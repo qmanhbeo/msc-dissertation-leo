@@ -32,13 +32,17 @@ python code/fetch_kaggle.py  # (optional, requires Kaggle credentials)
 ### 1. `fetch_openalex.py`
 **Source:** [OpenAlex API](https://openalex.org/) (free, no authentication required)
 
-Downloads academic papers on AI + Sustainable Development.
+Downloads academic papers on AI + Sustainable Development using a two-stage filtering strategy:
+1. **Native SDG filter** — requires OpenAlex's own `sustainable_development_goals.id` classification
+2. **AI/ML text search** — requires text match for "machine learning", "deep learning", "artificial intelligence", or "neural network"
+
+This ensures papers are genuinely about AI/ML *within* a specific SDG context, rather than papers that happen to mention both terms. Runs 17 queries (one per SDG 1-17), each combining 4 AI/ML keywords. Papers are sorted by OpenAlex relevance score.
 
 **Output:** 
 - `data/openalex/papers.jsonl` — papers with title, abstract, DOI, year, concepts, citation count
 - `data/openalex/metadata.json` — fetch metadata
 
-**Time:** ~2-5 minutes | **Size:** ~50-200 MB
+**Time:** ~15-30 minutes | **Size:** ~50-100 MB (~20-35K papers)
 
 ---
 

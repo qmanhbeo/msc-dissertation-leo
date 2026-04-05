@@ -1,112 +1,73 @@
 """
 Fetch academic papers from OpenAlex API on AI + Sustainable Development.
 
-Runs multiple search queries, paginates fully, deduplicates by openalex_id.
-- Year range: 2018-2025
-- Saves: title, abstract, DOI, year, concepts, cited-by-count
+Uses OpenAlex's native SDG classification combined with AI/ML text search.
+Fetches sequentially, saves incrementally every 200 papers.
+Safe to interrupt and resume — seen IDs are persisted.
 
-Output: data/openalex/papers.jsonl (one JSON per line, deduplicated)
-        data/openalex/metadata.json (fetch metadata)
+Output:
+  - data/openalex/papers_sdg{{N}}.jsonl  — papers tagged as SDG N
+  - data/openalex/seen_ids.json           — seen openalex_ids
+  - data/openalex/metadata.json           — fetch metadata
+
+Run from project root:
+    python code/fetch_openalex.py
 """
 
 import json
-import os
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Generator
 
 import requests
-from tqdm import tqdm
 
-# Configuration
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
 OUTPUT_DIR = Path("data/openalex")
-PAPERS_FILE = OUTPUT_DIR / "papers.jsonl"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
-
-# User email for polite pool (faster rate limits)
+SEEN_IDS_FILE = OUTPUT_DIR / "seen_ids.json"
 USER_EMAIL = "dissertation@example.com"
+SDG_BASE = "https://metadata.un.org/sdg"
+FLUSH_EVERY = 200
+REQUEST_DELAY = 0.5
 
-# Multiple queries to diversify the corpus
-QUERIES = [
-    "artificial intelligence sustainable development",
-    "machine learning sustainable development goals",
-    "deep learning sustainability",
-    "artificial intelligence SDG",
+AI_TERMS = [
+    "machine learning",
+    "deep learning",
+    "artificial intelligence",
+    "neural network",
 ]
 
-YEAR_FILTER = "publication_year:>2017,publication_year:<2026"
-
-# Cap per query — with 4 queries and ~50% overlap, this yields ~2000–4000 unique papers
-MAX_PER_QUERY = 2000
+QUERIES = []
+for sdg_num in range(1, 18):
+    sdg_filter = f"sustainable_development_goals.id:{SDG_BASE}/{sdg_num}"
+    filter_parts = [sdg_filter, "publication_year:>2017", "has_abstract:true"]
+    for term in AI_TERMS:
+        QUERIES.append({
+            "term": term,
+            "sdg": sdg_num,
+            "filter_parts": filter_parts,
+            "description": f"SDG {sdg_num} + \"{term}\"",
+        })
 
 
 def reconstruct_abstract(abstract_inverted_index: dict) -> str:
-    """Reconstruct plain text abstract from OpenAlex inverted index format."""
     if not abstract_inverted_index:
         return ""
-
-    # Create a position->word map
     position_to_word = {}
     for word, positions in abstract_inverted_index.items():
         for pos in positions:
             position_to_word[pos] = word
-
-    # Sort by position and join
     if not position_to_word:
         return ""
-
     max_pos = max(position_to_word.keys())
     words = [position_to_word.get(i, "") for i in range(max_pos + 1)]
     return " ".join(filter(None, words))
 
 
-def fetch_papers(query: str, max_results: int = MAX_PER_QUERY) -> Generator[dict, None, None]:
-    """
-    Generator to fetch papers for a given query string using cursor pagination.
-    Stops after max_results papers (default MAX_PER_QUERY).
-    Yields one paper dict at a time.
-    """
-    params = {
-        "search": query,
-        "sort": "publication_year:desc",
-        "per-page": 200,
-        "mailto": USER_EMAIL,
-        "filter": YEAR_FILTER,
-        "cursor": "*",
-    }
-
-    total_yielded = 0
-    while True:
-        response = requests.get(OPENALEX_BASE_URL, params=params, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-
-        results = data.get("results", [])
-        meta = data.get("meta", {})
-
-        for paper in results:
-            yield paper
-            total_yielded += 1
-            if total_yielded >= max_results:
-                return
-
-        next_cursor = meta.get("next_cursor")
-        if not next_cursor or not results:
-            break
-
-        params["cursor"] = next_cursor
-
-
 def extract_paper(paper: dict) -> dict:
-    """Extract and return relevant fields from a raw OpenAlex paper record."""
-    abstract_text = reconstruct_abstract(
-        paper.get("abstract_inverted_index", {})
-    )
-    # Fall back to plain abstract field if inverted index is absent
+    abstract_text = reconstruct_abstract(paper.get("abstract_inverted_index", {}))
     if not abstract_text:
         abstract_text = paper.get("abstract", "") or ""
-
     return {
         "openalex_id": paper.get("id", ""),
         "title": paper.get("title", ""),
@@ -115,11 +76,7 @@ def extract_paper(paper: dict) -> dict:
         "publication_year": paper.get("publication_year"),
         "cited_by_count": paper.get("cited_by_count", 0),
         "concepts": [
-            {
-                "id": c.get("id"),
-                "display_name": c.get("display_name"),
-                "score": c.get("score")
-            }
+            {"id": c.get("id"), "display_name": c.get("display_name"), "score": c.get("score")}
             for c in paper.get("concepts", [])[:10]
         ],
         "author_count": len(paper.get("authorships", [])),
@@ -127,68 +84,168 @@ def extract_paper(paper: dict) -> dict:
     }
 
 
-def main():
-    """Main fetch and save pipeline — runs all queries, deduplicates, saves."""
+def load_seen_ids() -> set[str]:
+    if SEEN_IDS_FILE.exists():
+        with SEEN_IDS_FILE.open() as f:
+            return set(json.load(f))
+    return set()
+
+
+def save_seen_ids(seen_ids: set[str]) -> None:
+    with SEEN_IDS_FILE.open("w") as f:
+        json.dump(sorted(seen_ids), f)
+
+
+def fetch_one_query(term: str, filter_parts: list[str]) -> list[dict]:
+    params = [
+        ("search", term),
+        ("per-page", "200"),
+        ("mailto", USER_EMAIL),
+        ("filter", ",".join(filter_parts)),
+        ("cursor", "*"),
+    ]
+    papers = []
+    page_num = 0
+    while True:
+        page_num += 1
+        response = requests.get(OPENALEX_BASE_URL, params=params, timeout=60)
+        if response.status_code == 429:
+            print(f"    Page {page_num}: rate limited, waiting 10s...", flush=True)
+            time.sleep(10)
+            continue
+        response.raise_for_status()
+        data = response.json()
+        results = data.get("results", [])
+        papers.extend(results)
+        print(f"    Page {page_num}: {len(papers)} papers fetched", flush=True)
+        meta = data.get("meta", {})
+        next_cursor = meta.get("next_cursor")
+        if not next_cursor or not results:
+            break
+        params[-1] = ("cursor", next_cursor)
+        time.sleep(REQUEST_DELAY)
+    return papers
+
+
+def papers_file(sdg: int) -> Path:
+    return OUTPUT_DIR / f"papers_sdg{sdg:02d}.jsonl"
+
+
+def load_existing_count(sdg: int) -> int:
+    path = papers_file(sdg)
+    if not path.exists():
+        return 0
+    with path.open() as f:
+        return sum(1 for line in f if line.strip())
+
+
+def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n{'='*70}")
-    print("OpenAlex Paper Fetcher (multi-query, deduplicated)")
-    print(f"{'='*70}")
-    print(f"Queries: {len(QUERIES)} (cap: {MAX_PER_QUERY} each)")
-    print(f"Year range: 2018-2025")
-    print(f"Output: {PAPERS_FILE}")
-    print(f"{'='*70}\n")
+    print(f"\n{'='*60}", flush=True)
+    print("OpenAlex Fetcher — AI/ML for SDGs", flush=True)
+    print(f"{'='*60}", flush=True)
+    print(f"Queries: {len(QUERIES)} (17 SDGs × 4 AI terms), sequential", flush=True)
+    print(f"Flush: every {FLUSH_EVERY} papers", flush=True)
+    print(f"{'='*60}\n", flush=True)
 
     start_time = datetime.now()
-    seen_ids: set[str] = set()
-    all_records: list[dict] = []
-    query_counts: dict[str, int] = {}
+    seen_ids = load_seen_ids()
+    sdg_counts = {sdg: load_existing_count(sdg) for sdg in range(1, 18)}
+    total_new = sum(sdg_counts.values())
 
-    for query in QUERIES:
-        print(f"\nQuery: \"{query}\"")
-        count_this_query = 0
-        new_this_query = 0
+    print(f"Loaded {len(seen_ids):,} seen IDs", flush=True)
+    print(f"Existing papers on disk: {total_new:,}\n", flush=True)
 
-        for paper in tqdm(fetch_papers(query), desc=f"  Fetching", unit=" papers"):
-            record = extract_paper(paper)
-            count_this_query += 1
-            if record["openalex_id"] and record["openalex_id"] not in seen_ids:
-                seen_ids.add(record["openalex_id"])
-                all_records.append(record)
-                new_this_query += 1
+    query_results = []
 
-        query_counts[query] = new_this_query
-        print(f"  → {count_this_query} fetched, {new_this_query} new after dedup")
+    for q_idx, q in enumerate(QUERIES, 1):
+        sdg = q["sdg"]
+        desc = q["description"]
+        out_path = papers_file(sdg)
 
-    # Write deduplicated JSONL
-    with open(PAPERS_FILE, "w") as f:
-        for record in all_records:
-            f.write(json.dumps(record) + "\n")
+        print(f"[{q_idx}/{len(QUERIES)}] {desc}...", flush=True)
+        raw_papers = fetch_one_query(q["term"], q["filter_parts"])
+        print(f"  Got {len(raw_papers)} raw papers", flush=True)
+
+        local_new = 0
+        buffer = []
+
+        for raw in raw_papers:
+            record = extract_paper(raw)
+            if not record["openalex_id"]:
+                continue
+            if record["openalex_id"] in seen_ids:
+                continue
+
+            seen_ids.add(record["openalex_id"])
+            total_new += 1
+            local_new += 1
+            sdg_counts[sdg] += 1
+            buffer.append(record)
+
+            if len(buffer) >= FLUSH_EVERY:
+                with out_path.open("a") as f:
+                    for r in buffer:
+                        f.write(json.dumps(r) + "\n")
+                buffer = []
+                save_seen_ids(seen_ids)
+                print(f"  → {total_new:,} saved", flush=True)
+
+        if buffer:
+            with out_path.open("a") as f:
+                for r in buffer:
+                    f.write(json.dumps(r) + "\n")
+            save_seen_ids(seen_ids)
+            print(f"  → {total_new:,} saved", flush=True)
+
+        query_results.append({
+            "query_index": q_idx,
+            "sdg": sdg,
+            "term": q["term"],
+            "raw_count": len(raw_papers),
+            "new_count": local_new,
+        })
+
+        print(f"  ✓ {local_new} new ({total_new:,} total)\n", flush=True)
 
     elapsed = datetime.now() - start_time
-    file_size_mb = PAPERS_FILE.stat().st_size / (1024 * 1024)
+    total_size = sum(f.stat().st_size for f in OUTPUT_DIR.glob("papers_sdg*.jsonl"))
+
+    combined_path = OUTPUT_DIR / "papers.jsonl"
+    if combined_path.exists():
+        combined_path.unlink()
+    combined_count = 0
+    with combined_path.open("w") as out:
+        for sdg in range(1, 18):
+            for pfile in sorted(OUTPUT_DIR.glob(f"papers_sdg{sdg:02d}.jsonl")):
+                with pfile.open() as inp:
+                    for line in inp:
+                        if line.strip():
+                            out.write(line)
+                            combined_count += 1
 
     metadata = {
         "source": "OpenAlex API",
         "url": OPENALEX_BASE_URL,
-        "queries": QUERIES,
+        "fetched_at": datetime.now().isoformat(),
+        "elapsed_seconds": round(elapsed.total_seconds(), 1),
+        "total_unique_papers": combined_count,
+        "total_size_mb": round(total_size / (1024 * 1024), 2),
         "year_range": [2018, 2025],
-        "fetched_at": start_time.isoformat(),
-        "elapsed_seconds": elapsed.total_seconds(),
-        "total_papers": len(all_records),
-        "papers_per_query": query_counts,
-        "output_file": str(PAPERS_FILE),
-        "file_size_mb": round(file_size_mb, 2),
+        "requires_abstract": True,
+        "sdg_filter": "native OpenAlex sustainable_development_goals.id classification",
+        "papers_per_sdg": {str(sdg): count for sdg, count in sdg_counts.items()},
+        "query_results": query_results,
     }
 
-    with open(METADATA_FILE, "w") as f:
+    with METADATA_FILE.open("w") as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"\n{'='*70}")
-    print(f"✓ Total unique papers: {len(all_records)}")
-    print(f"✓ File size: {file_size_mb:.2f} MB")
-    print(f"✓ Time elapsed: {elapsed.total_seconds():.1f}s")
-    print(f"{'='*70}\n")
+    print(f"{'='*60}")
+    print(f"Done! {combined_count:,} papers in {elapsed.total_seconds():.0f}s")
+    print(f"Size: {total_size / (1024*1024):.1f} MB")
+    print(f"{'='*60}")
 
 
 if __name__ == "__main__":
