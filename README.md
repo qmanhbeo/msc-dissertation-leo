@@ -346,38 +346,59 @@ The **Wellbeing Department** offers support for personal circumstances affecting
 
 ## Current Status
 
-✅ **Completed:**
-- Chose dissertation topic (Topic 2: AI-Sustainability Research-Policy Alignment)
-- Designed analysis pipeline with 5 data sources
-- Fetched all available data (87,000+ records, 48.7 MB, 2000–2025 coverage)
-- Documented research questions and methodology
+*Last updated: 2026-04-05*
 
-📋 **Next Phases:**
-1. **Data Preprocessing** (May 2026)
-   - Clean and tokenize academic & policy texts
-   - Handle special characters, PDFs, format inconsistencies
+### ✅ Done
 
-2. **Embeddings & Topic Modeling** (May–June 2026)
-   - Generate Sentence-BERT embeddings for all texts
-   - Apply BERTopic to identify research & policy themes
-   - Create semantic similarity matrices
+| Area | Output |
+|------|--------|
+| Topic selection | Topic 2: AI–Sustainability Research–Policy Alignment |
+| Data fetching | All 5 sources fetched (87,000+ records, 48.7 MB) |
+| Preprocessing — papers | `data/openalex/papers_clean.jsonl` (94 papers) |
+| Preprocessing — policy | `data/un_sdg/policy_chunks.jsonl` (253 chunks) |
+| Preprocessing — OSDG | `data/osdg/osdg_clean.jsonl` (30,534 rows, agreement ≥ 0.5) |
+| Preprocessing — benchmark | `data/sdg_benchmark/benchmark_clean.jsonl` (616 rows) |
+| Embeddings | `data/embeddings/*.npy` — all 4 corpora embedded (all-MiniLM-L6-v2, 384-dim) |
+| Methodology design | `notes/METHODOLOGY_DECISIONS.md` — pipeline, gap types, validation approach |
+| Assumptions | `notes/ASSUMPTIONS.md` — 14 assumptions documented with risk levels |
+| Hypotheses | `notes/HYPOTHESES.md` — 24 pre-registered hypotheses across 5 categories |
 
-3. **Alignment Analysis** (June 2026)
-   - Compare research vs policy topic distributions
-   - Calculate SDG alignment scores
-   - Identify critical gaps
+### 🔄 Current Focus
 
-4. **Visualization & Interpretation** (June–July 2026)
-   - Create heatmaps, scatter plots, network diagrams
-   - Write Results & Discussion chapters
+**Literature review** — reading key papers to ground hypotheses and strengthen the theoretical framework before running analysis.
 
-5. **Draft & Revise** (July–August 2026)
-   - Complete 8,000-word report
-   - Submit draft for supervisor feedback by 1 August
-   - Final revisions & presentation recording
+Key papers to engage:
+- Vinuesa et al. (2020) — AI and the SDGs (Nature Communications)
+- Sachs et al. (annual) — Sustainable Development Report
+- Reimers & Gurevych (2019) — Sentence-BERT
+- OSDG dataset paper
+- SDG Benchmark dataset paper
+- Literature on research-policy gaps in AI governance
+
+### 📋 Remaining Analysis (parked — resume after literature review)
+
+1. **SDG centroids** — `code/sdg_centroids.py` — compute per-SDG mean embeddings from OSDG
+2. **Centroid validation** — `code/validate_centroids.py` — accuracy/F1 on benchmark; validates measurement instrument
+3. **Alignment scoring** — `code/alignment_score.py` — cosine similarity of papers + policy chunks vs. all 17 centroids
+4. **Coverage gap** — `code/coverage_gap.py` — SDG proportion profiles, bar/radar charts
+5. **Semantic gap** — `code/semantic_gap.py` — intra-SDG similarity between research and policy clusters
+6. **Kaggle context** — `code/kaggle_context.py` — correlate gaps with global SDG performance scores
+7. **Topic modeling** — `code/topic_model.py` *(optional)* — surface themes within high-scoring SDG clusters
+
+### 🗓 Timeline
+
+| Phase | When | Status |
+|-------|------|--------|
+| Data & preprocessing | Mar–Apr 2026 | ✅ Done |
+| Literature review | Apr–May 2026 | 🔄 Active |
+| Analysis (steps 1–7 above) | May–Jun 2026 | ⏸ Parked |
+| Visualization | Jun–Jul 2026 | Not started |
+| Writing | Jul–Aug 2026 | Not started |
+| Supervisor feedback deadline | 1 Aug 2026 | — |
+| Final submission | 1 Sep 2026 | — |
 
 ---
 
-**Programme:** MSc AI and Sustainable Development  
-**Submission Deadline:** 1 September 2026, 12:00 pm  
-**Last Updated:** April 2026
+**Programme:** MSc AI and Sustainable Development
+**Submission Deadline:** 1 September 2026, 12:00 pm
+**Last Updated:** 2026-04-05
