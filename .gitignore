@@ -1,0 +1,108 @@
+# Data directories (large downloads)
+data/
+
+# Python environments and packages
+venv/
+env/
+ENV/
+.venv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv
+env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Research/literature cache
+literature/**/cache/
+literature/**/temp/
+
+# Data files (CSV, JSON, large datasets)
+*.csv
+*.json
+data_*
+*.parquet
+*.h5
+*.pkl
+*.pickle
+
+# Model files and checkpoints
+models/
+checkpoints/
+*.pt
+*.pth
+*.bin
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*backup*
+.temp/
+
+# PDF generated from LaTeX (but keep source)
+*.pdf
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Credentials and secrets (CRITICAL - never commit these!)
+.env
+.env.local
+.kaggle/
+credentials.json
+*.key
+*.pem
+
+# Build artifacts
+*.log
+dist/
+build/
+
+# Local settings
+.claude/
+.claude/settings.local.json
+
+# Dissertation-specific
+writing/drafts/
+notes/private/
+.supervisor-feedback/
