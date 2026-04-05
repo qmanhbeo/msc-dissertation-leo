@@ -30,7 +30,7 @@ USER_EMAIL = "dissertation@example.com"
 
 # Query parameters
 QUERY_PARAMS = {
-    "filter": "concepts.id:C15744967,concepts.id:C167923496",  # AI + sustainable dev
+    "search": "artificial intelligence sustainable development",
     "sort": "publication_year:desc",
     "per-page": 100,
     "mailto": USER_EMAIL,
@@ -65,7 +65,7 @@ def fetch_papers(cursor: str = None) -> Generator[tuple, None, None]:
     Yields: (paper_data, next_cursor)
     """
     params = QUERY_PARAMS.copy()
-    params["filter"] = f"{QUERY_PARAMS['filter']},{YEAR_FILTER}"
+    params["filter"] = YEAR_FILTER
 
     if cursor:
         params["cursor"] = cursor

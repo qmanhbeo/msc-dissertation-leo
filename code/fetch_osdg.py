@@ -70,14 +70,23 @@ def extract_archive(archive_path: Path, extract_to: Path) -> list:
     """Extract ZIP or handle CSV file. Returns list of extracted files."""
     extracted_files = []
 
-    if archive_path.suffix == ".zip":
-        print(f"Extracting {archive_path.name}...")
-        with zipfile.ZipFile(archive_path, "r") as zf:
-            zf.extractall(extract_to)
-            extracted_files = [extract_to / name for name in zf.namelist()]
-    else:
-        # If it's already a CSV, just move it
-        final_path = extract_to / archive_path.name
+    try:
+        # Try as ZIP first
+        if archive_path.suffix == ".zip" or zipfile.is_zipfile(archive_path):
+            print(f"Extracting {archive_path.name}...")
+            with zipfile.ZipFile(archive_path, "r") as zf:
+                zf.extractall(extract_to)
+                extracted_files = [extract_to / name for name in zf.namelist()]
+        else:
+            # Treat as CSV
+            csv_name = "osdg_dataset.csv"
+            final_path = extract_to / csv_name
+            archive_path.rename(final_path)
+            extracted_files = [final_path]
+    except zipfile.BadZipFile:
+        # Not a ZIP, treat as CSV
+        csv_name = "osdg_dataset.csv"
+        final_path = extract_to / csv_name
         archive_path.rename(final_path)
         extracted_files = [final_path]
 
