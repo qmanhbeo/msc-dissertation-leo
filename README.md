@@ -153,7 +153,7 @@ Provides a structural and semantic mapping of fair RL for resource allocation, i
 
 ---
 
-### Topic 2: Semantic Alignment Between AI Sustainability Research and Policy Frameworks
+### Topic 2: Semantic Alignment Between AI Sustainability Research and Policy Frameworks ⭐ **CHOSEN**
 
 **Core Question:**
 To what extent does academic AI-for-sustainability research align with sustainability policy priorities?
@@ -172,6 +172,111 @@ AI governance emphasizes that technical development and policy objectives must c
 
 **Contribution:**
 Provides a quantitative assessment of alignment between AI research and sustainability governance priorities, revealing thematic gaps and structural mismatches.
+
+---
+
+## Dissertation Analysis Plan
+
+### Research Question
+**To what extent does academic AI-for-sustainability research align with policy priorities for sustainable development?**
+
+Which SDGs do researchers emphasize vs. which do policymakers prioritize? Where are the gaps?
+
+### Analysis Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    RESEARCH CORPUS                                  │
+│                  (What academics publish)                           │
+├─────────────────────────────────────────────────────────────────────┤
+│  • OpenAlex Papers (100 papers on AI + sustainability, 2025)        │
+│  • OSDG Dataset (43,025 text excerpts, pre-labeled with SDGs)       │
+│  • GitHub Benchmark (1,251 expert-verified texts for validation)    │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │
+                            ↓
+                 ┌──────────────────────┐
+                 │  Topic Modeling 1    │
+                 │  (Research themes)   │
+                 │  + Extract SDG focus │
+                 └──────────────────────┘
+                            │
+┌───────────────────────────┴──────────────────────────────────────────┐
+│                          COMPARATIVE ANALYSIS                        │
+├─────────────────────────────────────────────────────────────────────┤
+│  • Semantic Similarity (cosine distance between embeddings)          │
+│  • Theme Comparison (which topics overlap? which diverge?)           │
+│  • SDG Alignment (% research vs % policy per SDG)                   │
+│  • Gap Analysis (critical research gaps, ignored policy priorities) │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │
+                            ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                     POLICY CORPUS                                   │
+│               (What policymakers prioritize)                        │
+├─────────────────────────────────────────────────────────────────────┤
+│  • UN AI Strategy Guide (June 2021, 298k chars)                     │
+│  • PARIS21 Report (April 2024, 61k chars)                          │
+└───────────────────────────┬──────────────────────────────────────────┘
+                            │
+                            ↓
+                 ┌──────────────────────┐
+                 │  Topic Modeling 2    │
+                 │  (Policy priorities) │
+                 │  + Extract SDG focus │
+                 └──────────────────────┘
+                            │
+┌───────────────────────────┴──────────────────────────────────────────┐
+│                       CONTEXTUAL DATA                                │
+├─────────────────────────────────────────────────────────────────────┤
+│  • Kaggle SDG Index (2000–2022 country performance scores)          │
+│    → Which SDGs have worst progress?                                │
+│    → Is research focused on the most critical goals?                │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+                            ↓
+        ┌───────────────────────────────────────┐
+        │   FINDINGS & INTERPRETATION           │
+        ├───────────────────────────────────────┤
+        │ ✓ Alignment scores (quantified)       │
+        │ ✓ Which SDGs are aligned/misaligned  │
+        │ ✓ Critical research gaps              │
+        │ ✓ Policy priorities under-researched  │
+        │ ✓ Heatmaps and visualizations         │
+        └───────────────────────────────────────┘
+```
+
+### Datasets & Their Role
+
+| Dataset | Records | Years | Role in Analysis |
+|---------|---------|-------|-----------------|
+| **OpenAlex** | 100 papers | 2025 | Extract contemporary research themes |
+| **OSDG** | 43,025 excerpts | Multi-year | Identify which SDGs research addresses (pre-labeled) |
+| **UN Policy** | 2 PDFs | 2021–2024 | Extract official policy priorities & themes |
+| **GitHub Benchmark** | 1,251 texts | 2024+ | Validate topic modeling accuracy |
+| **Kaggle SDG Index** | 4,140 records | 2000–2022 | Provide context: which SDGs have poorest progress? |
+
+### Research Questions Answered
+
+1. **What themes dominate academic AI research?**
+   - Method: Topic modeling on OpenAlex + OSDG corpus
+   - Output: Topic clusters, word frequencies, semantic embeddings
+
+2. **What themes dominate policy documents?**
+   - Method: Topic modeling on UN policy texts
+   - Output: Policy priorities, governance themes, SDG focus
+
+3. **How aligned are they?**
+   - Method: Cosine similarity between research & policy embeddings
+   - Output: Alignment score, semantic distance matrix
+
+4. **Which SDGs get mismatched attention?**
+   - Method: Compare SDG distribution in OSDG (research) vs policy texts
+   - Output: Table/heatmap of alignment by SDG
+
+5. **Is misalignment problematic?**
+   - Method: Cross-reference with Kaggle SDG performance data
+   - Output: Which neglected SDGs have worst development progress?
 
 ---
 
@@ -217,21 +322,59 @@ The **Wellbeing Department** offers support for personal circumstances affecting
 
 ---
 
-## Key Documents
+## Key Documents & Resources
 
-- `proposal-2026-03-27.md` — Research proposal ideas and project planning
-- `Dissertation_Handbook_26.pdf` — Full university dissertation handbook (archived)
+**Project Planning:**
+- `proposal-2026-03-27.md` — Research proposal ideas and initial planning
+- `CLAUDE.md` — Guidelines for Claude collaboration on dissertation
 - `README.md` — This file
+
+**Research Support:**
+- `notes/DATA_SUMMARY.md` — Complete data exploration results and field descriptions
+- `code/README.md` — Data fetching scripts documentation
+- `code/fetch_*.py` — 5 reproducible data pipeline scripts
+- `Dissertation_Handbook_26.pdf` — Full university dissertation handbook
+
+**Data:**
+- `data/openalex/` — Academic papers (100 records, 2025)
+- `data/osdg/` — SDG-labeled text excerpts (43,025 records)
+- `data/un_sdg/` — Policy documents and extracted text (2 PDFs)
+- `data/sdg_benchmark/` — Expert-verified benchmark dataset (1,251 texts)
+- `data/kaggle/` — Historical SDG performance data (4,140 records, 2000–2022)
 
 ---
 
-## Next Steps
+## Current Status
 
-1. Develop preliminary research ideas (Feb–Mar)
-2. Refine proposal and submit on Canvas by 2 March
-3. Connect with allocated supervisor
-4. Plan research approach and ethics requirements (if applicable)
-5. Begin active research and writing
+✅ **Completed:**
+- Chose dissertation topic (Topic 2: AI-Sustainability Research-Policy Alignment)
+- Designed analysis pipeline with 5 data sources
+- Fetched all available data (87,000+ records, 48.7 MB, 2000–2025 coverage)
+- Documented research questions and methodology
+
+📋 **Next Phases:**
+1. **Data Preprocessing** (May 2026)
+   - Clean and tokenize academic & policy texts
+   - Handle special characters, PDFs, format inconsistencies
+
+2. **Embeddings & Topic Modeling** (May–June 2026)
+   - Generate Sentence-BERT embeddings for all texts
+   - Apply BERTopic to identify research & policy themes
+   - Create semantic similarity matrices
+
+3. **Alignment Analysis** (June 2026)
+   - Compare research vs policy topic distributions
+   - Calculate SDG alignment scores
+   - Identify critical gaps
+
+4. **Visualization & Interpretation** (June–July 2026)
+   - Create heatmaps, scatter plots, network diagrams
+   - Write Results & Discussion chapters
+
+5. **Draft & Revise** (July–August 2026)
+   - Complete 8,000-word report
+   - Submit draft for supervisor feedback by 1 August
+   - Final revisions & presentation recording
 
 ---
 
