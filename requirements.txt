@@ -2,3 +2,8 @@ requests==2.31.0
 tqdm==4.66.1
 pdfplumber==0.10.4
 kaggle==1.5.13
+pandas>=2.0.0
+openpyxl>=3.0.0
+sentence-transformers>=2.2.0
+scikit-learn>=1.0.0
+datasets>=2.14.0

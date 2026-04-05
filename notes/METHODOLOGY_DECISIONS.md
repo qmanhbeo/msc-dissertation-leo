@@ -83,8 +83,8 @@ SDG Benchmark (616 expert-verified texts)
     → evaluate centroid quality: nearest-centroid accuracy/F1
     → also provides SDG 17 reference (OSDG missing SDG 17)
 
-OpenAlex papers (94, cleaned)        ──┐
-Policy chunks (253, cleaned)          ──┤── Sentence-BERT embeddings
+OpenAlex papers (6,172, cleaned)     ──┐
+Policy chunks (1,211 from 13 docs)   ──┤── Sentence-BERT embeddings
                                          │
                                          ▼
                               SDG alignment scores (cosine similarity to each centroid)
@@ -122,10 +122,12 @@ Policy chunks (253, cleaned)          ──┤── Sentence-BERT embeddings
 
 ## TODOs — Implementation
 
+- [x] **Corpus expanded (2026-04-05):**
+  - Papers: 94 → 6,172 (4 OpenAlex queries, 2,000 cap each, deduped, abstracts required)
+  - Policy: 2 docs/253 chunks → 13 docs/1,211 chunks (UN SDG Progress Report, IPCC AR6, UK/Singapore/Germany/AU national AI strategies, UN AI Advisory Body 2024, UNESCO, EU HLEG, OECD, US AI Bill of Rights)
 - [x] `code/embeddings.py` — all 4 corpora embedded with `all-MiniLM-L6-v2` (384-dim); saved to `data/embeddings/*.npy`
-  - Note: switched from `all-mpnet-base-v2` to `all-MiniLM-L6-v2` for CPU/WSL practicality
-  - Sanity check showed same-SDG vs diff-SDG similarity was marginal; centroid validation will be the real test
-  - Inter-centroid analysis confirmed sensible SDG cluster structure (SDG 1↔10: 0.887, SDG 7↔16: 0.183)
+  - papers.npy: (6172, 384); policy.npy: (1211, 384)
+  - Sanity check showed same-SDG vs diff-SDG similarity was marginal (expected — 2-sample artifact); centroid validation will be the real test
 - [ ] `code/sdg_centroids.py` — compute per-SDG mean embeddings from OSDG; handle SDG 17 using benchmark
 - [ ] `code/validate_centroids.py` — evaluate centroid quality on SDG benchmark; report accuracy + macro-F1
 - [ ] `code/alignment_score.py` — for each paper/chunk, compute cosine similarity to all 17 SDG centroids
@@ -150,7 +152,7 @@ Policy chunks (253, cleaned)          ──┤── Sentence-BERT embeddings
 - [ ] **Findings chapter:** Present coverage gap first (SDG proportion profiles) with visualizations
 - [ ] **Findings chapter:** Present semantic gap second (intra-SDG similarity scores) — this is the novel contribution
 - [ ] **Discussion chapter:** Interpret gaps in light of Kaggle SDG Index — which neglected SDGs are also most off-track globally?
-- [ ] **Discussion chapter:** Acknowledge limitation — 94 papers is a small corpus; results are indicative, not definitive; could be extended
+- [ ] **Discussion chapter:** Acknowledge limitations — unit-of-analysis asymmetry (paper abstracts vs policy chunks); corpus scope ("international institutional discourse", not all policy); English-language bias; topical overlap ≠ substantive alignment
 - [ ] **Discussion chapter:** Suggest implications — research funding priorities, AI-for-SDG agenda-setting
 
 ---

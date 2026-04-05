@@ -41,7 +41,7 @@ METADATA_FILE = OUTPUT_DIR / "metadata.json"
 # Document list — confirmed accessible first, then try-or-skip
 # ---------------------------------------------------------------------------
 DOCUMENTS = [
-    # --- Confirmed accessible ---
+    # --- Already downloaded successfully ---
     {
         "name": "UN_SDG_Progress_Report_2023",
         "url": "https://unstats.un.org/sdgs/report/2023/The-Sustainable-Development-Goals-Report-2023.pdf",
@@ -66,74 +66,83 @@ DOCUMENTS = [
         "year": 2021,
         "confirmed": True,
     },
+    # --- Updated URLs (verified via search) ---
     {
-        "name": "India_National_AI_Strategy_NITI_Aayog",
-        "url": "https://www.niti.gov.in/sites/default/files/2023-03/National-Strategy-for-Artificial-Intelligence.pdf",
-        "institution": "NITI Aayog (India)",
+        "name": "UN_AI_Advisory_Body_Final_Report_2024",
+        "url": "https://www.un.org/sites/un2.un.org/files/governing_ai_for_humanity_final_report_en.pdf",
+        "institution": "UN AI Advisory Body",
+        "type": "AI governance",
+        "year": 2024,
+        "confirmed": True,
+    },
+    {
+        "name": "Singapore_National_AI_Strategy_2.0",
+        "url": "https://file.go.gov.sg/nais2023.pdf",
+        "institution": "Singapore MDDI",
         "type": "national AI strategy",
         "year": 2023,
         "confirmed": True,
     },
-    # --- Try or skip ---
     {
-        "name": "UN_AI_Advisory_Body_Final_Report_2024",
-        "url": "https://www.un.org/ai-advisory-body/sites/www.un.org.ai-advisory-body/files/governing-ai-for-humanity-final-report-en.pdf",
-        "institution": "UN AI Advisory Body",
-        "type": "AI governance",
+        "name": "African_Union_Continental_AI_Strategy_2024",
+        "url": "https://au.int/sites/default/files/documents/44004-doc-EN-_Continental_AI_Strategy_July_2024.pdf",
+        "institution": "African Union",
+        "type": "regional AI framework",
         "year": 2024,
-        "confirmed": False,
+        "confirmed": True,
     },
     {
+        "name": "Germany_AI_Strategy_2020_Update",
+        "url": "https://www.ki-strategie-deutschland.de/files/downloads/Fortschreibung_KI-Strategie_engl.pdf",
+        "institution": "German Federal Government",
+        "type": "national AI strategy",
+        "year": 2020,
+        "confirmed": True,
+    },
+    {
+        "name": "UNESCO_Ethics_of_AI_2021",
+        "url": "https://www.ohchr.org/sites/default/files/2022-03/UNESCO.pdf",
+        "institution": "UNESCO",
+        "type": "AI ethics",
+        "year": 2021,
+        "confirmed": True,
+    },
+    # --- Try or skip ---
+    {
         "name": "US_Blueprint_AI_Bill_of_Rights",
-        "url": "https://www.whitehouse.gov/wp-content/uploads/2022/10/Blueprint-for-an-AI-Bill-of-Rights.pdf",
+        "url": "https://www.managementsolutions.com/sites/default/files/publicaciones/eng/blueprint-for-an-ai-bill-of-rights.pdf",
         "institution": "White House OSTP",
         "type": "national AI policy",
         "year": 2022,
         "confirmed": False,
     },
     {
-        "name": "Singapore_National_AI_Strategy_2.0",
-        "url": "https://www.smartnation.gov.sg/files/publications/national-ai-strategy-2023.pdf",
-        "institution": "Singapore MDDI",
+        "name": "India_Responsible_AI_NITI_Aayog_2021",
+        "url": "https://indiaai.gov.in/documents/pdf/RaiPolicyDocument.pdf",
+        "institution": "NITI Aayog (India)",
         "type": "national AI strategy",
-        "year": 2023,
-        "confirmed": False,
-    },
-    {
-        "name": "African_Union_AI_Continental_Framework",
-        "url": "https://au.int/sites/default/files/documents/42078-doc-au_ai_continental_framework.pdf",
-        "institution": "African Union",
-        "type": "regional AI framework",
-        "year": 2024,
-        "confirmed": False,
-    },
-    {
-        "name": "UNESCO_Recommendation_Ethics_of_AI_2021",
-        "url": "https://unesdoc.unesco.org/ark:/48223/pf0000381137",
-        "institution": "UNESCO",
-        "type": "AI ethics",
         "year": 2021,
         "confirmed": False,
     },
     {
-        "name": "OECD_AI_Principles_Report",
-        "url": "https://www.oecd-ilibrary.org/docserver/eedfee77-en.pdf",
+        "name": "EU_AI_Ethics_Guidelines_HLEG",
+        "url": "https://www.europarl.europa.eu/cmsdata/196377/AI%20HLEG_Ethics%20Guidelines%20for%20Trustworthy%20AI.pdf",
+        "institution": "EU High-Level Expert Group on AI",
+        "type": "AI ethics guidelines",
+        "year": 2019,
+        "confirmed": False,
+    },
+    {
+        "name": "OECD_AI_Recommendation_2019",
+        "url": "https://wecglobal.org/uploads/2019/07/2019_OECD_Recommendations-AI.pdf",
         "institution": "OECD",
         "type": "AI principles",
         "year": 2019,
         "confirmed": False,
     },
     {
-        "name": "Germany_AI_Strategy_2020",
-        "url": "https://www.ki-strategie-deutschland.de/files/downloads/Nationale_KI-Strategie_Fortschreibung_2020.pdf",
-        "institution": "German Federal Government",
-        "type": "national AI strategy",
-        "year": 2020,
-        "confirmed": False,
-    },
-    {
-        "name": "UNDP_AI_Futures_Report",
-        "url": "https://www.undp.org/sites/g/files/zskgke326/files/2023-08/undp-ai-futures-report-2023.pdf",
+        "name": "UNDP_Trustworthy_AI_2023",
+        "url": "https://www.undp.org/sites/g/files/zskgke326/files/2023-11/UNDP_Trustworthy_AI_report_0.pdf",
         "institution": "UNDP",
         "type": "AI development",
         "year": 2023,
@@ -219,8 +228,7 @@ def main() -> None:
     print(f"\n{'='*70}")
     print("Expanded Policy Document Fetcher")
     print(f"{'='*70}")
-    print(f"Documents to attempt: {len(DOCUMENTS)}")
-    print(f"Confirmed accessible: {sum(1 for d in DOCUMENTS if d['confirmed'])}")
+    print(f"Documents to attempt: {len(DOCUMENTS)} ({sum(1 for d in DOCUMENTS if d['confirmed'])} confirmed, {sum(1 for d in DOCUMENTS if not d['confirmed'])} try-or-skip)")
     print(f"{'='*70}\n")
 
     start_time = datetime.now()

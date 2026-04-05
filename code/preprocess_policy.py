@@ -1,8 +1,8 @@
 """
-Preprocess UN policy documents into text chunks for embedding.
+Preprocess all policy documents into text chunks for embedding.
 
-Input:  data/un_sdg/texts/UN_AI_Strategy_Resource_Guide.txt
-        data/un_sdg/texts/PARIS21_AI_for_SDGs.txt
+Input:  data/un_sdg/texts/*.txt        (original 2 UN docs)
+        data/policy_expanded/texts/*.txt  (expanded corpus: 11 docs)
 
 Output: data/un_sdg/policy_chunks.jsonl  — one chunk per line
         data/un_sdg/policy_chunks.csv    — flat CSV for inspection
@@ -25,12 +25,25 @@ import unicodedata
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Config
+# Config — discover all text files across both directories dynamically
 # ---------------------------------------------------------------------------
-DOCS = {
-    "UN_AI_Strategy": Path("data/un_sdg/texts/UN_AI_Strategy_Resource_Guide.txt"),
-    "PARIS21": Path("data/un_sdg/texts/PARIS21_AI_for_SDGs.txt"),
-}
+TEXT_DIRS = [
+    Path("data/un_sdg/texts"),
+    Path("data/policy_expanded/texts"),
+]
+
+
+def discover_docs() -> dict[str, Path]:
+    """Return {stem: path} for every .txt in TEXT_DIRS (later dirs win on name clash)."""
+    docs = {}
+    for d in TEXT_DIRS:
+        if d.exists():
+            for p in sorted(d.glob("*.txt")):
+                docs[p.stem] = p
+    return docs
+
+
+DOCS = discover_docs()
 OUTPUT_JSONL = Path("data/un_sdg/policy_chunks.jsonl")
 OUTPUT_CSV = Path("data/un_sdg/policy_chunks.csv")
 

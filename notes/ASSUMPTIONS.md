@@ -8,16 +8,16 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 
 ## Data Assumptions
 
-### A1 — 94 papers are a representative sample of AI-for-sustainability research
-- **Assumption:** The OpenAlex query ("artificial intelligence" + "sustainable development", 2018–2025) returns papers that are broadly representative of the field
-- **Risk:** Medium-high. 94 is a small corpus. Query terms may miss adjacent work (e.g. papers using "machine learning" + "SDGs", or work framed around specific SDGs without using "sustainable development" as a term)
-- **Mitigation:** Acknowledge as a limitation; frame findings as indicative rather than definitive; suggest future work could expand to 1,000+ papers with broader query terms
+### A1 — 6,172 papers are a representative sample of AI-for-sustainability research
+- **Assumption:** Four OpenAlex queries ("artificial intelligence sustainable development", "machine learning sustainable development goals", "deep learning sustainability", "artificial intelligence SDG"; 2018–2025; 2,000 per query cap; deduplicated to 6,172 with abstracts) return papers broadly representative of the field
+- **Risk:** Low-medium. 6,172 is a substantial corpus. Query terms may still miss niche adjacent work (e.g. papers framed around specific SDGs without using "sustainable development" as a term); English-language bias applies
+- **Mitigation:** Corpus concentration is no longer a primary weakness; frame any residual gaps as limitations for future multi-lingual or citation-network-based expansion
 - **Where to address:** Methodology → Data Sources; Discussion → Limitations
 
-### A2 — Two policy documents represent "policy priorities"
-- **Assumption:** The UN AI Strategy Resource Guide (2021) and PARIS21 report (2024) are sufficient proxies for global AI-for-sustainability policy discourse
-- **Risk:** High. Two documents is a very thin policy corpus. These are also both UN-affiliated — they may not reflect national-level or private-sector policy priorities
-- **Mitigation:** Be explicit about scope ("UN-level multilateral policy discourse"); flag that national AI strategies, OECD reports, etc. are out of scope; suggest extensions
+### A2 — Thirteen policy documents represent "global AI and SDG policy discourse"
+- **Assumption:** 13 documents from diverse institutions (2 original UN docs, UN SDG Progress Report 2023, IPCC AR6 SPM, UK/Singapore/Germany national AI strategies, African Union Continental AI Strategy, UN AI Advisory Body 2024, UNESCO Ethics of AI 2021, EU HLEG Ethics Guidelines, OECD AI Recommendation 2019, US AI Bill of Rights) are sufficient proxies for international policy discourse on AI and sustainability
+- **Risk:** Medium. National strategies from Global South (India failed download; no Latin America, Southeast Asia outside Singapore) are underrepresented. All documents are English-language. The corpus mixes AI-governance documents with sustainability-focused documents — institutional type is itself a variable
+- **Mitigation:** Report per-document SDG profiles; flag geographic and institutional gaps; describe corpus explicitly as "international institutional policy discourse" rather than "global policy"
 - **Where to address:** Methodology → Data Sources; Discussion → Limitations
 
 ### A3 — OSDG labels at agreement ≥ 0.5 are reliable ground truth
@@ -111,11 +111,18 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
   - *Productive misalignment*: Research addresses dimensions of a problem that policy has not yet framed, or challenges assumptions embedded in policy discourse (e.g., research questioning whether AI is net-positive for SDG 13 while policy assumes it is)
 - **Where to address:** Discussion → Interpretation of Findings; Conclusion
 
-### A19 — Policy corpus is comparable to research corpus in diversity
-- **Assumption:** 253 policy chunks from 2 documents are a comparable basis for SDG profiling as 94 research papers from 94 independent sources
-- **Risk:** Medium. The policy corpus is highly autocorrelated — chunks from the same 2 documents share vocabulary, style, and editorial choices. The SDG profile of the policy corpus reflects 2 authors' decisions, not 253 independent observations. The research corpus reflects 94 independent authorial choices. This asymmetry means coverage gap findings could partly reflect editorial decisions in the 2 policy documents rather than genuine policy priorities
-- **Mitigation:** When computing policy SDG profiles, note the source document per chunk; check whether SDG scores cluster by document; consider weighting results by document rather than by chunk count when reporting aggregate statistics; flag in methodology chapter
-- **Where to address:** Methodology → Data Sources; Results → Coverage Gap
+### A19 — Unit-of-analysis asymmetry: papers vs chunks
+- **Assumption:** Comparing 6,172 paper-level vectors (1 abstract = 1 vector) against 1,211 chunk-level vectors (~150 words per chunk, many chunks per document) is a valid basis for SDG profiling
+- **Risk:** High. This is a fundamental unit-of-analysis mismatch with three distinct problems:
+  1. **Unequal granularity:** A research paper is represented by its abstract — a dense, author-curated summary of the whole work. A policy chunk is a 150-word passage that may cover only one corner of a 300-page document. These are not the same kind of object semantically.
+  2. **Coverage inflation:** A policy document that heavily discusses SDG 9 generates ~50 SDG-9-heavy chunks. This inflates the apparent policy emphasis on SDG 9 — not because SDG 9 is more important to policy, but because one editorial decision produces dozens of correlated data points.
+  3. **Autocorrelation:** The 1,211 chunks are not 1,211 independent observations. They are ~13 clusters of highly correlated passages. Treating them as independent observations in any statistical test would be invalid. The research corpus (6,172 papers from thousands of independent authors) is genuinely diverse.
+- **Why chunking is necessary anyway:** Policy documents have no abstract. A 300-page report covers many topics; treating it as one vector would lose all internal structure. Chunking is the standard NLP approach for long-document comparison.
+- **Mitigations (must apply all three):**
+  1. **Per-document SDG profiles:** Always report which document drives which SDG signal; never report aggregate policy scores without showing the document breakdown
+  2. **Document-weighted comparisons:** For the coverage gap analysis, weight by document (each of 13 docs = 1 observation) not by chunk count (which would let large documents dominate)
+  3. **Fixed-sample per document:** For semantic gap analysis (within-SDG cluster similarity), cap the number of chunks contributed per document to avoid single-document dominance
+- **Where to address:** Methodology → Data Sources (explain chunking rationale); Methodology → Limitations (name the asymmetry explicitly); Results → Coverage Gap (show per-document breakdown alongside aggregate)
 
 ### A20 — High topical overlap indicates research is responding to policy (not a shared blind spot)
 - **Assumption:** When research and policy show high topical overlap on an SDG, this means research is addressing what policymakers need
@@ -163,6 +170,6 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 | A16 | Cosine similarity = substantive alignment | High | Reframe as "topical overlap"; qualify all claims |
 | A17 | Misalignment is always bad | Medium | Introduce productive vs problematic misalignment lens |
 | A18 | Research corpus represents current AI-for-sustainability field | Medium-high | Cite Armitage et al. (2020) on method-dependence |
-| A19 | Policy corpus is comparable to research corpus in diversity | Medium | Flag concentration; weight by document source |
+| A19 | Unit-of-analysis asymmetry: paper abstracts vs 150-word chunks | **High** | Per-doc profiles; document-weighted comparisons; fixed sample per doc in semantic gap |
 | A20 | High alignment = research responding to policy (not shared blind spot) | High | Name ambiguity explicitly; cannot distinguish with our data |
 | A21 | Our corpus captures AI *for* sustainability, not AI *in* sustainability | Medium | Check which policy chunks score lowest; flag framing gap |

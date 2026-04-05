@@ -353,45 +353,57 @@ The **Wellbeing Department** offers support for personal circumstances affecting
 | Area | Output |
 |------|--------|
 | Topic selection | Topic 2: AI–Sustainability Research–Policy Alignment |
-| Data fetching | All 5 sources fetched (87,000+ records, 48.7 MB) |
-| Preprocessing — papers | `data/openalex/papers_clean.jsonl` (94 papers) |
-| Preprocessing — policy | `data/un_sdg/policy_chunks.jsonl` (253 chunks) |
+| Data fetching | All sources fetched; corpus expanded this session |
+| Preprocessing — papers | `data/openalex/papers_clean.jsonl` (**6,172 papers**, 4 queries) |
+| Preprocessing — policy | `data/un_sdg/policy_chunks.jsonl` (**1,211 chunks from 13 docs**) |
 | Preprocessing — OSDG | `data/osdg/osdg_clean.jsonl` (30,534 rows, agreement ≥ 0.5) |
 | Preprocessing — benchmark | `data/sdg_benchmark/benchmark_clean.jsonl` (616 rows) |
-| Embeddings | `data/embeddings/*.npy` — all 4 corpora embedded (all-MiniLM-L6-v2, 384-dim) |
-| Methodology design | `notes/METHODOLOGY_DECISIONS.md` — pipeline, gap types, validation approach |
-| Assumptions | `notes/ASSUMPTIONS.md` — 14 assumptions documented with risk levels |
-| Hypotheses | `notes/HYPOTHESES.md` — 24 pre-registered hypotheses across 5 categories |
+| Embeddings | `data/embeddings/*.npy` — papers (6172,384), policy (1211,384), osdg (30534,384), benchmark (616,384) |
+| Methodology design | `notes/METHODOLOGY_DECISIONS.md` — pipeline, gap types, validation, unit-of-analysis asymmetry |
+| Assumptions | `notes/ASSUMPTIONS.md` — 21 assumptions with risk levels; A19 updated with unit-of-analysis asymmetry |
+| Hypotheses | `notes/HYPOTHESES.md` — 30 hypotheses across 5 categories |
+| Literature review | `notes/LIT_REVIEW_INSIGHTS.md` — ~1,684 papers synthesised; second-wave insights A–D |
 
-### 🔄 Current Focus
+### Policy Corpus (13 documents)
 
-**Literature review** — reading key papers to ground hypotheses and strengthen the theoretical framework before running analysis.
+| Document | Institution | Type | Year |
+|----------|-------------|------|------|
+| UN AI Strategy Resource Guide | UN | AI governance | 2021 |
+| PARIS21 AI for SDGs | PARIS21/UN | AI for statistics | 2024 |
+| UN SDG Progress Report | UN Statistics Division | SDG progress | 2023 |
+| UN AI Advisory Body Final Report | UN AI Advisory Body | AI governance | 2024 |
+| IPCC AR6 Summary for Policymakers | IPCC | Climate policy | 2023 |
+| UK National AI Strategy | UK Government | National AI strategy | 2021 |
+| Singapore National AI Strategy 2.0 | Singapore MDDI | National AI strategy | 2023 |
+| Germany AI Strategy Update | German Federal Government | National AI strategy | 2020 |
+| African Union Continental AI Strategy | African Union | Regional AI framework | 2024 |
+| UNESCO Recommendation on Ethics of AI | UNESCO | AI ethics | 2021 |
+| EU Ethics Guidelines for Trustworthy AI | EU HLEG | AI ethics | 2019 |
+| OECD AI Recommendation | OECD | AI principles | 2019 |
+| US Blueprint for AI Bill of Rights | White House OSTP | National AI policy | 2022 |
 
-Key papers to engage:
-- Vinuesa et al. (2020) — AI and the SDGs (Nature Communications)
-- Sachs et al. (annual) — Sustainable Development Report
-- Reimers & Gurevych (2019) — Sentence-BERT
-- OSDG dataset paper
-- SDG Benchmark dataset paper
-- Literature on research-policy gaps in AI governance
+### 📋 Remaining Analysis (parked — resume when ready)
 
-### 📋 Remaining Analysis (parked — resume after literature review)
+Run in order:
 
-1. **SDG centroids** — `code/sdg_centroids.py` — compute per-SDG mean embeddings from OSDG
-2. **Centroid validation** — `code/validate_centroids.py` — accuracy/F1 on benchmark; validates measurement instrument
-3. **Alignment scoring** — `code/alignment_score.py` — cosine similarity of papers + policy chunks vs. all 17 centroids
-4. **Coverage gap** — `code/coverage_gap.py` — SDG proportion profiles, bar/radar charts
-5. **Semantic gap** — `code/semantic_gap.py` — intra-SDG similarity between research and policy clusters
-6. **Kaggle context** — `code/kaggle_context.py` — correlate gaps with global SDG performance scores
-7. **Topic modeling** — `code/topic_model.py` *(optional)* — surface themes within high-scoring SDG clusters
+1. `code/sdg_centroids.py` — per-SDG mean embeddings from OSDG; SDG 17 from benchmark
+2. `code/validate_centroids.py` — accuracy + macro-F1 on benchmark; validates measurement instrument
+3. `code/alignment_score.py` — cosine similarity of papers + policy chunks vs all 17 centroids; **bidirectional** (research→policy AND policy→research)
+4. `code/coverage_gap.py` — SDG proportion profiles; **document-weighted** policy scores; per-document breakdown
+5. `code/semantic_gap.py` — intra-SDG cluster similarity; **cap chunks per document** to avoid dominance
+6. `code/coverage_semantic_interaction.py` — correlate coverage gap × semantic gap per SDG (H25 — headline hypothesis)
+7. `code/kaggle_context.py` — join SDG Index scores with gap scores; correlation analysis
+8. `code/topic_model.py` *(optional)* — topic modeling within high-scoring SDG clusters
+9. OSDG circularity diagnostic — compare mean research vs policy alignment scores (A15)
 
 ### 🗓 Timeline
 
 | Phase | When | Status |
 |-------|------|--------|
 | Data & preprocessing | Mar–Apr 2026 | ✅ Done |
-| Literature review | Apr–May 2026 | 🔄 Active |
-| Analysis (steps 1–7 above) | May–Jun 2026 | ⏸ Parked |
+| Corpus expansion | Apr 2026 | ✅ Done |
+| Literature review | Apr–May 2026 | ✅ Done (SciSpace synthesis) |
+| Analysis (steps 1–9 above) | May–Jun 2026 | ⏸ Ready to start |
 | Visualization | Jun–Jul 2026 | Not started |
 | Writing | Jul–Aug 2026 | Not started |
 | Supervisor feedback deadline | 1 Aug 2026 | — |

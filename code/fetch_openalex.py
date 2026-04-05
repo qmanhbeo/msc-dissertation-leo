@@ -37,6 +37,9 @@ QUERIES = [
 
 YEAR_FILTER = "publication_year:>2017,publication_year:<2026"
 
+# Cap per query — with 4 queries and ~50% overlap, this yields ~2000–4000 unique papers
+MAX_PER_QUERY = 2000
+
 
 def reconstruct_abstract(abstract_inverted_index: dict) -> str:
     """Reconstruct plain text abstract from OpenAlex inverted index format."""
@@ -58,9 +61,10 @@ def reconstruct_abstract(abstract_inverted_index: dict) -> str:
     return " ".join(filter(None, words))
 
 
-def fetch_papers(query: str) -> Generator[dict, None, None]:
+def fetch_papers(query: str, max_results: int = MAX_PER_QUERY) -> Generator[dict, None, None]:
     """
-    Generator to fetch all papers for a given query string using cursor pagination.
+    Generator to fetch papers for a given query string using cursor pagination.
+    Stops after max_results papers (default MAX_PER_QUERY).
     Yields one paper dict at a time.
     """
     params = {
@@ -72,9 +76,8 @@ def fetch_papers(query: str) -> Generator[dict, None, None]:
         "cursor": "*",
     }
 
-    page = 0
+    total_yielded = 0
     while True:
-        page += 1
         response = requests.get(OPENALEX_BASE_URL, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
@@ -84,6 +87,9 @@ def fetch_papers(query: str) -> Generator[dict, None, None]:
 
         for paper in results:
             yield paper
+            total_yielded += 1
+            if total_yielded >= max_results:
+                return
 
         next_cursor = meta.get("next_cursor")
         if not next_cursor or not results:
@@ -128,7 +134,7 @@ def main():
     print(f"\n{'='*70}")
     print("OpenAlex Paper Fetcher (multi-query, deduplicated)")
     print(f"{'='*70}")
-    print(f"Queries: {len(QUERIES)}")
+    print(f"Queries: {len(QUERIES)} (cap: {MAX_PER_QUERY} each)")
     print(f"Year range: 2018-2025")
     print(f"Output: {PAPERS_FILE}")
     print(f"{'='*70}\n")
