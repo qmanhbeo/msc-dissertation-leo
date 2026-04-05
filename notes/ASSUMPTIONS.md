@@ -90,6 +90,51 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 ### A13 — Paper-level analysis is sufficient (not citation network or author network)
 - No graph-based analysis; alignment is purely semantic/text-based
 
+### A15 — OSDG-derived centroids are neutral SDG reference points
+- **Assumption:** Building SDG centroids from OSDG (which was labeled using a tool trained on UN-related documents) produces reference vectors that are independent of our policy corpus
+- **Risk:** Medium-high. OSDG's labeling tool was trained primarily on UN-related sources. Our policy corpus *is* UN documents. The centroids may be implicitly calibrated toward UN-style language, inflating policy alignment scores relative to research alignment scores — not because policy is genuinely more aligned, but because the measurement instrument and the policy corpus share a common linguistic ancestor
+- **Diagnostic test:** After scoring, check whether policy chunks score systematically higher than research papers against OSDG centroids on average. A large systematic gap would indicate calibration bias, not genuine alignment difference
+- **Mitigation:** If bias detected, consider building separate centroids from (a) OSDG only and (b) SDG indicator metadata, and comparing results; flag in methodology chapter
+- **Where to address:** Methodology → SDG Reference Embeddings; Results → Centroid Validation
+
+### A16 — Semantic (cosine) similarity measures substantive alignment
+- **Assumption:** High cosine similarity between a research paper and an SDG centroid indicates the paper substantively addresses that SDG's policy priorities
+- **Risk:** High. This is the deepest assumption in the study. Research papers and policy documents are different *speech acts* with different communicative functions: policy articulates commitments and goals using performative, modal language ("must," "should," "will"); research reports findings using hedged, indicative language ("we show," "results suggest"). Two texts can share substantial vocabulary while performing entirely different functions. High cosine similarity may reflect *topical overlap* — they discuss the same subject area — without reflecting *substantive alignment* — they address the same problem in compatible ways
+- **Implication:** We are measuring *topical overlap as a proxy for alignment*, not alignment directly. This must be stated explicitly in every claim derived from similarity scores. The contribution is still valid — topical overlap is the necessary (if not sufficient) condition for research-policy alignment — but the language must be precise
+- **Where to address:** Introduction → Scope; Methodology → Alignment Scoring; Discussion → Limitations
+
+### A17 — Misalignment between research and policy is normatively undesirable
+- **Assumption:** Semantic gaps between research and policy indicate a problem to be addressed
+- **Risk:** Medium. Sometimes research *should* be misaligned with policy — when it challenges flawed policy assumptions, explores domains policy has not yet reached, or critically examines the SDG framework itself (which has been critiqued as reflecting Global North priorities). Uncritical alignment with policy could mean research that validates existing blind spots rather than expanding the frontier
+- **Implication:** Findings must be interpreted using a "productive vs problematic misalignment" lens:
+  - *Problematic misalignment*: Research ignores policy-urgent needs due to tractability bias, funding concentration, or researcher demographics (e.g., AI researchers not engaging with SDG 10 inequality because it resists reduction to optimization problems)
+  - *Productive misalignment*: Research addresses dimensions of a problem that policy has not yet framed, or challenges assumptions embedded in policy discourse (e.g., research questioning whether AI is net-positive for SDG 13 while policy assumes it is)
+- **Where to address:** Discussion → Interpretation of Findings; Conclusion
+
+### A19 — Policy corpus is comparable to research corpus in diversity
+- **Assumption:** 253 policy chunks from 2 documents are a comparable basis for SDG profiling as 94 research papers from 94 independent sources
+- **Risk:** Medium. The policy corpus is highly autocorrelated — chunks from the same 2 documents share vocabulary, style, and editorial choices. The SDG profile of the policy corpus reflects 2 authors' decisions, not 253 independent observations. The research corpus reflects 94 independent authorial choices. This asymmetry means coverage gap findings could partly reflect editorial decisions in the 2 policy documents rather than genuine policy priorities
+- **Mitigation:** When computing policy SDG profiles, note the source document per chunk; check whether SDG scores cluster by document; consider weighting results by document rather than by chunk count when reporting aggregate statistics; flag in methodology chapter
+- **Where to address:** Methodology → Data Sources; Results → Coverage Gap
+
+### A20 — High topical overlap indicates research is responding to policy (not a shared blind spot)
+- **Assumption:** When research and policy show high topical overlap on an SDG, this means research is addressing what policymakers need
+- **Risk:** High. Both AI research and UN SDG policy are produced within overlapping institutional contexts — predominantly Global North, growth-oriented, techno-solutionist. High alignment could indicate (a) research responsively addressing policy priorities, OR (b) both being embedded in the same paradigmatic frame, which causes them to both over-emphasise certain SDGs (e.g. SDG 9 Innovation) and under-emphasise others (e.g. SDG 10 Inequalities) for the same ideological reasons. There is no way to distinguish (a) from (b) with our data
+- **Implication:** This is a fundamental interpretive ambiguity that must be named in the Discussion, not apologised for. It changes what our study can claim: we identify *what* is aligned and *what* isn't; we cannot determine *why*. The North-South asymmetry pattern (if social SDGs 1, 5, 10 are consistently misaligned) is where the shared blind spot hypothesis is most plausible
+- **Where to address:** Discussion → Interpretation; Conclusion → Limitations
+
+### A21 — Our research corpus captures AI *for* sustainability, not AI *in* sustainability
+- **Assumption:** Papers retrieved via "artificial intelligence" + "sustainable development" query are studying AI as a tool applied to sustainability challenges (AI for sustainability)
+- **Risk:** Medium. UN policy documents discuss *both* AI for sustainability AND AI's own governance, ethics, energy use, and societal risks (AI in sustainability). If policy chunks about AI governance score low against our research-paper-derived topics, this reflects a categorical framing difference — not just a topical gap
+- **Diagnostic:** After scoring, examine which policy chunks score *lowest* against research embeddings. If these cluster around AI governance/ethics/risk topics, it confirms the framing gap
+- **Where to address:** Methodology → Corpus Definition; Discussion → "AI for vs AI in" as an additional gap dimension
+
+### A18 — Our corpus is representative of the AI-for-sustainability research field
+- **Assumption:** 94 papers from a single OpenAlex query reproduce the SDG distribution patterns found in larger bibliometric studies
+- **Risk:** Medium-high. Armitage et al. (2020) showed that independent bibliometric approaches can produce different SDG distributions, suggesting method choice matters as much as the underlying reality. Our specific query terms, corpus size, and time window may produce a non-representative sample. If our SDG distribution diverges sharply from Singh et al. (2023) or Nedungadi et al. (2024), this requires explanation
+- **Mitigation:** After running alignment scoring, compare our SDG distribution for the research corpus against findings from established bibliometric studies. Convergence validates; divergence must be explained
+- **Where to address:** Methodology → Data Sources; Discussion → Limitations
+
 ### A14 — SDG categories are treated as independent dimensions
 - In reality SDGs are highly interdependent (the "SDG interlinkages" literature). Treating them as independent scoring dimensions is a simplification
 - **Where to address:** Discussion → Limitations
@@ -114,3 +159,10 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 | A12 | 2018–2025 time window | Low | Defensible; note exclusions |
 | A13 | Paper-level only | Low | Scope choice |
 | A14 | SDGs are independent | Medium | Acknowledge SDG interlinkages |
+| A15 | OSDG centroids are neutral reference points | Medium-high | Check policy/research score distributions |
+| A16 | Cosine similarity = substantive alignment | High | Reframe as "topical overlap"; qualify all claims |
+| A17 | Misalignment is always bad | Medium | Introduce productive vs problematic misalignment lens |
+| A18 | Research corpus represents current AI-for-sustainability field | Medium-high | Cite Armitage et al. (2020) on method-dependence |
+| A19 | Policy corpus is comparable to research corpus in diversity | Medium | Flag concentration; weight by document source |
+| A20 | High alignment = research responding to policy (not shared blind spot) | High | Name ambiguity explicitly; cannot distinguish with our data |
+| A21 | Our corpus captures AI *for* sustainability, not AI *in* sustainability | Medium | Check which policy chunks score lowest; flag framing gap |

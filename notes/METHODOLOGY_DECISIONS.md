@@ -4,9 +4,53 @@ Last updated: 2026-04-05
 
 ---
 
+## What We Are Actually Measuring (precise statement — critical)
+
+**We are NOT measuring:**
+- Whether research actually influences policy
+- Whether research findings are adopted by policymakers
+- Substantive alignment (whether research and policy solve the same problem in compatible ways)
+
+**We ARE measuring:**
+- **Topical overlap** — whether research and policy discuss the same subject areas, as proxied by semantic similarity in embedding space
+- Topical overlap is the *necessary but not sufficient* condition for research-policy dialogue. You cannot align on what you don't discuss. But shared vocabulary does not guarantee shared meaning or direction.
+
+**Critical framing (from literature review):**
+Policy and research are different speech acts. Policy uses performative modal language to articulate commitments ("must," "should"). Research uses hedged indicative language to report findings ("we show," "results suggest"). High cosine similarity reflects shared subject matter — not that they are "saying the same thing." All findings must be framed as "research and policy show [high/low] *topical overlap* on SDG X," never simply "alignment." This is not a weakness — topical overlap is exactly the right first diagnostic.
+
+---
+
 ## Core Research Question
 
-> To what extent does academic AI-for-sustainability research **align** with sustainability policy priorities — and where do the gaps lie?
+> To what extent does academic AI-for-sustainability research show *topical overlap* with sustainability policy priorities — and where do the gaps lie?
+
+---
+
+## Positioning Statement (how to describe our contribution precisely)
+
+We are advancing measurement from **Level 1 to Level 2** of a three-level alignment hierarchy:
+
+| Level | What it measures | Approach | Who does it |
+|-------|-----------------|----------|-------------|
+| 1 — Lexical | Same keywords/terms for an SDG | Keyword dictionaries, bibliometrics | Most prior work (Armitage 2020, Singh 2023) |
+| 2 — Topical | Same subject areas semantically | Embedding similarity, centroids | **This study** |
+| 3 — Operational | Same approach to the problem | Requires structured comparison of proposed actions | Toney et al. (2024) approximates this |
+
+Our within-SDG semantic gap analysis (H6–H10) approximates Level 3 without claiming to reach it. This framing should appear in the Introduction ("we advance beyond keyword mapping"), Methodology ("we measure topical alignment"), and Discussion ("even topical overlap may mask operational divergence, per Toney et al. 2024").
+
+---
+
+## Corpus Concentration Asymmetry (methodological note)
+
+Research corpus: 94 papers from 94 independent authors → high diversity of perspectives
+Policy corpus: 253 chunks from 2 documents from 2 authoring teams → high autocorrelation
+
+Implication: Policy SDG profile reflects 2 editorial decisions amplified across 253 chunks. A document that heavily emphasises SDG 9 produces dozens of SDG-9 chunks. This can inflate apparent policy emphasis on certain SDGs.
+
+**Required mitigations:**
+- Report per-document profiles (PARIS21 vs UN AI Strategy) alongside combined figures
+- When interpreting coverage gaps, weight by document not chunk count
+- Consistently frame as "in these two UN documents" not "in policy discourse"
 
 ---
 
@@ -89,6 +133,10 @@ Policy chunks (253, cleaned)          ──┤── Sentence-BERT embeddings
 - [ ] `code/semantic_gap.py` — per-SDG: compute intra-SDG cosine similarity between research cluster and policy cluster
 - [ ] `code/topic_model.py` — optional: topic modeling within high-scoring SDG clusters to surface theme pairs
 - [ ] `code/kaggle_context.py` — join SDG Index scores with gap scores; correlation analysis
+
+- [ ] `code/alignment_score.py` — add **bidirectional scoring**: also build research-side centroids (per inferred SDG) and score policy chunks against them (needed for H26)
+- [ ] `code/coverage_semantic_interaction.py` — correlate coverage gap magnitude vs semantic gap magnitude per SDG (needed for H25 — the key structural finding)
+- [ ] OSDG circularity check: after scoring, compare mean alignment scores for research vs policy to detect systematic calibration bias (see A15)
 
 ⏸ **Analysis parked as of 2026-04-05 — focus shifted to literature review.**
 

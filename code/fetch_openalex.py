@@ -1,12 +1,11 @@
 """
 Fetch academic papers from OpenAlex API on AI + Sustainable Development.
 
-Uses cursor-based pagination to retrieve papers matching:
-- Concepts: "sustainable development" AND "artificial intelligence"
+Runs multiple search queries, paginates fully, deduplicates by openalex_id.
 - Year range: 2018-2025
 - Saves: title, abstract, DOI, year, concepts, cited-by-count
 
-Output: data/openalex/papers.jsonl (one JSON per line)
+Output: data/openalex/papers.jsonl (one JSON per line, deduplicated)
         data/openalex/metadata.json (fetch metadata)
 """
 
@@ -28,13 +27,13 @@ METADATA_FILE = OUTPUT_DIR / "metadata.json"
 # User email for polite pool (faster rate limits)
 USER_EMAIL = "dissertation@example.com"
 
-# Query parameters
-QUERY_PARAMS = {
-    "search": "artificial intelligence sustainable development",
-    "sort": "publication_year:desc",
-    "per-page": 100,
-    "mailto": USER_EMAIL,
-}
+# Multiple queries to diversify the corpus
+QUERIES = [
+    "artificial intelligence sustainable development",
+    "machine learning sustainable development goals",
+    "deep learning sustainability",
+    "artificial intelligence SDG",
+]
 
 YEAR_FILTER = "publication_year:>2017,publication_year:<2026"
 
@@ -59,20 +58,24 @@ def reconstruct_abstract(abstract_inverted_index: dict) -> str:
     return " ".join(filter(None, words))
 
 
-def fetch_papers(cursor: str = None) -> Generator[tuple, None, None]:
+def fetch_papers(query: str) -> Generator[dict, None, None]:
     """
-    Generator to fetch papers with cursor-based pagination.
-    Yields: (paper_data, next_cursor)
+    Generator to fetch all papers for a given query string using cursor pagination.
+    Yields one paper dict at a time.
     """
-    params = QUERY_PARAMS.copy()
-    params["filter"] = YEAR_FILTER
+    params = {
+        "search": query,
+        "sort": "publication_year:desc",
+        "per-page": 200,
+        "mailto": USER_EMAIL,
+        "filter": YEAR_FILTER,
+        "cursor": "*",
+    }
 
-    if cursor:
-        params["cursor"] = cursor
-
+    page = 0
     while True:
-        print(f"Fetching page (cursor: {cursor or 'initial'})...")
-        response = requests.get(OPENALEX_BASE_URL, params=params, timeout=10)
+        page += 1
+        response = requests.get(OPENALEX_BASE_URL, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
 
@@ -82,22 +85,23 @@ def fetch_papers(cursor: str = None) -> Generator[tuple, None, None]:
         for paper in results:
             yield paper
 
-        # Check for next page
         next_cursor = meta.get("next_cursor")
         if not next_cursor or not results:
             break
 
-        cursor = next_cursor
-        params["cursor"] = cursor
+        params["cursor"] = next_cursor
 
 
-def save_paper(paper: dict, file_handle) -> None:
-    """Extract and save relevant fields from a paper record."""
+def extract_paper(paper: dict) -> dict:
+    """Extract and return relevant fields from a raw OpenAlex paper record."""
     abstract_text = reconstruct_abstract(
         paper.get("abstract_inverted_index", {})
     )
+    # Fall back to plain abstract field if inverted index is absent
+    if not abstract_text:
+        abstract_text = paper.get("abstract", "") or ""
 
-    record = {
+    return {
         "openalex_id": paper.get("id", ""),
         "title": paper.get("title", ""),
         "abstract": abstract_text,
@@ -110,69 +114,75 @@ def save_paper(paper: dict, file_handle) -> None:
                 "display_name": c.get("display_name"),
                 "score": c.get("score")
             }
-            for c in paper.get("concepts", [])[:10]  # Top 10 concepts
+            for c in paper.get("concepts", [])[:10]
         ],
         "author_count": len(paper.get("authorships", [])),
         "source_url": paper.get("primary_location", {}).get("landing_page_url", ""),
     }
 
-    file_handle.write(json.dumps(record) + "\n")
-    return record
-
 
 def main():
-    """Main fetch and save pipeline."""
-    # Create output directory
+    """Main fetch and save pipeline — runs all queries, deduplicates, saves."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"\n{'='*70}")
-    print("OpenAlex Paper Fetcher")
+    print("OpenAlex Paper Fetcher (multi-query, deduplicated)")
     print(f"{'='*70}")
-    print(f"Query: AI + Sustainable Development (2018-2025)")
+    print(f"Queries: {len(QUERIES)}")
+    print(f"Year range: 2018-2025")
     print(f"Output: {PAPERS_FILE}")
     print(f"{'='*70}\n")
 
-    # Count and save papers
-    paper_count = 0
     start_time = datetime.now()
+    seen_ids: set[str] = set()
+    all_records: list[dict] = []
+    query_counts: dict[str, int] = {}
 
-    try:
-        with open(PAPERS_FILE, "w") as f:
-            for paper in tqdm(fetch_papers(), desc="Papers", unit=" papers"):
-                save_paper(paper, f)
-                paper_count += 1
+    for query in QUERIES:
+        print(f"\nQuery: \"{query}\"")
+        count_this_query = 0
+        new_this_query = 0
 
-        elapsed = datetime.now() - start_time
-        file_size_mb = PAPERS_FILE.stat().st_size / (1024 * 1024)
+        for paper in tqdm(fetch_papers(query), desc=f"  Fetching", unit=" papers"):
+            record = extract_paper(paper)
+            count_this_query += 1
+            if record["openalex_id"] and record["openalex_id"] not in seen_ids:
+                seen_ids.add(record["openalex_id"])
+                all_records.append(record)
+                new_this_query += 1
 
-        # Save metadata
-        metadata = {
-            "source": "OpenAlex API",
-            "url": OPENALEX_BASE_URL,
-            "query": {
-                "concepts": ["AI", "Sustainable Development"],
-                "year_range": [2018, 2025],
-            },
-            "fetched_at": start_time.isoformat(),
-            "elapsed_seconds": elapsed.total_seconds(),
-            "total_papers": paper_count,
-            "output_file": str(PAPERS_FILE),
-            "file_size_mb": round(file_size_mb, 2),
-        }
+        query_counts[query] = new_this_query
+        print(f"  → {count_this_query} fetched, {new_this_query} new after dedup")
 
-        with open(METADATA_FILE, "w") as f:
-            json.dump(metadata, f, indent=2)
+    # Write deduplicated JSONL
+    with open(PAPERS_FILE, "w") as f:
+        for record in all_records:
+            f.write(json.dumps(record) + "\n")
 
-        print(f"\n{'='*70}")
-        print(f"✓ Successfully fetched {paper_count} papers")
-        print(f"✓ File size: {file_size_mb:.2f} MB")
-        print(f"✓ Time elapsed: {elapsed.total_seconds():.1f}s")
-        print(f"✓ Metadata saved to {METADATA_FILE}")
-        print(f"{'='*70}\n")
+    elapsed = datetime.now() - start_time
+    file_size_mb = PAPERS_FILE.stat().st_size / (1024 * 1024)
 
-    except Exception as e:
-        print(f"\n✗ Error during fetch: {e}")
-        raise
+    metadata = {
+        "source": "OpenAlex API",
+        "url": OPENALEX_BASE_URL,
+        "queries": QUERIES,
+        "year_range": [2018, 2025],
+        "fetched_at": start_time.isoformat(),
+        "elapsed_seconds": elapsed.total_seconds(),
+        "total_papers": len(all_records),
+        "papers_per_query": query_counts,
+        "output_file": str(PAPERS_FILE),
+        "file_size_mb": round(file_size_mb, 2),
+    }
+
+    with open(METADATA_FILE, "w") as f:
+        json.dump(metadata, f, indent=2)
+
+    print(f"\n{'='*70}")
+    print(f"✓ Total unique papers: {len(all_records)}")
+    print(f"✓ File size: {file_size_mb:.2f} MB")
+    print(f"✓ Time elapsed: {elapsed.total_seconds():.1f}s")
+    print(f"{'='*70}\n")
 
 
 if __name__ == "__main__":
