@@ -1,12 +1,19 @@
 """
-Fetch OSDG Community Dataset from Zenodo.
+Fetch OSDG Community Dataset from Zenodo + examples from GitHub.
 
 The OSDG (Open Sustainable Development Goals) Community Dataset is a public dataset
 of ~42,000 text excerpts validated against the UN SDGs by 1,400+ citizen scientists.
 
-Source: https://zenodo.org/records/11441197
+Sources:
+- Dataset: https://zenodo.org/records/11441197
+- Examples: https://github.com/osdg-ai/osdg-data/tree/main/examples
+
 Output: data/osdg/ (extracted CSV files)
+        data/osdg/examples/ (helpers.py, notebooks)
         data/osdg/metadata.json (fetch metadata)
+
+Run from project root:
+    python code/fetch_osdg.py
 """
 
 import json
@@ -20,8 +27,16 @@ from tqdm import tqdm
 
 # Configuration
 ZENODO_API_URL = "https://zenodo.org/api/records/11441197"
+GITHUB_RAW_BASE = "https://raw.githubusercontent.com/osdg-ai/osdg-data/main/examples"
+GITHUB_REPO_URL = "https://github.com/osdg-ai/osdg-data"
 OUTPUT_DIR = Path("data/osdg")
+EXAMPLES_DIR = OUTPUT_DIR / "examples"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
+
+EXAMPLES_FILES = [
+    ("helpers.py", "Python utilities for SDG classification"),
+    ("osdg-cd-example-classifier-sklearn.ipynb", "Sklearn classification example notebook"),
+]
 
 
 def get_download_url() -> Optional[str]:
@@ -93,6 +108,53 @@ def extract_archive(archive_path: Path, extract_to: Path) -> list:
     return extracted_files
 
 
+def download_examples() -> list[dict]:
+    """Download example files from GitHub repo."""
+    print("\nFetching examples from GitHub...")
+    EXAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    for filename, description in EXAMPLES_FILES:
+        output_path = EXAMPLES_DIR / filename
+        url = f"{GITHUB_RAW_BASE}/{filename}"
+
+        if output_path.exists():
+            size_kb = output_path.stat().st_size / 1024
+            print(f"  {filename} already exists ({size_kb:.1f} KB)")
+            results.append({
+                "filename": filename,
+                "description": description,
+                "path": str(output_path.relative_to(OUTPUT_DIR)),
+                "status": "already_exists",
+                "size_kb": round(size_kb, 1),
+            })
+            continue
+
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            output_path.write_bytes(response.content)
+            size_kb = output_path.stat().st_size / 1024
+            print(f"  Downloaded {filename} ({size_kb:.1f} KB)")
+            results.append({
+                "filename": filename,
+                "description": description,
+                "path": str(output_path.relative_to(OUTPUT_DIR)),
+                "status": "success",
+                "size_kb": round(size_kb, 1),
+            })
+        except requests.RequestException as e:
+            print(f"  Failed to download {filename}: {e}")
+            results.append({
+                "filename": filename,
+                "description": description,
+                "status": "error",
+                "error": str(e),
+            })
+
+    return results
+
+
 def main():
     """Main fetch and extract pipeline."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -100,7 +162,8 @@ def main():
     print(f"\n{'='*70}")
     print("OSDG Community Dataset Fetcher")
     print(f"{'='*70}")
-    print(f"Source: {ZENODO_API_URL}")
+    print(f"Zenodo: https://zenodo.org/records/11441197")
+    print(f"GitHub: {GITHUB_REPO_URL}")
     print(f"Output: {OUTPUT_DIR}")
     print(f"{'='*70}\n")
 
@@ -138,33 +201,44 @@ def main():
         elapsed = datetime.now() - start_time
         total_size_mb = sum(f.stat().st_size for f in extracted) / (1024 * 1024)
 
+        # Download examples from GitHub
+        examples_results = download_examples()
+
+        elapsed = datetime.now() - start_time
+
         # Save metadata
         metadata = {
             "source": "Zenodo - OSDG Community Dataset",
             "zenodo_url": "https://zenodo.org/records/11441197",
+            "github_url": GITHUB_REPO_URL,
             "download_url": download_url,
             "fetched_at": start_time.isoformat(),
             "elapsed_seconds": elapsed.total_seconds(),
-            "extracted_files": [str(f.relative_to(OUTPUT_DIR)) for f in extracted],
+            "dataset_files": [str(f.relative_to(OUTPUT_DIR)) for f in extracted],
             "csv_count": len(csv_files),
             "estimated_total_records": total_records,
-            "total_size_mb": round(total_size_mb, 2),
+            "dataset_size_mb": round(total_size_mb, 2),
+            "examples": examples_results,
         }
 
         with open(METADATA_FILE, "w") as f:
             json.dump(metadata, f, indent=2)
 
+        success_examples = sum(1 for r in examples_results if r["status"] == "success")
+        existing_examples = sum(1 for r in examples_results if r["status"] == "already_exists")
+
         print(f"\n{'='*70}")
-        print(f"✓ Successfully downloaded OSDG dataset")
-        print(f"✓ CSV files: {len(csv_files)}")
-        print(f"✓ Estimated records: {total_records:,}")
-        print(f"✓ Total size: {total_size_mb:.2f} MB")
-        print(f"✓ Time elapsed: {elapsed.total_seconds():.1f}s")
-        print(f"✓ Metadata saved to {METADATA_FILE}")
+        print(f"Successfully downloaded OSDG dataset")
+        print(f"  CSV files: {len(csv_files)}")
+        print(f"  Estimated records: {total_records:,}")
+        print(f"  Dataset size: {total_size_mb:.2f} MB")
+        print(f"  Examples: {success_examples} downloaded, {existing_examples} already existed")
+        print(f"  Time elapsed: {elapsed.total_seconds():.1f}s")
+        print(f"  Metadata: {METADATA_FILE}")
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"\n✗ Error during fetch: {e}")
+        print(f"\nError during fetch: {e}")
         raise
 
 
