@@ -2,7 +2,7 @@
 Fetch academic papers from OpenAlex API on AI + Sustainable Development.
 
 Uses OpenAlex's native SDG classification combined with AI/ML text search.
-Fetches sequentially, saves incrementally every 200 papers.
+Fetches sequentially, saves incrementally every K new papers.
 Safe to interrupt and resume — seen IDs are persisted.
 
 Output:
@@ -27,8 +27,8 @@ METADATA_FILE = OUTPUT_DIR / "metadata.json"
 SEEN_IDS_FILE = OUTPUT_DIR / "seen_ids.json"
 USER_EMAIL = "dissertation@example.com"
 SDG_BASE = "https://metadata.un.org/sdg"
-FLUSH_EVERY = 200
-REQUEST_DELAY = 0.5
+SAVE_EVERY = 100
+REQUEST_DELAY = 0.1
 
 AI_TERMS = [
     "machine learning",
@@ -96,37 +96,6 @@ def save_seen_ids(seen_ids: set[str]) -> None:
         json.dump(sorted(seen_ids), f)
 
 
-def fetch_one_query(term: str, filter_parts: list[str]) -> list[dict]:
-    params = [
-        ("search", term),
-        ("per-page", "200"),
-        ("mailto", USER_EMAIL),
-        ("filter", ",".join(filter_parts)),
-        ("cursor", "*"),
-    ]
-    papers = []
-    page_num = 0
-    while True:
-        page_num += 1
-        response = requests.get(OPENALEX_BASE_URL, params=params, timeout=60)
-        if response.status_code == 429:
-            print(f"    Page {page_num}: rate limited, waiting 10s...", flush=True)
-            time.sleep(10)
-            continue
-        response.raise_for_status()
-        data = response.json()
-        results = data.get("results", [])
-        papers.extend(results)
-        print(f"    Page {page_num}: {len(papers)} papers fetched", flush=True)
-        meta = data.get("meta", {})
-        next_cursor = meta.get("next_cursor")
-        if not next_cursor or not results:
-            break
-        params[-1] = ("cursor", next_cursor)
-        time.sleep(REQUEST_DELAY)
-    return papers
-
-
 def papers_file(sdg: int) -> Path:
     return OUTPUT_DIR / f"papers_sdg{sdg:02d}.jsonl"
 
@@ -146,7 +115,7 @@ def main() -> None:
     print("OpenAlex Fetcher — AI/ML for SDGs", flush=True)
     print(f"{'='*60}", flush=True)
     print(f"Queries: {len(QUERIES)} (17 SDGs × 4 AI terms), sequential", flush=True)
-    print(f"Flush: every {FLUSH_EVERY} papers", flush=True)
+    print(f"Save: every {SAVE_EVERY} new papers", flush=True)
     print(f"{'='*60}\n", flush=True)
 
     start_time = datetime.now()
@@ -165,45 +134,73 @@ def main() -> None:
         out_path = papers_file(sdg)
 
         print(f"[{q_idx}/{len(QUERIES)}] {desc}...", flush=True)
-        raw_papers = fetch_one_query(q["term"], q["filter_parts"])
-        print(f"  Got {len(raw_papers)} raw papers", flush=True)
 
+        params = [
+            ("search", q["term"]),
+            ("per-page", "200"),
+            ("mailto", USER_EMAIL),
+            ("filter", ",".join(q["filter_parts"])),
+            ("cursor", "*"),
+        ]
+
+        page_num = 0
+        raw_total = 0
         local_new = 0
         buffer = []
 
-        for raw in raw_papers:
-            record = extract_paper(raw)
-            if not record["openalex_id"]:
+        while True:
+            page_num += 1
+            response = requests.get(OPENALEX_BASE_URL, params=params, timeout=60)
+            if response.status_code == 429:
+                print(f"    Page {page_num}: rate limited, waiting 10s...", flush=True)
+                time.sleep(10)
                 continue
-            if record["openalex_id"] in seen_ids:
-                continue
+            response.raise_for_status()
+            data = response.json()
+            results = data.get("results", [])
+            raw_total += len(results)
 
-            seen_ids.add(record["openalex_id"])
-            total_new += 1
-            local_new += 1
-            sdg_counts[sdg] += 1
-            buffer.append(record)
+            for raw in results:
+                record = extract_paper(raw)
+                if not record["openalex_id"]:
+                    continue
+                if record["openalex_id"] in seen_ids:
+                    continue
+                seen_ids.add(record["openalex_id"])
+                local_new += 1
+                total_new += 1
+                sdg_counts[sdg] += 1
+                buffer.append(record)
 
-            if len(buffer) >= FLUSH_EVERY:
-                with out_path.open("a") as f:
-                    for r in buffer:
-                        f.write(json.dumps(r) + "\n")
-                buffer = []
-                save_seen_ids(seen_ids)
-                print(f"  → {total_new:,} saved", flush=True)
+                if len(buffer) >= SAVE_EVERY:
+                    with out_path.open("a") as f:
+                        for r in buffer:
+                            f.write(json.dumps(r) + "\n")
+                    buffer = []
+                    save_seen_ids(seen_ids)
+                    print(f"    → {total_new:,} saved", flush=True)
+
+            print(f"    Page {page_num}: {raw_total} fetched, {local_new} new, {total_new:,} total", flush=True)
+
+            meta = data.get("meta", {})
+            next_cursor = meta.get("next_cursor")
+            if not next_cursor or not results:
+                break
+            params[-1] = ("cursor", next_cursor)
+            time.sleep(REQUEST_DELAY)
 
         if buffer:
             with out_path.open("a") as f:
                 for r in buffer:
                     f.write(json.dumps(r) + "\n")
             save_seen_ids(seen_ids)
-            print(f"  → {total_new:,} saved", flush=True)
+            print(f"    → {total_new:,} saved (final)", flush=True)
 
         query_results.append({
             "query_index": q_idx,
             "sdg": sdg,
             "term": q["term"],
-            "raw_count": len(raw_papers),
+            "raw_count": raw_total,
             "new_count": local_new,
         })
 
@@ -218,7 +215,7 @@ def main() -> None:
     combined_count = 0
     with combined_path.open("w") as out:
         for sdg in range(1, 18):
-            for pfile in sorted(OUTPUT_DIR.glob(f"papers_sdg{sdg:02d}.jsonl")):
+            for pfile in sorted(OUTPUT_DIR.glob(f"papers_sdg{sgd:02d}.jsonl")):
                 with pfile.open() as inp:
                     for line in inp:
                         if line.strip():
@@ -242,10 +239,10 @@ def main() -> None:
     with METADATA_FILE.open("w") as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"{'='*60}")
-    print(f"Done! {combined_count:,} papers in {elapsed.total_seconds():.0f}s")
-    print(f"Size: {total_size / (1024*1024):.1f} MB")
-    print(f"{'='*60}")
+    print(f"{'='*60}", flush=True)
+    print(f"Done! {combined_count:,} papers in {elapsed.total_seconds():.0f}s", flush=True)
+    print(f"Size: {total_size / (1024*1024):.1f} MB", flush=True)
+    print(f"{'='*60}", flush=True)
 
 
 if __name__ == "__main__":
