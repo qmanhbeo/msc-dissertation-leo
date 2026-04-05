@@ -287,6 +287,39 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 
 ---
 
+## H31–H34: Third Wave Hypotheses — Extended Data Sources (added 2026-04-05)
+
+### H31 — NLP4SG papers show stronger policy topical overlap than the broader AI-for-sustainability corpus
+> **Papers that explicitly target SDGs (NLP4SG, n≈5,000 ACL Anthology papers) will score higher on average against policy-aligned SDG centroids than the broader OpenAlex AI-for-sustainability corpus.**
+
+- Rationale: Intentional SDG framing forces researchers to use more policy-adjacent vocabulary; incidental SDG engagement in the broader OpenAlex corpus may never explicitly invoke SDG language at all
+- **Measured by:** Mean max-SDG alignment score for NLP4SG embeddings vs. OpenAlex paper embeddings; also compare SDG distribution profiles
+- **Implication if confirmed:** Awareness of the SDG framework in research is itself a predictor of research-policy alignment — a finding with direct policy implications (e.g. SDG-aware publication incentives, conference SDG tracks)
+- **Implication if not confirmed:** The SDG label is cosmetic; explicitly SDG-framed papers are not substantively different from the broader field → more damning
+
+### H32 — VNR policy texts (SDGi corpus) over-index on development SDGs; AI policy docs over-index on governance SDGs
+> **SDGi Voluntary National Review texts will show higher proportional emphasis on SDGs 1, 2, 3, and 10 relative to the 13 institutional AI policy documents, which will over-index on SDGs 9, 16, and 17.**
+
+- Rationale: VNRs are countries reporting on progress toward human development goals; AI policy docs are institutions framing AI's governance role — different institutional speech acts with structurally different SDG vocabularies
+- **Measured by:** Per-corpus SDG proportion profiles compared between a SDGi sample and the existing 13-doc policy corpus; visualise as side-by-side bar chart
+- **Implication:** The choice of policy corpus is not neutral — it materially shapes which SDGs appear "prioritised by policy." This should be reported as a substantive finding, not just a limitation. If confirmed, it vindicates treating the two corpora separately (see A23)
+
+### H33 — Within well-researched SDGs, AURORA target-level analysis reveals systematic neglect of equity-related targets
+> **Within SDGs 7 and 13, AI research will cluster on performance/technical targets (e.g. SDG 7.2 renewable energy share, 13.1 resilience modelling) while equity-related targets (7.1 universal access, 13.3 climate education and awareness) will be systematically underrepresented.**
+
+- Rationale: AI methods are more naturally applied to measurable, optimisable targets than to access and equity targets that require social/institutional intervention rather than algorithmic solutions
+- **Measured by:** AURORA target-level alignment scores per target within SDGs 7 and 13; classify each of the 169 targets as technical/optimisation-oriented vs equity/access-oriented; compare average representation
+- **Implication:** The coverage gap operates not just between SDGs but *within* SDGs — a subtler, more novel finding than aggregate SDG-level analysis. Only available via AURORA's 169-target labels. This directly challenges any "SDG 13 is well-researched" claim.
+
+### H34 — Government VNRs from lower-income countries show larger semantic gaps from AI research than high-income country VNRs
+> **SDGi texts from countries in the bottom tercile of GDP per capita will be semantically further from the AI-for-sustainability research corpus than VNRs from high-income countries.**
+
+- Rationale: AI research is predominantly produced in high-income countries; the problems, framings, priorities, and vocabulary of their VNRs will naturally share more with AI research than those from lower-income countries facing different developmental challenges
+- **Measured by:** Mean cosine similarity of SDGi texts to paper embeddings, grouped by country World Bank income classification (requires joining SDGi country metadata with WB income data — available)
+- **Implication if confirmed:** Research-policy semantic gaps are not uniformly distributed globally — they are structurally larger for the countries that most need AI-assisted development progress. This connects the dissertation to the North-South critique of AI governance.
+
+---
+
 ## Notes on Testing
 
 - All hypotheses tested at the level of the full corpus (94 papers, 253 policy chunks)

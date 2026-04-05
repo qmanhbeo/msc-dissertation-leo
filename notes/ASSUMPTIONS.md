@@ -8,9 +8,9 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 
 ## Data Assumptions
 
-### A1 — 6,172 papers are a representative sample of AI-for-sustainability research
-- **Assumption:** Four OpenAlex queries ("artificial intelligence sustainable development", "machine learning sustainable development goals", "deep learning sustainability", "artificial intelligence SDG"; 2018–2025; 2,000 per query cap; deduplicated to 6,172 with abstracts) return papers broadly representative of the field
-- **Risk:** Low-medium. 6,172 is a substantial corpus. Query terms may still miss niche adjacent work (e.g. papers framed around specific SDGs without using "sustainable development" as a term); English-language bias applies
+### A1 — 6,172+ papers are a representative sample of AI-for-sustainability research
+- **Assumption:** Multi-query OpenAlex fetching (68 queries across 17 SDGs × 4 AI terms; 2018–2025; deduplicated) returns papers broadly representative of the AI-for-sustainability field
+- **Risk:** Low-medium. The corpus is substantial and multi-query. Query terms may still miss niche adjacent work (e.g. papers framed around specific SDGs without using "sustainable development" as a term); English-language bias applies
 - **Mitigation:** Corpus concentration is no longer a primary weakness; frame any residual gaps as limitations for future multi-lingual or citation-network-based expansion
 - **Where to address:** Methodology → Data Sources; Discussion → Limitations
 
@@ -137,7 +137,7 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 - **Where to address:** Methodology → Corpus Definition; Discussion → "AI for vs AI in" as an additional gap dimension
 
 ### A18 — Our corpus is representative of the AI-for-sustainability research field
-- **Assumption:** 94 papers from a single OpenAlex query reproduce the SDG distribution patterns found in larger bibliometric studies
+- **Assumption:** 6,172 papers from OpenAlex (multi-query, deduplicated) reproduce the SDG distribution patterns found in larger bibliometric studies
 - **Risk:** Medium-high. Armitage et al. (2020) showed that independent bibliometric approaches can produce different SDG distributions, suggesting method choice matters as much as the underlying reality. Our specific query terms, corpus size, and time window may produce a non-representative sample. If our SDG distribution diverges sharply from Singh et al. (2023) or Nedungadi et al. (2024), this requires explanation
 - **Mitigation:** After running alignment scoring, compare our SDG distribution for the research corpus against findings from established bibliometric studies. Convergence validates; divergence must be explained
 - **Where to address:** Methodology → Data Sources; Discussion → Limitations
@@ -146,14 +146,38 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 - In reality SDGs are highly interdependent (the "SDG interlinkages" literature). Treating them as independent scoring dimensions is a simplification
 - **Where to address:** Discussion → Limitations
 
+### A22 — VNR/VLR texts reflect genuine policy priorities, not performative reporting
+- **Assumption:** Voluntary National Reviews represent actual government priorities for SDG implementation, not just what governments want to signal to UN audiences
+- **Risk:** High. VNRs are self-reported, unaudited, and submitted for international review — there is a structural incentive to report success and use approved UN language regardless of domestic policy reality. A government that does not prioritise SDG 5 may still write extensively about gender equality in its VNR
+- **Mitigation:** Frame SDGi analysis as "government *discourse* on SDG progress" not "government SDG priorities"; treat discourse alignment as the object of study — consistent with the A8 framing already established
+- **Where to address:** Methodology → Data Sources; Discussion → Limitations
+
+### A23 — SDGi VNR texts and institutional AI policy docs should NOT be merged into a single policy corpus
+- **Assumption violated:** VNRs (country progress reports on all 17 SDGs) and AI policy documents (institutional strategies for AI governance) cannot be treated as samples from a shared "policy" population
+- **Risk:** High. These are fundamentally different speech acts: VNRs report on broad development progress using SDG framework language; AI policy docs prescribe AI governance norms. A VNR discussing SDG 3 health outcomes and an EU AI ethics document discussing algorithmic fairness both touch on AI and SDGs but from entirely different institutional positions. Merging them would produce a corpus that represents neither coherently and would make it impossible to interpret SDG profile differences
+- **Mitigation:** Always treat SDGi as a second, independent policy corpus. Run coverage and semantic gap analysis separately for (a) the existing 13 AI/SDG policy docs and (b) a SDGi sample; compare rather than aggregate. Never report a single "policy corpus" SDG profile that mixes the two
+- **Where to address:** Methodology → Data Sources; Results → Policy Corpus Comparison
+
+### A24 — NLP4SG paper-SDG labels can serve as a validity check on cosine-based SDG assignment
+- **Assumption:** NLP4SG papers were labeled by human experts as addressing specific SDGs; comparing these expert labels against our cosine-similarity-derived SDG assignments provides a meaningful external validity check
+- **Risk:** Low-medium. NLP4SG labels may have been assigned based on explicit SDG framing in the paper text (title, keywords) rather than semantic proximity to SDG concepts. A paper mentioning "SDG 4 education" in its abstract may score high on SDG 4 in our system for the right reasons, or simply because it repeats the label verbatim. High agreement may reflect label leakage rather than validation
+- **Mitigation:** Report agreement rate between NLP4SG expert labels and our cosine-derived top-SDG assignment as a second validity metric alongside benchmark validation; note the label-leakage caveat explicitly
+- **Where to address:** Methodology → Validation Strategy
+
+### A25 — AURORA's target-level labels are granular enough to distinguish technical vs equity targets
+- **Assumption:** AURORA DOI-level SDG target labels (169 targets) accurately reflect which specific targets a paper addresses, and that the 169 targets can be meaningfully classified into "technical/optimisation-oriented" vs "equity/access-oriented" groups
+- **Risk:** Medium. AURORA labels were assigned using an automated classifier; target-level precision is harder than SDG-level precision (17 vs 169 classes). The technical/equity classification is an analytical judgment call that must be documented and defended. A misclassified target could reverse the H33 finding
+- **Mitigation:** Restrict AURORA analysis to SDGs 7 and 13 where the technical/equity target split is well-established in the literature; document target classification rationale explicitly in an appendix; treat as an exploratory finding rather than a primary result
+- **Where to address:** Methodology → AURORA Sub-analysis; Discussion → Limitations
+
 ---
 
 ## Summary Table
 
 | ID | Assumption | Risk | Mitigated by |
 |----|-----------|------|--------------|
-| A1 | 94 papers is representative | Medium-high | Acknowledge as limitation |
-| A2 | 2 policy docs represent policy | High | Narrow scope claim |
+| A1 | 6,172+ papers are representative | Low-medium | Multi-query strategy; acknowledge residual gaps |
+| A2 | 13 policy docs represent policy discourse | Medium | Narrow to "international institutional discourse"; flag geographic gaps |
 | A3 | OSDG agreement ≥ 0.5 is reliable | Low-medium | Centroid validation |
 | A4 | English-language only | Medium | Acknowledge as limitation |
 | A5 | SBERT captures SDG semantics | Low-medium | Validate accuracy on benchmark |
@@ -173,3 +197,7 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 | A19 | Unit-of-analysis asymmetry: paper abstracts vs 150-word chunks | **High** | Per-doc profiles; document-weighted comparisons; fixed sample per doc in semantic gap |
 | A20 | High alignment = research responding to policy (not shared blind spot) | High | Name ambiguity explicitly; cannot distinguish with our data |
 | A21 | Our corpus captures AI *for* sustainability, not AI *in* sustainability | Medium | Check which policy chunks score lowest; flag framing gap |
+| A22 | VNR texts reflect genuine policy priorities (not performative) | High | Frame as discourse analysis; consistent with A8 |
+| A23 | SDGi VNRs and AI policy docs must NOT be merged | High | Always treat as separate corpora; compare rather than aggregate |
+| A24 | NLP4SG expert labels serve as external validity check | Low-medium | Report agreement rate; note label-leakage caveat |
+| A25 | AURORA target-level labels distinguish technical vs equity targets | Medium | Restrict to SDGs 7 & 13; document classification rationale; treat as exploratory |
