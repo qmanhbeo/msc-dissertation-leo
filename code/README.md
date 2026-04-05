@@ -19,6 +19,9 @@ python code/fetch_sdgindex.py
 python code/fetch_unsd.py  # UNSD official SDG metadata + reports
 python code/fetch_aurora.py  # AURORA 1.4M DOIs with SDG labels
 python code/fetch_sdg_news.py  # IISD SDG news articles
+python code/fetch_ungdc.py  # UN General Debate Corpus
+python code/fetch_nlp4sg.py  # NLP papers mapped to SDGs
+python code/fetch_un_ga.py  # UN General Assembly data
 python code/fetch_kaggle.py  # (optional, requires Kaggle credentials)
 ```
 
@@ -198,7 +201,88 @@ Downloads the AURORA SDG Dataset: 1.4 million research article DOIs labeled at S
 
 ---
 
-### 10. `fetch_kaggle.py`
+### 10. `fetch_ungdc.py`
+**Source:** [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/0TJX8Y) (free, no authentication required)
+
+Downloads the UN General Debate Corpus (UNGDC): speeches from UN General Assembly General Debates 1946-2025.
+
+**Output:**
+- `data/ungdc/TXT/` — Extracted corpus (11,141 speeches organized by session/year)
+- `data/ungdc/Speakers_by_session.xlsx` — Speaker metadata
+- `data/ungdc/README.txt` — Documentation
+- `data/ungdc/metadata.json` — fetch metadata
+
+**Dataset stats:**
+- 11,141 speeches from 202 countries
+- Period: 1946-2025 (80 sessions)
+- Format: Plain text (UTF-8), named by ISO country code, session, year (e.g., USA_75_2020.txt)
+- Source: UN Library transcripts + audio transcription for 2025
+
+**Requirements:** `requests`, `pandas`, `tqdm` (optional)
+
+**Time:** ~15 seconds | **Size:** ~71 MB compressed
+
+**Citation:**
+> Jankin, S., Baturo, A., & Dasandi, N. (2025). Words to unite nations: The complete United Nations General Debate Corpus, 1946–present. Journal of Peace Research, 62(4), 1339-1351. https://doi.org/10.1177/00223433241275335
+
+**Use:** Government policy discourse — track how countries' stated positions on global issues evolve. Can cross-reference with SDG coverage in UNGD to measure policy attention to different goals over time.
+
+---
+
+### 11. `fetch_nlp4sg.py`
+**Source:** [Hugging Face: feradauto/NLP4SGPapers](https://huggingface.co/datasets/feradauto/NLP4SGPapers) (free)
+
+Maps NLP papers to SDGs from the ACL Anthology — directly relevant to your dissertation!
+
+**Output:**
+- `data/nlp4sg/train.json` — Training split (2,500 rows)
+- `data/nlp4sg/validation.json` — Validation split (500 rows)
+- `data/nlp4sg/test.json` — Test split (2,000 rows)
+- `data/nlp4sg/metadata.json` — fetch metadata
+
+**Dataset stats:**
+- 5,000 NLP papers from ACL Anthology
+- Columns: `id`, `url`, `title`, `abstract`, `label_nlp4sg`, `task`, `method`, `goal1-3`, `sdg1-sdg17` (bool)
+- Train: 2,500 | Val: 500 | Test: 2,000
+
+**Requirements:** `requests`, `pandas` (optional)
+
+**Time:** ~2 seconds | **Size:** ~7 MB
+
+**Citation:**
+> Fernandez, F., et al. (2023). NLP4SGPapers: A Scientific Dataset for Identifying NLP Papers Addressing Social Problems and UN SDGs. Findings of EMNLP 2023. https://aclanthology.org/2023.findings-emnlp.31/
+
+**Use:** **Goldmine for your dissertation** — directly maps NLP papers to SDGs. Compare AI/sustainability research coverage with policy priorities. Website: https://nlp4sg.vercel.app
+
+---
+
+### 12. `fetch_un_ga.py`
+**Source:** [UN Digital Library](https://digitallibrary.un.org/) (free, no authentication required)
+
+Downloads UN General Assembly resolutions and voting data from the Dag Hammarskjöld Library.
+
+**Output:**
+- `data/un_ga/ga_outcomes.csv` — Resolution outcomes with subjects, vote counts
+- `data/un_ga/ga_voting.csv` — Country-level voting data
+- `data/un_ga/metadata.json` — fetch metadata
+
+**Dataset stats:**
+- GA Outcomes: 20,761 resolutions (1946-2025), 7.4 MB
+- GA Voting: 947,434 votes (country-level), 364 MB
+- Columns: resolution, date, session, subjects, vote counts, member state votes
+
+**Requirements:** `requests`, `pandas`, `tqdm` (optional)
+
+**Time:** ~20 seconds | **Size:** ~372 MB
+
+**Citation:**
+> United Nations Dag Hammarskjöld Library. UN General Assembly resolutions and voting data, 1946-2025. https://digitallibrary.un.org/
+
+**Use:** Track UN policy attention to SDGs over time. Correlate with UNGDC speeches and AURORA research output for alignment analysis.
+
+---
+
+### 13. `fetch_kaggle.py`
 **Source:** [Kaggle Dataset](https://www.kaggle.com/datasets/sazidthe1/sustainable-development-report) (free dataset, requires Kaggle account)
 
 Downloads Sustainable Development Report data (SDG progress metrics).
@@ -350,6 +434,20 @@ data/
 │   └── metadata.json
 ├── sdg_news/          # IISD SDG Knowledge Hub news (~42 MB)
 │   ├── sdg_knowledge_hub.csv
+│   └── metadata.json
+├── ungdc/             # UN General Debate Corpus (~71 MB)
+│   ├── TXT/                        # 11,141 speeches by session
+│   ├── Speakers_by_session.xlsx
+│   ├── README.txt
+│   └── metadata.json
+├── nlp4sg/           # NLP papers mapped to SDGs (~7 MB)
+│   ├── train.json
+│   ├── validation.json
+│   ├── test.json
+│   └── metadata.json
+├── un_ga/            # UN General Assembly data (~372 MB)
+│   ├── ga_outcomes.csv       # Resolution outcomes (20k resolutions)
+│   ├── ga_voting.csv        # Country voting data (947k votes)
 │   └── metadata.json
 └── kaggle/            # SDG progress metrics (~10-20 MB, optional)
     ├── *.csv
