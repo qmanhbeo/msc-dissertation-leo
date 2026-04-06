@@ -25,6 +25,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 import requests
 
+
+class AllKeysExhaustedError(Exception):
+    """Raised when all API keys have been rate-limited after max retries."""
+    pass
+
+
 load_dotenv()
 
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
@@ -49,6 +55,7 @@ RATE_LIMIT_USER_EMAIL_2 = require_env("OPENALEX_RATE_LIMIT_MAILTO_2")
 RATE_LIMIT_API_KEY_2 = require_env("OPENALEX_RATE_LIMIT_API_KEY_2")
 RATE_LIMIT_USER_EMAIL_3 = require_env("OPENALEX_RATE_LIMIT_MAILTO_3")
 RATE_LIMIT_API_KEY_3 = require_env("OPENALEX_RATE_LIMIT_API_KEY_3")
+MAX_RETRIES = 10
 SDG_BASE = "https://metadata.un.org/sdg"
 SAVE_EVERY = 1000
 PER_PAGE = 200
@@ -192,13 +199,26 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
     raw_total = 0
     local_new = 0
     buffer = []
+    consecutive_failures = 0
 
     while True:
         page += 1
-        resp = requests.get(OPENALEX_BASE_URL, params=params, timeout=30)
+        try:
+            resp = requests.get(OPENALEX_BASE_URL, params=params, timeout=30)
+        except requests.RequestException as e:
+            consecutive_failures += 1
+            print(f"    [{desc}] p{page}: request failed ({e}), retry {consecutive_failures}/{MAX_RETRIES}", flush=True)
+            if consecutive_failures >= MAX_RETRIES:
+                raise AllKeysExhaustedError(f"Too many failed requests ({MAX_RETRIES}), all keys likely exhausted")
+            time.sleep(3)
+            page -= 1
+            continue
 
         if resp.status_code == 429:
-            print(f"    [{desc}] p{page}: rate limited, waiting 3...", flush=True)
+            consecutive_failures += 1
+            print(f"    [{desc}] p{page}: rate limited, retry {consecutive_failures}/{MAX_RETRIES}", flush=True)
+            if consecutive_failures >= MAX_RETRIES:
+                raise AllKeysExhaustedError(f"Too many rate limits ({MAX_RETRIES}), all keys likely exhausted")
             time.sleep(3)
             if credential_index < len(credential_sets) - 1:
                 credential_index += 1
@@ -206,6 +226,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
             page -= 1  # retry same page
             continue
 
+        consecutive_failures = 0  # Reset on success
         resp.raise_for_status()
         data = resp.json()
         results = data.get("results", [])
@@ -273,7 +294,16 @@ def main() -> None:
 
     for i, q in enumerate(QUERIES, 1):
         print(f"[{i}/{len(QUERIES)}] {q['description']}", flush=True)
-        result = fetch_query(q, seen_ids, progress)
+        try:
+            result = fetch_query(q, seen_ids, progress)
+        except AllKeysExhaustedError as e:
+            print(f"\n{'='*60}", flush=True)
+            print(f"STOPPED: {e}", flush=True)
+            print(f"Progress saved. Run again to resume from where we stopped.", flush=True)
+            print(f"{'='*60}", flush=True)
+            save_seen_ids(seen_ids)
+            save_progress(progress)
+            return
         total_new += result["new"]
         all_results.append({"query": q["description"], **result})
 
