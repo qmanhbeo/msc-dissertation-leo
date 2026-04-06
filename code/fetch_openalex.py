@@ -17,22 +17,40 @@ Run from project root:
 """
 
 import json
+import os
 import time
 from datetime import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
 import requests
+
+load_dotenv()
 
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
 OUTPUT_DIR = Path("data/openalex")
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 SEEN_IDS_FILE = OUTPUT_DIR / "seen_ids.json"
 PROGRESS_FILE = OUTPUT_DIR / "progress.json"
-USER_EMAIL = "dissertation@example.com"
+
+
+def require_env(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+
+USER_EMAIL = require_env("OPENALEX_MAILTO")
+API_KEY = require_env("OPENALEX_API_KEY")
+RATE_LIMIT_USER_EMAIL = require_env("OPENALEX_RATE_LIMIT_MAILTO")
+RATE_LIMIT_API_KEY = require_env("OPENALEX_RATE_LIMIT_API_KEY")
+RATE_LIMIT_USER_EMAIL_2 = require_env("OPENALEX_RATE_LIMIT_MAILTO_2")
+RATE_LIMIT_API_KEY_2 = require_env("OPENALEX_RATE_LIMIT_API_KEY_2")
 SDG_BASE = "https://metadata.un.org/sdg"
 SAVE_EVERY = 1000
 PER_PAGE = 200
-REQUEST_DELAY = 0.1
+REQUEST_DELAY = 1.0
 
 AI_TERMS = [
     "machine learning",
@@ -145,13 +163,27 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
     start_page = qprog.get("page", 0)
     cursor = qprog.get("cursor", "*")
 
-    params = {
-        "search": q["term"],
-        "per-page": str(PER_PAGE),
-        "mailto": USER_EMAIL,
-        "filter": ",".join(q["filter_parts"]),
-        "cursor": cursor,
-    }
+    credential_sets = [
+        (USER_EMAIL, API_KEY),
+        (RATE_LIMIT_USER_EMAIL, RATE_LIMIT_API_KEY),
+        (RATE_LIMIT_USER_EMAIL_2, RATE_LIMIT_API_KEY_2),
+    ]
+    credential_index = 0
+
+    def build_params(current_cursor: str) -> dict:
+        email, api_key = credential_sets[credential_index]
+        params = {
+            "search": q["term"],
+            "per-page": str(PER_PAGE),
+            "mailto": email,
+            "filter": ",".join(q["filter_parts"]),
+            "cursor": current_cursor,
+        }
+        if api_key:
+            params["api_key"] = api_key
+        return params
+
+    params = build_params(cursor)
 
     page = start_page
     raw_total = 0
@@ -163,8 +195,11 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
         resp = requests.get(OPENALEX_BASE_URL, params=params, timeout=60)
 
         if resp.status_code == 429:
-            print(f"    [{desc}] p{page}: rate limited, waiting 10s...", flush=True)
-            time.sleep(10)
+            print(f"    [{desc}] p{page}: rate limited, waiting 60s...", flush=True)
+            time.sleep(60)
+            if credential_index < len(credential_sets) - 1:
+                credential_index += 1
+            params = build_params(cursor)
             page -= 1  # retry same page
             continue
 
