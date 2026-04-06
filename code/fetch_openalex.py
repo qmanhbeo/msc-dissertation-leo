@@ -47,6 +47,8 @@ RATE_LIMIT_USER_EMAIL = require_env("OPENALEX_RATE_LIMIT_MAILTO")
 RATE_LIMIT_API_KEY = require_env("OPENALEX_RATE_LIMIT_API_KEY")
 RATE_LIMIT_USER_EMAIL_2 = require_env("OPENALEX_RATE_LIMIT_MAILTO_2")
 RATE_LIMIT_API_KEY_2 = require_env("OPENALEX_RATE_LIMIT_API_KEY_2")
+RATE_LIMIT_USER_EMAIL_3 = require_env("OPENALEX_RATE_LIMIT_MAILTO_3")
+RATE_LIMIT_API_KEY_3 = require_env("OPENALEX_RATE_LIMIT_API_KEY_3")
 SDG_BASE = "https://metadata.un.org/sdg"
 SAVE_EVERY = 1000
 PER_PAGE = 200
@@ -167,6 +169,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
         (USER_EMAIL, API_KEY),
         (RATE_LIMIT_USER_EMAIL, RATE_LIMIT_API_KEY),
         (RATE_LIMIT_USER_EMAIL_2, RATE_LIMIT_API_KEY_2),
+        (RATE_LIMIT_USER_EMAIL_3, RATE_LIMIT_API_KEY_3),
     ]
     credential_index = 0
 
@@ -192,11 +195,11 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
     while True:
         page += 1
-        resp = requests.get(OPENALEX_BASE_URL, params=params, timeout=60)
+        resp = requests.get(OPENALEX_BASE_URL, params=params, timeout=30)
 
         if resp.status_code == 429:
-            print(f"    [{desc}] p{page}: rate limited, waiting 60s...", flush=True)
-            time.sleep(60)
+            print(f"    [{desc}] p{page}: rate limited, waiting 3...", flush=True)
+            time.sleep(3)
             if credential_index < len(credential_sets) - 1:
                 credential_index += 1
             params = build_params(cursor)
