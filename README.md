@@ -346,52 +346,90 @@ The **Wellbeing Department** offers support for personal circumstances affecting
 
 ## Current Status
 
-*Last updated: 2026-04-05*
+*Last updated: 2026-04-09*
 
 ### ✅ Done
 
 | Area | Output |
 |------|--------|
 | Topic selection | Topic 2: AI–Sustainability Research–Policy Alignment |
-| Data fetching | All sources fetched; corpus expanded this session |
 | Preprocessing — papers | `data/openalex/papers_clean.jsonl` (**6,172 papers**, 4 queries) |
-| Preprocessing — policy | `data/un_sdg/policy_chunks.jsonl` (**1,211 chunks from 13 docs**) |
 | Preprocessing — OSDG | `data/osdg/osdg_clean.jsonl` (30,534 rows, agreement ≥ 0.5) |
 | Preprocessing — benchmark | `data/sdg_benchmark/benchmark_clean.jsonl` (616 rows) |
-| Embeddings | `data/embeddings/*.npy` — papers (6172,384), policy (1211,384), osdg (30534,384), benchmark (616,384) |
+| Embeddings — papers/osdg/benchmark | `data/embeddings/papers.npy` (6172,384), `osdg.npy` (30534,384), `benchmark.npy` (616,384) |
 | Methodology design | `notes/METHODOLOGY_DECISIONS.md` — pipeline, gap types, validation, unit-of-analysis asymmetry |
-| Assumptions | `notes/ASSUMPTIONS.md` — 21 assumptions with risk levels; A19 updated with unit-of-analysis asymmetry |
+| Assumptions | `notes/ASSUMPTIONS.md` — 21 assumptions with risk levels |
 | Hypotheses | `notes/HYPOTHESES.md` — 30 hypotheses across 5 categories |
-| Literature review | `notes/LIT_REVIEW_INSIGHTS.md` — ~1,684 papers synthesised; second-wave insights A–D |
+| Literature review | `notes/LIT_REVIEW_INSIGHTS.md` — ~1,684 papers synthesised |
+| **Policy corpus expansion** | Expanded from 1,211 → **~40,000+ chunks** (see below) |
 
-### Policy Corpus (13 documents)
+### Policy Corpus — Sources
 
-| Document | Institution | Type | Year |
-|----------|-------------|------|------|
-| UN AI Strategy Resource Guide | UN | AI governance | 2021 |
-| PARIS21 AI for SDGs | PARIS21/UN | AI for statistics | 2024 |
-| UN SDG Progress Report | UN Statistics Division | SDG progress | 2023 |
-| UN AI Advisory Body Final Report | UN AI Advisory Body | AI governance | 2024 |
-| IPCC AR6 Summary for Policymakers | IPCC | Climate policy | 2023 |
-| UK National AI Strategy | UK Government | National AI strategy | 2021 |
-| Singapore National AI Strategy 2.0 | Singapore MDDI | National AI strategy | 2023 |
-| Germany AI Strategy Update | German Federal Government | National AI strategy | 2020 |
-| African Union Continental AI Strategy | African Union | Regional AI framework | 2024 |
-| UNESCO Recommendation on Ethics of AI | UNESCO | AI ethics | 2021 |
-| EU Ethics Guidelines for Trustworthy AI | EU HLEG | AI ethics | 2019 |
-| OECD AI Recommendation | OECD | AI principles | 2019 |
-| US Blueprint for AI Bill of Rights | White House OSTP | National AI policy | 2022 |
+The policy corpus is now assembled from three sources and merged into a single file:
 
-### 📋 Remaining Analysis (parked — resume when ready)
+**Final output:** `data/policy_all/policy_chunks_extended.jsonl` (~39,604 chunks, median 164 words)
 
-Run in order:
+| Source | Chunks | What |
+|--------|--------|------|
+| Curated institutional docs (`data/un_sdg/policy_chunks.jsonl`) | ~1,191 | 13 AI/SDG policy docs — UN, IPCC, national AI strategies |
+| SDGi corpus (`data/sdgi_corpus/sdgi_chunks.jsonl`) | ~31,941 | VNR/VLR national govt reports from 40+ countries (UNDP) |
+| UNGDC speeches (`data/ungdc_sdg/ungdc_sdg_chunks.jsonl`) | ~6,472 | UN General Debate passages, sessions 70–80 (2015–2024) |
+
+**v3 PDFs fetched (`data/policy_v3/texts/`, 16 documents):**
+
+| Document | Institution | Year |
+|----------|-------------|------|
+| UN SDG Progress Report | UN Statistics Division | 2017–2022, 2024 (7 reports) |
+| EU AI Act | European Union | 2024 |
+| India National AI Strategy | NITI Aayog | 2018 |
+| IPCC AR6 WG2 Summary for Policymakers | IPCC | 2022 |
+| IPCC AR6 WG3 Summary for Policymakers | IPCC | 2022 |
+| Paris Agreement | UNFCCC | 2015 |
+| UN 2030 Agenda for Sustainable Development | United Nations | 2015 |
+| UN Secretary-General Roadmap for Digital Cooperation | UN | 2020 |
+| SDSN Sustainable Development Report | SDSN | 2024, 2025 |
+
+**Original 13 curated docs** (national AI strategies, UN AI Advisory Body, UNESCO, OECD, etc.) remain in `data/un_sdg/` and `data/policy_expanded/`.
+
+### New Scripts (2026-04-09)
+
+| Script | Purpose |
+|--------|---------|
+| `code/integrate_sdgi.py` | Converts SDGi parquet → policy chunks; rechunks long entries to ~150 words |
+| `code/filter_ungdc_sdg.py` | Extracts SDG-relevant paragraphs from UNGDC speeches (sessions 70–80) |
+| `code/fetch_policy_v3.py` | Downloads 50+ policy PDFs; 16/52 succeeded (remainder 404/403/HTML) |
+| `code/build_policy_corpus.py` | Merges all three sources, deduplicates, writes `policy_chunks_extended.jsonl` |
+
+### ⚠️ Immediate Next Steps (resume here)
+
+**Step 0 — Re-run preprocess_policy.py** (picks up v3 texts, now included in TEXT_DIRS):
+```bash
+python code/preprocess_policy.py
+```
+
+**Step 1 — Rebuild merged corpus** (incorporates v3 chunks from step 0):
+```bash
+python code/build_policy_corpus.py
+```
+
+**Step 2 — Re-embed policy corpus** (old `policy.npy` is stale — delete it first):
+```bash
+rm data/embeddings/policy.npy
+python code/embeddings.py
+```
+Output: `data/embeddings/policy.npy` — shape will be (~40,000, 384).
+
+**Step 3 — Optional: retry failed v3 URLs** (36 docs failed due to 404/403/DNS issues in WSL).
+Write `code/fetch_policy_v3b.py` with fixed URLs for: WHO IRIS PDFs, EUR-Lex EU docs, Denmark/Netherlands/Canada AI strategies. Then re-run steps 0–2.
+
+**Step 4 — Begin analysis pipeline** (run in order):
 
 1. `code/sdg_centroids.py` — per-SDG mean embeddings from OSDG; SDG 17 from benchmark
 2. `code/validate_centroids.py` — accuracy + macro-F1 on benchmark; validates measurement instrument
 3. `code/alignment_score.py` — cosine similarity of papers + policy chunks vs all 17 centroids; **bidirectional** (research→policy AND policy→research)
 4. `code/coverage_gap.py` — SDG proportion profiles; **document-weighted** policy scores; per-document breakdown
 5. `code/semantic_gap.py` — intra-SDG cluster similarity; **cap chunks per document** to avoid dominance
-6. `code/coverage_semantic_interaction.py` — correlate coverage gap × semantic gap per SDG (H25 — headline hypothesis)
+6. `code/coverage_semantic_interaction.py` — correlate coverage gap × semantic gap per SDG (H25 — headline)
 7. `code/kaggle_context.py` — join SDG Index scores with gap scores; correlation analysis
 8. `code/topic_model.py` *(optional)* — topic modeling within high-scoring SDG clusters
 9. OSDG circularity diagnostic — compare mean research vs policy alignment scores (A15)
@@ -401,9 +439,10 @@ Run in order:
 | Phase | When | Status |
 |-------|------|--------|
 | Data & preprocessing | Mar–Apr 2026 | ✅ Done |
-| Corpus expansion | Apr 2026 | ✅ Done |
+| Policy corpus expansion | Apr 2026 | ✅ Done (scripts written + v3 fetched) |
+| Policy re-embedding | Apr 2026 | ⏸ Next — steps 0–2 above |
 | Literature review | Apr–May 2026 | ✅ Done (SciSpace synthesis) |
-| Analysis (steps 1–9 above) | May–Jun 2026 | ⏸ Ready to start |
+| Analysis (steps 1–9 above) | May–Jun 2026 | Not started |
 | Visualization | Jun–Jul 2026 | Not started |
 | Writing | Jul–Aug 2026 | Not started |
 | Supervisor feedback deadline | 1 Aug 2026 | — |

@@ -44,7 +44,7 @@ CORPORA = [
     },
     {
         "name": "policy",
-        "input": Path("data/un_sdg/policy_chunks.jsonl"),
+        "input": Path("data/policy_all/policy_chunks_extended.jsonl"),
         "text_field": "text",
         "id_field": "chunk_id",
         "sdg_field": None,

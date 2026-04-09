@@ -30,6 +30,7 @@ from pathlib import Path
 TEXT_DIRS = [
     Path("data/un_sdg/texts"),
     Path("data/policy_expanded/texts"),
+    Path("data/policy_v3/texts"),  # added by fetch_policy_v3.py
 ]
 
 
