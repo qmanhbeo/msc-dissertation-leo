@@ -1,6 +1,6 @@
 # Research Assumptions
 
-Last updated: 2026-04-05
+Last updated: 2026-04-10
 
 Assumptions made (explicitly or implicitly) at each layer of the research. Each entry notes the assumption, its risk level, and what to say about it in the paper.
 
@@ -43,9 +43,15 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 
 ### A6 — Mean embedding (centroid) is a valid SDG representation
 - **Assumption:** Averaging all OSDG embeddings for a given SDG yields a centroid that meaningfully represents "what that SDG is about" in semantic space
-- **Risk:** Medium. If an SDG covers very heterogeneous topics (e.g. SDG 16: Peace, Justice, and Strong Institutions covers rule of law, corruption, violence, institutions — quite different themes), the centroid may be a poor representation of any of them
-- **Mitigation:** Check intra-SDG embedding variance; SDGs with high variance may need sub-cluster treatment; flag in methodology
-- **Where to address:** Methodology → SDG Reference Embeddings
+- **Risk:** Medium — but the risk has two distinct components that must not be conflated:
+  1. **Cohesion** (intra-SDG spread): how tightly the member texts cluster around the centroid. Low cohesion = the centroid is the average of a diffuse cloud; it does not closely represent any individual text. Measured by mean cosine similarity of member vectors to the unit centroid.
+  2. **Discriminability** (inter-centroid separation): how far the centroid is from other SDG centroids. High discriminability = the centroid reliably separates its SDG from others, even if the cluster is internally spread.
+- **Empirical finding from validate_centroids.py (2026-04-10):** These two properties are partially independent.
+  - SDG 16 (Peace, Justice): low cohesion (mean cos = 0.477, flagged) BUT high classification F1 (0.857). The cluster is internally heterogeneous, but governance/institutions language is so lexically distinct from other SDGs that the centroid still discriminates well. A6 risk for SDG 16 is *lower than expected* — the heterogeneity does not impair usefulness.
+  - SDG 8 (Decent Work): low cohesion (mean cos = 0.486, flagged) AND low classification F1 (0.531). The cluster is spread AND overlaps heavily with SDG 1 (poverty) and SDG 10 (inequality). Both A6 risks apply here — centroid is neither representative nor well-separated. SDG 8 findings require the most caution.
+  - SDG 11 (Sustainable Cities): not flagged by cohesion threshold but lowest F1 (0.519). The cluster is moderately tight but overlaps strongly with SDG 9 (innovation) — a discriminability failure that cohesion metrics did not catch.
+- **Revised mitigation:** Cohesion alone is insufficient as the A6 diagnostic. Use per-SDG classification F1 from benchmark validation as the operational risk indicator. SDGs with F1 < 0.55 (SDG 11: 0.519, SDG 8: 0.531, SDG 3: 0.583) warrant explicit caveats in Results. Do not rely solely on the `high_variance_flag` from sdg_centroid_meta.json.
+- **Where to address:** Methodology → SDG Reference Embeddings; Results → Centroid Validation (report the cohesion vs discriminability distinction explicitly)
 
 ### A7 — Cosine similarity is an appropriate alignment measure
 - **Assumption:** Cosine similarity between a text embedding and an SDG centroid is a valid measure of how much that text "belongs to" or "addresses" that SDG
@@ -164,6 +170,16 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 - **Mitigation:** Report agreement rate between NLP4SG expert labels and our cosine-derived top-SDG assignment as a second validity metric alongside benchmark validation; note the label-leakage caveat explicitly
 - **Where to address:** Methodology → Validation Strategy
 
+### A26 — SDG 1, SDG 8, and SDG 10 can be treated as distinguishable in coverage analysis
+- **Assumption:** The three "poverty-work-inequality" SDGs can be meaningfully separated in nearest-centroid assignment
+- **Risk:** High for individual-SDG findings. Centroid similarity: SDG 1 ↔ SDG 10 = 0.887, SDG 8 ↔ SDG 10 = 0.873, SDG 8 ↔ SDG 1 = 0.780. These are the three most collinear centroids in the full set. A paper on labour market inequality will plausibly score highest on any of the three depending on its exact vocabulary, not its actual focus. Per-SDG F1 for these three: SDG 1 = 0.697, SDG 8 = 0.531, SDG 10 = 0.727 — moderate, confirming leakage.
+- **Empirical basis:** Emerged from centroid_similarity_matrix.csv (2026-04-10)
+- **Mitigation:**
+  1. Report individual SDG 1/8/10 coverage scores alongside a combined macro-cluster score (proportion of texts scoring highest on any of the three)
+  2. In Results, lead with the macro-cluster finding; treat individual SDG breakdown as secondary and explicitly note leakage risk
+  3. Never report a strong individual claim (e.g. "SDG 10 is significantly more neglected than SDG 1") without acknowledging classifier leakage between them
+- **Where to address:** Methodology → SDG Reference Embeddings (note cluster collinearity); Results → Coverage Gap (present macro-cluster alongside individual scores)
+
 ### A25 — AURORA's target-level labels are granular enough to distinguish technical vs equity targets
 - **Assumption:** AURORA DOI-level SDG target labels (169 targets) accurately reflect which specific targets a paper addresses, and that the 169 targets can be meaningfully classified into "technical/optimisation-oriented" vs "equity/access-oriented" groups
 - **Risk:** Medium. AURORA labels were assigned using an automated classifier; target-level precision is harder than SDG-level precision (17 vs 169 classes). The technical/equity classification is an analytical judgment call that must be documented and defended. A misclassified target could reverse the H33 finding
@@ -181,7 +197,7 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 | A3 | OSDG agreement ≥ 0.5 is reliable | Low-medium | Centroid validation |
 | A4 | English-language only | Medium | Acknowledge as limitation |
 | A5 | SBERT captures SDG semantics | Low-medium | Validate accuracy on benchmark |
-| A6 | Centroid = valid SDG representation | Medium | Check intra-SDG variance |
+| A6 | Centroid = valid SDG representation | Medium | Use per-SDG F1 (not cohesion alone) as risk indicator; SDG 8/11 require caveats |
 | A7 | Cosine similarity is appropriate | Low | Standard in literature |
 | A8 | Text = priorities | Medium | Frame as discourse analysis |
 | A9 | Coverage gap is meaningful | Medium | Normalise; use relative ranking |
@@ -201,3 +217,4 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 | A23 | SDGi VNRs and AI policy docs must NOT be merged | High | Always treat as separate corpora; compare rather than aggregate |
 | A24 | NLP4SG expert labels serve as external validity check | Low-medium | Report agreement rate; note label-leakage caveat |
 | A25 | AURORA target-level labels distinguish technical vs equity targets | Medium | Restrict to SDGs 7 & 13; document classification rationale; treat as exploratory |
+| A26 | SDG 1, 8, 10 are distinguishable in coverage analysis | **High** | Report as macro-cluster + individual; never claim strong per-SDG differences within this group |

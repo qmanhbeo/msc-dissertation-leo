@@ -1,6 +1,6 @@
 # Research Hypotheses
 
-Last updated: 2026-04-05
+Last updated: 2026-04-10
 
 These hypotheses are stated **before** running alignment analysis to prevent HARKing (Hypothesising After Results are Known). Each is testable with the pipeline outputs. Marked with expected direction and rationale.
 
@@ -320,12 +320,37 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 
 ---
 
+## H35–H36: Hypotheses from Centroid Validation (added 2026-04-10)
+
+These hypotheses emerged directly from the centroid nearest-neighbour structure revealed by `validate_centroids.py` (centroid_similarity_matrix.csv). They are pre-registered before running alignment_score.py.
+
+### H35 — AI research classified as SDG 17 will predominantly address climate/tech partnerships, not global governance
+> **Papers assigned high SDG-17 scores will cluster around technology transfer and climate action mechanisms, not around development finance, multilateralism, or global institutional frameworks.**
+
+- Empirical basis: SDG-17 centroid sits unexpectedly close to SDG-13 (cosine sim = 0.860) and SDG-9 (0.813) in embedding space — far closer than to SDGs about governance/finance (e.g. SDG 16: 0.414)
+- This means "partnerships" language in the training corpus is overwhelmingly framed through climate and technology lenses. Research papers scoring high on SDG 17 will have been selected for that framing, not for multilateralism or financing content
+- **Implication:** Apparent SDG-17 research coverage will be inflated by climate/tech-partnership papers that belong semantically to SDG 13 or SDG 9. The genuine SDG-17 dimension — global governance, development finance, data for development — will be under-counted
+- **Measured by:** After alignment scoring, qualitatively inspect the top-20 papers by SDG-17 score; classify as climate/tech-partnerships vs governance/financing; report proportion
+- **Connects to:** H4 (SDG 17 low in research), H28 (AI governance framing gap)
+
+### H36 — SDG 11 (Sustainable Cities) research coverage will be systematically understated due to classifier leakage into SDG 9
+> **Smart city and urban AI papers will score higher on SDG-9 (Innovation) than SDG-11 (Sustainable Cities), causing SDG-11 to appear under-researched as a measurement artefact.**
+
+- Empirical basis: SDG-11 centroid's nearest neighbours are SDG-9 (0.716) and SDG-17 (0.691); SDG-11 achieved the lowest per-SDG F1 in validation (0.519), and its primary confusion is with SDG-9
+- Urban AI / smart city research uses language of innovation, infrastructure, and technology — vocabulary that is closer to SDG-9's centroid than SDG-11's
+- **Implication:** Any finding that SDG 11 shows a large research gap should be reported as a *lower bound* on coverage; the gap may be partly an artefact of classifier leakage. SDG-9 coverage, conversely, may be *inflated* by urban AI papers
+- **Measured by:** After alignment scoring, examine papers with top SDG-9 scores that also score highly on SDG-11; report the overlap; qualitatively check whether these are urban AI papers
+- **Connects to:** H1 (SDG 9 over-indexed in research), H20 (environmental+innovation cluster dominance)
+
+---
+
 ## Notes on Testing
 
-- All hypotheses tested at the level of the full corpus (94 papers, 253 policy chunks)
-- With 94 papers, many findings will be descriptive rather than statistically significant — acknowledge this
+- All hypotheses tested at the level of the full corpus (6,172 papers, 47,005 policy chunks)
 - Hypotheses H6–H10 (semantic gap) require qualitative inspection of representative texts to confirm interpretation
 - H18 and H19 require splitting by paper metadata (year, citation count) — sample sizes will be small per cell
 - H25 is the critical structural hypothesis — a negative correlation finding would be the headline result
 - H26 requires building research-side centroids, not just OSDG-derived centroids — add to implementation TODOs
 - H27 is qualitative; do not over-quantify it
+- H35 and H36 are measurement-layer hypotheses — test them *during* alignment scoring as robustness checks, before reporting coverage gaps
+- **Macro-cluster robustness check:** SDGs 1, 8, and 10 have near-collinear centroids (sim 0.780–0.887). Report their coverage as a group alongside individual scores as a sensitivity check. Individual SDG-level findings within this cluster are potentially unreliable due to classifier leakage between them.

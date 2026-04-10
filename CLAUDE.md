@@ -49,6 +49,21 @@ This file tells Claude how to best support your MSc dissertation work.
 - **Ethics approvals** — you handle with supervisor; I can help prepare documentation
 - **Data sourcing** — I can help with scripts, but you decide what data to use
 
+## Hard Rules for This Repository
+
+### Rebuild-from-Scratch Rule
+**Every process in this repository must be fully reproducible from documentation alone.**
+
+This means:
+- Every script must have a module-level docstring listing exact inputs, outputs, and run command
+- Every assumption made in code must be commented inline at the point where it is made — not just in a separate notes file
+- `README.md` is the single authoritative rebuild guide — it must stay current with the actual state of every script and data file
+- When a new script is written, `README.md` must be updated in the same session to reflect it
+- When data files change shape, size, or location, `README.md` must be updated immediately
+- Known failures, workarounds, and manual steps must be documented — not omitted because they're inconvenient
+
+**Why:** If this machine is lost, the data is corrupted, or someone else needs to reproduce the analysis, README.md + code comments must be sufficient to do so from scratch without asking the original author.
+
 ## How to Work Together
 
 1. **Come with a rough idea or question** — even half-formed is fine

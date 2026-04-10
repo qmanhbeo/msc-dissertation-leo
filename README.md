@@ -1,455 +1,387 @@
 # MSc AI and Sustainable Development — Dissertation
 
 **University of Birmingham | School of Government**
-
-This repository contains the dissertation research for the MSc AI and Sustainable Development programme at the University of Birmingham. The dissertation is a 60-credit independent research project (600 hours total) that culminates the MSc programme.
+**Research topic:** Semantic alignment between AI-for-sustainability research and SDG policy frameworks
+**Final submission:** 1 September 2026, 12:00 pm
 
 ---
 
-## Program Overview
+## Hard Rule: Rebuild from Scratch
 
-The dissertation module enables demonstration of professional competence in a substantial AI and data science research project, applying material learned across the degree programme. Students utilize research methods, data science methods, and appropriate AI tools to design solutions that account for sustainable development frameworks.
+**Every process in this repository must be fully reproducible from this document alone.**
 
-### Learning Outcomes
+This README is the single authoritative rebuild guide. If the machine is lost or data is corrupted, follow the pipeline below from Step 0 and every output can be recreated. When any script or data file changes, this README must be updated in the same session.
 
-By the end of this dissertation, I will be able to:
+---
 
-- Apply core machine learning techniques and algorithms to address sustainable development challenges
-- Utilise research and data science skills and methods to answer a substantial research question
-- Examine practical, ethical, social and cultural considerations in deploying AI solutions in international development contexts
-- Design an end-to-end AI/ML solution for a sustainable development issue, considering technical constraints and local stakeholder perspectives
-- Communicate effectively about the risks, limitations and unintended consequences of AI innovations for sustainable development
+## Repository Layout
+
+```
+dissertation/
+├── code/               # All scripts — fetch, preprocess, embed, analyse, backup
+├── data/               # All data (raw + processed + embeddings + outputs)
+│   ├── embeddings/     # .npy embedding matrices + _ids.json metadata
+│   ├── osdg/           # OSDG Community Dataset (SDG-labelled texts, SDGs 1–16)
+│   ├── sdg_benchmark/  # SDG Classification Benchmark (expert-labelled, SDGs 1–17)
+│   ├── openalex/       # AI-for-sustainability research abstracts
+│   ├── policy_all/     # Final merged policy corpus (all sources)
+│   ├── policy_v3/      # Policy PDF batch 1 (raw + extracted text)
+│   ├── policy_expanded/# Policy PDF batch 0 (raw + extracted text)
+│   ├── un_sdg/         # UN SDG + curated policy docs (raw + chunks)
+│   ├── sdgi_corpus/    # SDGi VNR/VLR national reports (Hugging Face)
+│   ├── ungdc/          # UN General Debate Corpus (raw speeches)
+│   ├── ungdc_sdg/      # SDG-relevant UNGDC passages (filtered)
+│   ├── sdgindex/       # Kaggle SDG Index (country performance 2000–2022)
+│   └── kaggle/         # Kaggle SDG Index processed output
+├── notes/              # Research design documents
+│   ├── HYPOTHESES.md       # 36 pre-registered hypotheses
+│   ├── ASSUMPTIONS.md      # 26 documented assumptions with risk levels
+│   ├── METHODOLOGY_DECISIONS.md
+│   └── LIT_REVIEW_INSIGHTS.md
+├── writing/            # Draft chapters
+├── literature/         # Reference papers
+├── CLAUDE.md           # Collaboration guidelines + hard rules
+├── requirements.txt    # Python dependencies
+└── README.md           # This file — the rebuild guide
+```
+
+---
+
+## Full Pipeline: Rebuild from Scratch
+
+### Step 0 — Environment setup
+
+```bash
+# Python 3.10+ required
+pip install -r requirements.txt
+
+# rclone for backup (already configured on this machine)
+# To configure on a new machine:
+#   rclone config   # follow prompts to add Google Drive remote
+#   Remote name must be: stocks-ecosystem-data-snapshots
+#   (or set DISSERTATION_SNAPSHOT_REMOTE_ROOT env var to override)
+```
+
+**`requirements.txt` installs:**
+`requests`, `tqdm`, `pdfplumber`, `kaggle`, `beautifulsoup4`, `pandas`, `openpyxl`,
+`sentence-transformers`, `scikit-learn`, `datasets`, `numpy`, `zstandard`
+
+---
+
+### Step 1 — Fetch raw data
+
+These scripts are **independent and can run in parallel**. Run from project root.
+
+| Script | Command | Output | Notes |
+|--------|---------|--------|-------|
+| `fetch_osdg.py` | `python code/fetch_osdg.py` | `data/osdg/osdg_dataset.csv` | Downloads from Zenodo; ~43k rows |
+| `fetch_sdg_benchmark.py` | `python code/fetch_sdg_benchmark.py` | `data/sdg_benchmark/benchmark.csv` | Downloads from GitHub; 1,251 rows |
+| `fetch_openalex.py` | `python code/fetch_openalex.py` | `data/openalex/papers_sdg01.jsonl` … `papers_sdg17.jsonl` | Queries OpenAlex API; 17 SDG × AI term queries; long-running (~hours) |
+| `fetch_un_sdg.py` | `python code/fetch_un_sdg.py` | `data/un_sdg/pdfs/`, `data/un_sdg/texts/` | Downloads curated UN+AI policy PDFs; extracts text with pdfplumber |
+| `fetch_policy_expanded.py` | `python code/fetch_policy_expanded.py` | `data/policy_expanded/pdfs/`, `data/policy_expanded/texts/` | 11 additional policy PDFs (IPCC, national AI strategies) |
+| `fetch_policy_v3.py` | `python code/fetch_policy_v3.py` | `data/policy_v3/pdfs/`, `data/policy_v3/texts/` | 52 targeted PDFs; ~16 succeed; rest blocked or 404 |
+| `fetch_policy_v3b.py` | `python code/fetch_policy_v3b.py` | `data/policy_v3/pdfs/`, `data/policy_v3/texts/` | Retry script for v3 failures; ~2/29 succeed from WSL |
+| `fetch_ungdc.py` | `python code/fetch_ungdc.py` | `data/ungdc/TXT/**/*.txt` | Harvard Dataverse; 11,141 UN General Debate speeches |
+| `fetch_sdgi_corpus.py` | `python code/fetch_sdgi_corpus.py` | `data/sdgi_corpus/sdgi_corpus.parquet` | Hugging Face; VNR/VLR national reports |
+| `fetch_sdgindex.py` | `python code/fetch_sdgindex.py` | `data/sdgindex/sdr2025_data.xlsx` | Kaggle API; SDG Index 2025 |
+
+**Known fetch failures (WSL network restrictions):**
+- Most `fetch_policy_v3b.py` targets return 403/404/HTML redirect from WSL due to TLS
+  fingerprinting and Bot-protection on WHO, EUR-Lex, OECD iLibrary, World Bank
+- **Workaround used (2026-04-10):** OECD AI Principles and Addis Ababa Action Agenda
+  were downloaded manually on a browser and placed in `data/policy_v3/pdfs/`
+- If rebuilding: re-attempt these from a non-WSL environment, or manually download the
+  18 documents listed in the Policy Corpus section below
+
+---
+
+### Step 2 — Preprocess raw data
+
+Run **in this order** (some depend on prior outputs).
+
+```bash
+python code/preprocess_osdg.py
+# Input:  data/osdg/osdg_dataset.csv
+# Output: data/osdg/osdg_clean.jsonl (30,534 rows, agreement ≥ 0.5, ≥ 20 words)
+# Filter: drops rows with agreement < 0.5 or word_count < 20; SDG 17 absent from OSDG
+
+python code/preprocess_sdg_benchmark.py
+# Input:  data/sdg_benchmark/benchmark.csv
+# Output: data/sdg_benchmark/benchmark_clean.jsonl (616 rows)
+# Filter: expert-positive labels only; all 17 SDGs present (SDG 17: 31 rows)
+
+python code/preprocess_papers.py
+# Input:  data/openalex/papers_sdg01.jsonl ... papers_sdg17.jsonl
+# Output: data/openalex/papers_clean.jsonl (6,172 papers after dedup)
+# Note:   combines title + abstract into combined_text; deduplicates by openalex_id
+
+python code/preprocess_policy.py
+# Input:  data/un_sdg/texts/*.txt, data/policy_expanded/texts/*.txt,
+#         data/policy_v3/texts/*.txt
+# Output: data/un_sdg/policy_chunks.jsonl (8,592 chunks, ~150–300 words each)
+# Note:   dynamic chunking on sentence boundaries
+
+python code/integrate_sdgi.py
+# Input:  data/sdgi_corpus/sdgi_corpus.parquet
+# Output: data/sdgi_corpus/sdgi_chunks.jsonl (31,941 chunks)
+# Note:   rechunks long entries to ~150 words; adds source_doc metadata
+
+python code/filter_ungdc_sdg.py
+# Input:  data/ungdc/TXT/Session*/*.txt (sessions 70–80, 2015–2024)
+# Output: data/ungdc_sdg/ungdc_sdg_chunks.jsonl (6,472 chunks)
+# Note:   keeps only paragraphs containing SDG-related keywords
+
+python code/build_policy_corpus.py
+# Input:  data/un_sdg/policy_chunks.jsonl
+#         data/sdgi_corpus/sdgi_chunks.jsonl
+#         data/ungdc_sdg/ungdc_sdg_chunks.jsonl
+# Output: data/policy_all/policy_chunks_extended.jsonl (47,005 chunks)
+# Note:   deduplicates by exact text match after normalisation;
+#         assigns merged chunk IDs (merged_NNNNNN)
+
+python code/preprocess_sdgindex.py
+# Input:  data/sdgindex/sdr2025_data.xlsx
+# Output: data/sdgindex/overview.csv, data/sdgindex/summary.json
+```
+
+---
+
+### Step 3 — Generate embeddings
+
+```bash
+python code/embeddings.py
+# Model:  all-MiniLM-L6-v2 (384-dim, ~5× faster than mpnet; CPU/WSL-friendly)
+# Output: data/embeddings/papers.npy      (6172, 384)  float32, L2-normalised
+#         data/embeddings/papers_ids.json
+#         data/embeddings/policy.npy      (47005, 384) float32, L2-normalised
+#         data/embeddings/policy_ids.json
+#         data/embeddings/osdg.npy        (30534, 384) float32, L2-normalised
+#         data/embeddings/osdg_ids.json
+#         data/embeddings/benchmark.npy   (616, 384)   float32, L2-normalised
+#         data/embeddings/benchmark_ids.json
+# Note:   idempotent — skips any corpus whose .npy already exists
+# IMPORTANT: normalize_embeddings=True is required. Downstream scripts assume unit
+#            vectors (dot product = cosine similarity). Changing this breaks everything.
+```
+
+---
+
+### Step 4 — Build and validate the SDG measurement instrument
+
+```bash
+python code/sdg_centroids.py
+# Input:  data/embeddings/osdg.npy + osdg_ids.json
+#         data/embeddings/benchmark.npy + benchmark_ids.json (SDG 17 only)
+# Output: data/sdg_centroids.npy      (17, 384) float32, unit-normalised
+#         data/sdg_centroid_meta.json  per-SDG diagnostics
+# Convention: centroids[i] = centroid for SDG (i+1); row 0 = SDG 1, row 16 = SDG 17
+# Note:   SDGs 1–16 from OSDG; SDG 17 from benchmark (no OSDG labels for SDG 17)
+# Assumption A-SDG17: the 31 SDG-17 benchmark texts are used to BUILD the centroid,
+#           so validating it on the same texts inflates SDG-17 accuracy (see below)
+
+python code/validate_centroids.py
+# Input:  data/sdg_centroids.npy, data/sdg_centroid_meta.json
+#         data/embeddings/benchmark.npy + benchmark_ids.json
+# Output: data/validation_results.json      primary: macro-F1 on SDGs 1–16 (n=585)
+#         data/confusion_matrix.csv          17×17 confusion matrix
+#         data/centroid_similarity_matrix.csv 17×17 pairwise centroid cosine sim
+# Result (2026-04-10): macro-F1 = 0.733 → PASS
+# Note:   SDG-17 evaluation is contaminated (same data as centroid); primary metric
+#         excludes SDG 17 — this is by design, not an error
+```
+
+---
+
+### Step 5 — Alignment scoring
+
+```bash
+python code/alignment_score.py
+# Input:  data/sdg_centroids.npy
+#         data/embeddings/papers.npy + papers_ids.json
+#         data/embeddings/policy.npy + policy_ids.json
+# Output: data/paper_scores.npy       (6172, 17)  cosine sim per paper × SDG
+#         data/policy_scores.npy      (47005, 17) cosine sim per chunk × SDG
+#         data/paper_scores_ids.json
+#         data/policy_scores_ids.json
+# Note:   bidirectional scoring required for H26; see script for details
+# Status: NOT YET WRITTEN
+```
+
+---
+
+### Step 6 — Coverage gap
+
+```bash
+python code/coverage_gap.py
+# Input:  data/paper_scores.npy, data/policy_scores.npy + their _ids.json
+# Output: data/coverage_gap.json    per-SDG research proportion vs policy proportion
+#         data/coverage_gap_doc_weighted.json  document-weighted policy scores (A19)
+# Note:   must use document-weighted policy scores to counter SDSN/SDGi dominance (A19)
+# Status: NOT YET WRITTEN
+```
+
+---
+
+### Step 7 — Semantic gap
+
+```bash
+python code/semantic_gap.py
+# Input:  data/paper_scores.npy, data/policy_scores.npy + their _ids.json
+#         data/embeddings/papers.npy, data/embeddings/policy.npy
+# Output: data/semantic_gap.json    intra-SDG cosine sim: research cluster vs policy cluster
+# Note:   cap chunks per document to avoid SDSN/SDGi dominance (A19)
+#         chunk cap applies in policy corpus only; all papers are independent
+# Status: NOT YET WRITTEN
+```
+
+---
+
+### Step 8 — Coverage × semantic interaction (headline finding)
+
+```bash
+python code/coverage_semantic_interaction.py
+# Input:  data/coverage_gap.json, data/semantic_gap.json
+# Output: data/h25_correlation.json   Pearson + Spearman correlation (H25)
+#         data/h25_scatter.csv        per-SDG (coverage_gap, semantic_gap) for plotting
+# Note:   H25 is the headline hypothesis: negative correlation = SDGs most engaged by
+#         research have the largest within-SDG divergence from policy ("talking past")
+# Status: NOT YET WRITTEN
+```
+
+---
+
+### Step 9 — Contextual SDG Index analysis
+
+```bash
+python code/kaggle_context.py
+# Input:  data/coverage_gap.json, data/sdgindex/overview.csv
+# Output: data/sdg_context.json   coverage gap + semantic gap joined with SDG Index scores
+# Note:   tests H21–H24; cross-references gap magnitude with real-world SDG performance
+# Status: NOT YET WRITTEN
+```
+
+---
+
+### Step 10 — OSDG circularity diagnostic (A15)
+
+Run **after** alignment_score.py. No dedicated script — add to validate_centroids.py or run inline:
+
+```python
+# Check if policy chunks score systematically higher than research papers
+# against OSDG-derived centroids (would indicate calibration bias, not genuine alignment)
+mean_policy_top_score = policy_scores.max(axis=1).mean()
+mean_paper_top_score  = paper_scores.max(axis=1).mean()
+# If mean_policy_top_score > mean_paper_top_score + 0.10: flag A15 in methodology
+```
+
+---
+
+### Step 11 — Backup
+
+```bash
+python code/backup_data_snapshot.py
+# Backs up data/ to Google Drive via rclone
+# Remote: stocks-ecosystem-data-snapshots:dissertation-backup/data-snapshots/
+# Keeps 7 most recent snapshots locally + on Drive
+# Archive: dissertation-data-snapshot-YYYY-MM-DD-HHMMSS.tar.zst + .sha256
+# Override remote: --remote-root gdrive:some/other/path
+#                  or set DISSERTATION_SNAPSHOT_REMOTE_ROOT env var
+```
+
+---
+
+## Current State (last updated 2026-04-10)
+
+### Data files — final
+
+| File | Shape / Size | Notes |
+|------|-------------|-------|
+| `data/osdg/osdg_clean.jsonl` | 30,534 rows | SDGs 1–16; agreement ≥ 0.5 |
+| `data/sdg_benchmark/benchmark_clean.jsonl` | 616 rows | SDGs 1–17; expert-labelled |
+| `data/openalex/papers_clean.jsonl` | 6,172 papers | OpenAlex; 2018–2025 |
+| `data/policy_all/policy_chunks_extended.jsonl` | 47,005 chunks | 3 sources merged + deduped |
+| `data/sdgindex/overview.csv` | 4,140 rows | Country × SDG × year |
+| `data/embeddings/papers.npy` | (6172, 384) float32 | L2-normalised |
+| `data/embeddings/policy.npy` | (47005, 384) float32 | L2-normalised |
+| `data/embeddings/osdg.npy` | (30534, 384) float32 | L2-normalised |
+| `data/embeddings/benchmark.npy` | (616, 384) float32 | L2-normalised |
+| `data/sdg_centroids.npy` | (17, 384) float32 | Unit-normalised; row i = SDG i+1 |
+
+### Policy corpus — sources
+
+**`data/policy_all/policy_chunks_extended.jsonl` — 47,005 chunks:**
+
+| Source | Chunks | What |
+|--------|--------|------|
+| Curated AI/SDG policy docs (`data/un_sdg/`) | 8,592 | 31 docs: UN, IPCC, national AI strategies, EU AI Act, SDSN, OECD |
+| SDGi VNR/VLR corpus (`data/sdgi_corpus/`) | 31,941 | National govt reports from 40+ countries (UNDP) |
+| UNGDC speeches (`data/ungdc_sdg/`) | 6,472 | UN General Debate, sessions 70–80 (2015–2024) |
+
+**Key individual documents in the curated corpus:**
+
+| Document | Institution | Year |
+|----------|-------------|------|
+| UN 2030 Agenda for Sustainable Development | United Nations | 2015 |
+| Paris Agreement | UNFCCC | 2015 |
+| Addis Ababa Action Agenda | UN (Financing for Development) | 2015 |
+| UN SDG Progress Reports | UN Statistics Division | 2017–2022, 2024 (7 reports) |
+| OECD AI Principles | OECD | 2019 |
+| UK National AI Strategy | UK Government | 2021 |
+| UNESCO Ethics of AI | UNESCO | 2021 |
+| UN Secretary-General Roadmap for Digital Cooperation | UN | 2020 |
+| IPCC AR6 WG2 + WG3 Summaries for Policymakers | IPCC | 2022 |
+| EU AI Act | European Union | 2024 |
+| UN AI Advisory Body Report | United Nations | 2024 |
+| SDSN Sustainable Development Reports | SDSN | 2024, 2025 |
+| African Union Continental AI Strategy | African Union | 2024 |
+
+### Analysis scripts — status
+
+| Script | Status | Output |
+|--------|--------|--------|
+| `sdg_centroids.py` | ✅ Done | `data/sdg_centroids.npy`, `data/sdg_centroid_meta.json` |
+| `validate_centroids.py` | ✅ Done (macro-F1=0.733, PASS) | `data/validation_results.json`, `data/confusion_matrix.csv`, `data/centroid_similarity_matrix.csv` |
+| `alignment_score.py` | ❌ Not written | `data/paper_scores.npy`, `data/policy_scores.npy` |
+| `coverage_gap.py` | ❌ Not written | `data/coverage_gap.json` |
+| `semantic_gap.py` | ❌ Not written | `data/semantic_gap.json` |
+| `coverage_semantic_interaction.py` | ❌ Not written | `data/h25_correlation.json` |
+| `kaggle_context.py` | ❌ Not written | `data/sdg_context.json` |
+| `topic_model.py` | ❌ Not written (optional) | interpretive clusters |
+
+### Notes and design documents
+
+| File | Contents |
+|------|----------|
+| `notes/HYPOTHESES.md` | 36 pre-registered hypotheses (H1–H36); updated 2026-04-10 |
+| `notes/ASSUMPTIONS.md` | 26 documented assumptions with risk levels; updated 2026-04-10 |
+| `notes/METHODOLOGY_DECISIONS.md` | Pipeline design rationale, gap type definitions |
+| `notes/LIT_REVIEW_INSIGHTS.md` | ~1,684 papers synthesised via SciSpace |
+
+---
+
+## Research Overview
+
+**Research question:** To what extent does academic AI-for-sustainability research show topical overlap with SDG policy priorities — and where are the gaps?
+
+**Method:** Nearest-centroid SDG classification using Sentence-BERT embeddings. Centroids are built from the OSDG Community Dataset (SDGs 1–16) and the SDG Classification Benchmark (SDG 17). Coverage and semantic gaps are computed by comparing per-SDG score profiles between the research corpus (6,172 abstracts) and the policy corpus (47,005 chunks).
+
+**Key design decisions** (see `notes/METHODOLOGY_DECISIONS.md` for full rationale):
+- All claims framed as "topical overlap," never "alignment" without qualification (A16)
+- Policy scores are document-weighted to counter SDSN/SDGi dominance (A19)
+- SDGs 1, 8, 10 reported as a macro-cluster due to centroid collinearity (A26)
+- SDG 17 centroid built from benchmark texts — contamination noted throughout (A-SDG17)
+- H25 (coverage × semantic gap correlation) is the headline hypothesis
 
 ---
 
 ## Assessment
 
-### Components
-
-| Component | Weight | Format |
-|-----------|--------|--------|
-| Written Research Report | 75% | 8,000 words |
-| Project Presentation | 25% | 10-minute recorded video (max 15 slides) |
-
-### Report Structure & Word Counts
-
-1. **Introduction** (~500 words) — Research topic, questions/objectives, and significance
-2. **Literature Review** (~2,500 words) — Academic literature, theoretical frameworks, and existing research gaps
-3. **Methodology** (~1,000 words) — Research approach, data collection, and analysis methods
-4. **Findings/Results** (~2,000 words) — Research findings with supporting data, tables, and figures
-5. **Discussion** (~1,500 words) — Interpretation of findings and implications for theory/practice
-6. **Conclusion** (~500 words) — Key findings, limitations, and directions for future research
-
-### Marking Criteria
-
-Dissertations are assessed on:
-
-- **Research Design and Methods** — Clear aims, appropriate methods, understanding of methodologies and limitations
-- **Theoretical and Conceptual Perspectives** — Clear research questions, comprehensive literature review, understanding of strengths/weaknesses
-- **Analysis and Originality** — Contextualisation, addressing research questions, original thinking and new insights
-- **Relevance to Practice** — Linkage with practice, theory-practice integration, practical implications for sustainable development
-- **Conclusions & Recommendations** — Clear, sound conclusions that address all key issues
-- **Structure and Presentation** — Logical structure, coherent argument, clarity, Harvard referencing
-
-### Grade Bands
-
-- **Distinction:** 72%, 75%, 78% and above
-- **Merit:** 62%, 65%, 68%
-- **Pass:** 52%, 55%, 58%
-- **Fail:** 42%, 45%, 48% and below
-
-### Presentation Assessment
-
-**Content:**
-- Clear and easy-to-follow structure
-- Helps audience understand the essence of the written report
-- Intrigues audience to read the full report
-
-**Presentation Skills:**
-- Clear voice with good pace
-- Effective use of time
-- Professional body language and eye contact
-
----
-
-## Project Timeline
-
-| Milestone | Deadline | Description |
-|-----------|----------|-------------|
-| Initial Development | Feb–Mar 2026 | Develop preliminary ideas and topics |
-| Project Proposal | 2 Mar 2026 | Submit draft proposal on Canvas for supervisor allocation |
-| Supervisor Allocation | Mar 2026 | Receive allocated supervisor and initiate contact |
-| Project Work | Mar–Jun 2026 | Active research and development; discuss ethics requirements with supervisor |
-| Finalisation | July 2026 | Complete chapters; submit for supervisor feedback by 1 Aug |
-| Independent Work | Aug 2026 | Refine project independently, proofread, record presentation |
-| **Final Submission** | **1 Sep 2026, 12 pm** | **Report + Recorded Presentation due** |
-
-### Supervisor Feedback Deadline
-
-The final deadline for submitting draft chapters for supervisor feedback is **1 August**. No feedback will be provided on drafts submitted after this date. Supervisors take annual leave during summer — confirm their availability and last feedback date early.
-
----
-
-## Supervision
-
-### Supervisor Role
-
-Your allocated supervisor will provide **advice and guidance** on:
-
-- Defining and organising your research project
-- Asking productive questions
-- Tailoring project approach and coverage
-- Making suitable methodological choices
-- Improving structure and presentation
-
-### What Supervisors Do NOT Do
-
-- Conceive, direct, or manage your research project (you are the lead)
-- Ensure you pass
-- Proofread the final draft before submission
-- Do line-by-line editing of drafts
-- Debug programming code
-
-### Supervision Requirements
-
-- **Minimum:** 2 supervision meetings throughout the project period
-- Additional meetings can be arranged based on individual needs
-- Prepare in advance and send work to your supervisor in good time for review before meetings
-
-### Your Responsibilities as a Student
-
-- Set realistic deadlines and maintain regular communication
-- Prepare for supervision meetings and provide work in advance
-- Take notes during meetings for future reference
-- Utilise Canvas resources from the research project module and other programme modules
-- Ensure the quality and content of your dissertation is your responsibility
-
----
-
-## Research Proposal Ideas
-
-### Topic 1: Mapping Fair Reinforcement Learning for Resource Allocation
-
-**Research Questions:**
-- What structural clusters define fair RL for resource allocation research (2022–2026)?
-- How is fairness operationalized across methodological streams?
-- Are theoretical (e.g., RMAB) and deep RL approaches integrated or fragmented?
-- Which application domains dominate the field?
-- What recurring methodological or governance gaps appear across clusters?
-
-**Motivation:**
-Resource allocation lies at the core of sustainability, determining how scarce resources are distributed under constraints of uncertainty, efficiency, and equity. RL has been increasingly proposed for dynamic allocation in smart grids, humanitarian logistics, and disaster response. However, the structural organization of fair RL for resource allocation remains unclear.
-
-**Method:**
-- Collect corpus using OpenAlex/Scopus
-- Construct citation network with community detection (e.g., Louvain algorithm)
-- Generate embeddings (Sentence-BERT)
-- Apply topic modeling (e.g., BERTopic)
-- Overlay semantic themes onto citation clusters
-- Analyze centrality, fragmentation, and thematic distribution
-
-**Contribution:**
-Provides a structural and semantic mapping of fair RL for resource allocation, identifying dominant paradigms, fragmentation patterns, and underexplored intersections between fairness, sustainability, and governance.
-
----
-
-### Topic 2: Semantic Alignment Between AI Sustainability Research and Policy Frameworks ⭐ **CHOSEN**
-
-**Core Question:**
-To what extent does academic AI-for-sustainability research align with sustainability policy priorities?
-
-**Motivation:**
-AI governance emphasizes that technical development and policy objectives must co-evolve. However, academic AI research and sustainability policy documents may prioritize different themes, potentially leading to technically sophisticated systems that fail to address real-world sustainability needs. Previous work has applied topic modeling to map AI/ML to SDGs in literature, but no study has comprehensively compared academic literature with government/IO policy documents.
-
-**Method:**
-- Collect AI-for-sustainability research abstracts (OpenAlex/Scopus)
-- Collect sustainability policy documents (UN SDGs, national AI strategies, climate reports)
-- Generate embeddings (Sentence-BERT)
-- Measure semantic similarity (cosine similarity)
-- Apply topic modeling to both corpora
-- Compare thematic prominence and divergence
-- Identify underrepresented policy themes in research literature
-
-**Contribution:**
-Provides a quantitative assessment of alignment between AI research and sustainability governance priorities, revealing thematic gaps and structural mismatches.
-
----
-
-## Dissertation Analysis Plan
-
-### Research Question
-**To what extent does academic AI-for-sustainability research align with policy priorities for sustainable development?**
-
-Which SDGs do researchers emphasize vs. which do policymakers prioritize? Where are the gaps?
-
-### Analysis Pipeline
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    RESEARCH CORPUS                                  │
-│                  (What academics publish)                           │
-├─────────────────────────────────────────────────────────────────────┤
-│  • OpenAlex Papers (100 papers on AI + sustainability, 2025)        │
-│  • OSDG Dataset (43,025 text excerpts, pre-labeled with SDGs)       │
-│  • GitHub Benchmark (1,251 expert-verified texts for validation)    │
-└───────────────────────────┬──────────────────────────────────────────┘
-                            │
-                            ↓
-                 ┌──────────────────────┐
-                 │  Topic Modeling 1    │
-                 │  (Research themes)   │
-                 │  + Extract SDG focus │
-                 └──────────────────────┘
-                            │
-┌───────────────────────────┴──────────────────────────────────────────┐
-│                          COMPARATIVE ANALYSIS                        │
-├─────────────────────────────────────────────────────────────────────┤
-│  • Semantic Similarity (cosine distance between embeddings)          │
-│  • Theme Comparison (which topics overlap? which diverge?)           │
-│  • SDG Alignment (% research vs % policy per SDG)                   │
-│  • Gap Analysis (critical research gaps, ignored policy priorities) │
-└───────────────────────────┬──────────────────────────────────────────┘
-                            │
-                            ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                     POLICY CORPUS                                   │
-│               (What policymakers prioritize)                        │
-├─────────────────────────────────────────────────────────────────────┤
-│  • UN AI Strategy Guide (June 2021, 298k chars)                     │
-│  • PARIS21 Report (April 2024, 61k chars)                          │
-└───────────────────────────┬──────────────────────────────────────────┘
-                            │
-                            ↓
-                 ┌──────────────────────┐
-                 │  Topic Modeling 2    │
-                 │  (Policy priorities) │
-                 │  + Extract SDG focus │
-                 └──────────────────────┘
-                            │
-┌───────────────────────────┴──────────────────────────────────────────┐
-│                       CONTEXTUAL DATA                                │
-├─────────────────────────────────────────────────────────────────────┤
-│  • Kaggle SDG Index (2000–2022 country performance scores)          │
-│    → Which SDGs have worst progress?                                │
-│    → Is research focused on the most critical goals?                │
-└─────────────────────────────────────────────────────────────────────┘
-                            │
-                            ↓
-        ┌───────────────────────────────────────┐
-        │   FINDINGS & INTERPRETATION           │
-        ├───────────────────────────────────────┤
-        │ ✓ Alignment scores (quantified)       │
-        │ ✓ Which SDGs are aligned/misaligned  │
-        │ ✓ Critical research gaps              │
-        │ ✓ Policy priorities under-researched  │
-        │ ✓ Heatmaps and visualizations         │
-        └───────────────────────────────────────┘
-```
-
-### Datasets & Their Role
-
-| Dataset | Records | Years | Role in Analysis |
-|---------|---------|-------|-----------------|
-| **OpenAlex** | 100 papers | 2025 | Extract contemporary research themes |
-| **OSDG** | 43,025 excerpts | Multi-year | Identify which SDGs research addresses (pre-labeled) |
-| **UN Policy** | 2 PDFs | 2021–2024 | Extract official policy priorities & themes |
-| **GitHub Benchmark** | 1,251 texts | 2024+ | Validate topic modeling accuracy |
-| **Kaggle SDG Index** | 4,140 records | 2000–2022 | Provide context: which SDGs have poorest progress? |
-
-### Research Questions Answered
-
-1. **What themes dominate academic AI research?**
-   - Method: Topic modeling on OpenAlex + OSDG corpus
-   - Output: Topic clusters, word frequencies, semantic embeddings
-
-2. **What themes dominate policy documents?**
-   - Method: Topic modeling on UN policy texts
-   - Output: Policy priorities, governance themes, SDG focus
-
-3. **How aligned are they?**
-   - Method: Cosine similarity between research & policy embeddings
-   - Output: Alignment score, semantic distance matrix
-
-4. **Which SDGs get mismatched attention?**
-   - Method: Compare SDG distribution in OSDG (research) vs policy texts
-   - Output: Table/heatmap of alignment by SDG
-
-5. **Is misalignment problematic?**
-   - Method: Cross-reference with Kaggle SDG performance data
-   - Output: Which neglected SDGs have worst development progress?
-
----
-
-## Time Commitment
-
-**Total: 600 hours** including:
-
-- Dissertation seminars
-- Supervision meetings
-- Research question development
-- Chapter planning
-- Literature sourcing
-- Data sourcing
-- Writing
-- Revisions
-
----
-
-## Support Resources
-
-### Academic Support
-
-- **Personal Tutor:** Advise on academic skills and support services
-- **Birmingham International Academy:** English language support
-- **Academic Skills Gateway:** Wide range of academic resources and skills training
-
-### Personal Issues & Wellbeing
-
-The **Wellbeing Department** offers support for personal circumstances affecting your studies:
-
-- **Location:** Muirhead Tower, Rooms 641 & 642
-- **Email:** gov.wellbeing@contacts.bham.ac.uk
-- **Phone:** 0121 4148060 or 0121 414 8452
-
-**Services:**
-- Drop-in appointments
-- Assignment extensions (where appropriate)
-- Removal of late submission penalties for extenuating circumstances
-- Leave of absence authorisation
-- Referral to relevant support services
-
-**Student Services** also provides support on health, wellbeing, funding, graduation, and postgraduate study.
-
----
-
-## Key Documents & Resources
-
-**Project Planning:**
-- `proposal-2026-03-27.md` — Research proposal ideas and initial planning
-- `CLAUDE.md` — Guidelines for Claude collaboration on dissertation
-- `README.md` — This file
-
-**Research Support:**
-- `notes/DATA_SUMMARY.md` — Complete data exploration results and field descriptions
-- `code/README.md` — Data fetching scripts documentation
-- `code/fetch_*.py` — 5 reproducible data pipeline scripts
-- `Dissertation_Handbook_26.pdf` — Full university dissertation handbook
-
-**Data:**
-- `data/openalex/` — Academic papers (100 records, 2025)
-- `data/osdg/` — SDG-labeled text excerpts (43,025 records)
-- `data/un_sdg/` — Policy documents and extracted text (2 PDFs)
-- `data/sdg_benchmark/` — Expert-verified benchmark dataset (1,251 texts)
-- `data/kaggle/` — Historical SDG performance data (4,140 records, 2000–2022)
-
----
-
-## Current Status
-
-*Last updated: 2026-04-09*
-
-### ✅ Done
-
-| Area | Output |
-|------|--------|
-| Topic selection | Topic 2: AI–Sustainability Research–Policy Alignment |
-| Preprocessing — papers | `data/openalex/papers_clean.jsonl` (**6,172 papers**, 4 queries) |
-| Preprocessing — OSDG | `data/osdg/osdg_clean.jsonl` (30,534 rows, agreement ≥ 0.5) |
-| Preprocessing — benchmark | `data/sdg_benchmark/benchmark_clean.jsonl` (616 rows) |
-| Embeddings — papers/osdg/benchmark | `data/embeddings/papers.npy` (6172,384), `osdg.npy` (30534,384), `benchmark.npy` (616,384) |
-| Methodology design | `notes/METHODOLOGY_DECISIONS.md` — pipeline, gap types, validation, unit-of-analysis asymmetry |
-| Assumptions | `notes/ASSUMPTIONS.md` — 21 assumptions with risk levels |
-| Hypotheses | `notes/HYPOTHESES.md` — 30 hypotheses across 5 categories |
-| Literature review | `notes/LIT_REVIEW_INSIGHTS.md` — ~1,684 papers synthesised |
-| **Policy corpus expansion** | Expanded from 1,211 → **~40,000+ chunks** (see below) |
-
-### Policy Corpus — Sources
-
-The policy corpus is now assembled from three sources and merged into a single file:
-
-**Final output:** `data/policy_all/policy_chunks_extended.jsonl` (~39,604 chunks, median 164 words)
-
-| Source | Chunks | What |
-|--------|--------|------|
-| Curated institutional docs (`data/un_sdg/policy_chunks.jsonl`) | ~1,191 | 13 AI/SDG policy docs — UN, IPCC, national AI strategies |
-| SDGi corpus (`data/sdgi_corpus/sdgi_chunks.jsonl`) | ~31,941 | VNR/VLR national govt reports from 40+ countries (UNDP) |
-| UNGDC speeches (`data/ungdc_sdg/ungdc_sdg_chunks.jsonl`) | ~6,472 | UN General Debate passages, sessions 70–80 (2015–2024) |
-
-**v3 PDFs fetched (`data/policy_v3/texts/`, 16 documents):**
-
-| Document | Institution | Year |
-|----------|-------------|------|
-| UN SDG Progress Report | UN Statistics Division | 2017–2022, 2024 (7 reports) |
-| EU AI Act | European Union | 2024 |
-| India National AI Strategy | NITI Aayog | 2018 |
-| IPCC AR6 WG2 Summary for Policymakers | IPCC | 2022 |
-| IPCC AR6 WG3 Summary for Policymakers | IPCC | 2022 |
-| Paris Agreement | UNFCCC | 2015 |
-| UN 2030 Agenda for Sustainable Development | United Nations | 2015 |
-| UN Secretary-General Roadmap for Digital Cooperation | UN | 2020 |
-| SDSN Sustainable Development Report | SDSN | 2024, 2025 |
-
-**Original 13 curated docs** (national AI strategies, UN AI Advisory Body, UNESCO, OECD, etc.) remain in `data/un_sdg/` and `data/policy_expanded/`.
-
-### New Scripts (2026-04-09)
-
-| Script | Purpose |
-|--------|---------|
-| `code/integrate_sdgi.py` | Converts SDGi parquet → policy chunks; rechunks long entries to ~150 words |
-| `code/filter_ungdc_sdg.py` | Extracts SDG-relevant paragraphs from UNGDC speeches (sessions 70–80) |
-| `code/fetch_policy_v3.py` | Downloads 50+ policy PDFs; 16/52 succeeded (remainder 404/403/HTML) |
-| `code/build_policy_corpus.py` | Merges all three sources, deduplicates, writes `policy_chunks_extended.jsonl` |
-
-### ⚠️ Immediate Next Steps (resume here)
-
-**Step 0 — Re-run preprocess_policy.py** (picks up v3 texts, now included in TEXT_DIRS):
-```bash
-python code/preprocess_policy.py
-```
-
-**Step 1 — Rebuild merged corpus** (incorporates v3 chunks from step 0):
-```bash
-python code/build_policy_corpus.py
-```
-
-**Step 2 — Re-embed policy corpus** (old `policy.npy` is stale — delete it first):
-```bash
-rm data/embeddings/policy.npy
-python code/embeddings.py
-```
-Output: `data/embeddings/policy.npy` — shape will be (~40,000, 384).
-
-**Step 3 — Optional: retry failed v3 URLs** (36 docs failed due to 404/403/DNS issues in WSL).
-Write `code/fetch_policy_v3b.py` with fixed URLs for: WHO IRIS PDFs, EUR-Lex EU docs, Denmark/Netherlands/Canada AI strategies. Then re-run steps 0–2.
-
-**Step 4 — Begin analysis pipeline** (run in order):
-
-1. `code/sdg_centroids.py` — per-SDG mean embeddings from OSDG; SDG 17 from benchmark
-2. `code/validate_centroids.py` — accuracy + macro-F1 on benchmark; validates measurement instrument
-3. `code/alignment_score.py` — cosine similarity of papers + policy chunks vs all 17 centroids; **bidirectional** (research→policy AND policy→research)
-4. `code/coverage_gap.py` — SDG proportion profiles; **document-weighted** policy scores; per-document breakdown
-5. `code/semantic_gap.py` — intra-SDG cluster similarity; **cap chunks per document** to avoid dominance
-6. `code/coverage_semantic_interaction.py` — correlate coverage gap × semantic gap per SDG (H25 — headline)
-7. `code/kaggle_context.py` — join SDG Index scores with gap scores; correlation analysis
-8. `code/topic_model.py` *(optional)* — topic modeling within high-scoring SDG clusters
-9. OSDG circularity diagnostic — compare mean research vs policy alignment scores (A15)
-
-### 🗓 Timeline
-
-| Phase | When | Status |
-|-------|------|--------|
-| Data & preprocessing | Mar–Apr 2026 | ✅ Done |
-| Policy corpus expansion | Apr 2026 | ✅ Done (scripts written + v3 fetched) |
-| Policy re-embedding | Apr 2026 | ⏸ Next — steps 0–2 above |
-| Literature review | Apr–May 2026 | ✅ Done (SciSpace synthesis) |
-| Analysis (steps 1–9 above) | May–Jun 2026 | Not started |
-| Visualization | Jun–Jul 2026 | Not started |
-| Writing | Jul–Aug 2026 | Not started |
-| Supervisor feedback deadline | 1 Aug 2026 | — |
-| Final submission | 1 Sep 2026 | — |
-
----
-
-**Programme:** MSc AI and Sustainable Development
-**Submission Deadline:** 1 September 2026, 12:00 pm
-**Last Updated:** 2026-04-05
+| Component | Weight | Format | Deadline |
+|-----------|--------|--------|----------|
+| Written Research Report | 75% | 8,000 words | 1 Sep 2026, 12 pm |
+| Project Presentation | 25% | 10-min recorded video (max 15 slides) | 1 Sep 2026, 12 pm |
+| Supervisor feedback draft deadline | — | Draft chapters | 1 Aug 2026 |
+
+**Grade bands:** Distinction ≥72% · Merit ≥62% · Pass ≥52% · Fail <52%
+
+**Programme:** MSc AI and Sustainable Development, University of Birmingham, School of Government

@@ -118,12 +118,21 @@ def main() -> None:
             f.write(json.dumps(chunk) + "\n")
     print(f"✓ JSONL → {OUTPUT_JSONL}")
 
-    # Save CSV
+    # Save CSV — sanitize text field (null bytes / control chars from OCR crash csv)
+    def _csv_safe(row: dict) -> dict:
+        safe = {k: v for k, v in row.items()}
+        if "text" in safe and isinstance(safe["text"], str):
+            safe["text"] = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", " ", safe["text"])
+        return safe
+
     csv_fields = ["chunk_id_merged", "chunk_id", "source_doc", "chunk_index", "word_count", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
+        writer = csv.DictWriter(
+            f, fieldnames=csv_fields, extrasaction="ignore",
+            quoting=csv.QUOTE_ALL,
+        )
         writer.writeheader()
-        writer.writerows(all_chunks)
+        writer.writerows(_csv_safe(c) for c in all_chunks)
     print(f"✓ CSV  → {OUTPUT_CSV}")
 
     print(f"\nSource breakdown:")

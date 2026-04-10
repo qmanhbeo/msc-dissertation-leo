@@ -76,7 +76,12 @@ checkpoints/
 *.temp
 *.bak
 *backup*
+!code/backup_data_snapshot.py
 .temp/
+
+# Data snapshot archives (backed up to Google Drive via backup_data_snapshot.py)
+*.tar.zst
+*.tar.zst.sha256
 
 # PDF generated from LaTeX (but keep source)
 *.pdf
