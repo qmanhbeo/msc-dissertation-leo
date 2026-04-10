@@ -317,6 +317,43 @@ python code/backup_data_snapshot.py
 
 ---
 
+### Step 12 — Compile the draft PDF and send it to a phone via Tailscale
+
+```bash
+cd writing
+./build_versioned_pdf.sh
+# Output:
+#   dissertation.pdf
+#   builds/dissertation_YYYY-MM-DD_HHMMSS_TZ.pdf
+```
+
+To see the latest versioned builds:
+
+```bash
+ls -t /home/manh/study-BHam/dissertation/writing/builds/dissertation_*.pdf | head -n 3
+```
+
+To send a build directly to a phone or any other Tailscale device:
+
+```bash
+tailscale status
+tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pro-max:
+```
+
+Reusable pattern for the current latest PDF:
+
+```bash
+latest_pdf="$(ls -t /home/manh/study-BHam/dissertation/writing/builds/dissertation_*.pdf | head -n 1)"
+tailscale file cp "$latest_pdf" iphone-14-pro-max:
+```
+
+Notes:
+- `tailscale status` must show the target device online in the same tailnet.
+- Replace `iphone-14-pro-max` if the device name changes.
+- The exact successful transfer command used on 2026-04-10 is recorded in `notes/WRITING_WORKFLOW.md`.
+
+---
+
 ## Current State (last updated 2026-04-10, analysis scripts complete)
 
 ### Data files — final
@@ -398,6 +435,7 @@ python code/backup_data_snapshot.py
 | `notes/ASSUMPTIONS.md` | 26 documented assumptions with risk levels; updated 2026-04-10 |
 | `notes/METHODOLOGY_DECISIONS.md` | Pipeline design rationale, gap type definitions |
 | `notes/LIT_REVIEW_INSIGHTS.md` | ~1,684 papers synthesised via SciSpace |
+| `notes/WRITING_WORKFLOW.md` | Build, version, and Tailscale delivery workflow for draft PDFs |
 
 ---
 
