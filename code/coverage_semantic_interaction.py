@@ -118,10 +118,6 @@ def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    if OUT_CORR.exists() and OUT_SCATTER.exists():
-        log.info("Outputs already exist. Delete to re-run.")
-        return
-
     # ---- Load coverage data ----
     log.info("Loading coverage gap: %s", COVERAGE_GAP_PATH)
     cov_data = load_json(COVERAGE_GAP_PATH)

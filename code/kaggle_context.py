@@ -201,10 +201,6 @@ def load_sdg_index_means(csv_path: Path, target_year: int) -> dict[int, float]:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    if OUT_CONTEXT.exists() and OUT_CONTEXT_CSV.exists():
-        log.info("Outputs already exist. Delete to re-run.")
-        return
-
     # ---- Load gap data ----
     log.info("Loading H25 per-SDG table: %s", H25_PATH)
     h25_data = load_json(H25_PATH)

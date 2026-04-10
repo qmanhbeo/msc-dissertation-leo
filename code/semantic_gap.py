@@ -295,11 +295,6 @@ def compute_sdg_semantic_gaps(
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    # ---- Idempotency check ----
-    if OUT_SEM_GAP.exists() and OUT_SEM_SENS.exists():
-        log.info("Outputs already exist. Delete to re-run.")
-        return
-
     # ---- Load embeddings ----
     log.info("Loading paper embeddings: %s", PAPERS_EMB)
     paper_emb = np.load(PAPERS_EMB)    # (6172, 384)

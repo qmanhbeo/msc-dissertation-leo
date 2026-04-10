@@ -186,11 +186,6 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    # ---- Check if outputs already exist (idempotency) ----
-    if OUT_COV_GAP.exists() and OUT_COV_GAP_RAW.exists():
-        log.info("Outputs already exist. Delete to re-run.")
-        return
-
     # ---- Load scores ----
     log.info("Loading paper scores: %s", PAPER_SCORES)
     paper_scores = np.load(PAPER_SCORES)    # (6172, 17)
