@@ -94,6 +94,8 @@ checkpoints/
 *.out
 *.run.xml
 *.toc
+writing/build_meta.tex
+writing/builds/
 
 # OS-specific
 .DS_Store

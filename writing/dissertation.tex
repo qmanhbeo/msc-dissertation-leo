@@ -15,8 +15,29 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{fancyhdr}
 \usepackage[style=apa,backend=biber]{biblatex}
 \addbibresource{references.bib}
+
+\providecommand{\DraftCompiledAt}{2026-04-10 17:35 BST}
+\providecommand{\DraftVersionTag}{2026-04-10_1735_BST}
+\InputIfFileExists{build_meta.tex}{}{}
+
+\hypersetup{
+  pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks (Draft compiled \DraftCompiledAt)},
+  pdfauthor={[Author Name]},
+  pdfsubject={Preliminary dissertation draft},
+  pdfcreator={LaTeX},
+  pdfproducer={pdfTeX}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{Preliminary draft}
+\fancyfoot[C]{Compiled \DraftCompiledAt}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.4pt}
 
 \onehalfspacing
 
@@ -24,17 +45,27 @@
 \large MSc AI and Sustainable Development\\
 University of Birmingham, School of Government}
 \author{[Author Name]}
-\date{September 2026}
+\date{Submission due: 1 September 2026\\[0.5em]\normalsize Preliminary draft compiled \DraftCompiledAt}
 
 \begin{document}
 
 \maketitle
+\thispagestyle{fancy}
+\begin{center}
+\fbox{%
+\begin{minipage}{0.93\textwidth}
+\small
+\textbf{Draft status note.} This manuscript is a preliminary working draft compiled on \DraftCompiledAt, approximately five months before the 1 September 2026 submission deadline. It reflects an interim project snapshot rather than a final locked analysis. At the time of compilation, the OpenAlex retrieval pipeline was still in progress and only approximately half of the planned query set had completed. All research-corpus counts, empirical distributions, and inferential claims reported here should therefore be treated as provisional and subject to revision as data collection and analysis continue.
+\end{minipage}%
+}
+\end{center}
+\vspace{1em}
 \tableofcontents
 \newpage
 
 %% ============================================================
 \begin{abstract}
-The Sustainable Development Goals (SDGs) provide the dominant international framework for sustainability governance, yet it remains unclear whether academic artificial intelligence (AI) research engages with policy priorities at the SDG level. Existing bibliometric studies map AI research to SDGs using keyword methods, but none has systematically compared the \emph{semantic content} of research and policy discourse or tested whether the two forms of topical gap are related. This study advances from lexical to topical alignment measurement using Sentence-BERT embeddings and a nearest-centroid classifier validated against expert-labelled SDG benchmarks (macro-F1 = 0.733). Applying this instrument to 6,172 research abstracts and 47,005 policy document chunks from 2,392 sources, we find: (i) a pronounced coverage gap in which policy discourse concentrates on SDG 13 (Climate, 36\% of documents), SDG 17 (Partnerships, 35\%), and SDG 16 (Governance, 20\%), while research concentrates on SDG 4 (Education/Learning, 22\%) and SDG 9 (Innovation, 17\%); (ii) a semantic gap in which SDG 8 (Decent Work), SDG 3 (Health), and SDG 16 (Governance) show the largest within-SDG semantic divergence between the two corpora; (iii) critically, coverage gaps and semantic gaps are \emph{statistically independent} ($r = 0.145$, $p = 0.578$), indicating that they represent two structurally distinct dimensions of misalignment requiring separate interventions; and (iv) evidence of directional asymmetry in which policy engages research framing more than research engages policy framing. These findings challenge the assumption that topical engagement implies substantive alignment and suggest that research-policy dialogue requires attention to semantic register, not only subject coverage.
+The Sustainable Development Goals (SDGs) provide the dominant international framework for sustainability governance, yet it remains unclear whether academic artificial intelligence (AI) research engages with policy priorities at the SDG level. Existing bibliometric studies map AI research to SDGs using keyword methods, but none has systematically compared the \emph{semantic content} of research and policy discourse or tested whether the two forms of topical gap are related. This study advances from lexical to topical alignment measurement using Sentence-BERT embeddings and a nearest-centroid classifier validated against expert-labelled SDG benchmarks (macro-F1 = 0.733). Applying this instrument to a preliminary working snapshot of 6,172 research abstracts and 47,005 policy document chunks from 2,392 sources, we find: (i) a pronounced coverage gap in which policy discourse concentrates on SDG 13 (Climate, 36\% of documents), SDG 17 (Partnerships, 35\%), and SDG 16 (Governance, 20\%), while research concentrates on SDG 4 (Education/Learning, 22\%) and SDG 9 (Innovation, 17\%); (ii) a semantic gap in which SDG 8 (Decent Work), SDG 3 (Health), and SDG 16 (Governance) show the largest within-SDG semantic divergence between the two corpora; (iii) critically, coverage gaps and semantic gaps are \emph{statistically independent} ($r = 0.145$, $p = 0.578$), indicating that they represent two structurally distinct dimensions of misalignment requiring separate interventions; and (iv) evidence of directional asymmetry in which policy engages research framing more than research engages policy framing. These findings challenge the assumption that topical engagement implies substantive alignment and suggest that research-policy dialogue requires attention to semantic register, not only subject coverage.
 \end{abstract}
 
 %% ============================================================
@@ -103,7 +134,9 @@ A further conceptual note is necessary on the linguistic register difference bet
 
 \subsection{Research Corpus}
 
-The research corpus consists of 6,172 English-language research abstracts retrieved from the OpenAlex API \parencite{Priem2022}, covering publications between 2018 and 2025. Abstracts were retrieved using a structured query combining four AI-related terms (``artificial intelligence'', ``machine learning'', ``deep learning'', ``neural network'') with each of the 17 SDGs as topic keywords, yielding 68 queries. Abstracts were required to include both an AI term and an SDG-relevant term. After deduplication by OpenAlex work ID and removal of records lacking abstracts, 6,172 unique papers were retained. The corpus spans applications across all SDG areas and includes conference papers, journal articles, and preprints. Each paper's title and abstract were concatenated to form the text unit for embedding.
+The research corpus reported in this draft is an interim working snapshot rather than a final locked harvest. As of \DraftCompiledAt, the OpenAlex collection process was still underway and only approximately half of the planned query set had completed at compile time. The counts and downstream results reported here should therefore be read as provisional.
+
+The research corpus consists of 6,172 English-language research abstracts retrieved from the OpenAlex API \parencite{Priem2022}, covering publications between 2018 and 2025. Abstracts were retrieved using a structured query combining four AI-related terms (``artificial intelligence'', ``machine learning'', ``deep learning'', ``neural network'') with each of the 17 SDGs as topic keywords, yielding 68 queries. Abstracts were required to include both an AI term and an SDG-relevant term. After deduplication by OpenAlex work ID and removal of records lacking abstracts, 6,172 unique papers were retained in the current snapshot. The corpus spans applications across all SDG areas and includes conference papers, journal articles, and preprints. Each paper's title and abstract were concatenated to form the text unit for embedding.
 
 The 2018 start date reflects the post-AlexNet emergence of deep learning as the dominant AI paradigm and the adoption of the SDG framework in 2015 with a research uptake lag. Earlier papers are excluded to ensure comparability in methodological framing.
 
@@ -414,6 +447,8 @@ Several limitations bound the conclusions.
 
 \textbf{Topical overlap is not substantive alignment.} The study measures semantic co-location in embedding space, not whether research and policy are substantively addressing the same problems in compatible ways. High cosine similarity reflects shared vocabulary, not shared agenda. All findings must be read with this constraint.
 
+\textbf{Preliminary draft status.} This manuscript was compiled on \DraftCompiledAt, approximately five months before the submission deadline of 1 September 2026. At that time, the OpenAlex retrieval process was still in progress and only approximately half of the planned query set had completed. All research-side counts, coverage estimates, and downstream inferential results are therefore provisional and subject to change.
+
 \textbf{A15 calibration bias.} The OSDG circularity (A15) means policy scores against OSDG centroids are likely inflated. Coverage proportions are less affected than absolute scores, but the finding warrants replication with a calibration-neutral instrument.
 
 \textbf{SDG 4 artefact.} The 22.1\% research assignment to SDG 4 likely overstates genuine education research. All findings involving the research-side SDG 4 profile should be treated with corresponding uncertainty.
@@ -438,7 +473,7 @@ The 2$\times$2 typology that follows from this result provides a more useful dia
 
 Several findings call for direct follow-up. The SDG 4 artefact should be resolved by qualitative inspection or a fine-tuned classifier. The A15 calibration bias should be addressed by replicating with a domain-neutral encoder. The temporal dimension --- whether the gaps are narrowing as the SDG framework matures --- can be addressed with the year metadata available in the OpenAlex corpus. Most importantly, the 2$\times$2 typology sketched here requires qualitative operationalisation of the productive/problematic distinction \parencite{Toney2024}, which this study has measured but not fully interpreted. Extending the analysis to the 169 individual SDG targets (using the AURORA dataset), and disaggregating the policy corpus by country income level (H34), would provide finer-grained evidence about where the misalignment problem is most acute and for whom.
 
-The headline message for research governance is therefore straightforward. Knowing which SDGs research covers is necessary but not sufficient. Measuring whether research and policy mean compatible things when they invoke those SDGs is a distinct diagnostic, and an equally important one. If topical overlap is mistaken for alignment, misalignment will be systematically underestimated.
+The headline message for research governance is therefore straightforward. Knowing which SDGs research covers is necessary but not sufficient. Measuring whether research and policy mean compatible things when they invoke those SDGs is a distinct diagnostic, and an equally important one. If topical overlap is mistaken for alignment, misalignment will be systematically underestimated. For this reason, the present manuscript should be read as a preliminary analytical draft rather than a final settled account: as of \DraftCompiledAt, the research corpus was still being assembled, and the reported findings remain subject to revision.
 
 %% ============================================================
 \printbibliography
