@@ -221,11 +221,18 @@ python code/alignment_score.py
 
 ```bash
 python code/coverage_gap.py
-# Input:  data/paper_scores.npy, data/policy_scores.npy + their _ids.json
-# Output: data/coverage_gap.json    per-SDG research proportion vs policy proportion
-#         data/coverage_gap_doc_weighted.json  document-weighted policy scores (A19)
-# Note:   must use document-weighted policy scores to counter SDSN/SDGi dominance (A19)
-# Status: NOT YET WRITTEN
+# Input:  data/paper_scores.npy + paper_scores_ids.json
+#         data/policy_scores.npy + policy_scores_ids.json
+# Output: data/coverage_gap.json          doc-weighted profiles + gap (canonical)
+#         data/coverage_gap_raw.json       chunk-level profiles (diagnostic, biased)
+# Note:   document-weighted policy profiles (A19) — each of 2,392 source_docs weighted
+#         equally regardless of chunk count
+# Result (2026-04-10): Largest gaps: SDG 13 (policy 36% vs research 5%, gap 0.310),
+#         SDG 17 (policy 35% vs research 4%, gap 0.308), SDG 4 (research 22% vs policy
+#         0.2%, gap 0.219), SDG 9 (research 17% vs policy 0.8%, gap 0.165), SDG 16
+#         (policy 20% vs research 8%, gap 0.121).
+#         CAVEAT: SDG 4 research dominance (22%) may reflect ML "learning" terminology
+#         conflating with the Education centroid — flag in Limitations.
 ```
 
 ---
@@ -234,12 +241,15 @@ python code/coverage_gap.py
 
 ```bash
 python code/semantic_gap.py
-# Input:  data/paper_scores.npy, data/policy_scores.npy + their _ids.json
+# Input:  data/paper_scores.npy + paper_scores_ids.json
+#         data/policy_scores.npy + policy_scores_ids.json
 #         data/embeddings/papers.npy, data/embeddings/policy.npy
-# Output: data/semantic_gap.json    intra-SDG cosine sim: research cluster vs policy cluster
-# Note:   cap chunks per document to avoid SDSN/SDGi dominance (A19)
-#         chunk cap applies in policy corpus only; all papers are independent
-# Status: NOT YET WRITTEN
+# Output: data/semantic_gap.json           primary (chunk_cap=50)
+#         data/semantic_gap_sensitivity.json  caps 20 + 100 for robustness check
+# Note:   chunk cap (50 per source_doc per SDG) prevents SDSN/SDGi dominance (A19).
+#         Rankings stable across caps 20/50/100.
+# Result (2026-04-10): Largest gaps: SDG 8 (0.292), SDG 3 (0.285), SDG 16 (0.284).
+#         Smallest: SDG 17 (0.182), SDG 9 (0.201) — confirms H10 prediction.
 ```
 
 ---
@@ -249,11 +259,15 @@ python code/semantic_gap.py
 ```bash
 python code/coverage_semantic_interaction.py
 # Input:  data/coverage_gap.json, data/semantic_gap.json
-# Output: data/h25_correlation.json   Pearson + Spearman correlation (H25)
-#         data/h25_scatter.csv        per-SDG (coverage_gap, semantic_gap) for plotting
-# Note:   H25 is the headline hypothesis: negative correlation = SDGs most engaged by
-#         research have the largest within-SDG divergence from policy ("talking past")
-# Status: NOT YET WRITTEN
+#         data/paper_scores.npy, data/policy_scores_vs_research.npy
+# Output: data/h25_correlation.json   Pearson + Spearman correlations (H25 + H26)
+#         data/h25_scatter.csv        per-SDG (research%, policy%, coverage_gap, semantic_gap)
+# Result (2026-04-10):
+#   H25: NOT SUPPORTED — r=0.145 (p=0.578); coverage and semantic gaps are independent.
+#        This IS a finding: two orthogonal dimensions of misalignment.
+#   H26: SUPPORTED — policy engages research framing more (top sim 0.472) than research
+#        engages policy framing (0.353); asymmetry gap=0.120. Caveat: A15 flag means
+#        some of this gap may reflect calibration bias (A15 gap=0.191).
 ```
 
 ---
@@ -262,10 +276,15 @@ python code/coverage_semantic_interaction.py
 
 ```bash
 python code/kaggle_context.py
-# Input:  data/coverage_gap.json, data/sdgindex/overview.csv
-# Output: data/sdg_context.json   coverage gap + semantic gap joined with SDG Index scores
-# Note:   tests H21–H24; cross-references gap magnitude with real-world SDG performance
-# Status: NOT YET WRITTEN
+# Input:  data/h25_correlation.json
+#         data/kaggle/sdg_index_2000-2022.csv  (goal_N_score columns, year=2022)
+# Output: data/sdg_context.json   gap scores joined with SDG Index global means
+#         data/sdg_context.csv    per-SDG summary table for plotting
+# Result (2026-04-10):
+#   H21: NOT SUPPORTED — r=-0.040 (p=0.882); research coverage ≠ SDG performance
+#   H22: NOT SUPPORTED — r=0.004 (p=0.988); semantic gap ≠ SDG performance
+#   H23: CONFIRMED — SDG 13 scores highest in index (82.98 vs mean ~68), supporting
+#        the claim that commitment indicators inflate climate scores in the SDG Index
 ```
 
 ---
@@ -298,7 +317,7 @@ python code/backup_data_snapshot.py
 
 ---
 
-## Current State (last updated 2026-04-10)
+## Current State (last updated 2026-04-10, analysis scripts complete)
 
 ### Data files — final
 
@@ -321,6 +340,14 @@ python code/backup_data_snapshot.py
 | `data/research_centroids.npy` | (17, 384) float32 | Per-SDG mean of research papers; H26 |
 | `data/research_centroid_meta.json` | 17 entries | n_papers_assigned, cohesion, zero_flag per SDG |
 | `data/policy_scores_vs_research.npy` | (47005, 17) float32 | Policy chunks vs research centroids; H26 |
+| `data/coverage_gap.json` | JSON | Doc-weighted policy + research profiles, gap per SDG |
+| `data/coverage_gap_raw.json` | JSON | Chunk-level (unweighted, biased) profiles; diagnostic |
+| `data/semantic_gap.json` | JSON | Per-SDG semantic gap (1 - cosine_sim), chunk_cap=50 |
+| `data/semantic_gap_sensitivity.json` | JSON | Same with chunk_cap=20 and 100 for robustness |
+| `data/h25_correlation.json` | JSON | H25 + H26 correlation results; per-SDG table |
+| `data/h25_scatter.csv` | CSV | Per-SDG: research%, policy%, coverage_gap, semantic_gap |
+| `data/sdg_context.json` | JSON | Gap scores joined with SDG Index 2022 global means |
+| `data/sdg_context.csv` | CSV | Per-SDG summary for plotting (SDGs 1–16) |
 
 ### Policy corpus — sources
 
@@ -357,10 +384,10 @@ python code/backup_data_snapshot.py
 | `sdg_centroids.py` | ✅ Done | `data/sdg_centroids.npy`, `data/sdg_centroid_meta.json` |
 | `validate_centroids.py` | ✅ Done (macro-F1=0.733, PASS) | `data/validation_results.json`, `data/confusion_matrix.csv`, `data/centroid_similarity_matrix.csv` |
 | `alignment_score.py` | ✅ Done (A15 FLAG: policy top sim 0.544 vs paper 0.353, gap=0.191) | `data/paper_scores.npy`, `data/policy_scores.npy`, `data/research_centroids.npy`, `data/policy_scores_vs_research.npy` |
-| `coverage_gap.py` | ❌ Not written | `data/coverage_gap.json` |
-| `semantic_gap.py` | ❌ Not written | `data/semantic_gap.json` |
-| `coverage_semantic_interaction.py` | ❌ Not written | `data/h25_correlation.json` |
-| `kaggle_context.py` | ❌ Not written | `data/sdg_context.json` |
+| `coverage_gap.py` | ✅ Done | `data/coverage_gap.json`, `data/coverage_gap_raw.json` |
+| `semantic_gap.py` | ✅ Done | `data/semantic_gap.json`, `data/semantic_gap_sensitivity.json` |
+| `coverage_semantic_interaction.py` | ✅ Done (H25 null result; H26 supported with caveats) | `data/h25_correlation.json`, `data/h25_scatter.csv` |
+| `kaggle_context.py` | ✅ Done (H21/H22 null; H23 confirmed) | `data/sdg_context.json`, `data/sdg_context.csv` |
 | `topic_model.py` | ❌ Not written (optional) | interpretive clusters |
 
 ### Notes and design documents

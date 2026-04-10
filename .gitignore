@@ -85,6 +85,15 @@ checkpoints/
 
 # PDF generated from LaTeX (but keep source)
 *.pdf
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.run.xml
+*.toc
 
 # OS-specific
 .DS_Store
