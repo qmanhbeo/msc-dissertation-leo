@@ -199,12 +199,20 @@ python code/alignment_score.py
 # Input:  data/sdg_centroids.npy
 #         data/embeddings/papers.npy + papers_ids.json
 #         data/embeddings/policy.npy + policy_ids.json
-# Output: data/paper_scores.npy       (6172, 17)  cosine sim per paper × SDG
-#         data/policy_scores.npy      (47005, 17) cosine sim per chunk × SDG
-#         data/paper_scores_ids.json
-#         data/policy_scores_ids.json
-# Note:   bidirectional scoring required for H26; see script for details
-# Status: NOT YET WRITTEN
+#         data/policy_all/policy_chunks_extended.jsonl  (source_doc metadata)
+# Output: data/paper_scores.npy              (6172, 17)  cosine sim per paper × SDG
+#         data/paper_scores_ids.json         list of {id}
+#         data/policy_scores.npy             (47005, 17) cosine sim per chunk × SDG
+#         data/policy_scores_ids.json        list of {id, source_doc}
+#         data/research_centroids.npy        (17, 384) per-SDG mean of research papers (H26)
+#         data/research_centroid_meta.json   per-SDG diagnostics for research centroids
+#         data/policy_scores_vs_research.npy (47005, 17) policy vs research centroids (H26)
+# Note:   bidirectional scoring built in for H26 (research vs OSDG centroids +
+#         policy vs research centroids); A15 circularity diagnostic run at end
+# Result (2026-04-10): A15 FLAG — policy top scores (0.544) exceed paper top scores (0.353)
+#         by 0.191 > 0.10 threshold. Flag in methodology limitations.
+#         H26 preview: policy engages research framing more (0.472) than research engages
+#         policy framing (0.353) — supports asymmetry hypothesis.
 ```
 
 ---
@@ -306,6 +314,13 @@ python code/backup_data_snapshot.py
 | `data/embeddings/osdg.npy` | (30534, 384) float32 | L2-normalised |
 | `data/embeddings/benchmark.npy` | (616, 384) float32 | L2-normalised |
 | `data/sdg_centroids.npy` | (17, 384) float32 | Unit-normalised; row i = SDG i+1 |
+| `data/paper_scores.npy` | (6172, 17) float32 | Cosine sim per paper × SDG; col j = SDG j+1 |
+| `data/paper_scores_ids.json` | 6,172 entries | `{id}` per row |
+| `data/policy_scores.npy` | (47005, 17) float32 | Cosine sim per chunk × SDG |
+| `data/policy_scores_ids.json` | 47,005 entries | `{id, source_doc}` per row |
+| `data/research_centroids.npy` | (17, 384) float32 | Per-SDG mean of research papers; H26 |
+| `data/research_centroid_meta.json` | 17 entries | n_papers_assigned, cohesion, zero_flag per SDG |
+| `data/policy_scores_vs_research.npy` | (47005, 17) float32 | Policy chunks vs research centroids; H26 |
 
 ### Policy corpus — sources
 
@@ -341,7 +356,7 @@ python code/backup_data_snapshot.py
 |--------|--------|--------|
 | `sdg_centroids.py` | ✅ Done | `data/sdg_centroids.npy`, `data/sdg_centroid_meta.json` |
 | `validate_centroids.py` | ✅ Done (macro-F1=0.733, PASS) | `data/validation_results.json`, `data/confusion_matrix.csv`, `data/centroid_similarity_matrix.csv` |
-| `alignment_score.py` | ❌ Not written | `data/paper_scores.npy`, `data/policy_scores.npy` |
+| `alignment_score.py` | ✅ Done (A15 FLAG: policy top sim 0.544 vs paper 0.353, gap=0.191) | `data/paper_scores.npy`, `data/policy_scores.npy`, `data/research_centroids.npy`, `data/policy_scores_vs_research.npy` |
 | `coverage_gap.py` | ❌ Not written | `data/coverage_gap.json` |
 | `semantic_gap.py` | ❌ Not written | `data/semantic_gap.json` |
 | `coverage_semantic_interaction.py` | ❌ Not written | `data/h25_correlation.json` |
