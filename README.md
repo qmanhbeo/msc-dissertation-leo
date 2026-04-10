@@ -426,6 +426,8 @@ Notes:
 | `coverage_semantic_interaction.py` | ✅ Done (H25 null result; H26 supported with caveats) | `data/h25_correlation.json`, `data/h25_scatter.csv` |
 | `kaggle_context.py` | ✅ Done (H21/H22 null; H23 confirmed) | `data/sdg_context.json`, `data/sdg_context.csv` |
 | `topic_model.py` | ❌ Not written (optional) | interpretive clusters |
+| `fix_sdg4_artefact.py` | ✅ Done | `data/sdg4_artefact_analysis.json` — keyword-based artefact audit of SDG 4 papers |
+| `plot_figures.py` | ✅ Done | `writing/figures/fig{1,2,3}_*.pdf` — three dissertation figures |
 
 ### Notes and design documents
 
