@@ -505,6 +505,48 @@ response = requests.get(url, timeout=60)  # Increase to 60 seconds
 
 ---
 
+## Bibliography Management
+
+### `fetch_cited_papers.py` — Extract and organize dissertation citations
+
+Extracts all citations from the dissertation bibliography (`writing/references.bib`) and generates structured indices for reference and linking.
+
+**What it does:**
+1. Parses the BibTeX bibliography file
+2. Extracts metadata (authors, title, year, journal, DOI, arXiv IDs)
+3. Generates clickable links to DOI.org and arXiv
+4. Outputs two formats: JSON (machine-readable) and Markdown (human-readable)
+
+**Output:**
+- `data/cited_papers.json` — Structured JSON with all paper metadata
+- `data/cited_papers.md` — Markdown index organized by publication type (articles, conference papers, reports)
+
+**Run:**
+```bash
+python code/fetch_cited_papers.py
+# Input:  writing/references.bib
+# Output: data/cited_papers.json, data/cited_papers.md
+# Time:   ~5 seconds
+```
+
+**Example JSON entry:**
+```json
+{
+  "key": "Vinuesa2020",
+  "type": "article",
+  "title": "The role of artificial intelligence in achieving the Sustainable Development Goals",
+  "author": "Vinuesa, Ricardo and Azizpour, Hossein and ...",
+  "year": "2020",
+  "journal": "Nature Communications",
+  "doi": "10.1038/s41467-019-14108-y",
+  "doi_url": "https://doi.org/10.1038/s41467-019-14108-y"
+}
+```
+
+**Use case:** Track all cited papers, generate citation lists, create links in dissertation PDFs, or prepare a supplementary materials archive of cited works.
+
+---
+
 ## Next Steps
 
 After downloading, you can:
