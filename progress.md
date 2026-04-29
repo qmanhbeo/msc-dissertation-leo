@@ -57,7 +57,7 @@
 - **Preliminary dissertation draft compiled** from `writing/dissertation.tex` with the front-matter acknowledgements section added and revised
 - **Versioned PDF build workflow used and documented**
   - Build command: `cd /home/manh/study-BHam/dissertation/writing && ./build_versioned_pdf.sh`
-  - Latest successful mobile delivery command: `tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pro-max:`
+  - Latest successful mobile delivery command: `tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pm:`
   - Reusable note saved in `notes/WRITING_WORKFLOW.md`
 
 ---

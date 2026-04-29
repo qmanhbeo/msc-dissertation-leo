@@ -337,14 +337,14 @@ To send a build directly to a phone or any other Tailscale device:
 
 ```bash
 tailscale status
-tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pro-max:
+tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pm:
 ```
 
 Reusable pattern for the current latest PDF:
 
 ```bash
 latest_pdf="$(ls -t /home/manh/study-BHam/dissertation/writing/builds/dissertation_*.pdf | head -n 1)"
-tailscale file cp "$latest_pdf" iphone-14-pro-max:
+tailscale file cp "$latest_pdf" iphone-14-pm:
 ```
 
 Notes:

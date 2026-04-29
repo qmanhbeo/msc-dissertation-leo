@@ -32,14 +32,14 @@ tailscale status
 Exact successful command used on 2026-04-10:
 
 ```bash
-tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pro-max:
+tailscale file cp /home/manh/study-BHam/dissertation/writing/builds/dissertation_2026-04-10_183449_BST.pdf iphone-14-pm:
 ```
 
 Reusable version that sends the latest build:
 
 ```bash
 latest_pdf="$(ls -t /home/manh/study-BHam/dissertation/writing/builds/dissertation_*.pdf | head -n 1)"
-tailscale file cp "$latest_pdf" iphone-14-pro-max:
+tailscale file cp "$latest_pdf" iphone-14-pm:
 ```
 
 Notes:
