@@ -47,6 +47,91 @@ dissertation/
 
 ---
 
+## Data Flow Map
+
+This is the current end-to-end contract for where data goes and which process
+owns each transition. As of the full OpenAlex run completed on 2026-04-29,
+`data/openalex/papers.jsonl` contains 2,763,579 unique papers. The downstream
+paper embeddings and scores still reflect the earlier 6,172-paper analysis
+artifacts until the full-corpus rebuild path is made streaming-safe.
+
+```mermaid
+flowchart TD
+  OA[OpenAlex API<br/>17 SDGs x 4 AI terms] --> FO[code/fetch_openalex.py]
+  FO --> SHARDS[data/openalex/papers_sdg01..17.jsonl]
+  FO --> STATE[data/openalex/progress.json<br/>seen_ids.json]
+  SHARDS --> RAW[data/openalex/papers.jsonl<br/>raw research corpus]
+  RAW --> CLEAN[code/preprocess_papers.py]
+  CLEAN --> PCLEAN[data/openalex/papers_clean.jsonl/csv<br/>embedding-ready research corpus]
+  PCLEAN --> EMB[code/embeddings.py]
+  EMB --> PEMB[data/embeddings/papers.npy<br/>papers_ids.json]
+
+  OSDG[OSDG dataset] --> POSDG[code/preprocess_osdg.py]
+  BENCH[SDG benchmark] --> PBENCH[code/preprocess_sdg_benchmark.py]
+  POSDG --> EMB
+  PBENCH --> EMB
+  EMB --> CENT[code/sdg_centroids.py]
+  CENT --> SDC[data/sdg_centroids.npy]
+  SDC --> VAL[code/validate_centroids.py]
+
+  UN[UN and AI policy docs] --> PPOL[code/preprocess_policy.py]
+  SDGI[SDGi VNR/VLR corpus] --> ISDGI[code/integrate_sdgi.py]
+  UNGDC[UN General Debate] --> FUNGDC[code/filter_ungdc_sdg.py]
+  PPOL --> MERGE[code/build_policy_corpus.py]
+  ISDGI --> MERGE
+  FUNGDC --> MERGE
+  MERGE --> PCORP[data/policy_all/policy_chunks_extended.jsonl<br/>47,005 chunks]
+  PCORP --> EMB
+  EMB --> POLEMB[data/embeddings/policy.npy<br/>policy_ids.json]
+
+  PEMB --> SCORE[code/alignment_score.py]
+  POLEMB --> SCORE
+  SDC --> SCORE
+  SCORE --> PSCORES[data/paper_scores.npy<br/>policy_scores.npy]
+  SCORE --> RCENT[data/research_centroids.npy<br/>policy_scores_vs_research.npy]
+
+  PSCORES --> COV[code/coverage_gap.py]
+  PSCORES --> SEM[code/semantic_gap.py]
+  COV --> H25[code/coverage_semantic_interaction.py]
+  SEM --> H25
+  H25 --> FIGS[code/plot_figures.py]
+  FIGS --> WRITE[writing/figures/*.pdf/png<br/>data/generated/*.tex<br/>writing/dissertation.tex]
+```
+
+### Full OpenAlex corpus downstream plan
+
+The massive OpenAlex file must not be pushed through the legacy scripts as one
+in-memory list. Treat the 7.6 GB raw JSONL as a warehouse input and rebuild the
+research side through streaming stages:
+
+1. Keep `data/openalex/papers_sdg01..17.jsonl` and `data/openalex/papers.jsonl`
+   as immutable raw fetch outputs.
+2. Add a streaming cleaner that reads raw JSONL line by line, deduplicates with
+   a disk-backed key store such as SQLite, and writes durable clean shards under
+   `data/openalex/clean_shards/`, plus a manifest with row counts, checksums,
+   schema version, and per-SDG/year counts.
+3. Embed clean shards sequentially by default, one shard at a time, writing
+   `data/embeddings/papers_shards/*.npy` and matching shard ID metadata. Use CPU
+   batches inside each shard; do not materialize all paper texts or all
+   embeddings in RAM.
+4. Finalize only after all shards pass validation. Either expose a combined
+   memory-mapped embedding matrix with `np.lib.format.open_memmap`, or update
+   downstream scripts to read the shard manifest directly.
+5. Score papers shard-by-shard against `data/sdg_centroids.npy`. The score
+   matrix is much smaller than embeddings, but the scoring stage should still
+   write incrementally and compute research centroid sums/counts while streaming.
+6. Refactor coverage and semantic-gap scripts to accept the paper score and
+   embedding manifest. Policy artifacts are small enough to stay on the current
+   path.
+
+Default execution should be sequential across shards for predictable RAM use.
+Only parallelize lightweight cleaning across independent input files or
+embedding on explicit hardware override. Every multi-minute stage should write
+progress to `artifacts/job_status/`, append durable shard outputs as it goes,
+and resume from the last completed shard.
+
+---
+
 ## Full Pipeline: Rebuild from Scratch
 
 ### Step 0 — Environment setup
