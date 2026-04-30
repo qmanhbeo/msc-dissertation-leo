@@ -118,3 +118,90 @@ python code/score_paper_shards.py --limit-shards 1
 ```
 
 Only launch the full job after the smoke test proves resume behavior, row ordering, shapes, and ID alignment.
+
+## Robustness Checks To Consider
+
+These are not blockers for the next engineering step, but they are useful
+viva-proofing checks before locking the final dissertation analysis.
+
+### Methodological Checks
+
+- Add a "none of the above" eligibility or distance diagnostic.
+  - Current nearest-centroid assignment always picks one SDG.
+  - Because the research corpus is pre-filtered by OpenAlex AI+SDG retrieval,
+    this is acceptable for relative SDG assignment, but a maximum-distance or
+    low-confidence flag would help identify weakly SDG-related papers.
+  - Candidate diagnostic: inspect distribution of max centroid similarity and
+    flag bottom decile or a fixed threshold chosen from Benchmark negatives.
+
+- Compare mean centroids against medoids.
+  - Current SDG centroid = mean of all unit embeddings for that SDG.
+  - Robustness check: compute a medoid per SDG, i.e. the actual labelled OSDG
+    text closest to the mean, then compare validation macro-F1 and per-SDG F1.
+  - Purpose: test whether OSDG outliers pull mean centroids off target.
+
+- Document token handling explicitly.
+  - For current analysis, research unit is title + abstract, so truncation risk
+    should be small.
+  - Policy texts are chunked before embedding, so each chunk should remain under
+    sentence-transformer token limits.
+  - If full papers are ever embedded, choose and document a strategy:
+    head+tail truncation, section-level chunking with mean pooling, or weighted
+    pooling across chunks.
+
+- Emphasize baseline context.
+  - Clean validation: macro-F1 0.733 on SDGs 1-16.
+  - Random 17-way baseline: 0.059.
+  - This is about 12.5x random, supporting the efficiency-to-gain argument for
+    a simple centroid instrument.
+
+### Semantic And SDG-Specific Checks
+
+- Add top-k SDG diagnostics.
+  - Current hard assignment uses top-1 nearest centroid.
+  - For cross-cutting SDGs, report top-3 centroid shares or ambiguity rates.
+  - Useful cases: SDGs 8, 11, 13, 17 and nexus topics such as energy/transport,
+    climate/partnerships, and work/inequality.
+
+- Inspect vocabulary distinctiveness.
+  - Strong SDGs such as 4, 6, and 7 may perform better because they have more
+    distinctive vocabulary.
+  - Weak SDGs such as 8 and 11 may be weaker because their language is broader
+    and overlaps with neighbouring goals.
+  - Possible check: compare top terms or nearest-neighbour examples per SDG,
+    and report this as an interpretability caveat.
+
+- Keep SDG 17 cleanly caveated.
+  - Headline validation should remain SDGs 1-16 only.
+  - The all-17 result is supplementary because SDG 17 centroid uses Benchmark
+    positives and is therefore contaminated.
+  - Could mention the contaminated SDG 17 result as a sensitivity illustration
+    of training/evaluation overlap, not as independent evidence.
+
+### Future-Ready Extensions
+
+- Vector search libraries are optional, not required for centroid scoring.
+  - FAISS or Annoy would be useful for nearest-document retrieval or medoid
+    search over millions of vectors.
+  - For scoring 2.7M papers against only 17 centroids, brute-force matrix
+    multiplication is already cheap; embedding remains the bottleneck.
+
+- Consider weighted centroid variants later.
+  - TF-IDF or SIF-style weighting could reduce the effect of generic academic
+    language and increase influence from SDG-distinctive terms.
+  - Treat this as a future-method extension, not a current requirement.
+
+- Consider multilingual or stronger embedding models later.
+  - BGE-M3 or multilingual sentence-transformers would support non-English
+    policy documents and a more global policy corpus.
+  - This would require rerunning centroid validation before any new claims.
+
+### Validation Snapshot To Remember
+
+- Headline clean performance: macro-F1 0.733 on SDGs 1-16.
+- Strongest SDGs:
+  - SDG 4: 0.920
+  - SDG 7: 0.889
+  - SDG 6: 0.869
+- Main challenge:
+  - Cross-cutting or conceptually broad SDGs, especially SDG 8 and SDG 11.
