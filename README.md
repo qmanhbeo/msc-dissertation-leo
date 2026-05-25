@@ -130,6 +130,60 @@ embedding on explicit hardware override. Every multi-minute stage should write
 progress to `artifacts/job_status/`, append durable shard outputs as it goes,
 and resume from the last completed shard.
 
+### Shard Pipeline Commands (Resume-Safe)
+
+The full-corpus path is now implemented as three checkpointed stages.
+
+```bash
+# 1) Streaming clean + shard (safe to interrupt/resume)
+python code/preprocess_papers_streaming.py \
+  --input data/openalex/papers.jsonl \
+  --out-dir data/openalex/clean_shards \
+  --shard-size 100000
+
+# 2) Embed shards (CUDA recommended)
+python code/embed_paper_shards.py \
+  --input-manifest data/openalex/clean_shards/manifest.json \
+  --out-dir data/embeddings/papers_shards \
+  --device cuda \
+  --batch-size 256 \
+  --local-files-only
+
+# 3) Score shards + build reusable subset index
+python code/score_paper_shards.py \
+  --embedding-manifest data/embeddings/papers_shards/manifest.json \
+  --out-dir data/paper_scores_shards
+```
+
+Or run all stages in order:
+
+```bash
+python code/run_full_corpus_pipeline.py --device cuda --batch-size 256 --local-files-only
+```
+
+Stage status and heartbeats:
+- `artifacts/job_status/preprocess_papers_streaming.json`
+- `artifacts/job_status/embed_paper_shards.json`
+- `artifacts/job_status/score_paper_shards.json`
+
+Quick subset reruns (no rebuild):
+
+```bash
+python code/run_subset_analysis.py \
+  --subset-name y2021_2022_sdg9 \
+  --year-from 2021 --year-to 2022 \
+  --assigned-sdgs 9
+```
+
+Optional explicit ID list intersection:
+
+```bash
+python code/run_subset_analysis.py \
+  --subset-name custom_ids \
+  --id-list /path/to/openalex_ids.txt \
+  --year-from 2019 --year-to 2024
+```
+
 ---
 
 ## Full Pipeline: Rebuild from Scratch
