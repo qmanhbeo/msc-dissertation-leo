@@ -1,12 +1,21 @@
+# Reproducibility baseline (captured 2026-05-26, dissertation env, WSL2)
+# CUDA PyTorch wheels are served from the PyTorch index:
+--extra-index-url https://download.pytorch.org/whl/cu121
+
 requests==2.31.0
 tqdm==4.66.1
 pdfplumber==0.10.4
 kaggle==1.5.13
-beautifulsoup4>=4.12.0
-pandas>=2.0.0
-openpyxl>=3.0.0
-sentence-transformers>=2.2.0
-scikit-learn>=1.0.0
-datasets>=2.14.0
-numpy>=1.24.0
-zstandard>=0.21.0
+beautifulsoup4==4.14.3
+pandas==3.0.3
+openpyxl==3.1.5
+sentence-transformers==5.5.1
+scikit-learn==1.8.0
+datasets==2.19.1
+numpy==2.4.4
+zstandard==0.25.0
+
+# GPU runtime stack used for this run:
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121

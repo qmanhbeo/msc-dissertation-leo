@@ -207,6 +207,42 @@ pip install -r requirements.txt
 
 ---
 
+## Reproducibility Snapshot (2026-05-26)
+
+For strict reruns of the current full-corpus job, use the pinned runtime artifacts in
+`docs/reproducibility/`:
+
+- `docs/reproducibility/runtime_snapshot_2026-05-26.md`
+- `docs/reproducibility/requirements.lock.txt`
+- `docs/reproducibility/conda-explicit-dissertation.txt`
+- `docs/reproducibility/conda-env-dissertation.yml`
+
+Captured machine/runtime versions for this run:
+
+- OS: Ubuntu `24.04.3 LTS` on `WSL2` (`Linux 5.15.146.1-microsoft-standard-WSL2`)
+- Conda: `26.1.1`
+- Python: `3.11.15` (`/home/manh/miniforge3/envs/dissertation/bin/python`)
+- NVIDIA driver: `546.30` (`nvidia-smi` reports CUDA `12.3`)
+- GPU: NVIDIA GeForce RTX 3050 Laptop GPU (4GB)
+- PyTorch stack used by pipeline:
+  - `torch==2.5.1+cu121`
+  - `torchvision==0.20.1+cu121`
+  - `torchaudio==2.5.1+cu121`
+- NLP/runtime stack:
+  - `sentence-transformers==5.5.1`
+  - `transformers==4.57.6`
+  - `tokenizers==0.22.2`
+  - `numpy==2.4.4`
+  - `scipy==1.17.1`
+  - `scikit-learn==1.8.0`
+  - `pandas==3.0.3`
+  - `datasets==2.19.1`
+
+The root `requirements.txt` now pins the above runtime package versions to match this
+execution profile.
+
+---
+
 ### Step 1 — Fetch raw data
 
 These scripts are **independent and can run in parallel**. Run from project root.

@@ -13,3 +13,7 @@
 ---
 
 **To what extent do AI-for-sustainability research and SDG policy discourse align/diverge in semantic space, and what systematic gaps in coverage and semantic representation can be identified?**
+
+---
+
+**To what extent do AI-for-sustainability research and SDG policy discourse align in their focus across and within the Sustainable Development Goals?**
