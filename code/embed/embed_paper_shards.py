@@ -31,6 +31,7 @@ from main_analysis.shard_pipeline_utils import atomic_write_json, ensure_dir, no
 
 
 log = logging.getLogger(__name__)
+STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 
 
 def parse_args() -> argparse.Namespace:
@@ -107,7 +108,7 @@ def main() -> None:
     out_manifest = read_json(out_manifest_path, default=None)
     if out_manifest is None:
         out_manifest = {
-            "stage": "embed_paper_shards",
+            "stage": STATUS_STAGE,
             "schema_version": 1,
             "created_at_utc": now_iso(),
             "model": args.model,
@@ -124,7 +125,7 @@ def main() -> None:
 
     update_stage_status(
         status_dir,
-        "embed_paper_shards",
+        STATUS_STAGE,
         "running",
         {"model": args.model, "device": device, "input_manifest": str(input_manifest)},
     )
@@ -177,14 +178,14 @@ def main() -> None:
         atomic_write_json(out_manifest_path, out_manifest)
         update_stage_status(
             status_dir,
-            "embed_paper_shards",
+            STATUS_STAGE,
             "running",
             {"last_completed_shard": shard_id, "rows_done": out_manifest["totals"]["rows"]},
         )
 
     update_stage_status(
         status_dir,
-        "embed_paper_shards",
+        STATUS_STAGE,
         "completed",
         {"manifest_path": str(out_manifest_path), "rows_done": out_manifest["totals"]["rows"]},
     )

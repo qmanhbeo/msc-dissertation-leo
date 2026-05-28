@@ -3,7 +3,7 @@ Streaming OpenAlex cleaner with checkpoint + resume safety.
 
 This stage reads the raw OpenAlex JSONL line-by-line and writes clean shards.
 It is safe to interrupt and resume. Progress is persisted under:
-  - artifacts/job_status/preprocess_papers_streaming.json
+  - artifacts/job_status/openalex_papers_to_clean_shards.json
   - data/openalex/clean_shards/state.json
 
 Outputs:
@@ -33,6 +33,7 @@ from main_analysis.shard_pipeline_utils import atomic_write_json, ensure_dir, no
 
 
 log = logging.getLogger(__name__)
+STATUS_STAGE = "openalex_papers_to_clean_shards"
 
 _BOILERPLATE = [
     re.compile(r"©\s*\d{4}.*", re.IGNORECASE),
@@ -186,7 +187,7 @@ def write_shard(
     manifest = read_json(manifest_path, default=None)
     if manifest is None:
         manifest = {
-            "stage": "preprocess_papers_streaming",
+            "stage": STATUS_STAGE,
             "schema_version": 1,
             "created_at_utc": now_iso(),
             "shards": [],
@@ -280,7 +281,7 @@ def main() -> None:
 
     update_stage_status(
         status_dir,
-        "preprocess_papers_streaming",
+        STATUS_STAGE,
         "running",
         {
             "input": str(input_path),
@@ -302,7 +303,7 @@ def main() -> None:
         pending_rows_count = 0
         update_stage_status(
             status_dir,
-            "preprocess_papers_streaming",
+            STATUS_STAGE,
             "running",
             {"message": "Recovered pending rows into shard", "rows_written": state["rows_written"]},
         )
@@ -369,7 +370,7 @@ def main() -> None:
                 pending_rows_count = 0
                 update_stage_status(
                     status_dir,
-                    "preprocess_papers_streaming",
+                    STATUS_STAGE,
                     "running",
                     {
                         "rows_written": state["rows_written"],
@@ -387,7 +388,7 @@ def main() -> None:
     atomic_write_json(state_path, state)
     update_stage_status(
         status_dir,
-        "preprocess_papers_streaming",
+        STATUS_STAGE,
         "completed",
         {
             "rows_written": state["rows_written"],
