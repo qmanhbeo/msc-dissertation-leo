@@ -123,3 +123,6 @@ writing/drafts/
 notes/private/
 .supervisor-feedback/
 marker/
+
+# Run-local full-corpus outputs
+outputs/
