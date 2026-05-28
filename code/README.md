@@ -14,4 +14,4 @@ Canonical workflow and dissertation-facing methodology notes are documented in:
 - `../README.md`
 
 Legacy/experimental scripts have been moved to:
-- `../archive/legacy/code/`
+- `../legacy/code/`
