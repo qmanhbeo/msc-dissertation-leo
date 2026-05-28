@@ -184,6 +184,52 @@ python code/run_subset_analysis.py \
   --year-from 2019 --year-to 2024
 ```
 
+### Full-Corpus Re-Visualization (Run-Local, Resume-Safe)
+
+Use this to regenerate full-corpus analysis outputs and figures from shard artifacts
+without touching canonical `data/` or `writing/` paths.
+
+```bash
+# From dissertation conda env
+/home/manh/miniforge3/envs/dissertation/bin/python -u code/revisualize_full_corpus.py \
+  --scores-manifest data/paper_scores_shards/manifest.json \
+  --embedding-manifest data/embeddings/papers_shards/manifest.json
+```
+
+Artifacts are written under:
+- `outputs/runs/full_corpus_viz_YYYYMMDD_HHMMSS/workspace/data/*`
+- `outputs/runs/full_corpus_viz_YYYYMMDD_HHMMSS/workspace/writing/figures/*`
+
+Strict reproducibility bundle per run:
+- `outputs/runs/<run>/commands.log`
+- `outputs/runs/<run>/job_status/*.json`
+- `outputs/runs/<run>/source_manifests/*`
+- `outputs/runs/<run>/reproducibility/runtime_snapshot.md`
+- `outputs/runs/<run>/artifacts_manifest.json`
+
+Resume and restart:
+
+```bash
+# Resume a named run after abort/interruption
+/home/manh/miniforge3/envs/dissertation/bin/python -u code/revisualize_full_corpus.py \
+  --run-name full_corpus_viz_20260526_120000
+```
+
+Smoke-mode validation (fast):
+
+```bash
+/home/manh/miniforge3/envs/dissertation/bin/python -u code/revisualize_full_corpus.py \
+  --run-name smoke_reviz \
+  --limit-shards 1 \
+  --skip-plots
+```
+
+Notes:
+- `plot_figures.py` requires `matplotlib` in the active environment.
+- This bridge rebuilds full `paper_scores.npy`, `paper_scores_ids.json`,
+  `embeddings/papers.npy`, recomputes `research_centroids.npy`, and
+  recomputes `policy_scores_vs_research.npy` before running legacy scripts.
+
 ---
 
 ## Full Pipeline: Rebuild from Scratch
@@ -203,7 +249,8 @@ pip install -r requirements.txt
 
 **`requirements.txt` installs:**
 `requests`, `tqdm`, `pdfplumber`, `kaggle`, `beautifulsoup4`, `pandas`, `openpyxl`,
-`sentence-transformers`, `scikit-learn`, `datasets`, `numpy`, `zstandard`
+`sentence-transformers`, `transformers`, `tokenizers`, `scikit-learn`, `scipy`,
+`matplotlib`, `datasets`, `numpy`, `zstandard`
 
 ---
 
