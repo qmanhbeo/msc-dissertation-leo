@@ -8,9 +8,9 @@ Sources:
 - Dataset: https://zenodo.org/records/11441197
 - Examples: https://github.com/osdg-ai/osdg-data/tree/main/examples
 
-Output: data/osdg/ (extracted CSV files)
-        data/osdg/examples/ (helpers.py, notebooks)
-        data/osdg/metadata.json (fetch metadata)
+Output: data/raw/osdg/ (extracted CSV files)
+        data/raw/osdg/examples/ (helpers.py, notebooks)
+        data/raw/osdg/metadata.json (fetch metadata)
 
 Run from project root:
     python code/fetch/fetch_osdg.py
@@ -29,7 +29,7 @@ from tqdm import tqdm
 ZENODO_API_URL = "https://zenodo.org/api/records/11441197"
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/osdg-ai/osdg-data/main/examples"
 GITHUB_REPO_URL = "https://github.com/osdg-ai/osdg-data"
-OUTPUT_DIR = Path("data/osdg")
+OUTPUT_DIR = Path("data/raw/osdg")
 EXAMPLES_DIR = OUTPUT_DIR / "examples"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 

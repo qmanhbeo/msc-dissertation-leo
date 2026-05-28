@@ -4,10 +4,10 @@ Fetch UN SDG-related policy documents and indicators.
 Part 1: Official UN SDG Indicators (from UN Statistics API)
 Part 2: Key UN/AI policy PDFs with text extraction
 
-Output: data/un_sdg/sdg_indicators.json
-        data/un_sdg/pdfs/*.pdf
-        data/un_sdg/texts/*.txt
-        data/un_sdg/metadata.json
+Output: data/raw/un_sdg/sdg_indicators.json
+        data/raw/un_sdg/pdfs/*.pdf
+        data/raw/un_sdg/texts/*.txt
+        data/raw/un_sdg/metadata.json
 """
 
 import json
@@ -28,7 +28,7 @@ except ImportError:
     print("Warning: pdfplumber not installed. PDFs will be downloaded but not extracted.")
 
 # Configuration
-OUTPUT_DIR = Path("data/un_sdg")
+OUTPUT_DIR = Path("data/raw/un_sdg")
 PDFS_DIR = OUTPUT_DIR / "pdfs"
 TEXTS_DIR = OUTPUT_DIR / "texts"
 INDICATORS_FILE = OUTPUT_DIR / "sdg_indicators.json"

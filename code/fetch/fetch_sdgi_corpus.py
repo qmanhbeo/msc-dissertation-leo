@@ -8,8 +8,8 @@ The SDGi Corpus is a comprehensive multilingual dataset of Voluntary National Re
 and Voluntary Local Reviews (VLRs) labeled by SDG. This is authoritative policy language
 directly from governments reporting on SDG implementation.
 
-Output: data/sdgi_corpus/ (downloaded Parquet files)
-        data/sdgi_corpus/metadata.json
+Output: data/raw/sdgi_corpus/ (downloaded Parquet files)
+        data/raw/sdgi_corpus/metadata.json
 
 Citation:
     Skrynnyk, O. et al. (2024). SDGi Corpus: A Comprehensive Multilingual Dataset
@@ -28,7 +28,7 @@ from pathlib import Path
 # Config
 # ---------------------------------------------------------------------------
 HUGGINGFACE_ID = "UNDP/sdgi-corpus"
-OUTPUT_DIR = Path("data/sdgi_corpus")
+OUTPUT_DIR = Path("data/raw/sdgi_corpus")
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 
 SOURCE_CITATION = (

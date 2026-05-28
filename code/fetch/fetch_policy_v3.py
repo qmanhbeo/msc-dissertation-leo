@@ -13,9 +13,9 @@ Fetch extended policy corpus v3 for dissertation.
   - AU, ASEAN, G7 digital / AI frameworks
   - SDSN Sustainable Development Report 2024/2025
 
-Output: data/policy_v3/pdfs/<name>.pdf
-        data/policy_v3/texts/<name>.txt
-        data/policy_v3/metadata.json
+Output: data/raw/policy_v3/pdfs/<name>.pdf
+        data/raw/policy_v3/texts/<name>.txt
+        data/raw/policy_v3/metadata.json
 
 Run from project root:
     python code/fetch/fetch_policy_v3.py
@@ -35,7 +35,7 @@ except ImportError:
     HAS_PDFPLUMBER = False
     print("Warning: pdfplumber not installed. Install with: pip install pdfplumber")
 
-OUTPUT_DIR = Path("data/policy_v3")
+OUTPUT_DIR = Path("data/raw/policy_v3")
 PDFS_DIR = OUTPUT_DIR / "pdfs"
 TEXTS_DIR = OUTPUT_DIR / "texts"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
@@ -665,7 +665,7 @@ def main() -> None:
         print(f"✗ Failed ({n_fail}): {', '.join(failed)}")
     print(f"✓ Elapsed: {elapsed.total_seconds():.1f}s")
     print(f"✓ Metadata saved to {METADATA_FILE}")
-    print(f"\nNext: add data/policy_v3/texts/ to preprocess_policy.py TEXT_DIRS and re-run.")
+    print(f"\nNext: add data/raw/policy_v3/texts/ to preprocess_policy.py TEXT_DIRS and re-run.")
     print(f"{'='*70}\n")
 
 

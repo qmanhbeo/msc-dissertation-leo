@@ -38,14 +38,14 @@ Coverage gap per SDG:
   (using document-weighted policy proportions as the canonical comparison)
 
 Inputs:
-  data/paper_scores.npy           (6172, 17)   float32
-  data/paper_scores_ids.json      list of {id}
-  data/policy_scores.npy          (47005, 17)  float32
-  data/policy_scores_ids.json     list of {id, source_doc}
+  data/scored/paper_scores.npy           (6172, 17)   float32
+  data/scored/paper_scores_ids.json      list of {id}
+  data/scored/policy_scores.npy          (47005, 17)  float32
+  data/scored/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
-  data/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
-  data/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
+  data/output/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
+  data/output/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
 
 Run from project root (after score materialization for the target run context):
     python code/main_analysis/coverage_gap.py
@@ -60,15 +60,16 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DATA_DIR = Path("data")
+SCORED_DIR = Path("data/scored")
+OUTPUT_DIR = Path("data/output")
 
-PAPER_SCORES    = DATA_DIR / "paper_scores.npy"
-PAPER_IDS       = DATA_DIR / "paper_scores_ids.json"
-POLICY_SCORES   = DATA_DIR / "policy_scores.npy"
-POLICY_IDS      = DATA_DIR / "policy_scores_ids.json"
+PAPER_SCORES    = SCORED_DIR / "paper_scores.npy"
+PAPER_IDS       = SCORED_DIR / "paper_scores_ids.json"
+POLICY_SCORES   = SCORED_DIR / "policy_scores.npy"
+POLICY_IDS      = SCORED_DIR / "policy_scores_ids.json"
 
-OUT_COV_GAP     = DATA_DIR / "coverage_gap.json"
-OUT_COV_GAP_RAW = DATA_DIR / "coverage_gap_raw.json"
+OUT_COV_GAP     = OUTPUT_DIR / "coverage_gap.json"
+OUT_COV_GAP_RAW = OUTPUT_DIR / "coverage_gap_raw.json"
 
 N_SDG = 17
 
@@ -186,6 +187,8 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     # ---- Load scores ----
     log.info("Loading paper scores: %s", PAPER_SCORES)
     paper_scores = np.load(PAPER_SCORES)    # (6172, 17)
@@ -350,7 +353,7 @@ def main() -> None:
         15: "Fifteen", 16: "Sixteen", 17: "Seventeen",
     }
 
-    gen_dir = DATA_DIR / "generated"
+    gen_dir = OUTPUT_DIR / "generated"
     gen_dir.mkdir(parents=True, exist_ok=True)
 
     # A15 calibration bias values

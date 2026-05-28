@@ -8,7 +8,7 @@ Produces three publication-quality figures for the dissertation:
     Figure 3 — Coverage vs semantic gap scatter (2×2 typology visualisation)
 
 Inputs:
-    data/h25_scatter.csv        — per-SDG metrics table from coverage_semantic_interaction.py
+    data/output/h25_scatter.csv        — per-SDG metrics table from coverage_semantic_interaction.py
 
 Outputs:
     writing/figures/fig1_coverage_profiles.pdf
@@ -28,8 +28,9 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
+OUT = DATA / "output"
 FIGS = ROOT / "writing" / "figures"
 FIGS.mkdir(parents=True, exist_ok=True)
 
@@ -73,7 +74,7 @@ SDG_SHORT = {
 # ---------------------------------------------------------------------------
 # Load data
 # ---------------------------------------------------------------------------
-df = pd.read_csv(DATA / "h25_scatter.csv")
+df = pd.read_csv(OUT / "h25_scatter.csv")
 df = df.sort_values("sdg").reset_index(drop=True)
 
 # Medians for 2×2 boundary

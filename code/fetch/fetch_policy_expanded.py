@@ -10,9 +10,9 @@ Downloads PDFs from diverse international sources:
 
 Graceful failure: logs errors and continues — a 403/404 does not abort the run.
 
-Output: data/policy_expanded/pdfs/<name>.pdf
-        data/policy_expanded/texts/<name>.txt
-        data/policy_expanded/metadata.json
+Output: data/raw/policy_expanded/pdfs/<name>.pdf
+        data/raw/policy_expanded/texts/<name>.txt
+        data/raw/policy_expanded/metadata.json
 
 Run from project root:
     python code/fetch/fetch_policy_expanded.py
@@ -32,7 +32,7 @@ except ImportError:
     HAS_PDFPLUMBER = False
     print("Warning: pdfplumber not installed. PDFs cannot be extracted.")
 
-OUTPUT_DIR = Path("data/policy_expanded")
+OUTPUT_DIR = Path("data/raw/policy_expanded")
 PDFS_DIR = OUTPUT_DIR / "pdfs"
 TEXTS_DIR = OUTPUT_DIR / "texts"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"

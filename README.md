@@ -192,12 +192,14 @@ python code/visualization/plot_figures.py
 ```
 
 Outputs:
-- `data/coverage_gap.json`
-- `data/coverage_gap_raw.json`
-- `data/semantic_gap.json`
-- `data/semantic_gap_sensitivity.json`
-- `data/coverage_semantic_interaction.csv`
-- `data/coverage_semantic_interaction_summary.json`
+- `data/output/coverage_gap.json`
+- `data/output/coverage_gap_raw.json`
+- `data/output/semantic_gap.json`
+- `data/output/semantic_gap_sensitivity.json`
+- `data/output/h25_scatter.csv`
+- `data/output/h25_correlation.json`
+- `data/output/validation_results.json`
+- `data/output/generated/*.tex`
 - `writing/figures/*.png`
 - `writing/figures/*.pdf`
 

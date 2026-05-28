@@ -31,14 +31,14 @@ Row ordering convention (critical for ALL downstream scripts):
   i.e., row 0 → SDG 1, row 1 → SDG 2, ..., row 16 → SDG 17
 
 Inputs:
-  data/embeddings/osdg.npy           (30534, 384) float32, L2-normalised
-  data/embeddings/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
-  data/embeddings/benchmark.npy      (616, 384)   float32, L2-normalised
-  data/embeddings/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
+  data/embedded/osdg.npy           (30534, 384) float32, L2-normalised
+  data/embedded/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
+  data/embedded/benchmark.npy      (616, 384)   float32, L2-normalised
+  data/embedded/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
 
 Outputs:
-  data/sdg_centroids.npy      (17, 384) float32, unit-normalised
-  data/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
+  data/scored/sdg_centroids.npy      (17, 384) float32, unit-normalised
+  data/scored/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
 
 Run from project root:
     python code/embed/sdg_centroids.py
@@ -52,8 +52,8 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-EMBEDDINGS_DIR = Path("data/embeddings")
-OUTPUT_DIR = Path("data")
+EMBEDDINGS_DIR = Path("data/embedded")
+OUTPUT_DIR = Path("data/scored")
 
 OSDG_EMB   = EMBEDDINGS_DIR / "osdg.npy"
 OSDG_IDS   = EMBEDDINGS_DIR / "osdg_ids.json"
@@ -167,6 +167,8 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     # ---- Load embeddings and ID metadata ----
     log.info("Loading OSDG embeddings: %s", OSDG_EMB)
     osdg_emb = np.load(OSDG_EMB)   # (30534, 384) float32 — produced by code/embed/embeddings.py

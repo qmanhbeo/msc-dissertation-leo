@@ -5,12 +5,12 @@ Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for 
        Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
 
 Inputs:
-  data/openalex/papers_clean.jsonl       (94 texts,    field: combined_text)
-  data/un_sdg/policy_chunks.jsonl        (253 texts,   field: text)
-  data/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
-  data/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
+  data/raw/openalex/papers_clean.jsonl       (94 texts,    field: combined_text)
+  data/preprocessed/un_sdg/policy_chunks.jsonl        (253 texts,   field: text)
+  data/preprocessed/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
+  data/preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
 
-Outputs per corpus (saved to data/embeddings/):
+Outputs per corpus (saved to data/embedded/):
   <name>.npy       float32 matrix (n_texts, 768)
   <name>_ids.json  list of dicts with id, sdg (where available), text_field
 
@@ -32,33 +32,33 @@ from sklearn.metrics.pairwise import cosine_similarity
 # ---------------------------------------------------------------------------
 MODEL_NAME = "all-MiniLM-L6-v2"
 BATCH_SIZE = 128
-OUTPUT_DIR = Path("data/embeddings")
+OUTPUT_DIR = Path("data/embedded")
 
 CORPORA = [
     {
         "name": "papers",
-        "input": Path("data/openalex/papers_clean.jsonl"),
+        "input": Path("data/raw/openalex/papers_clean.jsonl"),
         "text_field": "combined_text",
         "id_field": "openalex_id",
         "sdg_field": None,
     },
     {
         "name": "policy",
-        "input": Path("data/policy_all/policy_chunks_extended.jsonl"),
+        "input": Path("data/preprocessed/policy_all/policy_chunks_extended.jsonl"),
         "text_field": "text",
         "id_field": "chunk_id",
         "sdg_field": None,
     },
     {
         "name": "osdg",
-        "input": Path("data/osdg/osdg_clean.jsonl"),
+        "input": Path("data/preprocessed/osdg/osdg_clean.jsonl"),
         "text_field": "text",
         "id_field": "text_id",
         "sdg_field": "sdg",
     },
     {
         "name": "benchmark",
-        "input": Path("data/sdg_benchmark/benchmark_clean.jsonl"),
+        "input": Path("data/preprocessed/sdg_benchmark/benchmark_clean.jsonl"),
         "text_field": "text",
         "id_field": "id",
         "sdg_field": "sdg",

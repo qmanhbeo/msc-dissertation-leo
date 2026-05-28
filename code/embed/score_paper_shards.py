@@ -2,16 +2,16 @@
 Score paper embedding shards against SDG centroids.
 
 Inputs:
-  data/embeddings/papers_shards/manifest.json
-  data/sdg_centroids.npy
+  data/embedded/papers_shards/manifest.json
+  data/scored/sdg_centroids.npy
 
 Outputs:
-  data/paper_scores_shards/part-00001.npy
-  data/paper_scores_shards/part-00001_ids.jsonl
-  data/paper_scores_shards/manifest.json
-  data/paper_scores_shards/subset_index.sqlite
-  data/research_centroids.npy
-  data/research_centroid_meta.json
+  data/scored/paper_scores_shards/part-00001.npy
+  data/scored/paper_scores_shards/part-00001_ids.jsonl
+  data/scored/paper_scores_shards/manifest.json
+  data/scored/paper_scores_shards/subset_index.sqlite
+  data/scored/research_centroids.npy
+  data/scored/research_centroid_meta.json
 """
 
 from __future__ import annotations
@@ -39,12 +39,12 @@ STATUS_STAGE = "openalex_embeddings_to_sdg_scores"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--embedding-manifest", default="data/embeddings/papers_shards/manifest.json")
-    p.add_argument("--centroids", default="data/sdg_centroids.npy")
-    p.add_argument("--out-dir", default="data/paper_scores_shards")
-    p.add_argument("--status-dir", default="data/embeddings/papers_shards/artifact")
-    p.add_argument("--research-centroids-out", default="data/research_centroids.npy")
-    p.add_argument("--research-meta-out", default="data/research_centroid_meta.json")
+    p.add_argument("--embedding-manifest", default="data/embedded/papers_shards/manifest.json")
+    p.add_argument("--centroids", default="data/scored/sdg_centroids.npy")
+    p.add_argument("--out-dir", default="data/scored/paper_scores_shards")
+    p.add_argument("--status-dir", default="data/embedded/papers_shards/artifact")
+    p.add_argument("--research-centroids-out", default="data/scored/research_centroids.npy")
+    p.add_argument("--research-meta-out", default="data/scored/research_centroid_meta.json")
     p.add_argument("--limit-shards", type=int, default=0)
     return p.parse_args()
 

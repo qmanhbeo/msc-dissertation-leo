@@ -44,14 +44,14 @@ Statistics:
   Correlation results are reported with and without SDG 4 to test sensitivity.
 
 Inputs:
-  data/coverage_gap.json        per-SDG research + policy profiles (doc-weighted)
-  data/semantic_gap.json        per-SDG semantic gap (chunk_cap=50)
-  data/paper_scores.npy         (6172, 17) — for H26 paper top-scores
-  data/policy_scores_vs_research.npy  (47005, 17) — for H26 policy vs research centroids
+  data/output/coverage_gap.json        per-SDG research + policy profiles (doc-weighted)
+  data/output/semantic_gap.json        per-SDG semantic gap (chunk_cap=50)
+  data/scored/paper_scores.npy         (6172, 17) — for H26 paper top-scores
+  data/scored/policy_scores_vs_research.npy  (47005, 17) — for H26 policy vs research centroids
 
 Outputs:
-  data/h25_correlation.json     H25 correlation results + H26 asymmetry
-  data/h25_scatter.csv          per-SDG data table for plotting (SDG, research%, policy%,
+  data/output/h25_correlation.json     H25 correlation results + H26 asymmetry
+  data/output/h25_scatter.csv          per-SDG data table for plotting (SDG, research%, policy%,
                                 coverage_gap, semantic_gap, semantic_similarity)
 
 Run from project root (after semantic_gap.py):
@@ -69,15 +69,16 @@ from scipy import stats
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DATA_DIR = Path("data")
+SCORED_DIR = Path("data/scored")
+OUTPUT_DIR = Path("data/output")
 
-COVERAGE_GAP_PATH   = DATA_DIR / "coverage_gap.json"
-SEMANTIC_GAP_PATH   = DATA_DIR / "semantic_gap.json"
-PAPER_SCORES_PATH   = DATA_DIR / "paper_scores.npy"
-POL_VS_RES_PATH     = DATA_DIR / "policy_scores_vs_research.npy"
+COVERAGE_GAP_PATH   = OUTPUT_DIR / "coverage_gap.json"
+SEMANTIC_GAP_PATH   = OUTPUT_DIR / "semantic_gap.json"
+PAPER_SCORES_PATH   = SCORED_DIR / "paper_scores.npy"
+POL_VS_RES_PATH     = SCORED_DIR / "policy_scores_vs_research.npy"
 
-OUT_CORR   = DATA_DIR / "h25_correlation.json"
-OUT_SCATTER = DATA_DIR / "h25_scatter.csv"
+OUT_CORR   = OUTPUT_DIR / "h25_correlation.json"
+OUT_SCATTER = OUTPUT_DIR / "h25_scatter.csv"
 
 N_SDG = 17
 
@@ -119,6 +120,8 @@ def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     # ---- Load coverage data ----
     log.info("Loading coverage gap: %s", COVERAGE_GAP_PATH)
     cov_data = load_json(COVERAGE_GAP_PATH)
@@ -383,7 +386,7 @@ def main() -> None:
     log.info("Next step: python code/visualization/plot_figures.py")
 
     # ---- Write LaTeX generated outputs ----
-    gen_dir = DATA_DIR / "generated"
+    gen_dir = OUTPUT_DIR / "generated"
     gen_dir.mkdir(parents=True, exist_ok=True)
 
     # Median research% (midpoint of 8th and 9th values of 17 sorted values)

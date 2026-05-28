@@ -27,9 +27,9 @@ Note on expected accuracy:
   which still provides discriminative signal even when pairwise overlaps are high.
 
 Outputs:
-  data/validation_results.json        structured metrics + instrument flag
-  data/confusion_matrix.csv           17×17 (rows = true SDG, cols = predicted SDG)
-  data/centroid_similarity_matrix.csv 17×17 pairwise cosine similarities between centroids
+  data/output/validation_results.json        structured metrics + instrument flag
+  data/output/confusion_matrix.csv           17×17 (rows = true SDG, cols = predicted SDG)
+  data/output/centroid_similarity_matrix.csv 17×17 pairwise cosine similarities between centroids
 
 Run from project root (after sdg_centroids.py):
     python code/embed/validate_centroids.py
@@ -50,17 +50,18 @@ from sklearn.metrics import (
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-EMBEDDINGS_DIR = Path("data/embeddings")
-DATA_DIR = Path("data")
+EMBEDDINGS_DIR = Path("data/embedded")
+SCORED_DIR = Path("data/scored")
+OUTPUT_DIR = Path("data/output")
 
-CENTROIDS_PATH   = DATA_DIR / "sdg_centroids.npy"
-META_PATH        = DATA_DIR / "sdg_centroid_meta.json"
+CENTROIDS_PATH   = SCORED_DIR / "sdg_centroids.npy"
+META_PATH        = SCORED_DIR / "sdg_centroid_meta.json"
 BENCH_EMB        = EMBEDDINGS_DIR / "benchmark.npy"
 BENCH_IDS        = EMBEDDINGS_DIR / "benchmark_ids.json"
 
-OUT_RESULTS      = DATA_DIR / "validation_results.json"
-OUT_CONFUSION    = DATA_DIR / "confusion_matrix.csv"
-OUT_CENTROID_SIM = DATA_DIR / "centroid_similarity_matrix.csv"
+OUT_RESULTS      = OUTPUT_DIR / "validation_results.json"
+OUT_CONFUSION    = OUTPUT_DIR / "confusion_matrix.csv"
+OUT_CENTROID_SIM = OUTPUT_DIR / "centroid_similarity_matrix.csv"
 
 # Macro-F1 thresholds for the instrument pass/warn/fail flag (SDGs 1–16, uncontaminated).
 # These are judgment calls (Assumption A-THRESH in the implementation plan):
@@ -110,6 +111,8 @@ def save_csv_matrix(matrix: np.ndarray, labels: list, path: Path) -> None:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     # ---- Load centroids ----
     log.info("Loading centroids: %s", CENTROIDS_PATH)
     centroids = np.load(CENTROIDS_PATH)   # (17, 384) float32, unit-normalised
@@ -320,7 +323,7 @@ def main() -> None:
         16: "Peace, Justice and Strong Institutions",
     }
 
-    gen_dir = DATA_DIR / "generated"
+    gen_dir = OUTPUT_DIR / "generated"
     gen_dir.mkdir(parents=True, exist_ok=True)
 
     # Per-SDG centroid similarities needed in dissertation prose.

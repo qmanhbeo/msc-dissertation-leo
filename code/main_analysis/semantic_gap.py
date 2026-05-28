@@ -47,16 +47,16 @@ Minimum cluster size:
   be noisy. This is acknowledged in Assumption A-SPARSE.
 
 Inputs:
-  data/paper_scores.npy             (6172, 17)   float32
-  data/paper_scores_ids.json        list of {id}
-  data/policy_scores.npy            (47005, 17)  float32
-  data/policy_scores_ids.json       list of {id, source_doc}
-  data/embeddings/papers.npy        (6172, 384)  float32, L2-normalised
-  data/embeddings/policy.npy        (47005, 384) float32, L2-normalised
+  data/scored/paper_scores.npy             (6172, 17)   float32
+  data/scored/paper_scores_ids.json        list of {id}
+  data/scored/policy_scores.npy            (47005, 17)  float32
+  data/scored/policy_scores_ids.json       list of {id, source_doc}
+  data/embedded/papers.npy        (6172, 384)  float32, L2-normalised
+  data/embedded/policy.npy        (47005, 384) float32, L2-normalised
 
 Outputs:
-  data/semantic_gap.json            primary: semantic gap per SDG (CHUNK_CAP=50)
-  data/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
+  data/output/semantic_gap.json            primary: semantic gap per SDG (CHUNK_CAP=50)
+  data/output/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
 
 Run from project root (after coverage_gap.py):
     python code/main_analysis/semantic_gap.py
@@ -71,18 +71,19 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DATA_DIR       = Path("data")
-EMBEDDINGS_DIR = Path("data/embeddings")
+SCORED_DIR     = Path("data/scored")
+EMBEDDINGS_DIR = Path("data/embedded")
+OUTPUT_DIR     = Path("data/output")
 
-PAPER_SCORES  = DATA_DIR / "paper_scores.npy"
-PAPER_IDS     = DATA_DIR / "paper_scores_ids.json"
-POLICY_SCORES = DATA_DIR / "policy_scores.npy"
-POLICY_IDS    = DATA_DIR / "policy_scores_ids.json"
+PAPER_SCORES  = SCORED_DIR / "paper_scores.npy"
+PAPER_IDS     = SCORED_DIR / "paper_scores_ids.json"
+POLICY_SCORES = SCORED_DIR / "policy_scores.npy"
+POLICY_IDS    = SCORED_DIR / "policy_scores_ids.json"
 PAPERS_EMB    = EMBEDDINGS_DIR / "papers.npy"
 POLICY_EMB    = EMBEDDINGS_DIR / "policy.npy"
 
-OUT_SEM_GAP   = DATA_DIR / "semantic_gap.json"
-OUT_SEM_SENS  = DATA_DIR / "semantic_gap_sensitivity.json"
+OUT_SEM_GAP   = OUTPUT_DIR / "semantic_gap.json"
+OUT_SEM_SENS  = OUTPUT_DIR / "semantic_gap_sensitivity.json"
 
 N_SDG = 17
 
@@ -295,6 +296,8 @@ def compute_sdg_semantic_gaps(
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     # ---- Load embeddings ----
     log.info("Loading paper embeddings: %s", PAPERS_EMB)
     paper_emb = np.load(PAPERS_EMB)    # (6172, 384)
@@ -443,7 +446,7 @@ def main() -> None:
         15: "Fifteen", 16: "Sixteen", 17: "Seventeen",
     }
 
-    gen_dir = DATA_DIR / "generated"
+    gen_dir = OUTPUT_DIR / "generated"
     gen_dir.mkdir(parents=True, exist_ok=True)
 
     # Extract per-SDG values from primary_results (SDG order 1–17)

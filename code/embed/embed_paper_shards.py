@@ -2,12 +2,12 @@
 Embed cleaned OpenAlex shards into reusable embedding shards.
 
 Input manifest:
-  data/openalex/clean_shards/manifest.json
+  data/preprocessed/openalex/clean_shards/manifest.json
 
 Outputs:
-  data/embeddings/papers_shards/part-00001.npy
-  data/embeddings/papers_shards/part-00001_ids.jsonl
-  data/embeddings/papers_shards/manifest.json
+  data/embedded/papers_shards/part-00001.npy
+  data/embedded/papers_shards/part-00001_ids.jsonl
+  data/embedded/papers_shards/manifest.json
 """
 
 from __future__ import annotations
@@ -36,9 +36,9 @@ STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input-manifest", default="data/openalex/clean_shards/manifest.json")
-    p.add_argument("--out-dir", default="data/embeddings/papers_shards")
-    p.add_argument("--status-dir", default="data/embeddings/papers_shards/artifact")
+    p.add_argument("--input-manifest", default="data/preprocessed/openalex/clean_shards/manifest.json")
+    p.add_argument("--out-dir", default="data/embedded/papers_shards")
+    p.add_argument("--status-dir", default="data/embedded/papers_shards/artifact")
     p.add_argument("--model", default="all-MiniLM-L6-v2")
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
