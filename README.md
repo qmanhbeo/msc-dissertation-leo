@@ -248,6 +248,6 @@ This validation section should be cited directly in methodology/results chapters
 ## Legacy Surface
 
 Deprecated/experimental scripts are archived under:
-- `legacy/code/`
+- `_legacy/code/`
 
-See `legacy/README.md` for inventory and rationale.
+See `_legacy/README.md` for inventory and rationale.
