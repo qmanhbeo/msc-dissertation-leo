@@ -21,6 +21,9 @@ supported core pipeline.
 - `kaggle_context.py`
 - `preprocess_papers.py`
 - `preprocess_sdgindex.py`
+- `run_full_corpus_pipeline.py`
+- `run_subset_analysis.py`
+- `revisualize_full_corpus.py`
 
 If one of these is needed again, restore it explicitly and document why in the
 root README before reintroducing it into active workflows.

@@ -16,7 +16,7 @@ Outputs:
     writing/figures/fig3_coverage_semantic_scatter.pdf
 
 Run:
-    python code/plot_figures.py
+    python code/visualization/plot_figures.py
 """
 
 from pathlib import Path

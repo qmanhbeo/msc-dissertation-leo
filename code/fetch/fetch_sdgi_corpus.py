@@ -17,7 +17,7 @@ Citation:
     https://huggingface.co/datasets/UNDP/sdgi-corpus
 
 Run from project root:
-    python code/fetch_sdgi_corpus.py
+    python code/fetch/fetch_sdgi_corpus.py
 """
 
 import json

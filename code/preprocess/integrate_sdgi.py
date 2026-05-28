@@ -11,7 +11,7 @@ These VNR/VLR texts are the gold standard for SDG policy language —
 authored by national and local governments reporting on SDG implementation.
 
 Run from project root:
-    python code/integrate_sdgi.py
+    python code/preprocess/integrate_sdgi.py
 """
 
 import json

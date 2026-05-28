@@ -41,7 +41,7 @@ Outputs:
   data/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
 
 Run from project root:
-    python code/sdg_centroids.py
+    python code/embed/sdg_centroids.py
 """
 
 import json
@@ -169,7 +169,7 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
 def main() -> None:
     # ---- Load embeddings and ID metadata ----
     log.info("Loading OSDG embeddings: %s", OSDG_EMB)
-    osdg_emb = np.load(OSDG_EMB)   # (30534, 384) float32 — produced by code/embeddings.py
+    osdg_emb = np.load(OSDG_EMB)   # (30534, 384) float32 — produced by code/embed/embeddings.py
     osdg_ids = load_json(OSDG_IDS)  # list of {id, text, sdg} with sdg in 1..16
     log.info("  shape=%s  dtype=%s", osdg_emb.shape, osdg_emb.dtype)
 
@@ -300,7 +300,7 @@ def main() -> None:
     log.info(
         "\nRow ordering: centroids[i] = SDG (i+1)  "
         "(row 0 → SDG 1, row 16 → SDG 17)\n"
-        "Next step: python code/validate_centroids.py"
+        "Next step: python code/embed/validate_centroids.py"
     )
 
 

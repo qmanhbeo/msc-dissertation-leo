@@ -59,7 +59,7 @@ Outputs:
   data/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
 
 Run from project root (after coverage_gap.py):
-    python code/semantic_gap.py
+    python code/main_analysis/semantic_gap.py
 """
 
 import json
@@ -421,7 +421,7 @@ def main() -> None:
     log.info("Saved: %s", OUT_SEM_SENS)
 
     log.info("")
-    log.info("Next step: python code/coverage_semantic_interaction.py")
+    log.info("Next step: python code/main_analysis/coverage_semantic_interaction.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {

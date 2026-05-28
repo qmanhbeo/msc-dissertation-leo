@@ -13,7 +13,7 @@ Output: data/osdg/ (extracted CSV files)
         data/osdg/metadata.json (fetch metadata)
 
 Run from project root:
-    python code/fetch_osdg.py
+    python code/fetch/fetch_osdg.py
 """
 
 import json

@@ -55,7 +55,7 @@ Outputs:
                                 coverage_gap, semantic_gap, semantic_similarity)
 
 Run from project root (after semantic_gap.py):
-    python code/coverage_semantic_interaction.py
+    python code/main_analysis/coverage_semantic_interaction.py
 """
 
 import csv
@@ -380,7 +380,7 @@ def main() -> None:
     log.info("Saved: %s", OUT_SCATTER)
 
     log.info("")
-    log.info("Next step: python code/kaggle_context.py")
+    log.info("Next step: python code/visualization/plot_figures.py")
 
     # ---- Write LaTeX generated outputs ----
     gen_dir = DATA_DIR / "generated"

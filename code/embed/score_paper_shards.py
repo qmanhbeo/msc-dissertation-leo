@@ -20,12 +20,17 @@ import argparse
 import json
 import logging
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+
+from main_analysis.shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
 
 
 log = logging.getLogger(__name__)
@@ -286,4 +291,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

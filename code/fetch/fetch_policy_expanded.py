@@ -15,7 +15,7 @@ Output: data/policy_expanded/pdfs/<name>.pdf
         data/policy_expanded/metadata.json
 
 Run from project root:
-    python code/fetch_policy_expanded.py
+    python code/fetch/fetch_policy_expanded.py
 """
 
 import json

@@ -48,7 +48,7 @@ Outputs:
   data/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
 
 Run from project root (after score materialization for the target run context):
-    python code/coverage_gap.py
+    python code/main_analysis/coverage_gap.py
 """
 
 import json
@@ -328,7 +328,7 @@ def main() -> None:
     log.info("Saved: %s", OUT_COV_GAP_RAW)
 
     log.info("")
-    log.info("Next step: python code/semantic_gap.py")
+    log.info("Next step: python code/main_analysis/semantic_gap.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {

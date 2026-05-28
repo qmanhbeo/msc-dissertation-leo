@@ -46,8 +46,6 @@ graph TD
         C5[embed_paper_shards.py]
         C6[score_paper_shards.py]
         C7[shard_pipeline_utils.py]
-        C8[run_full_corpus_pipeline.py]
-        C9[run_subset_analysis.py]
     end
 
     %% 4. ANALYZE & VISUALIZE STAGE
@@ -56,7 +54,6 @@ graph TD
         D2[semantic_gap.py]
         D3[coverage_semantic_interaction.py]
         D4[plot_figures.py]
-        D5[revisualize_full_corpus.py]
     end
 
     %% 5. OPS STAGE
@@ -91,19 +88,9 @@ graph TD
     C5 -->|Embedded Shards| C6
     C7 -.->|Shared Shard Helpers| C5
     C7 -.->|Shared Shard Helpers| C6
-    C7 -.->|Shared Shard Helpers| C8
-
-    %% Orchestration Paths
-    C8 -->|Orchestrates Run| B1
-    C8 -->|Orchestrates Run| C5
-    C8 -->|Orchestrates Run| C6
 
     C6 -->|Scored Shards Data| D1
     C6 -->|Scored Shards Data| D2
-    C9 -.->|Fast Subset Loop| D1
-    C9 -.->|Fast Subset Loop| D2
-    D5 -.->|Rebuilds Local Workspace| D1
-    D5 -.->|Rebuilds Local Workspace| D2
 
     D1 -->|Gap Metrics| D3
     D2 -->|Gap Metrics| D3
@@ -144,15 +131,12 @@ graph TD
 - `embed_paper_shards.py`
 - `score_paper_shards.py`
 - `shard_pipeline_utils.py`
-- `run_full_corpus_pipeline.py`
-- `run_subset_analysis.py`
 
 ### Analyze / Visualize
 - `coverage_gap.py`
 - `semantic_gap.py`
 - `coverage_semantic_interaction.py`
 - `plot_figures.py`
-- `revisualize_full_corpus.py`
 
 ### Ops
 - `backup_data_snapshot.py`
@@ -168,43 +152,54 @@ pip install -r requirements.txt
 Build policy + centroid side:
 
 ```bash
-python code/fetch_un_sdg.py
-python code/fetch_policy_expanded.py
-python code/fetch_policy_v3.py
-python code/fetch_sdgi_corpus.py
-python code/fetch_ungdc.py
+python code/fetch/fetch_un_sdg.py
+python code/fetch/fetch_policy_expanded.py
+python code/fetch/fetch_policy_v3.py
+python code/fetch/fetch_sdgi_corpus.py
+python code/fetch/fetch_ungdc.py
 
-python code/preprocess_policy.py
-python code/integrate_sdgi.py
-python code/filter_ungdc_sdg.py
-python code/build_policy_corpus.py
+python code/preprocess/preprocess_policy.py
+python code/preprocess/integrate_sdgi.py
+python code/preprocess/filter_ungdc_sdg.py
+python code/preprocess/build_policy_corpus.py
 
-python code/fetch_osdg.py
-python code/fetch_sdg_benchmark.py
-python code/preprocess_osdg.py
-python code/preprocess_sdg_benchmark.py
+python code/fetch/fetch_osdg.py
+python code/fetch/fetch_sdg_benchmark.py
+python code/preprocess/preprocess_osdg.py
+python code/preprocess/preprocess_sdg_benchmark.py
 
-python code/embeddings.py
-python code/sdg_centroids.py
-python code/validate_centroids.py
+python code/embed/embeddings.py
+python code/embed/sdg_centroids.py
+python code/embed/validate_centroids.py
 ```
 
 Build full research corpus (resume-safe shard flow):
 
 ```bash
-python code/fetch_openalex.py
-python code/run_full_corpus_pipeline.py --device cuda --batch-size 256 --local-files-only
+python code/fetch/fetch_openalex.py
+python code/preprocess/preprocess_papers_streaming.py
+python code/embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
+python code/embed/score_paper_shards.py
 ```
 
 Run analysis + figures (run-local outputs):
 
 ```bash
-python code/revisualize_full_corpus.py --python /home/manh/miniforge3/envs/dissertation/bin/python
+python code/main_analysis/coverage_gap.py
+python code/main_analysis/semantic_gap.py
+python code/main_analysis/coverage_semantic_interaction.py
+python code/visualization/plot_figures.py
 ```
 
 Outputs:
-- `outputs/runs/full_corpus_viz_*/workspace/data/*`
-- `outputs/runs/full_corpus_viz_*/workspace/writing/figures/*`
+- `data/coverage_gap.json`
+- `data/coverage_gap_raw.json`
+- `data/semantic_gap.json`
+- `data/semantic_gap_sensitivity.json`
+- `data/coverage_semantic_interaction.csv`
+- `data/coverage_semantic_interaction_summary.json`
+- `writing/figures/*.png`
+- `writing/figures/*.pdf`
 
 ## Policy Corpus Taxonomy (Reviewer-Facing)
 
