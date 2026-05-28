@@ -13,12 +13,6 @@ Measure two different misalignment dimensions:
 
 ```mermaid
 graph TD
-    %% Styling
-    classDef fetch fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px;
-    classDef prep fill:#efebe9,stroke:#8d6e63,stroke-width:2px;
-    classDef core fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;
-    classDef analyze fill:#fff3e0,stroke:#ff9800,stroke-width:2px;
-    classDef ops fill:#fafafa,stroke:#9e9e9e,stroke-width:2px;
 
     %% 1. FETCH STAGE
     subgraph Fetch [1. Data Ingestion & Fetching]
@@ -31,7 +25,6 @@ graph TD
         A7[fetch_sdgi_corpus.py]
         A8[fetch_ungdc.py]
     end
-    class A1,A2,A3,A4,A5,A6,A7,A8 fetch;
 
     %% 2. PREPROCESS STAGE
     subgraph Preprocess [2. Clean, Shard & Merge]
@@ -43,7 +36,6 @@ graph TD
         B6[filter_ungdc_sdg.py]
         B7[build_policy_corpus.py]
     end
-    class B1,B2,B3,B4,B5,B6,B7 prep;
 
     %% 3. EMBED & SCORE STAGE
     subgraph EmbedCore [3. Embeddings, Centroids & Scoring]
@@ -57,7 +49,6 @@ graph TD
         C8[run_full_corpus_pipeline.py]
         C9[run_subset_analysis.py]
     end
-    class C1,C2,C3,C4,C5,C6,C7,C8,C9 core;
 
     %% 4. ANALYZE & VISUALIZE STAGE
     subgraph Analyze [4. Downstream Metrics & Figures]
@@ -67,13 +58,11 @@ graph TD
         D4[plot_figures.py]
         D5[revisualize_full_corpus.py]
     end
-    class D1,D2,D3,D4,D5 analyze;
 
     %% 5. OPS STAGE
     subgraph Ops [Operations]
         E1[backup_data_snapshot.py]
     end
-    class E1 ops;
 
     %% FLOW CONNECTIONS
     A1 -->|Raw Research JSON| B1
