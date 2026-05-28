@@ -6,7 +6,7 @@ Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for 
 
 Inputs:
   data/raw/openalex/papers_clean.jsonl       (94 texts,    field: combined_text)
-  data/preprocessed/un_sdg/policy_chunks.jsonl        (253 texts,   field: text)
+  data/preprocessed/policy/policy_chunks.jsonl        (policy chunks, field: text)
   data/preprocessed/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
   data/preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
 

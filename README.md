@@ -20,8 +20,7 @@ graph TD
         A2[fetch_osdg.py]
         A3[fetch_sdg_benchmark.py]
         A4[fetch_un_sdg.py]
-        A5[fetch_policy_expanded.py]
-        A6[fetch_policy_v3.py]
+        A5[fetch_policy.py]
         A7[fetch_sdgi_corpus.py]
         A8[fetch_ungdc.py]
     end
@@ -67,7 +66,6 @@ graph TD
     A3 -->|Raw Benchmarks| B3
     A4 -->|Raw Policy Text| B4
     A5 -->|Raw Policy Text| B4
-    A6 -->|Raw Policy Text| B4
     A7 -->|SDGi Data| B5
     A8 -->|UN Debate Corpus| B6
 
@@ -109,8 +107,7 @@ graph TD
 - `fetch_osdg.py`
 - `fetch_sdg_benchmark.py`
 - `fetch_un_sdg.py`
-- `fetch_policy_expanded.py`
-- `fetch_policy_v3.py`
+- `fetch_policy.py`
 - `fetch_sdgi_corpus.py`
 - `fetch_ungdc.py`
 
@@ -153,8 +150,7 @@ Build policy + centroid side:
 
 ```bash
 python code/fetch/fetch_un_sdg.py
-python code/fetch/fetch_policy_expanded.py
-python code/fetch/fetch_policy_v3.py
+python code/fetch/fetch_policy.py
 python code/fetch/fetch_sdgi_corpus.py
 python code/fetch/fetch_ungdc.py
 
@@ -208,8 +204,7 @@ Outputs:
 | Source Script | Corpus Role | Adds What Existing Sources Lack | Overlap Risk | Where Controlled |
 |---|---|---|---|---|
 | `fetch_un_sdg.py` | Core policy baseline | Canonical UN SDG/AI docs | Medium | `build_policy_corpus.py` exact-text dedupe |
-| `fetch_policy_expanded.py` | Additive policy breadth | Additional multilateral/national strategy texts | Medium | `build_policy_corpus.py` |
-| `fetch_policy_v3.py` | Additive long-tail policy docs | Broader document set beyond curated core | High | `build_policy_corpus.py` |
+| `fetch_policy.py` | Unified policy breadth | Combined multilateral, national, and long-tail policy texts | Medium-High | `build_policy_corpus.py` |
 | `fetch_sdgi_corpus.py` + `integrate_sdgi.py` | Government reporting corpus | VNR/VLR implementation language | Low-Medium | `build_policy_corpus.py` |
 | `fetch_ungdc.py` + `filter_ungdc_sdg.py` | Diplomatic discourse layer | UN General Debate SDG-relevant passages | Low-Medium | `build_policy_corpus.py` |
 

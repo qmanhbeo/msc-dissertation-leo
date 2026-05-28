@@ -4,14 +4,13 @@ Fetch UN SDG-related policy documents and indicators.
 Part 1: Official UN SDG Indicators (from UN Statistics API)
 Part 2: Key UN/AI policy PDFs with text extraction
 
-Output: data/raw/un_sdg/sdg_indicators.json
-        data/raw/un_sdg/pdfs/*.pdf
-        data/raw/un_sdg/texts/*.txt
-        data/raw/un_sdg/metadata.json
+Output: data/raw/un_sdg/artifact/sdg_indicators.json
+        data/raw/policy/pdfs/*.pdf
+        data/raw/policy/texts/*.txt
+        data/raw/un_sdg/artifact/metadata.json
 """
 
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -28,11 +27,12 @@ except ImportError:
     print("Warning: pdfplumber not installed. PDFs will be downloaded but not extracted.")
 
 # Configuration
-OUTPUT_DIR = Path("data/raw/un_sdg")
-PDFS_DIR = OUTPUT_DIR / "pdfs"
-TEXTS_DIR = OUTPUT_DIR / "texts"
-INDICATORS_FILE = OUTPUT_DIR / "sdg_indicators.json"
-METADATA_FILE = OUTPUT_DIR / "metadata.json"
+INDICATOR_DIR = Path("data/raw/un_sdg/artifact")
+INDICATORS_FILE = INDICATOR_DIR / "sdg_indicators.json"
+POLICY_DIR = Path("data/raw/policy")
+PDFS_DIR = POLICY_DIR / "pdfs"
+TEXTS_DIR = POLICY_DIR / "texts"
+METADATA_FILE = INDICATOR_DIR / "metadata.json"
 
 # UN SDG Indicators API
 UN_INDICATORS_API = "https://unstats.un.org/sdgs/api/v1/sdg"
@@ -120,14 +120,16 @@ def extract_pdf_text(pdf_path: Path) -> Optional[str]:
 
 def main():
     """Main fetch and extract pipeline."""
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    INDICATOR_DIR.mkdir(parents=True, exist_ok=True)
+    POLICY_DIR.mkdir(parents=True, exist_ok=True)
     PDFS_DIR.mkdir(parents=True, exist_ok=True)
     TEXTS_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"\n{'='*70}")
     print("UN SDG Policy Documents & Indicators Fetcher")
     print(f"{'='*70}")
-    print(f"Output: {OUTPUT_DIR}")
+    print(f"Indicators output: {INDICATORS_FILE}")
+    print(f"Policy output: {POLICY_DIR}")
     print(f"{'='*70}\n")
 
     start_time = datetime.now()
@@ -195,14 +197,12 @@ def main():
             "name": doc["name"],
             "source": doc["source"],
             "url": doc["url"],
-            "pdf_path": str(pdf_path.relative_to(OUTPUT_DIR)),
-            "text_path": str(text_path.relative_to(OUTPUT_DIR)) if text_path.exists() else None,
+            "pdf_path": str(pdf_path.relative_to(POLICY_DIR)),
+            "text_path": str(text_path.relative_to(POLICY_DIR)) if text_path.exists() else None,
         })
 
     elapsed = datetime.now() - start_time
-    total_size_mb = sum(
-        f.stat().st_size for f in OUTPUT_DIR.rglob("*") if f.is_file()
-    ) / (1024 * 1024)
+    total_size_mb = sum(f.stat().st_size for f in POLICY_DIR.rglob("*") if f.is_file()) / (1024 * 1024)
 
     metadata["elapsed_seconds"] = elapsed.total_seconds()
     metadata["total_size_mb"] = round(total_size_mb, 2)
