@@ -8,9 +8,9 @@ completed queries and resume mid-query using progress.json.
 
 Output:
   - data/raw/openalex/papers_sdg{{N}}.jsonl  — papers tagged as SDG N
-  - data/raw/openalex/seen_ids.json           — seen openalex_ids
-  - data/raw/openalex/progress.json           — per-query page tracking
-  - data/raw/openalex/metadata.json           — fetch metadata
+  - data/raw/openalex/artifact/seen_ids.json   — seen openalex_ids
+  - data/raw/openalex/artifact/progress.json   — per-query page tracking
+  - data/raw/openalex/artifact/metadata.json   — fetch metadata
 
 Run from project root:
     python code/fetch/fetch_openalex.py
@@ -35,9 +35,10 @@ load_dotenv()
 
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
 OUTPUT_DIR = Path("data/raw/openalex")
-METADATA_FILE = OUTPUT_DIR / "metadata.json"
-SEEN_IDS_FILE = OUTPUT_DIR / "seen_ids.json"
-PROGRESS_FILE = OUTPUT_DIR / "progress.json"
+ARTIFACT_DIR = OUTPUT_DIR / "artifact"
+METADATA_FILE = ARTIFACT_DIR / "metadata.json"
+SEEN_IDS_FILE = ARTIFACT_DIR / "seen_ids.json"
+PROGRESS_FILE = ARTIFACT_DIR / "progress.json"
 
 
 def require_env(name: str) -> str:
@@ -274,6 +275,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
     seen_ids = load_seen_ids()
     progress = load_progress()

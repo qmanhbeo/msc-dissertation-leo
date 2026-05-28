@@ -156,7 +156,9 @@ Generated from current stage layout.
 - data/preprocessed/un_sdg/policy_chunks.csv
 - data/preprocessed/un_sdg/policy_chunks.jsonl
 - data/preprocessed/ungdc_sdg/ungdc_sdg_chunks.jsonl
-- data/raw/openalex/metadata.json
+- data/raw/openalex/artifact/metadata.json
+- data/raw/openalex/artifact/progress.json
+- data/raw/openalex/artifact/seen_ids.json
 - data/raw/openalex/papers.jsonl
 - data/raw/openalex/papers_sdg01.jsonl
 - data/raw/openalex/papers_sdg02.jsonl
@@ -175,8 +177,6 @@ Generated from current stage layout.
 - data/raw/openalex/papers_sdg15.jsonl
 - data/raw/openalex/papers_sdg16.jsonl
 - data/raw/openalex/papers_sdg17.jsonl
-- data/raw/openalex/progress.json
-- data/raw/openalex/seen_ids.json
 - data/raw/osdg/examples/__pycache__/helpers.cpython-313.pyc
 - data/raw/osdg/examples/helpers.py
 - data/raw/osdg/examples/osdg-cd-example-classifier-sklearn.ipynb
