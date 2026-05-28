@@ -1,12 +1,15 @@
 # Code Directory (Active Surface)
 
-This folder contains only active scripts for the dissertation core pipeline:
+`code/` contains only active, supported pipeline scripts.
 
-1. Fetch
-2. Build/Embed/Score
-3. Analyze/Visualize
+Structure:
+- Fetch scripts
+- Build/preprocess scripts
+- Embed/score scripts
+- Analysis/visualization scripts
+- Shared active utility modules (for example `alignment_core.py`, `shard_pipeline_utils.py`)
 
-For canonical commands and workflow, use the root README:
+Canonical workflow and dissertation-facing methodology notes are documented in:
 - `../README.md`
 
 Legacy/experimental scripts have been moved to:

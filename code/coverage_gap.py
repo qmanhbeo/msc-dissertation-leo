@@ -47,7 +47,7 @@ Outputs:
   data/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
   data/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
 
-Run from project root (after alignment_score.py):
+Run from project root (after score materialization for the target run context):
     python code/coverage_gap.py
 """
 

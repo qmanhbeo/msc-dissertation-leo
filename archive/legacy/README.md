@@ -5,6 +5,7 @@ simplification. They are preserved for reference only and are not part of the
 supported core pipeline.
 
 ## Archived files
+- `alignment_score.py`
 - `fetch_aurora.py`
 - `fetch_cited_papers.py`
 - `fetch_full_papers.py`

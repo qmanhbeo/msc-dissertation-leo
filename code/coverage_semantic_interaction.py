@@ -23,7 +23,7 @@ H25 (headline hypothesis):
   All three operationalisations are reported. The primary test for H25 is (a).
 
 H26 asymmetry:
-  Computed from alignment_score.py outputs. The mean top-SDG score when papers are scored
+  Computed from active score artifacts. The mean top-SDG score when papers are scored
   against OSDG centroids is compared to the mean top-SDG score when policy chunks are scored
   against research centroids. An asymmetry where policy engages research framing more than
   research engages policy framing supports H26.

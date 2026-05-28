@@ -22,7 +22,7 @@ from typing import Any
 
 import numpy as np
 
-from alignment_score import build_research_centroids
+from alignment_core import build_research_centroids
 from coverage_gap import compute_coverage_gap, document_weighted_policy_profile, hard_assignment_profile, mean_score_profile
 from coverage_semantic_interaction import pearson_and_spearman
 from semantic_gap import compute_sdg_semantic_gaps

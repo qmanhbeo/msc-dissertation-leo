@@ -24,7 +24,7 @@ Assumption flags (see notes/ASSUMPTIONS.md for full details):
   A-NORM — Centroid normalisation: raw centroid norm is recorded, unit centroid is saved.
   A-SDG17 — SDG 17 contamination: benchmark texts used for both building and validating
              the SDG-17 centroid. Primary validation in validate_centroids.py excludes SDG 17.
-  A15 — OSDG circularity: not diagnosed here. Deferred to post-alignment_score.py step.
+  A15 — OSDG circularity: not diagnosed here. Deferred to downstream alignment scoring steps.
 
 Row ordering convention (critical for ALL downstream scripts):
   centroids[i] = centroid for SDG (i + 1)
@@ -264,7 +264,7 @@ def main() -> None:
     # ROW ORDERING CONVENTION: centroids[i] = centroid for SDG (i+1).
     # Row 0 → SDG 1, row 1 → SDG 2, ..., row 16 → SDG 17.
     # This convention is assumed by every downstream script that loads sdg_centroids.npy.
-    # Changing it here without updating alignment_score.py, coverage_gap.py, and
+    # Changing it here without updating downstream scoring/analysis scripts, including coverage_gap.py, and
     # semantic_gap.py would silently corrupt all downstream SDG assignments.
     centroids = np.stack(centroid_vectors, axis=0)  # (17, 384)
     assert centroids.shape == (17, 384), f"Unexpected centroid shape: {centroids.shape}"

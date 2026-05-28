@@ -1,21 +1,37 @@
-# Dissertation Pipeline (Minimal Core)
+# Dissertation Pipeline (Active Core)
 
-This repository is now intentionally simplified to the minimum active workflow:
+This repository implements a reproducible end-to-end methodology for evaluating
+alignment between AI-for-SDG research and SDG policy discourse.
 
-1. Fetch data
-2. Embed / score
-3. Analyze and visualize
+## Goal
 
-Legacy/experimental scripts were moved out of the active surface to `archive/legacy/`.
+Measure two different misalignment dimensions:
+- **Coverage Gap**: attention mismatch (how much each SDG is emphasized)
+- **Semantic Gap**: framing mismatch (how differently each SDG is discussed)
 
-## Active Script Surface
+## Pipeline Overview
 
-Active scripts live in `code/` and are the only supported path.
+```mermaid
+flowchart TD
+  OA[OpenAlex Research Fetch] --> RS[Streaming Clean + Shard]
+  OSDG[OSDG + SDG Benchmark] --> CEN[Build + Validate SDG Centroids]
+  POL[UN/Policy/SDGi/UNGDC Fetch] --> PB[Policy Build + Dedup]
+
+  RS --> EMBR[Embed Paper Shards]
+  EMBR --> SCR[Score Paper Shards vs SDG Centroids]
+  CEN --> SCR
+  PB --> EMP[Embed Policy Corpus]
+  EMP --> AN[Coverage + Semantic + Interaction Analysis]
+  SCR --> AN
+  AN --> FIG[Final Figures]
+```
+
+## Active Scripts
 
 ### Fetch
-- `fetch_openalex.py` (research corpus)
-- `fetch_osdg.py` (OSDG centroid source)
-- `fetch_sdg_benchmark.py` (benchmark centroid source + SDG17 support)
+- `fetch_openalex.py`
+- `fetch_osdg.py`
+- `fetch_sdg_benchmark.py`
 - `fetch_un_sdg.py`
 - `fetch_policy_expanded.py`
 - `fetch_policy_v3.py`
@@ -32,31 +48,35 @@ Active scripts live in `code/` and are the only supported path.
 - `preprocess_sdg_benchmark.py`
 
 ### Embed / Score
-- `embeddings.py` (policy + labelled corpora)
+- `embeddings.py`
 - `sdg_centroids.py`
 - `validate_centroids.py`
-- `alignment_score.py` (legacy flat-matrix scoring path)
-- `embed_paper_shards.py` (full research corpus)
-- `score_paper_shards.py` (full research corpus)
-- `run_full_corpus_pipeline.py` (orchestration)
-- `run_subset_analysis.py` (small fast reruns)
+- `alignment_core.py` (shared centroid/scoring helpers)
+- `embed_paper_shards.py`
+- `score_paper_shards.py`
+- `shard_pipeline_utils.py`
+- `run_full_corpus_pipeline.py`
+- `run_subset_analysis.py`
 
 ### Analyze / Visualize
 - `coverage_gap.py`
 - `semantic_gap.py`
 - `coverage_semantic_interaction.py`
 - `plot_figures.py`
-- `revisualize_full_corpus.py` (run-local bridge for full-corpus analysis/plots)
+- `revisualize_full_corpus.py`
 
-## Quick Start (Canonical)
+### Ops
+- `backup_data_snapshot.py`
 
-Install deps:
+## Canonical Run Path
+
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### A) Build policy + centroid side (if rebuilding from scratch)
+Build policy + centroid side:
 
 ```bash
 python code/fetch_un_sdg.py
@@ -80,32 +100,70 @@ python code/sdg_centroids.py
 python code/validate_centroids.py
 ```
 
-### B) Build full research corpus (resume-safe shard path)
+Build full research corpus (resume-safe shard flow):
 
 ```bash
 python code/fetch_openalex.py
 python code/run_full_corpus_pipeline.py --device cuda --batch-size 256 --local-files-only
 ```
 
-### C) Analyze + visualize full corpus (run-local outputs)
+Run analysis + figures (run-local outputs):
 
 ```bash
 python code/revisualize_full_corpus.py --python /home/manh/miniforge3/envs/dissertation/bin/python
 ```
 
-Outputs are written under:
+Outputs:
 - `outputs/runs/full_corpus_viz_*/workspace/data/*`
 - `outputs/runs/full_corpus_viz_*/workspace/writing/figures/*`
 
-## Data/Label Interpretation
+## Policy Corpus Taxonomy (Reviewer-Facing)
 
-- OpenAlex SDG tags are used as **retrieval filters**.
-- Final analytical SDG assignment is **centroid-based** (nearest-score hard assignment),
-  not direct OpenAlex SDG label assignment.
+| Source Script | Corpus Role | Adds What Existing Sources Lack | Overlap Risk | Where Controlled |
+|---|---|---|---|---|
+| `fetch_un_sdg.py` | Core policy baseline | Canonical UN SDG/AI docs | Medium | `build_policy_corpus.py` exact-text dedupe |
+| `fetch_policy_expanded.py` | Additive policy breadth | Additional multilateral/national strategy texts | Medium | `build_policy_corpus.py` |
+| `fetch_policy_v3.py` | Additive long-tail policy docs | Broader document set beyond curated core | High | `build_policy_corpus.py` |
+| `fetch_sdgi_corpus.py` + `integrate_sdgi.py` | Government reporting corpus | VNR/VLR implementation language | Low-Medium | `build_policy_corpus.py` |
+| `fetch_ungdc.py` + `filter_ungdc_sdg.py` | Diplomatic discourse layer | UN General Debate SDG-relevant passages | Low-Medium | `build_policy_corpus.py` |
 
-## Legacy Scripts
+Deduplication and merge boundary is explicit: `build_policy_corpus.py` performs
+normalized exact-text dedupe and emits the unified policy corpus.
 
-Anything not required for the core path has been moved to:
+## Method Definitions
+
+Let `R_s` = research share for SDG `s`, `P_s` = policy share for SDG `s`.
+
+- **Coverage Gap (per SDG)**: `|R_s - P_s|`
+- **Total Coverage Gap**: `sum_s |R_s - P_s|`
+- **Semantic Similarity (per SDG)**: cosine between research and policy sub-centroids within SDG `s`
+- **Semantic Gap (per SDG)**: `1 - semantic_similarity_s`
+
+Interpretation:
+- Coverage gap answers **“who pays attention where?”**
+- Semantic gap answers **“when both attend, do they mean the same thing?”**
+
+## Centroid Validation Transparency
+
+`validate_centroids.py` is the measurement-instrument quality gate.
+
+It reports:
+- nearest-centroid classification accuracy on benchmark texts
+- macro-F1 (primary uncontaminated SDG1–16 evaluation)
+- per-SDG F1
+- centroid-to-centroid similarity matrix
+- PASS/WARN/FAIL flag based on pre-declared thresholds
+
+This validation section should be cited directly in methodology/results chapters.
+
+## Label Interpretation
+
+- OpenAlex SDG tags are used as **retrieval filters** for candidate papers.
+- Final SDG assignment used in analysis is **centroid-score argmax**, not direct OpenAlex tag reuse.
+
+## Legacy Surface
+
+Deprecated/experimental scripts are archived under:
 - `archive/legacy/code/`
 
-See `archive/legacy/README.md` for the archived inventory.
+See `archive/legacy/README.md` for inventory and rationale.

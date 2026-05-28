@@ -28,7 +28,7 @@ from typing import Any
 
 import numpy as np
 
-from alignment_score import build_research_centroids
+from alignment_core import build_research_centroids
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
 
 
@@ -261,7 +261,7 @@ def stage_recompute_research_direction(ws: Path) -> dict[str, Any]:
     }
 
 
-def stage_run_legacy_analysis(ws: Path, py: str, command_log: Path, skip_plots: bool) -> dict[str, Any]:
+def stage_run_analysis(ws: Path, py: str, command_log: Path, skip_plots: bool) -> dict[str, Any]:
     cmds = [
         [py, "code/coverage_gap.py"],
         [py, "code/semantic_gap.py"],
@@ -523,8 +523,8 @@ def main() -> None:
     if not args.skip_analysis:
         _execute_stage(
             run_dir,
-            "legacy_analysis",
-            stage_run_legacy_analysis,
+            "analysis",
+            stage_run_analysis,
             ws,
             args.python,
             command_log,

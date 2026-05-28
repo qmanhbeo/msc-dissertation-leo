@@ -140,7 +140,7 @@ def main() -> None:
     # ASSUMPTION: both bench_emb and centroids are L2-normalised unit vectors (verified above).
     # For unit vectors: dot(a, b) = cos(θ) = cosine similarity.
     # scores[i, j] = cosine similarity of benchmark text i to centroid for SDG (j+1).
-    # This is the *same operation* that alignment_score.py will apply to papers and policy
+    # This is the *same operation* applied in downstream scoring stages for papers and policy
     # chunks — validating it here confirms the instrument before it is used at scale.
     scores = bench_emb @ centroids.T   # (616, 17)
 
@@ -299,7 +299,7 @@ def main() -> None:
     save_csv_matrix(centroid_sim, labels_17, OUT_CENTROID_SIM)
     log.info("Saved: %s  (17×17 pairwise centroid cosine sim)", OUT_CENTROID_SIM)
 
-    log.info("\nNext step: python code/alignment_score.py")
+    log.info("\nNext step: run the active scoring path (shard scoring or bridge materialisation).")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_num_words = {
