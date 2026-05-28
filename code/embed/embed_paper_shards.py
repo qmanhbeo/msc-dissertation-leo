@@ -38,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input-manifest", default="data/openalex/clean_shards/manifest.json")
     p.add_argument("--out-dir", default="data/embeddings/papers_shards")
-    p.add_argument("--status-dir", default="artifacts/job_status")
+    p.add_argument("--status-dir", default="data/embeddings/papers_shards/artifact")
     p.add_argument("--model", default="all-MiniLM-L6-v2")
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")

@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--embedding-manifest", default="data/embeddings/papers_shards/manifest.json")
     p.add_argument("--centroids", default="data/sdg_centroids.npy")
     p.add_argument("--out-dir", default="data/paper_scores_shards")
-    p.add_argument("--status-dir", default="artifacts/job_status")
+    p.add_argument("--status-dir", default="data/embeddings/papers_shards/artifact")
     p.add_argument("--research-centroids-out", default="data/research_centroids.npy")
     p.add_argument("--research-meta-out", default="data/research_centroid_meta.json")
     p.add_argument("--limit-shards", type=int, default=0)

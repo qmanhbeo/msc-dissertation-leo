@@ -3,7 +3,7 @@ Streaming OpenAlex cleaner with checkpoint + resume safety.
 
 This stage reads the raw OpenAlex JSONL line-by-line and writes clean shards.
 It is safe to interrupt and resume. Progress is persisted under:
-  - artifacts/job_status/openalex_papers_to_clean_shards.json
+  - data/embeddings/papers_shards/artifact/openalex_papers_to_clean_shards.json
   - data/openalex/clean_shards/state.json
 
 Outputs:
@@ -226,7 +226,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input", default="data/openalex/papers.jsonl")
     p.add_argument("--out-dir", default="data/openalex/clean_shards")
-    p.add_argument("--status-dir", default="artifacts/job_status")
+    p.add_argument("--status-dir", default="data/embeddings/papers_shards/artifact")
     p.add_argument("--manifest", default="")
     p.add_argument("--state", default="")
     p.add_argument("--db", default="")
