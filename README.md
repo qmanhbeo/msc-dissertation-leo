@@ -12,18 +12,118 @@ Measure two different misalignment dimensions:
 ## Pipeline Overview
 
 ```mermaid
-flowchart TD
-  OA[OpenAlex Research Fetch] --> RS[Streaming Clean + Shard]
-  OSDG[OSDG + SDG Benchmark] --> CEN[Build + Validate SDG Centroids]
-  POL[UN/Policy/SDGi/UNGDC Fetch] --> PB[Policy Build + Dedup]
+graph TD
+    %% Styling
+    classDef fetch fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px;
+    classDef prep fill:#efebe9,stroke:#8d6e63,stroke-width:2px;
+    classDef core fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;
+    classDef analyze fill:#fff3e0,stroke:#ff9800,stroke-width:2px;
+    classDef ops fill:#fafafa,stroke:#9e9e9e,stroke-width:2px;
 
-  RS --> EMBR[Embed Paper Shards]
-  EMBR --> SCR[Score Paper Shards vs SDG Centroids]
-  CEN --> SCR
-  PB --> EMP[Embed Policy Corpus]
-  EMP --> AN[Coverage + Semantic + Interaction Analysis]
-  SCR --> AN
-  AN --> FIG[Final Figures]
+    %% 1. FETCH STAGE
+    subgraph Fetch [1. Data Ingestion & Fetching]
+        A1[fetch_openalex.py]
+        A2[fetch_osdg.py]
+        A3[fetch_sdg_benchmark.py]
+        A4[fetch_un_sdg.py]
+        A5[fetch_policy_expanded.py]
+        A6[fetch_policy_v3.py]
+        A7[fetch_sdgi_corpus.py]
+        A8[fetch_ungdc.py]
+    end
+    class A1,A2,A3,A4,A5,A6,A7,A8 fetch;
+
+    %% 2. PREPROCESS STAGE
+    subgraph Preprocess [2. Clean, Shard & Merge]
+        B1[preprocess_papers_streaming.py]
+        B2[preprocess_osdg.py]
+        B3[preprocess_sdg_benchmark.py]
+        B4[preprocess_policy.py]
+        B5[integrate_sdgi.py]
+        B6[filter_ungdc_sdg.py]
+        B7[build_policy_corpus.py]
+    end
+    class B1,B2,B3,B4,B5,B6,B7 prep;
+
+    %% 3. EMBED & SCORE STAGE
+    subgraph EmbedCore [3. Embeddings, Centroids & Scoring]
+        C1[embeddings.py]
+        C2[sdg_centroids.py]
+        C3[validate_centroids.py]
+        C4[alignment_core.py]
+        C5[embed_paper_shards.py]
+        C6[score_paper_shards.py]
+        C7[shard_pipeline_utils.py]
+        C8[run_full_corpus_pipeline.py]
+        C9[run_subset_analysis.py]
+    end
+    class C1,C2,C3,C4,C5,C6,C7,C8,C9 core;
+
+    %% 4. ANALYZE & VISUALIZE STAGE
+    subgraph Analyze [4. Downstream Metrics & Figures]
+        D1[coverage_gap.py]
+        D2[semantic_gap.py]
+        D3[coverage_semantic_interaction.py]
+        D4[plot_figures.py]
+        D5[revisualize_full_corpus.py]
+    end
+    class D1,D2,D3,D4,D5 analyze;
+
+    %% 5. OPS STAGE
+    subgraph Ops [Operations]
+        E1[backup_data_snapshot.py]
+    end
+    class E1 ops;
+
+    %% FLOW CONNECTIONS
+    A1 -->|Raw Research JSON| B1
+    A2 -->|Raw Benchmarks| B2
+    A3 -->|Raw Benchmarks| B3
+    A4 -->|Raw Policy Text| B4
+    A5 -->|Raw Policy Text| B4
+    A6 -->|Raw Policy Text| B4
+    A7 -->|SDGi Data| B5
+    A8 -->|UN Debate Corpus| B6
+
+    B4 -->|Assembled Streams| B7
+    B5 -->|Assembled Streams| B7
+    B6 -->|Assembled Streams| B7
+
+    B1 -->|Research Shards| C5
+    B2 -->|Clean Labeled Text| C1
+    B3 -->|Clean Labeled Text| C1
+    B7 -->|Final Policy Corpus| C1
+
+    C1 -->|Baseline Vectors| C2
+    C2 --> C3
+    C2 -->|Centroid Matrix| C6
+    C4 -->|Centroid Matrix| C6
+
+    C5 -->|Embedded Shards| C6
+    C7 -.->|Shared Shard Helpers| C5
+    C7 -.->|Shared Shard Helpers| C6
+    C7 -.->|Shared Shard Helpers| C8
+
+    %% Orchestration Paths
+    C8 -->|Orchestrates Run| B1
+    C8 -->|Orchestrates Run| C5
+    C8 -->|Orchestrates Run| C6
+
+    C6 -->|Scored Shards Data| D1
+    C6 -->|Scored Shards Data| D2
+    C9 -.->|Fast Subset Loop| D1
+    C9 -.->|Fast Subset Loop| D2
+    D5 -.->|Rebuilds Local Workspace| D1
+    D5 -.->|Rebuilds Local Workspace| D2
+
+    D1 -->|Gap Metrics| D3
+    D2 -->|Gap Metrics| D3
+    D1 -->|Plotted Results| D4
+    D2 -->|Plotted Results| D4
+    D3 -->|Plotted Results| D4
+
+    %% Ops mapping
+    D4 -.->|Saves Artifact Run| E1
 ```
 
 ## Active Scripts
