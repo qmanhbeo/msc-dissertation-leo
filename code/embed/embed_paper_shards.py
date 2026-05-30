@@ -2,12 +2,12 @@
 Embed cleaned OpenAlex shards into reusable embedding shards.
 
 Input manifest:
-  data/preprocessed/openalex/clean_shards/manifest.json
+  data/preprocessed/research_corpus/metadata/manifest.json
 
 Outputs:
-  data/embedded/papers_shards/part-00001.npy
-  data/embedded/papers_shards/part-00001_ids.jsonl
-  data/embedded/papers_shards/manifest.json
+  data/embedded/research_shards/part-00001.npy
+  data/embedded/research_shards/metadata/part-00001_ids.jsonl
+  data/embedded/research_shards/metadata/manifest.json
 """
 
 from __future__ import annotations
@@ -36,9 +36,10 @@ STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input-manifest", default="data/preprocessed/openalex/clean_shards/manifest.json")
-    p.add_argument("--out-dir", default="data/embedded/papers_shards")
-    p.add_argument("--status-dir", default="data/embedded/papers_shards/artifact")
+    p.add_argument("--input-manifest", default="data/preprocessed/research_corpus/metadata/manifest.json")
+    p.add_argument("--out-dir", default="data/embedded/research_shards")
+    p.add_argument("--status-dir", default="data/embedded/research_shards/metadata")
+    p.add_argument("--metadata-dir", default="")
     p.add_argument("--model", default="all-MiniLM-L6-v2")
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
@@ -84,8 +85,10 @@ def main() -> None:
 
     input_manifest = Path(args.input_manifest)
     out_dir = Path(args.out_dir)
+    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
     status_dir = Path(args.status_dir)
     ensure_dir(out_dir)
+    ensure_dir(metadata_dir)
     ensure_dir(status_dir)
 
     data = read_json(input_manifest)
@@ -104,7 +107,7 @@ def main() -> None:
     emb_dim = int(model.get_sentence_embedding_dimension())
     log.info("Model=%s device=%s dim=%d", args.model, device, emb_dim)
 
-    out_manifest_path = out_dir / "manifest.json"
+    out_manifest_path = metadata_dir / "manifest.json"
     out_manifest = read_json(out_manifest_path, default=None)
     if out_manifest is None:
         out_manifest = {
@@ -134,7 +137,7 @@ def main() -> None:
         shard_id = int(shard["shard_id"])
         shard_name = shard["name"]
         out_emb = out_dir / f"{shard_name}.npy"
-        out_ids = out_dir / f"{shard_name}_ids.jsonl"
+        out_ids = metadata_dir / f"{shard_name}_ids.jsonl"
         in_data = Path(shard["data_path"])
         in_ids = Path(shard["ids_path"])
 

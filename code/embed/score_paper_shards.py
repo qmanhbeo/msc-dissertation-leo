@@ -2,16 +2,16 @@
 Score paper embedding shards against SDG centroids.
 
 Inputs:
-  data/embedded/papers_shards/manifest.json
+  data/embedded/research_shards/metadata/manifest.json
   data/scored/sdg_centroids.npy
 
 Outputs:
   data/scored/paper_scores_shards/part-00001.npy
-  data/scored/paper_scores_shards/part-00001_ids.jsonl
-  data/scored/paper_scores_shards/manifest.json
-  data/scored/paper_scores_shards/subset_index.sqlite
+  data/scored/paper_scores_shards/metadata/part-00001_ids.jsonl
+  data/scored/paper_scores_shards/metadata/manifest.json
+  data/scored/paper_scores_shards/metadata/subset_index.sqlite
   data/scored/research_centroids.npy
-  data/scored/research_centroid_meta.json
+  data/scored/metadata/research_centroid_meta.json
 """
 
 from __future__ import annotations
@@ -39,12 +39,13 @@ STATUS_STAGE = "openalex_embeddings_to_sdg_scores"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--embedding-manifest", default="data/embedded/papers_shards/manifest.json")
+    p.add_argument("--embedding-manifest", default="data/embedded/research_shards/metadata/manifest.json")
     p.add_argument("--centroids", default="data/scored/sdg_centroids.npy")
     p.add_argument("--out-dir", default="data/scored/paper_scores_shards")
-    p.add_argument("--status-dir", default="data/embedded/papers_shards/artifact")
+    p.add_argument("--status-dir", default="data/embedded/research_shards/metadata")
     p.add_argument("--research-centroids-out", default="data/scored/research_centroids.npy")
-    p.add_argument("--research-meta-out", default="data/scored/research_centroid_meta.json")
+    p.add_argument("--research-meta-out", default="data/scored/metadata/research_centroid_meta.json")
+    p.add_argument("--metadata-dir", default="")
     p.add_argument("--limit-shards", type=int, default=0)
     return p.parse_args()
 
@@ -93,6 +94,26 @@ def normalize(vec: np.ndarray) -> np.ndarray:
     return (vec / norm).astype(np.float32)
 
 
+def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
+    raw = Path(stored_path)
+    s = str(raw)
+    if s.startswith("data/embeddings/"):
+        raw = Path(s.replace("data/embeddings/", "data/embedded/", 1))
+    candidates = [
+        raw,
+        Path.cwd() / raw,
+        manifest_path.parent / raw,
+        manifest_path.parent / raw.name,
+    ]
+    for cand in candidates:
+        if cand.exists():
+            return cand
+    raise FileNotFoundError(
+        f"Could not resolve path from embedding manifest: {stored_path}. Tried: "
+        + ", ".join(str(c) for c in candidates)
+    )
+
+
 def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -100,11 +121,13 @@ def main() -> None:
     emb_manifest_path = Path(args.embedding_manifest)
     centroids_path = Path(args.centroids)
     out_dir = Path(args.out_dir)
+    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
     status_dir = Path(args.status_dir)
     research_centroids_out = Path(args.research_centroids_out)
     research_meta_out = Path(args.research_meta_out)
 
     ensure_dir(out_dir)
+    ensure_dir(metadata_dir)
     ensure_dir(status_dir)
 
     emb_manifest = read_json(emb_manifest_path)
@@ -115,7 +138,7 @@ def main() -> None:
     if centroids.shape[0] != 17:
         raise RuntimeError(f"Expected 17 centroids, got shape {centroids.shape}")
 
-    out_manifest_path = out_dir / "manifest.json"
+    out_manifest_path = metadata_dir / "manifest.json"
     out_manifest = read_json(out_manifest_path, default=None)
     if out_manifest is None:
         out_manifest = {
@@ -131,7 +154,7 @@ def main() -> None:
     completed = {int(s["shard_id"]): s for s in out_manifest.get("shards", [])}
     shards = emb_manifest["shards"][: args.limit_shards] if args.limit_shards > 0 else emb_manifest["shards"]
 
-    index_db = out_dir / "subset_index.sqlite"
+    index_db = metadata_dir / "subset_index.sqlite"
     conn = open_index(index_db)
 
     update_stage_status(
@@ -152,10 +175,10 @@ def main() -> None:
     for shard in shards:
         shard_id = int(shard["shard_id"])
         shard_name = shard["name"]
-        emb_path = Path(shard["embedding_path"])
-        ids_in = Path(shard["ids_path"])
+        emb_path = resolve_from_manifest(emb_manifest_path, shard["embedding_path"])
+        ids_in = resolve_from_manifest(emb_manifest_path, shard["ids_path"])
         score_path = out_dir / f"{shard_name}.npy"
-        ids_out = out_dir / f"{shard_name}_ids.jsonl"
+        ids_out = metadata_dir / f"{shard_name}_ids.jsonl"
 
         emb = np.load(emb_path).astype(np.float32)
         ids_rows = load_ids(ids_in)

@@ -44,15 +44,16 @@ Statistics:
   Correlation results are reported with and without SDG 4 to test sensitivity.
 
 Inputs:
-  data/output/coverage_gap.json        per-SDG research + policy profiles (doc-weighted)
-  data/output/semantic_gap.json        per-SDG semantic gap (chunk_cap=50)
-  data/scored/paper_scores.npy         (6172, 17) — for H26 paper top-scores
+  outputs/<run_name>/coverage_gap.json        per-SDG research + policy profiles (doc-weighted)
+  outputs/<run_name>/semantic_gap.json        per-SDG semantic gap (chunk_cap=50)
+  data/scored/paper_scores_shards/metadata/manifest.json — for H26 paper top-scores
   data/scored/policy_scores_vs_research.npy  (47005, 17) — for H26 policy vs research centroids
 
 Outputs:
-  data/output/h25_correlation.json     H25 correlation results + H26 asymmetry
-  data/output/h25_scatter.csv          per-SDG data table for plotting (SDG, research%, policy%,
+  outputs/<run_name>/h25_correlation.json     H25 correlation results + H26 asymmetry
+  outputs/<run_name>/h25_scatter.csv          per-SDG data table for plotting (SDG, research%, policy%,
                                 coverage_gap, semantic_gap, semantic_similarity)
+  outputs/<run_name>/tables/*.tex             generated LaTeX macros/tables
 
 Run from project root (after semantic_gap.py):
     python code/main_analysis/coverage_semantic_interaction.py
@@ -63,22 +64,25 @@ import json
 import logging
 import math
 import numpy as np
+import argparse
+import sys
 from pathlib import Path
 from scipy import stats
+
+from research_score_shards import aggregate_research_scores
+ROOT = Path(__file__).resolve().parents[2]
+CODE_ROOT = ROOT / "code"
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+from shared.output_runs import latest_run_dir, require_run_with_files, resolve_run_dir
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 SCORED_DIR = Path("data/scored")
-OUTPUT_DIR = Path("data/output")
-
-COVERAGE_GAP_PATH   = OUTPUT_DIR / "coverage_gap.json"
-SEMANTIC_GAP_PATH   = OUTPUT_DIR / "semantic_gap.json"
-PAPER_SCORES_PATH   = SCORED_DIR / "paper_scores.npy"
+DEFAULT_OUTPUT_ROOT = Path("outputs")
+PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
 POL_VS_RES_PATH     = SCORED_DIR / "policy_scores_vs_research.npy"
-
-OUT_CORR   = OUTPUT_DIR / "h25_correlation.json"
-OUT_SCATTER = OUTPUT_DIR / "h25_scatter.csv"
 
 N_SDG = 17
 
@@ -117,14 +121,58 @@ def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Args
+# ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Compute H25/H26 outputs into a run-scoped output folder.")
+    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--input-run", default=None, help="Run folder to read coverage/semantic inputs from.")
+    p.add_argument("--run-name", default=None, help="Run folder to write outputs to. Defaults to input run.")
+    p.add_argument("--run-label", default="analysis")
+    return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    output_root = Path(args.output_root)
+    required_inputs = ["coverage_gap.json", "semantic_gap.json"]
+    if args.input_run:
+        input_dir = require_run_with_files(output_root, args.input_run, required_inputs)
+    else:
+        latest = latest_run_dir(output_root, required_inputs)
+        if latest is None:
+            raise FileNotFoundError(
+                "No compatible output run found containing coverage_gap.json and semantic_gap.json. "
+                "Run coverage_gap.py and semantic_gap.py first, or pass --input-run."
+            )
+        input_dir = latest
+
+    if args.run_name:
+        output_dir = resolve_run_dir(
+            output_root=output_root,
+            run_name=args.run_name,
+            run_label=args.run_label,
+            prefer_latest_if_missing=False,
+        ).run_dir
+    else:
+        output_dir = input_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+    coverage_gap_path = input_dir / "coverage_gap.json"
+    semantic_gap_path = input_dir / "semantic_gap.json"
+    out_corr = output_dir / "h25_correlation.json"
+    out_scatter = output_dir / "h25_scatter.csv"
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    log.info("Input run:  %s", input_dir)
+    log.info("Output run: %s", output_dir)
 
     # ---- Load coverage data ----
-    log.info("Loading coverage gap: %s", COVERAGE_GAP_PATH)
-    cov_data = load_json(COVERAGE_GAP_PATH)
+    log.info("Loading coverage gap: %s", coverage_gap_path)
+    cov_data = load_json(coverage_gap_path)
 
     # Extract per-SDG arrays (1-indexed labels, so SDG{i} = SDG i, row index i-1)
     res_hard    = np.array([cov_data["research_profile_hard"][f"SDG{i}"] for i in range(1, 18)])
@@ -135,8 +183,8 @@ def main() -> None:
     res_dominance = res_hard - pol_dw_hard
 
     # ---- Load semantic gap data ----
-    log.info("Loading semantic gap: %s", SEMANTIC_GAP_PATH)
-    sem_data = load_json(SEMANTIC_GAP_PATH)
+    log.info("Loading semantic gap: %s", semantic_gap_path)
+    sem_data = load_json(semantic_gap_path)
 
     per_sdg = {r["sdg"]: r for r in sem_data["per_sdg"]}
     sem_gap  = np.array([per_sdg[i]["semantic_gap"]         for i in range(1, 18)], dtype=float)
@@ -268,18 +316,11 @@ def main() -> None:
     log.info("=" * 70)
     log.info("H26 DIRECTIONAL ASYMMETRY")
     log.info("=" * 70)
-    paper_scores    = np.load(PAPER_SCORES_PATH)           # (6172, 17)
+    research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
     pol_vs_research = np.load(POL_VS_RES_PATH)             # (47005, 17)
 
-    mean_paper_top    = float(paper_scores.max(axis=1).mean())
+    mean_paper_top    = float(research["mean_top_overall"])
     mean_pol_vs_res   = float(pol_vs_research.max(axis=1).mean())
-
-    # Per-SDG: mean score of research papers for their top OSDG centroid.
-    paper_assignments = paper_scores.argmax(axis=1)
-    mean_paper_per_sdg = np.array([
-        float(paper_scores[paper_assignments == j, j].mean()) if (paper_assignments == j).sum() > 0 else 0.0
-        for j in range(N_SDG)
-    ])
 
     # Per-SDG: mean score of policy chunks for their top research centroid.
     pol_assignments = pol_vs_research.argmax(axis=1)
@@ -357,12 +398,12 @@ def main() -> None:
         ],
     }
 
-    with OUT_CORR.open("w", encoding="utf-8") as f:
+    with out_corr.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    log.info("Saved: %s", OUT_CORR)
+    log.info("Saved: %s", out_corr)
 
     # CSV scatter table for plotting.
-    with OUT_SCATTER.open("w", newline="", encoding="utf-8") as f:
+    with out_scatter.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=[
             "sdg", "research_pct", "policy_pct_docweighted",
             "coverage_gap_abs", "research_dominance",
@@ -380,14 +421,13 @@ def main() -> None:
                 "semantic_similarity": round(float(sem_sim[i]), 6),
                 "reliable": int(reliable_mask[i]),
             })
-    log.info("Saved: %s", OUT_SCATTER)
+    log.info("Saved: %s", out_scatter)
 
     log.info("")
     log.info("Next step: python code/visualization/plot_figures.py")
 
     # ---- Write LaTeX generated outputs ----
-    gen_dir = OUTPUT_DIR / "generated"
-    gen_dir.mkdir(parents=True, exist_ok=True)
+    gen_dir = tables_dir
 
     # Median research% (midpoint of 8th and 9th values of 17 sorted values)
     sorted_res = sorted(float(v) * 100 for v in res_hard)

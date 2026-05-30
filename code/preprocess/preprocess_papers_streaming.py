@@ -3,14 +3,14 @@ Streaming OpenAlex cleaner with checkpoint + resume safety.
 
 This stage reads the raw OpenAlex JSONL line-by-line and writes clean shards.
 It is safe to interrupt and resume. Progress is persisted under:
-  - data/embedded/papers_shards/artifact/openalex_papers_to_clean_shards.json
-  - data/preprocessed/openalex/clean_shards/state.json
+  - data/embedded/research_shards/metadata/openalex_papers_to_clean_shards.json
+  - data/preprocessed/research_corpus/metadata/state.json
 
 Outputs:
-  data/preprocessed/openalex/clean_shards/part-00001.jsonl
-  data/preprocessed/openalex/clean_shards/part-00001_ids.jsonl
-  data/preprocessed/openalex/clean_shards/manifest.json
-  data/preprocessed/openalex/clean_shards/dedupe.sqlite
+  data/preprocessed/research_corpus/part-00001.jsonl
+  data/preprocessed/research_corpus/metadata/part-00001_ids.jsonl
+  data/preprocessed/research_corpus/metadata/manifest.json
+  data/preprocessed/research_corpus/metadata/dedupe.sqlite
 """
 
 from __future__ import annotations
@@ -143,6 +143,7 @@ def append_pending(path: Path, row: dict[str, Any]) -> None:
 
 def write_shard(
     out_dir: Path,
+    metadata_dir: Path,
     manifest_path: Path,
     state_path: Path,
     state: dict[str, Any],
@@ -154,7 +155,7 @@ def write_shard(
     shard_idx = int(state["next_shard_idx"])
     shard_name = f"part-{shard_idx:05d}"
     shard_path = out_dir / f"{shard_name}.jsonl"
-    ids_path = out_dir / f"{shard_name}_ids.jsonl"
+    ids_path = metadata_dir / f"{shard_name}_ids.jsonl"
     shard_tmp = shard_path.with_suffix(".jsonl.tmp")
     ids_tmp = ids_path.with_suffix(".jsonl.tmp")
 
@@ -225,8 +226,9 @@ def write_shard(
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input", default="data/raw/openalex/papers.jsonl")
-    p.add_argument("--out-dir", default="data/preprocessed/openalex/clean_shards")
-    p.add_argument("--status-dir", default="data/embedded/papers_shards/artifact")
+    p.add_argument("--out-dir", default="data/preprocessed/research_corpus")
+    p.add_argument("--status-dir", default="data/embedded/research_shards/metadata")
+    p.add_argument("--metadata-dir", default="")
     p.add_argument("--manifest", default="")
     p.add_argument("--state", default="")
     p.add_argument("--db", default="")
@@ -247,13 +249,15 @@ def main() -> None:
     input_path = Path(args.input)
     out_dir = Path(args.out_dir)
     status_dir = Path(args.status_dir)
+    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
     ensure_dir(out_dir)
     ensure_dir(status_dir)
+    ensure_dir(metadata_dir)
 
-    manifest_path = Path(args.manifest) if args.manifest else out_dir / "manifest.json"
-    state_path = Path(args.state) if args.state else out_dir / "state.json"
-    db_path = Path(args.db) if args.db else out_dir / "dedupe.sqlite"
-    pending_path = Path(args.pending) if args.pending else out_dir / "pending.jsonl"
+    manifest_path = Path(args.manifest) if args.manifest else metadata_dir / "manifest.json"
+    state_path = Path(args.state) if args.state else metadata_dir / "state.json"
+    db_path = Path(args.db) if args.db else metadata_dir / "dedupe.sqlite"
+    pending_path = Path(args.pending) if args.pending else metadata_dir / "pending.jsonl"
 
     if args.reset:
         for p in (manifest_path, state_path, db_path, pending_path):
@@ -261,7 +265,7 @@ def main() -> None:
                 p.unlink()
         for p in out_dir.glob("part-*.jsonl"):
             p.unlink()
-        for p in out_dir.glob("part-*_ids.jsonl"):
+        for p in metadata_dir.glob("part-*_ids.jsonl"):
             p.unlink()
 
     state = read_json(
@@ -298,7 +302,7 @@ def main() -> None:
     pending_rows_count = pending_count(pending_path)
     if pending_rows_count:
         log.info("Recovery: found %d pending rows, committing to next shard first.", pending_rows_count)
-        state = write_shard(out_dir, manifest_path, state_path, state, read_pending(pending_path))
+        state = write_shard(out_dir, metadata_dir, manifest_path, state_path, state, read_pending(pending_path))
         truncate_file(pending_path)
         pending_rows_count = 0
         update_stage_status(
@@ -365,7 +369,7 @@ def main() -> None:
                 if since_last_commit:
                     conn.commit()
                     since_last_commit = 0
-                state = write_shard(out_dir, manifest_path, state_path, state, read_pending(pending_path))
+                state = write_shard(out_dir, metadata_dir, manifest_path, state_path, state, read_pending(pending_path))
                 truncate_file(pending_path)
                 pending_rows_count = 0
                 update_stage_status(
@@ -382,7 +386,7 @@ def main() -> None:
     if since_last_commit:
         conn.commit()
     if pending_rows_count:
-        state = write_shard(out_dir, manifest_path, state_path, state, read_pending(pending_path))
+        state = write_shard(out_dir, metadata_dir, manifest_path, state_path, state, read_pending(pending_path))
         truncate_file(pending_path)
 
     atomic_write_json(state_path, state)

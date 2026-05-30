@@ -181,23 +181,23 @@ python code/embed/score_paper_shards.py
 Run analysis + figures (run-local outputs):
 
 ```bash
-python code/main_analysis/coverage_gap.py
-python code/main_analysis/semantic_gap.py
-python code/main_analysis/coverage_semantic_interaction.py
-python code/visualization/plot_figures.py
+python code/main_analysis/coverage_gap.py --run-name 20260530_full
+python code/main_analysis/semantic_gap.py --run-name 20260530_full
+python code/main_analysis/coverage_semantic_interaction.py --input-run 20260530_full --run-name 20260530_full
+python code/visualization/plot_figures.py --input-run 20260530_full --run-name 20260530_full
 ```
 
 Outputs:
-- `data/output/coverage_gap.json`
-- `data/output/coverage_gap_raw.json`
-- `data/output/semantic_gap.json`
-- `data/output/semantic_gap_sensitivity.json`
-- `data/output/h25_scatter.csv`
-- `data/output/h25_correlation.json`
-- `data/output/validation_results.json`
-- `data/output/generated/*.tex`
-- `writing/figures/*.png`
-- `writing/figures/*.pdf`
+- `outputs/<run_name>/coverage_gap.json`
+- `outputs/<run_name>/coverage_gap_raw.json`
+- `outputs/<run_name>/semantic_gap.json`
+- `outputs/<run_name>/semantic_gap_sensitivity.json`
+- `outputs/<run_name>/h25_scatter.csv`
+- `outputs/<run_name>/h25_correlation.json`
+- `outputs/<run_name>/validation_results.json`
+- `outputs/<run_name>/tables/*.tex`
+- `outputs/<run_name>/figures/*.png`
+- `outputs/<run_name>/figures/*.pdf`
 
 ## Policy Corpus Taxonomy (Reviewer-Facing)
 

@@ -47,16 +47,16 @@ Minimum cluster size:
   be noisy. This is acknowledged in Assumption A-SPARSE.
 
 Inputs:
-  data/scored/paper_scores.npy             (6172, 17)   float32
-  data/scored/paper_scores_ids.json        list of {id}
+  data/scored/research_centroids.npy       (17, 384)    float32
+  data/scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
   data/scored/policy_scores.npy            (47005, 17)  float32
-  data/scored/policy_scores_ids.json       list of {id, source_doc}
-  data/embedded/papers.npy        (6172, 384)  float32, L2-normalised
+  data/scored/metadata/policy_scores_ids.json       list of {id, source_doc}
   data/embedded/policy.npy        (47005, 384) float32, L2-normalised
 
 Outputs:
-  data/output/semantic_gap.json            primary: semantic gap per SDG (CHUNK_CAP=50)
-  data/output/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
+  outputs/<run_name>/semantic_gap.json            primary: semantic gap per SDG (CHUNK_CAP=50)
+  outputs/<run_name>/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
+  outputs/<run_name>/tables/*.tex                  generated LaTeX macros/tables
 
 Run from project root (after coverage_gap.py):
     python code/main_analysis/semantic_gap.py
@@ -65,25 +65,28 @@ Run from project root (after coverage_gap.py):
 import json
 import logging
 import numpy as np
+import argparse
+import sys
 from collections import defaultdict
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+CODE_ROOT = ROOT / "code"
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+from shared.output_runs import resolve_run_dir
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 SCORED_DIR     = Path("data/scored")
 EMBEDDINGS_DIR = Path("data/embedded")
-OUTPUT_DIR     = Path("data/output")
+DEFAULT_OUTPUT_ROOT = Path("outputs")
 
-PAPER_SCORES  = SCORED_DIR / "paper_scores.npy"
-PAPER_IDS     = SCORED_DIR / "paper_scores_ids.json"
 POLICY_SCORES = SCORED_DIR / "policy_scores.npy"
-POLICY_IDS    = SCORED_DIR / "policy_scores_ids.json"
-PAPERS_EMB    = EMBEDDINGS_DIR / "papers.npy"
+POLICY_IDS    = SCORED_DIR / "metadata" / "policy_scores_ids.json"
 POLICY_EMB    = EMBEDDINGS_DIR / "policy.npy"
-
-OUT_SEM_GAP   = OUTPUT_DIR / "semantic_gap.json"
-OUT_SEM_SENS  = OUTPUT_DIR / "semantic_gap_sensitivity.json"
+RESEARCH_CENTROIDS = SCORED_DIR / "research_centroids.npy"
+RESEARCH_CENTROID_META = SCORED_DIR / "metadata" / "research_centroid_meta.json"
 
 N_SDG = 17
 
@@ -186,9 +189,10 @@ def cap_policy_indices_per_doc(
 
 
 def compute_sdg_semantic_gaps(
-    paper_emb: np.ndarray,
+    research_centroids: np.ndarray,
+    research_counts: np.ndarray,
+    research_cohesions: np.ndarray,
     policy_emb: np.ndarray,
-    paper_assignments: np.ndarray,
     policy_assignments: np.ndarray,
     policy_ids: list[dict],
     chunk_cap: int,
@@ -205,10 +209,9 @@ def compute_sdg_semantic_gaps(
         sdg = sdg_idx + 1
 
         # Gather cluster indices.
-        paper_idxs  = [i for i, a in enumerate(paper_assignments)  if a == sdg_idx]
         policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
 
-        n_papers  = len(paper_idxs)
+        n_papers  = int(research_counts[sdg_idx])
         n_chunks  = len(policy_idxs)
 
         # Apply per-document chunk cap to policy side.
@@ -231,11 +234,12 @@ def compute_sdg_semantic_gaps(
                 sdg, n_papers, n_chunks_capped, MIN_CLUSTER_SIZE
             )
 
-        # Build sub-centroids.
-        res_centroid, res_cohesion = build_sub_centroid(paper_emb, paper_idxs)
+        # Build policy sub-centroid and read research centroid pre-computed at scoring stage.
+        res_centroid = research_centroids[sdg_idx]
+        res_cohesion = float(research_cohesions[sdg_idx])
         pol_centroid, pol_cohesion = build_sub_centroid(policy_emb, policy_idxs_capped)
 
-        if res_centroid is None or pol_centroid is None:
+        if pol_centroid is None or float(np.linalg.norm(res_centroid)) < 1e-8:
             # Cannot compute gap — one or both clusters are empty or near-zero.
             log.warning("SDG %2d: could not build sub-centroid (empty cluster)", sdg)
             results.append({
@@ -293,15 +297,46 @@ def compute_sdg_semantic_gaps(
 
 
 # ---------------------------------------------------------------------------
+# Args
+# ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Compute semantic gap outputs into a run-scoped output folder.")
+    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--run-name", default=None)
+    p.add_argument("--run-label", default="analysis")
+    return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    run = resolve_run_dir(
+        output_root=Path(args.output_root),
+        run_name=args.run_name,
+        run_label=args.run_label,
+        prefer_latest_if_missing=True,
+        prefer_latest_required_files=["coverage_gap.json"],
+    )
+    output_dir = run.run_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_sem_gap = output_dir / "semantic_gap.json"
+    out_sem_sens = output_dir / "semantic_gap_sensitivity.json"
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    log.info("Output run: %s", output_dir)
 
-    # ---- Load embeddings ----
-    log.info("Loading paper embeddings: %s", PAPERS_EMB)
-    paper_emb = np.load(PAPERS_EMB)    # (6172, 384)
-    paper_ids = load_json(PAPER_IDS)
+    # ---- Load research centroids/meta ----
+    log.info("Loading research centroids: %s", RESEARCH_CENTROIDS)
+    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
+    research_meta = load_json(RESEARCH_CENTROID_META)
+    if research_centroids.shape[0] != N_SDG:
+        raise RuntimeError(f"Expected research centroids shape ({N_SDG}, d), got {research_centroids.shape}")
+    if len(research_meta) != N_SDG:
+        raise RuntimeError(f"Expected {N_SDG} research centroid meta rows, got {len(research_meta)}")
+    research_counts = np.array([int(r["n_papers_assigned"]) for r in research_meta], dtype=np.int64)
+    research_cohesions = np.array([float(r["mean_cos_to_centroid"]) for r in research_meta], dtype=np.float32)
 
     log.info("Loading policy embeddings: %s", POLICY_EMB)
     policy_emb = np.load(POLICY_EMB)   # (47005, 384)
@@ -309,16 +344,14 @@ def main() -> None:
 
     # ---- Load score matrices for cluster assignments ----
     log.info("Loading score matrices...")
-    paper_scores  = np.load(PAPER_SCORES)
     policy_scores = np.load(POLICY_SCORES)
 
     # Hard assignment (0-indexed SDG index).
-    paper_assignments  = get_cluster_assignments(paper_scores)
     policy_assignments = get_cluster_assignments(policy_scores)
 
     log.info("Paper cluster sizes by SDG:")
     for sdg_idx in range(N_SDG):
-        n = int((paper_assignments == sdg_idx).sum())
+        n = int(research_counts[sdg_idx])
         log.info("  SDG %2d: %d papers", sdg_idx + 1, n)
 
     log.info("Policy cluster sizes by SDG (raw chunks):")
@@ -333,8 +366,8 @@ def main() -> None:
     log.info("=" * 60)
     rng_primary = np.random.default_rng(RANDOM_SEED)
     primary_results = compute_sdg_semantic_gaps(
-        paper_emb, policy_emb,
-        paper_assignments, policy_assignments,
+        research_centroids, research_counts, research_cohesions,
+        policy_emb, policy_assignments,
         policy_ids, CHUNK_CAP_PRIMARY, rng_primary
     )
 
@@ -354,8 +387,8 @@ def main() -> None:
     log.info("=" * 60)
     rng_lo = np.random.default_rng(RANDOM_SEED)
     sens_lo = compute_sdg_semantic_gaps(
-        paper_emb, policy_emb,
-        paper_assignments, policy_assignments,
+        research_centroids, research_counts, research_cohesions,
+        policy_emb, policy_assignments,
         policy_ids, CHUNK_CAP_SENS_LO, rng_lo
     )
 
@@ -365,8 +398,8 @@ def main() -> None:
     log.info("=" * 60)
     rng_hi = np.random.default_rng(RANDOM_SEED)
     sens_hi = compute_sdg_semantic_gaps(
-        paper_emb, policy_emb,
-        paper_assignments, policy_assignments,
+        research_centroids, research_counts, research_cohesions,
+        policy_emb, policy_assignments,
         policy_ids, CHUNK_CAP_SENS_HI, rng_hi
     )
 
@@ -415,13 +448,13 @@ def main() -> None:
         f"cap_{CHUNK_CAP_SENS_HI}": sens_hi,
     }
 
-    with OUT_SEM_GAP.open("w", encoding="utf-8") as f:
+    with out_sem_gap.open("w", encoding="utf-8") as f:
         json.dump(primary_out, f, indent=2)
-    log.info("Saved: %s", OUT_SEM_GAP)
+    log.info("Saved: %s", out_sem_gap)
 
-    with OUT_SEM_SENS.open("w", encoding="utf-8") as f:
+    with out_sem_sens.open("w", encoding="utf-8") as f:
         json.dump(sensitivity_out, f, indent=2)
-    log.info("Saved: %s", OUT_SEM_SENS)
+    log.info("Saved: %s", out_sem_sens)
 
     log.info("")
     log.info("Next step: python code/main_analysis/coverage_semantic_interaction.py")
@@ -446,8 +479,7 @@ def main() -> None:
         15: "Fifteen", 16: "Sixteen", 17: "Seventeen",
     }
 
-    gen_dir = OUTPUT_DIR / "generated"
-    gen_dir.mkdir(parents=True, exist_ok=True)
+    gen_dir = tables_dir
 
     # Extract per-SDG values from primary_results (SDG order 1–17)
     per_sdg_map = {r["sdg"]: r for r in primary_results}

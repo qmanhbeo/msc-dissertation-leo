@@ -38,14 +38,14 @@ Coverage gap per SDG:
   (using document-weighted policy proportions as the canonical comparison)
 
 Inputs:
-  data/scored/paper_scores.npy           (6172, 17)   float32
-  data/scored/paper_scores_ids.json      list of {id}
+  data/scored/paper_scores_shards/metadata/manifest.json
   data/scored/policy_scores.npy          (47005, 17)  float32
-  data/scored/policy_scores_ids.json     list of {id, source_doc}
+  data/scored/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
-  data/output/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
-  data/output/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
+  outputs/<run_name>/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
+  outputs/<run_name>/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
+  outputs/<run_name>/tables/*.tex               generated LaTeX macros/tables
 
 Run from project root (after score materialization for the target run context):
     python code/main_analysis/coverage_gap.py
@@ -54,22 +54,27 @@ Run from project root (after score materialization for the target run context):
 import json
 import logging
 import numpy as np
+import argparse
+import sys
 from collections import defaultdict
 from pathlib import Path
+
+from research_score_shards import aggregate_research_scores
+ROOT = Path(__file__).resolve().parents[2]
+CODE_ROOT = ROOT / "code"
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+from shared.output_runs import resolve_run_dir
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 SCORED_DIR = Path("data/scored")
-OUTPUT_DIR = Path("data/output")
+DEFAULT_OUTPUT_ROOT = Path("outputs")
 
-PAPER_SCORES    = SCORED_DIR / "paper_scores.npy"
-PAPER_IDS       = SCORED_DIR / "paper_scores_ids.json"
+PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
 POLICY_SCORES   = SCORED_DIR / "policy_scores.npy"
-POLICY_IDS      = SCORED_DIR / "policy_scores_ids.json"
-
-OUT_COV_GAP     = OUTPUT_DIR / "coverage_gap.json"
-OUT_COV_GAP_RAW = OUTPUT_DIR / "coverage_gap_raw.json"
+POLICY_IDS      = SCORED_DIR / "metadata" / "policy_scores_ids.json"
 
 N_SDG = 17
 
@@ -184,16 +189,39 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
 
 
 # ---------------------------------------------------------------------------
+# Args
+# ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Compute coverage gap outputs into a run-scoped output folder.")
+    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--run-name", default=None)
+    p.add_argument("--run-label", default="analysis")
+    return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    run = resolve_run_dir(
+        output_root=Path(args.output_root),
+        run_name=args.run_name,
+        run_label=args.run_label,
+        prefer_latest_if_missing=False,
+    )
+    output_dir = run.run_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_cov_gap = output_dir / "coverage_gap.json"
+    out_cov_gap_raw = output_dir / "coverage_gap_raw.json"
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    log.info("Output run: %s", output_dir)
 
     # ---- Load scores ----
-    log.info("Loading paper scores: %s", PAPER_SCORES)
-    paper_scores = np.load(PAPER_SCORES)    # (6172, 17)
-    paper_ids    = load_json(PAPER_IDS)
-    log.info("  shape=%s  n_ids=%d", paper_scores.shape, len(paper_ids))
+    log.info("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)
+    research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
+    log.info("  rows=%d", research["n_rows"])
 
     log.info("Loading policy scores: %s", POLICY_SCORES)
     policy_scores = np.load(POLICY_SCORES)  # (47005, 17)
@@ -205,8 +233,8 @@ def main() -> None:
     # Each paper is independently authored; treating them as equal is appropriate.
     log.info("")
     log.info("Computing research coverage profiles...")
-    res_hard = hard_assignment_profile(paper_scores)
-    res_soft = mean_score_profile(paper_scores)
+    res_hard = research["hard_profile"].astype(np.float64)
+    res_soft = research["soft_profile"].astype(np.float64)
 
     log.info("  Research hard-assignment profile (proportion per SDG):")
     for i, v in enumerate(res_hard):
@@ -270,7 +298,7 @@ def main() -> None:
             "Coverage gap = |research_proportion - policy_proportion| per SDG. "
             "See Assumption A19 for document-weighting rationale."
         ),
-        "n_research_papers": int(paper_scores.shape[0]),
+        "n_research_papers": int(research["n_rows"]),
         "n_policy_chunks": int(policy_scores.shape[0]),
         "n_policy_documents": len(doc_meta),
         "a15_note": (
@@ -311,7 +339,7 @@ def main() -> None:
             "SDGi VNR/VLR (31,941 chunks) and SDSN (5,591 chunks) dominate. "
             "Use coverage_gap.json (document-weighted) for primary analysis."
         ),
-        "n_research_papers": int(paper_scores.shape[0]),
+        "n_research_papers": int(research["n_rows"]),
         "n_policy_chunks": int(policy_scores.shape[0]),
         "research_profile_hard": make_sdg_dict(res_hard),
         "policy_profile_hard_raw": make_sdg_dict(pol_raw_hard),
@@ -322,13 +350,13 @@ def main() -> None:
     }
 
     # ---- Save ----
-    with OUT_COV_GAP.open("w", encoding="utf-8") as f:
+    with out_cov_gap.open("w", encoding="utf-8") as f:
         json.dump(coverage_gap_out, f, indent=2)
-    log.info("Saved: %s", OUT_COV_GAP)
+    log.info("Saved: %s", out_cov_gap)
 
-    with OUT_COV_GAP_RAW.open("w", encoding="utf-8") as f:
+    with out_cov_gap_raw.open("w", encoding="utf-8") as f:
         json.dump(coverage_gap_raw_out, f, indent=2)
-    log.info("Saved: %s", OUT_COV_GAP_RAW)
+    log.info("Saved: %s", out_cov_gap_raw)
 
     log.info("")
     log.info("Next step: python code/main_analysis/semantic_gap.py")
@@ -353,11 +381,10 @@ def main() -> None:
         15: "Fifteen", 16: "Sixteen", 17: "Seventeen",
     }
 
-    gen_dir = OUTPUT_DIR / "generated"
-    gen_dir.mkdir(parents=True, exist_ok=True)
+    gen_dir = tables_dir
 
     # A15 calibration bias values
-    a15_paper_top  = float(paper_scores.max(axis=1).mean())
+    a15_paper_top  = float(research["mean_top_overall"])
     a15_policy_top = float(policy_scores.max(axis=1).mean())
     a15_diff       = a15_policy_top - a15_paper_top
 
@@ -374,7 +401,7 @@ def main() -> None:
     # num_coverage.tex — macro definitions
     num_lines = [
         "% Auto-generated by code/coverage_gap.py — do not edit manually",
-        rf"\newcommand{{\NResearchPapers}}{{{_ltx_num(paper_scores.shape[0])}}}",
+        rf"\newcommand{{\NResearchPapers}}{{{_ltx_num(int(research['n_rows']))}}}",
         rf"\newcommand{{\NPolicyChunks}}{{{_ltx_num(policy_scores.shape[0])}}}",
         rf"\newcommand{{\NPolicyDocs}}{{{_ltx_num(len(doc_meta))}}}",
         rf"\newcommand{{\PolicyPctSdgThreePlusSeventeen}}{{{pol13 + pol17:.1f}}}",

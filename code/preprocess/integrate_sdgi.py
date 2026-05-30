@@ -5,7 +5,7 @@ Input:  data/raw/sdgi_corpus/sdgi_corpus.parquet
         (~5,880 text excerpts from Voluntary National Reviews and
         Voluntary Local Reviews submitted to the UN HLPF)
 
-Output: data/preprocessed/sdgi_corpus/sdgi_chunks.jsonl
+Output: data/preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl
 
 These VNR/VLR texts are the gold standard for SDG policy language —
 authored by national and local governments reporting on SDG implementation.
@@ -22,7 +22,7 @@ from pathlib import Path
 import pandas as pd
 
 INPUT_PARQUET = Path("data/raw/sdgi_corpus/sdgi_corpus.parquet")
-OUTPUT_JSONL = Path("data/preprocessed/sdgi_corpus/sdgi_chunks.jsonl")
+OUTPUT_JSONL = Path("data/preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl")
 
 # Only English; SDGi has multilingual content — non-English would noise the embedding
 TARGET_LANGUAGE = "en"

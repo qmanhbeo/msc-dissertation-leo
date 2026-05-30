@@ -27,9 +27,10 @@ Note on expected accuracy:
   which still provides discriminative signal even when pairwise overlaps are high.
 
 Outputs:
-  data/output/validation_results.json        structured metrics + instrument flag
-  data/output/confusion_matrix.csv           17×17 (rows = true SDG, cols = predicted SDG)
-  data/output/centroid_similarity_matrix.csv 17×17 pairwise cosine similarities between centroids
+  outputs/<run_name>/validation_results.json        structured metrics + instrument flag
+  outputs/<run_name>/confusion_matrix.csv           17×17 (rows = true SDG, cols = predicted SDG)
+  outputs/<run_name>/centroid_similarity_matrix.csv 17×17 pairwise cosine similarities between centroids
+  outputs/<run_name>/tables/*.tex                   generated LaTeX macros/tables
 
 Run from project root (after sdg_centroids.py):
     python code/embed/validate_centroids.py
@@ -39,6 +40,8 @@ import csv
 import json
 import logging
 import numpy as np
+import argparse
+import sys
 from pathlib import Path
 
 from sklearn.metrics import (
@@ -46,22 +49,25 @@ from sklearn.metrics import (
     f1_score,
     confusion_matrix,
 )
+ROOT = Path(__file__).resolve().parents[2]
+CODE_ROOT = ROOT / "code"
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+from shared.output_runs import resolve_run_dir
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 EMBEDDINGS_DIR = Path("data/embedded")
+EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
 SCORED_DIR = Path("data/scored")
-OUTPUT_DIR = Path("data/output")
+SCORED_METADATA_DIR = SCORED_DIR / "metadata"
+DEFAULT_OUTPUT_ROOT = Path("outputs")
 
 CENTROIDS_PATH   = SCORED_DIR / "sdg_centroids.npy"
-META_PATH        = SCORED_DIR / "sdg_centroid_meta.json"
+META_PATH        = SCORED_METADATA_DIR / "sdg_centroid_meta.json"
 BENCH_EMB        = EMBEDDINGS_DIR / "benchmark.npy"
-BENCH_IDS        = EMBEDDINGS_DIR / "benchmark_ids.json"
-
-OUT_RESULTS      = OUTPUT_DIR / "validation_results.json"
-OUT_CONFUSION    = OUTPUT_DIR / "confusion_matrix.csv"
-OUT_CENTROID_SIM = OUTPUT_DIR / "centroid_similarity_matrix.csv"
+BENCH_IDS        = EMBED_METADATA_DIR / "benchmark_ids.json"
 
 # Macro-F1 thresholds for the instrument pass/warn/fail flag (SDGs 1–16, uncontaminated).
 # These are judgment calls (Assumption A-THRESH in the implementation plan):
@@ -108,10 +114,35 @@ def save_csv_matrix(matrix: np.ndarray, labels: list, path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Args
+# ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Validate SDG centroids into a run-scoped output folder.")
+    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--run-name", default=None)
+    p.add_argument("--run-label", default="analysis")
+    return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    run = resolve_run_dir(
+        output_root=Path(args.output_root),
+        run_name=args.run_name,
+        run_label=args.run_label,
+        prefer_latest_if_missing=False,
+    )
+    output_dir = run.run_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_results = output_dir / "validation_results.json"
+    out_confusion = output_dir / "confusion_matrix.csv"
+    out_centroid_sim = output_dir / "centroid_similarity_matrix.csv"
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    log.info("Output run: %s", output_dir)
 
     # ---- Load centroids ----
     log.info("Loading centroids: %s", CENTROIDS_PATH)
@@ -283,24 +314,24 @@ def main() -> None:
         "thresholds": {"fail_below": THRESH_FAIL, "pass_above": THRESH_PASS},
     }
 
-    with OUT_RESULTS.open("w", encoding="utf-8") as f:
+    with out_results.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    log.info("\nSaved: %s", OUT_RESULTS)
+    log.info("\nSaved: %s", out_results)
 
     # Confusion matrix over all 17 SDGs (rows = true, cols = predicted).
     # The SDG-17 row/column is contaminated but included for completeness.
     # Examining off-diagonal mass reveals which SDG pairs are most confused — this directly
     # informs which per-SDG coverage gap findings should carry extra caveats (A6, A26).
     cm = confusion_matrix(true_sdgs, pred_sdgs, labels=labels_17)
-    save_csv_matrix(cm.astype(float), labels_17, OUT_CONFUSION)
-    log.info("Saved: %s  (17×17, rows=true, cols=predicted)", OUT_CONFUSION)
+    save_csv_matrix(cm.astype(float), labels_17, out_confusion)
+    log.info("Saved: %s  (17×17, rows=true, cols=predicted)", out_confusion)
 
     # Centroid similarity matrix: how close each pair of SDG centroids is in SBERT space.
     # Used downstream to: (1) predict which SDG pairs will have leakage in coverage scoring,
     # (2) interpret H14 (SDG 1 ↔ SDG 10), (3) contextualise H35 (SDG 17 ↔ SDG 13),
     # (4) flag A26 (SDG 1-8-10 cluster collinearity).
-    save_csv_matrix(centroid_sim, labels_17, OUT_CENTROID_SIM)
-    log.info("Saved: %s  (17×17 pairwise centroid cosine sim)", OUT_CENTROID_SIM)
+    save_csv_matrix(centroid_sim, labels_17, out_centroid_sim)
+    log.info("Saved: %s  (17×17 pairwise centroid cosine sim)", out_centroid_sim)
 
     log.info("\nNext step: run the active scoring path (shard scoring or bridge materialisation).")
 
@@ -323,8 +354,7 @@ def main() -> None:
         16: "Peace, Justice and Strong Institutions",
     }
 
-    gen_dir = OUTPUT_DIR / "generated"
-    gen_dir.mkdir(parents=True, exist_ok=True)
+    gen_dir = tables_dir
 
     # Per-SDG centroid similarities needed in dissertation prose.
     # SDG 11 (idx 10) vs SDG 9 (idx 8)

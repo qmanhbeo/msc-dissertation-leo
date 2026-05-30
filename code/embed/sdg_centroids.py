@@ -32,13 +32,13 @@ Row ordering convention (critical for ALL downstream scripts):
 
 Inputs:
   data/embedded/osdg.npy           (30534, 384) float32, L2-normalised
-  data/embedded/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
+  data/embedded/metadata/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
   data/embedded/benchmark.npy      (616, 384)   float32, L2-normalised
-  data/embedded/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
+  data/embedded/metadata/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
 
 Outputs:
   data/scored/sdg_centroids.npy      (17, 384) float32, unit-normalised
-  data/scored/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
+  data/scored/metadata/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
 
 Run from project root:
     python code/embed/sdg_centroids.py
@@ -53,15 +53,17 @@ from pathlib import Path
 # Config
 # ---------------------------------------------------------------------------
 EMBEDDINGS_DIR = Path("data/embedded")
+EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
 OUTPUT_DIR = Path("data/scored")
+SCORED_METADATA_DIR = OUTPUT_DIR / "metadata"
 
 OSDG_EMB   = EMBEDDINGS_DIR / "osdg.npy"
-OSDG_IDS   = EMBEDDINGS_DIR / "osdg_ids.json"
+OSDG_IDS   = EMBED_METADATA_DIR / "osdg_ids.json"
 BENCH_EMB  = EMBEDDINGS_DIR / "benchmark.npy"
-BENCH_IDS  = EMBEDDINGS_DIR / "benchmark_ids.json"
+BENCH_IDS  = EMBED_METADATA_DIR / "benchmark_ids.json"
 
 OUT_CENTROIDS = OUTPUT_DIR / "sdg_centroids.npy"
-OUT_META      = OUTPUT_DIR / "sdg_centroid_meta.json"
+OUT_META      = SCORED_METADATA_DIR / "sdg_centroid_meta.json"
 
 # Cohesion threshold for the high-variance flag (Assumption A6).
 # "Cohesion" = mean cosine similarity of an SDG's member vectors to its own unit centroid.
@@ -168,6 +170,7 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
 # ---------------------------------------------------------------------------
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SCORED_METADATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # ---- Load embeddings and ID metadata ----
     log.info("Loading OSDG embeddings: %s", OSDG_EMB)

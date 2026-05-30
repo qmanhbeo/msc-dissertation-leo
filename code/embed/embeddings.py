@@ -6,13 +6,13 @@ Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for 
 
 Inputs:
   data/raw/openalex/papers_clean.jsonl       (94 texts,    field: combined_text)
-  data/preprocessed/policy_scrape/policy_chunks.jsonl (policy chunks, field: text)
+  data/preprocessed/policy_all/policy_scrape/policy_chunks.jsonl (policy chunks, field: text)
   data/preprocessed/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
   data/preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
 
-Outputs per corpus (saved to data/embedded/):
+Outputs per corpus:
   <name>.npy       float32 matrix (n_texts, 768)
-  <name>_ids.json  list of dicts with id, sdg (where available), text_field
+  data/embedded/metadata/<name>_ids.json  list of dicts with id, sdg (where available), text_field
 
 Idempotent: skips a corpus if its .npy already exists (delete to re-embed).
 
@@ -33,6 +33,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 MODEL_NAME = "all-MiniLM-L6-v2"
 BATCH_SIZE = 128
 OUTPUT_DIR = Path("data/embedded")
+METADATA_DIR = OUTPUT_DIR / "metadata"
 
 CORPORA = [
     {
@@ -83,7 +84,7 @@ def load_jsonl(path: Path) -> list[dict]:
 def embed_corpus(corpus: dict, model: SentenceTransformer) -> None:
     name = corpus["name"]
     emb_path = OUTPUT_DIR / f"{name}.npy"
-    ids_path = OUTPUT_DIR / f"{name}_ids.json"
+    ids_path = METADATA_DIR / f"{name}_ids.json"
 
     if emb_path.exists():
         log.info("Skipping %s — %s already exists", name, emb_path)
@@ -112,6 +113,7 @@ def embed_corpus(corpus: dict, model: SentenceTransformer) -> None:
 
     # Save
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    METADATA_DIR.mkdir(parents=True, exist_ok=True)
     np.save(emb_path, embeddings)
     with ids_path.open("w") as f:
         json.dump(ids_meta, f)
@@ -123,7 +125,7 @@ def sanity_check() -> None:
     """Verify that same-SDG OSDG pairs score higher than different-SDG pairs."""
     log.info("Running sanity check on OSDG embeddings...")
     emb = np.load(OUTPUT_DIR / "osdg.npy")
-    with open(OUTPUT_DIR / "osdg_ids.json") as f:
+    with open(METADATA_DIR / "osdg_ids.json") as f:
         ids = json.load(f)
 
     # Find two texts for SDG 13 and two for SDG 1
