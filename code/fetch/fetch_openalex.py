@@ -7,10 +7,10 @@ sequentially (OpenAlex cursor pagination requires it), but we skip already-
 completed queries and resume mid-query using progress.json.
 
 Output:
-  - data/raw/openalex/papers_sdg{{N}}.jsonl  — papers tagged as SDG N
-  - data/raw/openalex/artifact/seen_ids.json   — seen openalex_ids
-  - data/raw/openalex/artifact/progress.json   — per-query page tracking
-  - data/raw/openalex/artifact/metadata.json   — fetch metadata
+  - data/0_raw/openalex/papers_sdg{{N}}.jsonl  — papers tagged as SDG N
+  - data/0_raw/openalex/artifact/seen_ids.json   — seen openalex_ids
+  - data/0_raw/openalex/artifact/progress.json   — per-query page tracking
+  - data/0_raw/openalex/artifact/metadata.json   — fetch metadata
 
 Run from project root:
     python code/fetch/fetch_openalex.py
@@ -34,7 +34,7 @@ class AllKeysExhaustedError(Exception):
 load_dotenv()
 
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
-OUTPUT_DIR = Path("data/raw/openalex")
+OUTPUT_DIR = Path("data/0_raw/openalex")
 ARTIFACT_DIR = OUTPUT_DIR / "artifact"
 METADATA_FILE = ARTIFACT_DIR / "metadata.json"
 SEEN_IDS_FILE = ARTIFACT_DIR / "seen_ids.json"

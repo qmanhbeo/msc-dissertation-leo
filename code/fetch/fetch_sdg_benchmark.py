@@ -4,8 +4,8 @@ Fetch SDG Classification Benchmark from GitHub.
 This repository contains a benchmark dataset for SDG classification in academic papers.
 Source: https://github.com/SDGClassification/benchmark
 
-Output: data/raw/sdg_benchmark/ (extracted repo contents)
-        data/raw/sdg_benchmark/metadata.json
+Output: data/0_raw/sdg_benchmark/ (extracted repo contents)
+        data/0_raw/sdg_benchmark/metadata.json
 """
 
 import json
@@ -20,7 +20,7 @@ from tqdm import tqdm
 # Configuration
 GITHUB_REPO = "SDGClassification/benchmark"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/zipball/main"
-OUTPUT_DIR = Path("data/raw/sdg_benchmark")
+OUTPUT_DIR = Path("data/0_raw/sdg_benchmark")
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 
 

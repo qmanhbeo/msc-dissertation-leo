@@ -74,6 +74,6 @@ Note: in non-elevated sandbox probes, `torch.cuda.is_available()` may appear `Fa
 
 Current pipeline structure remains checkpoint-safe via manifests and stage status under:
 
-- `data/preprocessed/research_corpus/metadata/manifest.json`
-- `data/embedded/research_shards/metadata/manifest.json`
-- `data/embedded/research_shards/metadata/*.json`
+- `data/1_preprocessed/research_corpus/metadata/manifest.json`
+- `data/2_embedded/research_shards/metadata/manifest.json`
+- `data/2_embedded/research_shards/metadata/*.json`

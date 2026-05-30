@@ -31,14 +31,14 @@ Row ordering convention (critical for ALL downstream scripts):
   i.e., row 0 → SDG 1, row 1 → SDG 2, ..., row 16 → SDG 17
 
 Inputs:
-  data/embedded/osdg.npy           (30534, 384) float32, L2-normalised
-  data/embedded/metadata/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
-  data/embedded/benchmark.npy      (616, 384)   float32, L2-normalised
-  data/embedded/metadata/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
+  data/2_embedded/osdg.npy           (30534, 384) float32, L2-normalised
+  data/2_embedded/metadata/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
+  data/2_embedded/benchmark.npy      (616, 384)   float32, L2-normalised
+  data/2_embedded/metadata/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
 
 Outputs:
-  data/scored/sdg_centroids.npy      (17, 384) float32, unit-normalised
-  data/scored/metadata/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
+  data/3_scored/sdg_centroids.npy      (17, 384) float32, unit-normalised
+  data/3_scored/metadata/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
 
 Run from project root:
     python code/embed/sdg_centroids.py
@@ -52,9 +52,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-EMBEDDINGS_DIR = Path("data/embedded")
+EMBEDDINGS_DIR = Path("data/2_embedded")
 EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
-OUTPUT_DIR = Path("data/scored")
+OUTPUT_DIR = Path("data/3_scored")
 SCORED_METADATA_DIR = OUTPUT_DIR / "metadata"
 
 OSDG_EMB   = EMBEDDINGS_DIR / "osdg.npy"

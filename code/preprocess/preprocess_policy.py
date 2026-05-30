@@ -1,10 +1,10 @@
 """
 Preprocess all policy documents into text chunks for embedding.
 
-Input:  data/raw/policy_scrape/texts/*.txt  (unified policy corpus)
+Input:  data/0_raw/policy_scrape/texts/*.txt  (unified policy corpus)
 
-Output: data/preprocessed/policy_all/policy_scrape/policy_chunks.jsonl  — one chunk per line
-        data/preprocessed/policy_all/policy_scrape/policy_chunks.csv    — flat CSV for inspection
+Output: data/1_preprocessed/policy_all/policy_scrape/policy_chunks.jsonl  — one chunk per line
+        data/1_preprocessed/policy_all/policy_scrape/policy_chunks.csv    — flat CSV for inspection
 
 Chunking strategy:
   1. Clean OCR artifacts and page-break markers
@@ -27,7 +27,7 @@ from pathlib import Path
 # Config
 # ---------------------------------------------------------------------------
 TEXT_DIRS = [
-    Path("data/raw/policy_scrape/texts"),
+    Path("data/0_raw/policy_scrape/texts"),
 ]
 
 
@@ -42,8 +42,8 @@ def discover_docs() -> dict[str, Path]:
 
 
 DOCS = discover_docs()
-OUTPUT_JSONL = Path("data/preprocessed/policy_all/policy_scrape/policy_chunks.jsonl")
-OUTPUT_CSV = Path("data/preprocessed/policy_all/policy_scrape/policy_chunks.csv")
+OUTPUT_JSONL = Path("data/1_preprocessed/policy_all/policy_scrape/policy_chunks.jsonl")
+OUTPUT_CSV = Path("data/1_preprocessed/policy_all/policy_scrape/policy_chunks.csv")
 
 # Target chunk size in words; chunks will be merged until they exceed this
 TARGET_WORDS = 150

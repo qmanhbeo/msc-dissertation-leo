@@ -58,9 +58,9 @@ from shared.output_runs import resolve_run_dir
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-EMBEDDINGS_DIR = Path("data/embedded")
+EMBEDDINGS_DIR = Path("data/2_embedded")
 EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
-SCORED_DIR = Path("data/scored")
+SCORED_DIR = Path("data/3_scored")
 SCORED_METADATA_DIR = SCORED_DIR / "metadata"
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 

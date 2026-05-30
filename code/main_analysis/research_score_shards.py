@@ -15,34 +15,22 @@ def load_json(path: Path) -> Any:
         return json.load(f)
 
 
-def _rewrite_known_legacy_paths(path: Path) -> Path:
-    s = str(path)
-    if s.startswith("data/embeddings/"):
-        return Path(s.replace("data/embeddings/", "data/embedded/", 1))
-    if s.startswith("data/paper_scores_shards/"):
-        return Path(s.replace("data/paper_scores_shards/", "data/scored/paper_scores_shards/", 1))
-    if s.startswith("data/scored/paper_scores_shards/manifest.json"):
-        return Path("data/scored/paper_scores_shards/metadata/manifest.json")
-    return path
-
-
 def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
-    """Resolve an artifact path recorded in a manifest, with safe fallbacks for moved folders."""
-    raw = _rewrite_known_legacy_paths(Path(stored_path))
-    candidates = [
-        raw,
-        Path.cwd() / raw,
-        manifest_path.parent / raw,
-        manifest_path.parent / raw.name,
-        manifest_path.parent.parent / raw.name,
-    ]
-    for cand in candidates:
-        if cand.exists():
-            return cand
-    raise FileNotFoundError(
-        f"Could not resolve path from manifest: {stored_path}. Tried: "
-        + ", ".join(str(c) for c in candidates)
-    )
+    """Resolve a canonical hard-pivot path recorded in a manifest."""
+    del manifest_path  # hard pivot: no location fallback based on manifest placement
+    raw = Path(stored_path)
+    if raw.is_absolute():
+        if raw.exists():
+            return raw
+        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
+    if not str(raw).startswith("data/3_scored/"):
+        raise RuntimeError(
+            f"Hard pivot violation: expected data path under data/3_scored/, got: {stored_path}"
+        )
+    resolved = Path.cwd() / raw
+    if resolved.exists():
+        return resolved
+    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def iter_research_score_shards(manifest_path: Path) -> Iterator[tuple[int, np.ndarray]]:

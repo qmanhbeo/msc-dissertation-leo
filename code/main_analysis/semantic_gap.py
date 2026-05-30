@@ -47,11 +47,11 @@ Minimum cluster size:
   be noisy. This is acknowledged in Assumption A-SPARSE.
 
 Inputs:
-  data/scored/research_centroids.npy       (17, 384)    float32
-  data/scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
-  data/scored/policy_scores.npy            (47005, 17)  float32
-  data/scored/metadata/policy_scores_ids.json       list of {id, source_doc}
-  data/embedded/policy.npy        (47005, 384) float32, L2-normalised
+  data/3_scored/research_centroids.npy       (17, 384)    float32
+  data/3_scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
+  data/3_scored/policy_scores.npy            (47005, 17)  float32
+  data/3_scored/metadata/policy_scores_ids.json       list of {id, source_doc}
+  data/2_embedded/policy.npy        (47005, 384) float32, L2-normalised
 
 Outputs:
   outputs/<run_name>/semantic_gap.json            primary: semantic gap per SDG (CHUNK_CAP=50)
@@ -78,8 +78,8 @@ from shared.output_runs import resolve_run_dir
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-SCORED_DIR     = Path("data/scored")
-EMBEDDINGS_DIR = Path("data/embedded")
+SCORED_DIR     = Path("data/3_scored")
+EMBEDDINGS_DIR = Path("data/2_embedded")
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 
 POLICY_SCORES = SCORED_DIR / "policy_scores.npy"

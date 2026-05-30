@@ -1,9 +1,9 @@
 """
 Preprocess OSDG corpus for use as SDG classification training signal.
 
-Input:  data/raw/osdg/osdg_dataset.csv  (TSV, 43,025 rows)
-Output: data/preprocessed/osdg/osdg_clean.jsonl  — filtered, cleaned records
-        data/preprocessed/osdg/osdg_clean.csv    — flat CSV for inspection
+Input:  data/0_raw/osdg/osdg_dataset.csv  (TSV, 43,025 rows)
+Output: data/1_preprocessed/osdg/osdg_clean.jsonl  — filtered, cleaned records
+        data/1_preprocessed/osdg/osdg_clean.csv    — flat CSV for inspection
 
 Filtering:
   - Keep rows where agreement >= AGREEMENT_THRESHOLD (default 0.5)
@@ -34,9 +34,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-INPUT_FILE = Path("data/raw/osdg/osdg_dataset.csv")
-OUTPUT_JSONL = Path("data/preprocessed/osdg/osdg_clean.jsonl")
-OUTPUT_CSV = Path("data/preprocessed/osdg/osdg_clean.csv")
+INPUT_FILE = Path("data/0_raw/osdg/osdg_dataset.csv")
+OUTPUT_JSONL = Path("data/1_preprocessed/osdg/osdg_clean.jsonl")
+OUTPUT_CSV = Path("data/1_preprocessed/osdg/osdg_clean.csv")
 
 AGREEMENT_THRESHOLD = 0.5   # minimum annotator agreement to keep a row
 MIN_WORDS = 20              # drop texts shorter than this

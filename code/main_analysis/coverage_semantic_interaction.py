@@ -46,8 +46,8 @@ Statistics:
 Inputs:
   outputs/<run_name>/coverage_gap.json        per-SDG research + policy profiles (doc-weighted)
   outputs/<run_name>/semantic_gap.json        per-SDG semantic gap (chunk_cap=50)
-  data/scored/paper_scores_shards/metadata/manifest.json — for H26 paper top-scores
-  data/scored/policy_scores_vs_research.npy  (47005, 17) — for H26 policy vs research centroids
+  data/3_scored/paper_scores_shards/metadata/manifest.json — for H26 paper top-scores
+  data/3_scored/policy_scores_vs_research.npy  (47005, 17) — for H26 policy vs research centroids
 
 Outputs:
   outputs/<run_name>/h25_correlation.json     H25 correlation results + H26 asymmetry
@@ -79,7 +79,7 @@ from shared.output_runs import latest_run_dir, require_run_with_files, resolve_r
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-SCORED_DIR = Path("data/scored")
+SCORED_DIR = Path("data/3_scored")
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
 POL_VS_RES_PATH     = SCORED_DIR / "policy_scores_vs_research.npy"

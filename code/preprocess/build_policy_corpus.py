@@ -2,13 +2,13 @@
 Merge all policy chunk sources into a single extended corpus.
 
 Input sources (each independently produced):
-  data/preprocessed/policy_all/policy_scrape/policy_chunks.jsonl        — chunks from unified policy preprocessing
-  data/preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl     — VNR/VLR corpus (integrate_sdgi.py)
-  data/preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl  — UNGDC filtered passages (filter_ungdc_sdg.py)
+  data/1_preprocessed/policy_all/policy_scrape/policy_chunks.jsonl        — chunks from unified policy preprocessing
+  data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl     — VNR/VLR corpus (integrate_sdgi.py)
+  data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl  — UNGDC filtered passages (filter_ungdc_sdg.py)
 
 Output:
-  data/preprocessed/policy_all/policy_chunks_extended.jsonl  — merged, deduplicated
-  data/preprocessed/policy_all/policy_chunks_extended.csv    — flat CSV for inspection
+  data/1_preprocessed/policy_all/policy_chunks_extended.jsonl  — merged, deduplicated
+  data/1_preprocessed/policy_all/policy_chunks_extended.csv    — flat CSV for inspection
 
 Deduplication: exact text match (after normalisation).
 
@@ -27,12 +27,12 @@ from collections import Counter
 from pathlib import Path
 
 SOURCES = [
-    Path("data/preprocessed/policy_all/policy_scrape/policy_chunks.jsonl"),
-    Path("data/preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl"),
-    Path("data/preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl"),
+    Path("data/1_preprocessed/policy_all/policy_scrape/policy_chunks.jsonl"),
+    Path("data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl"),
+    Path("data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl"),
 ]
 
-OUTPUT_DIR = Path("data/preprocessed/policy_all")
+OUTPUT_DIR = Path("data/1_preprocessed/policy_all")
 OUTPUT_JSONL = OUTPUT_DIR / "policy_chunks_extended.jsonl"
 OUTPUT_CSV = OUTPUT_DIR / "policy_chunks_extended.csv"
 

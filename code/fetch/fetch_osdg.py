@@ -8,8 +8,8 @@ Sources:
 - Dataset: https://zenodo.org/records/11441197
 - Examples (reference only, inactive): https://github.com/osdg-ai/osdg-data/tree/main/examples
 
-Output: data/raw/osdg/ (dataset CSV)
-        data/raw/osdg/artifact/metadata.json (fetch metadata)
+Output: data/0_raw/osdg/ (dataset CSV)
+        data/0_raw/osdg/artifact/metadata.json (fetch metadata)
 
 Run from project root:
     python code/fetch/fetch_osdg.py
@@ -29,7 +29,7 @@ ZENODO_API_URL = "https://zenodo.org/api/records/11441197"
 GITHUB_REPO_URL = "https://github.com/osdg-ai/osdg-data"
 OSDG_EXAMPLES_URL = "https://github.com/osdg-ai/osdg-data/tree/main/examples"
 # NOTE: Upstream examples are intentionally not fetched in active pipeline runs.
-OUTPUT_DIR = Path("data/raw/osdg")
+OUTPUT_DIR = Path("data/0_raw/osdg")
 METADATA_FILE = OUTPUT_DIR / "artifact" / "metadata.json"
 
 

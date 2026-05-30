@@ -8,12 +8,12 @@ Source: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN
 DOI: 10.7910/DVN/0TJX8Y
 Website: https://www.ungdc.bham.ac.uk
 
-Output: data/raw/ungdc/
-        data/raw/ungdc/TXT/              — extracted corpus (11,141 speeches by session)
-        data/raw/ungdc/Speakers_by_session.xlsx
-        data/raw/ungdc/README.txt
-        data/raw/ungdc/UNGDC_1946-2025.tar.gz
-        data/raw/ungdc/metadata.json
+Output: data/0_raw/ungdc/
+        data/0_raw/ungdc/TXT/              — extracted corpus (11,141 speeches by session)
+        data/0_raw/ungdc/Speakers_by_session.xlsx
+        data/0_raw/ungdc/README.txt
+        data/0_raw/ungdc/UNGDC_1946-2025.tar.gz
+        data/0_raw/ungdc/metadata.json
 
 Run from project root:
     python code/fetch/fetch_ungdc.py
@@ -31,7 +31,7 @@ from tqdm import tqdm
 
 DATASET_PERSISTENT_ID = "doi:10.7910/DVN/0TJX8Y"
 DATASET_API_URL = f"https://dataverse.harvard.edu/api/datasets/:persistentId?persistentId={DATASET_PERSISTENT_ID}"
-OUTPUT_DIR = Path("data/raw/ungdc")
+OUTPUT_DIR = Path("data/0_raw/ungdc")
 CORPUS_DIR = OUTPUT_DIR / "UNGDC_1946-2025"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 

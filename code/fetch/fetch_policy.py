@@ -3,9 +3,9 @@ Fetch unified policy document corpus for dissertation.
 
 This is the single active policy fetcher.
 
-Output: data/raw/policy_scrape/pdfs/<name>.pdf
-        data/raw/policy_scrape/texts/<name>.txt
-        data/raw/policy_scrape/artifact/metadata.json
+Output: data/0_raw/policy_scrape/pdfs/<name>.pdf
+        data/0_raw/policy_scrape/texts/<name>.txt
+        data/0_raw/policy_scrape/artifact/metadata.json
 
 Run from project root:
     python code/fetch/fetch_policy.py
@@ -27,7 +27,7 @@ except ImportError:
     HAS_PDFPLUMBER = False
     print("Warning: pdfplumber not installed. Install with: pip install pdfplumber")
 
-OUTPUT_DIR = Path("data/raw/policy_scrape")
+OUTPUT_DIR = Path("data/0_raw/policy_scrape")
 PDFS_DIR = OUTPUT_DIR / "pdfs"
 TEXTS_DIR = OUTPUT_DIR / "texts"
 ARTIFACT_DIR = OUTPUT_DIR / "artifact"

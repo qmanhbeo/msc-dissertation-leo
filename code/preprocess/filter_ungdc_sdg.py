@@ -1,10 +1,10 @@
 """
 Extract SDG-relevant policy passages from the UN General Debate Corpus (UNGDC).
 
-Input:  data/raw/ungdc/TXT/Session <N> - <YEAR>/<ISO>_<session>_<year>.txt
+Input:  data/0_raw/ungdc/TXT/Session <N> - <YEAR>/<ISO>_<session>_<year>.txt
         Sessions 70–80 (2015–2024) — post-SDG-adoption speeches only
 
-Output: data/preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl
+Output: data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl
 
 Strategy:
   1. Read all speeches from sessions 70–80 (2015–2024)
@@ -24,8 +24,8 @@ import json
 import re
 from pathlib import Path
 
-UNGDC_TXT_DIR = Path("data/raw/ungdc/TXT")
-OUTPUT_DIR = Path("data/preprocessed/policy_all/ungdc_sdg")
+UNGDC_TXT_DIR = Path("data/0_raw/ungdc/TXT")
+OUTPUT_DIR = Path("data/1_preprocessed/policy_all/ungdc_sdg")
 OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_chunks.jsonl"
 
 # Sessions after SDG adoption (September 2015 = Session 70)

@@ -1,9 +1,9 @@
 """
 Preprocess SDG Benchmark corpus (expert-verified SDG-labeled texts).
 
-Input:  data/raw/sdg_benchmark/benchmark.csv  (1,251 rows, label True/False)
-Output: data/preprocessed/sdg_benchmark/benchmark_clean.jsonl  — positive examples only
-        data/preprocessed/sdg_benchmark/benchmark_clean.csv    — flat CSV for inspection
+Input:  data/0_raw/sdg_benchmark/benchmark.csv  (1,251 rows, label True/False)
+Output: data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  — positive examples only
+        data/1_preprocessed/sdg_benchmark/benchmark_clean.csv    — flat CSV for inspection
 
 Filtering:
   - Keep only rows where label == True (expert-confirmed SDG relevance)
@@ -30,9 +30,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-INPUT_FILE = Path("data/raw/sdg_benchmark/benchmark.csv")
-OUTPUT_JSONL = Path("data/preprocessed/sdg_benchmark/benchmark_clean.jsonl")
-OUTPUT_CSV = Path("data/preprocessed/sdg_benchmark/benchmark_clean.csv")
+INPUT_FILE = Path("data/0_raw/sdg_benchmark/benchmark.csv")
+OUTPUT_JSONL = Path("data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl")
+OUTPUT_CSV = Path("data/1_preprocessed/sdg_benchmark/benchmark_clean.csv")
 
 MIN_WORDS = 10  # lower threshold — benchmark texts tend to be shorter
 

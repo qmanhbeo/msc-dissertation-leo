@@ -2,16 +2,16 @@
 Score paper embedding shards against SDG centroids.
 
 Inputs:
-  data/embedded/research_shards/metadata/manifest.json
-  data/scored/sdg_centroids.npy
+  data/2_embedded/research_shards/metadata/manifest.json
+  data/3_scored/sdg_centroids.npy
 
 Outputs:
-  data/scored/paper_scores_shards/part-00001.npy
-  data/scored/paper_scores_shards/metadata/part-00001_ids.jsonl
-  data/scored/paper_scores_shards/metadata/manifest.json
-  data/scored/paper_scores_shards/metadata/subset_index.sqlite
-  data/scored/research_centroids.npy
-  data/scored/metadata/research_centroid_meta.json
+  data/3_scored/paper_scores_shards/part-00001.npy
+  data/3_scored/paper_scores_shards/metadata/part-00001_ids.jsonl
+  data/3_scored/paper_scores_shards/metadata/manifest.json
+  data/3_scored/paper_scores_shards/metadata/subset_index.sqlite
+  data/3_scored/research_centroids.npy
+  data/3_scored/metadata/research_centroid_meta.json
 """
 
 from __future__ import annotations
@@ -39,12 +39,12 @@ STATUS_STAGE = "openalex_embeddings_to_sdg_scores"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--embedding-manifest", default="data/embedded/research_shards/metadata/manifest.json")
-    p.add_argument("--centroids", default="data/scored/sdg_centroids.npy")
-    p.add_argument("--out-dir", default="data/scored/paper_scores_shards")
-    p.add_argument("--status-dir", default="data/embedded/research_shards/metadata")
-    p.add_argument("--research-centroids-out", default="data/scored/research_centroids.npy")
-    p.add_argument("--research-meta-out", default="data/scored/metadata/research_centroid_meta.json")
+    p.add_argument("--embedding-manifest", default="data/2_embedded/research_shards/metadata/manifest.json")
+    p.add_argument("--centroids", default="data/3_scored/sdg_centroids.npy")
+    p.add_argument("--out-dir", default="data/3_scored/paper_scores_shards")
+    p.add_argument("--status-dir", default="data/2_embedded/research_shards/metadata")
+    p.add_argument("--research-centroids-out", default="data/3_scored/research_centroids.npy")
+    p.add_argument("--research-meta-out", default="data/3_scored/metadata/research_centroid_meta.json")
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--limit-shards", type=int, default=0)
     return p.parse_args()
@@ -95,23 +95,20 @@ def normalize(vec: np.ndarray) -> np.ndarray:
 
 
 def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
+    del manifest_path  # hard pivot: no location fallback based on manifest placement
     raw = Path(stored_path)
-    s = str(raw)
-    if s.startswith("data/embeddings/"):
-        raw = Path(s.replace("data/embeddings/", "data/embedded/", 1))
-    candidates = [
-        raw,
-        Path.cwd() / raw,
-        manifest_path.parent / raw,
-        manifest_path.parent / raw.name,
-    ]
-    for cand in candidates:
-        if cand.exists():
-            return cand
-    raise FileNotFoundError(
-        f"Could not resolve path from embedding manifest: {stored_path}. Tried: "
-        + ", ".join(str(c) for c in candidates)
-    )
+    if raw.is_absolute():
+        if raw.exists():
+            return raw
+        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
+    if not str(raw).startswith("data/2_embedded/"):
+        raise RuntimeError(
+            f"Hard pivot violation: expected data path under data/2_embedded/, got: {stored_path}"
+        )
+    resolved = Path.cwd() / raw
+    if resolved.exists():
+        return resolved
+    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def main() -> None:

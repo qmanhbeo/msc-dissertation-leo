@@ -3,14 +3,14 @@ Streaming OpenAlex cleaner with checkpoint + resume safety.
 
 This stage reads the raw OpenAlex JSONL line-by-line and writes clean shards.
 It is safe to interrupt and resume. Progress is persisted under:
-  - data/embedded/research_shards/metadata/openalex_papers_to_clean_shards.json
-  - data/preprocessed/research_corpus/metadata/state.json
+  - data/2_embedded/research_shards/metadata/openalex_papers_to_clean_shards.json
+  - data/1_preprocessed/research_corpus/metadata/state.json
 
 Outputs:
-  data/preprocessed/research_corpus/part-00001.jsonl
-  data/preprocessed/research_corpus/metadata/part-00001_ids.jsonl
-  data/preprocessed/research_corpus/metadata/manifest.json
-  data/preprocessed/research_corpus/metadata/dedupe.sqlite
+  data/1_preprocessed/research_corpus/part-00001.jsonl
+  data/1_preprocessed/research_corpus/metadata/part-00001_ids.jsonl
+  data/1_preprocessed/research_corpus/metadata/manifest.json
+  data/1_preprocessed/research_corpus/metadata/dedupe.sqlite
 """
 
 from __future__ import annotations
@@ -225,9 +225,9 @@ def write_shard(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input", default="data/raw/openalex/papers.jsonl")
-    p.add_argument("--out-dir", default="data/preprocessed/research_corpus")
-    p.add_argument("--status-dir", default="data/embedded/research_shards/metadata")
+    p.add_argument("--input", default="data/0_raw/openalex/papers.jsonl")
+    p.add_argument("--out-dir", default="data/1_preprocessed/research_corpus")
+    p.add_argument("--status-dir", default="data/2_embedded/research_shards/metadata")
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--manifest", default="")
     p.add_argument("--state", default="")

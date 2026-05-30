@@ -38,9 +38,9 @@ Coverage gap per SDG:
   (using document-weighted policy proportions as the canonical comparison)
 
 Inputs:
-  data/scored/paper_scores_shards/metadata/manifest.json
-  data/scored/policy_scores.npy          (47005, 17)  float32
-  data/scored/metadata/policy_scores_ids.json     list of {id, source_doc}
+  data/3_scored/paper_scores_shards/metadata/manifest.json
+  data/3_scored/policy_scores.npy          (47005, 17)  float32
+  data/3_scored/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
   outputs/<run_name>/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
@@ -69,7 +69,7 @@ from shared.output_runs import resolve_run_dir
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-SCORED_DIR = Path("data/scored")
+SCORED_DIR = Path("data/3_scored")
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 
 PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"

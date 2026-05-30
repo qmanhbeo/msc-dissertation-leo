@@ -2,12 +2,12 @@
 Embed cleaned OpenAlex shards into reusable embedding shards.
 
 Input manifest:
-  data/preprocessed/research_corpus/metadata/manifest.json
+  data/1_preprocessed/research_corpus/metadata/manifest.json
 
 Outputs:
-  data/embedded/research_shards/part-00001.npy
-  data/embedded/research_shards/metadata/part-00001_ids.jsonl
-  data/embedded/research_shards/metadata/manifest.json
+  data/2_embedded/research_shards/part-00001.npy
+  data/2_embedded/research_shards/metadata/part-00001_ids.jsonl
+  data/2_embedded/research_shards/metadata/manifest.json
 """
 
 from __future__ import annotations
@@ -36,9 +36,9 @@ STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input-manifest", default="data/preprocessed/research_corpus/metadata/manifest.json")
-    p.add_argument("--out-dir", default="data/embedded/research_shards")
-    p.add_argument("--status-dir", default="data/embedded/research_shards/metadata")
+    p.add_argument("--input-manifest", default="data/1_preprocessed/research_corpus/metadata/manifest.json")
+    p.add_argument("--out-dir", default="data/2_embedded/research_shards")
+    p.add_argument("--status-dir", default="data/2_embedded/research_shards/metadata")
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--model", default="all-MiniLM-L6-v2")
     p.add_argument("--batch-size", type=int, default=256)
@@ -77,6 +77,23 @@ def copy_ids(ids_in: Path, ids_out: Path) -> None:
             if line.strip():
                 dst.write(line)
     tmp.replace(ids_out)
+
+
+def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
+    del manifest_path  # hard pivot: no location fallback based on manifest placement
+    raw = Path(stored_path)
+    if raw.is_absolute():
+        if raw.exists():
+            return raw
+        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
+    if not str(raw).startswith("data/1_preprocessed/"):
+        raise RuntimeError(
+            f"Hard pivot violation: expected data path under data/1_preprocessed/, got: {stored_path}"
+        )
+    resolved = Path.cwd() / raw
+    if resolved.exists():
+        return resolved
+    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def main() -> None:
@@ -138,8 +155,8 @@ def main() -> None:
         shard_name = shard["name"]
         out_emb = out_dir / f"{shard_name}.npy"
         out_ids = metadata_dir / f"{shard_name}_ids.jsonl"
-        in_data = Path(shard["data_path"])
-        in_ids = Path(shard["ids_path"])
+        in_data = resolve_from_manifest(input_manifest, shard["data_path"])
+        in_ids = resolve_from_manifest(input_manifest, shard["ids_path"])
 
         if shard_id in completed and out_emb.exists() and out_ids.exists():
             log.info("Skip shard %s (already embedded)", shard_name)
