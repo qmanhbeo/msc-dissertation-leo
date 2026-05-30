@@ -2,7 +2,7 @@
 Merge all policy chunk sources into a single extended corpus.
 
 Input sources (each independently produced):
-  data/preprocessed/policy/policy_chunks.jsonl        — chunks from unified policy preprocessing
+  data/preprocessed/policy_scrape/policy_chunks.jsonl        — chunks from unified policy preprocessing
   data/preprocessed/sdgi_corpus/sdgi_chunks.jsonl     — VNR/VLR corpus (integrate_sdgi.py)
   data/preprocessed/ungdc_sdg/ungdc_sdg_chunks.jsonl  — UNGDC filtered passages (filter_ungdc_sdg.py)
 
@@ -27,7 +27,7 @@ from collections import Counter
 from pathlib import Path
 
 SOURCES = [
-    Path("data/preprocessed/policy/policy_chunks.jsonl"),
+    Path("data/preprocessed/policy_scrape/policy_chunks.jsonl"),
     Path("data/preprocessed/sdgi_corpus/sdgi_chunks.jsonl"),
     Path("data/preprocessed/ungdc_sdg/ungdc_sdg_chunks.jsonl"),
 ]
