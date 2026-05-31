@@ -195,27 +195,10 @@ def fetch_paper(paper: dict, out_dir: Path) -> dict:
     return result
 
 
-def convert_with_marker(pdf_path: Path, md_dir: Path, marker_dir: Path) -> bool:
-    """Convert a PDF to markdown using marker."""
-    md_path = md_dir / (pdf_path.stem + ".md")
-    if md_path.exists():
-        return True
-
-    convert_script = marker_dir / "convert_single.py"
-    if not convert_script.exists():
-        print(f"  ✗ marker convert_single.py not found at {convert_script}")
-        return False
-
-    cmd = f"cd {marker_dir} && python convert_single.py '{pdf_path}' --output_dir '{md_dir}' 2>&1"
-    ret = os.system(cmd)
-    return ret == 0
-
-
 def main():
     repo_root = Path(__file__).parent.parent
     citations_json = repo_root / "data" / "cited_papers.json"
     out_dir = repo_root / "literature" / "cited_papers"
-    marker_dir = repo_root / "marker"
 
     if not citations_json.exists():
         print("Run fetch_cited_papers.py first to generate data/cited_papers.json")
@@ -255,35 +238,6 @@ def main():
 
     print(f"\nLog: {log_path.relative_to(repo_root)}")
     print(f"PDFs: {out_dir.relative_to(repo_root)}/")
-
-    # Convert downloaded PDFs using marker
-    fetched_pdfs = [Path(r["pdf_path"]) for r in log if r["status"] == "ok" and r["pdf_path"]]
-    if fetched_pdfs and marker_dir.exists():
-        md_dir = repo_root / "literature" / "cited_papers_md"
-        md_dir.mkdir(exist_ok=True)
-        print(f"\nConverting {len(fetched_pdfs)} PDFs to Markdown with marker...")
-
-        # Check if marker dependencies are installed
-        try:
-            import marker  # noqa
-            marker_available = True
-        except ImportError:
-            marker_available = False
-
-        if not marker_available:
-            print("  marker Python package not installed. To convert PDFs:")
-            print(f"    cd {marker_dir}")
-            print("    pip install -e .")
-            print(f"    python convert.py '{out_dir}' --output_dir '{md_dir}'")
-        else:
-            for pdf_path in fetched_pdfs:
-                print(f"  Converting {pdf_path.name}...")
-                convert_with_marker(pdf_path, md_dir, marker_dir)
-    elif fetched_pdfs:
-        print(f"\nNote: marker not found at {marker_dir}. Convert PDFs manually:")
-        print(f"  git clone https://github.com/datalab-to/marker.git marker")
-        print(f"  cd marker && pip install -e .")
-        print(f"  python convert.py '{out_dir}' --output_dir 'literature/cited_papers_md'")
 
 
 if __name__ == "__main__":
