@@ -14,6 +14,7 @@ cd /home/manh/study-BHam/dissertation/writing
 This produces:
 - `writing/dissertation.pdf`
 - `writing/builds/dissertation_YYYY-MM-DD_HHMMSS_TZ.pdf`
+- Build byproducts (`.aux/.log/.bbl/...`) under `writing/artifact/`
 
 ## Inspect recent build artifacts
 
