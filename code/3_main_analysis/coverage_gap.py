@@ -43,8 +43,8 @@ Inputs:
   data/3_scored/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
-  outputs/coverage_gap.json         per-SDG coverage profiles + gap (canonical analysis)
-  outputs/coverage_gap_raw.json     chunk-level (unweighted) profiles + gap (diagnostic)
+  outputs/sdg_attention_distribution_document_weighted.json         per-SDG coverage profiles + gap (canonical analysis)
+  outputs/diagnostic_sdg_attention_distribution_unweighted_chunks.json     chunk-level (unweighted) profiles + gap (diagnostic)
   outputs/tables/*.tex              generated LaTeX macros/tables
 
 Run from project root (after score materialization for the target run context):
@@ -203,8 +203,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_cov_gap = layout.root / "coverage_gap.json"
-    out_cov_gap_raw = layout.root / "coverage_gap_raw.json"
+    out_cov_gap = layout.root / "sdg_attention_distribution_document_weighted.json"
+    out_cov_gap_raw = layout.root / "diagnostic_sdg_attention_distribution_unweighted_chunks.json"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.root)
 
@@ -330,7 +330,7 @@ def main() -> None:
         "note": (
             "Each policy chunk weighted equally — BIASED by document length. "
             "SDGi VNR/VLR (31,941 chunks) and SDSN (5,591 chunks) dominate. "
-            "Use coverage_gap.json (document-weighted) for primary analysis."
+            "Use sdg_attention_distribution_document_weighted.json (document-weighted) for primary analysis."
         ),
         "n_research_papers": int(research["n_rows"]),
         "n_policy_chunks": int(policy_scores.shape[0]),

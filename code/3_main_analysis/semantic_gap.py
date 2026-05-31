@@ -54,8 +54,8 @@ Inputs:
   data/2_embedded/policy.npy        (47005, 384) float32, L2-normalised
 
 Outputs:
-  outputs/semantic_gap.json              primary: semantic gap per SDG (CHUNK_CAP=50)
-  outputs/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
+  outputs/sdg_conceptual_alignment_cosine_distances.json              primary: semantic gap per SDG (CHUNK_CAP=50)
+  outputs/robustness_check_semantic_distances_by_chunk_cap.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
   outputs/tables/*.tex                   generated LaTeX macros/tables
 
 Run from project root (after coverage_gap.py):
@@ -311,8 +311,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_sem_gap = layout.root / "semantic_gap.json"
-    out_sem_sens = layout.root / "semantic_gap_sensitivity.json"
+    out_sem_gap = layout.root / "sdg_conceptual_alignment_cosine_distances.json"
+    out_sem_sens = layout.root / "robustness_check_semantic_distances_by_chunk_cap.json"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.root)
 
@@ -429,7 +429,7 @@ def main() -> None:
         "method": "centroid_to_centroid",
         "random_seed": RANDOM_SEED,
         "note": (
-            "Sensitivity analysis: same computation as semantic_gap.json but with different "
+            "Sensitivity analysis: same computation as sdg_conceptual_alignment_cosine_distances.json but with different "
             "per-document chunk caps (20 and 100). Use to verify finding robustness. "
             "Rankings should be broadly stable if findings are robust."
         ),

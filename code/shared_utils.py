@@ -12,12 +12,12 @@ class CanonicalOutputs:
 
 
 CANONICAL_ROOT_FILES = [
-    "coverage_gap.json",
-    "coverage_gap_raw.json",
-    "semantic_gap.json",
-    "semantic_gap_sensitivity.json",
-    "h25_correlation.json",
-    "h25_scatter.csv",
+    "sdg_attention_distribution_document_weighted.json",
+    "diagnostic_sdg_attention_distribution_unweighted_chunks.json",
+    "sdg_conceptual_alignment_cosine_distances.json",
+    "robustness_check_semantic_distances_by_chunk_cap.json",
+    "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json",
+    "visualization_source_sdg_attention_vs_semantic_distance.csv",
     "validation_results.json",
     "confusion_matrix.csv",
     "centroid_similarity_matrix.csv",

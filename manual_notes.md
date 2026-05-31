@@ -27,3 +27,14 @@ I used OpenAlex built-in SDG filters to fetch papers. This would have likely fil
 # Four
 
 Even though OpenAlex indexes over 474 million entries, the final research corpus in this paper has 2.54M titles + abstracts (I call SDG-related corpus), which is more than a human or any institution could ever read in a lifetime, and hopefully enough to be representative of the actual distribution
+
+
+# Five
+
+but the bias is, of course AI-driven SDG research is gonna focus heavily on SDG 9 and SDG 4 (due to terms like machine learning)
+
+It is critical to acknowledge that querying a research corpus using explicit computational nomenclature ('machine learning', 'neural networks') inherently conditions the dataset toward domains with high concentrations of technical and pedagogical literature, specifically SDG 4 (Quality Education) and SDG 9 (Industry, Innovation, and Infrastructure).Rather than viewing this as an uncontrolled confounding variable, this dissertation explicitly operationalizes this distribution as a baseline for Computational Sustainability. To ensure this vocabulary bias did not compromise our structural insights, an A15 Calibration Bias control was implemented. Because the baseline calibration bias ($0.326$) exceeded the observed directional asymmetry ($0.144$), the H26 hypothesis was conservatively treated as inconclusive, preventing vocabulary artifacting from driving false positive claims.
+
+## For main text:
+
+Methodological Justification for Calibration Bias Controls (Assumption A15)To ensure that the observed semantic alignments reflect genuine conceptual engagement rather than mere stylistic mimicry, the analysis implements a strict calibration bias safeguard (A15). Because both the international policy corpus and the underlying OSDG training text are written in a highly stylized, institutional "UN-speak," policy documents enjoy an artificial linguistic head-start when evaluated against SDG centroids. Our pipeline mathematically isolates this baseline vocabulary inflation, establishing a structural noise threshold of $0.326$. While the raw analysis for Hypothesis 26 indicates a directional asymmetry of $0.144$—suggesting that policy frameworks actively engage with scientific research vectors more than vice versa—this observed signal is completely swallowed by the much larger $0.326$ dialect bias. Consequently, this relationship is conservatively treated as inconclusive, preventing an artifact of institutional vocabulary from being misconstrued as a genuine cross-disciplinary alignment.

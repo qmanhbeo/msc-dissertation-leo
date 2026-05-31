@@ -65,12 +65,12 @@ Root artifacts:
 - `outputs/validation_results.json`
 - `outputs/confusion_matrix.csv`
 - `outputs/centroid_similarity_matrix.csv`
-- `outputs/coverage_gap.json`
-- `outputs/coverage_gap_raw.json`
-- `outputs/semantic_gap.json`
-- `outputs/semantic_gap_sensitivity.json`
-- `outputs/h25_correlation.json`
-- `outputs/h25_scatter.csv`
+- `outputs/sdg_attention_distribution_document_weighted.json`
+- `outputs/diagnostic_sdg_attention_distribution_unweighted_chunks.json`
+- `outputs/sdg_conceptual_alignment_cosine_distances.json`
+- `outputs/robustness_check_semantic_distances_by_chunk_cap.json`
+- `outputs/statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json`
+- `outputs/visualization_source_sdg_attention_vs_semantic_distance.csv`
 - `outputs/dissertation.pdf`
 
 Table artifacts:
