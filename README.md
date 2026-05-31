@@ -195,7 +195,6 @@ Canonical reproducibility artifacts now live at repository root:
 - `conda-env-dissertation.yml` (conda env export)
 - `conda-explicit-dissertation.txt` (explicit conda lock)
 - `runtime_snapshot_2026-05-26.md` (runtime + hardware snapshot)
-- `CONTRACT.md` (pipeline structure and path contract)
 
 Recommended environment setup:
 
@@ -212,6 +211,29 @@ conda create --name dissertation-replay --file conda-explicit-dissertation.txt
 conda activate dissertation-replay
 pip install -r requirements.lock.txt
 ```
+
+## Repository Conventions
+
+Active code surface:
+- `code/0_fetch/`
+- `code/1_preprocess/`
+- `code/2_embed/`
+- `code/3_main_analysis/`
+- `code/4_visualization/`
+- `code/shared_utils.py`
+
+Active data layers:
+- `data/0_raw/`
+- `data/1_preprocessed/`
+- `data/2_embedded/`
+- `data/3_scored/`
+
+Output contract:
+- Analysis/visualization outputs live under `outputs/<run_name>/` with `figures/` and `tables/`.
+- Active scripts should not write analysis outputs under `data/`.
+
+Legacy boundary:
+- `_legacy/` is archival only and not part of active runs.
 
 Outputs:
 - `outputs/<run_name>/coverage_gap.json`
