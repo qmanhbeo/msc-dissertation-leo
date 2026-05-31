@@ -43,9 +43,9 @@ Inputs:
   data/3_scored/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
-  outputs/<run_name>/coverage_gap.json          per-SDG coverage profiles + gap (canonical analysis)
-  outputs/<run_name>/coverage_gap_raw.json      chunk-level (unweighted) profiles + gap (diagnostic)
-  outputs/<run_name>/tables/*.tex               generated LaTeX macros/tables
+  outputs/coverage_gap.json         per-SDG coverage profiles + gap (canonical analysis)
+  outputs/coverage_gap_raw.json     chunk-level (unweighted) profiles + gap (diagnostic)
+  outputs/tables/*.tex              generated LaTeX macros/tables
 
 Run from project root (after score materialization for the target run context):
     python code/3_main_analysis/coverage_gap.py
@@ -64,7 +64,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared_utils import resolve_run_dir
+from shared_utils import ensure_canonical_outputs
 
 # ---------------------------------------------------------------------------
 # Config
@@ -192,10 +192,8 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
 # Args
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Compute coverage gap outputs into a run-scoped output folder.")
-    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--run-name", default=None)
-    p.add_argument("--run-label", default="analysis")
+    p = argparse.ArgumentParser(description="Compute coverage gap outputs into the canonical output folder.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     return p.parse_args()
 
 
@@ -204,19 +202,11 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
-    run = resolve_run_dir(
-        output_root=Path(args.output_root),
-        run_name=args.run_name,
-        run_label=args.run_label,
-        prefer_latest_if_missing=False,
-    )
-    output_dir = run.run_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
-    out_cov_gap = output_dir / "coverage_gap.json"
-    out_cov_gap_raw = output_dir / "coverage_gap_raw.json"
-    tables_dir = output_dir / "tables"
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    log.info("Output run: %s", output_dir)
+    layout = ensure_canonical_outputs(Path(args.output_dir))
+    out_cov_gap = layout.root / "coverage_gap.json"
+    out_cov_gap_raw = layout.root / "coverage_gap_raw.json"
+    tables_dir = layout.tables_dir
+    log.info("Canonical output dir: %s", layout.root)
 
     # ---- Load scores ----
     log.info("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)
@@ -290,6 +280,9 @@ def main() -> None:
         return {sdg_labels[i]: round(float(v), 6) for i, v in enumerate(arr)}
 
     # Canonical output (document-weighted)
+    a15_paper_top = float(research["mean_top_overall"])
+    a15_policy_top = float(policy_scores.max(axis=1).mean())
+    a15_diff = a15_policy_top - a15_paper_top
     coverage_gap_out = {
         "method": "document_weighted",
         "note": (
@@ -302,7 +295,7 @@ def main() -> None:
         "n_policy_chunks": int(policy_scores.shape[0]),
         "n_policy_documents": len(doc_meta),
         "a15_note": (
-            "A15 FLAG: policy top scores exceed paper top scores by 0.191 "
+            f"A15 FLAG: policy top scores exceed paper top scores by {a15_diff:.3f} "
             "(threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. "
             "Policy proportions may be inflated relative to research. "
             "Coverage gap results valid but directional comparison should be framed carefully."
@@ -384,10 +377,6 @@ def main() -> None:
     gen_dir = tables_dir
 
     # A15 calibration bias values
-    a15_paper_top  = float(research["mean_top_overall"])
-    a15_policy_top = float(policy_scores.max(axis=1).mean())
-    a15_diff       = a15_policy_top - a15_paper_top
-
     # Derived combined coverage shares for prose macros
     pol13 = float(pol_dw_hard[12]) * 100
     pol17 = float(pol_dw_hard[16]) * 100

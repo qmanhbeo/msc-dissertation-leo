@@ -13,24 +13,21 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{graphicx}
-\graphicspath{{figures/}}
+\graphicspath{{../outputs/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
 \usepackage[style=apa,backend=biber]{biblatex}
 \addbibresource{references.bib}
 
-\providecommand{\DraftCompiledAt}{manual build (run build\_versioned\_pdf.sh for exact timestamp)}
+\providecommand{\DraftCompiledAt}{manual build (run build\_pdf.sh for exact timestamp)}
 \providecommand{\DraftVersionTag}{manual-build}
-\newcommand{\AnalysisSnapshotDate}{10 April 2026}
 \InputIfFileExists{build_meta.tex}{}{}
-% Generated analysis outputs — produced by canon scripts; see data/generated/
-\input{../data/generated/num_validation.tex}
-\input{../data/generated/num_coverage.tex}
-\input{../data/generated/num_semantic.tex}
-\input{../data/generated/num_h25.tex}
-\input{../data/generated/num_context.tex}
-\input{../data/generated/num_sdg4.tex}
+% Generated analysis outputs — produced by active canon scripts under outputs/tables/
+\input{../outputs/tables/num_validation.tex}
+\input{../outputs/tables/num_coverage.tex}
+\input{../outputs/tables/num_semantic.tex}
+\input{../outputs/tables/num_h25.tex}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks (Draft compiled \DraftCompiledAt)},
@@ -42,7 +39,7 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyfoot[L]{Preliminary draft}
+\fancyfoot[L]{Canonical build}
 \fancyfoot[C]{Compiled \DraftCompiledAt}
 \fancyfoot[R]{\thepage}
 \renewcommand{\headrulewidth}{0pt}
@@ -54,21 +51,12 @@
 \large MSc AI and Sustainable Development\\
 University of Birmingham, School of Government}
 \author{Nguyen Quang Manh}
-\date{Submission due: 1 September 2026\\[0.5em]\normalsize Preliminary draft compiled \DraftCompiledAt}
+\date{Submission due: 1 September 2026\\[0.5em]\normalsize Canonical build compiled \DraftCompiledAt}
 
 \begin{document}
 
 \maketitle
 \thispagestyle{fancy}
-\begin{center}
-\fbox{%
-\begin{minipage}{0.93\textwidth}
-\small
-\textbf{Draft status note.} This manuscript is a preliminary working draft compiled on \DraftCompiledAt. It reflects an interim project snapshot rather than a final locked analysis. The empirical state described in this draft is pegged to \AnalysisSnapshotDate, approximately five months before the 1 September 2026 submission deadline. As of that snapshot date, the OpenAlex retrieval pipeline was still in progress and only approximately half of the planned query set had completed. All research-corpus counts, empirical distributions, and inferential claims reported here should therefore be treated as provisional and subject to revision as data collection and analysis continue.
-\end{minipage}%
-}
-\end{center}
-\vspace{1em}
 \tableofcontents
 \newpage
 
@@ -89,7 +77,7 @@ I am grateful to my supervisor for the guidance that will shape this early draft
 \newpage
 
 \begin{abstract}
-The Sustainable Development Goals (SDGs) provide the dominant international framework for sustainability governance, yet it remains unclear whether academic artificial intelligence (AI) research engages with policy priorities at the SDG level. Existing bibliometric studies map AI research to SDGs using keyword methods, but none has systematically compared the \emph{semantic content} of research and policy discourse or tested whether the two forms of topical gap are related. This study advances from lexical to topical alignment measurement using Sentence-BERT embeddings and a nearest-centroid semantic instrument validated against expert-labelled SDG benchmarks (macro-F1 = \MacroFOne). Applying this instrument to a preliminary working snapshot of \NResearchPapers{} research abstracts and \NPolicyChunks{} policy document chunks from \NPolicyDocs{} sources, we find: (i) a pronounced coverage gap in which policy discourse concentrates on SDG 13 (Climate, \PolicyPctSdgThirteen\% of documents), SDG 17 (Partnerships, \PolicyPctSdgSeventeen\%), and SDG 16 (Governance, \PolicyPctSdgSixteen\%), while research concentrates on SDG 4 (Education/Learning, \ResearchPctSdgFour\%) and SDG 9 (Innovation, \ResearchPctSdgNine\%); (ii) a semantic gap in which SDG 8 (Decent Work), SDG 3 (Health), and SDG 16 (Governance) show the largest within-SDG semantic divergence between the two corpora; (iii) coverage gaps and semantic gaps show no significant correlation ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = 17$), suggesting they represent structurally distinct dimensions of misalignment requiring separate interventions (note: with $n = 17$ SDGs, statistical power is limited and absence of significance should not be read as proof of independence); and (iv) a directional asymmetry in which policy chunks score higher against research-derived centroids (\HAsymPolicyScore) than research papers score against OSDG-derived centroids (\HAsymResearchScore), though this result is inconclusive due to a known calibration bias of comparable magnitude (see Section~\ref{sec:assumptions}). These findings challenge the assumption that topical engagement implies substantive alignment and suggest that research-policy dialogue requires attention to semantic register, not only subject coverage.
+The Sustainable Development Goals (SDGs) provide the dominant international framework for sustainability governance, yet it remains unclear whether academic artificial intelligence (AI) research engages with policy priorities at the SDG level. Existing bibliometric studies map AI research to SDGs using keyword methods, but none has systematically compared the \emph{semantic content} of research and policy discourse or tested whether the two forms of topical gap are related. This study advances from lexical to topical alignment measurement using Sentence-BERT embeddings and a nearest-centroid semantic instrument validated against expert-labelled SDG benchmarks (macro-F1 = \MacroFOne). Applying this instrument to \NResearchPapers{} research abstracts and \NPolicyChunks{} policy document chunks from \NPolicyDocs{} sources, we find: (i) a pronounced coverage gap in which policy discourse concentrates on SDG 13 (Climate, \PolicyPctSdgThirteen\% of documents), SDG 17 (Partnerships, \PolicyPctSdgSeventeen\%), and SDG 16 (Governance, \PolicyPctSdgSixteen\%), while research concentrates on SDG 3 (Health, \ResearchPctSdgThree\%), SDG 4 (Education/Learning, \ResearchPctSdgFour\%), and SDG 9 (Innovation, \ResearchPctSdgNine\%); (ii) the largest within-SDG semantic gaps occur in SDG 17 (\SemanticGapSdgSeventeen), SDG 13 (\SemanticGapSdgThirteen), and SDG 10 (\SemanticGapSdgTen); (iii) research attention alone does not predict semantic divergence ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$), but SDGs with larger cross-corpus coverage imbalance tend to show larger semantic gaps; and (iv) policy chunks score higher against research-derived centroids (\HAsymPolicyScore) than research papers score against OSDG-derived centroids (\HAsymResearchScore), although this directional asymmetry remains inconclusive because the A15 calibration bias (\AffFifteenDiff) is larger than the observed H26 gap (\HAsymGap). These findings challenge the assumption that topical engagement implies substantive alignment and suggest that research-policy dialogue requires attention to semantic register, not only subject coverage.
 \end{abstract}
 
 %% ============================================================
@@ -160,9 +148,7 @@ A further conceptual note is necessary on the linguistic register difference bet
 
 \subsection{Research Corpus}
 
-The research corpus reported in this draft is an interim working snapshot rather than a final locked harvest. As of \AnalysisSnapshotDate, the OpenAlex collection process was still underway and only approximately half of the planned query set had completed. The counts and downstream results reported here should therefore be read as provisional.
-
-The research corpus consists of \NResearchPapers{} English-language research abstracts retrieved from the OpenAlex API \parencite{Priem2022}, covering publications between 2018 and 2025. Abstracts were retrieved using a structured query combining OpenAlex's native SDG work filter with four AI-related search terms (``artificial intelligence'', ``machine learning'', ``deep learning'', ``neural network''), yielding 68 queries: 17 SDGs times four AI terms.\footnote{Complete query parameters are documented in \texttt{code/0_fetch/fetch\_openalex.py}. Each query filters to one OpenAlex native SDG identifier, publication year after 2017, and records with abstracts, then applies the AI search term.} This makes OpenAlex the retrieval mechanism rather than the final labelling authority. OpenAlex SDG metadata defines the candidate universe of AI-for-sustainability papers; the SDG assignments used in the analysis are produced later by the independently validated centroid instrument described below. After deduplication by OpenAlex work ID and removal of records lacking usable abstracts, \NResearchPapers{} unique papers were retained in the current snapshot. No balancing by SDG, citation count, or OpenAlex relevance rank is applied, because such trimming would distort the coverage profile the study aims to measure. Each paper's title and abstract were concatenated to form the text unit for embedding.
+The research corpus consists of \NResearchPapers{} English-language research abstracts retrieved from the OpenAlex API \parencite{Priem2022}, covering publications between 2018 and 2025. Abstracts were retrieved using a structured query combining OpenAlex's native SDG work filter with four AI-related search terms (``artificial intelligence'', ``machine learning'', ``deep learning'', ``neural network''), yielding 68 queries: 17 SDGs times four AI terms.\footnote{Complete query parameters are documented in \path{code/0_fetch/fetch_openalex.py}. Each query filters to one OpenAlex native SDG identifier, publication year after 2017, and records with abstracts, then applies the AI search term.} This makes OpenAlex the retrieval mechanism rather than the final labelling authority. OpenAlex SDG metadata defines the candidate universe of AI-for-sustainability papers; the SDG assignments used in the analysis are produced later by the independently validated centroid instrument described below. After deduplication by OpenAlex work ID and removal of records lacking usable abstracts, \NResearchPapers{} unique papers were retained in the canonical corpus. No balancing by SDG, citation count, or OpenAlex relevance rank is applied, because such trimming would distort the coverage profile the study aims to measure. Each paper's title and abstract were concatenated to form the text unit for embedding.
 
 The 2018 start date reflects the post-AlexNet emergence of deep learning as the dominant AI paradigm and the adoption of the SDG framework in 2015 with a research uptake lag. Earlier papers are excluded to ensure comparability in methodological framing.
 
@@ -227,10 +213,6 @@ The central structural hypothesis (H25) is that coverage gaps and semantic gaps 
 
 The directional asymmetry hypothesis (H26) tests whether research engages policy framing less than policy engages research framing. To operationalise this, we build research-side SDG centroids by hard-assigning each paper to its top OSDG centroid and computing the mean embedding of papers assigned to each SDG. Policy chunks are then scored against these research centroids. The mean top-centroid similarity for research papers against OSDG centroids (\HAsymResearchScore) is compared to the mean top-centroid similarity for policy chunks against research centroids (\HAsymPolicyScore).
 
-\subsection{SDG Index Contextualisation}
-
-Gap scores are joined with the Kaggle SDG Index 2022 global mean scores \parencite{Sachs2024} to contextualise findings. We compute Pearson and Spearman correlations between research coverage proportions and SDG Index scores (H21), and between semantic gap scores and SDG Index scores (H22). SDG 17 is excluded from index-based analyses as it is not scored in the SDG Index. This analysis tests whether research neglect and semantic divergence are concentrated on the SDGs where real-world progress is weakest.
-
 \subsection{Key Assumptions and Mitigations}
 \label{sec:assumptions}
 
@@ -244,8 +226,6 @@ The research coverage profile assigns \ResearchPctSdgFour\% of papers to SDG 4 (
 
 \textbf{A26 --- SDG 1/8/10 cluster.} SDG centroids for SDGs 1 (No Poverty), 8 (Decent Work), and 10 (Reduced Inequalities) show very high pairwise cosine similarities (\CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax), producing systematic classifier leakage. Individual findings for these three SDGs are reported as a macro-cluster in the discussion.
 
-\textbf{SDG 4 artefact: revised diagnostic.} A keyword-based audit of the \NsdgFourTotal{} papers assigned to SDG 4 (script: \path{code/fix_sdg4_artefact.py}; output: \path{data/sdg4_artefact_analysis.json}) classified papers into three groups: (i) \NsdgFourGenuineCount{} papers (\NsdgFourGenuinePct\%) contain explicit education vocabulary (``student'', ``teacher'', ``classroom'', ``curriculum'', etc.) and are likely genuine education research; (ii) \NsdgFourArtefactCount{} papers (\NsdgFourArtefactPct\%) contain ML methodology keywords but no education vocabulary and are clear artefacts; (iii) \NsdgFourAmbiguousCount{} papers (\NsdgFourAmbiguousPct\%) contain neither education-specific nor unambiguous ML-specific vocabulary (``ambiguous''). The ambiguous group is the primary artefact risk: these papers lack any education-domain signal and are likely assigned to SDG 4 by the embedding model purely from generic learning and training vocabulary. A conservative estimate is that approximately \NsdgFourAmbiguousPct\% of SDG 4 assignments represent vocabulary overlap artefacts, reducing the true SDG 4 research share from \ResearchPctSdgFour\% to approximately \SdgFourAdjustedSharePct\%. This estimate is heuristic and should be validated by qualitative inspection of a random sample of ambiguous papers.
-
 %% ============================================================
 \section{Results}
 \label{sec:results}
@@ -258,7 +238,7 @@ Table~\ref{tab:validation} reports per-SDG F1 scores from the uncontaminated ben
 \centering
 \caption{Per-SDG F1 scores from benchmark validation (SDGs 1--16, n=585, uncontaminated). SDG 17 excluded (contaminated; centroid built from same benchmark texts).}
 \label{tab:validation}
-\input{../data/generated/tab_validation.tex}
+\input{../outputs/tables/tab_validation.tex}
 \end{table}
 
 Three SDGs require specific caveats. SDG 11 (Sustainable Cities, F1 = \FiSdgEleven) is most frequently confused with SDG 9 (Innovation), whose centroid is its nearest neighbour (cosine similarity \CentroidSimElevenNine). Smart-city and urban-AI research vocabulary closely resembles innovation language, meaning SDG 11 coverage in the research corpus may be underestimated and SDG 9 coverage overestimated. SDG 8 (Decent Work, F1 = \FiSdgEight) is embedded within a high-similarity cluster with SDGs 1 and 10 (centroid similarities \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin{} respectively); findings for this cluster are reported with caution. SDG 15 (Life on Land, F1 = \FiSdgFifteen) is below the mean and may partially absorb misclassified SDG 14 items; findings for SDG 15 should be treated with corresponding uncertainty. SDG 4 achieves the highest F1 (\FiSdgFour) and SDG 16 the second highest (\FiSdgSixteen), confirming that both education/learning and governance/institutions vocabularies are sufficiently distinctive for reliable classification.
@@ -271,7 +251,7 @@ Table~\ref{tab:coverage} presents the document-weighted policy coverage profile 
 \centering
 \caption{Coverage profiles and coverage gap by SDG. Policy proportions are document-weighted ($n = \NPolicyDocs$ source documents). Research proportions are paper-weighted ($n = \NResearchPapers$ papers). Coverage gap = $|$Research$\%$ $-$ Policy$\%$$|$.}
 \label{tab:coverage}
-\input{../data/generated/tab_coverage.tex}
+\input{../outputs/tables/tab_coverage.tex}
 
 \par\vspace{0.5em}
 {\footnotesize $^\dagger$ SDG 4 coverage in research may be inflated by ML ``learning'' terminology; see Section~\ref{sec:sdg4artefact}.\par
@@ -285,11 +265,11 @@ $^\ddagger$ SDG 4 F1 = \FiSdgFour{} in the validation table (Table~\ref{tab:vali
 \label{fig:coverage_profiles}
 \end{figure}
 
-\textbf{Policy corpus.} Three SDGs dominate the document-weighted policy profile: SDG 13 (Climate Action, \PolicyPctSdgThirteen\%), SDG 17 (Partnerships for the Goals, \PolicyPctSdgSeventeen\%), and SDG 16 (Peace, Justice and Strong Institutions, \PolicyPctSdgSixteen\%), accounting for \PolicyTopThreePct\% of policy documents. This reflects the governance and meta-level framing characteristic of the corpus: VNR national reports, UNGDC speeches, and international frameworks disproportionately address institutional cooperation, climate commitments, and governance architecture rather than individual SDG programme areas.
+\textbf{Policy corpus.} Three SDGs dominate the document-weighted policy profile: SDG 13 (Climate Action, \PolicyPctSdgThirteen\%), SDG 17 (Partnerships for the Goals, \PolicyPctSdgSeventeen\%), and SDG 16 (Peace, Justice and Strong Institutions, \PolicyPctSdgSixteen\%), accounting for \PolicyTopThreePct\% of policy documents. This is a sharply policy-facing governance cluster: climate commitments, international coordination, and institutional capacity dominate the policy surface much more than sector-specific programme areas.
 
-\textbf{Research corpus.} Two SDGs dominate the research profile: SDG 4 (Quality Education, \ResearchPctSdgFour\%) and SDG 9 (Innovation, \ResearchPctSdgNine\%), together accounting for \ResearchSdgFourPlusSdgNinePct\% of papers. SDG 4's prominence requires the caveat flagged in Section~\ref{sec:sdg4artefact}: the OSDG Education centroid is likely capturing machine learning papers whose vocabulary (``learning'', ``training'', ``model'') overlaps with educational discourse. If SDG 4 papers are partially misclassified SDG 9 papers, then the true innovation share is higher and the true education share lower. SDG 9's prominence is consistent with prior bibliometric literature \parencite{Singh2023, Cowls2021}: AI research is structurally positioned as an ``innovation'' sector. Notably, H1 predicted that research would over-index on SDG 13 (Climate Action) relative to policy, but the empirical profile shows the opposite: SDG 13 is strongly policy-dominated (\PolicyPctSdgThirteen\% policy vs \ResearchPctSdgThirteen\% research). H1 is therefore partially disconfirmed for SDG 13, while its prediction holds for SDGs 9 and 7.
+\textbf{Research corpus.} The research profile is broader, but it still concentrates strongly on a smaller set of SDGs. The largest research shares are SDG 3 (Good Health, \ResearchPctSdgThree\%), SDG 4 (Quality Education, \ResearchPctSdgFour\%), and SDG 9 (Innovation, \ResearchPctSdgNine\%), followed by SDG 16 and SDG 7 at \ResearchPctSdgSixteen\% and \ResearchPctSdgSeven\% respectively. The SDG 4 result remains caveated by the artefact risk flagged in Section~\ref{sec:sdg4artefact}, but even with that caution the research corpus clearly does not mirror the policy-side dominance of SDGs 13, 17, and 16.
 
-\textbf{Divergent emphases.} Several SDGs show pronounced directional coverage gaps: SDG 13 (policy \PolicyPctSdgThirteen\% vs research \ResearchPctSdgThirteen\%, gap \CoverageGapSdgThirteen), SDG 17 (policy \PolicyPctSdgSeventeen\% vs research \ResearchPctSdgSeventeen\%, gap \CoverageGapSdgSeventeen), SDG 9 (research \ResearchPctSdgNine\% vs policy \PolicyPctSdgNine\%, gap \CoverageGapSdgNine), and SDG 16 (policy \PolicyPctSdgSixteen\% vs research \ResearchPctSdgSixteen\%, gap \CoverageGapSdgSixteen). The pattern is striking: policy discourse is concentrated on climate governance, international partnerships, and institutional frameworks, while research is concentrated on technical innovation (and possibly education methodology).
+\textbf{Largest coverage mismatches.} The five largest absolute coverage gaps are SDG 17 (\CoverageGapSdgSeventeen), SDG 13 (\CoverageGapSdgThirteen), SDG 3 (\CoverageGapSdgThree), SDG 4 (\CoverageGapSdgFour), and SDG 16 (\CoverageGapSdgSixteen). This produces a clear structural contrast: policy discourse is heavily concentrated on the climate--partnerships--governance block, while research attention is pulled much more toward health, learning, and innovation.
 
 \textbf{SDG 13/17 collinearity note.} The SDG 13 and SDG 17 centroids have a pairwise cosine similarity of \CentroidSimThirteenSeventeen{} --- the highest pair in the entire centroid similarity matrix, and higher than any pair within the SDG 1/8/10 cluster (\CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax). Climate discourse and partnership discourse are semantically intertwined in the OSDG labelling corpus, producing substantial leakage between these two classifications. The individual figures of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17) are each subject to this leakage and should be treated with the same caution as the SDG 1/8/10 cluster. The combined SDG 13+17 policy share (\PolicyPctSdgThreePlusSeventeen\%) is the more interpretively stable figure. In both cases, the core finding --- that this cluster dominates the policy profile while research concentrates elsewhere --- is robust.
 
@@ -297,13 +277,13 @@ $^\ddagger$ SDG 4 F1 = \FiSdgFour{} in the validation table (Table~\ref{tab:vali
 
 \subsection{Semantic Gap: How Differently Research and Policy Discuss Each SDG}
 
-Table~\ref{tab:semgap} reports the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgSeventeen{} (SDG 17) to \SemanticGapSdgEight{} (SDG 8), a range of \SemanticGapRange{} cosine distance units. Rankings are stable across chunk caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
+Table~\ref{tab:semgap} reports the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgFive{} (SDG 5) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. Rankings are stable across chunk caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
 
 \begin{table}[ht]
 \centering
 \caption{Within-SDG semantic gap (chunk cap = 50). Semantic gap = 1 $-$ cosine similarity between research sub-centroid and policy sub-centroid for each SDG. Higher gap = greater within-SDG semantic divergence. n$_{\text{res}}$ = papers assigned to SDG; n$_{\text{pol docs}}$ = unique policy documents with chunks assigned to SDG.}
 \label{tab:semgap}
-\input{../data/generated/tab_semgap.tex}
+\input{../outputs/tables/tab_semgap.tex}
 \end{table}
 
 \begin{figure}[ht]
@@ -313,36 +293,31 @@ Table~\ref{tab:semgap} reports the within-SDG semantic gap for all 17 SDGs. Sema
 \label{fig:semantic_gap}
 \end{figure}
 
-\textbf{Largest semantic gaps.} SDG 8 (Decent Work and Economic Growth, gap = \SemanticGapSdgEight) shows the greatest within-SDG divergence. Research papers assigned to this SDG likely address labour market analytics, productivity modelling, and automation, while policy discourse in VNR reports and UNGDC speeches frames SDG 8 around employment rights, economic inclusion, and informal sector formalisation. SDG 3 (Good Health, gap = \SemanticGapSdgThree) reflects a well-documented divide between AI diagnostics research (medical imaging, drug discovery, genomics) and global health policy framing around access, equity, and universal health coverage. SDG 16 (Peace, Justice, gap = \SemanticGapSdgSixteen) divides technical governance AI (fairness in legal systems, regulatory automation) from institutional discourse around rule of law, democracy, and state capacity.
+\textbf{Largest semantic gaps.} The greatest within-SDG divergence appears in SDG 17 (Partnerships, \SemanticGapSdgSeventeen), SDG 13 (Climate Action, \SemanticGapSdgThirteen), and SDG 10 (Reduced Inequalities, \SemanticGapSdgTen), with SDGs 6 and 7 close behind. This is important because it is not simply a ``neglect'' pattern: the most policy-dominant goals are also among the most semantically distant. Where policy discourse is most concentrated, research does not just appear less often; it also tends to frame those SDGs differently when it does appear.
 
-\textbf{Smallest semantic gaps.} SDG 17 (Partnerships, gap = \SemanticGapSdgSeventeen) shows the smallest divergence. This is interpretively ambiguous: both corpora use broad coalition-building and cooperation vocabulary when discussing SDG 17, but this may reflect shared \emph{generic} language rather than genuine substantive overlap. SDG 9 (Innovation, gap = \SemanticGapSdgNine) is the more interesting low-gap result: with \NPapersSdgNine{} papers and a moderate policy presence, the research and policy sub-centroids for innovation are semantically close, consistent with the prediction of H10 that shared innovation/infrastructure vocabulary would produce low within-SDG divergence.
+\textbf{Smallest semantic gaps.} The lowest gaps occur in SDG 5 (\SemanticGapSdgFive), SDG 9 (\SemanticGapSdgNine), SDG 4 (\SemanticGapSdgFour), and SDG 8 (\SemanticGapSdgEight). Low semantic gap does not imply balanced attention: SDG 9 is still strongly research-dominant in coverage, and SDG 4 remains subject to the learning-vocabulary artefact caveat. The key point is narrower: some SDGs show relatively close within-goal framing even when the two corpora differ sharply in how much attention they allocate to that goal.
 
 \subsection{Coverage--Semantic Interaction: Two Independent Dimensions of Misalignment}
 
-Table~\ref{tab:h25} reports the H25 correlation tests between research coverage proportions and semantic gap scores across all 17 SDGs.
+Table~\ref{tab:h25} reports the H25 correlation tests between coverage measures and semantic gap scores across the SDGs.
 
 \begin{table}[ht]
 \centering
 \caption{H25 correlation tests: research coverage proportion vs.\ semantic gap, across 17 SDGs.}
 \label{tab:h25}
-\input{../data/generated/tab_h25.tex}
+\input{../outputs/tables/tab_h25.tex}
 \end{table}
 
-The correlation is near-zero and statistically non-significant across all specifications. H25, as originally framed (the ``talking-past-each-other'' hypothesis predicting that research-engaged SDGs have the largest semantic gaps), is \textbf{not supported}. Coverage gap and semantic gap show no significant correlation across SDGs ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = 17$). The 95\% confidence interval for $r$ at $n = 17$ spans approximately $[\HPrimaryPearsonCiLower, +\HPrimaryPearsonCiUpper]$; the absence of significance should not be read as evidence of independence, but as insufficient power to detect moderate correlations with this number of SDG-level observations.
+The primary H25 test is \textbf{not supported}. Research coverage proportion and semantic gap are almost uncorrelated across SDGs ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$). The 95\% confidence interval for $r$ spans approximately $[\HPrimaryPearsonCiLower, +\HPrimaryPearsonCiUpper]$, so the result should be read as low-evidence for a linear relationship rather than proof of full independence.
 
-This non-significant result is nonetheless a substantive finding. It indicates that the two dimensions of misalignment do not track together: high research attention to an SDG does not predict whether research and policy will discuss that SDG similarly or differently. This is visible in the data: SDG 9 (high research coverage, \ResearchPctSdgNine\%; low semantic gap, \SemanticGapSdgNine) and SDG 3 (moderate research coverage, \ResearchPctSdgThree\%; high semantic gap, \SemanticGapSdgThree) occupy opposite corners of the coverage--semantic gap space. A 2$\times$2 typology of misalignment follows from this structure. The quadrant boundaries are set at the median research coverage proportion (\MedianResearchPct\%, the midpoint of the 8th and 9th values in the sorted distribution) and the median semantic gap (\MedianSemanticGap, the 9th value of 17 sorted values), yielding four operationally defined cells:
+Two supplementary tests sharpen the picture. First, SDGs with larger absolute coverage gaps tend to have larger semantic gaps. Second, the signed dominance measure is negative, meaning policy-dominant SDGs tend to be more semantically divergent than research-dominant ones. In other words, sheer research attention does not predict semantic distance, but strong cross-corpus imbalance does.
 
-\begin{itemize}
-  \item \textbf{High coverage, low semantic gap} (SDG 9, SDG 11): Research engages the same SDG framing as policy. May reflect genuine responsiveness or shared paradigm. Interpretively complex.
-  \item \textbf{High coverage, high semantic gap} (SDG 3, SDG 4, SDG 16): Research addresses the SDG but in a different register. The most structurally problematic configuration.
-  \item \textbf{Low coverage, low semantic gap} (SDG 17, SDG 5, SDG 1): Research rarely addresses the SDG, but when it does, it stays close to the policy framing. Limited research effort that is nonetheless aligned.
-  \item \textbf{Low coverage, high semantic gap} (SDG 8, SDG 10, SDG 6): Double neglect --- research rarely engages the SDG, and when it does, it diverges from policy framing. The highest-risk configuration for research-policy disconnection.
-\end{itemize}
+Figure~\ref{fig:typology_scatter} illustrates this refinement. High-coverage research goals are split between relatively low-gap cases such as SDG 9 and higher-gap cases such as SDG 3 and SDG 7, which is why the primary H25 test is near zero. At the same time, the most policy-dominant goals, especially SDGs 13 and 17, sit in the high-gap region. The substantive lesson is therefore not that coverage and semantic divergence are unrelated in every sense, but that \emph{research attention alone} is a poor predictor of semantic convergence.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig3_coverage_semantic_scatter.pdf}
-\caption{Coverage vs semantic gap scatter plot (2$\times$2 typology). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). Quadrant labels indicate the misalignment type. SDG~4 (top right) is subject to the ML vocabulary artefact caveat; SDGs~13/17 (not shown) fall in the lower left (policy-dominated, below-median semantic gap).}
+\caption{Coverage vs semantic gap scatter plot (2$\times$2 typology). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs cluster in the high-gap region.}
 \label{fig:typology_scatter}
 \end{figure}
 
@@ -352,67 +327,29 @@ The bidirectional asymmetry analysis finds that policy chunks score \HAsymPolicy
 
 However, H26 is \textbf{inconclusive} with the current instrument. The A15 calibration diagnostic found that policy chunks score \AffFifteenDiff{} higher than research papers against OSDG centroids --- this baseline asymmetry is \emph{larger} than the measured H26 gap of \HAsymGap. The entire observed asymmetry therefore falls within the range that the calibration bias alone could produce, and the result cannot be distinguished from instrument artefact. Reporting H26 as ``supported'' in this context would overstate the evidence. Replication with a domain-neutral embedding model (e.g., a model fine-tuned independently of UN documents) is required before any directional claim can be made with confidence.
 
-\subsection{SDG Index Contextualisation}
-
-Table~\ref{tab:sdgindex} reports the correlation between gap measures and SDG Index 2022 global mean scores (SDGs 1--16, n = 16).
-
-\begin{table}[ht]
-\centering
-\caption{H21--H22 correlations: gap measures vs.\ SDG Index 2022 global mean scores (n = 16 SDGs, SDG 17 excluded). SDG Index score = composite real-world progress (0--100, higher = better).}
-\label{tab:sdgindex}
-\small
-\input{../data/generated/tab_sdgindex.tex}
-\end{table}
-
-Both H21 (neglected SDGs have worse real-world progress) and H22 (larger semantic gaps correspond to worse progress) are not supported. Research neglect and semantic divergence are not distributed according to real-world SDG performance; the pattern is orthogonal to urgency.
-
-\textbf{H23 --- SDG 13 index inflation.} SDG 13 (Climate Action) has the highest global mean score in the SDG Index 2022 (\SdgThirteenIndexScore{} out of 100, the highest of all 16 scored SDGs), substantially above the mean of \MeanSdgIndexScore. This is methodologically notable: the SDG Index SDG 13 score incorporates policy commitment indicators (including climate pledges and NDC ratification) rather than outcomes alone, which inflates the score relative to measurable climate progress. The finding is consistent with the H23 prediction and provides independent validation that SDG 13's prominence in both policy discourse (\PolicyPctSdgThirteen\% of policy documents) and the SDG Index reflects institutional prioritisation and commitment signalling rather than commensurate real-world progress.
-
 %% ============================================================
 \section{Discussion}
 \label{sec:discussion}
 
 \subsection{Two Independent Dimensions of Misalignment}
 
-The headline result of this study is simple: alignment cannot be inferred from topical overlap. Current AI-for-sustainability research is structurally misaligned with SDG policy discourse along two dimensions: what it covers, and how it frames what it covers. Coverage gaps and semantic gaps show no significant correlation ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = 17$). That non-significant result is not an absence of finding; it is the finding. It means that research-policy mismatch is not one problem with one remedy, but two separable problems that require different diagnostics and different interventions. (Caution: at $n = 17$ SDG-level observations, statistical power is limited; the result is consistent with independence but does not conclusively establish it.)
+The headline result of this study is simple: alignment cannot be inferred from topical overlap. The rebuilt canonical analysis shows that research attention alone is a poor predictor of semantic convergence. SDGs that attract substantial research attention can still be either relatively close to policy framing (for example, SDG 9) or substantially divergent from it (for example, SDGs 3 and 7). At the same time, the strongest policy-dominant SDGs, especially SDGs 13 and 17, are also among the most semantically distant. The practical implication is that research-policy mismatch is not a single scalar problem. Attention allocation and framing divergence must be measured separately.
 
-The structural implication is immediate. Increasing research attention to a neglected SDG will not automatically produce semantic convergence with policy discourse on that SDG. Conversely, reducing semantic distance within an SDG does not require equalising the distribution of research attention across SDGs. What looks like alignment in a keyword or topic-count sense can therefore be false reassurance: two communities may appear to occupy the same policy space while still talking past one another.
+This interpretation is consistent with the epistemic communities framework \parencite{Haas1992}: research and policy communities can share concern for the same SDG while operating with different timescales, vocabularies, and decision contexts. The Mode 1/2 distinction \parencite{Gibbons1994} pushes the argument further. Supply-driven research agendas reward tractable technical problems, while policy discourse rewards implementable coordination, institutional legitimacy, and collective action. The policy-dominant concentration on SDGs 13, 17, and 16 therefore looks less like random imbalance and more like a structural difference in what each knowledge system is organised to do.
 
-This interpretation is consistent with the epistemic communities framework \parencite{Haas1992}: research and policy communities can share causal beliefs about a domain (captured in topical overlap) while operating at different levels of abstraction, on different time horizons, and with different institutional mandates. The Mode 1/2 knowledge production distinction \parencite{Gibbons1994} reinforces this: supply-driven research agendas generate SDG-coverage patterns driven by funding, tractability, and disciplinary norms, while the semantic register of research discourse is governed by academic communication conventions that differ structurally from policy speech acts. Both gaps are therefore endogenous to the organisation of knowledge production, not accidental noise around an otherwise aligned system.
+\subsection{Where Misalignment Concentrates}
 
-\subsection{The SDG 9 Paradox: Shared Vocabulary or Shared Blind Spot?}
+Two concentration patterns matter. First, the policy corpus is overwhelmingly dominated by the climate--partnerships--governance block, with SDGs 13, 17, and 16 alone accounting for \PolicyTopThreePct\% of source documents. Second, the largest semantic gaps are also concentrated in or near that policy-facing region, especially SDGs 17 and 13. This suggests that the most institutionally prominent policy goals are precisely where research and policy are least likely to be speaking in the same register.
 
-SDG 9 (Industry, Innovation and Infrastructure) presents the most interpretively complex finding. It receives the second-highest research coverage (\ResearchPctSdgNine\% of papers) and one of the smallest semantic gaps (\SemanticGapSdgNine), suggesting both corpora discuss innovation and infrastructure in similar terms. On a surface reading, this is the closest approximation to research-policy alignment in the dataset.
-
-However, this result is consistent with two interpretations of opposite valence. Under the \emph{genuine responsiveness} interpretation, AI research has successfully engaged with the innovation and infrastructure SDG because both communities share a ``techno-innovation'' vocabulary that generates natural semantic convergence. Under the \emph{shared blind spot} interpretation \parencite[H29]{Toney2024}, both corpora are embedded in an institutional culture that valorises technological progress, and what appears as alignment is actually convergent fixation on the same paradigm rather than responsive engagement. The SDG Index score for SDG 9 (\SdgNineIndexScore, the lowest of all 16 scored SDGs in 2022) is notable in this context: despite high research attention and apparent semantic alignment, SDG 9 real-world progress is worse than most other SDGs. This is consistent with the shared blind spot interpretation: both research and policy address the innovation discourse of SDG 9 while the actual infrastructure access goals --- particularly in the Global South --- remain substantially unmet. The two communities may be aligned on the language of technology but divergent on the urgency of equitable access.
-
-\subsection{Productive and Problematic Misalignment}
-
-The 2$\times$2 typology introduced in Section~\ref{sec:results} matters because it converts the independence result into a practical diagnostic. Once coverage and semantic distance are treated as separate axes, not a single continuum, different forms of misalignment become analytically and institutionally distinguishable.
-
-\textbf{Problematic misalignment} is most acute in the high-coverage, high-semantic-gap quadrant (SDGs 3, 4, 16). For SDG 3, research concentrates on AI-assisted diagnostics, drug discovery, and genomics --- technically impressive but addressing primarily the clinical problems of well-resourced healthcare systems. Policy discourse frames SDG 3 around universal health coverage, maternal mortality, infectious disease control, and access in low-income settings \parencite{SioumalasChristodoulou2025}. The semantic gap (\SemanticGapSdgThree) quantifies this divergence: research and policy on global health are not merely at different levels of abstraction but in different conversations. This is consistent with the Mode 1/2 framework --- supply-driven health AI research addresses the technically tractable frontier, not the access frontier that policy identifies as the priority.
-
-For SDG 16, research papers concentrate on governance AI, algorithmic accountability, and bias in legal systems, while policy discourse addresses democratic institution-building, rule of law, and conflict resolution --- a more fundamental divide. The high F1 score for SDG 16 centroid (\FiSdgSixteen) confirms that this gap is not a classifier artefact.
-
-\textbf{Potentially productive misalignment} may characterise some research-dominant low-semantic-gap cases, where research is pursuing SDG-relevant problems at greater technical depth than policy has yet articulated. However, we are unable to confirm this without qualitative inspection of the specific research-policy pairs within each SDG --- an important direction for future work.
-
-\textbf{Double neglect} (low coverage, high semantic gap: SDG 8, SDG 10) is the highest-risk configuration. Research rarely engages Decent Work and Economic Growth or Reduced Inequalities, and when it does, the framing is semantically distant from policy. The 1/8/10 cluster (SDGs 1, 8, 10 have near-collinear centroids, similarities \CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax) means these findings should be read as a group: the full complex of poverty, labour, and inequality is simultaneously under-researched and semantically divergent from policy when it does appear.
-
-\subsection{The SDG 13 Anomaly}
-
-SDG 13 (Climate Action) produces a finding that cuts against simple narratives. It has the largest policy-dominated coverage gap (policy \PolicyPctSdgThirteen\% vs research \ResearchPctSdgThirteen\%), indicating that policy discourse is overwhelmingly oriented toward climate while research is not. Yet SDG 13 also shows a moderate semantic gap (\SemanticGapSdgThirteen, slightly below the mean), and the SDG Index score of \SdgThirteenIndexScore{} is the highest of all scored SDGs, driven by climate commitment signalling.
-
-This pattern is internally consistent: the SDG 13 centroid is close to the SDG 17 centroid (cosine similarity \CentroidSimThirteenSeventeen, the highest pair in the centroid similarity matrix and flagged in Section~\ref{sec:results} as analogous to the SDG 1/8/10 cluster). Climate discourse and partnership discourse are semantically intertwined in the OSDG labelling corpus, and policy documents addressing climate action and international climate partnerships jointly may be labelled under either SDG. The combined SDG 13+17 policy share (\PolicyPctSdgThreePlusSeventeen\% of policy documents) is more interpretively stable than either figure in isolation, and is the more appropriate basis for claims about climate-and-partnerships dominance in the policy corpus.
-
-For research, the \ResearchPctSdgThirteen\% assignment to SDG 13 is lower than bibliometric studies suggest (prior work consistently identifies climate action as a major AI research theme). This discrepancy likely reflects differences in classification method: keyword-based studies classify any paper mentioning ``climate'' as SDG 13, while our embedding-based approach assigns papers to the nearest centroid, so papers combining climate methods with innovation framing may be absorbed into the SDG 9 cluster. This illustrates the methodological sensitivity documented by \textcite{Armitage2020}: embedding-based classification produces systematically different distributions than keyword methods, and neither is straightforwardly superior.
+By contrast, the strongest apparent alignment case is SDG 9. It combines high research coverage (\ResearchPctSdgNine\%) with one of the lowest semantic gaps (\SemanticGapSdgNine). That does not prove substantive alignment, but it does show that the embedding-based instrument can separate a comparatively close case from more visibly divergent ones. The contrast between SDG 9 and high-gap cases such as SDG 3 or SDG 13 is analytically useful: it demonstrates that semantic divergence is not simply a mechanical consequence of all high-salience SDGs.
 
 \subsection{Implications}
 
 Three implications follow from the combined findings, and each pushes against the common habit of treating topical mention as evidence of alignment.
 
-\textbf{Funding allocation.} The double-neglect quadrant (SDG 8, SDG 10) represents both the most under-researched SDGs and the most semantically divergent. Redirecting even modest research funding toward AI approaches to decent work and reduced inequalities, with explicit attention to policy framing, would address both dimensions of misalignment simultaneously.
+\textbf{Funding allocation.} The results point to two priorities: low-coverage high-gap goals such as SDG 10, and policy-dominant high-gap goals such as SDGs 13 and 17. Redirecting even modest research funding toward these areas, with explicit attention to policy framing rather than topic mention alone, would address both dimensions of misalignment simultaneously.
 
-\textbf{SDG-aware research communication.} The finding that coverage and semantic gaps are independent suggests that simply increasing research output on neglected SDGs is insufficient; research communication norms need to change as well. Publication incentives that reward explicit SDG engagement (as evidenced by better alignment among explicitly SDG-framed publications; cf.\ \textcite{Nedungadi2024}) may be more effective than topic-level funding mandates.
+\textbf{SDG-aware research communication.} The finding that research attention alone does not predict semantic alignment suggests that simply increasing research output on neglected SDGs is insufficient; research communication norms need to change as well. Publication incentives that reward explicit SDG engagement (as evidenced by better alignment among explicitly SDG-framed publications; cf.\ \textcite{Nedungadi2024}) may be more effective than topic-level funding mandates.
 
 \textbf{Bidirectional framing for AI governance.} H26 is inconclusive under the current instrument (the measured asymmetry of \HAsymGap{} is smaller than the A15 calibration bias of \AffFifteenDiff). However, the \emph{question} H26 poses --- whether AI governance policy has been more responsive to research than research has been to governance priorities --- remains substantively important and empirically tractable with a better-calibrated encoder. Future work replicating this analysis with a domain-neutral model should treat this as a primary hypothesis.
 
@@ -421,8 +358,6 @@ Three implications follow from the combined findings, and each pushes against th
 Several limitations bound the conclusions.
 
 \textbf{Topical overlap is not substantive alignment.} The study measures semantic co-location in embedding space, not whether research and policy are substantively addressing the same problems in compatible ways. High cosine similarity reflects shared vocabulary, not shared agenda. All findings must be read with this constraint.
-
-\textbf{Preliminary draft status.} This manuscript was compiled on \DraftCompiledAt, but the empirical snapshot discussed throughout is pegged to \AnalysisSnapshotDate, approximately five months before the submission deadline of 1 September 2026. As of that snapshot date, the OpenAlex retrieval process was still in progress and only approximately half of the planned query set had completed. All research-side counts, coverage estimates, and downstream inferential results are therefore provisional and subject to change.
 
 \textbf{A15 calibration bias.} The OSDG circularity (A15) means policy scores against OSDG centroids are likely inflated. Coverage proportions are less affected than absolute scores, but the finding warrants replication with a calibration-neutral instrument.
 
@@ -440,15 +375,15 @@ Several limitations bound the conclusions.
 
 This paper revisits an old problem with a new instrument. Policy scholars have long argued that research and policy often fail to meet one another on equal terms. What recent semantic tools add is not the discovery that mismatch exists, but the ability to measure one important dimension of it directly, across thousands of texts, instead of describing it impressionistically. The main result is clear: alignment cannot be inferred from topical overlap.
 
-Current AI-for-sustainability research is structurally misaligned with SDG policy discourse along two independent dimensions. The first is coverage: policy discourse is oriented toward climate governance (SDG 13, \PolicyPctSdgThirteen\%), international partnerships (SDG 17, \PolicyPctSdgSeventeen\%), and institutional frameworks (SDG 16, \PolicyPctSdgSixteen\%), while research is oriented toward technical innovation (SDG 9, \ResearchPctSdgNine\%) and, subject to the artefact caveat, educational or learning methodology (SDG 4, \ResearchPctSdgFour\%). The second is semantic divergence: even when research and policy occupy the same SDG, they often do not frame that SDG in commensurate terms. SDG 8 (Decent Work), SDG 3 (Good Health), and SDG 16 (Governance) show the largest within-SDG divergence, indicating not mere imbalance of attention but parallel monologues within shared labels.
+Current AI-for-sustainability research is structurally misaligned with SDG policy discourse along two related but non-identical dimensions. The first is coverage: policy discourse is overwhelmingly oriented toward climate governance (SDG 13, \PolicyPctSdgThirteen\%), international partnerships (SDG 17, \PolicyPctSdgSeventeen\%), and institutional frameworks (SDG 16, \PolicyPctSdgSixteen\%), while research is more concentrated on health (SDG 3, \ResearchPctSdgThree\%), learning-related material (SDG 4, \ResearchPctSdgFour\%), and innovation (SDG 9, \ResearchPctSdgNine\%). The second is semantic divergence: even when research and policy occupy the same SDG, they often do not frame that SDG in commensurate terms. The largest semantic gaps occur in SDGs 17, 13, and 10, showing that some of the most policy-salient goals are also those where shared SDG labels conceal the most divergent discourse.
 
-The central structural finding is that these two dimensions show no significant correlation ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = 17$). That matters because it challenges a common inference in AI-for-SDG mapping: research cannot be treated as aligned with policy simply because it appears to cover the same goals. Coverage is necessary, but it is not enough. What looks like alignment under keyword or topic-count approaches may in fact be shallow alignment, or false alignment altogether. (The $n = 17$ limitation means this result is exploratory; replication at a finer unit of analysis is needed to confirm structural independence.)
+The central structural finding is therefore more precise than a simple ``independence'' claim. Research coverage proportion itself shows no significant association with semantic gap ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$), so sheer research attention is not a reliable indicator of alignment. But SDGs with larger cross-corpus imbalance do tend to show larger semantic gaps. That matters because it challenges a common inference in AI-for-SDG mapping: research cannot be treated as aligned with policy simply because it appears to cover the same goals. Coverage is necessary, but it is not enough.
 
-The 2$\times$2 typology that follows from this result provides a more useful diagnostic than the simple research-neglect narrative. The highest-risk configuration is double neglect (low coverage + high semantic gap: SDGs 8 and 10); the most interpretively complex is the high-coverage, low-semantic-gap case of SDG 9, where shared vocabulary may conceal a shared blind spot about access and equity. This is why the independence result scales beyond the immediate case: it offers a general way to think about mismatch between knowledge systems, not just between AI research and SDG policy.
+The resulting diagnostic is still useful beyond the immediate case. It separates goals where research is present but framed differently from goals where the two corpora are both unevenly distributed and semantically far apart. SDG 9 remains the clearest apparent alignment case in the current corpus, while SDGs 13 and 17 exemplify policy-dominant high-divergence misalignment. That contrast is exactly why topical overlap alone is too weak a test.
 
 Several findings call for direct follow-up. The SDG 4 artefact should be resolved by qualitative inspection or a fine-tuned classifier. The A15 calibration bias should be addressed by replicating with a domain-neutral encoder. The temporal dimension --- whether the gaps are narrowing as the SDG framework matures --- can be addressed with the year metadata available in the OpenAlex corpus. Most importantly, the 2$\times$2 typology sketched here requires qualitative operationalisation of the productive/problematic distinction \parencite{Toney2024}, which this study has measured but not fully interpreted. Extending the analysis to the 169 individual SDG targets (using the AURORA dataset), and disaggregating the policy corpus by country income level (H34), would provide finer-grained evidence about where the misalignment problem is most acute and for whom.
 
-The headline message for research governance is therefore straightforward. Knowing which SDGs research covers is necessary but not sufficient. Measuring whether research and policy mean compatible things when they invoke those SDGs is a distinct diagnostic, and an equally important one. If topical overlap is mistaken for alignment, misalignment will be systematically underestimated. For this reason, the present manuscript should be read as a preliminary analytical draft rather than a final settled account: as of \AnalysisSnapshotDate, the research corpus was still being assembled, and the reported findings remain subject to revision.
+The headline message for research governance is therefore straightforward. Knowing which SDGs research covers is necessary but not sufficient. Measuring whether research and policy mean compatible things when they invoke those SDGs is a distinct diagnostic, and an equally important one. If topical overlap is mistaken for alignment, misalignment will be systematically underestimated.
 
 %% ============================================================
 \printbibliography

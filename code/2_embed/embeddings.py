@@ -1,12 +1,11 @@
 """
-Generate Sentence-BERT embeddings for all four corpora.
+Generate Sentence-BERT embeddings for the active non-sharded corpora.
 
 Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for CPU/WSL)
        Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
 
 Inputs:
-  data/0_raw/openalex/papers_clean.jsonl       (94 texts,    field: combined_text)
-  data/1_preprocessed/policy_all/policy_scrape/policy_chunks.jsonl (policy chunks, field: text)
+  data/1_preprocessed/policy_all/policy_chunks_extended.jsonl        (policy chunks, field: text)
   data/1_preprocessed/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
   data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
 
@@ -36,13 +35,6 @@ OUTPUT_DIR = Path("data/2_embedded")
 METADATA_DIR = OUTPUT_DIR / "metadata"
 
 CORPORA = [
-    {
-        "name": "papers",
-        "input": Path("data/0_raw/openalex/papers_clean.jsonl"),
-        "text_field": "combined_text",
-        "id_field": "openalex_id",
-        "sdg_field": None,
-    },
     {
         "name": "policy",
         "input": Path("data/1_preprocessed/policy_all/policy_chunks_extended.jsonl"),

@@ -19,3 +19,11 @@ Policy corpus includes:
 - SDGi
 - UNGDC
 - policy_scrape
+
+# Three
+
+I used OpenAlex built-in SDG filters to fetch papers. This would have likely filtered out the more deeply abstract fields like theoretical mathematics, particle physics, or niche historical texts, etc. This, hopefully, isolated the corpus to research dedicated to human and planetary survival.
+
+# Four
+
+Even though OpenAlex indexes over 474 million entries, the final research corpus in this paper has 2.54M titles + abstracts (I call SDG-related corpus), which is more than a human or any institution could ever read in a lifetime, and hopefully enough to be representative of the actual distribution

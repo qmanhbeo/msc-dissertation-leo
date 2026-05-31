@@ -1,201 +1,151 @@
-# Dissertation Pipeline (Active Core)
+# Dissertation Canon
 
-This repository implements a reproducible end-to-end methodology for evaluating
-alignment between AI-for-SDG research and SDG policy discourse.
+This repository measures research-policy misalignment in AI-for-SDG discourse along two separate dimensions:
+- `coverage gap`: which SDGs each corpus emphasizes
+- `semantic gap`: how differently research and policy discuss the same SDG
 
-## Goal
+The submission surface is intentionally narrow:
+- one canonical analysis package under `outputs/`
+- one canonical PDF at `outputs/dissertation.pdf`
+- one entrypoint at `main.py`
 
-Measure two different misalignment dimensions:
-- **Coverage Gap**: attention mismatch (how much each SDG is emphasized)
-- **Semantic Gap**: framing mismatch (how differently each SDG is discussed)
+## Main Thesis
 
-## Pipeline Overview
+Topical overlap is not enough to claim alignment. Research and policy can reference the same SDG while still allocating attention differently and framing the goal differently.
 
-```mermaid
-graph TD
+## Canonical Commands
 
-    %% 1. FETCH STAGE
-    subgraph Fetch [1. Data Ingestion & Fetching]
-        A1[fetch_openalex.py]
-        A2[fetch_osdg.py]
-        A3[fetch_sdg_benchmark.py]
-        A4[fetch_un_sdg.py]
-        A5[fetch_policy.py]
-        A7[fetch_sdgi_corpus.py]
-        A8[fetch_ungdc.py]
-    end
-
-    %% 2. PREPROCESS STAGE
-    subgraph Preprocess [2. Clean, Shard & Merge]
-        B1[preprocess_papers_streaming.py]
-        B2[preprocess_osdg.py]
-        B3[preprocess_sdg_benchmark.py]
-        B4[preprocess_policy.py]
-        B5[integrate_sdgi.py]
-        B6[filter_ungdc_sdg.py]
-        B7[build_policy_corpus.py]
-    end
-
-    %% 3. EMBED & SCORE STAGE
-    subgraph EmbedCore [3. Embeddings, Centroids & Scoring]
-        C1[embeddings.py]
-        C2[sdg_centroids.py]
-        C3[validate_centroids.py]
-        C4[alignment_core.py]
-        C5[embed_paper_shards.py]
-        C6[score_paper_shards.py]
-        C7[shard_pipeline_utils.py]
-    end
-
-    %% 4. ANALYZE & VISUALIZE STAGE
-    subgraph Analyze [4. Downstream Metrics & Figures]
-        D1[coverage_gap.py]
-        D2[semantic_gap.py]
-        D3[coverage_semantic_interaction.py]
-        D4[plot_figures.py]
-    end
-
-    %% 5. OPS STAGE
-    subgraph Ops [Operations]
-        E1[backup_data_snapshot.py]
-    end
-
-    %% FLOW CONNECTIONS
-    A1 -->|Raw Research JSON| B1
-    A2 -->|Raw Benchmarks| B2
-    A3 -->|Raw Benchmarks| B3
-    A4 -->|Raw Policy Text| B4
-    A5 -->|Raw Policy Text| B4
-    A7 -->|SDGi Data| B5
-    A8 -->|UN Debate Corpus| B6
-
-    B4 -->|Assembled Streams| B7
-    B5 -->|Assembled Streams| B7
-    B6 -->|Assembled Streams| B7
-
-    B1 -->|Research Shards| C5
-    B2 -->|Clean Labeled Text| C1
-    B3 -->|Clean Labeled Text| C1
-    B7 -->|Final Policy Corpus| C1
-
-    C1 -->|Baseline Vectors| C2
-    C2 --> C3
-    C2 -->|Centroid Matrix| C6
-    C4 -->|Centroid Matrix| C6
-
-    C5 -->|Embedded Shards| C6
-    C7 -.->|Shared Shard Helpers| C5
-    C7 -.->|Shared Shard Helpers| C6
-
-    C6 -->|Scored Shards Data| D1
-    C6 -->|Scored Shards Data| D2
-
-    D1 -->|Gap Metrics| D3
-    D2 -->|Gap Metrics| D3
-    D1 -->|Plotted Results| D4
-    D2 -->|Plotted Results| D4
-    D3 -->|Plotted Results| D4
-
-    %% Ops mapping
-    D4 -.->|Saves Artifact Run| E1
-```
-
-## Active Scripts
-
-### Fetch
-- `fetch_openalex.py`
-- `fetch_osdg.py`
-- `fetch_sdg_benchmark.py`
-- `fetch_un_sdg.py`
-- `fetch_policy.py`
-- `fetch_sdgi_corpus.py`
-- `fetch_ungdc.py`
-
-### Build / Prepare
-- `preprocess_papers_streaming.py`
-- `preprocess_policy.py`
-- `integrate_sdgi.py`
-- `filter_ungdc_sdg.py`
-- `build_policy_corpus.py`
-- `preprocess_osdg.py`
-- `preprocess_sdg_benchmark.py`
-
-### Embed / Score
-- `embeddings.py`
-- `sdg_centroids.py`
-- `validate_centroids.py`
-- `alignment_core.py` (shared centroid/scoring helpers)
-- `embed_paper_shards.py`
-- `score_paper_shards.py`
-- `shard_pipeline_utils.py`
-
-### Analyze / Visualize
-- `coverage_gap.py`
-- `semantic_gap.py`
-- `coverage_semantic_interaction.py`
-- `plot_figures.py`
-
-### Ops
-- `backup_data_snapshot.py`
-
-## Canonical Run Path
-
-Install dependencies:
+Show repo status only:
 
 ```bash
-pip install -r requirements.txt
+python main.py
 ```
 
-Build policy + centroid side:
+Rebuild the canonical analysis package and PDF from existing `data/`:
 
 ```bash
-python code/0_fetch/fetch_un_sdg.py
-python code/0_fetch/fetch_policy.py
-python code/0_fetch/fetch_sdgi_corpus.py
-python code/0_fetch/fetch_ungdc.py
-
-python code/1_preprocess/preprocess_policy.py
-python code/1_preprocess/integrate_sdgi.py
-python code/1_preprocess/filter_ungdc_sdg.py
-python code/1_preprocess/build_policy_corpus.py
-
-python code/0_fetch/fetch_osdg.py
-python code/0_fetch/fetch_sdg_benchmark.py
-python code/1_preprocess/preprocess_osdg.py
-python code/1_preprocess/preprocess_sdg_benchmark.py
-
-python code/2_embed/embeddings.py
-python code/2_embed/sdg_centroids.py
-python code/2_embed/validate_centroids.py
+python main.py --warm-replay --overwrite
 ```
 
-Build full research corpus (resume-safe shard flow):
+Build only the canonical PDF from existing canonical tables and figures:
 
 ```bash
-python code/0_fetch/fetch_openalex.py
-python code/1_preprocess/preprocess_papers_streaming.py
-python code/2_embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
-python code/2_embed/score_paper_shards.py
+python main.py --build-pdf --overwrite
 ```
 
-Run analysis + figures (run-local outputs):
+Run the full active pipeline facade from fetch through PDF:
 
 ```bash
-python code/3_main_analysis/coverage_gap.py --run-name 20260530_full
-python code/3_main_analysis/semantic_gap.py --run-name 20260530_full
-python code/3_main_analysis/coverage_semantic_interaction.py --input-run 20260530_full --run-name 20260530_full
-python code/4_visualization/plot_figures.py --input-run 20260530_full --run-name 20260530_full
+python main.py --full-pipeline --overwrite --device cuda --batch-size 256 --local-files-only
 ```
 
-## Reproducibility Canon (Root)
+Important behavior:
+- `main.py` with no flags is read-only and prints status
+- mutation requires an explicit action flag
+- if canonical artifacts already exist, reruns fail closed unless `--overwrite` is supplied
+- `--output-dir` can redirect the canonical output root, but the default contract is `outputs/`
 
-Canonical reproducibility artifacts now live at repository root:
-- `requirements.txt` (minimal active dependency set)
-- `requirements.lock.txt` (full pip lock snapshot)
-- `conda-env-dissertation.yml` (conda env export)
-- `conda-explicit-dissertation.txt` (explicit conda lock)
+## Reproducibility Contract
 
-Recommended environment setup:
+Warm replay is the primary reproducibility target.
+
+Assumed existing inputs:
+- hydrated `data/0_raw/` through `data/3_scored/`
+- policy embeddings in `data/2_embedded/`
+- research shard embeddings in `data/2_embedded/research_shards/`
+- paper score shards in `data/3_scored/paper_scores_shards/`
+
+`data/` and `outputs/` are intentionally not tracked in Git. A stranger can verify pipeline logic from source, but must hydrate `data/` before replaying the canon.
+
+## Canonical Outputs
+
+Root artifacts:
+- `outputs/validation_results.json`
+- `outputs/confusion_matrix.csv`
+- `outputs/centroid_similarity_matrix.csv`
+- `outputs/coverage_gap.json`
+- `outputs/coverage_gap_raw.json`
+- `outputs/semantic_gap.json`
+- `outputs/semantic_gap_sensitivity.json`
+- `outputs/h25_correlation.json`
+- `outputs/h25_scatter.csv`
+- `outputs/dissertation.pdf`
+
+Table artifacts:
+- `outputs/tables/num_validation.tex`
+- `outputs/tables/tab_validation.tex`
+- `outputs/tables/num_coverage.tex`
+- `outputs/tables/tab_coverage.tex`
+- `outputs/tables/num_semantic.tex`
+- `outputs/tables/tab_semgap.tex`
+- `outputs/tables/num_h25.tex`
+- `outputs/tables/tab_h25.tex`
+
+Figure artifacts:
+- `outputs/figures/fig1_coverage_profiles.pdf`
+- `outputs/figures/fig1_coverage_profiles.png`
+- `outputs/figures/fig2_semantic_gap.pdf`
+- `outputs/figures/fig2_semantic_gap.png`
+- `outputs/figures/fig3_coverage_semantic_scatter.pdf`
+- `outputs/figures/fig3_coverage_semantic_scatter.png`
+
+## Active Pipeline
+
+Policy / benchmark side:
+1. fetch policy, SDGi, UNGDC, OSDG, and benchmark sources
+2. preprocess and merge the policy corpus
+3. embed `policy`, `osdg`, and `benchmark`
+4. build SDG centroids
+5. validate centroids against the benchmark
+
+Research side:
+1. fetch OpenAlex works
+2. preprocess into resume-safe shards
+3. embed paper shards
+4. score paper shards against SDG centroids
+5. rebuild research centroids from the full scored shard set
+
+Downstream analysis:
+1. score the active policy corpus against SDG and research centroids
+2. compute coverage gap
+3. compute semantic gap with chunk-cap sensitivity checks
+4. compute H25/H26 interaction outputs
+5. generate figures
+6. build the dissertation PDF from canonical tables and figures
+
+## Robustness and Validation
+
+The active canon includes these safeguards:
+- centroid validation on the expert-labelled benchmark (`macro-F1` reported before downstream use)
+- document-weighted policy coverage, so long policy reports do not dominate by chunk count alone
+- semantic-gap chunk-cap sensitivity at 20, 50, and 100 chunks per document
+- explicit SDG reliability flags when clusters are too small
+- A15 calibration check comparing policy-vs-OSDG and paper-vs-OSDG top scores
+- SDG 4 caveat carried into the manuscript where learning vocabulary may inflate education assignments
+- hard protection against partial shard runs overwriting canonical research centroids unless explicitly allowed
+
+## Repo Layout
+
+Active source:
+- `main.py`
+- `code/0_fetch/`
+- `code/1_preprocess/`
+- `code/2_embed/`
+- `code/3_main_analysis/`
+- `code/4_visualization/`
+- `code/shared_utils.py`
+- `writing/dissertation.tex`
+- `writing/references.bib`
+- `writing/build_pdf.sh`
+
+Working notes kept for the active thesis:
+- `notes/ASSUMPTIONS.md`
+- `notes/HYPOTHESES.md`
+- `notes/LIT_REVIEW_INSIGHTS.md`
+
+## Environment
+
+Recommended setup:
 
 ```bash
 conda env create -f conda-env-dissertation.yml
@@ -203,116 +153,10 @@ conda activate dissertation
 pip install -r requirements.txt
 ```
 
-Strict replay option (exact lock replay):
+Lock snapshots retained for auditability:
+- `requirements.lock.txt`
+- `conda-explicit-dissertation.txt`
 
-```bash
-conda create --name dissertation-replay --file conda-explicit-dissertation.txt
-conda activate dissertation-replay
-pip install -r requirements.lock.txt
-```
+## What Was Removed
 
-## Runtime Baseline (Historical: 2026-05-26)
-
-This baseline captures the environment used for the full-corpus GPU run on **May 26, 2026**.
-
-- OS/Kernel: Ubuntu 24.04.3 LTS (WSL2), `Linux 5.15.146.1-microsoft-standard-WSL2`
-- GPU/Driver: NVIDIA GeForce RTX 3050 Laptop GPU, driver `546.30`, driver-reported CUDA `12.3`
-- Conda/Python: conda `26.1.1`, env `dissertation`, Python `3.11.15`, pip `26.0.1`
-- Torch stack: `torch==2.5.1+cu121`, `torchvision==0.20.1+cu121`, `torchaudio==2.5.1+cu121`, `torch.version.cuda=12.1`
-
-Canonical CUDA run commands:
-
-```bash
-python code/1_preprocess/preprocess_papers_streaming.py
-python code/2_embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
-python code/2_embed/score_paper_shards.py
-```
-
-Checkpoint-safe manifests:
-- `data/1_preprocessed/research_corpus/metadata/manifest.json`
-- `data/2_embedded/research_shards/metadata/manifest.json`
-
-## Repository Conventions
-
-Active code surface:
-- `code/0_fetch/`
-- `code/1_preprocess/`
-- `code/2_embed/`
-- `code/3_main_analysis/`
-- `code/4_visualization/`
-- `code/shared_utils.py`
-
-Active data layers:
-- `data/0_raw/`
-- `data/1_preprocessed/`
-- `data/2_embedded/`
-- `data/3_scored/`
-
-Output contract:
-- Analysis/visualization outputs live under `outputs/<run_name>/` with `figures/` and `tables/`.
-- Active scripts should not write analysis outputs under `data/`.
-
-Legacy boundary:
-- `_legacy/` is archival only and not part of active runs.
-
-Outputs:
-- `outputs/<run_name>/coverage_gap.json`
-- `outputs/<run_name>/coverage_gap_raw.json`
-- `outputs/<run_name>/semantic_gap.json`
-- `outputs/<run_name>/semantic_gap_sensitivity.json`
-- `outputs/<run_name>/h25_scatter.csv`
-- `outputs/<run_name>/h25_correlation.json`
-- `outputs/<run_name>/validation_results.json`
-- `outputs/<run_name>/tables/*.tex`
-- `outputs/<run_name>/figures/*.png`
-- `outputs/<run_name>/figures/*.pdf`
-
-## Policy Corpus Taxonomy (Reviewer-Facing)
-
-| Source Script | Corpus Role | Adds What Existing Sources Lack | Overlap Risk | Where Controlled |
-|---|---|---|---|---|
-| `fetch_un_sdg.py` | Core policy baseline | Canonical UN SDG/AI docs | Medium | `build_policy_corpus.py` exact-text dedupe |
-| `fetch_policy.py` | Unified policy breadth | Combined multilateral, national, and long-tail policy texts | Medium-High | `build_policy_corpus.py` |
-| `fetch_sdgi_corpus.py` + `integrate_sdgi.py` | Government reporting corpus | VNR/VLR implementation language | Low-Medium | `build_policy_corpus.py` |
-| `fetch_ungdc.py` + `filter_ungdc_sdg.py` | Diplomatic discourse layer | UN General Debate SDG-relevant passages | Low-Medium | `build_policy_corpus.py` |
-
-Deduplication and merge boundary is explicit: `build_policy_corpus.py` performs
-normalized exact-text dedupe and emits the unified policy corpus.
-
-## Method Definitions
-
-Let `R_s` = research share for SDG `s`, `P_s` = policy share for SDG `s`.
-
-- **Coverage Gap (per SDG)**: `|R_s - P_s|`
-- **Total Coverage Gap**: `sum_s |R_s - P_s|`
-- **Semantic Similarity (per SDG)**: cosine between research and policy sub-centroids within SDG `s`
-- **Semantic Gap (per SDG)**: `1 - semantic_similarity_s`
-
-Interpretation:
-- Coverage gap answers **“who pays attention where?”**
-- Semantic gap answers **“when both attend, do they mean the same thing?”**
-
-## Centroid Validation Transparency
-
-`validate_centroids.py` is the measurement-instrument quality gate.
-
-It reports:
-- nearest-centroid classification accuracy on benchmark texts
-- macro-F1 (primary uncontaminated SDG1–16 evaluation)
-- per-SDG F1
-- centroid-to-centroid similarity matrix
-- PASS/WARN/FAIL flag based on pre-declared thresholds
-
-This validation section should be cited directly in methodology/results chapters.
-
-## Label Interpretation
-
-- OpenAlex SDG tags are used as **retrieval filters** for candidate papers.
-- Final SDG assignment used in analysis is **centroid-score argmax**, not direct OpenAlex tag reuse.
-
-## Legacy Surface
-
-Deprecated/experimental scripts are archived under:
-- `_legacy/code/`
-
-See `_legacy/README.md` for inventory and rationale.
+This cleanup intentionally removed the old multi-run output layout, versioned dissertation builds, legacy manuscript dependencies, and stale prototype notes that contradicted the active pipeline.

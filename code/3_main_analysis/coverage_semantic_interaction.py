@@ -44,16 +44,16 @@ Statistics:
   Correlation results are reported with and without SDG 4 to test sensitivity.
 
 Inputs:
-  outputs/<run_name>/coverage_gap.json        per-SDG research + policy profiles (doc-weighted)
-  outputs/<run_name>/semantic_gap.json        per-SDG semantic gap (chunk_cap=50)
+  outputs/coverage_gap.json       per-SDG research + policy profiles (doc-weighted)
+  outputs/semantic_gap.json       per-SDG semantic gap (chunk_cap=50)
   data/3_scored/paper_scores_shards/metadata/manifest.json — for H26 paper top-scores
   data/3_scored/policy_scores_vs_research.npy  (47005, 17) — for H26 policy vs research centroids
 
 Outputs:
-  outputs/<run_name>/h25_correlation.json     H25 correlation results + H26 asymmetry
-  outputs/<run_name>/h25_scatter.csv          per-SDG data table for plotting (SDG, research%, policy%,
-                                coverage_gap, semantic_gap, semantic_similarity)
-  outputs/<run_name>/tables/*.tex             generated LaTeX macros/tables
+  outputs/h25_correlation.json    H25 correlation results + H26 asymmetry
+  outputs/h25_scatter.csv         per-SDG data table for plotting (SDG, research%, policy%,
+                                  coverage_gap, semantic_gap, semantic_similarity)
+  outputs/tables/*.tex            generated LaTeX macros/tables
 
 Run from project root (after semantic_gap.py):
     python code/3_main_analysis/coverage_semantic_interaction.py
@@ -74,7 +74,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared_utils import latest_run_dir, require_run_with_files, resolve_run_dir
+from shared_utils import ensure_canonical_outputs, require_output_files
 
 # ---------------------------------------------------------------------------
 # Config
@@ -83,6 +83,7 @@ SCORED_DIR = Path("data/3_scored")
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
 POL_VS_RES_PATH     = SCORED_DIR / "policy_scores_vs_research.npy"
+POLICY_SCORES_PATH  = SCORED_DIR / "policy_scores.npy"
 
 N_SDG = 17
 
@@ -104,6 +105,8 @@ def load_json(path: Path):
 def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
     """Compute Pearson r and Spearman ρ between x and y, return as dict."""
     assert len(x) == len(y), f"Length mismatch: {len(x)} vs {len(y)}"
+    if len(x) < 3:
+        raise ValueError(f"{label}: need at least 3 observations, got {len(x)}")
     r, r_p   = stats.pearsonr(x, y)
     rho, s_p = stats.spearmanr(x, y)
     result = {
@@ -120,15 +123,33 @@ def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
     return result
 
 
+def correlation_or_skip(
+    x: np.ndarray,
+    y: np.ndarray,
+    mask: np.ndarray,
+    label: str,
+) -> dict:
+    sdgs = [i + 1 for i, keep in enumerate(mask) if keep]
+    if int(mask.sum()) < 3:
+        log.warning("  %-55s  skipped (n=%d)", label, int(mask.sum()))
+        return {
+            "n": int(mask.sum()),
+            "sdgs": sdgs,
+            "skipped": True,
+            "reason": "fewer_than_3_valid_sdgs",
+        }
+    result = pearson_and_spearman(x[mask], y[mask], label)
+    result["sdgs"] = sdgs
+    result["skipped"] = False
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Args
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Compute H25/H26 outputs into a run-scoped output folder.")
-    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--input-run", default=None, help="Run folder to read coverage/semantic inputs from.")
-    p.add_argument("--run-name", default=None, help="Run folder to write outputs to. Defaults to input run.")
-    p.add_argument("--run-label", default="analysis")
+    p = argparse.ArgumentParser(description="Compute H25/H26 outputs into the canonical output folder.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     return p.parse_args()
 
 
@@ -137,38 +158,15 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
-    output_root = Path(args.output_root)
-    required_inputs = ["coverage_gap.json", "semantic_gap.json"]
-    if args.input_run:
-        input_dir = require_run_with_files(output_root, args.input_run, required_inputs)
-    else:
-        latest = latest_run_dir(output_root, required_inputs)
-        if latest is None:
-            raise FileNotFoundError(
-                "No compatible output run found containing coverage_gap.json and semantic_gap.json. "
-                "Run coverage_gap.py and semantic_gap.py first, or pass --input-run."
-            )
-        input_dir = latest
+    layout = ensure_canonical_outputs(Path(args.output_dir))
+    require_output_files(layout.root, ["coverage_gap.json", "semantic_gap.json"])
 
-    if args.run_name:
-        output_dir = resolve_run_dir(
-            output_root=output_root,
-            run_name=args.run_name,
-            run_label=args.run_label,
-            prefer_latest_if_missing=False,
-        ).run_dir
-    else:
-        output_dir = input_dir
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-    coverage_gap_path = input_dir / "coverage_gap.json"
-    semantic_gap_path = input_dir / "semantic_gap.json"
-    out_corr = output_dir / "h25_correlation.json"
-    out_scatter = output_dir / "h25_scatter.csv"
-    tables_dir = output_dir / "tables"
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    log.info("Input run:  %s", input_dir)
-    log.info("Output run: %s", output_dir)
+    coverage_gap_path = layout.root / "coverage_gap.json"
+    semantic_gap_path = layout.root / "semantic_gap.json"
+    out_corr = layout.root / "h25_correlation.json"
+    out_scatter = layout.root / "h25_scatter.csv"
+    tables_dir = layout.tables_dir
+    log.info("Canonical output dir: %s", layout.root)
 
     # ---- Load coverage data ----
     log.info("Loading coverage gap: %s", coverage_gap_path)
@@ -187,13 +185,31 @@ def main() -> None:
     sem_data = load_json(semantic_gap_path)
 
     per_sdg = {r["sdg"]: r for r in sem_data["per_sdg"]}
-    sem_gap  = np.array([per_sdg[i]["semantic_gap"]         for i in range(1, 18)], dtype=float)
-    sem_sim  = np.array([per_sdg[i]["semantic_similarity"]  for i in range(1, 18)], dtype=float)
-    unreliable = np.array([per_sdg[i]["unreliable"] for i in range(1, 18)])
+    sem_gap = np.array(
+        [
+            np.nan if per_sdg[i]["semantic_gap"] is None else float(per_sdg[i]["semantic_gap"])
+            for i in range(1, 18)
+        ],
+        dtype=float,
+    )
+    sem_sim = np.array(
+        [
+            np.nan if per_sdg[i]["semantic_similarity"] is None else float(per_sdg[i]["semantic_similarity"])
+            for i in range(1, 18)
+        ],
+        dtype=float,
+    )
+    unreliable = np.array([bool(per_sdg[i]["unreliable"]) for i in range(1, 18)], dtype=bool)
 
-    # Reliability flags from semantic gap (SDG 10 has n_papers=20, borderline).
-    reliable_mask = ~unreliable   # (17,) bool
-    reliable_sdgs = [i+1 for i, r in enumerate(reliable_mask) if r]
+    # Only SDGs with finite semantic values are eligible for correlation or plotting.
+    available_mask = np.isfinite(sem_gap) & np.isfinite(sem_sim)
+    available_sdgs = [i + 1 for i, keep in enumerate(available_mask) if keep]
+    reliable_mask = available_mask & ~unreliable
+    reliable_sdgs = [i + 1 for i, keep in enumerate(reliable_mask) if keep]
+    missing_sdgs = [i + 1 for i, keep in enumerate(available_mask) if not keep]
+    log.info("Semantic-gap SDGs available for correlation: %s  (n=%d)", available_sdgs, len(available_sdgs))
+    if missing_sdgs:
+        log.warning("Excluded from correlation due to missing semantic gap: %s", missing_sdgs)
     log.info("Reliable SDGs for correlation: %s  (n=%d)", reliable_sdgs, len(reliable_sdgs))
 
     # ---- Build per-SDG table ----
@@ -201,49 +217,50 @@ def main() -> None:
     log.info("Per-SDG data table:")
     log.info("  %-6s %-12s %-12s %-12s %-12s %-10s", "SDG", "res%", "pol%", "cov_gap", "sem_gap", "reliable")
     for i in range(N_SDG):
-        log.info("  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %10.4f  %s",
-                 i+1, res_hard[i]*100, pol_dw_hard[i]*100,
-                 cov_gap_abs[i], sem_gap[i], "✓" if reliable_mask[i] else "✗")
+        sem_gap_display = "N/A" if not np.isfinite(sem_gap[i]) else f"{sem_gap[i]:.4f}"
+        log.info(
+            "  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %10s  %s",
+            i + 1,
+            res_hard[i] * 100,
+            pol_dw_hard[i] * 100,
+            cov_gap_abs[i],
+            sem_gap_display,
+            "✓" if reliable_mask[i] else "✗",
+        )
 
     # ---- H25 Correlations ----
-    # Use all 17 SDGs first, then re-check with only reliable ones.
+    # Use all SDGs with finite semantic gaps first, then re-check with only reliable ones.
     log.info("")
     log.info("=" * 70)
     log.info("H25 CORRELATION TESTS")
     log.info("=" * 70)
     log.info("")
-    log.info("ALL 17 SDGs:")
-    corr_all = {
-        "a_res_prop_vs_sem_gap": pearson_and_spearman(
-            res_hard, sem_gap,
-            "(a) research_proportion vs semantic_gap"
+    log.info("OBSERVED SDGs WITH FINITE SEMANTIC GAP (n=%d):", int(available_mask.sum()))
+    corr_primary = {
+        "a_res_prop_vs_sem_gap": correlation_or_skip(
+            res_hard, sem_gap, available_mask, "(a) research_proportion vs semantic_gap"
         ),
-        "b_cov_gap_abs_vs_sem_gap": pearson_and_spearman(
-            cov_gap_abs, sem_gap,
-            "(b) coverage_gap_abs vs semantic_gap"
+        "b_cov_gap_abs_vs_sem_gap": correlation_or_skip(
+            cov_gap_abs, sem_gap, available_mask, "(b) coverage_gap_abs vs semantic_gap"
         ),
-        "c_res_dominance_vs_sem_gap": pearson_and_spearman(
-            res_dominance, sem_gap,
-            "(c) research_dominance (res%-pol%) vs semantic_gap"
+        "c_res_dominance_vs_sem_gap": correlation_or_skip(
+            res_dominance, sem_gap, available_mask, "(c) research_dominance (res%-pol%) vs semantic_gap"
         ),
     }
 
     # Reliable SDGs only (excludes SDG 10 if flagged).
-    if reliable_mask.sum() < N_SDG:
+    if reliable_mask.sum() < available_mask.sum():
         log.info("")
         log.info("RELIABLE SDGs ONLY (n=%d):", reliable_mask.sum())
         corr_reliable = {
-            "a_res_prop_vs_sem_gap": pearson_and_spearman(
-                res_hard[reliable_mask], sem_gap[reliable_mask],
-                "(a) research_proportion vs semantic_gap [reliable only]"
+            "a_res_prop_vs_sem_gap": correlation_or_skip(
+                res_hard, sem_gap, reliable_mask, "(a) research_proportion vs semantic_gap [reliable only]"
             ),
-            "b_cov_gap_abs_vs_sem_gap": pearson_and_spearman(
-                cov_gap_abs[reliable_mask], sem_gap[reliable_mask],
-                "(b) coverage_gap_abs vs semantic_gap [reliable only]"
+            "b_cov_gap_abs_vs_sem_gap": correlation_or_skip(
+                cov_gap_abs, sem_gap, reliable_mask, "(b) coverage_gap_abs vs semantic_gap [reliable only]"
             ),
-            "c_res_dominance_vs_sem_gap": pearson_and_spearman(
-                res_dominance[reliable_mask], sem_gap[reliable_mask],
-                "(c) research_dominance vs semantic_gap [reliable only]"
+            "c_res_dominance_vs_sem_gap": correlation_or_skip(
+                res_dominance, sem_gap, reliable_mask, "(c) research_dominance vs semantic_gap [reliable only]"
             ),
         }
     else:
@@ -252,26 +269,27 @@ def main() -> None:
     # Sensitivity: exclude SDG 4 (suspected ML terminology artefact in research SDG 4 = 22%).
     # If SDG 4's high research proportion is genuine → correlation should be robust to exclusion.
     # If SDG 4 is an artefact inflating the research proportion → excluding it tests robustness.
-    excl4_mask = np.ones(N_SDG, dtype=bool)
+    excl4_mask = available_mask.copy()
     excl4_mask[3] = False   # SDG 4 is index 3
     log.info("")
     log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact):")
     corr_excl4 = {
-        "a_res_prop_vs_sem_gap": pearson_and_spearman(
-            res_hard[excl4_mask], sem_gap[excl4_mask],
-            "(a) research_proportion vs semantic_gap [excl SDG4]"
+        "a_res_prop_vs_sem_gap": correlation_or_skip(
+            res_hard, sem_gap, excl4_mask, "(a) research_proportion vs semantic_gap [excl SDG4]"
         ),
-        "b_cov_gap_abs_vs_sem_gap": pearson_and_spearman(
-            cov_gap_abs[excl4_mask], sem_gap[excl4_mask],
-            "(b) coverage_gap_abs vs semantic_gap [excl SDG4]"
+        "b_cov_gap_abs_vs_sem_gap": correlation_or_skip(
+            cov_gap_abs, sem_gap, excl4_mask, "(b) coverage_gap_abs vs semantic_gap [excl SDG4]"
         ),
     }
 
     # ---- H25 interpretation ----
     # Primary test: correlation (a) research_proportion vs semantic_gap.
-    r_primary = corr_all["a_res_prop_vs_sem_gap"]["pearson_r"]
-    rho_primary = corr_all["a_res_prop_vs_sem_gap"]["spearman_rho"]
-    p_primary   = corr_all["a_res_prop_vs_sem_gap"]["pearson_p"]
+    primary_stats = corr_primary["a_res_prop_vs_sem_gap"]
+    if primary_stats["skipped"]:
+        raise RuntimeError("Primary H25 correlation could not be computed: fewer than 3 valid SDGs.")
+    r_primary = primary_stats["pearson_r"]
+    rho_primary = primary_stats["spearman_rho"]
+    p_primary = primary_stats["pearson_p"]
 
     log.info("")
     log.info("=" * 70)
@@ -303,7 +321,7 @@ def main() -> None:
     log.info("")
     log.info("NOTABLE SDGS (highest research % + gap relationship):")
     pairs = sorted(
-        [(i+1, res_hard[i], sem_gap[i]) for i in range(N_SDG)],
+        [(i + 1, res_hard[i], sem_gap[i]) for i in range(N_SDG) if np.isfinite(sem_gap[i])],
         key=lambda x: x[1], reverse=True
     )[:5]
     for sdg, rp, sg in pairs:
@@ -318,9 +336,12 @@ def main() -> None:
     log.info("=" * 70)
     research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
     pol_vs_research = np.load(POL_VS_RES_PATH)             # (47005, 17)
+    policy_scores = np.load(POLICY_SCORES_PATH)           # (47005, 17)
 
     mean_paper_top    = float(research["mean_top_overall"])
     mean_pol_vs_res   = float(pol_vs_research.max(axis=1).mean())
+    a15_policy_top    = float(policy_scores.max(axis=1).mean())
+    a15_gap           = a15_policy_top - mean_paper_top
 
     # Per-SDG: mean score of policy chunks for their top research centroid.
     pol_assignments = pol_vs_research.argmax(axis=1)
@@ -353,16 +374,21 @@ def main() -> None:
                 "SDGs with the highest research attention show the largest within-SDG semantic "
                 "gaps (research and policy talk past each other at points of engagement)."
             ),
-            "primary_test": "research_proportion vs semantic_gap (Pearson r, Spearman rho, n=17)",
+            "primary_test": (
+                "research_proportion vs semantic_gap "
+                f"(Pearson r, Spearman rho, n={primary_stats['n']})"
+            ),
             "direction_found": h25_direction,
             "story": h25_story,
             "caveats": [
-                "n=17 SDGs gives low statistical power — p-values are indicative only.",
+                f"n={primary_stats['n']} SDGs in the primary test gives low statistical power.",
                 "SDG 4 research proportion (22%) may be inflated by ML 'learning' terminology.",
                 "Hard assignment creates zero-sum profiles — SDGs with overlapping centroids "
                 "(e.g. SDG 1/8/10 cluster) may trade assignments artificially.",
             ],
-            "correlations_all17": corr_all,
+            "available_semantic_gap_sdgs": available_sdgs,
+            "missing_semantic_gap_sdgs": missing_sdgs,
+            "correlations_primary_observed": corr_primary,
             "correlations_reliable_only": corr_reliable,
             "correlations_excl_sdg4": corr_excl4,
         },
@@ -376,7 +402,7 @@ def main() -> None:
             "asymmetry_gap": round(h26_gap, 6),
             "supported": h26_supported,
             "caveats": [
-                "A15 FLAG: policy scores against OSDG centroids are inflated by 0.191 relative "
+                f"A15 FLAG: policy scores against OSDG centroids are inflated by {a15_gap:.3f} relative "
                 "to paper scores. The H26 asymmetry may partly reflect this calibration bias, "
                 "not genuine research-policy framing asymmetry.",
                 "Research centroids are built via hard assignment from OSDG centroids — a "
@@ -390,8 +416,8 @@ def main() -> None:
                 "policy_proportion_docweighted": round(float(pol_dw_hard[i]), 6),
                 "coverage_gap_abs": round(float(cov_gap_abs[i]), 6),
                 "research_dominance": round(float(res_dominance[i]), 6),
-                "semantic_gap": round(float(sem_gap[i]), 6),
-                "semantic_similarity": round(float(sem_sim[i]), 6),
+                "semantic_gap": None if not np.isfinite(sem_gap[i]) else round(float(sem_gap[i]), 6),
+                "semantic_similarity": None if not np.isfinite(sem_sim[i]) else round(float(sem_sim[i]), 6),
                 "reliable": bool(reliable_mask[i]),
             }
             for i in range(N_SDG)
@@ -417,8 +443,8 @@ def main() -> None:
                 "policy_pct_docweighted": round(float(pol_dw_hard[i]) * 100, 4),
                 "coverage_gap_abs": round(float(cov_gap_abs[i]), 6),
                 "research_dominance": round(float(res_dominance[i]), 6),
-                "semantic_gap": round(float(sem_gap[i]), 6),
-                "semantic_similarity": round(float(sem_sim[i]), 6),
+                "semantic_gap": "" if not np.isfinite(sem_gap[i]) else round(float(sem_gap[i]), 6),
+                "semantic_similarity": "" if not np.isfinite(sem_sim[i]) else round(float(sem_sim[i]), 6),
                 "reliable": int(reliable_mask[i]),
             })
     log.info("Saved: %s", out_scatter)
@@ -435,8 +461,8 @@ def main() -> None:
 
     # Excl-SDG4 correlation values
     excl4 = corr_excl4["a_res_prop_vs_sem_gap"]
-    primary = corr_all["a_res_prop_vs_sem_gap"]
-    n_primary = len(res_hard)
+    primary = corr_primary["a_res_prop_vs_sem_gap"]
+    n_primary = int(primary["n"])
     z_primary = math.atanh(r_primary)
     z_se = 1 / math.sqrt(n_primary - 3)
     r_ci_lo = math.tanh(z_primary - 1.96 * z_se)
@@ -455,6 +481,7 @@ def main() -> None:
     # num_h25.tex — macro definitions
     num_lines = [
         "% Auto-generated by code/coverage_semantic_interaction.py — do not edit manually",
+        rf"\newcommand{{\HPrimaryN}}{{{n_primary}}}",
         rf"\newcommand{{\HPrimaryPearsonR}}{{{_fmt(r_primary)}}}",
         rf"\newcommand{{\HPrimaryPearsonP}}{{{primary['pearson_p']:.3f}}}",
         rf"\newcommand{{\HPrimaryPearsonCiLower}}{{{_fmt2(r_ci_lo)}}}",
@@ -479,7 +506,7 @@ def main() -> None:
         r"\toprule",
         r"Test & Pearson $r$ & $p$ & Spearman $\rho$ & $p$ \\",
         r"\midrule",
-        rf"All 17 SDGs & \HPrimaryPearsonR & \HPrimaryPearsonP"
+        rf"Primary observed SDGs ($n=\HPrimaryN$) & \HPrimaryPearsonR & \HPrimaryPearsonP"
         rf" & \HPrimarySpearmanRho & \HPrimarySpearmanP \\",
         rf"Excluding SDG 4 & \HExclSdgFourPearsonR & \HExclSdgFourPearsonP"
         rf" & \HExclSdgFourSpearmanRho & \HExclSdgFourSpearmanP \\",

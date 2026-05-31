@@ -54,9 +54,9 @@ Inputs:
   data/2_embedded/policy.npy        (47005, 384) float32, L2-normalised
 
 Outputs:
-  outputs/<run_name>/semantic_gap.json            primary: semantic gap per SDG (CHUNK_CAP=50)
-  outputs/<run_name>/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
-  outputs/<run_name>/tables/*.tex                  generated LaTeX macros/tables
+  outputs/semantic_gap.json              primary: semantic gap per SDG (CHUNK_CAP=50)
+  outputs/semantic_gap_sensitivity.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
+  outputs/tables/*.tex                   generated LaTeX macros/tables
 
 Run from project root (after coverage_gap.py):
     python code/3_main_analysis/semantic_gap.py
@@ -73,7 +73,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared_utils import resolve_run_dir
+from shared_utils import ensure_canonical_outputs
 
 # ---------------------------------------------------------------------------
 # Config
@@ -300,10 +300,8 @@ def compute_sdg_semantic_gaps(
 # Args
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Compute semantic gap outputs into a run-scoped output folder.")
-    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--run-name", default=None)
-    p.add_argument("--run-label", default="analysis")
+    p = argparse.ArgumentParser(description="Compute semantic gap outputs into the canonical output folder.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     return p.parse_args()
 
 
@@ -312,20 +310,11 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
-    run = resolve_run_dir(
-        output_root=Path(args.output_root),
-        run_name=args.run_name,
-        run_label=args.run_label,
-        prefer_latest_if_missing=True,
-        prefer_latest_required_files=["coverage_gap.json"],
-    )
-    output_dir = run.run_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
-    out_sem_gap = output_dir / "semantic_gap.json"
-    out_sem_sens = output_dir / "semantic_gap_sensitivity.json"
-    tables_dir = output_dir / "tables"
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    log.info("Output run: %s", output_dir)
+    layout = ensure_canonical_outputs(Path(args.output_dir))
+    out_sem_gap = layout.root / "semantic_gap.json"
+    out_sem_sens = layout.root / "semantic_gap_sensitivity.json"
+    tables_dir = layout.tables_dir
+    log.info("Canonical output dir: %s", layout.root)
 
     # ---- Load research centroids/meta ----
     log.info("Loading research centroids: %s", RESEARCH_CENTROIDS)

@@ -8,12 +8,12 @@ Produces three publication-quality figures for the dissertation:
     Figure 3 — Coverage vs semantic gap scatter (2×2 typology visualisation)
 
 Inputs:
-    outputs/<run_name>/h25_scatter.csv        — per-SDG metrics table from coverage_semantic_interaction.py
+    outputs/h25_scatter.csv                   — per-SDG metrics table from coverage_semantic_interaction.py
 
 Outputs:
-    outputs/<run_name>/figures/fig1_coverage_profiles.pdf
-    outputs/<run_name>/figures/fig2_semantic_gap.pdf
-    outputs/<run_name>/figures/fig3_coverage_semantic_scatter.pdf
+    outputs/figures/fig1_coverage_profiles.pdf
+    outputs/figures/fig2_semantic_gap.pdf
+    outputs/figures/fig3_coverage_semantic_scatter.pdf
 
 Run:
     python code/4_visualization/plot_figures.py
@@ -22,8 +22,11 @@ Run:
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 import sys
+
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-dissertation")
 
 import matplotlib
 matplotlib.use("Agg")  # non-interactive backend for WSL
@@ -36,17 +39,14 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared_utils import latest_run_dir, require_run_with_files, resolve_run_dir
+from shared_utils import ensure_canonical_outputs, require_output_files
 
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Generate figures from a run-scoped output folder.")
-    p.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--input-run", default=None, help="Run folder containing h25_scatter.csv")
-    p.add_argument("--run-name", default=None, help="Run folder to write figures to. Defaults to input run.")
-    p.add_argument("--run-label", default="analysis")
+    p = argparse.ArgumentParser(description="Generate figures from the canonical output folder.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     return p.parse_args()
 
 
@@ -90,45 +90,26 @@ SDG_SHORT = {
 
 def main() -> None:
     args = parse_args()
-    output_root = Path(args.output_root)
+    layout = ensure_canonical_outputs(Path(args.output_dir))
+    require_output_files(layout.root, ["h25_scatter.csv"])
+    figures_dir = layout.figures_dir
 
-    if args.input_run:
-        input_dir = require_run_with_files(output_root, args.input_run, ["h25_scatter.csv"])
-    else:
-        latest = latest_run_dir(output_root, ["h25_scatter.csv"])
-        if latest is None:
-            raise FileNotFoundError(
-                "No compatible output run found containing h25_scatter.csv. "
-                "Run coverage_semantic_interaction.py first, or pass --input-run."
-            )
-        input_dir = latest
-
-    if args.run_name:
-        output_dir = resolve_run_dir(
-            output_root=output_root,
-            run_name=args.run_name,
-            run_label=args.run_label,
-            prefer_latest_if_missing=False,
-        ).run_dir
-    else:
-        output_dir = input_dir
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-    figures_dir = output_dir / "figures"
-    figures_dir.mkdir(parents=True, exist_ok=True)
-
-    print(f"Input run:  {input_dir}")
-    print(f"Output run: {output_dir}")
+    print(f"Canonical output dir: {layout.root}")
 
     # -----------------------------------------------------------------------
     # Load data
     # -----------------------------------------------------------------------
-    df = pd.read_csv(input_dir / "h25_scatter.csv")
+    df = pd.read_csv(layout.root / "h25_scatter.csv")
     df = df.sort_values("sdg").reset_index(drop=True)
+    df["semantic_gap"] = pd.to_numeric(df["semantic_gap"], errors="coerce")
+    df["semantic_similarity"] = pd.to_numeric(df["semantic_similarity"], errors="coerce")
+    df_sem_valid = df[df["semantic_gap"].notna()].copy()
+    if df_sem_valid.empty:
+        raise RuntimeError("No finite semantic-gap rows available for figure generation.")
 
     # Medians for 2×2 boundary
     median_research_pct = df["research_pct"].median()
-    median_semantic_gap = df["semantic_gap"].median()
+    median_semantic_gap = df_sem_valid["semantic_gap"].median()
 
     # -----------------------------------------------------------------------
     # Figure 1 — Coverage profiles comparison
@@ -161,9 +142,7 @@ def main() -> None:
     ax1.set_yticklabels(labels, fontsize=7.5)
     ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
     ax1.set_title(
-        "Figure 1. Coverage profiles: research vs policy by SDG\n"
-        "†SDG 4 research share likely inflated by ML vocabulary artefact  "
-        "‡SDG 13 & 17 centroids highly collinear (cos = 0.860); combined share = 71%",
+        "Figure 1. Coverage profiles: research vs policy by SDG",
         fontsize=8.5,
         loc="left",
     )
@@ -184,7 +163,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     fig2, ax2 = plt.subplots(figsize=(7, 5.5))
 
-    df_sem = df.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
+    df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
     y = np.arange(len(df_sem))
     colors = [RESEARCH_COLOR if v > median_semantic_gap else "#92C5DE" for v in df_sem["semantic_gap"]]
 
@@ -196,7 +175,7 @@ def main() -> None:
     ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
     ax2.set_title(
         "Figure 2. Within-SDG semantic gap (chunk cap = 50)\n"
-        "Higher gap = research and policy discuss this SDG more differently",
+        "Higher gap indicates greater semantic divergence between research and policy",
         fontsize=8.5,
         loc="left",
     )
@@ -224,7 +203,7 @@ def main() -> None:
     ax3.axhline(median_semantic_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
 
     xlim = (0, df["research_pct"].max() * 1.12)
-    ylim = (0.16, df["semantic_gap"].max() * 1.08)
+    ylim = (max(0.0, df_sem_valid["semantic_gap"].min() * 0.92), df_sem_valid["semantic_gap"].max() * 1.08)
 
     ax3.fill_betweenx([median_semantic_gap, ylim[1]], xlim[0], median_research_pct,
                       color="#FDDBC7", alpha=0.35, zorder=0)
@@ -244,7 +223,7 @@ def main() -> None:
     ax3.text(0.99, 0.02, "High coverage\nLow semantic gap\n(apparent alignment)", transform=ax3.transAxes,
              fontsize=7, ha="right", va="bottom", color="#2e7d32", style="italic")
 
-    for _, row in df.iterrows():
+    for _, row in df_sem_valid.iterrows():
         sdg = int(row["sdg"])
         x = row["research_pct"]
         y = row["semantic_gap"]
@@ -263,7 +242,7 @@ def main() -> None:
     ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
     ax3.set_title(
         "Figure 3. Coverage vs semantic gap: 2×2 misalignment typology\n"
-        "Dashed lines = median thresholds (research: 4.25%, semantic gap: 0.211)",
+        f"Dashed lines = median thresholds (research: {median_research_pct:.2f}%, semantic gap: {median_semantic_gap:.3f})",
         fontsize=8.5,
         loc="left",
     )

@@ -50,6 +50,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--research-meta-out", default="data/3_scored/metadata/research_centroid_meta.json")
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--limit-shards", type=int, default=0)
+    p.add_argument(
+        "--allow-partial-research-centroids",
+        action="store_true",
+        help=(
+            "Allow writing research centroids/meta from a limited shard subset. "
+            "Without this flag, --limit-shards refuses to overwrite canonical research centroids."
+        ),
+    )
     return p.parse_args()
 
 
@@ -125,6 +133,20 @@ def main() -> None:
     status_dir = Path(args.status_dir)
     research_centroids_out = Path(args.research_centroids_out)
     research_meta_out = Path(args.research_meta_out)
+    default_research_centroids_out = Path("data/3_scored/research_centroids.npy")
+    default_research_meta_out = Path("data/3_scored/metadata/research_centroid_meta.json")
+
+    if (
+        args.limit_shards > 0
+        and not args.allow_partial_research_centroids
+        and research_centroids_out == default_research_centroids_out
+        and research_meta_out == default_research_meta_out
+    ):
+        raise RuntimeError(
+            "Refusing to overwrite canonical research centroids from a partial shard run. "
+            "Either remove --limit-shards for the full corpus, point research outputs to a "
+            "non-canonical path, or pass --allow-partial-research-centroids explicitly."
+        )
 
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)

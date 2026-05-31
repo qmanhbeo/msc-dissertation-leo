@@ -1,18 +1,14 @@
-# Code Directory (Active Surface)
+# Code Surface
 
-`code/` contains only active, supported pipeline scripts.
+`code/` contains only the active pipeline used by `main.py`.
 
 Structure:
-- `0_fetch/` data ingestion scripts
-- `1_preprocess/` cleaning, filtering, and corpus assembly scripts
-- `2_embed/` embedding, centroid, and shard scoring scripts
-- `3_main_analysis/` coverage/semantic analysis scripts and shared analysis utilities
-- `4_visualization/` figure generation scripts
-- `shared_utils.py` shared run-output utilities used across stages
-- root: `backup_data_snapshot.py` (operations utility)
+- `0_fetch/` source acquisition
+- `1_preprocess/` corpus cleaning, filtering, and shard building
+- `2_embed/` embeddings, centroids, and scoring producers
+- `3_main_analysis/` coverage, semantic, and interaction analysis
+- `4_visualization/` dissertation figures
+- `shared_utils.py` canonical output helpers and shared path utilities
+- `backup_data_snapshot.py` data backup utility
 
-Canonical workflow and dissertation-facing methodology notes are documented in:
-- `../README.md`
-
-Legacy/experimental scripts have been moved to:
-- `../_legacy/code/`
+Operator documentation lives in `../README.md`.
