@@ -1,7 +1,7 @@
 """
 Shared alignment helpers for active pipelines.
 
-This module holds reusable primitives used by run-local and subset workflows:
+This module holds reusable primitives used by the active analysis pipeline:
 - unit-norm verification for embedding matrices
 - research centroid construction from paper embeddings and SDG scores
 """

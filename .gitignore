@@ -41,6 +41,7 @@ env
 *.swo
 *~
 .DS_Store
+._*
 .project
 .pydevproject
 .settings/

@@ -39,6 +39,8 @@ Run the full active pipeline facade from fetch through PDF:
 python main.py --full-pipeline --overwrite --device cuda --batch-size 256 --local-files-only
 ```
 
+`--full-pipeline` requires network access, OpenAlex credentials, and the upstream fetch prerequisites expected by the active fetch scripts. It is materially heavier than warm replay.
+
 Important behavior:
 - `main.py` with no flags is read-only and prints status
 - mutation requires an explicit action flag
