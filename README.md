@@ -194,7 +194,6 @@ Canonical reproducibility artifacts now live at repository root:
 - `requirements.lock.txt` (full pip lock snapshot)
 - `conda-env-dissertation.yml` (conda env export)
 - `conda-explicit-dissertation.txt` (explicit conda lock)
-- `runtime_snapshot_2026-05-26.md` (runtime + hardware snapshot)
 
 Recommended environment setup:
 
@@ -211,6 +210,27 @@ conda create --name dissertation-replay --file conda-explicit-dissertation.txt
 conda activate dissertation-replay
 pip install -r requirements.lock.txt
 ```
+
+## Runtime Baseline (Historical: 2026-05-26)
+
+This baseline captures the environment used for the full-corpus GPU run on **May 26, 2026**.
+
+- OS/Kernel: Ubuntu 24.04.3 LTS (WSL2), `Linux 5.15.146.1-microsoft-standard-WSL2`
+- GPU/Driver: NVIDIA GeForce RTX 3050 Laptop GPU, driver `546.30`, driver-reported CUDA `12.3`
+- Conda/Python: conda `26.1.1`, env `dissertation`, Python `3.11.15`, pip `26.0.1`
+- Torch stack: `torch==2.5.1+cu121`, `torchvision==0.20.1+cu121`, `torchaudio==2.5.1+cu121`, `torch.version.cuda=12.1`
+
+Canonical CUDA run commands:
+
+```bash
+python code/1_preprocess/preprocess_papers_streaming.py
+python code/2_embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
+python code/2_embed/score_paper_shards.py
+```
+
+Checkpoint-safe manifests:
+- `data/1_preprocessed/research_corpus/metadata/manifest.json`
+- `data/2_embedded/research_shards/metadata/manifest.json`
 
 ## Repository Conventions
 
