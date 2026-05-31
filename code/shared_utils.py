@@ -18,6 +18,10 @@ CANONICAL_ROOT_FILES = [
     "robustness_check_semantic_distances_by_chunk_cap.json",
     "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json",
     "visualization_source_sdg_attention_vs_semantic_distance.csv",
+    "sample_stability_summary.json",
+    "sample_stability_draws.jsonl",
+    "sample_stability_per_sdg.json",
+    "sample_stability_table.csv",
     "validation_results.json",
     "confusion_matrix.csv",
     "centroid_similarity_matrix.csv",
@@ -33,6 +37,8 @@ CANONICAL_TABLE_FILES = [
     "tab_semgap.tex",
     "num_h25.tex",
     "tab_h25.tex",
+    "num_sample_stability.tex",
+    "tab_sample_stability.tex",
 ]
 
 CANONICAL_FIGURE_FILES = [
@@ -61,6 +67,25 @@ def require_output_files(output_dir: Path, required_files: list[str]) -> Path:
         missing_str = ", ".join(missing)
         raise FileNotFoundError(f"Canonical output directory '{output_dir}' is missing: {missing_str}")
     return output_dir
+
+
+def require_pdf_inputs(output_dir: Path) -> Path:
+    root = Path(output_dir)
+    missing = []
+    for name in CANONICAL_TABLE_FILES:
+        path = root / "tables" / name
+        if not path.exists():
+            missing.append(str(path.relative_to(root)))
+    for name in CANONICAL_FIGURE_FILES:
+        path = root / "figures" / name
+        if not path.exists():
+            missing.append(str(path.relative_to(root)))
+    if missing:
+        missing_str = ", ".join(missing)
+        raise FileNotFoundError(
+            f"Canonical output directory '{root}' is missing PDF inputs: {missing_str}"
+        )
+    return root
 
 
 def canonical_artifact_paths(output_dir: Path) -> list[Path]:

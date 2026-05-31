@@ -28,6 +28,7 @@
 \input{../outputs/tables/num_coverage.tex}
 \input{../outputs/tables/num_semantic.tex}
 \input{../outputs/tables/num_h25.tex}
+\input{../outputs/tables/num_sample_stability.tex}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks (Draft compiled \DraftCompiledAt)},
@@ -327,13 +328,28 @@ The bidirectional asymmetry analysis finds that policy chunks score \HAsymPolicy
 
 However, H26 is \textbf{inconclusive} with the current instrument. The A15 calibration diagnostic found that policy chunks score \AffFifteenDiff{} higher than research papers against OSDG centroids --- this baseline asymmetry is \emph{larger} than the measured H26 gap of \HAsymGap. The entire observed asymmetry therefore falls within the range that the calibration bias alone could produce, and the result cannot be distinguished from instrument artefact. Reporting H26 as ``supported'' in this context would overstate the evidence. Replication with a domain-neutral embedding model (e.g., a model fine-tuned independently of UN documents) is required before any directional claim can be made with confidence.
 
+\subsection{Sample Stability Robustness Check}
+
+To test whether the headline findings depend heavily on research-corpus size, we reran the downstream research-side analysis on repeated random subsamples drawn from the pre-embedded, pre-scored OpenAlex corpus. For each of \SampleStabilitySampledTierCount{} sampled tiers (from 1{,}000 to 2{,}000{,}000 papers), we drew \SampleStabilityDraws{} independent samples without replacement, recomputed the research coverage profile, rebuilt sampled research centroids, recalculated the mean within-SDG semantic gap, and re-estimated the H26 and A15 summary statistics. Policy-side quantities were held fixed. The full \SampleStabilityFullCorpusN{}-paper analysis is shown as a deterministic anchor row rather than as another repeated sample.
+
+\begin{table}[ht]
+\centering
+\caption{Sample-stability ladder for the research corpus. Macro coverage variance is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.}
+\label{tab:sample-stability}
+\resizebox{\textwidth}{!}{%
+\input{../outputs/tables/tab_sample_stability.tex}
+}
+\end{table}
+
+The stability ladder is intended as a robustness check, not as a replacement for the canonical full-corpus result. The substantive question is whether the downstream measurements continue to jump materially as sample size grows, or whether they flatten into a narrow band. Table~\ref{tab:sample-stability} provides that audit directly. The clearest practical plateau appears by roughly 200{,}000 papers: at that tier, the mean semantic gap is 0.4242 versus 0.4239 for the full corpus, the mean H26 asymmetry is 0.1434 versus 0.1441, and the mean A15 bias is 0.3261 versus 0.3263. From 500{,}000 papers upward, the draw-to-draw dispersion becomes very small and the headline values are effectively unchanged at three decimal places. This means the substantive conclusions are not artefacts of sample size choice. However, because the computationally expensive embedding stage had already been completed, there was no methodological advantage in discarding evidence for the canonical analysis. The full \SampleStabilityFullCorpusN{}-paper result is therefore retained as the primary estimate because it uses all available data while also delivering the tightest and least contestable values. The appropriate interpretation is therefore that the main findings are not artefacts of a particular random draw from the research corpus, even though the full dataset still gives the tightest estimates.
+
 %% ============================================================
 \section{Discussion}
 \label{sec:discussion}
 
 \subsection{Two Independent Dimensions of Misalignment}
 
-The headline result of this study is simple: alignment cannot be inferred from topical overlap. The rebuilt canonical analysis shows that research attention alone is a poor predictor of semantic convergence. SDGs that attract substantial research attention can still be either relatively close to policy framing (for example, SDG 9) or substantially divergent from it (for example, SDGs 3 and 7). At the same time, the strongest policy-dominant SDGs, especially SDGs 13 and 17, are also among the most semantically distant. The practical implication is that research-policy mismatch is not a single scalar problem. Attention allocation and framing divergence must be measured separately.
+The headline result of this study is simple: alignment cannot be inferred from topical overlap. The rebuilt canonical analysis shows that research attention alone is a poor predictor of semantic convergence. SDGs that attract substantial research attention can still be either relatively close to policy framing (for example, SDG 9) or substantially divergent from it (for example, SDGs 3 and 7). At the same time, the strongest policy-dominant SDGs, especially SDGs 13 and 17, are also among the most semantically distant. The sample-stability ladder strengthens this reading: once the research subsamples reach roughly 200{,}000 papers, the headline downstream metrics already sit very close to the full-corpus values. The practical implication is that research-policy mismatch is not a single scalar problem. Attention allocation and framing divergence must be measured separately.
 
 This interpretation is consistent with the epistemic communities framework \parencite{Haas1992}: research and policy communities can share concern for the same SDG while operating with different timescales, vocabularies, and decision contexts. The Mode 1/2 distinction \parencite{Gibbons1994} pushes the argument further. Supply-driven research agendas reward tractable technical problems, while policy discourse rewards implementable coordination, institutional legitimacy, and collective action. The policy-dominant concentration on SDGs 13, 17, and 16 therefore looks less like random imbalance and more like a structural difference in what each knowledge system is organised to do.
 

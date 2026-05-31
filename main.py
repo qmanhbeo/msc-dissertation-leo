@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -10,7 +9,12 @@ CODE_ROOT = Path(__file__).resolve().parent / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
-from shared_utils import canonical_artifact_paths, canonical_artifact_status
+from shared_utils import (
+    canonical_artifact_paths,
+    canonical_artifact_status,
+    require_output_files,
+    require_pdf_inputs,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -39,6 +43,8 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
+    p.add_argument("--sample-stability", action="store_true", help="Run only the sample-stability robustness stage from existing canonical analysis outputs.")
+    p.add_argument("--skip-sample-stability", action="store_true", help="Skip the sample-stability stage during --warm-replay or --full-pipeline.")
     p.add_argument("--build-pdf", action="store_true", help="Build outputs/dissertation.pdf from existing canonical tables/figures.")
     p.add_argument("--clean-canon", action="store_true", help="Remove canonical outputs/ artifacts only.")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing canonical outputs.")
@@ -57,7 +63,15 @@ def rel(path: Path) -> str:
 
 
 def action_requested(args: argparse.Namespace) -> bool:
-    return any([args.warm_replay, args.full_pipeline, args.build_pdf, args.clean_canon])
+    return any(
+        [
+            args.warm_replay,
+            args.full_pipeline,
+            args.sample_stability,
+            args.build_pdf,
+            args.clean_canon,
+        ]
+    )
 
 
 def run_step(label: str, cmd: list[str]) -> None:
@@ -118,6 +132,25 @@ def print_status(output_dir: Path) -> None:
         for item in status["missing"][:6]:
             print(f"    - {item}")
 
+    sample_stability_missing = [
+        name
+        for name in [
+            "sample_stability_summary.json",
+            "sample_stability_draws.jsonl",
+            "sample_stability_per_sdg.json",
+            "sample_stability_table.csv",
+            "tables/num_sample_stability.tex",
+            "tables/tab_sample_stability.tex",
+        ]
+        if name in status["missing"]
+    ]
+    print("")
+    print("Sample stability status:")
+    print(f"  present: {'yes' if not sample_stability_missing else 'no'}")
+    if sample_stability_missing:
+        for item in sample_stability_missing:
+            print(f"  missing: {item}")
+
     tex = (ROOT / "writing" / "dissertation.tex").read_text(encoding="utf-8")
     legacy_markers = [
         "../data/generated/",
@@ -138,13 +171,29 @@ def print_status(output_dir: Path) -> None:
 
 
 def build_pdf(output_dir: Path) -> None:
+    require_pdf_inputs(output_dir)
     run_step(
         "build pdf",
         ["bash", str(ROOT / "writing" / "build_pdf.sh"), str(output_dir / "dissertation.pdf")],
     )
 
 
-def run_warm_replay(output_dir: Path) -> None:
+def run_sample_stability(output_dir: Path) -> None:
+    require_output_files(
+        output_dir,
+        [
+            "sdg_attention_distribution_document_weighted.json",
+            "sdg_conceptual_alignment_cosine_distances.json",
+            "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json",
+        ],
+    )
+    run_step(
+        "sample stability",
+        [sys.executable, "code/3_main_analysis/sample_stability.py", "--output-dir", str(output_dir)],
+    )
+
+
+def run_warm_replay(output_dir: Path, *, include_sample_stability: bool) -> None:
     missing = missing_requirements(WARM_REPLAY_REQUIREMENTS)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
@@ -161,6 +210,8 @@ def run_warm_replay(output_dir: Path) -> None:
         [sys.executable, "code/3_main_analysis/coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
     )
     run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
+    if include_sample_stability:
+        run_sample_stability(output_dir)
     build_pdf(output_dir)
 
 
@@ -197,7 +248,7 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
         embed_cmd.append("--local-files-only")
     run_step("embed paper shards", embed_cmd)
 
-    run_warm_replay(output_dir)
+    run_warm_replay(output_dir, include_sample_stability=not args.skip_sample_stability)
 
 
 def main() -> None:
@@ -213,7 +264,12 @@ def main() -> None:
     if args.clean_canon and not args.overwrite:
         raise RuntimeError("--clean-canon requires --overwrite.")
 
-    if (args.warm_replay or args.full_pipeline or args.build_pdf) and canonical_exists(output_dir) and not args.overwrite:
+    if (
+        args.warm_replay
+        or args.full_pipeline
+        or args.sample_stability
+        or args.build_pdf
+    ) and canonical_exists(output_dir) and not args.overwrite:
         raise RuntimeError(
             "Canonical outputs already exist. Re-run with --overwrite to replace them, "
             "or run without action flags to inspect status."
@@ -225,7 +281,11 @@ def main() -> None:
     if args.full_pipeline:
         run_full_pipeline(output_dir, args)
     elif args.warm_replay:
-        run_warm_replay(output_dir)
+        run_warm_replay(output_dir, include_sample_stability=not args.skip_sample_stability)
+    elif args.sample_stability:
+        run_sample_stability(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
     elif args.build_pdf:
         build_pdf(output_dir)
 
