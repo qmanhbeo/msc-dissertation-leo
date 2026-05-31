@@ -187,6 +187,32 @@ python code/3_main_analysis/coverage_semantic_interaction.py --input-run 2026053
 python code/4_visualization/plot_figures.py --input-run 20260530_full --run-name 20260530_full
 ```
 
+## Reproducibility Canon (Root)
+
+Canonical reproducibility artifacts now live at repository root:
+- `requirements.txt` (minimal active dependency set)
+- `requirements.lock.txt` (full pip lock snapshot)
+- `conda-env-dissertation.yml` (conda env export)
+- `conda-explicit-dissertation.txt` (explicit conda lock)
+- `runtime_snapshot_2026-05-26.md` (runtime + hardware snapshot)
+- `CONTRACT.md` (pipeline structure and path contract)
+
+Recommended environment setup:
+
+```bash
+conda env create -f conda-env-dissertation.yml
+conda activate dissertation
+pip install -r requirements.txt
+```
+
+Strict replay option (exact lock replay):
+
+```bash
+conda create --name dissertation-replay --file conda-explicit-dissertation.txt
+conda activate dissertation-replay
+pip install -r requirements.lock.txt
+```
+
 Outputs:
 - `outputs/<run_name>/coverage_gap.json`
 - `outputs/<run_name>/coverage_gap_raw.json`

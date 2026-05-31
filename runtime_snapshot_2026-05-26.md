@@ -62,14 +62,16 @@ Note: in non-elevated sandbox probes, `torch.cuda.is_available()` may appear `Fa
 
 ## Reproducibility Artifacts Generated
 
-- Python lockfile: `docs/reproducibility/requirements.lock.txt`
-- Conda explicit spec: `docs/reproducibility/conda-explicit-dissertation.txt`
-- Conda env YAML (no-builds): `docs/reproducibility/conda-env-dissertation.yml`
+- Python lockfile: `requirements.lock.txt`
+- Conda explicit spec: `conda-explicit-dissertation.txt`
+- Conda env YAML (no-builds): `conda-env-dissertation.yml`
 
 ## Job Command (resume-safe)
 
 ```bash
-/home/manh/miniforge3/envs/dissertation/bin/python -u code/run_full_corpus_pipeline.py --device cuda --batch-size 256 --local-files-only
+/home/manh/miniforge3/envs/dissertation/bin/python -u code/1_preprocess/preprocess_papers_streaming.py
+/home/manh/miniforge3/envs/dissertation/bin/python -u code/2_embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
+/home/manh/miniforge3/envs/dissertation/bin/python -u code/2_embed/score_paper_shards.py
 ```
 
 Current pipeline structure remains checkpoint-safe via manifests and stage status under:
