@@ -149,42 +149,42 @@ pip install -r requirements.txt
 Build policy + centroid side:
 
 ```bash
-python code/fetch/fetch_un_sdg.py
-python code/fetch/fetch_policy.py
-python code/fetch/fetch_sdgi_corpus.py
-python code/fetch/fetch_ungdc.py
+python code/0_fetch/fetch_un_sdg.py
+python code/0_fetch/fetch_policy.py
+python code/0_fetch/fetch_sdgi_corpus.py
+python code/0_fetch/fetch_ungdc.py
 
-python code/preprocess/preprocess_policy.py
-python code/preprocess/integrate_sdgi.py
-python code/preprocess/filter_ungdc_sdg.py
-python code/preprocess/build_policy_corpus.py
+python code/1_preprocess/preprocess_policy.py
+python code/1_preprocess/integrate_sdgi.py
+python code/1_preprocess/filter_ungdc_sdg.py
+python code/1_preprocess/build_policy_corpus.py
 
-python code/fetch/fetch_osdg.py
-python code/fetch/fetch_sdg_benchmark.py
-python code/preprocess/preprocess_osdg.py
-python code/preprocess/preprocess_sdg_benchmark.py
+python code/0_fetch/fetch_osdg.py
+python code/0_fetch/fetch_sdg_benchmark.py
+python code/1_preprocess/preprocess_osdg.py
+python code/1_preprocess/preprocess_sdg_benchmark.py
 
-python code/embed/embeddings.py
-python code/embed/sdg_centroids.py
-python code/embed/validate_centroids.py
+python code/2_embed/embeddings.py
+python code/2_embed/sdg_centroids.py
+python code/2_embed/validate_centroids.py
 ```
 
 Build full research corpus (resume-safe shard flow):
 
 ```bash
-python code/fetch/fetch_openalex.py
-python code/preprocess/preprocess_papers_streaming.py
-python code/embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
-python code/embed/score_paper_shards.py
+python code/0_fetch/fetch_openalex.py
+python code/1_preprocess/preprocess_papers_streaming.py
+python code/2_embed/embed_paper_shards.py --device cuda --batch-size 256 --local-files-only
+python code/2_embed/score_paper_shards.py
 ```
 
 Run analysis + figures (run-local outputs):
 
 ```bash
-python code/main_analysis/coverage_gap.py --run-name 20260530_full
-python code/main_analysis/semantic_gap.py --run-name 20260530_full
-python code/main_analysis/coverage_semantic_interaction.py --input-run 20260530_full --run-name 20260530_full
-python code/visualization/plot_figures.py --input-run 20260530_full --run-name 20260530_full
+python code/3_main_analysis/coverage_gap.py --run-name 20260530_full
+python code/3_main_analysis/semantic_gap.py --run-name 20260530_full
+python code/3_main_analysis/coverage_semantic_interaction.py --input-run 20260530_full --run-name 20260530_full
+python code/4_visualization/plot_figures.py --input-run 20260530_full --run-name 20260530_full
 ```
 
 Outputs:

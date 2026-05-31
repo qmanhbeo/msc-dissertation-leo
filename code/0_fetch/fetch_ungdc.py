@@ -16,7 +16,7 @@ Output: data/0_raw/ungdc/
         data/0_raw/ungdc/metadata.json
 
 Run from project root:
-    python code/fetch/fetch_ungdc.py
+    python code/0_fetch/fetch_ungdc.py
 
 Requires: requests, pandas, tqdm (optional)
 """

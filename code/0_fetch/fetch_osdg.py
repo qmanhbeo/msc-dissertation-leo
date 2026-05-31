@@ -12,7 +12,7 @@ Output: data/0_raw/osdg/ (dataset CSV)
         data/0_raw/osdg/artifact/metadata.json (fetch metadata)
 
 Run from project root:
-    python code/fetch/fetch_osdg.py
+    python code/0_fetch/fetch_osdg.py
 """
 
 import json

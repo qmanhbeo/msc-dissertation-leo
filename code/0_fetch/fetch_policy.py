@@ -8,7 +8,7 @@ Output: data/0_raw/policy_scrape/pdfs/<name>.pdf
         data/0_raw/policy_scrape/artifact/metadata.json
 
 Run from project root:
-    python code/fetch/fetch_policy.py
+    python code/0_fetch/fetch_policy.py
 """
 
 import json
@@ -619,7 +619,7 @@ def main(local_files_only: bool = False) -> None:
 
     metadata = {
         "schema_version": "policy_fetch_metadata_v2",
-        "generated_by": "code/fetch/fetch_policy.py",
+        "generated_by": "code/0_fetch/fetch_policy.py",
         "run_started_at": start_time.isoformat(),
         "run_finished_at": end_time.isoformat(),
         "generated_at": end_time.isoformat(),

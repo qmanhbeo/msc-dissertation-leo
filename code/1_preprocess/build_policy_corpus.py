@@ -13,10 +13,10 @@ Output:
 Deduplication: exact text match (after normalisation).
 
 Run from project root:
-    python code/preprocess/build_policy_corpus.py
+    python code/1_preprocess/build_policy_corpus.py
 
 After running, re-embed with:
-    python code/embed/embeddings.py --corpus policy_all
+    python code/2_embed/embeddings.py --corpus policy_all
 """
 
 import csv

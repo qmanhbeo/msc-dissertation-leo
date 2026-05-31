@@ -13,7 +13,7 @@ Output:
   - data/0_raw/openalex/artifact/metadata.json   — fetch metadata
 
 Run from project root:
-    python code/fetch/fetch_openalex.py
+    python code/0_fetch/fetch_openalex.py
 """
 
 import json

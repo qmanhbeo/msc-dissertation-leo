@@ -1,22 +1,26 @@
 """
-Preprocess SDG Benchmark corpus (expert-verified SDG-labeled texts).
+Preprocess OSDG corpus for use as SDG classification training signal.
 
-Input:  data/0_raw/sdg_benchmark/benchmark.csv  (1,251 rows, label True/False)
-Output: data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  — positive examples only
-        data/1_preprocessed/sdg_benchmark/benchmark_clean.csv    — flat CSV for inspection
+Input:  data/0_raw/osdg/osdg_dataset.csv  (TSV, 43,025 rows)
+Output: data/1_preprocessed/osdg/osdg_clean.jsonl  — filtered, cleaned records
+        data/1_preprocessed/osdg/osdg_clean.csv    — flat CSV for inspection
 
 Filtering:
-  - Keep only rows where label == True (expert-confirmed SDG relevance)
-  - Drop rows with text shorter than MIN_WORDS
+  - Keep rows where agreement >= AGREEMENT_THRESHOLD (default 0.5)
+  - Drop rows with empty or very short text (< 20 words)
+
+Cleaning:
+  - Normalize Unicode, strip boilerplate (URLs, emails, copyright)
+  - Normalize whitespace
 
 Role in pipeline:
-  Higher-quality complement to OSDG — used to:
-  1. Cross-validate SDG centroid embeddings built from OSDG
-  2. Evaluate alignment scoring (ground truth for SDG relevance)
-  3. Provide a held-out evaluation set if needed
+  This corpus provides SDG-labeled text snippets used to:
+  1. Validate SDG topic clusters from topic modeling
+  2. Build a reference embedding per SDG (centroid of labeled texts)
+  3. Provide a classification training signal if supervised labeling is needed
 
 Run from project root:
-    python code/preprocess/preprocess_sdg_benchmark.py
+    python code/1_preprocess/preprocess_osdg.py
 """
 
 import csv
@@ -30,11 +34,12 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-INPUT_FILE = Path("data/0_raw/sdg_benchmark/benchmark.csv")
-OUTPUT_JSONL = Path("data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl")
-OUTPUT_CSV = Path("data/1_preprocessed/sdg_benchmark/benchmark_clean.csv")
+INPUT_FILE = Path("data/0_raw/osdg/osdg_dataset.csv")
+OUTPUT_JSONL = Path("data/1_preprocessed/osdg/osdg_clean.jsonl")
+OUTPUT_CSV = Path("data/1_preprocessed/osdg/osdg_clean.csv")
 
-MIN_WORDS = 10  # lower threshold — benchmark texts tend to be shorter
+AGREEMENT_THRESHOLD = 0.5   # minimum annotator agreement to keep a row
+MIN_WORDS = 20              # drop texts shorter than this
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -43,7 +48,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Text cleaning
+# Text cleaning (shared pattern with preprocess_papers.py)
 # ---------------------------------------------------------------------------
 _BOILERPLATE = [
     re.compile(r"©\s*\d{4}.*", re.IGNORECASE),
@@ -81,40 +86,41 @@ def main() -> None:
 
     raw_rows: list[dict] = []
     with INPUT_FILE.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
+        reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             raw_rows.append(row)
 
-    log.info("Loaded %d raw rows (%d True, %d False)",
-             len(raw_rows),
-             sum(1 for r in raw_rows if r["label"].strip().lower() == "true"),
-             sum(1 for r in raw_rows if r["label"].strip().lower() == "false"))
+    log.info("Loaded %d raw rows", len(raw_rows))
 
-    kept, dropped_label, dropped_text = [], 0, 0
+    kept, dropped_agreement, dropped_text = [], 0, 0
 
     for row in raw_rows:
-        # Keep only expert-confirmed positive examples
-        if row.get("label", "").strip().lower() != "true":
-            dropped_label += 1
+        agreement = float(row.get("agreement", 0))
+
+        # Agreement filter
+        if agreement < AGREEMENT_THRESHOLD:
+            dropped_agreement += 1
             continue
 
         text = clean_text(row.get("text", ""))
 
+        # Text quality filter
         if len(text.split()) < MIN_WORDS:
             dropped_text += 1
-            log.warning("Dropping short text (id=%s, %d words)", row.get("id"), len(text.split()))
             continue
 
         kept.append({
-            "id": row.get("id", ""),
+            "text_id": row.get("text_id", ""),
+            "doi": row.get("doi", ""),
             "text": text,
             "sdg": int(row["sdg"]),
+            "agreement": agreement,
             "word_count": len(text.split()),
         })
 
     log.info(
-        "Kept: %d  |  Dropped (False label): %d  |  Dropped (short text): %d",
-        len(kept), dropped_label, dropped_text,
+        "Kept: %d  |  Dropped (low agreement): %d  |  Dropped (short text): %d",
+        len(kept), dropped_agreement, dropped_text,
     )
 
     # SDG distribution
@@ -136,7 +142,7 @@ def main() -> None:
     log.info("Saved JSONL → %s", OUTPUT_JSONL)
 
     # Save CSV
-    csv_fields = ["id", "sdg", "word_count", "text"]
+    csv_fields = ["text_id", "sdg", "agreement", "word_count", "doi", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
@@ -144,8 +150,8 @@ def main() -> None:
     log.info("Saved CSV  → %s", OUTPUT_CSV)
 
     print(f"\nDone. {len(kept)} rows written to {OUTPUT_JSONL}")
+    print(f"  Agreement threshold: >= {AGREEMENT_THRESHOLD}")
     print(f"  SDGs covered: {sorted(sdg_counts.keys())}")
-    print(f"  Examples per SDG — min: {min(sdg_counts.values())}  max: {max(sdg_counts.values())}")
 
 
 if __name__ == "__main__":

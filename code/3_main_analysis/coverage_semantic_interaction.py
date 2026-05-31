@@ -56,7 +56,7 @@ Outputs:
   outputs/<run_name>/tables/*.tex             generated LaTeX macros/tables
 
 Run from project root (after semantic_gap.py):
-    python code/main_analysis/coverage_semantic_interaction.py
+    python code/3_main_analysis/coverage_semantic_interaction.py
 """
 
 import csv
@@ -74,7 +74,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared.output_runs import latest_run_dir, require_run_with_files, resolve_run_dir
+from shared_utils import latest_run_dir, require_run_with_files, resolve_run_dir
 
 # ---------------------------------------------------------------------------
 # Config
@@ -424,7 +424,7 @@ def main() -> None:
     log.info("Saved: %s", out_scatter)
 
     log.info("")
-    log.info("Next step: python code/visualization/plot_figures.py")
+    log.info("Next step: python code/4_visualization/plot_figures.py")
 
     # ---- Write LaTeX generated outputs ----
     gen_dir = tables_dir

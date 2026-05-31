@@ -59,7 +59,7 @@ Outputs:
   outputs/<run_name>/tables/*.tex                  generated LaTeX macros/tables
 
 Run from project root (after coverage_gap.py):
-    python code/main_analysis/semantic_gap.py
+    python code/3_main_analysis/semantic_gap.py
 """
 
 import json
@@ -73,7 +73,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared.output_runs import resolve_run_dir
+from shared_utils import resolve_run_dir
 
 # ---------------------------------------------------------------------------
 # Config
@@ -457,7 +457,7 @@ def main() -> None:
     log.info("Saved: %s", out_sem_sens)
 
     log.info("")
-    log.info("Next step: python code/main_analysis/coverage_semantic_interaction.py")
+    log.info("Next step: python code/3_main_analysis/coverage_semantic_interaction.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {

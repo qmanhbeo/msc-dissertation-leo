@@ -17,7 +17,7 @@ Outputs per corpus:
 Idempotent: skips a corpus if its .npy already exists (delete to re-embed).
 
 Run from project root:
-    python code/embed/embeddings.py
+    python code/2_embed/embeddings.py
 """
 
 import json

@@ -16,7 +16,7 @@ Outputs:
     outputs/<run_name>/figures/fig3_coverage_semantic_scatter.pdf
 
 Run:
-    python code/visualization/plot_figures.py
+    python code/4_visualization/plot_figures.py
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-from shared.output_runs import latest_run_dir, require_run_with_files, resolve_run_dir
+from shared_utils import latest_run_dir, require_run_with_files, resolve_run_dir
 
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 
