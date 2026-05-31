@@ -117,6 +117,8 @@ build/
 # Local settings
 .claude/
 .claude/settings.local.json
+.agents/
+.codex
 
 # Dissertation-specific
 writing/drafts/
