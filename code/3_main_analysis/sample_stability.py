@@ -772,7 +772,7 @@ def write_outputs(
     tab_lines = [
         r"\begin{tabular}{lcccc}",
         r"\toprule",
-        r"Sample Size & Macro Coverage Variance & Avg.\ Micro Semantic Gap & H26 Asymmetry Score & A15 Calibration Bias \\",
+        r"Sample Size & Mean SD of SDG Coverage Shares & Mean Within-SDG Semantic Gap & Policy-to-Research Asymmetry & Policy-Text Calibration Bias \\",
         r"\midrule",
     ]
     for row in summary_rows:
