@@ -143,7 +143,7 @@ The active canon includes these safeguards:
 - semantic-gap chunk-cap sensitivity at 20, 50, and 100 chunks per document
 - explicit SDG reliability flags when clusters are too small
 - A15 calibration check comparing policy-vs-OSDG and paper-vs-OSDG top scores
-- sample-size stability sweep across repeated random research subsamples, with 10 deterministic draw seeds (`42`-`51`) reused across tiers and cached sampled aggregates under `data/3_scored/paper_sample_seed_42_51/`
+- sample-size stability sweep across repeated random research subsamples, with 100 deterministic draw seeds (`42`-`141`) reused across tiers and cached sampled aggregates under `data/3_scored/paper_sample_seed_42_141/`
 - SDG 4 caveat carried into the manuscript where learning vocabulary may inflate education assignments
 - hard protection against partial shard runs overwriting canonical research centroids unless explicitly allowed
 
@@ -944,11 +944,11 @@ The pipeline repeatedly sampled the already embedded and already scored research
 
 For each sampled tier, it ran:
 
-- **10 random draws**
+- **100 random draws**
 
 using the same deterministic seed list:
 
-- **42-51**
+- **42-141**
 
 reused across all tiers.
 

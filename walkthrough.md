@@ -205,6 +205,25 @@ Because this project is about comparing meanings in text.
 
 If there is no real text to compare, the paper cannot be placed reliably in semantic space.
 
+### What does the cleaned research corpus look like?
+
+One important detail: the research corpus is **not chunked** the way the policy corpus is.
+
+Each research unit stays as **one paper-level text**, built from:
+
+- the paper title
+- plus the paper abstract
+
+In the canonical corpus of **2,543,698 papers**:
+
+- the average title length is **12.6 words**
+- the average abstract length is **195.4 words**
+- the average combined title+abstract length is **208.0 words**
+- the median combined title+abstract length is **197 words**
+- the middle of the corpus is fairly compact: the 10th to 90th percentile range is **97 to 303 words**
+
+That means the research side is made of short, focused paper summaries rather than long mixed-topic documents. That is exactly why the policy side has to be chunked later, while the research side does not.
+
 ---
 
 ### 2B. Policy preprocessing
@@ -756,11 +775,11 @@ The pipeline repeatedly sampled the already embedded and already scored research
 
 For each sampled tier, it ran:
 
-- **10 random draws**
+- **100 random draws**
 
 using the same deterministic seed list:
 
-- **42-51**
+- **42-141**
 
 reused across all tiers.
 

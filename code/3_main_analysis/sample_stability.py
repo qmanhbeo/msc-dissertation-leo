@@ -60,7 +60,7 @@ CANONICAL_SEMANTIC_JSON = "sdg_conceptual_alignment_cosine_distances.json"
 CANONICAL_H25_JSON = "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json"
 
 N_SDG = 17
-DRAW_SEEDS = tuple(range(42, 52))
+DRAW_SEEDS = tuple(range(42, 142))
 DRAWS_PER_TIER = len(DRAW_SEEDS)
 DEFAULT_CACHE_ROOT = SCORED_DIR / f"paper_sample_seed_{DRAW_SEEDS[0]}_{DRAW_SEEDS[-1]}"
 TIER_SPECS: list[tuple[str, int]] = [
