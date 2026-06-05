@@ -1,57 +1,21 @@
 """
-Genre-adjustment robustness check for semantic gap analysis.
+Genre-adjustment robustness and diagnostics for semantic-gap analysis.
 
-This stage estimates a broad research-vs-policy genre/register direction in the
-shared 384D embedding space, removes that direction from both corpora, and
-recomputes within-SDG semantic gaps. It is additive: the existing raw semantic
-gap remains canonical, while this stage reports how much the gap changes after
-genre subtraction.
+This stage is intentionally additive. The raw within-SDG semantic gap remains
+the dissertation's primary estimand and canonical result. The procedures here
+probe whether broad research-vs-policy register differences contribute to that
+raw gap, and how aggressively different subtraction schemes begin to remove the
+within-SDG contrast itself.
 
 Outputs:
-  outputs/genre_adjusted_semantic_gaps.json
-  outputs/genre_adjusted_semantic_gaps.csv
-  outputs/genre_adjustment_classifier_metrics.json
-  outputs/genre_adjustment_classifier_validation_grid.csv
-  outputs/genre_extreme_examples.csv
-  outputs/genre_tfidf_terms.csv
-  outputs/genre_adjustment/*
-  outputs/genre_adjustment/top_policy_like_texts.csv
-  outputs/genre_adjustment/top_research_like_texts.csv
-  outputs/genre_adjustment/genre_projection_summary.csv
-  outputs/genre_adjustment/genre_direction_interpretation.md
-  outputs/genre_adjustment/genre_sdg_alignment.csv
-  outputs/genre_adjustment/genre_sdg_alignment_summary.json
-  outputs/genre_adjustment/within_sdg_genre_centroid_alignment.csv
-  outputs/genre_adjustment/regression_genre_vector.npy
-  outputs/genre_adjustment/regression_within_sdg_genre_vectors.npy
-  outputs/genre_adjustment/regression_genre_sdg_alignment.csv
-  outputs/genre_adjustment/regression_vs_classifier_similarity.json
-  outputs/genre_adjustment/regression_gap_comparison.csv
-  outputs/robustness/genre_confidence_checks/*.json
-  outputs/robustness/genre_confidence_checks/*.csv
-  outputs/figures/fig_genre_adjusted_semantic_gap_comparison.pdf
-  outputs/figures/fig_genre_adjusted_semantic_gap_comparison.png
-  outputs/figures/fig_genre_confidence_curve.pdf
-  outputs/figures/fig_genre_confidence_curve.png
-  outputs/figures/fig_sdg_genre_robustness_comparison.pdf
-  outputs/figures/fig_sdg_genre_robustness_comparison.png
-  outputs/figures/fig_genre_projection_distribution.pdf
-  outputs/figures/fig_genre_projection_distribution.png
-  outputs/figures/fig_genre_sdg_alignment.pdf
-  outputs/figures/fig_genre_sdg_alignment.png
-  outputs/figures/fig_regression_vs_classifier_alignment.pdf
-  outputs/figures/fig_regression_vs_classifier_alignment.png
-  outputs/tables/num_genre_adjustment.tex
-  outputs/tables/tab_genre_adjusted_semgap.tex
-  outputs/tables/num_genre_confidence_checks.tex
-  outputs/tables/tab_genre_confidence_checks.tex
-  outputs/tables/num_sdg_genre_robustness.tex
-  outputs/tables/tab_sdg_genre_robustness.tex
-  outputs/tables/num_genre_interpretability.tex
-  outputs/tables/num_regression_genre_alignment.tex
-  outputs/tables/tab_genre_sdg_alignment.tex
-  outputs/tables/tab_genre_projection_examples.tex
-  outputs/tables/tab_regression_genre_alignment.tex
+  outputs/robustness/genre_adjustment/data/*.json
+  outputs/robustness/genre_adjustment/data/*.csv
+  outputs/robustness/genre_adjustment/data/*.npy
+  outputs/robustness/genre_adjustment/data/genre_confidence_checks/*
+  outputs/robustness/genre_adjustment/tables/*.tex
+  outputs/robustness/genre_adjustment/figures/*.pdf
+  outputs/robustness/genre_adjustment/figures/*.png
+  outputs/robustness/genre_adjustment/README_genre_adjustment.md
 """
 
 from __future__ import annotations
@@ -92,7 +56,7 @@ CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
-from shared_utils import ensure_canonical_outputs
+from shared_utils import CanonicalOutputs
 from semantic_gap import (
     CHUNK_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
@@ -122,7 +86,8 @@ DEFAULT_SAMPLE_PER_CLASS = 20_000
 DEFAULT_TFIDF_SAMPLE_PER_CLASS = 5_000
 DEFAULT_TFIDF_MAX_FEATURES = 20_000
 DEFAULT_EXTREME_TOP_N = 25
-DEFAULT_GENRE_CONFIDENCE_SUBDIR = str(Path("robustness") / "genre_confidence_checks")
+ROBUSTNESS_OUTPUT_SUBDIR = Path("robustness") / "genre_adjustment"
+DEFAULT_GENRE_CONFIDENCE_SUBDIR = "genre_confidence_checks"
 DEFAULT_MULTI_DIRECTION_KS = (1, 2, 3, 5)
 DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG = 5_000
 DEFAULT_TOPIC_MATCH_TOP_K = 1
@@ -136,7 +101,6 @@ DEFAULT_SDG_GENRE_METHOD = "both"
 DEFAULT_SDG_GENRE_MIN_SAMPLES_PER_CLASS = 50
 DEFAULT_SDG_GENRE_TEST_SIZE = 0.20
 DEFAULT_SDG_GENRE_CLASSIFIER_TYPE = "logistic_regression_liblinear"
-GENRE_ADJUSTMENT_SUBDIR = "genre_adjustment"
 GENRE_PROJECTION_TOP_N = 100
 GENRE_PROJECTION_REPORT_N = 20
 GENRE_PROJECTION_PREVIEW_CHARS = 400
@@ -150,6 +114,17 @@ HELDOUT_SDG_FOLDS = (
     (4, 9, 14),
     (5, 10, 15),
 )
+
+
+def ensure_genre_robustness_outputs(output_dir: Path) -> CanonicalOutputs:
+    """Create and return the appendix-style robustness output layout."""
+    robustness_root = Path(output_dir) / ROBUSTNESS_OUTPUT_SUBDIR
+    data_dir = robustness_root / "data"
+    tables_dir = robustness_root / "tables"
+    figures_dir = robustness_root / "figures"
+    for path in (data_dir, tables_dir, figures_dir):
+        path.mkdir(parents=True, exist_ok=True)
+    return CanonicalOutputs(root=data_dir, tables_dir=tables_dir, figures_dir=figures_dir)
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -170,7 +145,12 @@ class ResearchShard:
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Run the genre-adjustment robustness suite.")
+    p = argparse.ArgumentParser(
+        description=(
+            "Run the appendix-style genre-adjustment robustness suite. "
+            "This stage does not replace the canonical raw semantic gap."
+        )
+    )
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--cache-dir", default=str(DEFAULT_CACHE_ROOT))
     p.add_argument("--sample-per-class", type=int, default=DEFAULT_SAMPLE_PER_CLASS)
@@ -2169,8 +2149,12 @@ def build_regression_similarity_payload(
         "baseline_sdg": baseline_sdg,
         "global_regression_vs_classifier_cosine": round(cosine, 6),
         "agreement_band": interpretation,
-        "classifier_vector_source": str(Path("outputs") / GENRE_ADJUSTMENT_SUBDIR / "sdg_balanced_genre_vector.npy"),
-        "regression_vector_source": str(Path("outputs") / GENRE_ADJUSTMENT_SUBDIR / "regression_genre_vector.npy"),
+        "classifier_vector_source": str(
+            Path("outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "sdg_balanced_genre_vector.npy"
+        ),
+        "regression_vector_source": str(
+            Path("outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "regression_genre_vector.npy"
+        ),
         "classifier_alignment_summary": classifier_alignment_summary,
         "regression_alignment_summary": regression_alignment_summary,
     }
@@ -3339,7 +3323,11 @@ def plot_sdg_balanced_gap_comparison(output_dir: Path, rows: list[dict[str, Any]
     ax.set_yticks(y)
     ax.set_yticklabels([f"SDG {row['sdg']} {names[row['sdg']]}" for row in valid_rows], fontsize=7.5)
     ax.set_xlabel("Gap = 1 - cosine similarity")
-    ax.set_title("SDG-balanced genre classifier: raw vs adjusted semantic gap", fontsize=8.5, loc="left")
+    ax.set_title(
+        "SDG-balanced global sensitivity check: raw vs adjusted semantic gap",
+        fontsize=8.5,
+        loc="left",
+    )
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -3410,7 +3398,11 @@ def plot_sdg_genre_robustness_comparison(
     ax.set_yticks(y)
     ax.set_yticklabels([f"SDG {sdg} {names[sdg]}" for sdg in ordered_sdgs], fontsize=7.4)
     ax.set_xlabel("Gap = 1 - cosine similarity")
-    ax.set_title("SDG-aware genre controls: raw vs global and within-SDG adjusted gaps", fontsize=8.5, loc="left")
+    ax.set_title(
+        "SDG-aware genre sensitivity and stress tests",
+        fontsize=8.5,
+        loc="left",
+    )
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -3470,9 +3462,10 @@ def write_sdg_genre_adjustment_note(
     test_size: float,
 ) -> None:
     note = [
-        "# SDG-aware genre adjustment robustness checks",
+        "# Genre-adjustment robustness suite",
         "",
-        "This folder contains additional genre-adjustment robustness methods.",
+        "This folder contains appendix-style robustness and diagnostic checks.",
+        "The raw within-SDG semantic gap remains the main estimand.",
         "",
         "1. `sdg_balanced` trains one global research-vs-policy classifier on an SDG-balanced sample.",
         "2. `within_sdg` trains separate research-vs-policy classifiers within each SDG.",
@@ -3489,9 +3482,9 @@ def write_sdg_genre_adjustment_note(
         f"- `test_size = {test_size}`",
         "",
         "How to interpret:",
-        "- If adjusted gaps shrink markedly, some of the raw gap reflected research-policy genre/register differences.",
-        "- The SDG-balanced method controls for SDG composition while assuming one common genre direction across SDGs.",
-        "- The within-SDG method allows genre direction to vary by SDG but is noisier, especially where per-SDG sample sizes are small.",
+        "- Smaller adjusted gaps do not automatically mean a better estimate of the dissertation's target quantity.",
+        "- The one-direction global subtraction and the SDG-balanced global subtraction are sensitivity checks for broad corpus-level register effects.",
+        "- The within-SDG classifier and within-SDG regression procedures are stress tests: they can over-subtract by learning the very within-goal research-policy contrast the raw gap is meant to measure.",
         "- The regression method estimates genre-associated embedding variation after controlling for SDG and compares that direction directly with the classifier-derived direction.",
         "- The genre_vector_cosine_similarity.csv file shows whether the within-SDG directions are broadly stable or highly heterogeneous.",
     ]
@@ -4306,7 +4299,7 @@ def plot_gap_comparison(figures_dir: Path, merged_rows: list[dict[str, Any]]) ->
     ax.set_yticklabels([f"SDG {row['sdg']} {names[row['sdg']]}" for row in valid_rows], fontsize=7.5)
     ax.set_xlabel("Gap = 1 - cosine similarity between research and policy sub-centroids")
     ax.set_title(
-        "Genre-adjustment robustness check: raw vs genre-adjusted semantic gap",
+        "One-direction global genre sensitivity check: raw vs adjusted semantic gap",
         fontsize=8.5,
         loc="left",
     )
@@ -4342,7 +4335,7 @@ def main() -> None:
     if args.min_samples_per_class <= 1:
         raise ValueError("--min-samples-per-class must be greater than 1.")
 
-    layout = ensure_canonical_outputs(Path(args.output_dir))
+    layout = ensure_genre_robustness_outputs(Path(args.output_dir))
     cache_root = Path(args.cache_dir)
     ensure_dir(cache_root)
     out_combined_json = layout.root / "genre_adjusted_semantic_gaps.json"
@@ -4351,7 +4344,8 @@ def main() -> None:
     out_val_grid = layout.root / "genre_adjustment_classifier_validation_grid.csv"
     out_extremes = layout.root / "genre_extreme_examples.csv"
     out_tfidf = layout.root / "genre_tfidf_terms.csv"
-    log.info("Output dir: %s", layout.root)
+    log.info("Robustness output dir: %s", layout.root.parent)
+    log.info("Genre data dir: %s", layout.root)
     log.info("Cache dir: %s", cache_root)
 
     required_paths = [
@@ -4545,7 +4539,8 @@ def main() -> None:
             "The outputs here report how much within-SDG gaps change after subtracting a learned research-vs-policy "
             "genre/register direction. "
             "The genre direction is estimated by logistic regression on a balanced research-vs-policy embedding sample, "
-            "selected by train/validation/test evaluation without using the test split to fit the final direction."
+            "selected by train/validation/test evaluation without using the test split to fit the final direction. "
+            "These adjusted gaps are sensitivity diagnostics, not replacement estimates of a pure substantive gap."
         ),
         "per_sdg": merged_rows,
         "reliable_sdgs": [row["sdg"] for row in merged_rows if not row["unreliable"]],
@@ -4599,8 +4594,7 @@ def main() -> None:
     log.info("Saved figure outputs to %s", layout.figures_dir)
 
     genre_methods_seed = args.seed if args.random_seed is None else args.random_seed
-    genre_adjustment_dir = layout.root / GENRE_ADJUSTMENT_SUBDIR
-    ensure_dir(genre_adjustment_dir)
+    genre_adjustment_dir = layout.root
     research_indices_by_sdg_signature, research_indices_by_sdg = load_or_build_research_indices_by_sdg_cache(
         cache_root=cache_root,
         base_signature=base_signature,
@@ -4811,7 +4805,7 @@ def main() -> None:
         )
 
     write_sdg_genre_adjustment_note(
-        genre_adjustment_dir / "README_genre_adjustment.md",
+        layout.root.parent / "README_genre_adjustment.md",
         method=args.method,
         seed=genre_methods_seed,
         classifier_type=args.classifier_type,
@@ -5111,7 +5105,7 @@ def main() -> None:
             "regression_gap_comparison_file": "regression_gap_comparison.csv",
         },
     )
-    log.info("Saved SDG-aware genre robustness outputs to %s", genre_adjustment_dir)
+    log.info("Saved SDG-aware genre robustness outputs to %s", layout.root.parent)
 
     genre_confidence_artifacts: dict[str, Any] | None = None
     if not args.skip_genre_confidence_checks:
@@ -5386,7 +5380,8 @@ def main() -> None:
             "sample_signature": sample_signature,
             "classifier_signature": classifier_signature,
             "selected_c": selected_c,
-            "output_dir": str(layout.root),
+            "robustness_output_dir": str(layout.root.parent),
+            "genre_data_dir": str(layout.root),
             "artifacts": {
                 "combined_json": str(out_combined_json),
                 "combined_csv": str(out_combined_csv),
@@ -5395,6 +5390,7 @@ def main() -> None:
                 "extremes_csv": str(out_extremes),
                 "tfidf_csv": str(out_tfidf),
                 "sdg_genre_dir": str(genre_adjustment_dir),
+                "genre_readme_md": str(layout.root.parent / "README_genre_adjustment.md"),
                 "sdg_genre_summary_json": str(genre_adjustment_dir / "summary.json"),
                 "genre_projection_policy_csv": str(top_policy_like_path),
                 "genre_projection_research_csv": str(top_research_like_path),

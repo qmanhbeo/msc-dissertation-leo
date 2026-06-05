@@ -44,10 +44,25 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
     p.add_argument("--sample-stability", action="store_true", help="Run only the sample-stability robustness stage from existing canonical analysis outputs.")
-    p.add_argument("--genre-adjustment", action="store_true", help="Run the genre-adjustment robustness suite, including SDG-aware controls, interpretability outputs, regression decomposition, and the additional genre-confidence checks, from existing embedded/scored data.")
+    p.add_argument(
+        "--genre-adjustment",
+        action="store_true",
+        help=(
+            "Run the appendix-style genre-adjustment robustness suite from existing embedded/scored data. "
+            "This stage is additive only and does not replace the canonical raw semantic gap."
+        ),
+    )
     p.add_argument("--skip-sample-stability", action="store_true", help="Skip the sample-stability stage during --warm-replay or --full-pipeline.")
     p.add_argument("--skip-genre-confidence-checks", action="store_true", help="Skip the additional genre-confidence checks inside --genre-adjustment.")
-    p.add_argument("--sdg-genre-method", choices=["sdg_balanced", "within_sdg", "both"], default="both", help="Method subset for the additional SDG-aware genre robustness checks inside --genre-adjustment.")
+    p.add_argument(
+        "--sdg-genre-method",
+        choices=["sdg_balanced", "within_sdg", "both"],
+        default="both",
+        help=(
+            "Method subset for the SDG-aware genre robustness checks inside --genre-adjustment. "
+            "The SDG-balanced method is a stronger global sensitivity check; the within-SDG method is an over-subtraction stress test."
+        ),
+    )
     p.add_argument("--sdg-genre-random-seed", type=int, default=None, help="Optional seed override for the SDG-aware genre robustness checks.")
     p.add_argument("--sdg-genre-samples-per-cell", type=int, default=None, help="Optional cap for samples per SDG x genre cell in the SDG-aware genre robustness checks.")
     p.add_argument("--sdg-genre-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
@@ -215,7 +230,7 @@ def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_
     if args.sdg_genre_samples_per_cell is not None:
         cmd.extend(["--samples-per-cell", str(args.sdg_genre_samples_per_cell)])
     run_step(
-        "genre adjustment",
+        "genre-adjustment robustness",
         cmd,
     )
 

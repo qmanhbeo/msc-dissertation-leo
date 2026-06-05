@@ -13,7 +13,7 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{graphicx}
-\graphicspath{{../outputs/figures/}}
+\graphicspath{{../outputs/figures/}{../outputs/robustness/genre_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -29,11 +29,11 @@
 \input{../outputs/tables/num_semantic.tex}
 \input{../outputs/tables/num_h25.tex}
 \input{../outputs/tables/num_sample_stability.tex}
-\InputIfFileExists{../outputs/tables/num_genre_adjustment.tex}{}{}
-\InputIfFileExists{../outputs/tables/num_genre_confidence_checks.tex}{}{}
-\InputIfFileExists{../outputs/tables/num_sdg_genre_robustness.tex}{}{}
-\InputIfFileExists{../outputs/tables/num_genre_interpretability.tex}{}{}
-\InputIfFileExists{../outputs/tables/num_regression_genre_alignment.tex}{}{}
+\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_adjustment.tex}{}{}
+\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_confidence_checks.tex}{}{}
+\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_sdg_genre_robustness.tex}{}{}
+\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_interpretability.tex}{}{}
+\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_regression_genre_alignment.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks (Draft compiled \DraftCompiledAt)},
@@ -213,6 +213,8 @@ The semantic gap measures within-SDG semantic divergence: given that both corpor
 
 A semantic gap of 0 would indicate perfectly overlapping semantic directions; a gap approaching 1 would indicate orthogonal framing. Robustness is assessed by replicating the analysis with chunk caps of 20 and 100 per document; rankings were stable across all three caps.
 
+The raw within-SDG centroid distance is retained as the primary measure of semantic misalignment because it directly corresponds to the dissertation's estimand: the observed difference in semantic framing between AI-for-sustainability research and SDG policy discourse within the same SDG. Additional genre-adjustment procedures were explored as robustness and diagnostic checks. These analyses suggest that broad research-policy register differences may contribute to the observed gaps, but also show that more aggressive adjustment procedures risk removing substantive within-SDG differences rather than merely isolating stylistic wrapper effects. For this reason, adjusted results are treated as sensitivity analyses rather than replacement estimates.
+
 \subsection{Coverage--Semantic Interaction and Bidirectional Asymmetry}
 
 The central structural hypothesis (H25) is that coverage gaps and semantic gaps are correlated across SDGs. We compute Pearson $r$ and Spearman $\rho$ between research coverage proportions and semantic gap scores across all 17 SDGs, and report sensitivity analyses excluding SDG 4 (see Section~\ref{sec:sdg4artefact}).
@@ -350,162 +352,11 @@ To test whether the headline findings depend heavily on research-corpus size, we
 
 The stability ladder is intended as a robustness check, not as a replacement for the canonical full-corpus result. The substantive question is whether the downstream measurements continue to jump materially as sample size grows, or whether they flatten into a narrow band. Table~\ref{tab:sample-stability} provides that audit directly. The clearest practical plateau appears by roughly 200{,}000 papers: at that tier, the mean semantic gap is 0.4242 versus 0.4239 for the full corpus, the mean policy-to-research asymmetry is 0.1434 versus 0.1441, and the mean policy-text calibration bias is 0.3261 versus 0.3263. From 500{,}000 papers upward, the draw-to-draw dispersion becomes very small and the headline values are effectively unchanged at three decimal places. This means the substantive conclusions are not artefacts of sample size choice. However, because the computationally expensive embedding stage had already been completed, there was no methodological advantage in discarding evidence for the canonical analysis. The full \SampleStabilityFullCorpusN{}-paper result is therefore retained as the primary estimate because it uses all available data while also delivering the tightest and least contestable values. The appropriate interpretation is therefore that the main findings are not artefacts of a particular random draw from the research corpus, even though the full dataset still gives the tightest estimates.
 
-\IfFileExists{../outputs/tables/num_genre_adjustment.tex}{
-\subsection{Genre-Adjustment Robustness Check}
+\subsection{Register-Sensitivity Note}
 
-The raw semantic-gap measure compares research and policy sub-centroids directly in the shared SBERT space. A reasonable concern is that part of this distance may reflect corpus register rather than substantive within-SDG misalignment: research abstracts and policy documents differ systematically in style, modality, abstraction, and institutional language. To probe that possibility, I estimate a research-versus-policy genre direction in the same 384-dimensional embedding space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \GenreClassifierTestAccuracy{}, ROC-AUC \GenreClassifierTestRocAuc{}, F1 \GenreClassifierTestFOne{}, precision \GenreClassifierTestPrecision{}, and recall \GenreClassifierTestRecall{} using \GenreClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This indicates that the two corpora are indeed separable at the broad register level.
+Possible corpus-register effects remain an important limitation. Research abstracts and policy documents differ systematically in style, modality, and institutional language, so part of the raw within-SDG distance may reflect broad research--policy register differences rather than topic framing alone. Additional genre-adjustment procedures were therefore explored as appendix-style robustness and diagnostic checks rather than as replacement estimates.
 
-The robustness step then subtracts the learned genre direction from each embedding and recomputes the within-SDG semantic gap without changing the SDG assignments or the policy chunk-cap rule. Table~\ref{tab:genre-adjusted-semantic-gap} reports the resulting comparison, and Figure~\ref{fig:genre-adjusted-semantic-gap} visualises the same raw-versus-adjusted contrast. The mean raw gap is \MeanRawSemanticGap{}, the mean genre-adjusted gap is \MeanAdjustedSemanticGap{}, and the mean change is \MeanSemanticGapDelta{}. The largest shrinkage appears in \LargestGapShrinkSdg{} (\LargestGapShrinkDelta{}), while the largest remaining adjusted gap is still \LargestAdjustedGapSdg{} at \LargestAdjustedGapValue{}.
-
-These results are informative in three ways. First, if a gap remains large after genre subtraction, the misalignment is unlikely to be merely a matter of academic versus institutional writing style. Second, if a gap shrinks materially, part of the raw distance was plausibly register-driven. Third, if a gap expands after subtraction, removing shared background genre noise may reveal a sharper SDG-specific divergence. I therefore treat this stage as an additive robustness check: it does not replace the canonical semantic-gap result, but it helps distinguish broad discourse-style differences from more substantive within-goal framing mismatches.
-
-\begin{table}[ht]
-\centering
-\caption{Genre-adjustment robustness check for the semantic gap. Raw gap = the canonical semantic gap from the main analysis. Adjusted gap = the same within-SDG gap after subtracting the learned research-policy genre direction from each embedding.}
-\label{tab:genre-adjusted-semantic-gap}
-\resizebox{\textwidth}{!}{%
-\input{../outputs/tables/tab_genre_adjusted_semgap.tex}
-}
-\end{table}
-
-\IfFileExists{../outputs/figures/fig_genre_adjusted_semantic_gap_comparison.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.9\textwidth]{fig_genre_adjusted_semantic_gap_comparison.pdf}
-\caption{Genre-adjustment robustness check: raw vs genre-adjusted semantic gap by SDG. Raw gap is shown in grey and the genre-adjusted gap in blue.}
-\label{fig:genre-adjusted-semantic-gap}
-\end{figure}
-}{}
-}{}
-
-\IfFileExists{../outputs/tables/num_genre_confidence_checks.tex}{
-\subsection{Additional Confidence Checks on Genre Subtraction}
-
-The one-direction genre subtraction is itself testable. Four additional checks clarify what it does and does not buy analytically. First, the adjusted re-separability audit asks whether research and policy remain easy to distinguish after the learned genre direction has been removed. The answer is yes: the raw held-out ROC-AUC is \GenreConfidenceAdjustedResepRawRocAuc{}, while the adjusted held-out ROC-AUC remains \GenreConfidenceAdjustedResepAdjustedRocAuc{} (a relative change of \GenreConfidenceAdjustedResepDeltaRocAuc{}). This means that subtracting one dominant direction does remove some shared register signal, but it does not come close to exhausting overall research-policy separability in the embedding space.
-
-Second, the held-out-SDG generalization test checks whether the estimated genre axis is merely exploiting SDG-specific topical leakage. It does not appear to be doing so. When the classifier is trained on one set of SDGs and evaluated on disjoint held-out SDG blocks, the mean held-out ROC-AUC is still \GenreConfidenceHeldoutMeanRocAuc{} and the mean held-out F1 is \GenreConfidenceHeldoutMeanFOne{}, with fold-level ROC-AUC values ranging from \GenreConfidenceHeldoutMinRocAuc{} to \GenreConfidenceHeldoutMaxRocAuc{}. This suggests that the learned axis captures a broad cross-corpus register contrast rather than only within-goal topic idiosyncrasies.
-
-Third, the multi-direction subtraction curve asks whether the one-direction result is unusually fragile. Figure~\ref{fig:genre-confidence-curve} shows that the mean adjusted gap continues to decline from \GenreConfidenceMultiKOneMeanGap{} at $k=\GenreConfidenceMultiKOne$ to \GenreConfidenceMultiKMaxMeanGap{} at $k=\GenreConfidenceMultiKMax$, a further shift of \GenreConfidenceMultiKOneToMaxDelta{}, while the residual classifier ROC-AUC at $k=\GenreConfidenceMultiKMax$ is still \GenreConfidenceMultiKMaxResidualRocAuc{}. The top of the gap ranking nonetheless remains concentrated in \GenreConfidenceStableTopGapSdgs. This combination matters: the substantive high-gap SDGs do not disappear, but the absolute magnitudes are still sensitive to how many genre-like directions are removed.
-
-Fourth, a within-SDG topic-matched nearest-neighbor check asks whether local policy--research pairs become clearly closer after subtraction. They do not. The mean matched gap is \GenreConfidenceTopicRawMatchedGap{} in raw space and \GenreConfidenceTopicAdjustedMatchedGap{} after subtraction, for a change of \GenreConfidenceTopicDeltaMatchedGap{}. In other words, even within SDGs and after local nearest-neighbor matching, research and policy remain substantially separated.
-
-Taken together, these additional checks sharpen the interpretation of the genre-adjusted semantic gap. The subtraction is useful as a robustness check against one strong global register axis, and the persistence of high-gap SDGs after subtraction still argues against a purely stylistic explanation. However, the confidence checks also show that the one-direction residual cannot be treated as ``pure'' substantive divergence. A large part of the remaining embedding-space separation is still structured enough to be detectable after the first subtraction step. I therefore interpret the adjusted gap as a more conservative robustness estimate, not as a complete identification of policy-research conceptual difference net of all register effects.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Additional robustness checks on the genre-adjustment stage. These checks audit whether the one-direction subtraction plausibly isolates a broad global register axis, and how sensitive the remaining semantic-gap magnitudes are to stronger subtraction schemes.}
-\label{tab:genre-confidence-checks}
-\input{../outputs/tables/tab_genre_confidence_checks.tex}
-\end{table}
-
-\IfFileExists{../outputs/figures/fig_genre_confidence_curve.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.82\textwidth]{fig_genre_confidence_curve.pdf}
-\caption{Additional genre-confidence checks: multi-direction subtraction sensitivity. The top panel shows how the mean adjusted semantic gap changes as more discriminative research-policy directions are removed. The bottom panel shows the residual held-out classifier ROC-AUC after the same sequence of removals.}
-\label{fig:genre-confidence-curve}
-\end{figure}
-}{}
-}{}
-
-\IfFileExists{../outputs/tables/num_sdg_genre_robustness.tex}{
-\subsection{SDG-Balanced and Within-SDG Genre Controls}
-
-The one-direction genre subtraction above is global: it learns a single research-versus-policy axis from a balanced sample and removes that axis everywhere. A natural follow-on question is whether the observed raw-to-adjusted shrinkage is being driven partly by SDG composition. To probe that, I add two simple SDG-aware controls. First, an SDG-balanced global classifier draws equal numbers of research and policy texts from every SDG and then learns one shared research-policy direction. Second, a within-SDG design fits separate research-policy classifiers inside each SDG, allowing the genre direction to vary goal by goal.
-
-These two controls answer slightly different questions. The SDG-balanced global classifier asks whether the broad research-policy axis survives after equalising the SDG mix of the training data. The within-SDG classifiers ask whether each SDG appears to have its own research-policy style axis, and whether those axes point in broadly similar directions. In the current run, the SDG-balanced classifier still separates the corpora strongly (accuracy \SdgGenreBalancedAccuracy{}, macro-F1 \SdgGenreBalancedMacroFOne{}, ROC-AUC \SdgGenreBalancedRocAuc{}), while the within-SDG classifiers also remain strong on average (mean accuracy \SdgGenreWithinMeanAccuracy{}, mean macro-F1 \SdgGenreWithinMeanMacroFOne{}, mean ROC-AUC \SdgGenreWithinMeanRocAuc{}). The mean raw gap across SDGs is \SdgGenreRawMeanGap{}, compared with \SdgGenreBalancedMeanGap{} after the SDG-balanced adjustment and \SdgGenreWithinMeanGap{} after the within-SDG adjustment.
-
-The stability question is also informative. The cosine similarity between the SDG-balanced global direction and the average within-SDG direction is \SdgGenreGlobalVsAverageCosine{}. If this cosine is high, the SDG-specific genre directions mostly line up with the global direction; if it is low, the apparent research-policy contrast depends strongly on which SDG is being considered. Figure~\ref{fig:sdg-genre-robustness} and Table~\ref{tab:sdg-genre-robustness} summarize the comparison.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Additional SDG-aware genre robustness checks. The SDG-balanced classifier equalises the SDG composition of the training sample before learning one global research-policy direction, while the within-SDG design allows the genre direction to vary by goal.}
-\label{tab:sdg-genre-robustness}
-\input{../outputs/tables/tab_sdg_genre_robustness.tex}
-\end{table}
-
-\IfFileExists{../outputs/figures/fig_sdg_genre_robustness_comparison.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.90\textwidth]{fig_sdg_genre_robustness_comparison.pdf}
-\caption{Raw semantic gap compared with two SDG-aware genre controls. The green bars subtract one SDG-balanced global research-policy direction; the blue bars subtract within-SDG research-policy directions estimated separately inside each goal.}
-\label{fig:sdg-genre-robustness}
-\end{figure}
-}{}
-}{}
-
-\IfFileExists{../outputs/tables/num_genre_interpretability.tex}{
-\subsection{Interpreting the Learned Genre Direction}
-
-The previous robustness checks establish that a strong research--policy direction exists in the embedding space and that its removal changes the size of the semantic gaps. A separate question is what that direction is actually capturing. Two descriptive checks help answer that. First, every text can be projected onto the SDG-balanced global genre vector. This produces a ranked list of the most policy-like and most research-like texts in the corpus without fitting any new model. Second, the same genre direction can be compared directly with the canonical OSDG-derived SDG centroids. If the direction is largely orthogonal to those centroids, it is more plausibly capturing broad register differences; if it aligns strongly with one or more SDG axes, it may still encode substantive thematic structure.
-
-The projection examples are intended for manual inspection rather than automatic summarization. The generated report and Table~\ref{tab:genre-projection-examples} expose representative extreme cases directly. In the current run, the mean score of the top policy-like examples is \GenreProjectionPolicyTopMean{}, while the mean score of the bottom research-like examples is \GenreProjectionResearchBottomMean{}. Figure~\ref{fig:genre-projection-distribution} shows how the projection scores distribute across corpora and across SDGs.
-
-The SDG-centroid comparison supplies a more formal check on whether the learned genre direction overlaps with SDG meaning. The mean absolute cosine between the global genre vector and the 17 SDG centroids is \GenreAlignmentMeanAbsCosine{}; the median is \GenreAlignmentMedianAbsCosine{}; the maximum is \GenreAlignmentMaxAbsCosine{}. The strongest alignment occurs at \GenreAlignmentStrongestSdg{}, while the weakest occurs at \GenreAlignmentWeakestSdg{}. Table~\ref{tab:genre-sdg-alignment} reports the full per-SDG pattern, including the optional within-SDG genre-versus-centroid alignment when SDG-specific genre vectors are available. Figure~\ref{fig:genre-sdg-alignment} visualizes the signed global alignment values.
-
-\begin{table}[ht]
-\centering
-\caption{Alignment between the SDG-balanced global genre direction and the canonical SDG centroids. The final column reports the matching within-SDG genre-versus-centroid cosine when an SDG-specific genre vector is available.}
-\label{tab:genre-sdg-alignment}
-\input{../outputs/tables/tab_genre_sdg_alignment.tex}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Manual-inspection examples from the learned genre direction. The policy-like rows have the highest positive projection onto the global genre vector; the research-like rows have the lowest projection.}
-\label{tab:genre-projection-examples}
-\resizebox{\textwidth}{!}{%
-\input{../outputs/tables/tab_genre_projection_examples.tex}
-}
-\end{table}
-
-\IfFileExists{../outputs/figures/fig_genre_projection_distribution.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.92\textwidth]{fig_genre_projection_distribution.pdf}
-\caption{Distribution of projection scores onto the SDG-balanced global genre direction. The top panel shows the overall research--policy separation, the middle panel shows the per-SDG spread for each corpus, and the bottom panel aggregates the scores by corpus.}
-\label{fig:genre-projection-distribution}
-\end{figure}
-}{}
-
-\IfFileExists{../outputs/figures/fig_genre_sdg_alignment.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.86\textwidth]{fig_genre_sdg_alignment.pdf}
-\caption{Signed cosine similarity between the SDG-balanced global genre direction and each OSDG-derived SDG centroid. Values close to zero indicate relative orthogonality; larger magnitudes indicate stronger overlap between the learned genre direction and a specific SDG axis.}
-\label{fig:genre-sdg-alignment}
-\end{figure}
-}{}
-}{}
-
-\IfFileExists{../outputs/tables/num_regression_genre_alignment.tex}{
-\subsection{Regression Decomposition of the Embedding Space}
-
-The classifier-based genre direction above is discriminative by construction, so one remaining concern is that its overlap with SDG semantic structure might partly be an artefact of optimizing corpus separation. To probe that, I add a Rodriguez-style embedding regression robustness check. Each embedding coordinate is treated as an outcome in a linear model with corpus genre, SDG fixed effects, and genre--SDG interactions. Because the design is saturated at the SDG-by-genre cell level, the resulting coefficients can be recovered exactly from the observed cell means while still corresponding to the ordinary least-squares decomposition implied by the model.
-
-This regression view does not ask whether research and policy can be separated accurately. Instead, it asks whether the direction associated with genre after controlling for SDG points in roughly the same place as the classifier-derived direction. In the current run, the cosine between the regression-derived global genre vector and the SDG-balanced classifier vector is \RegressionGenreVsClassifierCosine{}, which falls in the \RegressionGenreAgreementBand{} range. The regression-derived genre vector also remains materially aligned with the SDG centroids: the mean absolute cosine is \RegressionGenreMeanAbsCosine{}, the median is \RegressionGenreMedianAbsCosine{}, and the maximum is \RegressionGenreMaxAbsCosine{}, with the strongest alignment at \RegressionGenreStrongestSdg{} and the weakest at \RegressionGenreWeakestSdg{}.
-
-The semantic-gap implication is similar. The mean regression-global adjusted gap is \RegressionGlobalMeanGap{}, and the mean regression within-SDG adjusted gap is \RegressionWithinMeanGap{}. These values can be compared directly with the classifier-based SDG-balanced and within-SDG controls reported above. If the regression and classifier vectors largely agree, then the observed entanglement between genre and SDG meaning is unlikely to be a mere artefact of discriminative fitting. If they diverge sharply, the classifier interpretation becomes more fragile. Table~\ref{tab:regression-genre-alignment} and Figure~\ref{fig:regression-vs-classifier-alignment} summarize the comparison.
-
-\begin{table}[ht]
-\centering
-\caption{Regression-derived versus classifier-derived genre alignment with the canonical SDG centroids. The second column reports the existing SDG-balanced classifier direction, the third reports the regression-derived global genre direction, and the fourth reports SDG-specific regression genre directions.}
-\label{tab:regression-genre-alignment}
-\input{../outputs/tables/tab_regression_genre_alignment.tex}
-\end{table}
-
-\IfFileExists{../outputs/figures/fig_regression_vs_classifier_alignment.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}
-\caption{Classifier-derived versus regression-derived genre alignment with the OSDG centroids. The annotation reports the cosine similarity between the global regression vector and the SDG-balanced classifier vector.}
-\label{fig:regression-vs-classifier-alignment}
-\end{figure}
-}{}
-}{}
+Those appendix checks point in the same broad direction. Limited global adjustments reduce the semantic gaps but do not eliminate them, which suggests that broad research--policy register contributes to the observed distances without fully explaining them. More aggressive within-SDG classifier and within-SDG regression procedures shrink the gaps much more strongly, but they are interpreted as over-subtraction stress tests because they learn and remove the within-goal policy--research contrast itself. The raw within-SDG semantic gap is therefore retained as the primary result because it best matches the dissertation's estimand: the observed semantic difference between research and policy discourse within the same SDG.
 
 %% ============================================================
 \section{Discussion}
@@ -565,7 +416,149 @@ Several findings call for direct follow-up. The SDG 4 artefact should be resolve
 
 The headline message for research governance is therefore straightforward. Knowing which SDGs research covers is necessary but not sufficient. Measuring whether research and policy mean compatible things when they invoke those SDGs is a distinct diagnostic, and an equally important one. If topical overlap is mistaken for alignment, misalignment will be systematically underestimated.
 
-%% ============================================================
 \printbibliography
+
+%% ============================================================
+\IfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_adjustment.tex}{
+\clearpage
+\appendix
+\section{Genre-Adjustment Robustness and Diagnostics}
+\label{app:genre-robustness}
+
+This appendix reports exploratory genre-adjustment procedures that probe whether broad research--policy register differences contribute to the raw semantic gap. These analyses are not treated as corrected or preferred estimates. The raw within-SDG semantic gap remains the primary estimand because it directly measures the observed research--policy difference within each SDG. The appendix therefore uses a simple hierarchy: global one-direction adjustments are limited sensitivity checks; SDG-balanced global adjustments are stronger sensitivity checks; within-SDG classifier and within-SDG regression procedures are interpreted as over-subtraction stress tests because they risk removing the very within-goal contrast the raw metric is designed to measure.
+
+\subsection{One-Direction Global Sensitivity Check}
+
+The simplest robustness step estimates one broad research-versus-policy direction in the shared SBERT space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \GenreClassifierTestAccuracy{}, ROC-AUC \GenreClassifierTestRocAuc{}, F1 \GenreClassifierTestFOne{}, precision \GenreClassifierTestPrecision{}, and recall \GenreClassifierTestRecall{} using \GenreClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This shows that a strong corpus-level research--policy axis exists.
+
+Subtracting that one global direction reduces the mean gap from \MeanRawSemanticGap{} to \MeanAdjustedSemanticGap{}, a change of \MeanSemanticGapDelta{}. The largest shrinkage appears in \LargestGapShrinkSdg{} (\LargestGapShrinkDelta{}), while the largest remaining adjusted gap is still \LargestAdjustedGapSdg{} at \LargestAdjustedGapValue{}. The substantive interpretation is limited: this subtraction attenuates one broad corpus-level axis, but it does not cleanly identify a pure substantive gap net of all register effects.
+
+\begin{table}[ht]
+\centering
+\caption{Global one-direction genre sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the dissertation. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
+\label{tab:genre-adjusted-semantic-gap}
+\resizebox{\textwidth}{!}{%
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_adjusted_semgap.tex}
+}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_adjusted_semantic_gap_comparison.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_genre_adjusted_semantic_gap_comparison.pdf}
+\caption{Global one-direction genre sensitivity check: raw versus adjusted semantic gap by SDG. Raw gap is shown in grey and the one-direction adjusted gap in blue.}
+\label{fig:genre-adjusted-semantic-gap}
+\end{figure}
+}{}
+
+\subsection{Additional Confidence Checks on Global Subtraction}
+
+The one-direction subtraction is itself testable. The adjusted re-separability audit shows that research and policy remain highly separable even after this first direction is removed: the raw held-out ROC-AUC is \GenreConfidenceAdjustedResepRawRocAuc{}, while the adjusted held-out ROC-AUC remains \GenreConfidenceAdjustedResepAdjustedRocAuc{} (relative change \GenreConfidenceAdjustedResepDeltaRocAuc{}). Held-out-SDG generalization is also strong, with mean held-out ROC-AUC \GenreConfidenceHeldoutMeanRocAuc{} and mean held-out F1 \GenreConfidenceHeldoutMeanFOne{}, which indicates that the learned axis is broad rather than purely SDG-specific leakage.
+
+At the same time, the multi-direction subtraction curve shows that the mean adjusted gap continues to decline from \GenreConfidenceMultiKOneMeanGap{} at $k=\GenreConfidenceMultiKOne$ to \GenreConfidenceMultiKMaxMeanGap{} at $k=\GenreConfidenceMultiKMax$, while the residual classifier ROC-AUC at $k=\GenreConfidenceMultiKMax$ is still \GenreConfidenceMultiKMaxResidualRocAuc{}. The topic-matched nearest-neighbor check also remains far from a collapse, moving from \GenreConfidenceTopicRawMatchedGap{} in raw space to \GenreConfidenceTopicAdjustedMatchedGap{} after subtraction. Taken together, these checks show that the one-direction residual cannot be treated as pure substantive divergence. It is therefore best interpreted as a limited sensitivity analysis against one strong global register axis.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Additional checks on the one-direction global genre subtraction. These diagnostics test whether the first subtraction plausibly attenuates a broad corpus-level register axis without claiming that the residual is a fully purified substantive gap.}
+\label{tab:genre-confidence-checks}
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_confidence_checks.tex}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_confidence_curve.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_genre_confidence_curve.pdf}
+\caption{Confidence checks on global genre subtraction. The top panel shows how the mean adjusted semantic gap changes as more discriminative research--policy directions are removed. The bottom panel shows the residual held-out classifier ROC-AUC after the same sequence of removals.}
+\label{fig:genre-confidence-curve}
+\end{figure}
+}{}
+
+\subsection{SDG-Balanced Global Controls and Within-SDG Stress Tests}
+
+The global one-direction subtraction may still reflect SDG composition in the sampled classifier data. To probe that, I add an SDG-balanced global classifier that draws equal numbers of research and policy texts from every SDG before learning one shared research--policy direction. This is a stronger global sensitivity check because it targets broad corpus-level register while controlling SDG composition. In the current run, the SDG-balanced classifier remains strongly separable (accuracy \SdgGenreBalancedAccuracy{}, macro-F1 \SdgGenreBalancedMacroFOne{}, ROC-AUC \SdgGenreBalancedRocAuc{}), and the mean gap becomes \SdgGenreBalancedMeanGap{}.
+
+I also fit within-SDG classifiers, but these are interpreted differently. Because each classifier is estimated inside a single SDG, subtracting the resulting direction risks removing the very within-goal research--policy contrast the dissertation is trying to measure. Their mean adjusted gap (\SdgGenreWithinMeanGap{}) is therefore treated as a stress-test result rather than as a better estimate. The cosine similarity between the SDG-balanced global direction and the average within-SDG direction is \SdgGenreGlobalVsAverageCosine{}, which helps show whether the SDG-specific directions mostly line up with the broad global axis or vary goal by goal.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{SDG-aware genre robustness hierarchy. The SDG-balanced classifier is treated as a stronger global sensitivity check. The within-SDG design is treated as an over-subtraction stress test because it learns and removes within-goal research--policy contrasts directly.}
+\label{tab:sdg-genre-robustness}
+\input{../outputs/robustness/genre_adjustment/tables/tab_sdg_genre_robustness.tex}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_sdg_genre_robustness_comparison.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.90\textwidth]{fig_sdg_genre_robustness_comparison.pdf}
+\caption{Raw semantic gap compared with SDG-aware genre procedures. The green bars show the SDG-balanced global sensitivity check. The blue bars show the within-SDG stress test, which is more prone to over-subtraction.}
+\label{fig:sdg-genre-robustness}
+\end{figure}
+}{}
+
+\subsection{Interpreting the Learned Genre Direction}
+
+The previous appendix checks establish that a strong research--policy direction exists in the embedding space and that its subtraction changes semantic-gap magnitudes. A separate question is what that learned direction is actually capturing. Two descriptive diagnostics help answer that. First, every text can be projected onto the SDG-balanced global genre vector, producing ranked lists of the most policy-like and most research-like texts without fitting any new model. Second, the same genre direction can be compared directly with the canonical OSDG-derived SDG centroids. If the direction were close to orthogonal to those centroids, it would look more like a broad wrapper-language axis; if it aligns materially with SDG centroids, it likely mixes register and substantive thematic structure.
+
+The projection examples are included for manual inspection rather than automatic summarization. In the current run, the mean score of the top policy-like examples is \GenreProjectionPolicyTopMean{}, while the mean score of the bottom research-like examples is \GenreProjectionResearchBottomMean{}. The SDG-centroid comparison is more formal: the mean absolute cosine between the global genre vector and the 17 SDG centroids is \GenreAlignmentMeanAbsCosine{}, the median is \GenreAlignmentMedianAbsCosine{}, and the maximum is \GenreAlignmentMaxAbsCosine{}. The strongest alignment occurs at \GenreAlignmentStrongestSdg{}, while the weakest occurs at \GenreAlignmentWeakestSdg{}. These values indicate overlap with SDG semantic structure rather than a clean separation of style from substance.
+
+\begin{table}[ht]
+\centering
+\caption{Alignment between the SDG-balanced global genre direction and the canonical SDG centroids. The final column reports the matching within-SDG genre-versus-centroid cosine when an SDG-specific genre vector is available.}
+\label{tab:genre-sdg-alignment}
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_sdg_alignment.tex}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Manual-inspection examples from the learned global genre direction. The policy-like rows have the highest positive projection onto the global genre vector; the research-like rows have the lowest projection.}
+\label{tab:genre-projection-examples}
+\resizebox{\textwidth}{!}{%
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_projection_examples.tex}
+}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_projection_distribution.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\textwidth]{fig_genre_projection_distribution.pdf}
+\caption{Distribution of projection scores onto the SDG-balanced global genre direction. The figure is descriptive only: it exposes what kinds of texts align most strongly with the learned global axis.}
+\label{fig:genre-projection-distribution}
+\end{figure}
+}{}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_sdg_alignment.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.86\textwidth]{fig_genre_sdg_alignment.pdf}
+\caption{Signed cosine similarity between the SDG-balanced global genre direction and each OSDG-derived SDG centroid. Larger magnitudes indicate stronger overlap between the learned genre direction and a specific SDG axis.}
+\label{fig:genre-sdg-alignment}
+\end{figure}
+}{}
+
+\subsection{Regression Decomposition of the Embedding Space}
+
+The classifier-based genre direction is discriminative by construction, so a final concern is that its overlap with SDG semantic structure might partly be an artefact of optimizing corpus separation. To probe that possibility, I add a Rodriguez-style embedding regression diagnostic. Each embedding coordinate is treated as an outcome in a linear model with corpus genre, SDG fixed effects, and genre--SDG interactions. This does not optimize a classifier; it decomposes embedding variation associated with genre after controlling for SDG structure.
+
+In the current run, the cosine between the regression-derived global genre vector and the SDG-balanced classifier vector is \RegressionGenreVsClassifierCosine{}, which falls in the \RegressionGenreAgreementBand{} range. The regression-derived global genre vector remains materially aligned with SDG centroids: mean absolute cosine \RegressionGenreMeanAbsCosine{}, median \RegressionGenreMedianAbsCosine{}, maximum \RegressionGenreMaxAbsCosine{}, strongest alignment \RegressionGenreStrongestSdg{}, weakest \RegressionGenreWeakestSdg{}. The mean regression-global adjusted gap is \RegressionGlobalMeanGap{}, while the mean regression within-SDG adjusted gap is \RegressionWithinMeanGap{}. The latter is interpreted as an especially aggressive over-subtraction stress test because the within-SDG regression vectors are very close to estimating the within-goal policy--research contrast itself.
+
+\begin{table}[ht]
+\centering
+\caption{Regression-derived versus classifier-derived genre alignment with the canonical SDG centroids. The second column reports the SDG-balanced classifier direction, the third reports the regression-derived global genre direction, and the fourth reports SDG-specific regression genre directions.}
+\label{tab:regression-genre-alignment}
+\input{../outputs/robustness/genre_adjustment/tables/tab_regression_genre_alignment.tex}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}
+\caption{Classifier-derived versus regression-derived genre alignment with the OSDG centroids. The annotation reports the cosine similarity between the global regression vector and the SDG-balanced classifier vector.}
+\label{fig:regression-vs-classifier-alignment}
+\end{figure}
+}{}
+}{}
 
 \end{document}
