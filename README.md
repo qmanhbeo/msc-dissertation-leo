@@ -39,6 +39,32 @@ Run only the sample-stability robustness stage from existing canonical analysis 
 python main.py --sample-stability --overwrite
 ```
 
+Run the genre-adjustment robustness suite from existing embedded/scored data:
+
+```bash
+python main.py --genre-adjustment --overwrite
+```
+
+Run warm replay and then append the full genre-adjustment robustness suite before the PDF build:
+
+```bash
+python main.py --warm-replay --genre-adjustment --overwrite
+```
+
+Run the genre-adjustment stage but skip the additional genre-confidence checks:
+
+```bash
+python main.py --genre-adjustment --overwrite --skip-genre-confidence-checks
+```
+
+Run only the new SDG-aware genre robustness methods inside the stage from the script CLI:
+
+```bash
+python code/3_main_analysis/genre_adjustment.py --method sdg_balanced
+python code/3_main_analysis/genre_adjustment.py --method within_sdg
+python code/3_main_analysis/genre_adjustment.py --method both
+```
+
 Build only the canonical PDF from existing canonical tables and figures:
 
 ```bash
@@ -59,6 +85,9 @@ Important behavior:
 - if canonical artifacts already exist, reruns fail closed unless `--overwrite` is supplied
 - `--output-dir` can redirect the canonical output root, but the default contract is `outputs/`
 - `--warm-replay` and `--full-pipeline` run sample stability by default; use `--skip-sample-stability` only when the existing sample-stability artifacts are already present and should be reused
+- `--genre-adjustment` is additive only: it does not replace the canonical semantic-gap outputs, but it now runs the full genre robustness suite by default
+- `--skip-genre-confidence-checks` is an escape hatch for the expensive follow-on genre-confidence checks; it only matters when `--genre-adjustment` is present
+- the SDG-aware genre controls run by default inside `--genre-adjustment`; use `--sdg-genre-method`, `--sdg-genre-samples-per-cell`, `--sdg-genre-min-samples-per-class`, `--sdg-genre-test-size`, `--sdg-genre-classifier-type`, and `--sdg-genre-random-seed` from `main.py` to override their defaults
 
 ## Reproducibility Contract
 
@@ -110,6 +139,76 @@ Figure artifacts:
 - `outputs/figures/fig3_coverage_semantic_scatter.pdf`
 - `outputs/figures/fig3_coverage_semantic_scatter.png`
 
+Genre-adjustment robustness artifacts when `--genre-adjustment` is run:
+- `outputs/genre_adjusted_semantic_gaps.json`
+- `outputs/genre_adjusted_semantic_gaps.csv`
+- `outputs/genre_adjustment_classifier_metrics.json`
+- `outputs/genre_adjustment_classifier_validation_grid.csv`
+- `outputs/genre_extreme_examples.csv`
+- `outputs/genre_tfidf_terms.csv`
+- `outputs/tables/num_genre_adjustment.tex`
+- `outputs/tables/tab_genre_adjusted_semgap.tex`
+- `outputs/figures/fig_genre_adjusted_semantic_gap_comparison.pdf`
+- `outputs/figures/fig_genre_adjusted_semantic_gap_comparison.png`
+- `outputs/robustness/genre_confidence_checks/genre_confidence_summary.json`
+- `outputs/robustness/genre_confidence_checks/adjusted_reseparability_metrics.json`
+- `outputs/robustness/genre_confidence_checks/adjusted_reseparability_validation_grid.csv`
+- `outputs/robustness/genre_confidence_checks/heldout_sdg_generalization.json`
+- `outputs/robustness/genre_confidence_checks/heldout_sdg_generalization.csv`
+- `outputs/robustness/genre_confidence_checks/multi_direction_gap_curve.json`
+- `outputs/robustness/genre_confidence_checks/multi_direction_gap_curve.csv`
+- `outputs/robustness/genre_confidence_checks/multi_direction_per_sdg.csv`
+- `outputs/robustness/genre_confidence_checks/topic_matched_pair_summary.json`
+- `outputs/robustness/genre_confidence_checks/topic_matched_pair_summary.csv`
+- `outputs/robustness/genre_confidence_checks/topic_matched_pair_examples.csv`
+- `outputs/robustness/genre_confidence_checks/manifest.json`
+- `outputs/tables/num_genre_confidence_checks.tex`
+- `outputs/tables/tab_genre_confidence_checks.tex`
+- `outputs/figures/fig_genre_confidence_curve.pdf`
+- `outputs/figures/fig_genre_confidence_curve.png`
+- `outputs/genre_adjustment/README_genre_adjustment.md`
+- `outputs/genre_adjustment/summary.json`
+- `outputs/genre_adjustment/sdg_balanced_metrics.json`
+- `outputs/genre_adjustment/sdg_balanced_gap_comparison.csv`
+- `outputs/genre_adjustment/sdg_balanced_genre_vector.npy`
+- `outputs/genre_adjustment/sdg_balanced_gap_comparison.pdf`
+- `outputs/genre_adjustment/sdg_balanced_gap_comparison.png`
+- `outputs/genre_adjustment/top_policy_like_texts.csv`
+- `outputs/genre_adjustment/top_research_like_texts.csv`
+- `outputs/genre_adjustment/genre_projection_summary.csv`
+- `outputs/genre_adjustment/genre_direction_interpretation.md`
+- `outputs/genre_adjustment/genre_sdg_alignment.csv`
+- `outputs/genre_adjustment/genre_sdg_alignment_summary.json`
+- `outputs/genre_adjustment/regression_genre_vector.npy`
+- `outputs/genre_adjustment/regression_within_sdg_genre_vectors.npy`
+- `outputs/genre_adjustment/regression_genre_sdg_alignment.csv`
+- `outputs/genre_adjustment/regression_vs_classifier_similarity.json`
+- `outputs/genre_adjustment/regression_gap_comparison.csv`
+- `outputs/genre_adjustment/within_sdg_genre_centroid_alignment.csv`
+- `outputs/genre_adjustment/within_sdg_metrics.csv`
+- `outputs/genre_adjustment/within_sdg_gap_comparison.csv`
+- `outputs/genre_adjustment/within_sdg_genre_vectors.npy`
+- `outputs/genre_adjustment/genre_vector_cosine_similarity.csv`
+- `outputs/genre_adjustment/within_sdg_vector_cosine_heatmap.pdf`
+- `outputs/genre_adjustment/within_sdg_vector_cosine_heatmap.png`
+- `outputs/genre_adjustment/raw_vs_global_vs_within_sdg_gap_comparison.pdf`
+- `outputs/genre_adjustment/raw_vs_global_vs_within_sdg_gap_comparison.png`
+- `outputs/tables/num_genre_interpretability.tex`
+- `outputs/tables/num_regression_genre_alignment.tex`
+- `outputs/tables/tab_genre_sdg_alignment.tex`
+- `outputs/tables/tab_genre_projection_examples.tex`
+- `outputs/tables/tab_regression_genre_alignment.tex`
+- `outputs/figures/fig_genre_projection_distribution.pdf`
+- `outputs/figures/fig_genre_projection_distribution.png`
+- `outputs/figures/fig_genre_sdg_alignment.pdf`
+- `outputs/figures/fig_genre_sdg_alignment.png`
+- `outputs/figures/fig_regression_vs_classifier_alignment.pdf`
+- `outputs/figures/fig_regression_vs_classifier_alignment.png`
+- `outputs/tables/num_sdg_genre_robustness.tex`
+- `outputs/tables/tab_sdg_genre_robustness.tex`
+- `outputs/figures/fig_sdg_genre_robustness_comparison.pdf`
+- `outputs/figures/fig_sdg_genre_robustness_comparison.png`
+
 ## Active Pipeline
 
 Policy / benchmark side:
@@ -132,8 +231,9 @@ Downstream analysis:
 3. compute semantic gap with chunk-cap sensitivity checks
 4. compute H25/H26 interaction outputs
 5. run the sample-stability robustness sweep
-6. generate figures
-7. build the dissertation PDF from canonical tables and figures
+6. optionally run the genre-adjustment robustness suite
+7. generate figures
+8. build the dissertation PDF from canonical tables and figures
 
 ## Robustness and Validation
 
@@ -144,6 +244,12 @@ The active canon includes these safeguards:
 - explicit SDG reliability flags when clusters are too small
 - A15 calibration check comparing policy-vs-OSDG and paper-vs-OSDG top scores
 - sample-size stability sweep across repeated random research subsamples, with 100 deterministic draw seeds (`42`-`141`) reused across tiers and cached sampled aggregates under `data/3_scored/paper_sample_seed_42_141/`
+- genre-adjustment robustness suite with deterministic train/validation/test logistic-regression selection before projection subtraction
+- additional genre-confidence checks covering adjusted re-separability, held-out-SDG generalization, multi-direction subtraction sensitivity, and topic-matched nearest-neighbor comparison
+- SDG-balanced genre classifier control, which equalises SDG composition before learning one global research-policy direction
+- within-SDG genre classifiers, which allow the genre direction to vary by SDG and save direction-similarity diagnostics
+- genre-vector interpretability outputs that expose the most aligned texts and measure cosine overlap between the learned genre direction and the canonical SDG centroids without fitting any additional classifier
+- Rodriguez-style embedding regression robustness, which treats embedding coordinates as outcomes and compares regression-derived genre directions against the classifier-derived direction after controlling for SDG and genre x SDG structure
 - SDG 4 caveat carried into the manuscript where learning vocabulary may inflate education assignments
 - hard protection against partial shard runs overwriting canonical research centroids unless explicitly allowed
 

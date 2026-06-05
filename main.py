@@ -44,7 +44,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
     p.add_argument("--sample-stability", action="store_true", help="Run only the sample-stability robustness stage from existing canonical analysis outputs.")
+    p.add_argument("--genre-adjustment", action="store_true", help="Run the genre-adjustment robustness suite, including SDG-aware controls, interpretability outputs, regression decomposition, and the additional genre-confidence checks, from existing embedded/scored data.")
     p.add_argument("--skip-sample-stability", action="store_true", help="Skip the sample-stability stage during --warm-replay or --full-pipeline.")
+    p.add_argument("--skip-genre-confidence-checks", action="store_true", help="Skip the additional genre-confidence checks inside --genre-adjustment.")
+    p.add_argument("--sdg-genre-method", choices=["sdg_balanced", "within_sdg", "both"], default="both", help="Method subset for the additional SDG-aware genre robustness checks inside --genre-adjustment.")
+    p.add_argument("--sdg-genre-random-seed", type=int, default=None, help="Optional seed override for the SDG-aware genre robustness checks.")
+    p.add_argument("--sdg-genre-samples-per-cell", type=int, default=None, help="Optional cap for samples per SDG x genre cell in the SDG-aware genre robustness checks.")
+    p.add_argument("--sdg-genre-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
+    p.add_argument("--sdg-genre-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware genre robustness checks.")
+    p.add_argument("--sdg-genre-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware genre robustness checks.")
     p.add_argument("--build-pdf", action="store_true", help="Build outputs/dissertation.pdf from existing canonical tables/figures.")
     p.add_argument("--clean-canon", action="store_true", help="Remove canonical outputs/ artifacts only.")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing canonical outputs.")
@@ -68,6 +76,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.warm_replay,
             args.full_pipeline,
             args.sample_stability,
+            args.genre_adjustment,
             args.build_pdf,
             args.clean_canon,
         ]
@@ -193,7 +202,32 @@ def run_sample_stability(output_dir: Path) -> None:
     )
 
 
-def run_warm_replay(output_dir: Path, *, include_sample_stability: bool) -> None:
+def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
+    cmd = [sys.executable, "code/3_main_analysis/genre_adjustment.py", "--output-dir", str(output_dir)]
+    if not include_genre_confidence_checks:
+        cmd.append("--skip-genre-confidence-checks")
+    cmd.extend(["--method", args.sdg_genre_method])
+    cmd.extend(["--test-size", str(args.sdg_genre_test_size)])
+    cmd.extend(["--classifier-type", args.sdg_genre_classifier_type])
+    cmd.extend(["--min-samples-per-class", str(args.sdg_genre_min_samples_per_class)])
+    if args.sdg_genre_random_seed is not None:
+        cmd.extend(["--random-seed", str(args.sdg_genre_random_seed)])
+    if args.sdg_genre_samples_per_cell is not None:
+        cmd.extend(["--samples-per-cell", str(args.sdg_genre_samples_per_cell)])
+    run_step(
+        "genre adjustment",
+        cmd,
+    )
+
+
+def run_warm_replay(
+    output_dir: Path,
+    args: argparse.Namespace,
+    *,
+    include_sample_stability: bool,
+    include_genre_adjustment: bool,
+    include_genre_confidence_checks: bool,
+) -> None:
     missing = missing_requirements(WARM_REPLAY_REQUIREMENTS)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
@@ -212,6 +246,8 @@ def run_warm_replay(output_dir: Path, *, include_sample_stability: bool) -> None
     run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
         run_sample_stability(output_dir)
+    if include_genre_adjustment:
+        run_genre_adjustment(output_dir, args, include_genre_confidence_checks=include_genre_confidence_checks)
     build_pdf(output_dir)
 
 
@@ -248,7 +284,13 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
         embed_cmd.append("--local-files-only")
     run_step("embed paper shards", embed_cmd)
 
-    run_warm_replay(output_dir, include_sample_stability=not args.skip_sample_stability)
+    run_warm_replay(
+        output_dir,
+        args,
+        include_sample_stability=not args.skip_sample_stability,
+        include_genre_adjustment=args.genre_adjustment,
+        include_genre_confidence_checks=not args.skip_genre_confidence_checks,
+    )
 
 
 def main() -> None:
@@ -281,9 +323,21 @@ def main() -> None:
     if args.full_pipeline:
         run_full_pipeline(output_dir, args)
     elif args.warm_replay:
-        run_warm_replay(output_dir, include_sample_stability=not args.skip_sample_stability)
+        run_warm_replay(
+            output_dir,
+            args,
+            include_sample_stability=not args.skip_sample_stability,
+            include_genre_adjustment=args.genre_adjustment,
+            include_genre_confidence_checks=not args.skip_genre_confidence_checks,
+        )
     elif args.sample_stability:
         run_sample_stability(output_dir)
+        if args.genre_adjustment:
+            run_genre_adjustment(output_dir, args, include_genre_confidence_checks=not args.skip_genre_confidence_checks)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.genre_adjustment:
+        run_genre_adjustment(output_dir, args, include_genre_confidence_checks=not args.skip_genre_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.build_pdf:
