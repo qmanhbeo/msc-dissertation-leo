@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -20,7 +21,7 @@ from shared_utils import (
 ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = ROOT / "outputs"
 
-WARM_REPLAY_REQUIREMENTS = [
+BASE_WARM_REPLAY_REQUIREMENTS = [
     Path("data/2_embedded/policy.npy"),
     Path("data/2_embedded/metadata/policy_ids.json"),
     Path("data/2_embedded/osdg.npy"),
@@ -32,6 +33,11 @@ WARM_REPLAY_REQUIREMENTS = [
     Path("data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
     Path("writing/dissertation.tex"),
     Path("writing/references.bib"),
+]
+
+WARM_REPLAY_GENRE_EXTRA_REQUIREMENTS = [
+    Path("data/1_preprocessed/research_corpus/metadata/manifest.json"),
+    Path("data/1_preprocessed/research_corpus/part-00001.jsonl"),
 ]
 
 POLICY_REFRESH_REQUIREMENTS = [
@@ -49,6 +55,11 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
+    p.add_argument(
+        "--fetch-data-snapshot",
+        action="store_true",
+        help="Fetch and extract the frozen dissertation data snapshot into ./data/.",
+    )
     p.add_argument(
         "--refresh-policy-corpus",
         action="store_true",
@@ -86,6 +97,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--clean-canon", action="store_true", help="Remove canonical outputs/ artifacts only.")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing canonical outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Canonical output directory. Default: outputs/")
+    p.add_argument(
+        "--snapshot-profile",
+        choices=["curated", "full"],
+        default="curated",
+        help="Snapshot profile for --fetch-data-snapshot. Warm replay auto-fetch always uses curated.",
+    )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --full-pipeline mode.")
     p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --full-pipeline mode.")
     p.add_argument("--local-files-only", action="store_true", help="Pass --local-files-only to embed_paper_shards.py in --full-pipeline mode.")
@@ -104,6 +121,7 @@ def action_requested(args: argparse.Namespace) -> bool:
         [
             args.warm_replay,
             args.full_pipeline,
+            args.fetch_data_snapshot,
             args.refresh_policy_corpus,
             args.sample_stability,
             args.genre_adjustment,
@@ -120,6 +138,50 @@ def run_step(label: str, cmd: list[str]) -> None:
 
 def missing_requirements(paths: list[Path]) -> list[Path]:
     return [p for p in paths if not (ROOT / p).exists()]
+
+
+def required_warm_replay_inputs(*, include_genre_adjustment: bool) -> list[Path]:
+    required = list(BASE_WARM_REPLAY_REQUIREMENTS)
+    if include_genre_adjustment:
+        required.extend(WARM_REPLAY_GENRE_EXTRA_REQUIREMENTS)
+    return required
+
+
+def missing_research_text_shards() -> list[Path]:
+    manifest_path = ROOT / "data/1_preprocessed/research_corpus/metadata/manifest.json"
+    if not manifest_path.exists():
+        return [manifest_path.relative_to(ROOT)]
+
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return [manifest_path.relative_to(ROOT)]
+
+    shards = payload.get("shards")
+    if not isinstance(shards, list):
+        return [manifest_path.relative_to(ROOT)]
+
+    missing: list[Path] = []
+    for shard in shards:
+        if not isinstance(shard, dict):
+            continue
+        data_path = shard.get("data_path")
+        ids_path = shard.get("ids_path")
+        for value in (data_path, ids_path):
+            if isinstance(value, str):
+                path = ROOT / value
+                if not path.exists():
+                    missing.append(path.relative_to(ROOT))
+    return missing
+
+
+def missing_warm_replay_requirements(*, include_genre_adjustment: bool) -> list[Path]:
+    missing = missing_requirements(required_warm_replay_inputs(include_genre_adjustment=include_genre_adjustment))
+    if include_genre_adjustment:
+        for path in missing_research_text_shards():
+            if path not in missing:
+                missing.append(path)
+    return missing
 
 
 def canonical_exists(output_dir: Path) -> bool:
@@ -147,13 +209,25 @@ def print_status(output_dir: Path) -> None:
     print(f"Project root: {ROOT}")
     print(f"Canonical output dir: {output_dir}")
 
-    warm_missing = missing_requirements(WARM_REPLAY_REQUIREMENTS)
+    warm_missing = missing_warm_replay_requirements(include_genre_adjustment=False)
     print("")
     print("Warm replay readiness:")
     if warm_missing:
         print("  ready: no")
         for path in warm_missing:
             print(f"  missing: {rel(ROOT / path)}")
+    else:
+        print("  ready: yes")
+
+    warm_genre_missing = missing_warm_replay_requirements(include_genre_adjustment=True)
+    print("")
+    print("Warm replay + genre-adjustment readiness:")
+    if warm_genre_missing:
+        print("  ready: no")
+        for path in warm_genre_missing[:12]:
+            print(f"  missing: {rel(ROOT / path)}")
+        if len(warm_genre_missing) > 12:
+            print(f"  ... and {len(warm_genre_missing) - 12} more")
     else:
         print("  ready: yes")
 
@@ -258,7 +332,7 @@ def run_warm_replay(
     include_genre_adjustment: bool,
     include_genre_confidence_checks: bool,
 ) -> None:
-    missing = missing_requirements(WARM_REPLAY_REQUIREMENTS)
+    missing = missing_warm_replay_requirements(include_genre_adjustment=include_genre_adjustment)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Warm replay is not ready. Missing required inputs: {missing_str}")
@@ -300,6 +374,8 @@ def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
 
 
 def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
+    print("WARNING: live-source full-pipeline reruns are not expected to be identical to the frozen data snapshot.")
+    print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
     pre_steps = [
         ("fetch policy", [sys.executable, "code/0_fetch/fetch_policy.py"]),
         ("convert policy manual", [sys.executable, "code/0_fetch/convert_policy_manual.py"]),
@@ -348,6 +424,25 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
     )
 
 
+def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
+    cmd = [sys.executable, "code/data_backup_and_fetch/fetch_data_snapshot.py", "--profile", profile_name]
+    if overwrite_data:
+        cmd.append("--overwrite")
+    run_step(f"fetch data snapshot ({profile_name})", cmd)
+
+
+def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_genre_adjustment: bool) -> None:
+    missing = missing_warm_replay_requirements(include_genre_adjustment=include_genre_adjustment)
+    if not missing:
+        return
+
+    missing_str = ", ".join(rel(ROOT / p) for p in missing[:12])
+    print(f"[info] warm replay inputs missing: {missing_str}")
+    if len(missing) > 12:
+        print(f"[info] ... and {len(missing) - 12} more")
+    run_fetch_data_snapshot(args, profile_name="curated", overwrite_data=(ROOT / "data").exists())
+
+
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
@@ -377,11 +472,14 @@ def main() -> None:
     if args.clean_canon:
         clean_canonical_outputs(output_dir)
 
-    if args.full_pipeline:
+    if args.fetch_data_snapshot:
+        run_fetch_data_snapshot(args, profile_name=args.snapshot_profile, overwrite_data=args.overwrite)
+    elif args.full_pipeline:
         run_full_pipeline(output_dir, args)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
     elif args.warm_replay:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=args.genre_adjustment)
         run_warm_replay(
             output_dir,
             args,

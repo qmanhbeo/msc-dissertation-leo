@@ -8,7 +8,7 @@ Structure:
 - `2_embed/` embeddings, centroids, and scoring producers
 - `3_main_analysis/` coverage, semantic, interaction, and sample-stability analysis
 - `4_visualization/` dissertation figures
+- `data_backup_and_fetch/` operator backup and marker-facing frozen data bootstrap utilities
 - `shared_utils.py` canonical output helpers and shared path utilities
-- `backup_data_snapshot.py` data backup utility
 
 Operator documentation lives in `../README.md`.

@@ -4,19 +4,25 @@ Create and upload a timestamped snapshot of the dissertation data/ directory.
 Adapted from ~/stocks-ecosystem/alpha-research-lab/backup_data_snapshot.py.
 
 Features:
-- creates `dissertation-data-snapshot-YYYY-MM-DD-HHMMSS.tar.zst`
+- creates either:
+  - `dissertation-data-snapshot-YYYY-MM-DD-HHMMSS.tar.zst` for the full profile
+  - `dissertation-data-snapshot-curated-YYYY-MM-DD-HHMMSS.tar.zst` for the curated profile
 - writes a matching `.sha256` checksum file
 - uploads both to Google Drive via `rclone`
 - prunes old local and remote snapshot pairs, keeping the newest N
+- embeds snapshot metadata under `data/_snapshot_metadata/`
 
 Usage:
-    python code/backup_data_snapshot.py
+    python code/data_backup_and_fetch/backup_data_snapshot.py
 
     # dry run — build archive locally, skip upload:
-    python code/backup_data_snapshot.py --no-upload
+    python code/data_backup_and_fetch/backup_data_snapshot.py --no-upload
+
+    # marker-facing replay snapshot without OpenAlex and rebuildable caches:
+    python code/data_backup_and_fetch/backup_data_snapshot.py --profile curated --no-upload
 
     # override remote:
-    python code/backup_data_snapshot.py --remote-root gdrive:some/other/path
+    python code/data_backup_and_fetch/backup_data_snapshot.py --remote-root gdrive:some/other/path
 
 Environment:
     DISSERTATION_SNAPSHOT_REMOTE_ROOT may be used instead of --remote-root.
@@ -30,39 +36,37 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import os
 import re
 import shutil
 import subprocess
 import tarfile
+import tempfile
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 
 import zstandard as zstd
 
+from data_snapshot_profiles import (
+    SNAPSHOT_METADATA_FILE,
+    build_snapshot_metadata,
+    get_snapshot_profile,
+    should_exclude_data_path,
+    snapshot_archive_prefix,
+    write_snapshot_metadata_file,
+)
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-WORKSPACE_ROOT = SCRIPT_DIR.parent           # dissertation root
+WORKSPACE_ROOT = SCRIPT_DIR.parent.parent    # dissertation root
 DEFAULT_KEEP = 7
 DEFAULT_REMOTE_ROOT = "stocks-ecosystem-data-snapshots:dissertation-backup/data-snapshots/"
-
-SNAPSHOT_PREFIX = "dissertation-data-snapshot"
-SNAPSHOT_STEM_RE = re.compile(
-    rf"^{re.escape(SNAPSHOT_PREFIX)}-(\d{{4}}-\d{{2}}-\d{{2}})(?:-(\d{{6}}))?$"
-)
-SNAPSHOT_ARCHIVE_RE = re.compile(
-    rf"^({re.escape(SNAPSHOT_PREFIX)}-(\d{{4}}-\d{{2}}-\d{{2}})(?:-(\d{{6}}))?)\.tar\.zst$"
-)
-SNAPSHOT_CHECKSUM_RE = re.compile(
-    rf"^({re.escape(SNAPSHOT_PREFIX)}-(\d{{4}}-\d{{2}}-\d{{2}})(?:-(\d{{6}}))?)\.tar\.zst\.sha256$"
-)
-
 
 @dataclass(frozen=True)
 class SnapshotPaths:
     snapshot_at: datetime
+    profile_name: str
     archive_path: Path
     checksum_path: Path
 
@@ -72,15 +76,33 @@ def _log(msg: str) -> None:
     print(f"[{ts}] {msg}", flush=True)
 
 
-def _snapshot_name(snapshot_at: datetime) -> str:
-    return f"{SNAPSHOT_PREFIX}-{snapshot_at.strftime('%Y-%m-%d-%H%M%S')}.tar.zst"
+def _snapshot_patterns(profile_name: str) -> tuple[str, re.Pattern[str], re.Pattern[str], re.Pattern[str]]:
+    prefix = snapshot_archive_prefix(profile_name)
+    stem_re = re.compile(rf"^{re.escape(prefix)}-(\d{{4}}-\d{{2}}-\d{{2}})(?:-(\d{{6}}))?$")
+    archive_re = re.compile(
+        rf"^({re.escape(prefix)}-(\d{{4}}-\d{{2}}-\d{{2}})(?:-(\d{{6}}))?)\.tar\.zst$"
+    )
+    checksum_re = re.compile(
+        rf"^({re.escape(prefix)}-(\d{{4}}-\d{{2}}-\d{{2}})(?:-(\d{{6}}))?)\.tar\.zst\.sha256$"
+    )
+    return prefix, stem_re, archive_re, checksum_re
 
 
-def _snapshot_paths(output_dir: Path, snapshot_at: datetime) -> SnapshotPaths:
-    archive_name = _snapshot_name(snapshot_at)
+def _snapshot_name(profile_name: str, snapshot_at: datetime) -> str:
+    prefix = snapshot_archive_prefix(profile_name)
+    return f"{prefix}-{snapshot_at.strftime('%Y-%m-%d-%H%M%S')}.tar.zst"
+
+
+def _snapshot_paths(output_dir: Path, profile_name: str, snapshot_at: datetime) -> SnapshotPaths:
+    archive_name = _snapshot_name(profile_name, snapshot_at)
     archive_path = output_dir / archive_name
     checksum_path = output_dir / f"{archive_name}.sha256"
-    return SnapshotPaths(snapshot_at=snapshot_at, archive_path=archive_path, checksum_path=checksum_path)
+    return SnapshotPaths(
+        snapshot_at=snapshot_at,
+        profile_name=profile_name,
+        archive_path=archive_path,
+        checksum_path=checksum_path,
+    )
 
 
 def _compute_sha256(path: Path) -> str:
@@ -96,7 +118,8 @@ def _write_checksum(archive_path: Path, checksum_path: Path) -> None:
     checksum_path.write_text(f"{digest}  {archive_path.name}\n", encoding="utf-8")
 
 
-def _iter_snapshot_members(source_dir: Path):
+def _iter_snapshot_members(source_dir: Path, profile_name: str):
+    profile = get_snapshot_profile(profile_name)
     if not source_dir.exists():
         raise FileNotFoundError(f"snapshot source directory does not exist: {source_dir}")
     if not source_dir.is_dir():
@@ -106,18 +129,27 @@ def _iter_snapshot_members(source_dir: Path):
 
     yield source_dir
     for root, dirnames, filenames in os.walk(source_dir, topdown=True, followlinks=False):
+        root_path = Path(root)
         dirnames.sort()
         filenames.sort()
-        root_path = Path(root)
 
+        kept_dirnames: list[str] = []
         for dirname in dirnames:
             path = root_path / dirname
+            rel_data_path = path.relative_to(source_dir)
+            if should_exclude_data_path(rel_data_path, profile):
+                continue
+            kept_dirnames.append(dirname)
             if path.is_symlink():
                 raise RuntimeError(f"refusing to snapshot symlink entry: {path}")
             yield path
+        dirnames[:] = kept_dirnames
 
         for filename in filenames:
             path = root_path / filename
+            rel_data_path = path.relative_to(source_dir)
+            if should_exclude_data_path(rel_data_path, profile):
+                continue
             if path.is_symlink():
                 raise RuntimeError(f"refusing to snapshot symlink entry: {path}")
             if not path.is_file():
@@ -125,25 +157,36 @@ def _iter_snapshot_members(source_dir: Path):
             yield path
 
 
-def _build_archive(source_dir: Path, archive_path: Path, *, zstd_level: int = 9) -> None:
+def _build_archive(source_dir: Path, archive_path: Path, *, profile_name: str, zstd_level: int = 9) -> None:
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = archive_path.with_suffix(archive_path.suffix + ".tmp")
     if tmp_path.exists():
         tmp_path.unlink()
 
     _log(f"building archive {archive_path.name} from {source_dir}")
+    snapshot_version = archive_path.name.removesuffix(".tar.zst")
+    metadata_payload = build_snapshot_metadata(
+        workspace_root=WORKSPACE_ROOT,
+        source_dir=source_dir,
+        profile=get_snapshot_profile(profile_name),
+        snapshot_version=snapshot_version,
+    )
     compressor = zstd.ZstdCompressor(level=zstd_level, threads=-1)
-    with tmp_path.open("wb") as raw:
-        with compressor.stream_writer(raw) as compressed:
-            with tarfile.open(fileobj=compressed, mode="w|") as tf:
-                for path in _iter_snapshot_members(source_dir):
-                    arcname = Path("data") if path == source_dir else Path("data") / path.relative_to(source_dir)
-                    tf.add(path, arcname=str(arcname), recursive=False)
+    with tempfile.TemporaryDirectory(prefix="snapshot-meta-", dir=str(WORKSPACE_ROOT)) as tmpdir:
+        metadata_path = Path(tmpdir) / SNAPSHOT_METADATA_FILE.name
+        write_snapshot_metadata_file(metadata_path, metadata_payload)
+        with tmp_path.open("wb") as raw:
+            with compressor.stream_writer(raw) as compressed:
+                with tarfile.open(fileobj=compressed, mode="w|") as tf:
+                    for path in _iter_snapshot_members(source_dir, profile_name):
+                        arcname = Path("data") if path == source_dir else Path("data") / path.relative_to(source_dir)
+                        tf.add(path, arcname=str(arcname), recursive=False)
+                    tf.add(metadata_path, arcname=str(Path("data") / SNAPSHOT_METADATA_FILE), recursive=False)
     tmp_path.replace(archive_path)
 
 
-def _snapshot_sort_key_from_stem(stem: str) -> datetime | None:
-    m = SNAPSHOT_STEM_RE.fullmatch(stem)
+def _snapshot_sort_key_from_stem(stem: str, stem_re: re.Pattern[str]) -> datetime | None:
+    m = stem_re.fullmatch(stem)
     if not m:
         return None
     day = date.fromisoformat(m.group(1))
@@ -153,39 +196,46 @@ def _snapshot_sort_key_from_stem(stem: str) -> datetime | None:
     return datetime.combine(day, datetime.min.time())
 
 
-def _snapshot_group_info(path: Path) -> tuple[str, datetime] | None:
-    m = SNAPSHOT_ARCHIVE_RE.fullmatch(path.name)
+def _snapshot_group_info(
+    path: Path,
+    *,
+    stem_re: re.Pattern[str],
+    archive_re: re.Pattern[str],
+    checksum_re: re.Pattern[str],
+) -> tuple[str, datetime] | None:
+    m = archive_re.fullmatch(path.name)
     if m:
         stem = m.group(1)
-        sort_key = _snapshot_sort_key_from_stem(stem)
+        sort_key = _snapshot_sort_key_from_stem(stem, stem_re)
         if sort_key is not None:
             return stem, sort_key
-    m = SNAPSHOT_CHECKSUM_RE.fullmatch(path.name)
+    m = checksum_re.fullmatch(path.name)
     if m:
         stem = m.group(1)
-        sort_key = _snapshot_sort_key_from_stem(stem)
+        sort_key = _snapshot_sort_key_from_stem(stem, stem_re)
         if sort_key is not None:
             return stem, sort_key
     return None
 
 
-def _local_snapshot_groups(root: Path) -> dict[str, dict]:
+def _local_snapshot_groups(root: Path, profile_name: str) -> dict[str, dict]:
+    _, stem_re, archive_re, checksum_re = _snapshot_patterns(profile_name)
     groups: dict[str, dict] = {}
     for path in root.iterdir():
-        info = _snapshot_group_info(path)
+        info = _snapshot_group_info(path, stem_re=stem_re, archive_re=archive_re, checksum_re=checksum_re)
         if info is None:
             continue
         stem, sort_key = info
         bucket = groups.setdefault(stem, {"sort_key": sort_key})
-        if SNAPSHOT_ARCHIVE_RE.fullmatch(path.name):
+        if archive_re.fullmatch(path.name):
             bucket["archive"] = path
-        elif SNAPSHOT_CHECKSUM_RE.fullmatch(path.name):
+        elif checksum_re.fullmatch(path.name):
             bucket["checksum"] = path
     return groups
 
 
-def _prune_local_snapshots(root: Path, keep: int) -> list[Path]:
-    groups = _local_snapshot_groups(root)
+def _prune_local_snapshots(root: Path, profile_name: str, keep: int) -> list[Path]:
+    groups = _local_snapshot_groups(root, profile_name)
     ordered_stems = sorted(groups.keys(), key=lambda stem: groups[stem]["sort_key"], reverse=True)
     removed: list[Path] = []
     for stem in ordered_stems[keep:]:
@@ -235,28 +285,36 @@ def _upload_snapshot(remote_root: str, snapshot: SnapshotPaths) -> None:
     _run_rclone("copyto", str(snapshot.checksum_path), _remote_join(remote_root, snapshot.checksum_path.name))
 
 
-def _remote_snapshot_groups(remote_root: str) -> dict[str, dict]:
+def _remote_snapshot_groups(remote_root: str, profile_name: str) -> dict[str, dict]:
+    _, stem_re, archive_re, checksum_re = _snapshot_patterns(profile_name)
     result = _run_rclone("lsjson", remote_root)
+    import json
+
     entries = json.loads(result.stdout or "[]")
     groups: dict[str, dict] = {}
     for entry in entries:
         if not isinstance(entry, dict):
             continue
         name = str(entry.get("Name") or entry.get("Path") or "").strip()
-        info = _snapshot_group_info(Path(name))
+        info = _snapshot_group_info(
+            Path(name),
+            stem_re=stem_re,
+            archive_re=archive_re,
+            checksum_re=checksum_re,
+        )
         if info is None:
             continue
         stem, sort_key = info
         bucket = groups.setdefault(stem, {"sort_key": sort_key})
-        if SNAPSHOT_ARCHIVE_RE.fullmatch(name):
+        if archive_re.fullmatch(name):
             bucket["archive"] = name
-        elif SNAPSHOT_CHECKSUM_RE.fullmatch(name):
+        elif checksum_re.fullmatch(name):
             bucket["checksum"] = name
     return groups
 
 
-def _prune_remote_snapshots(remote_root: str, keep: int) -> list[str]:
-    groups = _remote_snapshot_groups(remote_root)
+def _prune_remote_snapshots(remote_root: str, profile_name: str, keep: int) -> list[str]:
+    groups = _remote_snapshot_groups(remote_root, profile_name)
     ordered_stems = sorted(groups.keys(), key=lambda stem: groups[stem]["sort_key"], reverse=True)
     removed: list[str] = []
     for stem in ordered_stems[keep:]:
@@ -272,11 +330,12 @@ def _create_snapshot(
     *,
     source_dir: Path,
     output_dir: Path,
+    profile_name: str,
     snapshot_at: datetime,
     zstd_level: int,
 ) -> SnapshotPaths:
-    snapshot = _snapshot_paths(output_dir, snapshot_at)
-    _build_archive(source_dir, snapshot.archive_path, zstd_level=zstd_level)
+    snapshot = _snapshot_paths(output_dir, profile_name, snapshot_at)
+    _build_archive(source_dir, snapshot.archive_path, profile_name=profile_name, zstd_level=zstd_level)
     _write_checksum(snapshot.archive_path, snapshot.checksum_path)
     return snapshot
 
@@ -300,6 +359,12 @@ def main() -> None:
         type=str,
         default=os.environ.get("DISSERTATION_SNAPSHOT_REMOTE_ROOT", DEFAULT_REMOTE_ROOT),
         help=f"rclone destination, e.g. {DEFAULT_REMOTE_ROOT}",
+    )
+    ap.add_argument(
+        "--profile",
+        choices=["full", "curated"],
+        default="full",
+        help="Snapshot profile. 'full' preserves the literal data/ tree. 'curated' excludes large rebuildable caches.",
     )
     ap.add_argument(
         "--keep",
@@ -343,23 +408,25 @@ def main() -> None:
     snapshot = _create_snapshot(
         source_dir=args.source_dir.resolve(),
         output_dir=args.output_dir.resolve(),
+        profile_name=args.profile,
         snapshot_at=snapshot_at,
         zstd_level=args.zstd_level,
     )
 
     if not args.no_upload:
         _upload_snapshot(args.remote_root, snapshot)
-        removed_remote = _prune_remote_snapshots(args.remote_root, args.keep)
+        removed_remote = _prune_remote_snapshots(args.remote_root, args.profile, args.keep)
         if removed_remote:
             _log(f"pruned remote snapshot files: {removed_remote}")
 
-    removed_local = _prune_local_snapshots(args.output_dir.resolve(), args.keep)
+    removed_local = _prune_local_snapshots(args.output_dir.resolve(), args.profile, args.keep)
     if removed_local:
         _log(f"pruned local snapshot files: {[str(p) for p in removed_local]}")
 
     _log(
         f"done  archive={snapshot.archive_path.name}  "
         f"checksum={snapshot.checksum_path.name}  "
+        f"profile={args.profile}  "
         f"keep={args.keep}  upload={'yes' if not args.no_upload else 'no'}"
     )
 

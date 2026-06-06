@@ -1,0 +1,49 @@
+{
+  "current_version": "unpublished",
+  "profiles": {
+    "curated": {
+      "version": "unpublished",
+      "url": "",
+      "sha256": "",
+      "expected_repo_paths": [
+        "data/2_embedded/policy.npy",
+        "data/2_embedded/metadata/policy_ids.json",
+        "data/2_embedded/osdg.npy",
+        "data/2_embedded/benchmark.npy",
+        "data/2_embedded/research_shards/metadata/manifest.json",
+        "data/3_scored/sdg_centroids.npy",
+        "data/3_scored/paper_scores_shards/metadata/manifest.json",
+        "data/1_preprocessed/policy_all/policy_chunks_all.jsonl",
+        "data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json",
+        "data/1_preprocessed/research_corpus/metadata/manifest.json",
+        "data/1_preprocessed/research_corpus/part-00001.jsonl"
+      ],
+      "notes": [
+        "Default marker-facing replay snapshot.",
+        "Excludes raw OpenAlex fetch artifacts and large rebuildable caches."
+      ]
+    },
+    "full": {
+      "version": "unpublished",
+      "url": "",
+      "sha256": "",
+      "expected_repo_paths": [
+        "data/2_embedded/policy.npy",
+        "data/2_embedded/metadata/policy_ids.json",
+        "data/2_embedded/osdg.npy",
+        "data/2_embedded/benchmark.npy",
+        "data/2_embedded/research_shards/metadata/manifest.json",
+        "data/3_scored/sdg_centroids.npy",
+        "data/3_scored/paper_scores_shards/metadata/manifest.json",
+        "data/1_preprocessed/policy_all/policy_chunks_all.jsonl",
+        "data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json",
+        "data/1_preprocessed/research_corpus/metadata/manifest.json",
+        "data/1_preprocessed/research_corpus/part-00001.jsonl",
+        "data/0_raw/openalex/artifact/metadata.json"
+      ],
+      "notes": [
+        "Literal data/ snapshot including raw OpenAlex and rebuildable caches."
+      ]
+    }
+  }
+}

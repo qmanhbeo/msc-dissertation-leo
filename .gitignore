@@ -77,7 +77,9 @@ checkpoints/
 *.temp
 *.bak
 *backup*
-!code/backup_data_snapshot.py
+!code/data_backup_and_fetch/
+!code/data_backup_and_fetch/**
+code/data_backup_and_fetch/__pycache__/
 .temp/
 
 # Data snapshot archives (backed up to Google Drive via backup_data_snapshot.py)

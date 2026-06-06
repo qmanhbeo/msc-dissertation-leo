@@ -27,6 +27,18 @@ Rebuild the canonical analysis package and PDF from existing `data/`:
 python main.py --warm-replay --overwrite
 ```
 
+Fetch the frozen marker-facing data snapshot into `data/`:
+
+```bash
+python code/data_backup_and_fetch/fetch_data_snapshot.py --profile curated
+```
+
+Equivalent entrypoint through `main.py`:
+
+```bash
+python main.py --fetch-data-snapshot --snapshot-profile curated --overwrite
+```
+
 Refresh the active policy corpus snapshot, fully re-embed policy chunks, and re-score policy against the current centroids:
 
 ```bash
@@ -96,6 +108,8 @@ Important behavior:
 - mutation requires an explicit action flag
 - if canonical artifacts already exist, reruns fail closed unless `--overwrite` is supplied
 - `--output-dir` can redirect the canonical output root, but the default contract is `outputs/`
+- if `--warm-replay` is requested and required snapshot inputs are missing, `main.py` will try to bootstrap the curated frozen snapshot automatically
+- `--fetch-data-snapshot` is the explicit marker-facing bootstrap action; it is separate from the operator backup utility
 - `--warm-replay` and `--full-pipeline` run sample stability by default; use `--skip-sample-stability` only when the existing sample-stability artifacts are already present and should be reused
 - `--refresh-policy-corpus` is the canonical response to any policy-corpus change; it rebuilds `policy_chunks_all`, fully re-embeds `policy`, and refreshes policy scoring without touching `osdg`, `benchmark`, or the research shard embeddings
 - `--genre-adjustment` is additive only: it does not replace the canonical raw semantic-gap outputs, and it exists as an appendix-style robustness suite
@@ -106,6 +120,19 @@ Important behavior:
 ## Reproducibility Contract
 
 Warm replay is the primary reproducibility target.
+
+Marker-facing replay flow:
+
+```bash
+python code/data_backup_and_fetch/fetch_data_snapshot.py --profile curated
+python main.py --warm-replay --overwrite
+```
+
+For the appendix robustness suite as well:
+
+```bash
+python main.py --warm-replay --genre-adjustment --overwrite
+```
 
 Assumed existing inputs:
 - hydrated `data/0_raw/` through `data/3_scored/`
@@ -119,6 +146,19 @@ Policy-specific reproducibility rule:
 - append-only policy embedding is intentionally unsupported; `data/2_embedded/policy.npy` should always be a full embedding of the active `policy_chunks_all` snapshot
 
 `data/` and `outputs/` are intentionally not tracked in Git. A stranger can verify pipeline logic from source, but must hydrate `data/` before replaying the canon.
+
+Snapshot profiles:
+- `curated` is the default marker-facing replay snapshot; it preserves warm-replay and genre-adjustment inputs but excludes raw OpenAlex fetch artifacts and large rebuildable caches
+- `full` is the literal `data/` snapshot, including rebuildable caches and raw OpenAlex artifacts
+
+Reproducibility boundaries:
+- replay from the frozen snapshot should reproduce the frozen active pipeline outputs
+- a live-source `--full-pipeline` rerun is not claimed to be identical to the frozen snapshot
+- the main reasons are OpenAlex updates, drifting scraper links, and the manual policy supplement
+
+Manual policy provenance:
+- the manual policy supplement is preserved in the snapshot by document inventory rather than stable source URLs
+- the inventory is written into `data/_snapshot_metadata/snapshot_manifest.json`
 
 ## Canonical Outputs
 
@@ -188,7 +228,7 @@ Policy / benchmark side:
 1. fetch policy sources
 2. convert manually downloaded policy PDFs into text, when present
 3. run the policy-source preprocess stage under `code/1_preprocess/policy/`
-4. build `policy_scrape`, `sdgi_corpus`, and `ungdc_sdg` source corpora, with `policy_scrape` and `policy_manual` handled together inside `0_preprocess_policy.py`
+4. build `policy_scrape`, `policy_manual`, `sdgi_corpus`, and `ungdc_sdg` source corpora, with `policy_scrape` and `policy_manual` produced by the same preprocessing stage but written to separate source folders
 5. merge policy sources into `data/1_preprocessed/policy_all/policy_chunks_all.jsonl`
 6. embed `policy`, `osdg`, and `benchmark`
 7. build SDG centroids
