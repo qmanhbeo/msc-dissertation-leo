@@ -154,7 +154,7 @@ def document_weighted_policy_profile(
         # ASSUMPTION (A-DOC-MEAN): Averaging chunk scores assumes all chunks of a document
         # are equally representative. Long introductions and appendices contribute the same as
         # substantive body text. A weighted average by chunk word count would be more precise
-        # but requires loading word_count from policy_chunks_extended.jsonl. The current
+        # but requires loading word_count from policy_chunks_all.jsonl. The current
         # approach is conservative and avoids introducing another assumption about weights.
         doc_vec = policy_scores[row_idxs].mean(axis=0)   # (17,)
         doc_vectors[d_idx] = doc_vec

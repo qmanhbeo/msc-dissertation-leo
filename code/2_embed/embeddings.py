@@ -5,7 +5,7 @@ Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for 
        Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
 
 Inputs:
-  data/1_preprocessed/policy_all/policy_chunks_extended.jsonl        (policy chunks, field: text)
+  data/1_preprocessed/policy_all/policy_chunks_all.jsonl        (policy chunks, field: text)
   data/1_preprocessed/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
   data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
 
@@ -37,7 +37,7 @@ METADATA_DIR = OUTPUT_DIR / "metadata"
 CORPORA = [
     {
         "name": "policy",
-        "input": Path("data/1_preprocessed/policy_all/policy_chunks_extended.jsonl"),
+        "input": Path("data/1_preprocessed/policy_all/policy_chunks_all.jsonl"),
         "text_field": "text",
         "id_field": "chunk_id",
         "sdg_field": None,

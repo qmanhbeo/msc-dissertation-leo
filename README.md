@@ -167,11 +167,13 @@ Interpretation status of the genre suite:
 ## Active Pipeline
 
 Policy / benchmark side:
-1. fetch policy, SDGi, UNGDC, OSDG, and benchmark sources
-2. preprocess and merge the policy corpus
-3. embed `policy`, `osdg`, and `benchmark`
-4. build SDG centroids
-5. validate centroids against the benchmark
+1. fetch policy sources
+2. convert manually downloaded policy PDFs into text, when present
+3. preprocess `policy_scrape` and `policy_manual` into source-specific chunk corpora
+4. merge policy sources into `data/1_preprocessed/policy_all/policy_chunks_all.jsonl`
+5. embed `policy`, `osdg`, and `benchmark`
+6. build SDG centroids
+7. validate centroids against the benchmark
 
 Research side:
 1. fetch OpenAlex works

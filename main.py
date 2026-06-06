@@ -28,7 +28,8 @@ WARM_REPLAY_REQUIREMENTS = [
     Path("data/2_embedded/research_shards/metadata/manifest.json"),
     Path("data/3_scored/sdg_centroids.npy"),
     Path("data/3_scored/paper_scores_shards/metadata/manifest.json"),
-    Path("data/1_preprocessed/policy_all/policy_chunks_extended.jsonl"),
+    Path("data/1_preprocessed/policy_all/policy_chunks_all.jsonl"),
+    Path("data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
     Path("writing/dissertation.tex"),
     Path("writing/references.bib"),
 ]
@@ -268,8 +269,8 @@ def run_warm_replay(
 
 def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
     pre_steps = [
-        ("fetch un sdg", [sys.executable, "code/0_fetch/fetch_un_sdg.py"]),
         ("fetch policy", [sys.executable, "code/0_fetch/fetch_policy.py"]),
+        ("convert policy manual", [sys.executable, "code/0_fetch/convert_policy_manual.py"]),
         ("fetch sdgi corpus", [sys.executable, "code/0_fetch/fetch_sdgi_corpus.py"]),
         ("fetch ungdc", [sys.executable, "code/0_fetch/fetch_ungdc.py"]),
         ("preprocess policy", [sys.executable, "code/1_preprocess/preprocess_policy.py"]),

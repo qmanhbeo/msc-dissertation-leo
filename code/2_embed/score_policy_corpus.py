@@ -4,7 +4,7 @@ Materialize active policy scoring artifacts used by downstream analysis.
 Inputs:
   data/2_embedded/policy.npy
   data/2_embedded/metadata/policy_ids.json
-  data/1_preprocessed/policy_all/policy_chunks_extended.jsonl
+  data/1_preprocessed/policy_all/policy_chunks_all.jsonl
   data/3_scored/sdg_centroids.npy
   data/3_scored/research_centroids.npy
 
@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Score the active policy corpus against SDG and research centroids.")
     p.add_argument("--policy-emb", default="data/2_embedded/policy.npy")
     p.add_argument("--policy-ids", default="data/2_embedded/metadata/policy_ids.json")
-    p.add_argument("--policy-corpus", default="data/1_preprocessed/policy_all/policy_chunks_extended.jsonl")
+    p.add_argument("--policy-corpus", default="data/1_preprocessed/policy_all/policy_chunks_all.jsonl")
     p.add_argument("--sdg-centroids", default="data/3_scored/sdg_centroids.npy")
     p.add_argument("--research-centroids", default="data/3_scored/research_centroids.npy")
     p.add_argument("--policy-scores-out", default="data/3_scored/policy_scores.npy")
