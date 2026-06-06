@@ -3,8 +3,7 @@ Compute intra-SDG semantic gap between research and policy corpora.
 
 The semantic gap measures whether research and policy texts assigned to the *same* SDG are
 semantically similar to each other. A large semantic gap on SDG j means that even though both
-corpora discuss SDG j, they do so in different semantic registers — the research and policy
-communities are "talking past each other" within that SDG.
+corpora discuss SDG j, they do so in materially different semantic framings within that SDG.
 
 Method:
   For each SDG j:
@@ -49,251 +48,65 @@ Minimum cluster size:
 Inputs:
   data/3_scored/research_centroids.npy       (17, 384)    float32
   data/3_scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
-  data/3_scored/policy_scores.npy            (47005, 17)  float32
+  data/3_scored/policy_scores.npy            float32 matrix with one row per policy chunk
   data/3_scored/metadata/policy_scores_ids.json       list of {id, source_doc}
-  data/2_embedded/policy.npy        (47005, 384) float32, L2-normalised
+  data/2_embedded/policy.npy                 float32 matrix with one row per policy chunk
 
 Outputs:
   outputs/sdg_conceptual_alignment_cosine_distances.json              primary: semantic gap per SDG (CHUNK_CAP=50)
   outputs/robustness_check_semantic_distances_by_chunk_cap.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
   outputs/tables/*.tex                   generated LaTeX macros/tables
 
-Run from project root (after coverage_gap.py):
-    python code/3_main_analysis/semantic_gap.py
+Run from project root:
+    python code/3_main_analysis/canonical/1_semantic_gap.py
 """
 
-import json
 import logging
-import numpy as np
 import argparse
+import json
 import sys
-from collections import defaultdict
 from pathlib import Path
-ROOT = Path(__file__).resolve().parents[2]
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = ROOT / "code"
-if str(CODE_ROOT) not in sys.path:
-    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
+SHARED_DIR = ANALYSIS_ROOT / "shared"
+for path in (CODE_ROOT, SHARED_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
 from shared_utils import ensure_canonical_outputs
+from semantic_gap_shared import (
+    CHUNK_CAP_PRIMARY,
+    CHUNK_CAP_SENS_HI,
+    CHUNK_CAP_SENS_LO,
+    MIN_CLUSTER_SIZE,
+    N_SDG,
+    POLICY_EMB,
+    POLICY_IDS,
+    POLICY_SCORES,
+    RANDOM_SEED,
+    RESEARCH_CENTROID_META,
+    RESEARCH_CENTROIDS,
+    build_sub_centroid,
+    cap_policy_indices_per_doc,
+    compute_sdg_semantic_gaps,
+    get_cluster_assignments,
+    load_json,
+)
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-SCORED_DIR     = Path("data/3_scored")
-EMBEDDINGS_DIR = Path("data/2_embedded")
 DEFAULT_OUTPUT_ROOT = Path("outputs")
-
-POLICY_SCORES = SCORED_DIR / "policy_scores.npy"
-POLICY_IDS    = SCORED_DIR / "metadata" / "policy_scores_ids.json"
-POLICY_EMB    = EMBEDDINGS_DIR / "policy.npy"
-RESEARCH_CENTROIDS = SCORED_DIR / "research_centroids.npy"
-RESEARCH_CENTROID_META = SCORED_DIR / "metadata" / "research_centroid_meta.json"
-
-N_SDG = 17
-
-# Per-document chunk cap for policy clusters. See docstring.
-CHUNK_CAP_PRIMARY  = 50
-CHUNK_CAP_SENS_LO  = 20
-CHUNK_CAP_SENS_HI  = 100
-
-# Minimum items in research OR policy cluster for a reliable gap estimate.
-# SDGs below this threshold in either corpus are flagged as unreliable.
-MIN_CLUSTER_SIZE = 10
-
-# Random seed for chunk cap sampling (ensures reproducibility).
-RANDOM_SEED = 42
 
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-# Utilities
-# ---------------------------------------------------------------------------
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def get_cluster_assignments(scores: np.ndarray) -> np.ndarray:
-    """Return hard SDG assignment (0..16) for each item."""
-    return scores.argmax(axis=1)
-
-
-def build_sub_centroid(emb: np.ndarray, idxs: list[int]) -> tuple[np.ndarray | None, float]:
-    """
-    Compute L2-normalised sub-centroid for a set of row indices into `emb`.
-
-    Returns (unit_centroid, cohesion) or (None, 0.0) if idxs is empty or near-zero norm.
-    cohesion = mean cosine sim of member vectors to the unit centroid = raw centroid norm
-               (mathematically equivalent for unit input vectors).
-    """
-    if len(idxs) == 0:
-        return None, 0.0
-
-    vecs = emb[idxs]   # (n, D) — L2-normalised inputs
-    raw = vecs.mean(axis=0)
-    norm = float(np.linalg.norm(raw))
-
-    if norm < 1e-8:
-        return None, 0.0
-
-    unit = (raw / norm).astype(np.float32)
-    cohesion = float((vecs @ unit).mean())   # = norm for unit inputs
-    return unit, cohesion
-
-
-def cap_policy_indices_per_doc(
-    policy_idxs: list[int],
-    policy_ids: list[dict],
-    chunk_cap: int,
-    rng: np.random.Generator,
-) -> list[int]:
-    """
-    Apply per-document chunk cap to a list of policy chunk indices.
-
-    Groups indices by source_doc and samples at most `chunk_cap` per document.
-
-    Args:
-        policy_idxs: row indices into policy_emb for chunks assigned to this SDG.
-        policy_ids:  full policy IDs list (length = total policy corpus size).
-        chunk_cap:   maximum chunks per source_doc.
-        rng:         seeded numpy random generator for reproducibility.
-
-    Returns:
-        Filtered list of indices with at most `chunk_cap` per source_doc.
-
-    ASSUMPTION (A-CHUNKCAT-SAMPLE): Random sampling without replacement is used when a
-    document exceeds the cap. All chunks in a document are equally informative (no ordering
-    preference). This may undersample the most substantive body text if a document's
-    introductory chunks (lower indices) are less informative than its body. The alternative
-    — max-marginal relevance sampling — would be more principled but adds complexity. For a
-    sub-centroid computation, random sampling is sufficient.
-    """
-    doc_to_idxs: dict[str, list[int]] = defaultdict(list)
-    for i in policy_idxs:
-        doc_to_idxs[policy_ids[i]["source_doc"]].append(i)
-
-    result = []
-    for doc_idxs in doc_to_idxs.values():
-        if len(doc_idxs) <= chunk_cap:
-            result.extend(doc_idxs)
-        else:
-            # Sample without replacement.
-            sampled = rng.choice(doc_idxs, size=chunk_cap, replace=False).tolist()
-            result.extend(sampled)
-
-    return result
-
-
-def compute_sdg_semantic_gaps(
-    research_centroids: np.ndarray,
-    research_counts: np.ndarray,
-    research_cohesions: np.ndarray,
-    policy_emb: np.ndarray,
-    policy_assignments: np.ndarray,
-    policy_ids: list[dict],
-    chunk_cap: int,
-    rng: np.random.Generator,
-) -> list[dict]:
-    """
-    Compute semantic gap for each SDG (centroid-to-centroid method).
-
-    Returns list of 17 dicts with per-SDG gap metrics.
-    """
-    results = []
-
-    for sdg_idx in range(N_SDG):
-        sdg = sdg_idx + 1
-
-        # Gather cluster indices.
-        policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
-
-        n_papers  = int(research_counts[sdg_idx])
-        n_chunks  = len(policy_idxs)
-
-        # Apply per-document chunk cap to policy side.
-        policy_idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, chunk_cap, rng)
-        n_chunks_capped = len(policy_idxs_capped)
-
-        # Identify unique source_docs in policy cluster (before and after capping).
-        policy_docs_raw    = {policy_ids[i]["source_doc"] for i in policy_idxs}
-        policy_docs_capped = {policy_ids[i]["source_doc"] for i in policy_idxs_capped}
-
-        # Flag unreliable estimates.
-        unreliable_paper  = n_papers < MIN_CLUSTER_SIZE
-        unreliable_policy = n_chunks_capped < MIN_CLUSTER_SIZE
-        unreliable = unreliable_paper or unreliable_policy
-
-        if unreliable:
-            log.warning(
-                "SDG %2d: unreliable gap estimate — n_papers=%d, n_chunks_capped=%d "
-                "(min=%d required for both)",
-                sdg, n_papers, n_chunks_capped, MIN_CLUSTER_SIZE
-            )
-
-        # Build policy sub-centroid and read research centroid pre-computed at scoring stage.
-        res_centroid = research_centroids[sdg_idx]
-        res_cohesion = float(research_cohesions[sdg_idx])
-        pol_centroid, pol_cohesion = build_sub_centroid(policy_emb, policy_idxs_capped)
-
-        if pol_centroid is None or float(np.linalg.norm(res_centroid)) < 1e-8:
-            # Cannot compute gap — one or both clusters are empty or near-zero.
-            log.warning("SDG %2d: could not build sub-centroid (empty cluster)", sdg)
-            results.append({
-                "sdg": sdg,
-                "n_papers": n_papers,
-                "n_policy_chunks": n_chunks,
-                "n_policy_chunks_capped": n_chunks_capped,
-                "n_policy_docs": len(policy_docs_raw),
-                "n_policy_docs_capped": len(policy_docs_capped),
-                "chunk_cap": chunk_cap,
-                "semantic_similarity": None,
-                "semantic_gap": None,
-                "research_cohesion": None,
-                "policy_cohesion": None,
-                "unreliable": True,
-                "unreliable_reason": "empty_cluster",
-            })
-            continue
-
-        # Semantic similarity = cosine sim between research and policy sub-centroids.
-        # Both are unit vectors → dot product = cosine similarity.
-        sim = float(np.dot(res_centroid, pol_centroid))
-        gap = 1.0 - sim
-
-        results.append({
-            "sdg": sdg,
-            "n_papers": n_papers,
-            "n_policy_chunks": n_chunks,
-            "n_policy_chunks_capped": n_chunks_capped,
-            "n_policy_docs": len(policy_docs_raw),
-            "n_policy_docs_capped": len(policy_docs_capped),
-            "chunk_cap": chunk_cap,
-            "semantic_similarity": round(sim, 6),
-            "semantic_gap": round(gap, 6),
-            "research_cohesion": round(res_cohesion, 6),
-            "policy_cohesion": round(pol_cohesion, 6),
-            "unreliable": unreliable,
-            "unreliable_reason": (
-                "n_papers_too_small" if unreliable_paper
-                else "n_policy_chunks_too_small" if unreliable_policy
-                else None
-            ),
-        })
-
-        level = logging.WARNING if unreliable else logging.INFO
-        log.log(level,
-            "SDG %2d | n_papers=%4d | n_chunks=%5d→%4d (cap=%d) | "
-            "n_docs=%4d | sim=%.4f | gap=%.4f%s",
-            sdg, n_papers, n_chunks, n_chunks_capped, chunk_cap,
-            len(policy_docs_capped), sim, gap,
-            " [UNRELIABLE]" if unreliable else ""
-        )
-
-    return results
 
 
 # ---------------------------------------------------------------------------
@@ -328,7 +141,7 @@ def main() -> None:
     research_cohesions = np.array([float(r["mean_cos_to_centroid"]) for r in research_meta], dtype=np.float32)
 
     log.info("Loading policy embeddings: %s", POLICY_EMB)
-    policy_emb = np.load(POLICY_EMB)   # (47005, 384)
+    policy_emb = np.load(POLICY_EMB)
     policy_ids = load_json(POLICY_IDS)
 
     # ---- Load score matrices for cluster assignments ----
@@ -446,7 +259,7 @@ def main() -> None:
     log.info("Saved: %s", out_sem_sens)
 
     log.info("")
-    log.info("Next step: python code/3_main_analysis/coverage_semantic_interaction.py")
+    log.info("Next step: python code/3_main_analysis/canonical/2_coverage_semantic_interaction.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {
@@ -487,7 +300,7 @@ def main() -> None:
 
     # num_semantic.tex — macro definitions
     num_lines = [
-        "% Auto-generated by code/semantic_gap.py — do not edit manually",
+        "% Auto-generated by code/3_main_analysis/canonical/1_semantic_gap.py — do not edit manually",
         rf"\newcommand{{\MeanSemanticGap}}{{{mean_gap:.3f}}}",
         rf"\newcommand{{\MedianSemanticGap}}{{{median_gap:.3f}}}",
         rf"\newcommand{{\SemanticGapRange}}{{{max(valid_gaps) - min(valid_gaps):.3f}}}",

@@ -72,9 +72,9 @@ python main.py --genre-adjustment --overwrite --skip-genre-confidence-checks
 Run only the new SDG-aware genre robustness methods inside the stage from the script CLI:
 
 ```bash
-python code/3_main_analysis/genre_adjustment.py --method sdg_balanced
-python code/3_main_analysis/genre_adjustment.py --method within_sdg
-python code/3_main_analysis/genre_adjustment.py --method both
+python code/3_main_analysis/robustness/1_genre_adjustment.py --method sdg_balanced
+python code/3_main_analysis/robustness/1_genre_adjustment.py --method within_sdg
+python code/3_main_analysis/robustness/1_genre_adjustment.py --method both
 ```
 
 Build only the canonical PDF from existing canonical tables and figures:
@@ -240,6 +240,9 @@ Active source:
   Research subchain: `research/0_embed_paper_shards.py`, `research/1_score_paper_shards.py`
   Policy subchain: `policy/0_score_policy_corpus.py`
 - `code/3_main_analysis/`
+  Canonical chain: `canonical/0_coverage_gap.py`, `canonical/1_semantic_gap.py`, `canonical/2_coverage_semantic_interaction.py`
+  Robustness chain: `robustness/0_sample_stability.py`, `robustness/1_genre_adjustment.py`
+  Shared helpers: `shared/`
 - `code/4_visualization/`
 - `code/shared_utils.py`
 - `writing/dissertation.tex`
@@ -1212,7 +1215,7 @@ If you want to connect the explanation above to the codebase, the project is lai
 - `code/0_fetch/`: data collection scripts
 - `code/1_preprocess/`: cleaning, filtering, merging, and chunking
 - `code/2_embed/`: embeddings, SDG centroids, scoring, and validation
-- `code/3_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
+- `code/3_main_analysis/`: canonical main-text analysis in `canonical/`, appendix robustness in `robustness/`, and shared helper logic in `shared/`
 - `code/4_visualization/`: final plots
 - `writing/dissertation.tex`: the paper itself
 - `outputs/`: the canonical results, tables, figures, and final PDF

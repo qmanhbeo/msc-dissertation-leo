@@ -228,12 +228,12 @@ def run_sample_stability(output_dir: Path) -> None:
     )
     run_step(
         "sample stability",
-        [sys.executable, "code/3_main_analysis/sample_stability.py", "--output-dir", str(output_dir)],
+        [sys.executable, "code/3_main_analysis/robustness/0_sample_stability.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
-    cmd = [sys.executable, "code/3_main_analysis/genre_adjustment.py", "--output-dir", str(output_dir)]
+    cmd = [sys.executable, "code/3_main_analysis/robustness/1_genre_adjustment.py", "--output-dir", str(output_dir)]
     if not include_genre_confidence_checks:
         cmd.append("--skip-genre-confidence-checks")
     cmd.extend(["--method", args.sdg_genre_method])
@@ -267,11 +267,11 @@ def run_warm_replay(
     run_step("validate centroids", [sys.executable, "code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
     run_step("rebuild research centroids", [sys.executable, "code/2_embed/research/1_score_paper_shards.py"])
     run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
-    run_step("coverage gap", [sys.executable, "code/3_main_analysis/coverage_gap.py", "--output-dir", str(output_dir)])
-    run_step("semantic gap", [sys.executable, "code/3_main_analysis/semantic_gap.py", "--output-dir", str(output_dir)])
+    run_step("coverage gap", [sys.executable, "code/3_main_analysis/canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
+    run_step("semantic gap", [sys.executable, "code/3_main_analysis/canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
     run_step(
         "coverage semantic interaction",
-        [sys.executable, "code/3_main_analysis/coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
+        [sys.executable, "code/3_main_analysis/canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
     )
     run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
