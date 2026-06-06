@@ -10,21 +10,24 @@ Inputs:
   data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
 
 Outputs per corpus:
-  <name>.npy       float32 matrix (n_texts, 768)
+  <name>.npy       float32 matrix (n_texts, 384 for all-MiniLM-L6-v2)
   data/2_embedded/metadata/<name>_ids.json  list of dicts with id, sdg (where available), text_field
 
-Idempotent: skips a corpus if its .npy already exists (delete to re-embed).
+Idempotent by default: skips a corpus if its .npy already exists.
+Use --overwrite to replace selected corpus artifacts.
 
 Run from project root:
-    python code/2_embed/embeddings.py
+    python code/2_embed/reference/0_embed_reference_corpora.py
+    python code/2_embed/reference/0_embed_reference_corpora.py --corpora policy --overwrite
+    python code/2_embed/reference/0_embed_reference_corpora.py --corpora policy --overwrite --local-files-only
 """
 
+import argparse
 import json
 import logging
 import numpy as np
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 # ---------------------------------------------------------------------------
 # Config
@@ -66,19 +69,40 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Helpers
+# CLI / Helpers
 # ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Embed the active non-sharded corpora.")
+    parser.add_argument(
+        "--corpora",
+        nargs="+",
+        choices=[corpus["name"] for corpus in CORPORA],
+        help="Optional subset of corpora to embed. Default: all corpora.",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing embedding and metadata files for the selected corpora.",
+    )
+    parser.add_argument(
+        "--local-files-only",
+        action="store_true",
+        help="Load the sentence-transformer model from the local Hugging Face cache only.",
+    )
+    return parser.parse_args()
+
+
 def load_jsonl(path: Path) -> list[dict]:
     with path.open(encoding="utf-8") as f:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def embed_corpus(corpus: dict, model: SentenceTransformer) -> None:
+def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool) -> None:
     name = corpus["name"]
     emb_path = OUTPUT_DIR / f"{name}.npy"
     ids_path = METADATA_DIR / f"{name}_ids.json"
 
-    if emb_path.exists():
+    if emb_path.exists() and not overwrite:
         log.info("Skipping %s — %s already exists", name, emb_path)
         return
 
@@ -113,47 +137,24 @@ def embed_corpus(corpus: dict, model: SentenceTransformer) -> None:
     log.info("Saved %s → shape %s", emb_path, embeddings.shape)
 
 
-def sanity_check() -> None:
-    """Verify that same-SDG OSDG pairs score higher than different-SDG pairs."""
-    log.info("Running sanity check on OSDG embeddings...")
-    emb = np.load(OUTPUT_DIR / "osdg.npy")
-    with open(METADATA_DIR / "osdg_ids.json") as f:
-        ids = json.load(f)
-
-    # Find two texts for SDG 13 and two for SDG 1
-    sdg13 = [i for i, r in enumerate(ids) if r.get("sdg") == 13][:2]
-    sdg1  = [i for i, r in enumerate(ids) if r.get("sdg") == 1][:2]
-
-    if len(sdg13) < 2 or len(sdg1) < 2:
-        log.warning("Not enough examples for sanity check")
-        return
-
-    same_sim = float(cosine_similarity(emb[sdg13[:1]], emb[sdg13[1:2]])[0][0])
-    diff_sim = float(cosine_similarity(emb[sdg13[:1]], emb[sdg1[:1]])[0][0])
-
-    log.info("Sanity check — same-SDG sim: %.3f  |  diff-SDG sim: %.3f", same_sim, diff_sim)
-    if same_sim > diff_sim:
-        log.info("PASS: same-SDG similarity > different-SDG similarity")
-    else:
-        log.warning("FAIL: embeddings may not separate SDGs well — check model choice")
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
+    args = parse_args()
+    selected_names = list(args.corpora or [corpus["name"] for corpus in CORPORA])
+    selected_corpora = [corpus for corpus in CORPORA if corpus["name"] in selected_names]
+
     log.info("Loading model: %s", MODEL_NAME)
-    model = SentenceTransformer(MODEL_NAME)
+    model = SentenceTransformer(MODEL_NAME, local_files_only=args.local_files_only)
     log.info("Embedding dimension: %d", model.get_sentence_embedding_dimension())
 
-    for corpus in CORPORA:
-        embed_corpus(corpus, model)
-
-    sanity_check()
+    for corpus in selected_corpora:
+        embed_corpus(corpus, model, overwrite=args.overwrite)
 
     # Final summary
     print("\nEmbedding complete:")
-    for corpus in CORPORA:
+    for corpus in selected_corpora:
         path = OUTPUT_DIR / f"{corpus['name']}.npy"
         if path.exists():
             shape = np.load(path).shape

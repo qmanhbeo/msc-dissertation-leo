@@ -11,7 +11,7 @@ These VNR/VLR texts are the gold standard for SDG policy language —
 authored by national and local governments reporting on SDG implementation.
 
 Run from project root:
-    python code/1_preprocess/integrate_sdgi.py
+    python code/1_preprocess/policy/0_integrate_sdgi.py
 """
 
 import json
@@ -28,7 +28,7 @@ OUTPUT_JSONL = Path("data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.json
 TARGET_LANGUAGE = "en"
 MIN_TEXT_LEN = 80  # characters — discard header-only fragments
 
-# Chunking parameters — match preprocess_policy.py
+# Chunking parameters — match 0_preprocess_policy.py
 TARGET_WORDS = 150
 MAX_WORDS = 300
 

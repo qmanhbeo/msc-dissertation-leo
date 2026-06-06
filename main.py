@@ -34,6 +34,11 @@ WARM_REPLAY_REQUIREMENTS = [
     Path("writing/references.bib"),
 ]
 
+POLICY_REFRESH_REQUIREMENTS = [
+    Path("data/3_scored/sdg_centroids.npy"),
+    Path("data/3_scored/research_centroids.npy"),
+]
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
@@ -44,6 +49,14 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
+    p.add_argument(
+        "--refresh-policy-corpus",
+        action="store_true",
+        help=(
+            "Rebuild the active policy corpus snapshot, fully re-embed policy chunks, and re-score policy "
+            "against the current SDG and research centroids."
+        ),
+    )
     p.add_argument("--sample-stability", action="store_true", help="Run only the sample-stability robustness stage from existing canonical analysis outputs.")
     p.add_argument(
         "--genre-adjustment",
@@ -91,6 +104,7 @@ def action_requested(args: argparse.Namespace) -> bool:
         [
             args.warm_replay,
             args.full_pipeline,
+            args.refresh_policy_corpus,
             args.sample_stability,
             args.genre_adjustment,
             args.build_pdf,
@@ -249,10 +263,10 @@ def run_warm_replay(
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Warm replay is not ready. Missing required inputs: {missing_str}")
 
-    run_step("rebuild sdg centroids", [sys.executable, "code/2_embed/sdg_centroids.py"])
-    run_step("validate centroids", [sys.executable, "code/2_embed/validate_centroids.py", "--output-dir", str(output_dir)])
-    run_step("rebuild research centroids", [sys.executable, "code/2_embed/score_paper_shards.py"])
-    run_step("score policy corpus", [sys.executable, "code/2_embed/score_policy_corpus.py"])
+    run_step("rebuild sdg centroids", [sys.executable, "code/2_embed/reference/1_build_sdg_centroids.py"])
+    run_step("validate centroids", [sys.executable, "code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
+    run_step("rebuild research centroids", [sys.executable, "code/2_embed/research/1_score_paper_shards.py"])
+    run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
     run_step("coverage gap", [sys.executable, "code/3_main_analysis/coverage_gap.py", "--output-dir", str(output_dir)])
     run_step("semantic gap", [sys.executable, "code/3_main_analysis/semantic_gap.py", "--output-dir", str(output_dir)])
     run_step(
@@ -267,21 +281,46 @@ def run_warm_replay(
     build_pdf(output_dir)
 
 
+def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
+    missing = missing_requirements(POLICY_REFRESH_REQUIREMENTS)
+    if missing:
+        missing_str = ", ".join(rel(ROOT / p) for p in missing)
+        raise RuntimeError(
+            "Policy refresh requires existing SDG and research centroids. "
+            f"Missing required inputs: {missing_str}"
+        )
+
+    run_step("preprocess policy", [sys.executable, "code/1_preprocess/policy/0_preprocess_policy.py"])
+    run_step("build policy corpus", [sys.executable, "code/1_preprocess/policy/1_build_policy_corpus.py"])
+    embed_cmd = [sys.executable, "code/2_embed/reference/0_embed_reference_corpora.py", "--corpora", "policy", "--overwrite"]
+    if args.local_files_only:
+        embed_cmd.append("--local-files-only")
+    run_step("embed policy corpus", embed_cmd)
+    run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
+
+
 def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
     pre_steps = [
         ("fetch policy", [sys.executable, "code/0_fetch/fetch_policy.py"]),
         ("convert policy manual", [sys.executable, "code/0_fetch/convert_policy_manual.py"]),
         ("fetch sdgi corpus", [sys.executable, "code/0_fetch/fetch_sdgi_corpus.py"]),
         ("fetch ungdc", [sys.executable, "code/0_fetch/fetch_ungdc.py"]),
-        ("preprocess policy", [sys.executable, "code/1_preprocess/preprocess_policy.py"]),
-        ("integrate sdgi", [sys.executable, "code/1_preprocess/integrate_sdgi.py"]),
-        ("filter ungdc", [sys.executable, "code/1_preprocess/filter_ungdc_sdg.py"]),
-        ("build policy corpus", [sys.executable, "code/1_preprocess/build_policy_corpus.py"]),
+        ("preprocess policy", [sys.executable, "code/1_preprocess/policy/0_preprocess_policy.py"]),
+        ("integrate sdgi", [sys.executable, "code/1_preprocess/policy/0_integrate_sdgi.py"]),
+        ("filter ungdc", [sys.executable, "code/1_preprocess/policy/0_filter_ungdc_sdg.py"]),
+        ("build policy corpus", [sys.executable, "code/1_preprocess/policy/1_build_policy_corpus.py"]),
         ("fetch osdg", [sys.executable, "code/0_fetch/fetch_osdg.py"]),
         ("fetch sdg benchmark", [sys.executable, "code/0_fetch/fetch_sdg_benchmark.py"]),
         ("preprocess osdg", [sys.executable, "code/1_preprocess/preprocess_osdg.py"]),
         ("preprocess sdg benchmark", [sys.executable, "code/1_preprocess/preprocess_sdg_benchmark.py"]),
-        ("embed policy/osdg/benchmark", [sys.executable, "code/2_embed/embeddings.py"]),
+        (
+            "embed policy/osdg/benchmark",
+            [
+                sys.executable,
+                "code/2_embed/reference/0_embed_reference_corpora.py",
+                *(["--local-files-only"] if args.local_files_only else []),
+            ],
+        ),
         ("fetch openalex", [sys.executable, "code/0_fetch/fetch_openalex.py"]),
         ("preprocess research shards", [sys.executable, "code/1_preprocess/preprocess_papers_streaming.py"]),
     ]
@@ -290,7 +329,7 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
 
     embed_cmd = [
         sys.executable,
-        "code/2_embed/embed_paper_shards.py",
+        "code/2_embed/research/0_embed_paper_shards.py",
         "--device",
         args.device,
         "--batch-size",
@@ -321,6 +360,8 @@ def main() -> None:
 
     if args.clean_canon and not args.overwrite:
         raise RuntimeError("--clean-canon requires --overwrite.")
+    if args.refresh_policy_corpus and not args.overwrite:
+        raise RuntimeError("--refresh-policy-corpus requires --overwrite.")
 
     if (
         args.warm_replay
@@ -338,6 +379,8 @@ def main() -> None:
 
     if args.full_pipeline:
         run_full_pipeline(output_dir, args)
+    elif args.refresh_policy_corpus:
+        run_refresh_policy_corpus(args)
     elif args.warm_replay:
         run_warm_replay(
             output_dir,

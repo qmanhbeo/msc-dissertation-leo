@@ -15,7 +15,7 @@ Merge rule: concatenate source corpora in order, while keeping the existing
 minimum word-count filter.
 
 Run from project root:
-    python code/1_preprocess/build_policy_corpus.py
+    python code/1_preprocess/policy/1_build_policy_corpus.py
 """
 
 import csv

@@ -18,7 +18,7 @@ Chunking strategy:
   4. Each chunk has a source label, sequential ID, and word count
 
 Run from project root:
-    python code/1_preprocess/preprocess_policy.py
+    python code/1_preprocess/policy/0_preprocess_policy.py
 """
 
 import csv

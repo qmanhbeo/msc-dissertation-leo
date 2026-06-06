@@ -17,7 +17,7 @@ These are official statements by heads of state/government at the UN General
 Assembly — authentic policy discourse on international goals and commitments.
 
 Run from project root:
-    python code/1_preprocess/filter_ungdc_sdg.py
+    python code/1_preprocess/policy/0_filter_ungdc_sdg.py
 """
 
 import json

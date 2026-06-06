@@ -8,6 +8,9 @@ Outputs:
   data/2_embedded/research_shards/part-00001.npy
   data/2_embedded/research_shards/metadata/part-00001_ids.jsonl
   data/2_embedded/research_shards/metadata/manifest.json
+
+Run from project root:
+    python code/2_embed/research/0_embed_paper_shards.py
 """
 
 from __future__ import annotations

@@ -27,6 +27,18 @@ Rebuild the canonical analysis package and PDF from existing `data/`:
 python main.py --warm-replay --overwrite
 ```
 
+Refresh the active policy corpus snapshot, fully re-embed policy chunks, and re-score policy against the current centroids:
+
+```bash
+python main.py --refresh-policy-corpus --overwrite
+```
+
+If the model must be loaded from the local Hugging Face cache without any network access:
+
+```bash
+python main.py --refresh-policy-corpus --overwrite --local-files-only
+```
+
 Rebuild the canonical analysis package and PDF but skip the expensive sample-stability sweep when those artifacts already exist:
 
 ```bash
@@ -85,6 +97,7 @@ Important behavior:
 - if canonical artifacts already exist, reruns fail closed unless `--overwrite` is supplied
 - `--output-dir` can redirect the canonical output root, but the default contract is `outputs/`
 - `--warm-replay` and `--full-pipeline` run sample stability by default; use `--skip-sample-stability` only when the existing sample-stability artifacts are already present and should be reused
+- `--refresh-policy-corpus` is the canonical response to any policy-corpus change; it rebuilds `policy_chunks_all`, fully re-embeds `policy`, and refreshes policy scoring without touching `osdg`, `benchmark`, or the research shard embeddings
 - `--genre-adjustment` is additive only: it does not replace the canonical raw semantic-gap outputs, and it exists as an appendix-style robustness suite
 - `--skip-genre-confidence-checks` is an escape hatch for the expensive follow-on genre-confidence checks; it only matters when `--genre-adjustment` is present
 - the SDG-aware genre controls run by default inside `--genre-adjustment`; use `--sdg-genre-method`, `--sdg-genre-samples-per-cell`, `--sdg-genre-min-samples-per-class`, `--sdg-genre-test-size`, `--sdg-genre-classifier-type`, and `--sdg-genre-random-seed` from `main.py` to override their defaults
@@ -99,6 +112,11 @@ Assumed existing inputs:
 - policy embeddings in `data/2_embedded/`
 - research shard embeddings in `data/2_embedded/research_shards/`
 - paper score shards in `data/3_scored/paper_scores_shards/`
+
+Policy-specific reproducibility rule:
+- `data/1_preprocessed/policy_all/policy_chunks_all.jsonl` is the authoritative active policy corpus snapshot
+- when any policy source changes, the canonical workflow is a full policy refresh via `python main.py --refresh-policy-corpus --overwrite`
+- append-only policy embedding is intentionally unsupported; `data/2_embedded/policy.npy` should always be a full embedding of the active `policy_chunks_all` snapshot
 
 `data/` and `outputs/` are intentionally not tracked in Git. A stranger can verify pipeline logic from source, but must hydrate `data/` before replaying the canon.
 
@@ -169,11 +187,12 @@ Interpretation status of the genre suite:
 Policy / benchmark side:
 1. fetch policy sources
 2. convert manually downloaded policy PDFs into text, when present
-3. preprocess `policy_scrape` and `policy_manual` into source-specific chunk corpora
-4. merge policy sources into `data/1_preprocessed/policy_all/policy_chunks_all.jsonl`
-5. embed `policy`, `osdg`, and `benchmark`
-6. build SDG centroids
-7. validate centroids against the benchmark
+3. run the policy-source preprocess stage under `code/1_preprocess/policy/`
+4. build `policy_scrape`, `sdgi_corpus`, and `ungdc_sdg` source corpora, with `policy_scrape` and `policy_manual` handled together inside `0_preprocess_policy.py`
+5. merge policy sources into `data/1_preprocessed/policy_all/policy_chunks_all.jsonl`
+6. embed `policy`, `osdg`, and `benchmark`
+7. build SDG centroids
+8. validate centroids against the benchmark
 
 Research side:
 1. fetch OpenAlex works
@@ -217,6 +236,9 @@ Active source:
 - `code/0_fetch/`
 - `code/1_preprocess/`
 - `code/2_embed/`
+  Reference subchain: `reference/0_embed_reference_corpora.py`, `reference/1_build_sdg_centroids.py`, `reference/2_validate_centroids.py`
+  Research subchain: `research/0_embed_paper_shards.py`, `research/1_score_paper_shards.py`
+  Policy subchain: `policy/0_score_policy_corpus.py`
 - `code/3_main_analysis/`
 - `code/4_visualization/`
 - `code/shared_utils.py`

@@ -14,7 +14,7 @@ Outputs:
   data/3_scored/metadata/policy_scores_ids.json
 
 Run from project root:
-    python code/2_embed/score_policy_corpus.py
+    python code/2_embed/policy/0_score_policy_corpus.py
 """
 
 from __future__ import annotations
