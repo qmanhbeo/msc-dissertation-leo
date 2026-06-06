@@ -27,11 +27,11 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = ROOT / "code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis"
+ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
