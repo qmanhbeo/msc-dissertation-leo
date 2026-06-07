@@ -27,6 +27,24 @@ Rebuild the canonical analysis package and PDF from existing `data/`:
 python main.py --warm-replay --overwrite
 ```
 
+Run only the canonical descriptive PCA semantic-landscape stage:
+
+```bash
+python main.py --pca-semantic-landscape --overwrite
+```
+
+Run only the within-corpus SDG centroid-structure diagnostics:
+
+```bash
+python main.py --within-corpus-centroid-structure --overwrite
+```
+
+Run the soft multi-label SDG robustness stage:
+
+```bash
+python main.py --softmax-multilabel-sdg --overwrite
+```
+
 Fetch the frozen marker-facing data snapshot into `data/`:
 
 ```bash
@@ -179,6 +197,11 @@ Root artifacts:
 - `outputs/dissertation.pdf`
 
 Table artifacts:
+- `outputs/tables/pca_semantic_landscape_metadata.json`
+- `outputs/tables/num_pca_semantic_landscape.tex`
+- `outputs/tables/within_corpus_centroid_structure_metrics.csv`
+- `outputs/tables/within_corpus_centroid_structure_summary.json`
+- `outputs/tables/num_within_corpus_centroid_structure.tex`
 - `outputs/tables/num_validation.tex`
 - `outputs/tables/tab_validation.tex`
 - `outputs/tables/num_coverage.tex`
@@ -191,6 +214,12 @@ Table artifacts:
 - `outputs/tables/tab_sample_stability.tex`
 
 Figure artifacts:
+- `outputs/figures/fig_pca_semantic_landscape.pdf`
+- `outputs/figures/fig_pca_semantic_landscape.png`
+- `outputs/figures/fig_within_corpus_research_sdg_pca.pdf`
+- `outputs/figures/fig_within_corpus_research_sdg_pca.png`
+- `outputs/figures/fig_within_corpus_policy_sdg_pca.pdf`
+- `outputs/figures/fig_within_corpus_policy_sdg_pca.png`
 - `outputs/figures/fig1_coverage_profiles.pdf`
 - `outputs/figures/fig1_coverage_profiles.png`
 - `outputs/figures/fig2_semantic_gap.pdf`
@@ -243,18 +272,22 @@ Research side:
 
 Downstream analysis:
 1. score the active policy corpus against SDG and research centroids
-2. compute coverage gap
-3. compute semantic gap with chunk-cap sensitivity checks
-4. compute H25/H26 interaction outputs
-5. run the sample-stability robustness sweep
-6. optionally run the genre-adjustment robustness suite
-7. generate figures
-8. build the dissertation PDF from canonical tables and figures
+2. fit the descriptive balanced-sample PCA semantic landscape and project SDG anchors plus full-corpus research/policy SDG centroids
+3. fit separate within-corpus PCA diagnostics for research and policy and compute centroid-coherence / clustering diagnostics
+4. compute coverage gap
+5. compute semantic gap with chunk-cap sensitivity checks
+6. compute H25/H26 interaction outputs
+7. run the sample-stability robustness sweep
+8. optionally run the genre-adjustment robustness suite
+9. generate figures
+10. build the dissertation PDF from canonical tables and figures
 
 ## Robustness and Validation
 
 The active canon includes these safeguards:
 - centroid validation on the expert-labelled benchmark (`macro-F1` reported before downstream use)
+- PCA semantic-landscape visualisation fitted on a balanced policy-plus-sampled-research corpus so the 2D projection is not dominated by the much larger research universe
+- corpus-internal PCA diagnostics for research and policy, paired with within-centroid cosine diagnostics, assignment margins, silhouette scores, and k-means agreement checks
 - document-weighted policy coverage, so long policy reports do not dominate by chunk count alone
 - semantic-gap chunk-cap sensitivity at 20, 50, and 100 chunks per document
 - explicit SDG reliability flags when clusters are too small
@@ -280,7 +313,7 @@ Active source:
   Research subchain: `research/0_embed_paper_shards.py`, `research/1_score_paper_shards.py`
   Policy subchain: `policy/0_score_policy_corpus.py`
 - `code/3_main_analysis/`
-  Canonical chain: `canonical/0_coverage_gap.py`, `canonical/1_semantic_gap.py`, `canonical/2_coverage_semantic_interaction.py`
+  Canonical chain: `canonical/0_pca_semantic_landscape.py`, `canonical/1_within_corpus_centroid_structure.py`, `canonical/2_coverage_gap.py`, `canonical/3_semantic_gap.py`, `canonical/4_coverage_semantic_interaction.py`
   Robustness chain: `robustness/0_sample_stability.py`, `robustness/1_genre_adjustment.py`
   Shared helpers: `shared/`
 - `code/4_visualization/`

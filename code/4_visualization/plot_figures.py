@@ -142,7 +142,7 @@ def main() -> None:
     ax1.set_yticklabels(labels, fontsize=7.5)
     ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
     ax1.set_title(
-        "Figure 1. Coverage profiles: research vs policy by SDG",
+        "Coverage profiles: research vs policy by SDG",
         fontsize=8.5,
         loc="left",
     )
@@ -174,7 +174,7 @@ def main() -> None:
     ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=7.5)
     ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
     ax2.set_title(
-        "Figure 2. Within-SDG semantic gap (chunk cap = 50)\n"
+        "Within-SDG semantic gap (chunk cap = 50)\n"
         "Higher gap indicates greater semantic divergence between research and policy",
         fontsize=8.5,
         loc="left",
@@ -241,7 +241,7 @@ def main() -> None:
     ax3.set_xlabel("Research corpus SDG coverage (%)")
     ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
     ax3.set_title(
-        "Figure 3. Coverage vs semantic gap: 2×2 misalignment typology\n"
+        "Coverage vs semantic gap: 2×2 misalignment typology\n"
         f"Dashed lines = median thresholds (research: {median_research_pct:.2f}%, semantic gap: {median_semantic_gap:.3f})",
         fontsize=8.5,
         loc="left",

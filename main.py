@@ -56,6 +56,21 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
     p.add_argument(
+        "--pca-semantic-landscape",
+        action="store_true",
+        help="Run only the canonical descriptive PCA semantic-landscape stage from existing embedded/scored data.",
+    )
+    p.add_argument(
+        "--softmax-multilabel-sdg",
+        action="store_true",
+        help="Run only the softmax-weighted multi-label SDG robustness stage from existing embedded/scored data.",
+    )
+    p.add_argument(
+        "--within-corpus-centroid-structure",
+        action="store_true",
+        help="Run only the canonical within-corpus SDG centroid-structure diagnostics from existing embedded/scored data.",
+    )
+    p.add_argument(
         "--fetch-data-snapshot",
         action="store_true",
         help="Fetch and extract the frozen dissertation data snapshot into ./data/.",
@@ -121,6 +136,9 @@ def action_requested(args: argparse.Namespace) -> bool:
         [
             args.warm_replay,
             args.full_pipeline,
+            args.pca_semantic_landscape,
+            args.softmax_multilabel_sdg,
+            args.within_corpus_centroid_structure,
             args.fetch_data_snapshot,
             args.refresh_policy_corpus,
             args.sample_stability,
@@ -175,8 +193,40 @@ def missing_research_text_shards() -> list[Path]:
     return missing
 
 
+def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, ...]) -> list[Path]:
+    if not manifest_path.exists():
+        return [manifest_path.relative_to(ROOT)]
+
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return [manifest_path.relative_to(ROOT)]
+
+    shards = payload.get("shards")
+    if not isinstance(shards, list):
+        return [manifest_path.relative_to(ROOT)]
+
+    missing: list[Path] = []
+    for shard in shards:
+        if not isinstance(shard, dict):
+            continue
+        for field in shard_fields:
+            value = shard.get(field)
+            if isinstance(value, str):
+                path = ROOT / value
+                if not path.exists():
+                    missing.append(path.relative_to(ROOT))
+    return missing
+
+
 def missing_warm_replay_requirements(*, include_genre_adjustment: bool) -> list[Path]:
     missing = missing_requirements(required_warm_replay_inputs(include_genre_adjustment=include_genre_adjustment))
+    for path in missing_manifest_shard_paths(
+        ROOT / "data/2_embedded/research_shards/metadata/manifest.json",
+        ("embedding_path", "ids_path"),
+    ):
+        if path not in missing:
+            missing.append(path)
     if include_genre_adjustment:
         for path in missing_research_text_shards():
             if path not in missing:
@@ -306,6 +356,27 @@ def run_sample_stability(output_dir: Path) -> None:
     )
 
 
+def run_pca_semantic_landscape(output_dir: Path) -> None:
+    run_step(
+        "pca semantic landscape",
+        [sys.executable, "code/3_main_analysis/canonical/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
+    )
+
+
+def run_within_corpus_centroid_structure(output_dir: Path) -> None:
+    run_step(
+        "within-corpus centroid structure",
+        [sys.executable, "code/3_main_analysis/canonical/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
+    )
+
+
+def run_softmax_multilabel_sdg(output_dir: Path) -> None:
+    run_step(
+        "softmax multi-label SDG robustness",
+        [sys.executable, "code/3_main_analysis/robustness/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
+    )
+
+
 def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
     cmd = [sys.executable, "code/3_main_analysis/robustness/1_genre_adjustment.py", "--output-dir", str(output_dir)]
     if not include_genre_confidence_checks:
@@ -341,11 +412,13 @@ def run_warm_replay(
     run_step("validate centroids", [sys.executable, "code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
     run_step("rebuild research centroids", [sys.executable, "code/2_embed/research/1_score_paper_shards.py"])
     run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
-    run_step("coverage gap", [sys.executable, "code/3_main_analysis/canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
-    run_step("semantic gap", [sys.executable, "code/3_main_analysis/canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
+    run_pca_semantic_landscape(output_dir)
+    run_within_corpus_centroid_structure(output_dir)
+    run_step("coverage gap", [sys.executable, "code/3_main_analysis/canonical/2_coverage_gap.py", "--output-dir", str(output_dir)])
+    run_step("semantic gap", [sys.executable, "code/3_main_analysis/canonical/3_semantic_gap.py", "--output-dir", str(output_dir)])
     run_step(
         "coverage semantic interaction",
-        [sys.executable, "code/3_main_analysis/canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
+        [sys.executable, "code/3_main_analysis/canonical/4_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
     )
     run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
@@ -461,6 +534,9 @@ def main() -> None:
     if (
         args.warm_replay
         or args.full_pipeline
+        or args.pca_semantic_landscape
+        or args.softmax_multilabel_sdg
+        or args.within_corpus_centroid_structure
         or args.sample_stability
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
@@ -476,6 +552,15 @@ def main() -> None:
         run_fetch_data_snapshot(args, profile_name=args.snapshot_profile, overwrite_data=args.overwrite)
     elif args.full_pipeline:
         run_full_pipeline(output_dir, args)
+    elif args.pca_semantic_landscape:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        run_pca_semantic_landscape(output_dir)
+    elif args.softmax_multilabel_sdg:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        run_softmax_multilabel_sdg(output_dir)
+    elif args.within_corpus_centroid_structure:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        run_within_corpus_centroid_structure(output_dir)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
     elif args.warm_replay:

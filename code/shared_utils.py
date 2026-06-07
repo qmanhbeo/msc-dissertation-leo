@@ -29,6 +29,11 @@ CANONICAL_ROOT_FILES = [
 ]
 
 CANONICAL_TABLE_FILES = [
+    "pca_semantic_landscape_metadata.json",
+    "num_pca_semantic_landscape.tex",
+    "within_corpus_centroid_structure_metrics.csv",
+    "within_corpus_centroid_structure_summary.json",
+    "num_within_corpus_centroid_structure.tex",
     "num_validation.tex",
     "tab_validation.tex",
     "num_coverage.tex",
@@ -42,6 +47,12 @@ CANONICAL_TABLE_FILES = [
 ]
 
 CANONICAL_FIGURE_FILES = [
+    "fig_pca_semantic_landscape.pdf",
+    "fig_pca_semantic_landscape.png",
+    "fig_within_corpus_research_sdg_pca.pdf",
+    "fig_within_corpus_research_sdg_pca.png",
+    "fig_within_corpus_policy_sdg_pca.pdf",
+    "fig_within_corpus_policy_sdg_pca.png",
     "fig1_coverage_profiles.pdf",
     "fig1_coverage_profiles.png",
     "fig2_semantic_gap.pdf",

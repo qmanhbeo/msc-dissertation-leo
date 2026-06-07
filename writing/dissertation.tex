@@ -24,6 +24,8 @@
 \providecommand{\DraftVersionTag}{manual-build}
 \InputIfFileExists{build_meta.tex}{}{}
 % Generated analysis outputs — produced by active canon scripts under outputs/tables/
+\input{../outputs/tables/num_pca_semantic_landscape.tex}
+\input{../outputs/tables/num_within_corpus_centroid_structure.tex}
 \input{../outputs/tables/num_validation.tex}
 \input{../outputs/tables/num_coverage.tex}
 \input{../outputs/tables/num_semantic.tex}
@@ -188,6 +190,41 @@ This is not a supervised machine-learning classifier in the conventional sense. 
 
 The validation task should also be interpreted correctly. It tests whether positive benchmark examples are assigned to the nearest appropriate SDG; it does not evaluate a rejection option for texts unrelated to any SDG. This is acceptable for the present design because the research corpus is first restricted to an OpenAlex AI-and-SDG retrieval universe. The centroid instrument then answers a relative question: among the 17 SDGs, which one is this eligible text closest to?
 
+\subsection{Data Overview: PCA Semantic Landscape}
+\label{sec:pca-landscape}
+
+Before presenting the main alignment metrics, I visualise the empirical semantic landscape of the corpus using PCA. Research-paper embeddings and policy-text embeddings are first combined into a shared corpus and projected into two principal components. This projection is not used for inferential measurement, but as a descriptive diagnostic of how the two domains occupy the broader embedding space. I then overlay the 17 SDG reference centroids, derived from labelled SDG benchmark data, using the same fitted PCA transformation. This places the SDG anchors in relation to the actual distribution of research and policy discourse. Where research and policy clouds overlap around an SDG anchor, the visualisation suggests shared semantic framing; where the research and policy SDG centroids occupy distinct regions, it provides an intuitive illustration of the semantic gaps later measured through cosine distances in the original 384-dimensional space.
+
+Because the research corpus is much larger than the policy corpus, PCA is fitted on a balanced sample consisting of all usable policy chunks and an equal-sized random sample of research papers. In the current canonical run, this means \PcaLandscapePolicyFitN{} policy chunks and \PcaLandscapeResearchFitN{} research papers drawn from totals of \PcaLandscapeTotalPolicy{} policy chunks and \PcaLandscapeTotalResearch{} research papers. This prevents the visual projection axes from being dominated by variance in the research corpus. The first two principal components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance respectively. The full corpus is retained for the main quantitative analysis, and all reported cosine-distance metrics are calculated in the original 384-dimensional Sentence-BERT embedding space.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig_pca_semantic_landscape.pdf}
+\caption{PCA semantic landscape of the research-policy embedding space. Background points show a balanced research-policy sample used only to fit and visualise the two-dimensional projection. Diamond markers show the 17 SDG reference centroids. Circular and square markers show the full-corpus research and policy SDG centroids respectively, with thin line segments linking each research-policy pair. PCA is fitted on a balanced research-policy sample for visual interpretability. The projection is descriptive only; formal semantic distances are computed in the original embedding space.}
+\label{fig:pca-semantic-landscape}
+\end{figure}
+
+\subsection{Within-Corpus SDG Structure Diagnostics}
+\label{sec:within-corpus-structure}
+
+To assess whether the SDG-centroid method produces meaningful structure within each corpus, I also visualise research and policy embeddings separately using corpus-specific PCA projections. In each case, PCA is fitted only within that corpus, documents are assigned to their nearest SDG centroid using the existing scoring procedure, and corpus-specific SDG centroids are overlaid. These plots are diagnostic only: they show whether SDG assignments form relatively coherent regions or whether the corpus appears as heavily overlapping semantic fog. Because PCA is fitted separately for research and policy, the two panels do not share a common coordinate system and should not be compared spatially.
+
+I pair the visual diagnostics with centroid-coherence and clustering statistics saved alongside the figure outputs. In the current canonical run, the research panel plots \WithinCorpusResearchPlotN{} sampled documents and the policy panel plots \WithinCorpusPolicyPlotN{} chunks. Sample-based cosine silhouette scores are \WithinCorpusResearchSilhouette{} for research and \WithinCorpusPolicySilhouette{} for policy. These values are reported as diagnostics rather than as proof of cluster validity, and they are interpreted alongside the per-SDG own-centroid cosine and assignment-margin summaries.
+
+\begin{figure}[ht]
+\centering
+\begin{minipage}{0.49\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig_within_corpus_research_sdg_pca.pdf}
+\end{minipage}\hfill
+\begin{minipage}{0.49\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig_within_corpus_policy_sdg_pca.pdf}
+\end{minipage}
+\caption{Within-corpus PCA diagnostics for SDG assignments. Left: research embeddings with corpus-specific research SDG centroids overlaid. Right: policy embeddings with corpus-specific policy SDG centroids overlaid. PCA is fitted separately within each corpus and is used only to visualise internal SDG structure. The two panels do not share a coordinate system. Quantitative diagnostics are reported alongside the visualisation.}
+\label{fig:within-corpus-centroid-structure}
+\end{figure}
+
 \subsection{Coverage Gap Analysis}
 
 For each item in the research and policy corpora, the predicted SDG is the centroid with the highest cosine similarity score (hard assignment). The coverage profile for a corpus is the proportion of items assigned to each SDG.
@@ -226,7 +263,7 @@ The directional asymmetry hypothesis (H26) tests whether research engages policy
 
 \textbf{A15 --- OSDG circularity.} OSDG is human-validated, but many source texts and suggested labels come from UN-adjacent SDG document collections. Since our policy corpus also contains UN and institutional SDG documents, OSDG-derived centroids may be calibrated to policy vocabulary, systematically inflating policy cosine similarity scores relative to research scores. We test for this post hoc by comparing mean top-centroid scores: policy chunks score \AffFifteenDiff{} higher than research papers (\AffFifteenPolicyScore{} vs \AffFifteenPaperScore), exceeding our pre-registered flag threshold of 0.10. This difference is acknowledged throughout the Results and Discussion as a potential calibration bias. Coverage gap and semantic gap findings remain valid as relative comparisons, but absolute score comparisons between corpora should be interpreted cautiously.
 
-\textbf{A19 --- Unit-of-analysis asymmetry.} Research papers are single, focused abstract-length texts (mean $\sim$200 words); policy corpus items are 150-word chunks from documents of highly variable length. Document-weighting (Section 3.6) and per-document chunk caps (Section 3.7) are the primary mitigations.
+\textbf{A19 --- Unit-of-analysis asymmetry.} Research papers are single, focused abstract-length texts (mean $\sim$200 words); policy corpus items are 150-word chunks from documents of highly variable length. Document-weighting and per-document chunk caps are the primary mitigations.
 
 \textbf{SDG 4 artefact.}
 \label{sec:sdg4artefact}
@@ -357,6 +394,8 @@ The stability ladder is intended as a robustness check, not as a replacement for
 Possible corpus-register effects remain an important limitation. Research abstracts and policy documents differ systematically in style, modality, and institutional language, so part of the raw within-SDG distance may reflect broad research--policy register differences rather than topic framing alone. Additional genre-adjustment procedures were therefore explored as appendix-style robustness and diagnostic checks rather than as replacement estimates.
 
 Those appendix checks point in the same broad direction. Limited global adjustments reduce the semantic gaps but do not eliminate them, which suggests that broad research--policy register contributes to the observed distances without fully explaining them. More aggressive within-SDG classifier and within-SDG regression procedures shrink the gaps much more strongly, but they are interpreted as over-subtraction stress tests because they learn and remove the within-goal policy--research contrast itself. The raw within-SDG semantic gap is therefore retained as the primary result because it best matches the dissertation's estimand: the observed semantic difference between research and policy discourse within the same SDG.
+
+A separate robustness check also relaxes the hard one-SDG-per-text assumption. Instead of assigning each text exclusively to its nearest SDG centroid, I transform similarities to all 17 SDG centroids into temperature-scaled softmax weights, allowing each research paper or policy chunk to contribute fractionally to multiple goals. I also test a corpus-calibrated variant in which similarities are standardised within each corpus before the softmax is applied. This specification addresses the multi-label nature of SDG discourse and reduces winner-takes-all instability, but it does not eliminate benchmark- or register-based bias in the reference centroids. It is therefore treated as an alternative-specification robustness check rather than as a replacement for the main hard-assignment results.
 
 %% ============================================================
 \section{Discussion}
