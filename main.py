@@ -82,8 +82,23 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--fetch-data-snapshot",
-        action="store_true",
-        help="Fetch and extract the frozen dissertation data snapshot into ./data/.",
+        nargs="?",
+        const="curated",
+        choices=["curated", "full"],
+        help=(
+            "Fetch and extract a frozen dissertation data snapshot into ./data/. "
+            "Defaults to curated; full is optional and audit-oriented."
+        ),
+    )
+    p.add_argument(
+        "--backup-data-snapshot",
+        nargs="?",
+        const="curated",
+        choices=["curated", "full", "both"],
+        help=(
+            "Create a dissertation data snapshot archive via the backup utility. "
+            "Defaults to curated; 'both' runs curated then full."
+        ),
     )
     p.add_argument(
         "--refresh-policy-corpus",
@@ -126,7 +141,10 @@ def parse_args() -> argparse.Namespace:
         "--snapshot-profile",
         choices=["curated", "full"],
         default="curated",
-        help="Snapshot profile for --fetch-data-snapshot. Warm replay auto-fetch always uses curated.",
+        help=(
+            "Legacy compatibility profile selector for --fetch-data-snapshot. "
+            "Warm replay auto-fetch always uses curated."
+        ),
     )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --full-pipeline mode.")
     p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --full-pipeline mode.")
@@ -152,6 +170,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.sdg4_lexical_audit,
             args.within_corpus_centroid_structure,
             args.fetch_data_snapshot,
+            args.backup_data_snapshot,
             args.refresh_policy_corpus,
             args.sample_stability,
             args.genre_adjustment,
@@ -533,6 +552,45 @@ def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, over
     run_step(f"fetch data snapshot ({profile_name})", cmd)
 
 
+def run_backup_data_snapshot(*, profile_name: str) -> None:
+    cmd = [sys.executable, "code/data_backup_and_fetch/backup_data_snapshot.py", "--profile", profile_name]
+    run_step(f"backup data snapshot ({profile_name})", cmd)
+
+
+def explicit_fetch_snapshot_profile(argv: list[str]) -> str | None:
+    tokens = argv[1:]
+    for index, token in enumerate(tokens):
+        if token.startswith("--fetch-data-snapshot="):
+            return token.split("=", 1)[1]
+        if token == "--fetch-data-snapshot":
+            if index + 1 < len(tokens) and not tokens[index + 1].startswith("-"):
+                return tokens[index + 1]
+            return None
+    return None
+
+
+def resolve_fetch_snapshot_profile(args: argparse.Namespace) -> str | None:
+    requested_profile = args.fetch_data_snapshot
+    legacy_profile = args.snapshot_profile
+    if requested_profile is None:
+        return None
+    explicit_profile = explicit_fetch_snapshot_profile(sys.argv)
+    if explicit_profile is None:
+        return legacy_profile
+    if explicit_profile != legacy_profile and legacy_profile != "curated":
+        raise RuntimeError(
+            "Conflicting fetch snapshot profiles. Use either `--fetch-data-snapshot <profile>` "
+            "or the legacy `--snapshot-profile <profile>`, but not different values for both."
+        )
+    return explicit_profile
+
+
+def selected_backup_profiles(profile_name: str) -> list[str]:
+    if profile_name == "both":
+        return ["curated", "full"]
+    return [profile_name]
+
+
 def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_genre_adjustment: bool) -> None:
     missing = missing_warm_replay_requirements(include_genre_adjustment=include_genre_adjustment)
     if not missing:
@@ -550,6 +608,7 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     if not output_dir.is_absolute():
         output_dir = (ROOT / output_dir).resolve()
+    fetch_profile = resolve_fetch_snapshot_profile(args)
 
     if not action_requested(args):
         print_status(output_dir)
@@ -579,8 +638,11 @@ def main() -> None:
     if args.clean_canon:
         clean_canonical_outputs(output_dir)
 
-    if args.fetch_data_snapshot:
-        run_fetch_data_snapshot(args, profile_name=args.snapshot_profile, overwrite_data=args.overwrite)
+    if fetch_profile is not None:
+        run_fetch_data_snapshot(args, profile_name=fetch_profile, overwrite_data=args.overwrite)
+    elif args.backup_data_snapshot:
+        for profile_name in selected_backup_profiles(args.backup_data_snapshot):
+            run_backup_data_snapshot(profile_name=profile_name)
     elif args.full_pipeline:
         run_full_pipeline(output_dir, args)
     elif args.pca_semantic_landscape:

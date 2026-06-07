@@ -13,6 +13,10 @@ Features:
 - embeds snapshot metadata under `data/_snapshot_metadata/`
 
 Usage:
+    python main.py --backup-data-snapshot curated
+    python main.py --backup-data-snapshot both
+
+    # direct utility usage:
     python code/data_backup_and_fetch/backup_data_snapshot.py
 
     # dry run — build archive locally, skip upload:

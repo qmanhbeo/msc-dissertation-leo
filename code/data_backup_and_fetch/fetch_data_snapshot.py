@@ -1,12 +1,18 @@
 """
 Fetch and extract the frozen dissertation data snapshot into ./data/.
 
-This script is the marker-facing bootstrap path. It is intentionally separate
-from the operator backup script:
+This script underlies the main entrypoint snapshot fetch path:
+- `python main.py --fetch-data-snapshot curated`
+- `python main.py --fetch-data-snapshot full`
+
+It is intentionally separate from the operator backup script:
 - `backup_data_snapshot.py` creates and uploads archives.
 - `fetch_data_snapshot.py` downloads one frozen release snapshot and extracts it.
 
 Usage:
+    python main.py --fetch-data-snapshot curated
+
+Debugging / direct script usage:
     python code/data_backup_and_fetch/fetch_data_snapshot.py --profile curated
 
 For local pre-release testing with a one-off archive:

@@ -1,10 +1,10 @@
 {
-  "current_version": "unpublished",
+  "current_version": "2026-06-07",
   "profiles": {
     "curated": {
-      "version": "unpublished",
-      "url": "",
-      "sha256": "",
+      "version": "2026-06-07-213211",
+      "url": "https://drive.usercontent.google.com/download?id=19l49swobHEhWQQVyhBfolwjJX85WXny1&export=download",
+      "sha256": "f11de67fd63776f59663d19539e2be12816fefee982e122fb192f999cacaa45d",
       "expected_repo_paths": [
         "data/2_embedded/policy.npy",
         "data/2_embedded/metadata/policy_ids.json",
@@ -24,9 +24,9 @@
       ]
     },
     "full": {
-      "version": "unpublished",
-      "url": "",
-      "sha256": "",
+      "version": "2026-06-07-211237",
+      "url": "https://drive.usercontent.google.com/download?id=15gsY8hcaU9MmSIn0qSnMZ0a1ILD-gTcT&export=download",
+      "sha256": "fcba8bb3eaff5298a304933afe50cb7c6f51f1c8f899494dd2d19133a67647b6",
       "expected_repo_paths": [
         "data/2_embedded/policy.npy",
         "data/2_embedded/metadata/policy_ids.json",
