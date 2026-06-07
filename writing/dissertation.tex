@@ -103,7 +103,7 @@ A substantial body of bibliometric work documents \emph{what} AI research engage
 
 This study addresses that gap. Its central claim is straightforward: shared SDG labels are insufficient evidence of shared framing. I make three contributions. First, I advance AI--SDG mapping from Level 1 (lexical or bibliometric correspondence) to Level 2 (topical proximity in semantic space), using Sentence-BERT \parencite{Reimers2019} embeddings and SDG centroids derived from the OSDG Community Dataset \parencite{Pukelis2022}. Second, I distinguish between a \emph{coverage gap} (which SDGs each corpus emphasises) and a \emph{semantic gap} (how differently the two corpora discuss the same SDG), and measure both across all 17 SDGs. Third, I evaluate whether these two dimensions are related, or whether apparent overlap in SDG coverage can coexist with substantial semantic divergence.
 
-The central research question is therefore: \emph{To what extent do academic AI-for-sustainability research and international institutional SDG policy discourse align in coverage and semantic content across the 17 SDGs, and how are these two dimensions related?}
+The central research question is therefore: \emph{To what extent do academic AI-for-sustainability research and international institutional SDG policy discourse differ in SDG coverage and semantic framing across the 17 SDGs, and how are these two dimensions related?}
 
 The remainder of this paper is structured as follows. Section~\ref{sec:litreview} reviews the relevant literature on AI-SDG mapping, research-policy alignment, and semantic similarity methods. Section~\ref{sec:method} describes the corpora, measurement instrument, and gap analysis procedures. Section~\ref{sec:results} presents the empirical findings. Section~\ref{sec:discussion} interprets the findings, introduces a productive/problematic misalignment typology, and discusses limitations. Section~\ref{sec:conclusion} concludes with implications and directions for future research.
 
@@ -137,7 +137,7 @@ The nearest-centroid approach --- computing the mean embedding of labelled texts
 
 Not all research-policy misalignment is necessarily harmful. \textcite{Heilinger2023} warns against ``greenwashing'' misalignment where research adopts SDG framing superficially; but the converse risk is also real: demanding that research track policy discourse too closely would suppress basic research and frontier exploration that creates future policy options. I therefore distinguish between \emph{productive misalignment} --- where research addresses SDG-relevant dimensions that policy has not yet engaged --- and \emph{problematic misalignment} --- where research is absent from or superficially engaged with dimensions that policy identifies as urgent.
 
-This distinction, introduced theoretically in \textcite{Toney2024} and operationalised here at SDG level, provides the interpretive framework for the Discussion. It shifts the normative question from ``how should misalignment be addressed?'' to ``which forms of misalignment are beneficial, and which require redress?''
+This distinction, introduced theoretically in \textcite{Toney2024} and operationalised here at SDG level, provides the interpretive framework for the Discussion. It shifts the normative question from ``how should misalignment be addressed?'' to ``which forms of misalignment are beneficial, and which require redress?'' The typology is therefore interpretive rather than classificatory: the embedding analysis identifies where divergence occurs, but qualitative analysis would be required to determine whether a given divergence is productive or problematic.
 
 \subsection{Research Gap}
 
@@ -330,7 +330,7 @@ Figure~\ref{fig:typology_scatter} illustrates this refinement. High-coverage res
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig3_coverage_semantic_scatter.pdf}
-\caption{Coverage vs semantic gap scatter plot (2$\times$2 typology). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs cluster in the high-gap region.}
+\caption{Coverage vs semantic gap scatter plot (diagnostic typology). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs cluster in the high-gap region. Quadrants are descriptive diagnostics rather than normative classifications.}
 \label{fig:typology_scatter}
 \end{figure}
 
@@ -375,7 +375,7 @@ This interpretation is consistent with the epistemic communities framework \pare
 
 Two concentration patterns matter. First, the full policy corpus is overwhelmingly dominated by the climate--partnerships--governance block, with SDGs 13, 17, and 16 alone accounting for \PolicyTopThreePct\% of source documents. Appendix~\ref{app:policy-source-family-sensitivity} shows that this is not a universal profile of all AI sustainability policy: the curated AI/SDG sub-corpus is much more innovation-oriented, while the broader institutional families are more climate-, partnership-, and governance-oriented. Second, the largest semantic gaps are also concentrated in or near that policy-facing region, especially SDGs 17 and 13. This suggests that the most institutionally prominent policy goals are precisely where research and policy are least likely to be speaking in the same register.
 
-By contrast, the strongest apparent alignment case is SDG 9. It combines high research coverage (\ResearchPctSdgNine\%) with one of the lowest semantic gaps (\SemanticGapSdgNine). That does not prove substantive alignment, but it does show that the embedding-based instrument can separate a comparatively close case from more visibly divergent ones. The contrast between SDG 9 and high-gap cases such as SDG 3 or SDG 13 is analytically useful: it demonstrates that semantic divergence is not simply a mechanical consequence of all high-salience SDGs.
+By contrast, SDG 9 is the closest observed case in this diagnostic map. It combines high research coverage (\ResearchPctSdgNine\%) with one of the lowest semantic gaps (\SemanticGapSdgNine). That does not prove substantive alignment, but it does show that the embedding-based instrument can separate a comparatively close case from more visibly divergent ones. The contrast between SDG 9 and high-gap cases such as SDG 3 or SDG 13 is analytically useful: it demonstrates that semantic divergence is not simply a mechanical consequence of all high-salience SDGs.
 
 \subsection{Implications}
 
