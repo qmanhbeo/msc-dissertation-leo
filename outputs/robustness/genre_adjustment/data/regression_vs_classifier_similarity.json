@@ -1,0 +1,28 @@
+{
+  "analysis": "rodriguez_style_embedding_regression",
+  "baseline_sdg": 1,
+  "global_regression_vs_classifier_cosine": 0.620797,
+  "agreement_band": "partial_agreement",
+  "classifier_vector_source": "outputs/robustness/genre_adjustment/data/sdg_balanced_genre_vector.npy",
+  "regression_vector_source": "outputs/robustness/genre_adjustment/data/regression_genre_vector.npy",
+  "classifier_alignment_summary": {
+    "mean_absolute_cosine": 0.386351,
+    "median_absolute_cosine": 0.403086,
+    "max_absolute_cosine": 0.456363,
+    "min_absolute_cosine": 0.208825,
+    "strongest_alignment_sdg": 17,
+    "strongest_alignment_value": 0.456363,
+    "weakest_alignment_sdg": 16,
+    "weakest_alignment_value": 0.208825
+  },
+  "regression_alignment_summary": {
+    "mean_absolute_cosine": 0.503283,
+    "median_absolute_cosine": 0.495574,
+    "max_absolute_cosine": 0.693315,
+    "min_absolute_cosine": 0.292426,
+    "strongest_alignment_sdg": 1,
+    "strongest_alignment_value": 0.693315,
+    "weakest_alignment_sdg": 16,
+    "weakest_alignment_value": 0.292426
+  }
+}

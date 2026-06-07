@@ -31,14 +31,17 @@ Reproducibility notes:
 from __future__ import annotations
 
 import argparse
+import http.cookiejar
 import hashlib
 import json
+import re
 import shutil
 import sys
 import tarfile
 import tempfile
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlencode, urljoin
 
 import zstandard as zstd
 
@@ -96,10 +99,61 @@ def compute_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def build_url_opener() -> urllib.request.OpenerDirector:
+    cookie_jar = http.cookiejar.CookieJar()
+    return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+
+
+def is_google_drive_warning_page(content_type: str, body: bytes) -> bool:
+    if "text/html" not in content_type.lower():
+        return False
+    snippet = body[:4096].decode("utf-8", errors="replace")
+    return "Google Drive - Virus scan warning" in snippet and "download-form" in snippet
+
+
+def extract_google_drive_confirm_url(base_url: str, html: str) -> str:
+    form_match = re.search(r'<form[^>]+id="download-form"[^>]+action="([^"]+)"', html)
+    if not form_match:
+        raise RuntimeError("Google Drive warning page did not expose a download form.")
+    action_url = urljoin(base_url, form_match.group(1))
+    hidden_inputs = dict(re.findall(r'<input[^>]+type="hidden"[^>]+name="([^"]+)"[^>]+value="([^"]*)"', html))
+    required_fields = {"id", "export", "confirm"}
+    if not required_fields.issubset(hidden_inputs):
+        raise RuntimeError("Google Drive warning page is missing required confirm fields.")
+    return f"{action_url}?{urlencode(hidden_inputs)}"
+
+
+def describe_html_download_failure(body: bytes) -> str:
+    text = body[:4096].decode("utf-8", errors="replace")
+    title_match = re.search(r"<title>(.*?)</title>", text, flags=re.IGNORECASE)
+    if title_match:
+        return title_match.group(1).strip()
+    return text[:160].strip() or "unknown HTML response"
+
+
 def download_snapshot(url: str, out_path: Path) -> None:
+    opener = build_url_opener()
     log(f"downloading {url}")
-    with urllib.request.urlopen(url) as response, out_path.open("wb") as out:
-        shutil.copyfileobj(response, out)
+    request = urllib.request.Request(url, headers={"User-Agent": "dissertation-snapshot-fetch/1.0"})
+    with opener.open(request) as response:
+        content_type = response.headers.get("Content-Type", "")
+        body = response.read()
+
+    if is_google_drive_warning_page(content_type, body):
+        warning_html = body.decode("utf-8", errors="replace")
+        confirm_url = extract_google_drive_confirm_url(url, warning_html)
+        log("Google Drive returned a virus-scan warning page; retrying via confirmed download URL")
+        confirm_request = urllib.request.Request(confirm_url, headers={"User-Agent": "dissertation-snapshot-fetch/1.0"})
+        with opener.open(confirm_request) as response, out_path.open("wb") as out:
+            shutil.copyfileobj(response, out)
+        return
+
+    if "text/html" in content_type.lower():
+        failure = describe_html_download_failure(body)
+        raise RuntimeError(f"snapshot URL returned HTML instead of an archive: {failure}")
+
+    with out_path.open("wb") as out:
+        out.write(body)
 
 
 def safe_extract_tar_zst(archive_path: Path, dest_root: Path) -> None:

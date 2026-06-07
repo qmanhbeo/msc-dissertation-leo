@@ -129,4 +129,18 @@ notes/private/
 .supervisor-feedback/
 
 # Run-local full-corpus outputs
-outputs/
+# The submitted dissertation outputs/ tree is intentionally tracked below.
+
+# Marker-facing committed dissertation outputs
+!outputs/
+!outputs/**
+outputs/**/*.aux
+outputs/**/*.bbl
+outputs/**/*.bcf
+outputs/**/*.blg
+outputs/**/*.fdb_latexmk
+outputs/**/*.fls
+outputs/**/*.log
+outputs/**/*.out
+outputs/**/*.run.xml
+outputs/**/*.toc

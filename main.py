@@ -53,7 +53,14 @@ def parse_args() -> argparse.Namespace:
             "Mutation requires an explicit action flag."
         )
     )
-    p.add_argument("--warm-replay", action="store_true", help="Rebuild canonical analysis outputs and PDF from existing data/.")
+    p.add_argument(
+        "--warm-replay",
+        action="store_true",
+        help=(
+            "Rebuild canonical analysis outputs and PDF. If required replay inputs are missing, "
+            "main.py auto-fetches the curated frozen snapshot into ./data/ first."
+        ),
+    )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
     p.add_argument(
         "--pca-semantic-landscape",
@@ -141,10 +148,7 @@ def parse_args() -> argparse.Namespace:
         "--snapshot-profile",
         choices=["curated", "full"],
         default="curated",
-        help=(
-            "Legacy compatibility profile selector for --fetch-data-snapshot. "
-            "Warm replay auto-fetch always uses curated."
-        ),
+        help=argparse.SUPPRESS,
     )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --full-pipeline mode.")
     p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --full-pipeline mode.")

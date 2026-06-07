@@ -1,0 +1,18 @@
+{
+  "balanced_sampling_used": true,
+  "chunk_cap_for_policy_gap_overlay": 50,
+  "generated_at_utc": "2026-06-06T19:19:25.095898Z",
+  "n_policy_projected_background": 54082,
+  "n_policy_used_for_pca_fit": 54082,
+  "n_research_projected_background": 54082,
+  "n_research_used_for_pca_fit": 54082,
+  "note": "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original 384-dimensional embedding space.",
+  "pc1_explained_variance_ratio": 0.07167377322912216,
+  "pc2_explained_variance_ratio": 0.035442523658275604,
+  "policy_capped": false,
+  "policy_fit_cap": 0,
+  "random_seed": 42,
+  "research_trimmed_to_policy_count": true,
+  "total_policy_embeddings_available": 54082,
+  "total_research_embeddings_available": 2543698
+}

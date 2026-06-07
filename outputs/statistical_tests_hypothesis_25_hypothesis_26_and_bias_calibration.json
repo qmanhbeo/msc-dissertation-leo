@@ -1,0 +1,354 @@
+{
+  "h25": {
+    "hypothesis": "SDGs with the highest research attention show the largest within-SDG semantic gaps (research and policy talk past each other at points of engagement).",
+    "primary_test": "research_proportion vs semantic_gap (Pearson r, Spearman rho, n=17)",
+    "direction_found": "NOT SUPPORTED (WEAK CORRELATION)",
+    "story": "Near-zero correlation: research attention does not predict semantic gap direction. Coverage and semantic divergence are largely independent dimensions.",
+    "caveats": [
+      "n=17 SDGs in the primary test gives low statistical power.",
+      "SDG 4 research proportion (22%) may be inflated by ML 'learning' terminology.",
+      "Hard assignment creates zero-sum profiles \u2014 SDGs with overlapping centroids (e.g. SDG 1/8/10 cluster) may trade assignments artificially."
+    ],
+    "available_semantic_gap_sdgs": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "missing_semantic_gap_sdgs": [],
+    "correlations_primary_observed": {
+      "a_res_prop_vs_sem_gap": {
+        "n": 17,
+        "pearson_r": -0.134311,
+        "pearson_p": 0.607297,
+        "spearman_rho": -0.044118,
+        "spearman_p": 0.866483,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      },
+      "b_cov_gap_abs_vs_sem_gap": {
+        "n": 17,
+        "pearson_r": 0.50902,
+        "pearson_p": 0.036906,
+        "spearman_rho": 0.362745,
+        "spearman_p": 0.15243,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      },
+      "c_res_dominance_vs_sem_gap": {
+        "n": 17,
+        "pearson_r": -0.494638,
+        "pearson_p": 0.04354,
+        "spearman_rho": -0.22549,
+        "spearman_p": 0.384197,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      }
+    },
+    "correlations_reliable_only": null,
+    "correlations_excl_sdg4": {
+      "a_res_prop_vs_sem_gap": {
+        "n": 16,
+        "pearson_r": -0.017053,
+        "pearson_p": 0.950019,
+        "spearman_rho": 0.047059,
+        "spearman_p": 0.862604,
+        "sdgs": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      },
+      "b_cov_gap_abs_vs_sem_gap": {
+        "n": 16,
+        "pearson_r": 0.572174,
+        "pearson_p": 0.020557,
+        "spearman_rho": 0.45,
+        "spearman_p": 0.080296,
+        "sdgs": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      }
+    }
+  },
+  "h26": {
+    "hypothesis": "Research papers score lower against OSDG centroids than policy chunks score against research centroids \u2014 research ignores policy framing more than vice versa.",
+    "mean_paper_top_vs_osdg": 0.217817,
+    "mean_policy_top_vs_research": 0.370178,
+    "asymmetry_gap": 0.152361,
+    "supported": true,
+    "caveats": [
+      "A15 FLAG: policy scores against OSDG centroids are inflated by 0.321 relative to paper scores. The H26 asymmetry may partly reflect this calibration bias, not genuine research-policy framing asymmetry.",
+      "Research centroids are built via hard assignment from OSDG centroids \u2014 a circularity that may reduce apparent research-centroid distance."
+    ]
+  },
+  "per_sdg_table": [
+    {
+      "sdg": 1,
+      "research_proportion": 0.006905,
+      "policy_proportion_docweighted": 0.008958,
+      "coverage_gap_abs": 0.002053,
+      "research_dominance": -0.002053,
+      "semantic_gap": 0.317789,
+      "semantic_similarity": 0.682211,
+      "reliable": true
+    },
+    {
+      "sdg": 2,
+      "research_proportion": 0.034102,
+      "policy_proportion_docweighted": 0.003664,
+      "coverage_gap_abs": 0.030437,
+      "research_dominance": 0.030438,
+      "semantic_gap": 0.325858,
+      "semantic_similarity": 0.674142,
+      "reliable": true
+    },
+    {
+      "sdg": 3,
+      "research_proportion": 0.178626,
+      "policy_proportion_docweighted": 0.003664,
+      "coverage_gap_abs": 0.174962,
+      "research_dominance": 0.174962,
+      "semantic_gap": 0.437361,
+      "semantic_similarity": 0.562639,
+      "reliable": true
+    },
+    {
+      "sdg": 4,
+      "research_proportion": 0.138383,
+      "policy_proportion_docweighted": 0.002036,
+      "coverage_gap_abs": 0.136347,
+      "research_dominance": 0.136347,
+      "semantic_gap": 0.285634,
+      "semantic_similarity": 0.714366,
+      "reliable": true
+    },
+    {
+      "sdg": 5,
+      "research_proportion": 0.022897,
+      "policy_proportion_docweighted": 0.011401,
+      "coverage_gap_abs": 0.011496,
+      "research_dominance": 0.011496,
+      "semantic_gap": 0.251523,
+      "semantic_similarity": 0.748477,
+      "reliable": true
+    },
+    {
+      "sdg": 6,
+      "research_proportion": 0.040331,
+      "policy_proportion_docweighted": 0.003664,
+      "coverage_gap_abs": 0.036666,
+      "research_dominance": 0.036667,
+      "semantic_gap": 0.509269,
+      "semantic_similarity": 0.490731,
+      "reliable": true
+    },
+    {
+      "sdg": 7,
+      "research_proportion": 0.08369,
+      "policy_proportion_docweighted": 0.004072,
+      "coverage_gap_abs": 0.079618,
+      "research_dominance": 0.079618,
+      "semantic_gap": 0.497785,
+      "semantic_similarity": 0.502215,
+      "reliable": true
+    },
+    {
+      "sdg": 8,
+      "research_proportion": 0.014762,
+      "policy_proportion_docweighted": 0.00285,
+      "coverage_gap_abs": 0.011912,
+      "research_dominance": 0.011912,
+      "semantic_gap": 0.279997,
+      "semantic_similarity": 0.720003,
+      "reliable": true
+    },
+    {
+      "sdg": 9,
+      "research_proportion": 0.102461,
+      "policy_proportion_docweighted": 0.023616,
+      "coverage_gap_abs": 0.078846,
+      "research_dominance": 0.078845,
+      "semantic_gap": 0.220248,
+      "semantic_similarity": 0.779752,
+      "reliable": true
+    },
+    {
+      "sdg": 10,
+      "research_proportion": 0.009385,
+      "policy_proportion_docweighted": 0.0,
+      "coverage_gap_abs": 0.009385,
+      "research_dominance": 0.009385,
+      "semantic_gap": 0.500903,
+      "semantic_similarity": 0.499097,
+      "reliable": true
+    },
+    {
+      "sdg": 11,
+      "research_proportion": 0.054506,
+      "policy_proportion_docweighted": 0.027687,
+      "coverage_gap_abs": 0.026818,
+      "research_dominance": 0.026819,
+      "semantic_gap": 0.456967,
+      "semantic_similarity": 0.543033,
+      "reliable": true
+    },
+    {
+      "sdg": 12,
+      "research_proportion": 0.037263,
+      "policy_proportion_docweighted": 0.002443,
+      "coverage_gap_abs": 0.03482,
+      "research_dominance": 0.03482,
+      "semantic_gap": 0.428023,
+      "semantic_similarity": 0.571977,
+      "reliable": true
+    },
+    {
+      "sdg": 13,
+      "research_proportion": 0.052316,
+      "policy_proportion_docweighted": 0.354642,
+      "coverage_gap_abs": 0.302326,
+      "research_dominance": -0.302326,
+      "semantic_gap": 0.536124,
+      "semantic_similarity": 0.463876,
+      "reliable": true
+    },
+    {
+      "sdg": 14,
+      "research_proportion": 0.03884,
+      "policy_proportion_docweighted": 0.001221,
+      "coverage_gap_abs": 0.037618,
+      "research_dominance": 0.037619,
+      "semantic_gap": 0.483881,
+      "semantic_similarity": 0.516119,
+      "reliable": true
+    },
+    {
+      "sdg": 15,
+      "research_proportion": 0.074239,
+      "policy_proportion_docweighted": 0.008143,
+      "coverage_gap_abs": 0.066096,
+      "research_dominance": 0.066096,
+      "semantic_gap": 0.463841,
+      "semantic_similarity": 0.536159,
+      "reliable": true
+    },
+    {
+      "sdg": 16,
+      "research_proportion": 0.084023,
+      "policy_proportion_docweighted": 0.197476,
+      "coverage_gap_abs": 0.113452,
+      "research_dominance": -0.113453,
+      "semantic_gap": 0.35578,
+      "semantic_similarity": 0.64422,
+      "reliable": true
+    },
+    {
+      "sdg": 17,
+      "research_proportion": 0.027271,
+      "policy_proportion_docweighted": 0.344463,
+      "coverage_gap_abs": 0.317191,
+      "research_dominance": -0.317192,
+      "semantic_gap": 0.658918,
+      "semantic_similarity": 0.341082,
+      "reliable": true
+    }
+  ]
+}

@@ -1,0 +1,382 @@
+{
+  "payload": {
+    "schema_version": 1,
+    "phase": "local_heldout_sdg",
+    "base_signature": {
+      "required_inputs": {
+        "data/2_embedded/research_shards/metadata/manifest.json": {
+          "path": "data/2_embedded/research_shards/metadata/manifest.json",
+          "size": 12671,
+          "mtime_ns": 1780157223209432713
+        },
+        "data/3_scored/paper_scores_shards/metadata/manifest.json": {
+          "path": "data/3_scored/paper_scores_shards/metadata/manifest.json",
+          "size": 12096,
+          "mtime_ns": 1780157223236932703
+        },
+        "data/1_preprocessed/research_corpus/metadata/manifest.json": {
+          "path": "data/1_preprocessed/research_corpus/metadata/manifest.json",
+          "size": 17962,
+          "mtime_ns": 1780157222393599738
+        },
+        "data/2_embedded/policy.npy": {
+          "path": "data/2_embedded/policy.npy",
+          "size": 72199808,
+          "mtime_ns": 1775820694306796621
+        },
+        "data/3_scored/metadata/policy_scores_ids.json": {
+          "path": "data/3_scored/metadata/policy_scores_ids.json",
+          "size": 3905137,
+          "mtime_ns": 1780229835736982781
+        },
+        "data/2_embedded/metadata/policy_ids.json": {
+          "path": "data/2_embedded/metadata/policy_ids.json",
+          "size": 59689628,
+          "mtime_ns": 1780157222631932969
+        },
+        "data/3_scored/policy_scores.npy": {
+          "path": "data/3_scored/policy_scores.npy",
+          "size": 3196468,
+          "mtime_ns": 1780229835621834954
+        },
+        "data/3_scored/research_centroids.npy": {
+          "path": "data/3_scored/research_centroids.npy",
+          "size": 26240,
+          "mtime_ns": 1780229834230465363
+        },
+        "data/3_scored/metadata/research_centroid_meta.json": {
+          "path": "data/3_scored/metadata/research_centroid_meta.json",
+          "size": 2580,
+          "mtime_ns": 1780229834230465363
+        }
+      },
+      "cache_schema_version": 1,
+      "script": "code/3_main_analysis/genre_adjustment.py"
+    },
+    "research_indices_by_sdg_signature": {
+      "schema_version": 1,
+      "phase": "local_research_indices_by_sdg",
+      "base_signature": {
+        "required_inputs": {
+          "data/2_embedded/research_shards/metadata/manifest.json": {
+            "path": "data/2_embedded/research_shards/metadata/manifest.json",
+            "size": 12671,
+            "mtime_ns": 1780157223209432713
+          },
+          "data/3_scored/paper_scores_shards/metadata/manifest.json": {
+            "path": "data/3_scored/paper_scores_shards/metadata/manifest.json",
+            "size": 12096,
+            "mtime_ns": 1780157223236932703
+          },
+          "data/1_preprocessed/research_corpus/metadata/manifest.json": {
+            "path": "data/1_preprocessed/research_corpus/metadata/manifest.json",
+            "size": 17962,
+            "mtime_ns": 1780157222393599738
+          },
+          "data/2_embedded/policy.npy": {
+            "path": "data/2_embedded/policy.npy",
+            "size": 72199808,
+            "mtime_ns": 1775820694306796621
+          },
+          "data/3_scored/metadata/policy_scores_ids.json": {
+            "path": "data/3_scored/metadata/policy_scores_ids.json",
+            "size": 3905137,
+            "mtime_ns": 1780229835736982781
+          },
+          "data/2_embedded/metadata/policy_ids.json": {
+            "path": "data/2_embedded/metadata/policy_ids.json",
+            "size": 59689628,
+            "mtime_ns": 1780157222631932969
+          },
+          "data/3_scored/policy_scores.npy": {
+            "path": "data/3_scored/policy_scores.npy",
+            "size": 3196468,
+            "mtime_ns": 1780229835621834954
+          },
+          "data/3_scored/research_centroids.npy": {
+            "path": "data/3_scored/research_centroids.npy",
+            "size": 26240,
+            "mtime_ns": 1780229834230465363
+          },
+          "data/3_scored/metadata/research_centroid_meta.json": {
+            "path": "data/3_scored/metadata/research_centroid_meta.json",
+            "size": 2580,
+            "mtime_ns": 1780229834230465363
+          }
+        },
+        "cache_schema_version": 1,
+        "script": "code/3_main_analysis/genre_adjustment.py"
+      }
+    },
+    "folds": [
+      [
+        1,
+        6,
+        11,
+        16
+      ],
+      [
+        2,
+        7,
+        12,
+        17
+      ],
+      [
+        3,
+        8,
+        13
+      ],
+      [
+        4,
+        9,
+        14
+      ],
+      [
+        5,
+        10,
+        15
+      ]
+    ],
+    "c_grid": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "split_fracs": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15
+    },
+    "seed": 42
+  },
+  "mean_test_metrics": {
+    "test_accuracy": 0.981776,
+    "test_roc_auc": 0.998018,
+    "test_f1": 0.981678,
+    "test_precision": 0.983635,
+    "test_recall": 0.979932
+  },
+  "fold_rows": [
+    {
+      "fold": 1,
+      "heldout_sdgs": [
+        1,
+        6,
+        11,
+        16
+      ],
+      "train_sdgs": [
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        17
+      ],
+      "train_per_class": 35579,
+      "test_per_class": 11426,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998803,
+      "val_f1": 0.985526,
+      "test_accuracy": 0.981446,
+      "test_roc_auc": 0.997961,
+      "test_f1": 0.981443,
+      "test_precision": 0.981614,
+      "test_recall": 0.981271,
+      "test_confusion_matrix": [
+        [
+          11216,
+          210
+        ],
+        [
+          214,
+          11212
+        ]
+      ]
+    },
+    {
+      "fold": 2,
+      "heldout_sdgs": [
+        2,
+        7,
+        12,
+        17
+      ],
+      "train_sdgs": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16
+      ],
+      "train_per_class": 34462,
+      "test_per_class": 12543,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998549,
+      "val_f1": 0.985839,
+      "test_accuracy": 0.987682,
+      "test_roc_auc": 0.998817,
+      "test_f1": 0.987745,
+      "test_precision": 0.982718,
+      "test_recall": 0.992825,
+      "test_confusion_matrix": [
+        [
+          12324,
+          219
+        ],
+        [
+          90,
+          12453
+        ]
+      ]
+    },
+    {
+      "fold": 3,
+      "heldout_sdgs": [
+        3,
+        8,
+        13
+      ],
+      "train_sdgs": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17
+      ],
+      "train_per_class": 37209,
+      "test_per_class": 9796,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998553,
+      "val_f1": 0.983664,
+      "test_accuracy": 0.985096,
+      "test_roc_auc": 0.998624,
+      "test_f1": 0.985155,
+      "test_precision": 0.981264,
+      "test_recall": 0.989077,
+      "test_confusion_matrix": [
+        [
+          9611,
+          185
+        ],
+        [
+          107,
+          9689
+        ]
+      ]
+    },
+    {
+      "fold": 4,
+      "heldout_sdgs": [
+        4,
+        9,
+        14
+      ],
+      "train_sdgs": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17
+      ],
+      "train_per_class": 40017,
+      "test_per_class": 6988,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998887,
+      "val_f1": 0.986561,
+      "test_accuracy": 0.970092,
+      "test_roc_auc": 0.9961,
+      "test_f1": 0.969431,
+      "test_precision": 0.991325,
+      "test_recall": 0.948483,
+      "test_confusion_matrix": [
+        [
+          6930,
+          58
+        ],
+        [
+          360,
+          6628
+        ]
+      ]
+    },
+    {
+      "fold": 5,
+      "heldout_sdgs": [
+        5,
+        10,
+        15
+      ],
+      "train_sdgs": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        16,
+        17
+      ],
+      "train_per_class": 40753,
+      "test_per_class": 6252,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998561,
+      "val_f1": 0.986125,
+      "test_accuracy": 0.984565,
+      "test_roc_auc": 0.998586,
+      "test_f1": 0.984618,
+      "test_precision": 0.981255,
+      "test_recall": 0.988004,
+      "test_confusion_matrix": [
+        [
+          6134,
+          118
+        ],
+        [
+          75,
+          6177
+        ]
+      ]
+    }
+  ]
+}

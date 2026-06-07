@@ -1,0 +1,4 @@
+subset,subset_label,n,ml_only_n,education_only_n,both_n,neither_unclear_n,ml_only_pct,education_only_pct,both_pct,neither_unclear_pct
+sdg4_assigned,SDG 4-assigned research,352005,27309,182134,110665,31897,7.758,51.742,31.438,9.062
+non_sdg4_sample,Non-SDG4 research sample,352005,196370,14217,11113,130305,55.786,4.039,3.157,37.018
+sdg9_assigned,SDG 9-assigned research,260631,133680,12026,11050,103875,51.291,4.614,4.24,39.855

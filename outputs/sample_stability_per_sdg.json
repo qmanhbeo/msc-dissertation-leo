@@ -1,0 +1,2007 @@
+{
+  "method": "sample_stability_random_subsampling",
+  "draws_per_tier": 100,
+  "sampled_tiers": [
+    "1k",
+    "2k",
+    "5k",
+    "10k",
+    "20k",
+    "50k",
+    "100k",
+    "200k",
+    "500k",
+    "1m",
+    "2m"
+  ],
+  "sampled_tier_sizes": {
+    "1k": 1000,
+    "2k": 2000,
+    "5k": 5000,
+    "10k": 10000,
+    "20k": 20000,
+    "50k": 50000,
+    "100k": 100000,
+    "200k": 200000,
+    "500k": 500000,
+    "1m": 1000000,
+    "2m": 2000000
+  },
+  "per_tier": [
+    {
+      "tier_label": "1k",
+      "sample_size": 1000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.00722,
+          "std": 0.002524
+        },
+        "SDG2": {
+          "mean": 0.03369,
+          "std": 0.005542
+        },
+        "SDG3": {
+          "mean": 0.17842,
+          "std": 0.011029
+        },
+        "SDG4": {
+          "mean": 0.13761,
+          "std": 0.011931
+        },
+        "SDG5": {
+          "mean": 0.02243,
+          "std": 0.004541
+        },
+        "SDG6": {
+          "mean": 0.04152,
+          "std": 0.006311
+        },
+        "SDG7": {
+          "mean": 0.08407,
+          "std": 0.008659
+        },
+        "SDG8": {
+          "mean": 0.0158,
+          "std": 0.004294
+        },
+        "SDG9": {
+          "mean": 0.10211,
+          "std": 0.008629
+        },
+        "SDG10": {
+          "mean": 0.00969,
+          "std": 0.003055
+        },
+        "SDG11": {
+          "mean": 0.05393,
+          "std": 0.007411
+        },
+        "SDG12": {
+          "mean": 0.03722,
+          "std": 0.006316
+        },
+        "SDG13": {
+          "mean": 0.05237,
+          "std": 0.008027
+        },
+        "SDG14": {
+          "mean": 0.0379,
+          "std": 0.00623
+        },
+        "SDG15": {
+          "mean": 0.07395,
+          "std": 0.008252
+        },
+        "SDG16": {
+          "mean": 0.08408,
+          "std": 0.007877
+        },
+        "SDG17": {
+          "mean": 0.02799,
+          "std": 0.005027
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.542174,
+          "std": 0.13402,
+          "observed_draws": 100,
+          "reliable_draws": 19
+        },
+        "SDG2": {
+          "mean": 0.374538,
+          "std": 0.046174,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.448216,
+          "std": 0.02408,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.295402,
+          "std": 0.013078,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.345485,
+          "std": 0.055214,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.525818,
+          "std": 0.056609,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.508989,
+          "std": 0.031785,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.378704,
+          "std": 0.065688,
+          "observed_draws": 100,
+          "reliable_draws": 95
+        },
+        "SDG9": {
+          "mean": 0.245539,
+          "std": 0.022432,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.645661,
+          "std": 0.116059,
+          "observed_draws": 100,
+          "reliable_draws": 50
+        },
+        "SDG11": {
+          "mean": 0.477751,
+          "std": 0.049439,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.470308,
+          "std": 0.059764,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.557345,
+          "std": 0.045347,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.520911,
+          "std": 0.062291,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.477954,
+          "std": 0.038452,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.381051,
+          "std": 0.032536,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.703189,
+          "std": 0.084928,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "2k",
+      "sample_size": 2000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006745,
+          "std": 0.001849
+        },
+        "SDG2": {
+          "mean": 0.033225,
+          "std": 0.004396
+        },
+        "SDG3": {
+          "mean": 0.179295,
+          "std": 0.007386
+        },
+        "SDG4": {
+          "mean": 0.137865,
+          "std": 0.008442
+        },
+        "SDG5": {
+          "mean": 0.022625,
+          "std": 0.003357
+        },
+        "SDG6": {
+          "mean": 0.040855,
+          "std": 0.004819
+        },
+        "SDG7": {
+          "mean": 0.083885,
+          "std": 0.006925
+        },
+        "SDG8": {
+          "mean": 0.01506,
+          "std": 0.002684
+        },
+        "SDG9": {
+          "mean": 0.10158,
+          "std": 0.00725
+        },
+        "SDG10": {
+          "mean": 0.00937,
+          "std": 0.002208
+        },
+        "SDG11": {
+          "mean": 0.055345,
+          "std": 0.004511
+        },
+        "SDG12": {
+          "mean": 0.037695,
+          "std": 0.004233
+        },
+        "SDG13": {
+          "mean": 0.0529,
+          "std": 0.005296
+        },
+        "SDG14": {
+          "mean": 0.039035,
+          "std": 0.003892
+        },
+        "SDG15": {
+          "mean": 0.07297,
+          "std": 0.006023
+        },
+        "SDG16": {
+          "mean": 0.08394,
+          "std": 0.00644
+        },
+        "SDG17": {
+          "mean": 0.02761,
+          "std": 0.004043
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.467063,
+          "std": 0.097156,
+          "observed_draws": 100,
+          "reliable_draws": 87
+        },
+        "SDG2": {
+          "mean": 0.348972,
+          "std": 0.034219,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.440703,
+          "std": 0.015756,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.290751,
+          "std": 0.010652,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.292783,
+          "std": 0.036045,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.520468,
+          "std": 0.041804,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.500926,
+          "std": 0.02352,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.336008,
+          "std": 0.044044,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.231842,
+          "std": 0.020203,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.596056,
+          "std": 0.08233,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.462903,
+          "std": 0.033746,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.454214,
+          "std": 0.040555,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.544901,
+          "std": 0.037442,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.509376,
+          "std": 0.038607,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.464677,
+          "std": 0.027982,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.369744,
+          "std": 0.024009,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.673473,
+          "std": 0.063027,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "5k",
+      "sample_size": 5000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.007072,
+          "std": 0.001091
+        },
+        "SDG2": {
+          "mean": 0.03392,
+          "std": 0.002412
+        },
+        "SDG3": {
+          "mean": 0.178924,
+          "std": 0.005326
+        },
+        "SDG4": {
+          "mean": 0.137694,
+          "std": 0.004992
+        },
+        "SDG5": {
+          "mean": 0.022468,
+          "std": 0.001873
+        },
+        "SDG6": {
+          "mean": 0.040392,
+          "std": 0.003023
+        },
+        "SDG7": {
+          "mean": 0.083964,
+          "std": 0.003679
+        },
+        "SDG8": {
+          "mean": 0.015154,
+          "std": 0.001686
+        },
+        "SDG9": {
+          "mean": 0.10279,
+          "std": 0.004882
+        },
+        "SDG10": {
+          "mean": 0.009282,
+          "std": 0.001262
+        },
+        "SDG11": {
+          "mean": 0.054952,
+          "std": 0.003243
+        },
+        "SDG12": {
+          "mean": 0.037206,
+          "std": 0.002625
+        },
+        "SDG13": {
+          "mean": 0.052466,
+          "std": 0.002844
+        },
+        "SDG14": {
+          "mean": 0.03839,
+          "std": 0.002722
+        },
+        "SDG15": {
+          "mean": 0.074332,
+          "std": 0.003638
+        },
+        "SDG16": {
+          "mean": 0.083502,
+          "std": 0.003683
+        },
+        "SDG17": {
+          "mean": 0.027492,
+          "std": 0.002277
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.388754,
+          "std": 0.074529,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.335681,
+          "std": 0.021607,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.438307,
+          "std": 0.011145,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.2876,
+          "std": 0.006336,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.276161,
+          "std": 0.023769,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.516298,
+          "std": 0.023491,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.499512,
+          "std": 0.014656,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.304192,
+          "std": 0.028878,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.224312,
+          "std": 0.009815,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.545797,
+          "std": 0.068413,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.463587,
+          "std": 0.022288,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.441327,
+          "std": 0.026453,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.543485,
+          "std": 0.023503,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.49618,
+          "std": 0.025566,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.467159,
+          "std": 0.018458,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.3593,
+          "std": 0.016576,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.670103,
+          "std": 0.036128,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "10k",
+      "sample_size": 10000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006902,
+          "std": 0.000789
+        },
+        "SDG2": {
+          "mean": 0.034171,
+          "std": 0.001716
+        },
+        "SDG3": {
+          "mean": 0.178284,
+          "std": 0.0038
+        },
+        "SDG4": {
+          "mean": 0.13771,
+          "std": 0.003106
+        },
+        "SDG5": {
+          "mean": 0.022854,
+          "std": 0.001304
+        },
+        "SDG6": {
+          "mean": 0.040104,
+          "std": 0.001947
+        },
+        "SDG7": {
+          "mean": 0.083979,
+          "std": 0.00261
+        },
+        "SDG8": {
+          "mean": 0.014654,
+          "std": 0.001263
+        },
+        "SDG9": {
+          "mean": 0.102397,
+          "std": 0.002767
+        },
+        "SDG10": {
+          "mean": 0.009473,
+          "std": 0.000972
+        },
+        "SDG11": {
+          "mean": 0.055116,
+          "std": 0.002272
+        },
+        "SDG12": {
+          "mean": 0.037452,
+          "std": 0.002103
+        },
+        "SDG13": {
+          "mean": 0.052286,
+          "std": 0.00221
+        },
+        "SDG14": {
+          "mean": 0.038913,
+          "std": 0.001904
+        },
+        "SDG15": {
+          "mean": 0.07466,
+          "std": 0.002703
+        },
+        "SDG16": {
+          "mean": 0.083806,
+          "std": 0.002634
+        },
+        "SDG17": {
+          "mean": 0.027239,
+          "std": 0.001448
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.357897,
+          "std": 0.053247,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.329026,
+          "std": 0.014467,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.43896,
+          "std": 0.007376,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.287978,
+          "std": 0.004371,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.258976,
+          "std": 0.014936,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.513144,
+          "std": 0.019241,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.49865,
+          "std": 0.009646,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.293189,
+          "std": 0.019539,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.221166,
+          "std": 0.006549,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.527019,
+          "std": 0.049544,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.458332,
+          "std": 0.016066,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.434442,
+          "std": 0.020557,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.539624,
+          "std": 0.017741,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.490231,
+          "std": 0.020468,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.46377,
+          "std": 0.011998,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.359201,
+          "std": 0.010834,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.665569,
+          "std": 0.026729,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "20k",
+      "sample_size": 20000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006899,
+          "std": 0.000573
+        },
+        "SDG2": {
+          "mean": 0.034135,
+          "std": 0.001261
+        },
+        "SDG3": {
+          "mean": 0.178614,
+          "std": 0.002697
+        },
+        "SDG4": {
+          "mean": 0.138642,
+          "std": 0.002354
+        },
+        "SDG5": {
+          "mean": 0.023005,
+          "std": 0.00101
+        },
+        "SDG6": {
+          "mean": 0.040282,
+          "std": 0.001443
+        },
+        "SDG7": {
+          "mean": 0.08363,
+          "std": 0.002179
+        },
+        "SDG8": {
+          "mean": 0.014886,
+          "std": 0.000781
+        },
+        "SDG9": {
+          "mean": 0.102323,
+          "std": 0.002173
+        },
+        "SDG10": {
+          "mean": 0.009404,
+          "std": 0.000624
+        },
+        "SDG11": {
+          "mean": 0.054736,
+          "std": 0.001541
+        },
+        "SDG12": {
+          "mean": 0.037195,
+          "std": 0.001289
+        },
+        "SDG13": {
+          "mean": 0.052275,
+          "std": 0.001529
+        },
+        "SDG14": {
+          "mean": 0.038908,
+          "std": 0.001344
+        },
+        "SDG15": {
+          "mean": 0.074067,
+          "std": 0.001836
+        },
+        "SDG16": {
+          "mean": 0.083833,
+          "std": 0.002179
+        },
+        "SDG17": {
+          "mean": 0.027167,
+          "std": 0.001176
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.336878,
+          "std": 0.034175,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.328049,
+          "std": 0.010108,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.438677,
+          "std": 0.005139,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.286976,
+          "std": 0.002964,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.255169,
+          "std": 0.01006,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.511669,
+          "std": 0.013449,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.498592,
+          "std": 0.00774,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.287102,
+          "std": 0.012033,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.220904,
+          "std": 0.005237,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.514324,
+          "std": 0.037069,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.458002,
+          "std": 0.011395,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.431762,
+          "std": 0.014123,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536679,
+          "std": 0.012354,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.486823,
+          "std": 0.013721,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.464369,
+          "std": 0.009017,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.357627,
+          "std": 0.007267,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.663147,
+          "std": 0.020225,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "50k",
+      "sample_size": 50000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006935,
+          "std": 0.000384
+        },
+        "SDG2": {
+          "mean": 0.034028,
+          "std": 0.000812
+        },
+        "SDG3": {
+          "mean": 0.17874,
+          "std": 0.001903
+        },
+        "SDG4": {
+          "mean": 0.138329,
+          "std": 0.001384
+        },
+        "SDG5": {
+          "mean": 0.022955,
+          "std": 0.00062
+        },
+        "SDG6": {
+          "mean": 0.040237,
+          "std": 0.000802
+        },
+        "SDG7": {
+          "mean": 0.083603,
+          "std": 0.001206
+        },
+        "SDG8": {
+          "mean": 0.014859,
+          "std": 0.000516
+        },
+        "SDG9": {
+          "mean": 0.102453,
+          "std": 0.001339
+        },
+        "SDG10": {
+          "mean": 0.00942,
+          "std": 0.000447
+        },
+        "SDG11": {
+          "mean": 0.054488,
+          "std": 0.001025
+        },
+        "SDG12": {
+          "mean": 0.037338,
+          "std": 0.000832
+        },
+        "SDG13": {
+          "mean": 0.052335,
+          "std": 0.001027
+        },
+        "SDG14": {
+          "mean": 0.038789,
+          "std": 0.000767
+        },
+        "SDG15": {
+          "mean": 0.074065,
+          "std": 0.001135
+        },
+        "SDG16": {
+          "mean": 0.084058,
+          "std": 0.001184
+        },
+        "SDG17": {
+          "mean": 0.027369,
+          "std": 0.000733
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.325409,
+          "std": 0.021226,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.326723,
+          "std": 0.007929,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.437451,
+          "std": 0.004014,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.286047,
+          "std": 0.002308,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.253409,
+          "std": 0.006383,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.508532,
+          "std": 0.007843,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.498428,
+          "std": 0.004262,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.282667,
+          "std": 0.00805,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.220422,
+          "std": 0.003328,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.502793,
+          "std": 0.02472,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.456069,
+          "std": 0.00678,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.429255,
+          "std": 0.008791,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536826,
+          "std": 0.007356,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.484362,
+          "std": 0.008922,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.46425,
+          "std": 0.006189,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.356391,
+          "std": 0.00526,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.661388,
+          "std": 0.013845,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "100k",
+      "sample_size": 100000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006878,
+          "std": 0.000276
+        },
+        "SDG2": {
+          "mean": 0.034091,
+          "std": 0.00062
+        },
+        "SDG3": {
+          "mean": 0.178671,
+          "std": 0.001293
+        },
+        "SDG4": {
+          "mean": 0.138333,
+          "std": 0.000943
+        },
+        "SDG5": {
+          "mean": 0.02284,
+          "std": 0.000437
+        },
+        "SDG6": {
+          "mean": 0.04038,
+          "std": 0.000633
+        },
+        "SDG7": {
+          "mean": 0.083672,
+          "std": 0.000831
+        },
+        "SDG8": {
+          "mean": 0.014749,
+          "std": 0.000376
+        },
+        "SDG9": {
+          "mean": 0.10262,
+          "std": 0.000935
+        },
+        "SDG10": {
+          "mean": 0.009407,
+          "std": 0.000324
+        },
+        "SDG11": {
+          "mean": 0.054395,
+          "std": 0.000701
+        },
+        "SDG12": {
+          "mean": 0.037305,
+          "std": 0.000595
+        },
+        "SDG13": {
+          "mean": 0.052362,
+          "std": 0.000746
+        },
+        "SDG14": {
+          "mean": 0.038767,
+          "std": 0.000658
+        },
+        "SDG15": {
+          "mean": 0.074123,
+          "std": 0.000887
+        },
+        "SDG16": {
+          "mean": 0.084072,
+          "std": 0.00094
+        },
+        "SDG17": {
+          "mean": 0.027334,
+          "std": 0.000489
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.323581,
+          "std": 0.016927,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.325674,
+          "std": 0.005705,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.437201,
+          "std": 0.002342,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.285867,
+          "std": 0.001426,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.252838,
+          "std": 0.004883,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.509937,
+          "std": 0.005308,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.497132,
+          "std": 0.00305,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.281567,
+          "std": 0.006974,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.22067,
+          "std": 0.002372,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.500389,
+          "std": 0.01698,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.457177,
+          "std": 0.004923,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.428357,
+          "std": 0.00627,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536616,
+          "std": 0.004803,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.483483,
+          "std": 0.006104,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.463416,
+          "std": 0.004638,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.356044,
+          "std": 0.002949,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.658587,
+          "std": 0.008681,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "200k",
+      "sample_size": 200000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006896,
+          "std": 0.000169
+        },
+        "SDG2": {
+          "mean": 0.034142,
+          "std": 0.000428
+        },
+        "SDG3": {
+          "mean": 0.178719,
+          "std": 0.00086
+        },
+        "SDG4": {
+          "mean": 0.138248,
+          "std": 0.000688
+        },
+        "SDG5": {
+          "mean": 0.022879,
+          "std": 0.000305
+        },
+        "SDG6": {
+          "mean": 0.040379,
+          "std": 0.000377
+        },
+        "SDG7": {
+          "mean": 0.083637,
+          "std": 0.000514
+        },
+        "SDG8": {
+          "mean": 0.01478,
+          "std": 0.000238
+        },
+        "SDG9": {
+          "mean": 0.102507,
+          "std": 0.000609
+        },
+        "SDG10": {
+          "mean": 0.009415,
+          "std": 0.000231
+        },
+        "SDG11": {
+          "mean": 0.054458,
+          "std": 0.000462
+        },
+        "SDG12": {
+          "mean": 0.037269,
+          "std": 0.000416
+        },
+        "SDG13": {
+          "mean": 0.052321,
+          "std": 0.000534
+        },
+        "SDG14": {
+          "mean": 0.038823,
+          "std": 0.000439
+        },
+        "SDG15": {
+          "mean": 0.074158,
+          "std": 0.000607
+        },
+        "SDG16": {
+          "mean": 0.084073,
+          "std": 0.000633
+        },
+        "SDG17": {
+          "mean": 0.027296,
+          "std": 0.000356
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.32112,
+          "std": 0.009953,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.325969,
+          "std": 0.003674,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.437307,
+          "std": 0.001752,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.285724,
+          "std": 0.001028,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.25212,
+          "std": 0.003128,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.510209,
+          "std": 0.003735,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.497054,
+          "std": 0.002374,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.28053,
+          "std": 0.003997,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.220417,
+          "std": 0.001703,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.500486,
+          "std": 0.011201,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.456835,
+          "std": 0.003401,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.428092,
+          "std": 0.004488,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536305,
+          "std": 0.003134,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.484178,
+          "std": 0.004717,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.46343,
+          "std": 0.003057,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.355947,
+          "std": 0.002152,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.658223,
+          "std": 0.005614,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "500k",
+      "sample_size": 500000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006903,
+          "std": 9.7e-05
+        },
+        "SDG2": {
+          "mean": 0.034093,
+          "std": 0.000235
+        },
+        "SDG3": {
+          "mean": 0.178692,
+          "std": 0.000468
+        },
+        "SDG4": {
+          "mean": 0.138371,
+          "std": 0.000483
+        },
+        "SDG5": {
+          "mean": 0.022861,
+          "std": 0.000197
+        },
+        "SDG6": {
+          "mean": 0.040343,
+          "std": 0.000249
+        },
+        "SDG7": {
+          "mean": 0.083622,
+          "std": 0.000308
+        },
+        "SDG8": {
+          "mean": 0.014772,
+          "std": 0.000147
+        },
+        "SDG9": {
+          "mean": 0.102491,
+          "std": 0.000387
+        },
+        "SDG10": {
+          "mean": 0.009396,
+          "std": 0.00013
+        },
+        "SDG11": {
+          "mean": 0.054473,
+          "std": 0.000253
+        },
+        "SDG12": {
+          "mean": 0.037253,
+          "std": 0.000244
+        },
+        "SDG13": {
+          "mean": 0.052336,
+          "std": 0.000299
+        },
+        "SDG14": {
+          "mean": 0.038828,
+          "std": 0.000233
+        },
+        "SDG15": {
+          "mean": 0.074222,
+          "std": 0.000335
+        },
+        "SDG16": {
+          "mean": 0.084063,
+          "std": 0.000409
+        },
+        "SDG17": {
+          "mean": 0.02728,
+          "std": 0.000223
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.318493,
+          "std": 0.00593,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.325601,
+          "std": 0.002345,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.43738,
+          "std": 0.000936,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.285696,
+          "std": 0.00059,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.251683,
+          "std": 0.001991,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.509556,
+          "std": 0.002265,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.497801,
+          "std": 0.001342,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.280157,
+          "std": 0.002278,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.220347,
+          "std": 0.000998,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.500931,
+          "std": 0.005847,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.456845,
+          "std": 0.001979,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.427884,
+          "std": 0.002605,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536054,
+          "std": 0.002118,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.484091,
+          "std": 0.002586,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.463632,
+          "std": 0.001876,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.355892,
+          "std": 0.001266,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.659,
+          "std": 0.00327,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "1m",
+      "sample_size": 1000000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006899,
+          "std": 6.6e-05
+        },
+        "SDG2": {
+          "mean": 0.034078,
+          "std": 0.000144
+        },
+        "SDG3": {
+          "mean": 0.178633,
+          "std": 0.000258
+        },
+        "SDG4": {
+          "mean": 0.138382,
+          "std": 0.000263
+        },
+        "SDG5": {
+          "mean": 0.022895,
+          "std": 0.000111
+        },
+        "SDG6": {
+          "mean": 0.040338,
+          "std": 0.000162
+        },
+        "SDG7": {
+          "mean": 0.08368,
+          "std": 0.0002
+        },
+        "SDG8": {
+          "mean": 0.014776,
+          "std": 8.3e-05
+        },
+        "SDG9": {
+          "mean": 0.102465,
+          "std": 0.00024
+        },
+        "SDG10": {
+          "mean": 0.009385,
+          "std": 7.6e-05
+        },
+        "SDG11": {
+          "mean": 0.054495,
+          "std": 0.000164
+        },
+        "SDG12": {
+          "mean": 0.037257,
+          "std": 0.000144
+        },
+        "SDG13": {
+          "mean": 0.052332,
+          "std": 0.00018
+        },
+        "SDG14": {
+          "mean": 0.038834,
+          "std": 0.000147
+        },
+        "SDG15": {
+          "mean": 0.074237,
+          "std": 0.000222
+        },
+        "SDG16": {
+          "mean": 0.084039,
+          "std": 0.000261
+        },
+        "SDG17": {
+          "mean": 0.027277,
+          "std": 0.000138
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.317365,
+          "std": 0.003954,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.325848,
+          "std": 0.001176,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.437397,
+          "std": 0.000596,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.285665,
+          "std": 0.000428,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.25162,
+          "std": 0.001302,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.509283,
+          "std": 0.001433,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.497728,
+          "std": 0.000896,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.279993,
+          "std": 0.00169,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.220265,
+          "std": 0.000604,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.500762,
+          "std": 0.003857,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.456933,
+          "std": 0.001194,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.428074,
+          "std": 0.00155,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536054,
+          "std": 0.001303,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.4837,
+          "std": 0.001466,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.463594,
+          "std": 0.001076,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.355823,
+          "std": 0.000813,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.659158,
+          "std": 0.002204,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    },
+    {
+      "tier_label": "2m",
+      "sample_size": 2000000,
+      "n_draws": 100,
+      "coverage_share": {
+        "SDG1": {
+          "mean": 0.006903,
+          "std": 2.3e-05
+        },
+        "SDG2": {
+          "mean": 0.034094,
+          "std": 5.5e-05
+        },
+        "SDG3": {
+          "mean": 0.178648,
+          "std": 0.000122
+        },
+        "SDG4": {
+          "mean": 0.138367,
+          "std": 0.000104
+        },
+        "SDG5": {
+          "mean": 0.022891,
+          "std": 5.1e-05
+        },
+        "SDG6": {
+          "mean": 0.040331,
+          "std": 6.6e-05
+        },
+        "SDG7": {
+          "mean": 0.083685,
+          "std": 8.4e-05
+        },
+        "SDG8": {
+          "mean": 0.014768,
+          "std": 3.8e-05
+        },
+        "SDG9": {
+          "mean": 0.102461,
+          "std": 0.000103
+        },
+        "SDG10": {
+          "mean": 0.009384,
+          "std": 3e-05
+        },
+        "SDG11": {
+          "mean": 0.054496,
+          "std": 7e-05
+        },
+        "SDG12": {
+          "mean": 0.037278,
+          "std": 6.2e-05
+        },
+        "SDG13": {
+          "mean": 0.052324,
+          "std": 8.5e-05
+        },
+        "SDG14": {
+          "mean": 0.038839,
+          "std": 7.4e-05
+        },
+        "SDG15": {
+          "mean": 0.074236,
+          "std": 8.6e-05
+        },
+        "SDG16": {
+          "mean": 0.084027,
+          "std": 8.7e-05
+        },
+        "SDG17": {
+          "mean": 0.027268,
+          "std": 4.9e-05
+        }
+      },
+      "semantic_gap": {
+        "SDG1": {
+          "mean": 0.317758,
+          "std": 0.001824,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG2": {
+          "mean": 0.325874,
+          "std": 0.000584,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG3": {
+          "mean": 0.437394,
+          "std": 0.000238,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG4": {
+          "mean": 0.285613,
+          "std": 0.000173,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG5": {
+          "mean": 0.251511,
+          "std": 0.00048,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG6": {
+          "mean": 0.509222,
+          "std": 0.000569,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG7": {
+          "mean": 0.497778,
+          "std": 0.000325,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG8": {
+          "mean": 0.279977,
+          "std": 0.000636,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG9": {
+          "mean": 0.22022,
+          "std": 0.000241,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG10": {
+          "mean": 0.500809,
+          "std": 0.001878,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG11": {
+          "mean": 0.456913,
+          "std": 0.000515,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG12": {
+          "mean": 0.428019,
+          "std": 0.000735,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG13": {
+          "mean": 0.536101,
+          "std": 0.000559,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG14": {
+          "mean": 0.483865,
+          "std": 0.000645,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG15": {
+          "mean": 0.463786,
+          "std": 0.000439,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG16": {
+          "mean": 0.355799,
+          "std": 0.000364,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        },
+        "SDG17": {
+          "mean": 0.658784,
+          "std": 0.001043,
+          "observed_draws": 100,
+          "reliable_draws": 100
+        }
+      }
+    }
+  ],
+  "full_corpus": {
+    "sample_size": 2543698,
+    "mean_semantic_gap": 0.412347,
+    "mean_h26_asymmetry_gap": 0.152361,
+    "mean_a15_calibration_bias": 0.320545
+  }
+}
