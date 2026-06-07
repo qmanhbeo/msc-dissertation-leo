@@ -31,6 +31,14 @@ MANUSCRIPT_ROOT_FILES = [
     "dissertation.pdf",
 ]
 
+MANUSCRIPT_EXTRA_FILES = [
+    "source_family_sensitivity/policy_source_family_summary.csv",
+    "source_family_sensitivity/policy_source_family_coverage.csv",
+    "source_family_sensitivity/policy_source_family_semantic_gaps.csv",
+    "sdg4_audit/sdg4_lexical_audit.csv",
+    "sdg4_audit/sdg4_lexical_audit_summary.json",
+]
+
 MANUSCRIPT_TABLE_FILES = [
     "pca_semantic_landscape_metadata.json",
     "num_pca_semantic_landscape.tex",
@@ -43,6 +51,8 @@ MANUSCRIPT_TABLE_FILES = [
     "softmax_multilabel_metadata.json",
     "num_softmax_multilabel.tex",
     "tab_softmax_multilabel_summary.tex",
+    "tab_policy_source_family_sensitivity.tex",
+    "tab_sdg4_lexical_audit.tex",
     "num_validation.tex",
     "tab_validation.tex",
     "num_coverage.tex",
@@ -115,6 +125,7 @@ def require_pdf_inputs(output_dir: Path) -> Path:
 def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     root = Path(output_dir)
     files = [root / name for name in MANUSCRIPT_ROOT_FILES]
+    files.extend(root / name for name in MANUSCRIPT_EXTRA_FILES)
     files.extend(root / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
     files.extend(root / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
     return files

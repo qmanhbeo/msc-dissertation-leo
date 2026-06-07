@@ -22,11 +22,11 @@ H25 (headline hypothesis):
 
   All three operationalisations are reported. The primary test for H25 is (a).
 
-H26 asymmetry:
+H26 asymmetry diagnostic:
   Computed from active score artifacts. The mean top-SDG score when papers are scored
   against OSDG centroids is compared to the mean top-SDG score when policy chunks are scored
-  against research centroids. An asymmetry where policy engages research framing more than
-  research engages policy framing supports H26.
+  against research centroids. This is treated as an appendix-style directional diagnostic,
+  not as a headline result.
 
 Statistics:
   Pearson r (parametric, assumes linear relationship) and Spearman ρ (rank correlation,
@@ -333,7 +333,7 @@ def main() -> None:
     # ---- H26 asymmetry ----
     log.info("")
     log.info("=" * 70)
-    log.info("H26 DIRECTIONAL ASYMMETRY")
+    log.info("H26 DIRECTIONAL ASYMMETRY DIAGNOSTIC")
     log.info("=" * 70)
     research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
     pol_vs_research = np.load(POL_VS_RES_PATH)
@@ -355,17 +355,16 @@ def main() -> None:
     log.info("  Policy chunks vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
     h26_supported = mean_pol_vs_res > mean_paper_top
     h26_gap = mean_pol_vs_res - mean_paper_top
-    log.info("  Asymmetry gap (policy - research): %.4f  → H26 %s",
-             h26_gap, "SUPPORTED" if h26_supported else "NOT SUPPORTED")
+    log.info("  Asymmetry gap (policy - research): %.4f  → H26 direction %s",
+             h26_gap, "OBSERVED" if h26_supported else "NOT OBSERVED")
     if h26_supported:
         log.info(
-            "  Interpretation: policy engages research framing more than research engages "
-            "policy framing. Research ignores policy language more than policy ignores research."
+            "  Diagnostic reading: policy-facing texts score closer to research-derived "
+            "centroids than papers score to OSDG-derived centroids."
         )
     else:
         log.info(
-            "  Interpretation: research engages policy framing more than policy engages "
-            "research framing — AGAINST H26 direction."
+            "  Diagnostic reading: the observed direction does not favour the H26 asymmetry claim."
         )
 
     # ---- Save outputs ----
@@ -395,8 +394,8 @@ def main() -> None:
         },
         "h26": {
             "hypothesis": (
-                "Research papers score lower against OSDG centroids than policy chunks score "
-                "against research centroids — research ignores policy framing more than vice versa."
+                "Policy-facing texts may score closer to research-derived centroids than papers score "
+                "to OSDG-derived centroids, but this is treated only as a directional diagnostic."
             ),
             "mean_paper_top_vs_osdg": round(mean_paper_top, 6),
             "mean_policy_top_vs_research": round(mean_pol_vs_res, 6),
@@ -404,8 +403,8 @@ def main() -> None:
             "supported": h26_supported,
             "caveats": [
                 f"A15 FLAG: policy scores against OSDG centroids are inflated by {a15_gap:.3f} relative "
-                "to paper scores. The H26 asymmetry may partly reflect this calibration bias, "
-                "not genuine research-policy framing asymmetry.",
+                "to paper scores. The H26 diagnostic may partly reflect this calibration bias, "
+                "not genuine directional asymmetry.",
                 "Research centroids are built via hard assignment from OSDG centroids — a "
                 "circularity that may reduce apparent research-centroid distance.",
             ],

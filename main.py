@@ -66,6 +66,16 @@ def parse_args() -> argparse.Namespace:
         help="Run only the Appendix A softmax-weighted multi-label SDG robustness stage from existing embedded/scored data.",
     )
     p.add_argument(
+        "--policy-source-family-sensitivity",
+        action="store_true",
+        help="Run only the Appendix A policy source-family sensitivity diagnostic from existing embedded/scored data.",
+    )
+    p.add_argument(
+        "--sdg4-lexical-audit",
+        action="store_true",
+        help="Run only the Appendix A SDG 4 lexical artefact audit from existing scored research assignments and text shards.",
+    )
+    p.add_argument(
         "--within-corpus-centroid-structure",
         action="store_true",
         help="Run only the Appendix A within-corpus SDG centroid-structure diagnostics from existing embedded/scored data.",
@@ -138,6 +148,8 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.full_pipeline,
             args.pca_semantic_landscape,
             args.softmax_multilabel_sdg,
+            args.policy_source_family_sensitivity,
+            args.sdg4_lexical_audit,
             args.within_corpus_centroid_structure,
             args.fetch_data_snapshot,
             args.refresh_policy_corpus,
@@ -377,6 +389,20 @@ def run_softmax_multilabel_sdg(output_dir: Path) -> None:
     )
 
 
+def run_policy_source_family_sensitivity(output_dir: Path) -> None:
+    run_step(
+        "appendix A policy source-family sensitivity",
+        [sys.executable, "code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(output_dir)],
+    )
+
+
+def run_sdg4_lexical_audit(output_dir: Path) -> None:
+    run_step(
+        "appendix A SDG 4 lexical artefact audit",
+        [sys.executable, "code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(output_dir)],
+    )
+
+
 def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
     cmd = [sys.executable, "code/3_main_analysis/3_appendix/3_genre_adjustment.py", "--output-dir", str(output_dir)]
     if not include_genre_confidence_checks:
@@ -415,6 +441,8 @@ def run_warm_replay(
     run_pca_semantic_landscape(output_dir)
     run_within_corpus_centroid_structure(output_dir)
     run_softmax_multilabel_sdg(output_dir)
+    run_policy_source_family_sensitivity(output_dir)
+    run_sdg4_lexical_audit(output_dir)
     run_step("coverage gap", [sys.executable, "code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
     run_step("semantic gap", [sys.executable, "code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
     run_step(
@@ -537,6 +565,8 @@ def main() -> None:
         or args.full_pipeline
         or args.pca_semantic_landscape
         or args.softmax_multilabel_sdg
+        or args.policy_source_family_sensitivity
+        or args.sdg4_lexical_audit
         or args.within_corpus_centroid_structure
         or args.sample_stability
         or args.build_pdf
@@ -559,6 +589,12 @@ def main() -> None:
     elif args.softmax_multilabel_sdg:
         ensure_warm_replay_inputs(args, include_genre_adjustment=False)
         run_softmax_multilabel_sdg(output_dir)
+    elif args.policy_source_family_sensitivity:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        run_policy_source_family_sensitivity(output_dir)
+    elif args.sdg4_lexical_audit:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=True)
+        run_sdg4_lexical_audit(output_dir)
     elif args.within_corpus_centroid_structure:
         ensure_warm_replay_inputs(args, include_genre_adjustment=False)
         run_within_corpus_centroid_structure(output_dir)
