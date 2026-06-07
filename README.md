@@ -27,19 +27,19 @@ Rebuild the canonical analysis package and PDF from existing `data/`:
 python main.py --warm-replay --overwrite
 ```
 
-Run only the canonical descriptive PCA semantic-landscape stage:
+Run only the Appendix A PCA semantic-landscape diagnostic stage:
 
 ```bash
 python main.py --pca-semantic-landscape --overwrite
 ```
 
-Run only the within-corpus SDG centroid-structure diagnostics:
+Run only the Appendix A within-corpus SDG centroid-structure diagnostics:
 
 ```bash
 python main.py --within-corpus-centroid-structure --overwrite
 ```
 
-Run the soft multi-label SDG robustness stage:
+Run the Appendix A soft multi-label SDG robustness stage:
 
 ```bash
 python main.py --softmax-multilabel-sdg --overwrite
@@ -81,7 +81,7 @@ Run only the sample-stability robustness stage from existing canonical analysis 
 python main.py --sample-stability --overwrite
 ```
 
-Run the appendix-style genre-adjustment robustness suite from existing embedded/scored data:
+Run the Appendix B genre-adjustment robustness suite from existing embedded/scored data:
 
 ```bash
 python main.py --genre-adjustment --overwrite
@@ -102,12 +102,12 @@ python main.py --genre-adjustment --overwrite --skip-genre-confidence-checks
 Run only the new SDG-aware genre robustness methods inside the stage from the script CLI:
 
 ```bash
-python code/3_main_analysis/robustness/1_genre_adjustment.py --method sdg_balanced
-python code/3_main_analysis/robustness/1_genre_adjustment.py --method within_sdg
-python code/3_main_analysis/robustness/1_genre_adjustment.py --method both
+python code/3_main_analysis/3_appendix/3_genre_adjustment.py --method sdg_balanced
+python code/3_main_analysis/3_appendix/3_genre_adjustment.py --method within_sdg
+python code/3_main_analysis/3_appendix/3_genre_adjustment.py --method both
 ```
 
-Build only the canonical PDF from existing canonical tables and figures:
+Build only the dissertation PDF from existing manuscript tables and figures:
 
 ```bash
 python main.py --build-pdf --overwrite
@@ -272,22 +272,24 @@ Research side:
 
 Downstream analysis:
 1. score the active policy corpus against SDG and research centroids
-2. fit the descriptive balanced-sample PCA semantic landscape and project SDG anchors plus full-corpus research/policy SDG centroids
-3. fit separate within-corpus PCA diagnostics for research and policy and compute centroid-coherence / clustering diagnostics
-4. compute coverage gap
-5. compute semantic gap with chunk-cap sensitivity checks
-6. compute H25/H26 interaction outputs
-7. run the sample-stability robustness sweep
-8. optionally run the genre-adjustment robustness suite
-9. generate figures
-10. build the dissertation PDF from canonical tables and figures
+2. fit the Appendix A balanced-sample PCA semantic landscape and project SDG anchors plus full-corpus research/policy SDG centroids
+3. fit Appendix A within-corpus PCA diagnostics for research and policy and compute centroid-coherence / clustering diagnostics
+4. run the Appendix A softmax multi-label robustness stage
+5. compute coverage gap
+6. compute semantic gap with chunk-cap sensitivity checks
+7. compute H25/H26 interaction outputs
+8. generate figures
+9. run the sample-stability robustness sweep
+10. optionally run the Appendix B genre-adjustment robustness suite
+11. build the dissertation PDF from manuscript tables and figures
 
 ## Robustness and Validation
 
 The active canon includes these safeguards:
 - centroid validation on the expert-labelled benchmark (`macro-F1` reported before downstream use)
-- PCA semantic-landscape visualisation fitted on a balanced policy-plus-sampled-research corpus so the 2D projection is not dominated by the much larger research universe
-- corpus-internal PCA diagnostics for research and policy, paired with within-centroid cosine diagnostics, assignment margins, silhouette scores, and k-means agreement checks
+- Appendix A PCA semantic-landscape visualisation fitted on a balanced policy-plus-sampled-research corpus so the 2D projection is not dominated by the much larger research universe
+- Appendix A corpus-internal PCA diagnostics for research and policy, paired with within-centroid cosine diagnostics, assignment margins, silhouette scores, and k-means agreement checks
+- Appendix A softmax-weighted multi-label stress test, including a corpus-calibrated variant that probes sensitivity to centroid-register calibration
 - document-weighted policy coverage, so long policy reports do not dominate by chunk count alone
 - semantic-gap chunk-cap sensitivity at 20, 50, and 100 chunks per document
 - explicit SDG reliability flags when clusters are too small
@@ -313,9 +315,10 @@ Active source:
   Research subchain: `research/0_embed_paper_shards.py`, `research/1_score_paper_shards.py`
   Policy subchain: `policy/0_score_policy_corpus.py`
 - `code/3_main_analysis/`
-  Canonical chain: `canonical/0_pca_semantic_landscape.py`, `canonical/1_within_corpus_centroid_structure.py`, `canonical/2_coverage_gap.py`, `canonical/3_semantic_gap.py`, `canonical/4_coverage_semantic_interaction.py`
-  Robustness chain: `robustness/0_sample_stability.py`, `robustness/1_genre_adjustment.py`
-  Shared helpers: `shared/`
+  `0_shared/`: helper modules reused across analysis stages
+  `1_canonical/`: `0_coverage_gap.py`, `1_semantic_gap.py`, `2_coverage_semantic_interaction.py`
+  `2_robustness/`: `0_sample_stability.py`
+  `3_appendix/`: `0_pca_semantic_landscape.py`, `1_within_corpus_centroid_structure.py`, `2_softmax_multilabel_sdg.py`, `3_genre_adjustment.py`
 - `code/4_visualization/`
 - `code/shared_utils.py`
 - `writing/dissertation.tex`

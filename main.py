@@ -58,17 +58,17 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--pca-semantic-landscape",
         action="store_true",
-        help="Run only the canonical descriptive PCA semantic-landscape stage from existing embedded/scored data.",
+        help="Run only the Appendix A PCA semantic-landscape diagnostic stage from existing embedded/scored data.",
     )
     p.add_argument(
         "--softmax-multilabel-sdg",
         action="store_true",
-        help="Run only the softmax-weighted multi-label SDG robustness stage from existing embedded/scored data.",
+        help="Run only the Appendix A softmax-weighted multi-label SDG robustness stage from existing embedded/scored data.",
     )
     p.add_argument(
         "--within-corpus-centroid-structure",
         action="store_true",
-        help="Run only the canonical within-corpus SDG centroid-structure diagnostics from existing embedded/scored data.",
+        help="Run only the Appendix A within-corpus SDG centroid-structure diagnostics from existing embedded/scored data.",
     )
     p.add_argument(
         "--fetch-data-snapshot",
@@ -88,7 +88,7 @@ def parse_args() -> argparse.Namespace:
         "--genre-adjustment",
         action="store_true",
         help=(
-            "Run the appendix-style genre-adjustment robustness suite from existing embedded/scored data. "
+            "Run the Appendix B genre-adjustment robustness suite from existing embedded/scored data. "
             "This stage is additive only and does not replace the canonical raw semantic gap."
         ),
     )
@@ -108,10 +108,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--sdg-genre-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
     p.add_argument("--sdg-genre-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware genre robustness checks.")
     p.add_argument("--sdg-genre-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware genre robustness checks.")
-    p.add_argument("--build-pdf", action="store_true", help="Build outputs/dissertation.pdf from existing canonical tables/figures.")
-    p.add_argument("--clean-canon", action="store_true", help="Remove canonical outputs/ artifacts only.")
-    p.add_argument("--overwrite", action="store_true", help="Required before replacing existing canonical outputs.")
-    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Canonical output directory. Default: outputs/")
+    p.add_argument("--build-pdf", action="store_true", help="Build outputs/dissertation.pdf from existing manuscript tables/figures.")
+    p.add_argument("--clean-canon", action="store_true", help="Remove manuscript output artifacts only.")
+    p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: outputs/")
     p.add_argument(
         "--snapshot-profile",
         choices=["curated", "full"],
@@ -257,7 +257,7 @@ def clean_canonical_outputs(output_dir: Path) -> None:
 
 def print_status(output_dir: Path) -> None:
     print(f"Project root: {ROOT}")
-    print(f"Canonical output dir: {output_dir}")
+    print(f"Manuscript output dir: {output_dir}")
 
     warm_missing = missing_warm_replay_requirements(include_genre_adjustment=False)
     print("")
@@ -283,7 +283,7 @@ def print_status(output_dir: Path) -> None:
 
     status = canonical_artifact_status(output_dir)
     print("")
-    print("Canonical output status:")
+    print("Manuscript output status:")
     print(f"  present: {len(status['present'])}")
     print(f"  missing: {len(status['missing'])}")
     if status["present"]:
@@ -352,33 +352,33 @@ def run_sample_stability(output_dir: Path) -> None:
     )
     run_step(
         "sample stability",
-        [sys.executable, "code/3_main_analysis/robustness/0_sample_stability.py", "--output-dir", str(output_dir)],
+        [sys.executable, "code/3_main_analysis/2_robustness/0_sample_stability.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_pca_semantic_landscape(output_dir: Path) -> None:
     run_step(
-        "pca semantic landscape",
-        [sys.executable, "code/3_main_analysis/canonical/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
+        "appendix A pca semantic landscape",
+        [sys.executable, "code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_within_corpus_centroid_structure(output_dir: Path) -> None:
     run_step(
-        "within-corpus centroid structure",
-        [sys.executable, "code/3_main_analysis/canonical/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
+        "appendix A within-corpus centroid structure",
+        [sys.executable, "code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_softmax_multilabel_sdg(output_dir: Path) -> None:
     run_step(
-        "softmax multi-label SDG robustness",
-        [sys.executable, "code/3_main_analysis/robustness/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
+        "appendix A softmax multi-label SDG robustness",
+        [sys.executable, "code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
-    cmd = [sys.executable, "code/3_main_analysis/robustness/1_genre_adjustment.py", "--output-dir", str(output_dir)]
+    cmd = [sys.executable, "code/3_main_analysis/3_appendix/3_genre_adjustment.py", "--output-dir", str(output_dir)]
     if not include_genre_confidence_checks:
         cmd.append("--skip-genre-confidence-checks")
     cmd.extend(["--method", args.sdg_genre_method])
@@ -390,7 +390,7 @@ def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_
     if args.sdg_genre_samples_per_cell is not None:
         cmd.extend(["--samples-per-cell", str(args.sdg_genre_samples_per_cell)])
     run_step(
-        "genre-adjustment robustness",
+        "appendix B genre-adjustment robustness",
         cmd,
     )
 
@@ -414,11 +414,12 @@ def run_warm_replay(
     run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
     run_pca_semantic_landscape(output_dir)
     run_within_corpus_centroid_structure(output_dir)
-    run_step("coverage gap", [sys.executable, "code/3_main_analysis/canonical/2_coverage_gap.py", "--output-dir", str(output_dir)])
-    run_step("semantic gap", [sys.executable, "code/3_main_analysis/canonical/3_semantic_gap.py", "--output-dir", str(output_dir)])
+    run_softmax_multilabel_sdg(output_dir)
+    run_step("coverage gap", [sys.executable, "code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
+    run_step("semantic gap", [sys.executable, "code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
     run_step(
         "coverage semantic interaction",
-        [sys.executable, "code/3_main_analysis/canonical/4_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
+        [sys.executable, "code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
     )
     run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
@@ -541,7 +542,7 @@ def main() -> None:
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         raise RuntimeError(
-            "Canonical outputs already exist. Re-run with --overwrite to replace them, "
+            "Manuscript outputs already exist. Re-run with --overwrite to replace them, "
             "or run without action flags to inspect status."
         )
 

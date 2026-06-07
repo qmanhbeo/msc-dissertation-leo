@@ -5,13 +5,16 @@ from pathlib import Path
 
 
 @dataclass(frozen=True)
-class CanonicalOutputs:
+class DissertationOutputs:
     root: Path
     tables_dir: Path
     figures_dir: Path
 
 
-CANONICAL_ROOT_FILES = [
+CanonicalOutputs = DissertationOutputs
+
+
+MANUSCRIPT_ROOT_FILES = [
     "sdg_attention_distribution_document_weighted.json",
     "diagnostic_sdg_attention_distribution_unweighted_chunks.json",
     "sdg_conceptual_alignment_cosine_distances.json",
@@ -28,12 +31,18 @@ CANONICAL_ROOT_FILES = [
     "dissertation.pdf",
 ]
 
-CANONICAL_TABLE_FILES = [
+MANUSCRIPT_TABLE_FILES = [
     "pca_semantic_landscape_metadata.json",
     "num_pca_semantic_landscape.tex",
     "within_corpus_centroid_structure_metrics.csv",
     "within_corpus_centroid_structure_summary.json",
     "num_within_corpus_centroid_structure.tex",
+    "softmax_multilabel_coverage.csv",
+    "softmax_multilabel_semantic_gaps.csv",
+    "softmax_multilabel_comparison_summary.csv",
+    "softmax_multilabel_metadata.json",
+    "num_softmax_multilabel.tex",
+    "tab_softmax_multilabel_summary.tex",
     "num_validation.tex",
     "tab_validation.tex",
     "num_coverage.tex",
@@ -46,7 +55,7 @@ CANONICAL_TABLE_FILES = [
     "tab_sample_stability.tex",
 ]
 
-CANONICAL_FIGURE_FILES = [
+MANUSCRIPT_FIGURE_FILES = [
     "fig_pca_semantic_landscape.pdf",
     "fig_pca_semantic_landscape.png",
     "fig_within_corpus_research_sdg_pca.pdf",
@@ -62,48 +71,52 @@ CANONICAL_FIGURE_FILES = [
 ]
 
 
-def ensure_canonical_outputs(output_dir: Path) -> CanonicalOutputs:
-    """Create and return the flat canonical output layout."""
+def ensure_dissertation_outputs(output_dir: Path) -> DissertationOutputs:
+    """Create and return the flat dissertation output layout."""
     output_dir.mkdir(parents=True, exist_ok=True)
     tables_dir = output_dir / "tables"
     figures_dir = output_dir / "figures"
     tables_dir.mkdir(parents=True, exist_ok=True)
     figures_dir.mkdir(parents=True, exist_ok=True)
-    return CanonicalOutputs(root=output_dir, tables_dir=tables_dir, figures_dir=figures_dir)
+    return DissertationOutputs(root=output_dir, tables_dir=tables_dir, figures_dir=figures_dir)
+
+
+def ensure_canonical_outputs(output_dir: Path) -> DissertationOutputs:
+    return ensure_dissertation_outputs(output_dir)
 
 
 def require_output_files(output_dir: Path, required_files: list[str]) -> Path:
     missing = [r for r in required_files if not (output_dir / r).exists()]
     if missing:
         missing_str = ", ".join(missing)
-        raise FileNotFoundError(f"Canonical output directory '{output_dir}' is missing: {missing_str}")
+        raise FileNotFoundError(f"Manuscript output directory '{output_dir}' is missing: {missing_str}")
     return output_dir
 
 
 def require_pdf_inputs(output_dir: Path) -> Path:
     root = Path(output_dir)
     missing = []
-    for name in CANONICAL_TABLE_FILES:
+    for name in MANUSCRIPT_TABLE_FILES:
         path = root / "tables" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
-    for name in CANONICAL_FIGURE_FILES:
+    for name in MANUSCRIPT_FIGURE_FILES:
         path = root / "figures" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     if missing:
         missing_str = ", ".join(missing)
         raise FileNotFoundError(
-            f"Canonical output directory '{root}' is missing PDF inputs: {missing_str}"
+            f"Manuscript output directory '{root}' is missing PDF inputs: {missing_str}"
         )
     return root
 
 
 def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     root = Path(output_dir)
-    files = [root / name for name in CANONICAL_ROOT_FILES]
-    files.extend(root / "tables" / name for name in CANONICAL_TABLE_FILES)
-    files.extend(root / "figures" / name for name in CANONICAL_FIGURE_FILES)
+    files = [root / name for name in MANUSCRIPT_ROOT_FILES]
+    files.extend(root / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
+    files.extend(root / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
     return files
 
 
