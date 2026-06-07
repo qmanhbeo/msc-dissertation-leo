@@ -456,9 +456,8 @@ def main() -> None:
     # ---- Write LaTeX generated outputs ----
     gen_dir = tables_dir
 
-    # Median research% (midpoint of 8th and 9th values of 17 sorted values)
-    sorted_res = sorted(float(v) * 100 for v in res_hard)
-    median_res_pct = (sorted_res[7] + sorted_res[8]) / 2
+    # Median research% across 17 SDGs.
+    median_res_pct = float(np.median(res_hard * 100.0))
 
     # Excl-SDG4 correlation values
     excl4 = corr_excl4["a_res_prop_vs_sem_gap"]

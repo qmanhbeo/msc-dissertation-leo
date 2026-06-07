@@ -775,7 +775,7 @@ def write_outputs(
     tab_lines = [
         r"\begin{tabular}{lcccc}",
         r"\toprule",
-        r"Sample Size & Mean SD of SDG Coverage Shares & Mean Within-SDG Semantic Gap & Policy-to-Research Asymmetry & Policy-Text Calibration Bias \\",
+        r"Sample Size & \shortstack{Mean SD of SDG\\coverage shares} & \shortstack{Mean within-SDG\\semantic gap} & \shortstack{Policy-to-research\\asymmetry} & \shortstack{Policy-text\\calibration bias} \\",
         r"\midrule",
     ]
     for row in summary_rows:
