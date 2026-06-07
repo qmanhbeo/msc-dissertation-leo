@@ -29,7 +29,7 @@ from sentence_transformers import SentenceTransformer
 CODE_ROOT = Path(__file__).resolve().parents[2]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "shared"
+ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
