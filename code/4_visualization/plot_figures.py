@@ -5,7 +5,7 @@ Produces three publication-quality figures for the dissertation:
 
     Figure 1 — Coverage profiles: research vs policy (horizontal grouped bar chart)
     Figure 2 — Semantic gap by SDG (horizontal bar chart, sorted descending)
-    Figure 3 — Coverage vs semantic gap scatter (2×2 typology visualisation)
+    Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
 
 Inputs:
     outputs/visualization_source_sdg_attention_vs_semantic_distance.csv                   — per-SDG metrics table from coverage_semantic_interaction.py
@@ -107,7 +107,7 @@ def main() -> None:
     if df_sem_valid.empty:
         raise RuntimeError("No finite semantic-gap rows available for figure generation.")
 
-    # Medians for 2×2 boundary
+    # Medians for the diagonal thresholds used in the diagnostic map
     median_research_pct = df["research_pct"].median()
     median_semantic_gap = df_sem_valid["semantic_gap"].median()
 
@@ -142,7 +142,7 @@ def main() -> None:
     ax1.set_yticklabels(labels, fontsize=7.5)
     ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
     ax1.set_title(
-        "Coverage profiles: research vs policy by SDG",
+        "Coverage profiles by SDG",
         fontsize=8.5,
         loc="left",
     )
@@ -174,8 +174,8 @@ def main() -> None:
     ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=7.5)
     ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
     ax2.set_title(
-        "Within-SDG semantic gap (chunk cap = 50)\n"
-        "Higher gap indicates greater semantic divergence between research and policy",
+        "Within-SDG semantic gap by SDG\n"
+        "Higher values indicate greater research-policy semantic divergence",
         fontsize=8.5,
         loc="left",
     )
@@ -195,7 +195,7 @@ def main() -> None:
     print("Saved: fig2_semantic_gap.pdf")
 
     # -----------------------------------------------------------------------
-    # Figure 3 — Coverage vs semantic gap scatter (2×2 typology)
+    # Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
     # -----------------------------------------------------------------------
     fig3, ax3 = plt.subplots(figsize=(7.5, 6))
 
@@ -214,13 +214,13 @@ def main() -> None:
     ax3.fill_betweenx([ylim[0], median_semantic_gap], median_research_pct, xlim[1],
                       color="#E0F3DB", alpha=0.35, zorder=0)
 
-    ax3.text(0.01, 0.98, "Low coverage\nHigh divergence\n(low coverage / high divergence)", transform=ax3.transAxes,
+    ax3.text(0.01, 0.98, "Low coverage\nHigh gap", transform=ax3.transAxes,
              fontsize=7, ha="left", va="top", color="#8B0000", style="italic")
-    ax3.text(0.99, 0.98, "High coverage\nHigh divergence\n(high coverage / high divergence)", transform=ax3.transAxes,
+    ax3.text(0.99, 0.98, "High coverage\nHigh gap", transform=ax3.transAxes,
              fontsize=7, ha="right", va="top", color="#1A237E", style="italic")
-    ax3.text(0.01, 0.02, "Low coverage\nLow divergence\n(low coverage / low divergence)", transform=ax3.transAxes,
+    ax3.text(0.01, 0.02, "Low coverage\nLow gap", transform=ax3.transAxes,
              fontsize=7, ha="left", va="bottom", color="#555", style="italic")
-    ax3.text(0.99, 0.02, "High coverage\nLow divergence\n(high coverage / low divergence)", transform=ax3.transAxes,
+    ax3.text(0.99, 0.02, "High coverage\nLow gap", transform=ax3.transAxes,
              fontsize=7, ha="right", va="bottom", color="#2e7d32", style="italic")
 
     for _, row in df_sem_valid.iterrows():
@@ -241,7 +241,7 @@ def main() -> None:
     ax3.set_xlabel("Research corpus SDG coverage (%)")
     ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
     ax3.set_title(
-        "Coverage vs semantic gap: 2×2 diagnostic typology\n"
+        "Coverage vs semantic gap: diagnostic map\n"
         f"Dashed lines = median thresholds (research: {median_research_pct:.2f}%, semantic gap: {median_semantic_gap:.3f})",
         fontsize=8.5,
         loc="left",

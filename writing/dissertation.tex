@@ -27,6 +27,7 @@
 \input{../outputs/tables/num_pca_semantic_landscape.tex}
 \input{../outputs/tables/num_within_corpus_centroid_structure.tex}
 \input{../outputs/tables/num_softmax_multilabel.tex}
+\InputIfFileExists{../outputs/tables/num_sdg17_reference_sensitivity.tex}{}{}
 \input{../outputs/tables/num_validation.tex}
 \input{../outputs/tables/num_coverage.tex}
 \input{../outputs/tables/num_semantic.tex}
@@ -207,7 +208,7 @@ All texts were encoded using the \texttt{all-MiniLM-L6-v2} sentence-transformers
 
 \subsection{SDG Measurement Instrument: Centroids and Validation}
 
-The core measurement instrument is a set of 17 per-SDG centroid vectors in the embedding space. For SDGs 1--16, centroids are computed as the mean embedding of all texts in the OSDG Community Dataset labelled for that SDG (after filtering at annotator agreement $\geq 0.5$ and minimum 20 words), drawn from a pool of 30,534 texts. For SDG 17, OSDG contains no labelled texts; the centroid is derived from 31 expert-labelled texts in the SDG Classification Benchmark \parencite{SDGBenchmark}. Each raw centroid vector (the mean of unit vectors) is L2-normalised to a unit vector before use, so that downstream dot products equal cosine similarities. The raw centroid norm (prior to normalisation) is retained as a cohesion diagnostic: it equals the mean cosine similarity of member texts to the unit centroid.
+The core measurement instrument is a set of 17 per-SDG centroid vectors in the embedding space. For SDGs 1--16, centroids are computed as the mean embedding of all texts in the OSDG Community Dataset labelled for that SDG (after filtering at annotator agreement $\geq 0.5$ and minimum 20 words), drawn from a pool of 30,534 texts. For SDG 17, OSDG contains no labelled texts; the centroid is derived from 31 expert-labelled texts in the SDG Classification Benchmark \parencite{SDGBenchmark}. Appendix~\ref{app:sdg17-reference-sensitivity} therefore reports a narrow bootstrap reference-set sensitivity check for SDG 17, rather than treating its sparse benchmark base as equivalent to the larger OSDG-supported centroids. Each raw centroid vector (the mean of unit vectors) is L2-normalised to a unit vector before use, so that downstream dot products equal cosine similarities. The raw centroid norm (prior to normalisation) is retained as a cohesion diagnostic: it equals the mean cosine similarity of member texts to the unit centroid.
 
 This is not a supervised machine-learning classifier in the conventional sense. No model weights are fitted, no gradient descent is used, and no train/test split is required for parameter estimation. The only learned representation is the pre-trained sentence encoder; the SDG instrument itself is a transparent geometric summary of human-labelled examples. Its purpose is not industry-grade operational labelling, but a reproducible semantic proxy for comparing broad corpus-level patterns.
 
@@ -242,7 +243,7 @@ The semantic gap measures within-SDG semantic divergence: given that both corpor
 
 A semantic gap of 0 would indicate perfectly overlapping semantic directions; a gap approaching 1 would indicate orthogonal framing. Robustness is assessed by replicating the analysis with chunk caps of 20 and 100 per document; rankings were stable across all three caps.
 
-The raw within-SDG centroid distance is retained as the primary measure of semantic divergence because it directly corresponds to the dissertation's target quantity: the observed difference in semantic framing between AI-for-sustainability research and SDG policy discourse within the same SDG. Additional register-adjustment procedures were explored as robustness and diagnostic checks. These analyses suggest that broad research-policy register differences may contribute to the observed gaps, but also show that more aggressive adjustment procedures risk removing substantive within-SDG differences rather than merely isolating purely superficial wording effects. For this reason, adjusted results are treated as sensitivity analyses rather than replacement estimates.
+The raw within-SDG centroid distance is retained as the primary measure of semantic divergence because it directly corresponds to the dissertation's target quantity: the observed difference in semantic framing between AI-for-sustainability research and SDG policy discourse within the same SDG. Additional register-adjustment procedures were explored as robustness and diagnostic checks. These analyses suggest that broad research-policy register differences may contribute to the observed gaps, but also show that more aggressive adjustment procedures risk removing substantive within-SDG differences rather than merely isolating purely superficial wording effects. Appendix~\ref{app:register-robustness} gives the projection definition explicitly and reports only register-adjusted sensitivity checks, not replacement estimates. For this reason, adjusted results are treated as sensitivity analyses rather than replacement estimates.
 
 \subsection{Coverage--Semantic Interaction}
 
@@ -330,7 +331,7 @@ Table~\ref{tab:semgap} reports the within-SDG semantic gap for all 17 SDGs. Sema
 \label{fig:semantic_gap}
 \end{figure}
 
-\textbf{Largest semantic gaps.} The greatest within-SDG divergence appears in SDG 17 (Partnerships, \SemanticGapSdgSeventeen), SDG 13 (Climate Action, \SemanticGapSdgThirteen), and SDG 10 (Reduced Inequalities, \SemanticGapSdgTen), with SDGs 6 and 7 close behind. This is important because it is not simply a ``neglect'' pattern: the most institutionally salient policy goals are also among the most semantically distant. Where institutional policy discourse is most concentrated, research does not just appear less often; it also tends to frame those SDGs differently when it does appear.
+\textbf{Largest semantic gaps.} The greatest within-SDG divergence appears in SDG 17 (Partnerships, \SemanticGapSdgSeventeen), SDG 13 (Climate Action, \SemanticGapSdgThirteen), and SDG 10 (Reduced Inequalities, \SemanticGapSdgTen), with SDGs 6 and 7 close behind. SDG 17 should nevertheless be read more cautiously than the OSDG-backed goals, because its reference centroid is built from only \SdgSeventeenBenchmarkN{} benchmark texts rather than from the larger OSDG corpus used for SDGs 1--16; Appendix~\ref{app:sdg17-reference-sensitivity} reports a bootstrap reference-set sensitivity check on that sparse base. The substantive point remains the same: this is not simply a ``neglect'' pattern. Some of the most institutionally salient policy goals are also among the most semantically distant. Where institutional policy discourse is most concentrated, research does not just appear less often; it also tends to frame those SDGs differently when it does appear.
 
 \textbf{Smallest semantic gaps.} The lowest gaps occur in SDG 5 (\SemanticGapSdgFive), SDG 9 (\SemanticGapSdgNine), SDG 4 (\SemanticGapSdgFour), and SDG 8 (\SemanticGapSdgEight). Low semantic gap does not imply balanced attention: SDG 9 is still strongly research-dominant in coverage, and SDG 4 remains subject to the learning-vocabulary caveat discussed in Appendix~\ref{app:sdg4-lexical-audit}. The key point is narrower: some SDGs show relatively close within-goal framing even when the two corpora differ sharply in how much attention they allocate to that goal.
 
@@ -354,7 +355,7 @@ Figure~\ref{fig:typology_scatter} illustrates this refinement. High-coverage res
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig3_coverage_semantic_scatter.pdf}
-\caption{Coverage vs semantic gap scatter plot (diagnostic typology). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs cluster in the high-gap region. Quadrants are descriptive diagnostics rather than normative classifications.}
+\caption{Coverage vs semantic gap scatter plot (diagnostic map). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs cluster in the high-gap region. Quadrants are descriptive diagnostics rather than normative classifications.}
 \label{fig:typology_scatter}
 \end{figure}
 
@@ -506,6 +507,21 @@ I pair the visual diagnostics with centroid-coherence and clustering statistics 
 \label{fig:within-corpus-centroid-structure}
 \end{figure}
 
+\subsection{SDG 17 Sparse-Reference Sensitivity}
+\label{app:sdg17-reference-sensitivity}
+
+SDG 17 is methodologically atypical because its reference centroid is built from only \SdgSeventeenBenchmarkN{} expert-labelled benchmark texts, rather than from the much larger OSDG reference pool used for SDGs 1--16. Table~\ref{tab:sdg17-reference-sensitivity} therefore reports a narrow bootstrap reference-set sensitivity check. I resample those \SdgSeventeenBenchmarkN{} texts with replacement \SdgSeventeenBootstrapDraws{} times, rebuild only the SDG 17 centroid, re-score only the SDG 17 column against the fixed other 16 SDGs, and then recompute the induced SDG 17 research-policy semantic gap.
+
+The result is best read as a conditional sensitivity band, not as a formal inferential confidence interval. Across the bootstrap resamples, the SDG 17 centroid remains close to its baseline direction (median cosine to baseline \SdgSeventeenBootstrapCosineMedian{}; 5th--95th percentile \SdgSeventeenBootstrapCosinePFive{}--\SdgSeventeenBootstrapCosinePNinetyFive{}). The resulting SDG 17 semantic gap also remains high (median \SdgSeventeenBootstrapGapMedian{}; 5th--95th percentile \SdgSeventeenBootstrapGapPFive{}--\SdgSeventeenBootstrapGapPNinetyFive{}), with the induced research and policy cluster sizes staying in the same broad range as the canonical run. This does not eliminate the sparse-reference caveat, but it suggests that the SDG 17 headline finding is not driven by a single fragile benchmark composition.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{SDG 17 sparse-reference sensitivity diagnostic. The bootstrap resamples only the 31 SDG 17 benchmark texts used to build the SDG 17 centroid, then recomputes the induced SDG 17 semantic gap. It is a conditional reference-set sensitivity check rather than a formal inferential confidence interval.}
+\label{tab:sdg17-reference-sensitivity}
+\input{../outputs/tables/tab_sdg17_reference_sensitivity.tex}
+\end{table}
+
 \subsection{Softmax Multi-label SDG Membership}
 
 The canonical analysis forces each text into exactly one SDG by nearest-centroid assignment. This is transparent and directly interpretable, but it also imposes a one-SDG-per-text assumption on discourse that is naturally multi-label. A research abstract or policy chunk may simultaneously concern climate, energy, infrastructure, inequality, health, and governance. To stress-test this assumption, I implement an alternative specification in which each text contributes fractionally to all 17 SDGs.
@@ -573,7 +589,7 @@ This quantity is not interpreted as a headline finding because the A1 OSDG calib
 
 \subsection{Implications for Interpreting the Main Estimates}
 
-These diagnostics are not treated as failed repairs to the method. They are methodological stress tests that clarify the limits of the centroid approach. The PCA diagnostics show that real-world SDG discourse is fuzzy rather than cleanly clustered, especially in the research corpus. The softmax multi-label analysis shows that the hard-label baseline is broadly stable when the one-SDG-per-text assumption is softened, but that corpus-calibrated variants can change exact rankings. The policy source-family split shows that the full-corpus policy profile is a broader institutional SDG discourse rather than a universal AI policy profile. The SDG 4 audit shows that the caveat is real, but more nuanced than a pure machine-learning false positive. The canonical hard-label method is therefore retained because it is transparent, reproducible, and directly interpretable. The alternative specifications are reported to document boundary conditions rather than to replace the main target quantity.
+These diagnostics are not treated as failed repairs to the method. They are methodological stress tests that clarify the limits of the centroid approach. The PCA diagnostics show that real-world SDG discourse is fuzzy rather than cleanly clustered, especially in the research corpus. The SDG 17 sparse-reference check shows that the headline SDG 17 result is not solely a one-resample accident, while still preserving the caveat that SDG 17 rests on a much smaller benchmark base than the other goals. The softmax multi-label analysis shows that the hard-label baseline is broadly stable when the one-SDG-per-text assumption is softened, but that corpus-calibrated variants can change exact rankings. The policy source-family split shows that the full-corpus policy profile is a broader institutional SDG discourse rather than a universal AI policy profile. The SDG 4 audit shows that the caveat is real, but more nuanced than a pure machine-learning false positive. The canonical hard-label method is therefore retained because it is transparent, reproducible, and directly interpretable. The alternative specifications are reported to document boundary conditions rather than to replace the main target quantity.
 
 These analyses also show that the centroid method should be interpreted as a transparent semantic anchoring procedure rather than a definitive operational SDG classifier. Attempts to address multi-label overlap and corpus-register bias improve some aspects of the design but introduce new modelling choices. For this dissertation, the hard-label centroid method is therefore retained as the canonical specification, while the alternatives are reported as robustness and boundary-condition checks.
 
@@ -588,6 +604,12 @@ The logic of this appendix is informed by multidimensional register analysis: re
 \subsection{One-Direction Global Sensitivity Check}
 
 The simplest robustness step estimates one broad research-versus-policy direction in the shared SBERT space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \GenreClassifierTestAccuracy{}, ROC-AUC \GenreClassifierTestRocAuc{}, F1 \GenreClassifierTestFOne{}, precision \GenreClassifierTestPrecision{}, and recall \GenreClassifierTestRecall{} using \GenreClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This shows that a strong corpus-level research--policy axis exists.
+
+Formally, let $\mathbf{x}$ be a unit-normalised embedding and let $\mathbf{g}$ denote the learned global research--policy direction. The one-direction adjustment first subtracts the orthogonal projection of $\mathbf{x}$ onto $\mathbf{g}$,
+\[
+\mathbf{x}^{\perp} = \mathbf{x} - \frac{\mathbf{x} \cdot \mathbf{g}}{\lVert \mathbf{g} \rVert^2}\mathbf{g},
+\]
+and then renormalises the residual to unit length before centroid averaging. I describe the result as \emph{register-adjusted}, not ``debiased'': the subtraction removes one estimated global corpus axis, not every possible register or corpus-composition difference.
 
 Subtracting that one global direction reduces the mean gap from \MeanRawSemanticGap{} to \MeanAdjustedSemanticGap{}, a change of \MeanSemanticGapDelta{}. The largest shrinkage appears in \LargestGapShrinkSdg{} (\LargestGapShrinkDelta{}), while the largest remaining adjusted gap is still \LargestAdjustedGapSdg{} at \LargestAdjustedGapValue{}. The substantive interpretation is limited: this subtraction attenuates one broad corpus-level axis, but it does not cleanly identify a pure substantive gap net of all register effects.
 

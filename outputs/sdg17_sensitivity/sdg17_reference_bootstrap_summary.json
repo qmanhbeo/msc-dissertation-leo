@@ -1,0 +1,44 @@
+{
+  "generated_from": "code/3_main_analysis/3_appendix/6_sdg17_reference_sensitivity.py",
+  "note": "This is a conditional bootstrap reference-set sensitivity check for SDG 17. It does not replace the canonical semantic-gap estimate and should not be read as a formal inferential confidence interval over substantive SDG 17 reality.",
+  "benchmark_n": 31,
+  "draws": 200,
+  "chunk_cap": 50,
+  "min_cluster_size": 10,
+  "baseline": {
+    "semantic_gap": 0.658918,
+    "semantic_similarity": 0.341082,
+    "n_research_papers": 69370,
+    "n_policy_docs_capped": 1441
+  },
+  "bootstrap": {
+    "centroid_cosine_to_baseline": {
+      "median": 0.9742407202720642,
+      "p05": 0.9564191490411759,
+      "p95": 0.9842850565910339,
+      "min": 0.9455382227897644,
+      "max": 0.9911257028579712
+    },
+    "semantic_gap": {
+      "median": 0.6958575,
+      "p05": 0.57620395,
+      "p95": 0.7675906,
+      "min": 0.517201,
+      "max": 0.789355
+    },
+    "n_research_papers": {
+      "median": 77643.0,
+      "p05": 57221.3,
+      "p95": 105241.59999999999,
+      "min": 43967.0,
+      "max": 121509.0
+    },
+    "n_policy_docs_capped": {
+      "median": 1285.0,
+      "p05": 983.3000000000001,
+      "p95": 1560.1999999999998,
+      "min": 815.0,
+      "max": 1679.0
+    }
+  }
+}

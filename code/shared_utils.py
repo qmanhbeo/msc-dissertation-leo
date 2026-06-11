@@ -37,6 +37,8 @@ MANUSCRIPT_EXTRA_FILES = [
     "source_family_sensitivity/policy_source_family_semantic_gaps.csv",
     "sdg4_audit/sdg4_lexical_audit.csv",
     "sdg4_audit/sdg4_lexical_audit_summary.json",
+    "sdg17_sensitivity/sdg17_reference_bootstrap_draws.csv",
+    "sdg17_sensitivity/sdg17_reference_bootstrap_summary.json",
 ]
 
 MANUSCRIPT_TABLE_FILES = [
@@ -53,6 +55,8 @@ MANUSCRIPT_TABLE_FILES = [
     "tab_softmax_multilabel_summary.tex",
     "tab_policy_source_family_sensitivity.tex",
     "tab_sdg4_lexical_audit.tex",
+    "num_sdg17_reference_sensitivity.tex",
+    "tab_sdg17_reference_sensitivity.tex",
     "num_validation.tex",
     "tab_validation.tex",
     "num_coverage.tex",
