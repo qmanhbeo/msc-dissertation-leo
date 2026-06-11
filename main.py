@@ -88,6 +88,11 @@ def parse_args() -> argparse.Namespace:
         help="Run only the Appendix A SDG 17 sparse-reference sensitivity diagnostic from existing benchmark embeddings and scored corpora.",
     )
     p.add_argument(
+        "--semantic-gap-interpretability",
+        action="store_true",
+        help="Run only the Appendix A semantic-gap text interpretability diagnostic from existing scored texts.",
+    )
+    p.add_argument(
         "--within-corpus-centroid-structure",
         action="store_true",
         help="Run only the Appendix A within-corpus SDG centroid-structure diagnostics from existing embedded/scored data.",
@@ -178,6 +183,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.policy_source_family_sensitivity,
             args.sdg4_lexical_audit,
             args.sdg17_reference_sensitivity,
+            args.semantic_gap_interpretability,
             args.within_corpus_centroid_structure,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
@@ -440,6 +446,14 @@ def run_sdg17_reference_sensitivity(output_dir: Path) -> None:
     )
 
 
+def run_semantic_gap_interpretability(output_dir: Path) -> None:
+    require_output_files(output_dir, ["sdg_conceptual_alignment_cosine_distances.json"])
+    run_step(
+        "appendix A semantic-gap text interpretability",
+        [sys.executable, "code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],
+    )
+
+
 def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
     cmd = [sys.executable, "code/3_main_analysis/3_appendix/3_genre_adjustment.py", "--output-dir", str(output_dir)]
     if not include_genre_confidence_checks:
@@ -483,6 +497,7 @@ def run_warm_replay(
     run_step("coverage gap", [sys.executable, "code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
     run_step("semantic gap", [sys.executable, "code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
     run_sdg17_reference_sensitivity(output_dir)
+    run_semantic_gap_interpretability(output_dir)
     run_step(
         "coverage semantic interaction",
         [sys.executable, "code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
@@ -646,6 +661,7 @@ def main() -> None:
         or args.policy_source_family_sensitivity
         or args.sdg4_lexical_audit
         or args.sdg17_reference_sensitivity
+        or args.semantic_gap_interpretability
         or args.within_corpus_centroid_structure
         or args.sample_stability
         or args.build_pdf
@@ -680,6 +696,9 @@ def main() -> None:
     elif args.sdg17_reference_sensitivity:
         ensure_warm_replay_inputs(args, include_genre_adjustment=False)
         run_sdg17_reference_sensitivity(output_dir)
+    elif args.semantic_gap_interpretability:
+        ensure_warm_replay_inputs(args, include_genre_adjustment=True)
+        run_semantic_gap_interpretability(output_dir)
     elif args.within_corpus_centroid_structure:
         ensure_warm_replay_inputs(args, include_genre_adjustment=False)
         run_within_corpus_centroid_structure(output_dir)
