@@ -201,7 +201,7 @@ def format_pm(mean_value: float | None, std_value: float | None, *, precision: i
 def format_variance(value: float | None, *, precision: int = 3) -> str:
     if value is None:
         return "--"
-    return f"$\\pm {value:.{precision}f}$"
+    return f"${value:.{precision}f}$"
 
 
 def latex_num(value: int) -> str:
