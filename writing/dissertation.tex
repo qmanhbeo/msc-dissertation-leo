@@ -107,6 +107,8 @@ This study addresses that gap. Its central claim is straightforward: shared SDG 
 
 The central research question is therefore: \emph{To what extent do academic AI-for-sustainability research and international institutional SDG policy discourse differ in SDG coverage and semantic framing across the 17 SDGs, and how are these two dimensions related?}
 
+In brief, the two corpora differ substantially in both what they prioritise and how they frame those priorities, and the pattern of divergence is informative.
+
 The remainder of this paper is structured as follows. Section~\ref{sec:litreview} reviews the relevant literature on AI-SDG mapping, research-policy alignment, and semantic similarity methods. Section~\ref{sec:method} describes the corpora, measurement instrument, and gap analysis procedures. Section~\ref{sec:results} presents the empirical findings. Section~\ref{sec:discussion} interprets the findings, introduces a productive/problematic misalignment typology, and discusses limitations. Section~\ref{sec:conclusion} concludes with implications and directions for future research.
 
 %% ============================================================
@@ -115,7 +117,7 @@ The remainder of this paper is structured as follows. Section~\ref{sec:litreview
 
 \subsection{AI and the SDGs: What Bibliometrics Shows}
 
-The relationship between AI research and the SDGs has been studied primarily through bibliometric and expert survey methods. \textcite{Vinuesa2020} conducted the most widely cited study, in which an expert panel assessed how AI could enable or inhibit each of the 169 SDG targets; their finding that AI could facilitate 134 targets while potentially inhibiting 59 has shaped discourse around AI governance. However, as the authors acknowledge, the study reflects expert perception rather than empirical measurement of the research literature.
+Most existing studies of AI and the SDGs ask which goals attract the most research attention, but they have not compared what research and policy texts actually say within each goal. \textcite{Vinuesa2020} conducted the most widely cited study, in which an expert panel assessed how AI could enable or inhibit each of the 169 SDG targets; their finding that AI could facilitate 134 targets while potentially inhibiting 59 has shaped discourse around AI governance. However, as the authors acknowledge, the study reflects expert perception rather than empirical measurement of the research literature.
 
 Broader SDG scientometric work has already mapped the growth, institutional distribution, thematic structure, and interlinkages of MDG/SDG-related research. For example, \textcite{BautistaPuig2021} identify global MDG/SDG-related research from 2000--2017 using core publications and citation expansion, then classify outputs into SDGs using a glossary-based approach. Subsequent AI-specific empirical work has mapped the AI publication record to the SDGs. \textcite{Singh2024} analysed AI-for-SDG publications over a 20-year period and found that SDGs 3 and 7 were the areas with the most AI applications. \textcite{Cowls2021} examined 108 deployed AI for Social Good projects and found SDG 3 dominant while SDGs 5, 16, and 17 were largely unaddressed. \textcite{Nedungadi2024} applied topic modelling to a broader corpus and confirmed these patterns. The methodological concern raised by \textcite{Armitage2020} is important: SDG publication mapping depends on interpretive choices about what counts as SDG relevance, how target concepts are translated into queries or labels, and which bibliographic database is used. The embedding-based approach used here reduces some vocabulary-level brittleness of keyword dictionaries, but it remains a distributional measurement strategy whose results are conditional on corpus construction, centroid provenance, and model choice. Later benchmarking work reaches the same caution from a broader comparison of Boolean, machine-learning, and hybrid SDG-mapping systems: \textcite{Kashnitsky2024} find that no single approach performs best across all validation datasets, and that no single ``golden'' SDG validation set exists.
 
@@ -419,7 +421,7 @@ A bidirectional asymmetry diagnostic was also attempted, but because the observe
 
 \subsection{Limitations}
 
-Several limitations bound the conclusions.
+Several limitations bound the conclusions. The main findings are robust to the stability and diagnostic checks above, but they should be interpreted within several boundary conditions.
 
 \textbf{Topical overlap is not substantive alignment.} The study measures semantic co-location in embedding space, not whether research and policy are substantively addressing the same problems in compatible ways. High cosine similarity reflects shared vocabulary, not shared agenda. All findings must be read with this constraint.
 
