@@ -205,24 +205,6 @@ def main() -> None:
     xlim = (0, df["research_pct"].max() * 1.12)
     ylim = (max(0.0, df_sem_valid["semantic_gap"].min() * 0.92), df_sem_valid["semantic_gap"].max() * 1.08)
 
-    ax3.fill_betweenx([median_semantic_gap, ylim[1]], xlim[0], median_research_pct,
-                      color="#FDDBC7", alpha=0.35, zorder=0)
-    ax3.fill_betweenx([median_semantic_gap, ylim[1]], median_research_pct, xlim[1],
-                      color="#D1E5F0", alpha=0.35, zorder=0)
-    ax3.fill_betweenx([ylim[0], median_semantic_gap], xlim[0], median_research_pct,
-                      color="#F7F7F7", alpha=0.55, zorder=0)
-    ax3.fill_betweenx([ylim[0], median_semantic_gap], median_research_pct, xlim[1],
-                      color="#E0F3DB", alpha=0.35, zorder=0)
-
-    ax3.text(0.01, 0.98, "Low coverage\nHigh gap", transform=ax3.transAxes,
-             fontsize=7, ha="left", va="top", color="#8B0000", style="italic")
-    ax3.text(0.99, 0.98, "High coverage\nHigh gap", transform=ax3.transAxes,
-             fontsize=7, ha="right", va="top", color="#1A237E", style="italic")
-    ax3.text(0.01, 0.02, "Low coverage\nLow gap", transform=ax3.transAxes,
-             fontsize=7, ha="left", va="bottom", color="#555", style="italic")
-    ax3.text(0.99, 0.02, "High coverage\nLow gap", transform=ax3.transAxes,
-             fontsize=7, ha="right", va="bottom", color="#2e7d32", style="italic")
-
     for _, row in df_sem_valid.iterrows():
         sdg = int(row["sdg"])
         x = row["research_pct"]
@@ -241,8 +223,7 @@ def main() -> None:
     ax3.set_xlabel("Research corpus SDG coverage (%)")
     ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
     ax3.set_title(
-        "Coverage vs semantic gap: diagnostic map\n"
-        f"Dashed lines = median thresholds (research: {median_research_pct:.2f}%, semantic gap: {median_semantic_gap:.3f})",
+        "Coverage vs semantic gap: diagnostic map",
         fontsize=8.5,
         loc="left",
     )

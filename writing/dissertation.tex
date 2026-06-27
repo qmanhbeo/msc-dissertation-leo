@@ -74,7 +74,7 @@ University of Birmingham, School of Government}
 \section*{Acknowledgements}
 \addcontentsline{toc}{section}{Acknowledgements}
 
-This project emerged from a series of convergences rather than a single moment of design. I happened to encounter the Sustainable Development Goals early in my undergraduate studies. I happened to learn natural language processing during my master's. I happened to notice, over time, that the gap between research and policy is real, persistent, and often unspoken. And eventually, these threads happened to meet.
+This project emerged from a series of convergences rather than a single moment of design. I first encountered the Sustainable Development Goals early in my undergraduate studies. I later learned natural language processing during my master's. Over time, I noticed that the gap between research and policy is real, persistent, and often unspoken. Eventually, these threads converged.
 
 To me, the connection felt natural---almost obvious. But that, I have come to realise, is precisely the point of education: not simply the accumulation of knowledge, but the gradual layering of perspectives until, at some point, they overlap. And when they do, something new becomes visible---something that, in hindsight, feels like it had always been there.
 
@@ -152,9 +152,7 @@ The nearest-centroid approach --- computing the mean embedding of labelled texts
 
 \subsection{Theoretical Framing: Productive and Problematic Misalignment}
 
-Not all research-policy misalignment is necessarily harmful. \textcite{Heilinger2023} warns against ``greenwashing'' misalignment where research adopts SDG framing superficially; but the converse risk is also real: demanding that research track policy discourse too closely could suppress basic research and frontier exploration that creates future policy options. This caution is reinforced by research-evaluation scholarship showing that impact metrics can reshape researcher behaviour toward externally rewarded outputs rather than necessarily improving the substance of research \parencite{bornmann2017impact}. Building on the broader research-policy literature, and in the spirit of \textcite{ToneyWails2024}, I therefore distinguish between \emph{productive misalignment} --- where research explores SDG-relevant possibilities that policy discourse has not yet absorbed --- and \emph{problematic misalignment} --- where research and policy-facing discourse remain distant in areas that are already institutionally salient or policy-dominant.
-
-This distinction provides the interpretive framework for the Discussion, but it is not itself a measured classification. The embedding analysis can identify where coverage imbalance and semantic divergence occur; it cannot determine whether a given divergence reflects useful frontier exploration, weak translation between knowledge systems, or substantive neglect. The conceptual contribution is therefore diagnostic: it shifts the question from whether research and policy are simply ``aligned'' or ``misaligned'' to where divergence is visible, why that divergence may matter, and what kinds of qualitative follow-up would be needed to interpret it.
+Not all research-policy misalignment is necessarily harmful. \textcite{Heilinger2023} warns against ``greenwashing'' misalignment where research adopts SDG framing superficially; but the converse risk is also real: demanding that research track policy discourse too closely could suppress basic research and frontier exploration that creates future policy options. Building on the broader research-policy literature, and in the spirit of \textcite{ToneyWails2024}, I therefore distinguish between \emph{productive misalignment} --- where research explores SDG-relevant possibilities that policy discourse has not yet absorbed --- and \emph{problematic misalignment} --- where research and policy-facing discourse remain distant in areas that are already institutionally salient or policy-dominant. This distinction is interpretive rather than measured: embedding analysis can identify where divergence occurs but cannot classify it as productive or problematic without qualitative follow-up. The conceptual contribution is therefore diagnostic: it shifts the question from whether research and policy are simply ``aligned'' or ``misaligned'' to where divergence is visible and what kinds of follow-up would be needed to interpret it.
 
 \subsection{Research Gap}
 
@@ -243,7 +241,7 @@ The semantic gap measures within-SDG semantic divergence: given that both corpor
 
 A semantic gap of 0 would indicate perfectly overlapping semantic directions; a gap approaching 1 would indicate orthogonal framing. Robustness is assessed by replicating the analysis with chunk caps of 20 and 100 per document; rankings were stable across all three caps.
 
-The raw within-SDG centroid distance is retained as the primary measure of semantic divergence because it directly corresponds to the dissertation's target quantity: the observed difference in semantic framing between AI-for-sustainability research and SDG policy discourse within the same SDG. Additional register-adjustment procedures were explored as robustness and diagnostic checks. These analyses suggest that broad research-policy register differences may contribute to the observed gaps, but also show that more aggressive adjustment procedures risk removing substantive within-SDG differences rather than merely isolating purely superficial wording effects. Appendix~\ref{app:register-robustness} gives the projection definition explicitly and reports only register-adjusted sensitivity checks, not replacement estimates. For this reason, adjusted results are treated as sensitivity analyses rather than replacement estimates.
+The raw within-SDG centroid distance is retained as the primary measure of semantic divergence because it directly corresponds to the quantity the analysis measures: the observed difference in semantic framing between AI-for-sustainability research and SDG policy discourse within the same SDG. Additional register-adjustment procedures were explored as robustness and diagnostic checks. These analyses suggest that broad research-policy register differences may contribute to the observed gaps, but also show that more aggressive adjustment procedures risk removing substantive within-SDG differences rather than merely isolating purely superficial wording effects. Appendix~\ref{app:register-robustness} gives the projection definition explicitly and reports only register-adjusted sensitivity checks, not replacement estimates. For this reason, adjusted results are treated as sensitivity analyses rather than replacement estimates.
 
 \subsection{Coverage--Semantic Interaction}
 
@@ -292,14 +290,14 @@ Table~\ref{tab:coverage} presents the document-weighted policy coverage profile 
 \input{../outputs/tables/tab_coverage.tex}
 
 \par\vspace{0.5em}
-{\footnotesize $^\dagger$ SDG 4 coverage in research may be inflated by ML ``learning'' terminology; see Section~\ref{sec:sdg4artefact}.\par
-$^\ddagger$ SDG 4 F1 = \FiSdgFour{} in the validation table (Table~\ref{tab:validation}) indicates confident assignment, which strengthens the artefact concern.}
+{\footnotesize $^{(a)}$ SDG 4 coverage in research may be inflated by ML ``learning'' terminology; see Section~\ref{sec:sdg4artefact}.\par
+$^{(b)}$ SDG 4 F1 = \FiSdgFour{} in the validation table (Table~\ref{tab:validation}) indicates confident assignment, which strengthens the artefact concern.}
 \end{table}
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{fig1_coverage_profiles.pdf}
-\caption{Coverage profiles by SDG: proportion of each corpus assigned to each SDG via hard assignment (highest-scoring SDG). Policy proportions are document-weighted ($n = \NPolicyDocs$ source documents); research proportions are paper-weighted ($n = \NResearchPapers$ papers). SDGs sorted by policy proportion (descending). $^\dagger$SDG~4 research share likely inflated by ML vocabulary artefact. $^\ddagger$SDG~13 and SDG~17 centroids are nearly collinear (cosine similarity = \CentroidSimThirteenSeventeen); combined share = \PolicyPctSdgThreePlusSeventeen\%.}
+\caption{Coverage profiles by SDG: proportion of each corpus assigned to each SDG via hard assignment (highest-scoring SDG). Policy proportions are document-weighted ($n = \NPolicyDocs$ source documents); research proportions are paper-weighted ($n = \NResearchPapers$ papers). SDGs sorted by policy proportion (descending). $^{(a)}$SDG~4 research share likely inflated by ML vocabulary artefact. $^{(b)}$SDG~13 and SDG~17 centroids are nearly collinear (cosine similarity = \CentroidSimThirteenSeventeen); combined share = \PolicyPctSdgThreePlusSeventeen\%.}
 \label{fig:coverage_profiles}
 \end{figure}
 
@@ -348,14 +346,14 @@ Table~\ref{tab:h25} reports the H1 coverage–semantic correlation tests between
 
 The primary H1 test is \textbf{not supported}. Research coverage proportion and semantic gap are almost uncorrelated across SDGs ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$). The 95\% confidence interval for $r$ spans approximately $[\HPrimaryPearsonCiLower, +\HPrimaryPearsonCiUpper]$, so the result should be read as low-evidence for a linear relationship rather than proof of full independence.
 
-Two supplementary tests sharpen the picture. First, SDGs with larger absolute coverage gaps tend to have larger semantic gaps. Second, descriptively, the most policy-dominant SDGs cluster in the high-gap region of Figure~3. In other words, sheer research attention does not predict semantic distance, while strong cross-corpus imbalance appears descriptively more informative in this diagnostic map.
+Two post-hoc supplementary tests provide additional descriptive context. First, SDGs with larger absolute coverage gaps tend to have larger semantic gaps. Second, the most policy-dominant SDGs tend to sit above the median on both axes of Figure~3. In other words, sheer research attention does not predict semantic distance, while strong cross-corpus imbalance shows a descriptive tendency to coincide with larger semantic gaps in this dataset.
 
-Figure~\ref{fig:typology_scatter} illustrates this diagnostic refinement. High-coverage research goals are split between relatively low-gap cases such as SDG 9 and higher-gap cases such as SDG 3 and SDG 7, which is why the primary H1 test is near zero. At the same time, the most policy-dominant goals, especially SDGs 13 and 17, sit in the high-gap region. The substantive lesson is therefore not that coverage and semantic divergence are unrelated in every sense, but that \emph{research attention alone} is a poor predictor of semantic convergence.
+Figure~\ref{fig:typology_scatter} illustrates this diagnostic refinement. High-coverage research goals are split between relatively low-gap cases such as SDG 9 and higher-gap cases such as SDG 3 and SDG 7, which is why the primary H1 test is near zero. At the same time, the most policy-dominant goals, especially SDGs 13 and 17, sit above the median on both axes. As a descriptive observation, the substantive lesson is therefore not that coverage and semantic divergence are unrelated in every sense, but that \emph{research attention alone} is a poor predictor of semantic convergence.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig3_coverage_semantic_scatter.pdf}
-\caption{Coverage vs semantic gap scatter plot (diagnostic map). Each point is one SDG. Dashed lines separate quadrants at the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs cluster in the high-gap region. Quadrants are descriptive diagnostics rather than normative classifications.}
+\caption{Coverage vs semantic gap scatter plot (diagnostic map). Each point is one SDG. Reference lines indicate the median research coverage (\MedianResearchPct\%) and median semantic gap (\MedianSemanticGap). The figure shows that high research attention can coexist with either low or high semantic divergence, while the most policy-dominant SDGs tend to sit above the median on both axes.}
 \label{fig:typology_scatter}
 \end{figure}
 
@@ -374,9 +372,7 @@ To test whether the headline findings depend heavily on research-corpus size, I 
 }
 \end{table}
 
-\noindent\textit{Plain-language guide.} The first metric asks how much the SDG topic mix moves across repeated random samples; smaller values mean the topic balance is stable. The second asks how different research language is from policy language within the same SDG; larger values mean greater semantic divergence. The third asks whether policy text matches sampled research framing better than sampled papers match the SDG benchmark framing; positive values indicate more policy-to-research fit. The fourth is a bias check showing how much the scoring instrument tends to favor policy text over research text even before substantive interpretation.
-
-The stability ladder is intended as a robustness check, not as a replacement for the canonical full-corpus result. The substantive question is whether the downstream measurements continue to jump materially as sample size grows, or whether they flatten into a narrow band. Table~\ref{tab:sample-stability} provides that audit directly. The clearest practical plateau appears by roughly 200{,}000 papers: at that tier, the mean semantic gap is already approximately 0.413, compared with 0.412 in the full corpus; the policy-to-research asymmetry is approximately 0.152, matching the full-corpus value; and the policy-text calibration bias is approximately 0.321, again matching the full-corpus value at three decimal places. From 500{,}000 papers upward, the draw-to-draw dispersion becomes very small and the headline values are effectively unchanged at three decimal places. This means the substantive conclusions are not artefacts of sample size choice. However, because the computationally expensive embedding stage had already been completed, there was no methodological advantage in discarding evidence for the canonical analysis. The full \SampleStabilityFullCorpusN{}-paper result is therefore retained as the primary estimate because it uses all available data while also delivering the tightest and least contestable values. The appropriate interpretation is therefore that the main findings are not artefacts of a particular random draw from the research corpus, even though the full dataset still gives the tightest estimates.
+\noindent\textit{Plain-language guide.\footnote{The four metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy-to-research asymmetry --- whether policy text matches sampled research framing better than the reverse; (4) calibration bias --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$0.413), policy-to-research asymmetry ($\sim$0.152), and calibration bias ($\sim$0.321) already match the full-corpus values at three decimal places. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice.
 
 \subsection{Register-Sensitivity Note}
 
@@ -386,7 +382,7 @@ This terminology follows Biber and Conrad's distinction between register, genre,
 
 This caution is consistent with Biber's argument that register differences should be investigated empirically rather than assumed from simple text-type categories \parencite{biber1988variation}. The register-adjustment appendix is therefore interpreted as a sensitivity analysis around register effects, not as a procedure that cleanly recovers a register-free semantic gap.
 
-Those appendix checks point in the same broad direction. Limited global adjustments reduce the semantic gaps but do not eliminate them, which suggests that broad research--policy register contributes to the observed distances without fully explaining them. More aggressive within-SDG classifier and within-SDG regression procedures shrink the gaps much more strongly, but they are interpreted as over-subtraction stress tests because they learn and remove the within-goal policy--research contrast itself. The raw within-SDG semantic gap is therefore retained as the primary result because it best matches the dissertation's target quantity: the observed semantic difference between research and policy discourse within the same SDG. The spread between raw and aggressively adjusted estimates is therefore best read as an uncertainty range around the register-sensitive component of the measure, rather than as evidence that any single adjusted estimate is uniquely correct.
+Those appendix checks point in the same broad direction. Limited global adjustments reduce the semantic gaps but do not eliminate them, which suggests that broad research--policy register contributes to the observed distances without fully explaining them. More aggressive within-SDG classifier and within-SDG regression procedures shrink the gaps much more strongly, but they are interpreted as over-subtraction stress tests because they learn and remove the within-goal policy--research contrast itself. The raw within-SDG semantic gap is therefore retained as the primary result because it best matches what the dissertation measures: the observed semantic difference between research and policy discourse within the same SDG. The spread between raw and aggressively adjusted estimates is therefore best read as an uncertainty range around the register-sensitive component of the measure, rather than as evidence that any single adjusted estimate is uniquely correct.
 
 Appendix~\ref{app:centroid-diagnostics} further relaxes the hard one-SDG-per-text assumption using softmax-weighted multi-label membership, reports policy source-family sensitivity, and audits the SDG 4 lexical caveat directly. Low-temperature raw softmax produces coverage and semantic-gap rankings broadly consistent with the hard-label baseline, while the corpus-calibrated variant changes some rankings more materially. The appendix diagnostics therefore support the hard-label method as a transparent canonical baseline while also clarifying where exact rankings and policy-side scope claims require caution.
 
@@ -430,39 +426,23 @@ Several limitations bound the conclusions. The main findings are robust to the s
 
 \textbf{A3 --- SDG 4 lexical artefact caveat.} The \ResearchPctSdgFour\% research assignment to SDG 4 remains caveated because learning-related ML vocabulary overlaps with education language. Appendix~\ref{app:sdg4-lexical-audit} shows that education-specific vocabulary is common within the SDG 4-assigned set, so the result is not a pure ML false positive, but it should still be treated as a learning-related rather than a clean education finding.
 
-\textbf{Corpus scope.} The policy corpus, while broad, represents international institutional SDG discourse (UN, OECD, national governments) rather than the full universe of AI sustainability policy. Domestic implementation plans, sub-national policies, and non-English-language policy documents are not represented. The research corpus is also English-language. Both biases likely understate the perspectives of the Global South. Appendix~\ref{app:policy-source-family-sensitivity} makes the policy source-family sensitivity explicit.
+\textbf{Corpus scope and retrieval boundaries.} The policy corpus represents international institutional SDG discourse (UN, OECD, national governments) rather than the full universe of AI sustainability policy. Domestic implementation plans, sub-national policies, and non-English-language documents are not represented. The research corpus is retrieved through OpenAlex's native SDG filters and is also English-only. Both biases likely understate the perspectives of the Global South. SDG-related research can also be delineated through other strategies (citation expansion, keyword ontologies, platform-assigned labels, or curated datasets), so results should be read as conditional on these corpus and retrieval boundaries. Appendix~\ref{app:policy-source-family-sensitivity} makes the policy source-family sensitivity explicit.
 
-\textbf{Register effects on the semantic gap.} A further limitation is that semantic distance may partly capture differences in communicative function. In register terms, research abstracts and policy documents are not simply two containers for the same topic; they are text varieties designed to do different things. The semantic gap should therefore be read as observed textual-semantic divergence, not as a purified estimate of substantive disagreement.
+\textbf{Register effects on the semantic gap.} Semantic distance may partly capture differences in communicative function. In register terms, research abstracts and policy documents are not simply two containers for the same topic; they are text varieties designed to do different things. The semantic gap should therefore be read as observed textual-semantic divergence, not as a purified estimate of substantive disagreement.
 
-\textbf{OpenAlex retrieval boundary.} Because the research corpus is retrieved through OpenAlex's native SDG filters, the analysis is conditional on OpenAlex's SDG-relevant publication universe. AI-for-sustainability papers not captured by those filters are excluded before the centroid instrument is applied. The results therefore measure alignment within an OpenAlex-defined AI--SDG corpus rather than the entire universe of AI-for-sustainability research.
+\textbf{Cross-sectional design and single embedding model.} The study provides a snapshot of the 2018--2025 research period against a policy corpus assembled over a similar timeframe; it cannot address whether alignment is improving or deteriorating, or whether specific policy events (e.g., the EU AI Act 2024, IPCC AR6 2022) have shifted research framing. The findings are also model-specific to the general-purpose encoder used; a domain-adapted model might produce different cluster structures and coverage profiles.
 
-\textbf{Corpus-boundary choices.} SDG-related research can be delineated through different strategies, including explicit SDG terminology, citation expansion, keyword ontologies, platform-assigned SDG labels, or curated policy datasets. The present study uses an OpenAlex-defined AI-and-SDG retrieval universe and an institutional policy corpus; results should therefore be read as conditional on those corpus boundaries.
-
-\textbf{Cross-sectional design.} The study provides a snapshot of the 2018--2025 research period against a policy corpus assembled over a similar timeframe. It cannot address whether alignment is improving or deteriorating, or whether specific policy events (e.g., the EU AI Act 2024, IPCC AR6 2022) have shifted research framing.
-
-\textbf{Single embedding model.} Using a single general-purpose encoder means the findings are model-specific. A general-purpose encoder may understate similarity between specialised technical sustainability vocabulary and institutional SDG vocabulary, inflating apparent gaps where equivalent concepts are expressed in different registers. A domain-adapted model (e.g., fine-tuned on sustainability text) might produce different cluster structures and coverage profiles.
-
-\textbf{Boundary-work scope.} The analysis identifies observed semantic distance, but it does not measure whether research is salient, credible, or legitimate to policy actors. Those qualities would require interviews, process tracing, or institutional analysis of the boundary organisations and practices linking research to decision-making.
-
-\textbf{Policy-uptake scope.} As established in Sections 2.2 and 3.1, this study does not measure whether academic papers are cited in, read by, or used by policy actors; it measures observed semantic proximity between two corpora. The trade-off is that it cannot identify concrete pathways of policy influence, distinguish direct uptake from indirect agenda-setting, or evaluate whether non-mentioned research nevertheless informs policy decisions.
-
-\textbf{Boundary-organisation scope.} The analysis identifies where boundary work may be warranted, but it does not identify boundary organisations or assess whether they have the dual accountability, mediating roles, or boundary objects needed to link research and policy in practice.
+\textbf{Scope: semantic proximity, not policy influence or institutional mechanisms.} The analysis identifies observed semantic distance, but it does not measure whether research is salient, credible, or legitimate to policy actors, whether academic papers are used by policy actors, or whether boundary organisations effectively link research and policy. These would require interviews, process tracing, or institutional analysis beyond the scope of this study.
 
 %% ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper revisits an old problem with a new instrument. Policy scholars have long argued that research and policy often fail to meet one another on equal terms. What recent semantic tools add is not a final verdict on that problem, but the ability to map one important dimension of it directly, across thousands of texts, instead of describing it impressionistically. The main result is clear: shared SDG labels are insufficient evidence of shared framing.
+This paper revisits an old problem with a new instrument. Policy scholars have long argued that research and policy often fail to meet one another on equal terms. What recent semantic tools add is not a final verdict, but the ability to map one important dimension of it directly, across thousands of texts.
 
-The analysis shows two distinct patterns. First, the broad profile of international institutional SDG policy discourse is heavily oriented toward climate governance (SDG 13, \PolicyPctSdgThirteen\%), partnerships (SDG 17, \PolicyPctSdgSeventeen\%), and institutional frameworks (SDG 16, \PolicyPctSdgSixteen\%), while research is more concentrated on health (SDG 3, \ResearchPctSdgThree\%), learning-related SDG 4 material (\ResearchPctSdgFour\%), and innovation (SDG 9, \ResearchPctSdgNine\%). Second, even when research and policy occupy the same SDG, they often do not frame that SDG in commensurate terms. The largest observed semantic distances occur in SDGs 17, 13, and 10, showing that some of the most policy-salient goals are also those where shared SDG labels conceal the most divergent discourse.
+The core finding is that shared SDG labels are insufficient evidence of shared framing. Research concentrates on SDGs 3, 4, and 9, while institutional policy discourse is dominated by SDGs 13, 16, and 17; within the same SDG, semantic divergence is largest precisely in some of the most policy-dominant goals. The resulting map therefore separates cases where apparent alignment is strongest (SDG 9) from cases where shared labels conceal substantial divergence (SDGs 13 and 17). This contrast is the dissertation's main conceptual contribution: embedding-based distance can help identify where closer investigation is warranted, not as a final classification of whether any given gap is productive or problematic.
 
-The central structural finding is therefore more precise than a simple topical-comparison story. Research coverage proportion itself shows no significant association with semantic gap ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$), so sheer research attention is not a reliable indicator of semantic proximity. But SDGs with larger cross-corpus imbalance do tend to show larger semantic gaps. That matters because it challenges a common inference in AI-for-SDG mapping: research cannot be treated as semantically close to policy-facing SDG discourse simply because it appears to cover the same goals.
-
-The resulting map is still useful beyond the immediate case. It separates goals where research is present but framed differently from goals where the two corpora are both unevenly distributed and semantically far apart. SDG 9 remains the clearest apparent proximity case in the current corpus, while SDGs 13 and 17 exemplify policy-dominant high-divergence cases. This contrast is the dissertation's main conceptual contribution: semantic divergence is not automatically a failure, but it is a signal that shared SDG labels are too coarse to distinguish productive frontier exploration from potentially problematic disconnects.
-
-This dissertation therefore offers a diagnostic rather than a verdict. It does not show that research and policy are substantively aligned or misaligned, nor does it identify which side is correct. It shows that shared SDG labels are insufficient evidence of shared framing, and that embedding-based distance can help identify where closer qualitative investigation is needed. The value of the map lies precisely in this modest role: it makes visible where apparent AI-for-SDG alignment is strongest, where it is weakest, and where the measurement itself remains uncertain.
-
-Extending the analysis toward finer SDG-target-level interpretation could draw on expert-survey resources such as the AURORA SDG survey dataset, which contains researcher judgements on relevant publications, keywords, journals, glossaries, and query improvements for SDG research-output classification \parencite{Aurora2020SDGSurvey}. Disaggregating the policy corpus by country income level would also provide finer-grained evidence about where observed divergence is most acute and for whom.
+Extending the analysis toward finer SDG-target-level interpretation could draw on expert-survey resources such as the AURORA SDG survey dataset \parencite{Aurora2020SDGSurvey}. Disaggregating the policy corpus by country income level would provide finer-grained evidence about where observed divergence is most acute and for whom. A temporal extension --- tracking whether semantic gaps narrow or widen over successive policy cycles --- would test whether policy events such as the EU AI Act or IPCC assessment reports shift research framing. Finally, moving from goal-level to target-level comparison would assess whether apparent proximity at the SDG level conceals divergence at the more operationally relevant target level.
 
 \printbibliography
 
@@ -606,156 +586,13 @@ This quantity is not interpreted as a headline finding because the A1 OSDG calib
 
 \subsection{Implications for Interpreting the Main Estimates}
 
-These diagnostics are not treated as failed repairs to the method. They are methodological stress tests that clarify the limits of the centroid approach. The PCA diagnostics show that real-world SDG discourse is fuzzy rather than cleanly clustered, especially in the research corpus. The SDG 17 sparse-reference check shows that the headline SDG 17 result is not solely a one-resample accident, while still preserving the caveat that SDG 17 rests on a much smaller benchmark base than the other goals. The softmax multi-label analysis shows that the hard-label baseline is broadly stable when the one-SDG-per-text assumption is softened, but that corpus-calibrated variants can change exact rankings. The policy source-family split shows that the full-corpus policy profile is a broader institutional SDG discourse rather than a universal AI policy profile. The SDG 4 audit shows that the caveat is real, but more nuanced than a pure machine-learning false positive. The canonical hard-label method is therefore retained because it is transparent, reproducible, and directly interpretable. The alternative specifications are reported to document boundary conditions rather than to replace the main target quantity.
+These diagnostics are not treated as failed repairs to the method. They are methodological stress tests that clarify the limits of the centroid approach. The PCA diagnostics show that real-world SDG discourse is fuzzy rather than cleanly clustered, especially in the research corpus. The SDG 17 sparse-reference check shows that the headline SDG 17 result is not solely a one-resample accident, while still preserving the caveat that SDG 17 rests on a much smaller benchmark base than the other goals. The softmax multi-label analysis shows that the hard-label baseline is broadly stable when the one-SDG-per-text assumption is softened, but that corpus-calibrated variants can change exact rankings. The policy source-family split shows that the full-corpus policy profile is a broader institutional SDG discourse rather than a universal AI policy profile. The SDG 4 audit shows that the caveat is real, but more nuanced than a pure machine-learning false positive. The canonical hard-label method is therefore retained because it is transparent, reproducible, and directly interpretable. The alternative specifications are reported to document boundary conditions rather than to replace the primary quantity of interest.
 
 These analyses also show that the centroid method should be interpreted as a transparent semantic anchoring procedure rather than a definitive operational SDG classifier. Attempts to address multi-label overlap and corpus-register bias improve some aspects of the design but introduce new modelling choices. For this dissertation, the hard-label centroid method is therefore retained as the canonical specification, while the alternatives are reported as robustness and boundary-condition checks.
 
-\IfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_adjustment.tex}{
 \section{Register-Adjustment Robustness and Diagnostics}
 \label{app:register-robustness}
 
-This appendix reports exploratory register-adjustment procedures that probe whether broad research-policy register differences contribute to the raw semantic gap. Following Biber and Conrad's distinction between register, genre, and style, I treat the research-policy contrast primarily as a register contrast: the corpora differ in situation of use, audience, institutional setting, and communicative purpose, not merely in surface wording \parencite{biberConrad2009register}.
-
-The logic of this appendix is informed by multidimensional register analysis: register differences are not merely surface decoration around stable content, but structured patterns of co-occurring linguistic features \parencite{biber1988variation}. A learned research-policy direction in embedding space may therefore capture a mixture of modality, abstraction, institutional stance, and substantive theme. This is why the adjusted results are reported as robustness diagnostics rather than corrected estimates.
-
-\subsection{One-Direction Global Sensitivity Check}
-
-The simplest robustness step estimates one broad research-versus-policy direction in the shared SBERT space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \GenreClassifierTestAccuracy{}, ROC-AUC \GenreClassifierTestRocAuc{}, F1 \GenreClassifierTestFOne{}, precision \GenreClassifierTestPrecision{}, and recall \GenreClassifierTestRecall{} using \GenreClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This shows that a strong corpus-level research--policy axis exists.
-
-Formally, let $\mathbf{x}$ be a unit-normalised embedding and let $\mathbf{g}$ denote the learned global research--policy direction. The one-direction adjustment first subtracts the orthogonal projection of $\mathbf{x}$ onto $\mathbf{g}$,
-\[
-\mathbf{x}^{\perp} = \mathbf{x} - \frac{\mathbf{x} \cdot \mathbf{g}}{\lVert \mathbf{g} \rVert^2}\mathbf{g},
-\]
-and then renormalises the residual to unit length before centroid averaging. I describe the result as \emph{register-adjusted}, not ``debiased'': the subtraction removes one estimated global corpus axis, not every possible register or corpus-composition difference.
-
-Subtracting that one global direction reduces the mean gap from \MeanRawSemanticGap{} to \MeanAdjustedSemanticGap{}, a change of \MeanSemanticGapDelta{}. The largest shrinkage appears in \LargestGapShrinkSdg{} (\LargestGapShrinkDelta{}), while the largest remaining adjusted gap is still \LargestAdjustedGapSdg{} at \LargestAdjustedGapValue{}. The substantive interpretation is limited: this subtraction attenuates one broad corpus-level axis, but it does not cleanly identify a pure substantive gap net of all register effects.
-
-\begin{table}[ht]
-\centering
-\caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the dissertation. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
-\label{tab:register-adjusted-semantic-gap}
-\resizebox{\textwidth}{!}{%
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_adjusted_semgap.tex}
-}
-\end{table}
-
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_adjusted_semantic_gap_comparison.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.9\textwidth]{fig_genre_adjusted_semantic_gap_comparison.pdf}
-\caption{Global one-direction register sensitivity check: raw versus adjusted semantic gap by SDG. Raw gap is shown in grey and the one-direction adjusted gap in blue.}
-\label{fig:register-adjusted-semantic-gap}
-\end{figure}
-}{}
-
-\subsection{Additional Confidence Checks on Global Subtraction}
-
-The one-direction subtraction is itself testable. The adjusted re-separability audit shows that research and policy remain highly separable even after this first direction is removed: the raw held-out ROC-AUC is \GenreConfidenceAdjustedResepRawRocAuc{}, while the adjusted held-out ROC-AUC remains \GenreConfidenceAdjustedResepAdjustedRocAuc{} (relative change \GenreConfidenceAdjustedResepDeltaRocAuc{}). Held-out-SDG generalization is also strong, with mean held-out ROC-AUC \GenreConfidenceHeldoutMeanRocAuc{} and mean held-out F1 \GenreConfidenceHeldoutMeanFOne{}, which indicates that the learned axis is broad rather than purely SDG-specific leakage.
-
-At the same time, the multi-direction subtraction curve shows that the mean adjusted gap continues to decline from \GenreConfidenceMultiKOneMeanGap{} at $k=\GenreConfidenceMultiKOne$ to \GenreConfidenceMultiKMaxMeanGap{} at $k=\GenreConfidenceMultiKMax$, while the residual classifier ROC-AUC at $k=\GenreConfidenceMultiKMax$ is still \GenreConfidenceMultiKMaxResidualRocAuc{}. The topic-matched nearest-neighbor check also remains far from a collapse, moving from \GenreConfidenceTopicRawMatchedGap{} in raw space to \GenreConfidenceTopicAdjustedMatchedGap{} after subtraction. Taken together, these checks show that the one-direction residual cannot be treated as pure substantive divergence. It is therefore best interpreted as a limited sensitivity analysis against one strong global register axis.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Additional checks on the one-direction global register subtraction. These diagnostics test whether the first subtraction plausibly attenuates a broad corpus-level register axis without claiming that the residual is a fully purified substantive gap.}
-\label{tab:register-confidence-checks}
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_confidence_checks.tex}
-\end{table}
-
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_confidence_curve.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.82\textwidth]{fig_genre_confidence_curve.pdf}
-\caption{Confidence checks on global register subtraction. The top panel shows how the mean adjusted semantic gap changes as more discriminative research--policy directions are removed. The bottom panel shows the residual held-out classifier ROC-AUC after the same sequence of removals.}
-\label{fig:register-confidence-curve}
-\end{figure}
-}{}
-
-\subsection{SDG-Balanced Global Controls and Within-SDG Stress Tests}
-
-The global one-direction subtraction may still reflect SDG composition in the sampled classifier data. To probe that, I add an SDG-balanced global classifier that draws equal numbers of research and policy texts from every SDG before learning one shared research--policy direction. This is a stronger global sensitivity check because it targets broad corpus-level register while controlling SDG composition. In the current run, the SDG-balanced classifier remains strongly separable (accuracy \SdgGenreBalancedAccuracy{}, macro-F1 \SdgGenreBalancedMacroFOne{}, ROC-AUC \SdgGenreBalancedRocAuc{}), and the mean gap becomes \SdgGenreBalancedMeanGap{}.
-
-I also fit within-SDG classifiers, but these are interpreted differently. Because each classifier is estimated inside a single SDG, subtracting the resulting direction risks removing the very within-goal research--policy contrast the dissertation is trying to measure. Their mean adjusted gap (\SdgGenreWithinMeanGap{}) is therefore treated as a stress-test result rather than as a better estimate. The cosine similarity between the SDG-balanced global direction and the average within-SDG direction is \SdgGenreGlobalVsAverageCosine{}, which helps show whether the SDG-specific directions mostly line up with the broad global axis or vary goal by goal.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{SDG-aware register robustness hierarchy. The SDG-balanced classifier is treated as a stronger global sensitivity check. The within-SDG design is treated as an over-subtraction stress test because it learns and removes within-goal research--policy contrasts directly.}
-\label{tab:sdg-register-robustness}
-\input{../outputs/robustness/genre_adjustment/tables/tab_sdg_genre_robustness.tex}
-\end{table}
-
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_sdg_genre_robustness_comparison.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.90\textwidth]{fig_sdg_genre_robustness_comparison.pdf}
-\caption{Raw semantic gap compared with SDG-aware register procedures. The green bars show the SDG-balanced global sensitivity check. The blue bars show the within-SDG stress test, which is more prone to over-subtraction.}
-\label{fig:sdg-register-robustness}
-\end{figure}
-}{}
-
-\subsection{Interpreting the Learned Register Direction}
-
-The previous appendix checks establish that a strong research--policy direction exists in the embedding space and that its subtraction changes semantic-gap magnitudes. A separate question is what that learned direction is actually capturing. Two descriptive diagnostics help answer that. First, every text can be projected onto the SDG-balanced global register vector, producing ranked lists of the most policy-like and most research-like texts without fitting any new model. Second, the same register direction can be compared directly with the canonical OSDG-derived SDG centroids. If the direction were close to orthogonal to those centroids, it would look more like a broad wrapper-language axis; if it aligns materially with SDG centroids, it likely mixes register and substantive thematic structure.
-
-The projection examples are included for manual inspection rather than automatic summarization. In the current run, the mean score of the top policy-like examples is \GenreProjectionPolicyTopMean{}, while the mean score of the bottom research-like examples is \GenreProjectionResearchBottomMean{}. The SDG-centroid comparison is more formal: the mean absolute cosine between the global register vector and the 17 SDG centroids is \GenreAlignmentMeanAbsCosine{}, the median is \GenreAlignmentMedianAbsCosine{}, and the maximum is \GenreAlignmentMaxAbsCosine{}. The strongest alignment occurs at \GenreAlignmentStrongestSdg{}, while the weakest occurs at \GenreAlignmentWeakestSdg{}. These values indicate overlap with SDG semantic structure rather than a clean separation of style from substance.
-
-\begin{table}[ht]
-\centering
-\caption{Alignment between the SDG-balanced global register direction and the canonical SDG centroids. The final column reports the matching within-SDG register-versus-centroid cosine when an SDG-specific register vector is available.}
-\label{tab:register-sdg-alignment}
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_sdg_alignment.tex}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Manual-inspection examples from the learned global register direction. The policy-like rows have the highest positive projection onto the global register vector; the research-like rows have the lowest projection.}
-\label{tab:register-projection-examples}
-\resizebox{\textwidth}{!}{%
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_projection_examples.tex}
-}
-\end{table}
-
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_projection_distribution.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.92\textwidth]{fig_genre_projection_distribution.pdf}
-\caption{Distribution of projection scores onto the SDG-balanced global register direction. The figure is descriptive only: it exposes what kinds of texts align most strongly with the learned global axis.}
-\label{fig:register-projection-distribution}
-\end{figure}
-}{}
-
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_sdg_alignment.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.86\textwidth]{fig_genre_sdg_alignment.pdf}
-\caption{Signed cosine similarity between the SDG-balanced global register direction and each OSDG-derived SDG centroid. Larger magnitudes indicate stronger overlap between the learned register direction and a specific SDG axis.}
-\label{fig:register-sdg-alignment}
-\end{figure}
-}{}
-
-\subsection{Regression Decomposition of the Embedding Space}
-
-The classifier-based register direction is discriminative by construction, so a final concern is that its overlap with SDG semantic structure might partly be an artefact of optimizing corpus separation. To probe that possibility, I add a Rodriguez-style embedding regression diagnostic. Each embedding coordinate is treated as an outcome in a linear model with corpus register, SDG fixed effects, and register--SDG interactions. This does not optimize a classifier; it decomposes embedding variation associated with register after controlling for SDG structure.
-
-In the current run, the cosine between the regression-derived global register vector and the SDG-balanced classifier vector is \RegressionGenreVsClassifierCosine{}, which falls in the \RegressionGenreAgreementBand{} range. The regression-derived global register vector remains materially aligned with SDG centroids: mean absolute cosine \RegressionGenreMeanAbsCosine{}, median \RegressionGenreMedianAbsCosine{}, maximum \RegressionGenreMaxAbsCosine{}, strongest alignment \RegressionGenreStrongestSdg{}, weakest \RegressionGenreWeakestSdg{}. The mean regression-global adjusted gap is \RegressionGlobalMeanGap{}, while the mean regression within-SDG adjusted gap is \RegressionWithinMeanGap{}. The latter is interpreted as an especially aggressive over-subtraction stress test because the within-SDG regression vectors are very close to estimating the within-goal policy--research contrast itself.
-
-\begin{table}[ht]
-\centering
-\caption{Regression-derived versus classifier-derived register alignment with the canonical SDG centroids. The second column reports the SDG-balanced classifier direction, the third reports the regression-derived global register direction, and the fourth reports SDG-specific regression register directions.}
-\label{tab:regression-register-alignment}
-\input{../outputs/robustness/genre_adjustment/tables/tab_regression_genre_alignment.tex}
-\end{table}
-
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}
-\caption{Classifier-derived versus regression-derived register alignment with the OSDG centroids. The annotation reports the cosine similarity between the global regression vector and the SDG-balanced classifier vector.}
-\label{fig:regression-vs-classifier-alignment}
-\end{figure}
-}{}
-}{}
+This appendix summarises exploratory register-adjustment procedures that probe whether broad research-policy register differences contribute to the raw semantic gap. Following the register framework \parencite{biberConrad2009register}, a one-direction global sensitivity check estimates a single corpus-level research--policy axis using a balanced logistic-regression classifier, subtracts its projection from each embedding, and recomputes within-SDG semantic gaps. This subtraction reduces the mean gap from \MeanRawSemanticGap{} to \MeanAdjustedSemanticGap{}, with the largest remaining gap at \LargestAdjustedGapSdg{} (\LargestAdjustedGapValue{}). Stronger within-SDG adjustments shrink gaps further but are treated as over-subtraction stress tests because they learn and remove the very within-goal research--policy contrast the dissertation measures. The learned register direction aligns materially with SDG centroid structure (mean absolute cosine = \GenreAlignmentMeanAbsCosine{}), confirming that register and substantive thematic structure are not cleanly separable in this embedding space. The raw within-SDG semantic gap is therefore retained as the primary estimate because it corresponds most directly to the quantity of interest, while the register-adjusted range provides a sensitivity band. Full tables and figures for all procedures are available in the project repository.
 
 \end{document}
