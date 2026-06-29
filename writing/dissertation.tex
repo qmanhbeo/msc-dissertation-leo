@@ -202,7 +202,7 @@ Each source document was chunked into segments of approximately 150--300 words u
 
 \subsection{Embedding Model and Normalisation}
 
-All texts were encoded using the \texttt{all-MiniLM-L6-v2} sentence-transformers model \parencite{Reimers2019}, producing 384-dimensional dense vector representations. This model was selected for three reasons: it achieves competitive performance on semantic textual similarity benchmarks, it is computationally efficient on CPU hardware (relevant for WSL deployment), and it avoids the need for domain-specific fine-tuning that would introduce additional analytical assumptions. All embeddings were L2-normalised to unit vectors prior to storage, such that cosine similarity between any two vectors equals their dot product. This normalisation is applied consistently across all corpora and is required for the centroid computation to yield cosine similarities.
+All texts were encoded using \texttt{all-MiniLM-L6-v2} \parencite{all-minilm-l6-v2}, a pre-trained sentence embedding model from the sentence-transformers library \parencite{Reimers2019}, producing 384-dimensional dense vector representations. This model was selected for three reasons: it achieves competitive performance on semantic textual similarity benchmarks, it is computationally efficient on CPU hardware, and it avoids the need for domain-specific fine-tuning that would introduce additional analytical assumptions. All embeddings were L2-normalised to unit vectors prior to storage, such that cosine similarity between any two vectors equals their dot product. This normalisation is applied consistently across all corpora and is required for the centroid computation to yield cosine similarities.
 
 \subsection{SDG Measurement Instrument: Centroids and Validation}
 
