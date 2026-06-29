@@ -9,7 +9,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 1 | Singh2024 | manual_download/Singh2024.pdf | DONE | |
 | 2 | Cowls2021 | manual_download/Cowls2021.pdf | DONE | |
 | 3 | Nedungadi2024 | manual_download/Nedungadi2024.pdf | DONE | |
-| 4 | ToneyWails2024 | manual_download/ToneyWails2024.pdf | PENDING | |
+| 4 | ToneyWails2024 | manual_download/ToneyWails2024.pdf | DONE | |
 | 5 | SioumalasChristodoulou2025 | manual_download/SioumalasChristodoulou2025.pdf | PENDING | |
 | 6 | Gjorgjevikj2025 | manual_download/Gjorgjevikj2025.pdf | PENDING | |
 | 7 | Heink2015 | manual_download/Heink2015.pdf | DONE | Mild framing: "knowledge utilisation framework" is not Heink2015's own label; CRELE content is accurate | |
