@@ -35,7 +35,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 22 | biber1988variation | 4_corpusLinguistic/biber1988variation.pdf | PENDING | |
 | 23 | biberConrad2009register | 4_corpusLinguistic/Biber2009.pdf | PENDING | |
 | 24 | Rodriguez2023 | semanticReg/Rodriguez et al 2023.pdf | PENDING | |
-| 25 | BautistaPuig2021 | BautistaPuig2021.pdf | PENDING | |
+| 25 | BautistaPuig2021 | BautistaPuig2021.pdf | DONE | |
 | 26 | Strauss2025 | Strauss2025.pdf | PENDING | |
 
 ## Policy docs / datasets (no PDF to check)
