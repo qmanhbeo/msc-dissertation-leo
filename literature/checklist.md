@@ -6,7 +6,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
-| 1 | Singh2024 | manual_download/Singh2024.pdf | PENDING | |
+| 1 | Singh2024 | manual_download/Singh2024.pdf | DONE | |
 | 2 | Cowls2021 | manual_download/Cowls2021.pdf | PENDING | |
 | 3 | Nedungadi2024 | manual_download/Nedungadi2024.pdf | PENDING | |
 | 4 | ToneyWails2024 | manual_download/ToneyWails2024.pdf | PENDING | |
