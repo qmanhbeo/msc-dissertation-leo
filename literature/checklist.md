@@ -23,7 +23,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 10 | Vinuesa2020 | first/Vinuesa2020.pdf | PENDING | |
 | 11 | Armitage2020 | first/Armitage2020.pdf | PENDING | |
 | 12 | Reimers2019 | first/Reimers2019.pdf | DONE | |
-| 13 | Pukelis2022 | first/Pukelis2022.pdf | PENDING | |
+| 13 | Pukelis2022 | first/Pukelis2022.pdf | DONE | |
 | 14 | Priem2022 | first/Priem2022.pdf | PENDING | |
 | 15 | bornmann2016policy | 5_policy-science-gap/Bornmann2016.pdf | PENDING | |
 | 16 | bornmann2017impact | 5_policy-science-gap/Bornmann2017.pdf | PENDING | |
