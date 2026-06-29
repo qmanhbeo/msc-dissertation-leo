@@ -13,7 +13,7 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{graphicx}
-\graphicspath{{../outputs/figures/}{../outputs/robustness/genre_adjustment/figures/}}
+\graphicspath{{../outputs/figures/}{../outputs/robustness/register_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -33,11 +33,11 @@
 \input{../outputs/tables/num_semantic.tex}
 \input{../outputs/tables/num_h25.tex}
 \input{../outputs/tables/num_sample_stability.tex}
-\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_adjustment.tex}{}{}
-\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_confidence_checks.tex}{}{}
-\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_sdg_genre_robustness.tex}{}{}
-\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_genre_interpretability.tex}{}{}
-\InputIfFileExists{../outputs/robustness/genre_adjustment/tables/num_regression_genre_alignment.tex}{}{}
+\InputIfFileExists{../outputs/robustness/register_adjustment/tables/num_register_adjustment.tex}{}{}
+\InputIfFileExists{../outputs/robustness/register_adjustment/tables/num_register_confidence_checks.tex}{}{}
+\InputIfFileExists{../outputs/robustness/register_adjustment/tables/num_sdg_register_robustness.tex}{}{}
+\InputIfFileExists{../outputs/robustness/register_adjustment/tables/num_register_interpretability.tex}{}{}
+\InputIfFileExists{../outputs/robustness/register_adjustment/tables/num_regression_register_alignment.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -599,7 +599,7 @@ The logic of this appendix is informed by multidimensional register analysis: re
 
 \subsection{One-Direction Global Sensitivity Check}
 
-The simplest robustness step estimates one broad research-versus-policy direction in the shared SBERT space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \GenreClassifierTestAccuracy{}, ROC-AUC \GenreClassifierTestRocAuc{}, F1 \GenreClassifierTestFOne{}, precision \GenreClassifierTestPrecision{}, and recall \GenreClassifierTestRecall{} using \GenreClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This shows that a strong corpus-level research--policy axis exists.
+The simplest robustness step estimates one broad research-versus-policy direction in the shared SBERT space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \RegisterClassifierTestAccuracy{}, ROC-AUC \RegisterClassifierTestRocAuc{}, F1 \RegisterClassifierTestFOne{}, precision \RegisterClassifierTestPrecision{}, and recall \RegisterClassifierTestRecall{} using \RegisterClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This shows that a strong corpus-level research--policy axis exists.
 
 Formally, let $\mathbf{x}$ be a unit-normalised embedding and let $\mathbf{g}$ denote the learned global research--policy direction. The one-direction adjustment first subtracts the orthogonal projection of $\mathbf{x}$ onto $\mathbf{g}$,
 \[
@@ -614,14 +614,14 @@ Subtracting that one global direction reduces the mean gap from \MeanRawSemantic
 \caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the dissertation. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
 \label{tab:register-adjusted-semantic-gap}
 \resizebox{\textwidth}{!}{%
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_adjusted_semgap.tex}
+\input{../outputs/robustness/register_adjustment/tables/tab_register_adjusted_semgap.tex}
 }
 \end{table}
 
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_adjusted_semantic_gap_comparison.pdf}{
+\IfFileExists{../outputs/robustness/register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf}{
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{fig_genre_adjusted_semantic_gap_comparison.pdf}
+\includegraphics[width=0.9\textwidth]{fig_register_adjusted_semantic_gap_comparison.pdf}
 \caption{Global one-direction register sensitivity check: raw versus adjusted semantic gap by SDG. Raw gap is shown in grey and the one-direction adjusted gap in blue.}
 \label{fig:register-adjusted-semantic-gap}
 \end{figure}
@@ -629,22 +629,22 @@ Subtracting that one global direction reduces the mean gap from \MeanRawSemantic
 
 \subsection{Additional Confidence Checks on Global Subtraction}
 
-The one-direction subtraction is itself testable. The adjusted re-separability audit shows that research and policy remain highly separable even after this first direction is removed: the raw held-out ROC-AUC is \GenreConfidenceAdjustedResepRawRocAuc{}, while the adjusted held-out ROC-AUC remains \GenreConfidenceAdjustedResepAdjustedRocAuc{} (relative change \GenreConfidenceAdjustedResepDeltaRocAuc{}). Held-out-SDG generalization is also strong, with mean held-out ROC-AUC \GenreConfidenceHeldoutMeanRocAuc{} and mean held-out F1 \GenreConfidenceHeldoutMeanFOne{}, which indicates that the learned axis is broad rather than purely SDG-specific leakage.
+The one-direction subtraction is itself testable. The adjusted re-separability audit shows that research and policy remain highly separable even after this first direction is removed: the raw held-out ROC-AUC is \RegisterConfidenceAdjustedResepRawRocAuc{}, while the adjusted held-out ROC-AUC remains \RegisterConfidenceAdjustedResepAdjustedRocAuc{} (relative change \RegisterConfidenceAdjustedResepDeltaRocAuc{}). Held-out-SDG generalization is also strong, with mean held-out ROC-AUC \RegisterConfidenceHeldoutMeanRocAuc{} and mean held-out F1 \RegisterConfidenceHeldoutMeanFOne{}, which indicates that the learned axis is broad rather than purely SDG-specific leakage.
 
-At the same time, the multi-direction subtraction curve shows that the mean adjusted gap continues to decline from \GenreConfidenceMultiKOneMeanGap{} at $k=\GenreConfidenceMultiKOne$ to \GenreConfidenceMultiKMaxMeanGap{} at $k=\GenreConfidenceMultiKMax$, while the residual classifier ROC-AUC at $k=\GenreConfidenceMultiKMax$ is still \GenreConfidenceMultiKMaxResidualRocAuc{}. The topic-matched nearest-neighbor check also remains far from a collapse, moving from \GenreConfidenceTopicRawMatchedGap{} in raw space to \GenreConfidenceTopicAdjustedMatchedGap{} after subtraction. Taken together, these checks show that the one-direction residual cannot be treated as pure substantive divergence. It is therefore best interpreted as a limited sensitivity analysis against one strong global register axis.
+At the same time, the multi-direction subtraction curve shows that the mean adjusted gap continues to decline from \RegisterConfidenceMultiKOneMeanGap{} at $k=\RegisterConfidenceMultiKOne$ to \RegisterConfidenceMultiKMaxMeanGap{} at $k=\RegisterConfidenceMultiKMax$, while the residual classifier ROC-AUC at $k=\RegisterConfidenceMultiKMax$ is still \RegisterConfidenceMultiKMaxResidualRocAuc{}. The topic-matched nearest-neighbor check also remains far from a collapse, moving from \RegisterConfidenceTopicRawMatchedGap{} in raw space to \RegisterConfidenceTopicAdjustedMatchedGap{} after subtraction. Taken together, these checks show that the one-direction residual cannot be treated as pure substantive divergence. It is therefore best interpreted as a limited sensitivity analysis against one strong global register axis.
 
 \begin{table}[ht]
 \centering
 \small
 \caption{Additional checks on the one-direction global register subtraction. These diagnostics test whether the first subtraction plausibly attenuates a broad corpus-level register axis without claiming that the residual is a fully purified substantive gap.}
 \label{tab:register-confidence-checks}
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_confidence_checks.tex}
+\input{../outputs/robustness/register_adjustment/tables/tab_register_confidence_checks.tex}
 \end{table}
 
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_confidence_curve.pdf}{
+\IfFileExists{../outputs/robustness/register_adjustment/figures/fig_register_confidence_curve.pdf}{
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.82\textwidth]{fig_genre_confidence_curve.pdf}
+\includegraphics[width=0.82\textwidth]{fig_register_confidence_curve.pdf}
 \caption{Confidence checks on global register subtraction. The top panel shows how the mean adjusted semantic gap changes as more discriminative research--policy directions are removed. The bottom panel shows the residual held-out classifier ROC-AUC after the same sequence of removals.}
 \label{fig:register-confidence-curve}
 \end{figure}
@@ -652,22 +652,22 @@ At the same time, the multi-direction subtraction curve shows that the mean adju
 
 \subsection{SDG-Balanced Global Controls and Within-SDG Stress Tests}
 
-The global one-direction subtraction may still reflect SDG composition in the sampled classifier data. To probe that, I add an SDG-balanced global classifier that draws equal numbers of research and policy texts from every SDG before learning one shared research--policy direction. This is a stronger global sensitivity check because it targets broad corpus-level register while controlling SDG composition. In the current run, the SDG-balanced classifier remains strongly separable (accuracy \SdgGenreBalancedAccuracy{}, macro-F1 \SdgGenreBalancedMacroFOne{}, ROC-AUC \SdgGenreBalancedRocAuc{}), and the mean gap becomes \SdgGenreBalancedMeanGap{}.
+The global one-direction subtraction may still reflect SDG composition in the sampled classifier data. To probe that, I add an SDG-balanced global classifier that draws equal numbers of research and policy texts from every SDG before learning one shared research--policy direction. This is a stronger global sensitivity check because it targets broad corpus-level register while controlling SDG composition. In the current run, the SDG-balanced classifier remains strongly separable (accuracy \SdgRegisterBalancedAccuracy{}, macro-F1 \SdgRegisterBalancedMacroFOne{}, ROC-AUC \SdgRegisterBalancedRocAuc{}), and the mean gap becomes \SdgRegisterBalancedMeanGap{}.
 
-I also fit within-SDG classifiers, but these are interpreted differently. Because each classifier is estimated inside a single SDG, subtracting the resulting direction risks removing the very within-goal research--policy contrast the dissertation is trying to measure. Their mean adjusted gap (\SdgGenreWithinMeanGap{}) is therefore treated as a stress-test result rather than as a better estimate. The cosine similarity between the SDG-balanced global direction and the average within-SDG direction is \SdgGenreGlobalVsAverageCosine{}, which helps show whether the SDG-specific directions mostly line up with the broad global axis or vary goal by goal.
+I also fit within-SDG classifiers, but these are interpreted differently. Because each classifier is estimated inside a single SDG, subtracting the resulting direction risks removing the very within-goal research--policy contrast the dissertation is trying to measure. Their mean adjusted gap (\SdgRegisterWithinMeanGap{}) is therefore treated as a stress-test result rather than as a better estimate. The cosine similarity between the SDG-balanced global direction and the average within-SDG direction is \SdgRegisterGlobalVsAverageCosine{}, which helps show whether the SDG-specific directions mostly line up with the broad global axis or vary goal by goal.
 
 \begin{table}[ht]
 \centering
 \small
 \caption{SDG-aware register robustness hierarchy. The SDG-balanced classifier is treated as a stronger global sensitivity check. The within-SDG design is treated as an over-subtraction stress test because it learns and removes within-goal research--policy contrasts directly.}
 \label{tab:sdg-register-robustness}
-\input{../outputs/robustness/genre_adjustment/tables/tab_sdg_genre_robustness.tex}
+\input{../outputs/robustness/register_adjustment/tables/tab_sdg_register_robustness.tex}
 \end{table}
 
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_sdg_genre_robustness_comparison.pdf}{
+\IfFileExists{../outputs/robustness/register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf}{
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.90\textwidth]{fig_sdg_genre_robustness_comparison.pdf}
+\includegraphics[width=0.90\textwidth]{fig_sdg_register_robustness_comparison.pdf}
 \caption{Raw semantic gap compared with SDG-aware register procedures. The green bars show the SDG-balanced global sensitivity check. The blue bars show the within-SDG stress test, which is more prone to over-subtraction.}
 \label{fig:sdg-register-robustness}
 \end{figure}
@@ -677,13 +677,13 @@ I also fit within-SDG classifiers, but these are interpreted differently. Becaus
 
 The previous appendix checks establish that a strong research--policy direction exists in the embedding space and that its subtraction changes semantic-gap magnitudes. A separate question is what that learned direction is actually capturing. Two descriptive diagnostics help answer that. First, every text can be projected onto the SDG-balanced global register vector, producing ranked lists of the most policy-like and most research-like texts without fitting any new model. Second, the same register direction can be compared directly with the canonical OSDG-derived SDG centroids. If the direction were close to orthogonal to those centroids, it would look more like a broad wrapper-language axis; if it aligns materially with SDG centroids, it likely mixes register and substantive thematic structure.
 
-The projection examples are included for manual inspection rather than automatic summarization. In the current run, the mean score of the top policy-like examples is \GenreProjectionPolicyTopMean{}, while the mean score of the bottom research-like examples is \GenreProjectionResearchBottomMean{}. The SDG-centroid comparison is more formal: the mean absolute cosine between the global register vector and the 17 SDG centroids is \GenreAlignmentMeanAbsCosine{}, the median is \GenreAlignmentMedianAbsCosine{}, and the maximum is \GenreAlignmentMaxAbsCosine{}. The strongest alignment occurs at \GenreAlignmentStrongestSdg{}, while the weakest occurs at \GenreAlignmentWeakestSdg{}. These values indicate overlap with SDG semantic structure rather than a clean separation of style from substance.
+The projection examples are included for manual inspection rather than automatic summarization. In the current run, the mean score of the top policy-like examples is \RegisterProjectionPolicyTopMean{}, while the mean score of the bottom research-like examples is \RegisterProjectionResearchBottomMean{}. The SDG-centroid comparison is more formal: the mean absolute cosine between the global register vector and the 17 SDG centroids is \RegisterAlignmentMeanAbsCosine{}, the median is \RegisterAlignmentMedianAbsCosine{}, and the maximum is \RegisterAlignmentMaxAbsCosine{}. The strongest alignment occurs at \RegisterAlignmentStrongestSdg{}, while the weakest occurs at \RegisterAlignmentWeakestSdg{}. These values indicate overlap with SDG semantic structure rather than a clean separation of style from substance.
 
 \begin{table}[ht]
 \centering
 \caption{Alignment between the SDG-balanced global register direction and the canonical SDG centroids. The final column reports the matching within-SDG register-versus-centroid cosine when an SDG-specific register vector is available.}
 \label{tab:register-sdg-alignment}
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_sdg_alignment.tex}
+\input{../outputs/robustness/register_adjustment/tables/tab_register_sdg_alignment.tex}
 \end{table}
 
 \begin{table}[ht]
@@ -692,23 +692,23 @@ The projection examples are included for manual inspection rather than automatic
 \caption{Manual-inspection examples from the learned global register direction. The policy-like rows have the highest positive projection onto the global register vector; the research-like rows have the lowest projection.}
 \label{tab:register-projection-examples}
 \resizebox{\textwidth}{!}{%
-\input{../outputs/robustness/genre_adjustment/tables/tab_genre_projection_examples.tex}
+\input{../outputs/robustness/register_adjustment/tables/tab_register_projection_examples.tex}
 }
 \end{table}
 
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_projection_distribution.pdf}{
+\IfFileExists{../outputs/robustness/register_adjustment/figures/fig_register_projection_distribution.pdf}{
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.92\textwidth]{fig_genre_projection_distribution.pdf}
+\includegraphics[width=0.92\textwidth]{fig_register_projection_distribution.pdf}
 \caption{Distribution of projection scores onto the SDG-balanced global register direction. The figure is descriptive only: it exposes what kinds of texts align most strongly with the learned global axis.}
 \label{fig:register-projection-distribution}
 \end{figure}
 }{}
 
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_sdg_alignment.pdf}{
+\IfFileExists{../outputs/robustness/register_adjustment/figures/fig_register_sdg_alignment.pdf}{
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.86\textwidth]{fig_genre_sdg_alignment.pdf}
+\includegraphics[width=0.86\textwidth]{fig_register_sdg_alignment.pdf}
 \caption{Signed cosine similarity between the SDG-balanced global register direction and each OSDG-derived SDG centroid. Larger magnitudes indicate stronger overlap between the learned register direction and a specific SDG axis.}
 \label{fig:register-sdg-alignment}
 \end{figure}
@@ -718,16 +718,16 @@ The projection examples are included for manual inspection rather than automatic
 
 The classifier-based register direction is discriminative by construction, so a final concern is that its overlap with SDG semantic structure might partly be an artefact of optimizing corpus separation. To probe that possibility, I add a Rodriguez-style embedding regression diagnostic. Each embedding coordinate is treated as an outcome in a linear model with corpus register, SDG fixed effects, and register--SDG interactions. This does not optimize a classifier; it decomposes embedding variation associated with register after controlling for SDG structure.
 
-In the current run, the cosine between the regression-derived global register vector and the SDG-balanced classifier vector is \RegressionGenreVsClassifierCosine{}, which falls in the \RegressionGenreAgreementBand{} range. The regression-derived global register vector remains materially aligned with SDG centroids: mean absolute cosine \RegressionGenreMeanAbsCosine{}, median \RegressionGenreMedianAbsCosine{}, maximum \RegressionGenreMaxAbsCosine{}, strongest alignment \RegressionGenreStrongestSdg{}, weakest \RegressionGenreWeakestSdg{}. The mean regression-global adjusted gap is \RegressionGlobalMeanGap{}, while the mean regression within-SDG adjusted gap is \RegressionWithinMeanGap{}. The latter is interpreted as an especially aggressive over-subtraction stress test because the within-SDG regression vectors are very close to estimating the within-goal policy--research contrast itself.
+In the current run, the cosine between the regression-derived global register vector and the SDG-balanced classifier vector is \RegressionRegisterVsClassifierCosine{}, which falls in the \RegressionRegisterAgreementBand{} range. The regression-derived global register vector remains materially aligned with SDG centroids: mean absolute cosine \RegressionRegisterMeanAbsCosine{}, median \RegressionRegisterMedianAbsCosine{}, maximum \RegressionRegisterMaxAbsCosine{}, strongest alignment \RegressionRegisterStrongestSdg{}, weakest \RegressionRegisterWeakestSdg{}. The mean regression-global adjusted gap is \RegressionGlobalMeanGap{}, while the mean regression within-SDG adjusted gap is \RegressionWithinMeanGap{}. The latter is interpreted as an especially aggressive over-subtraction stress test because the within-SDG regression vectors are very close to estimating the within-goal policy--research contrast itself.
 
 \begin{table}[ht]
 \centering
 \caption{Regression-derived versus classifier-derived register alignment with the canonical SDG centroids. The second column reports the SDG-balanced classifier direction, the third reports the regression-derived global register direction, and the fourth reports SDG-specific regression register directions.}
 \label{tab:regression-register-alignment}
-\input{../outputs/robustness/genre_adjustment/tables/tab_regression_genre_alignment.tex}
+\input{../outputs/robustness/register_adjustment/tables/tab_regression_register_alignment.tex}
 \end{table}
 
-\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
+\IfFileExists{../outputs/robustness/register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}

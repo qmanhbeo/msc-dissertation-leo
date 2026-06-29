@@ -69,9 +69,9 @@ python main.py --build-pdf --overwrite
 Rebuild only the dissertation PDF from existing tables and figures.
 
 ```bash
-python main.py --genre-adjustment --overwrite
+python main.py --register-adjustment --overwrite
 ```
-Run the Appendix B genre-adjustment robustness suite from existing embedded/scored data.
+Run the Appendix B register-adjustment robustness suite from existing embedded/scored data.
 
 ```bash
 python main.py --sample-stability --overwrite

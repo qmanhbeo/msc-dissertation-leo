@@ -35,7 +35,7 @@ BASE_WARM_REPLAY_REQUIREMENTS = [
     Path("writing/references.bib"),
 ]
 
-WARM_REPLAY_GENRE_EXTRA_REQUIREMENTS = [
+WARM_REPLAY_REGISTER_EXTRA_REQUIREMENTS = [
     Path("data/1_preprocessed/research_corpus/metadata/manifest.json"),
     Path("data/1_preprocessed/research_corpus/part-00001.jsonl"),
 ]
@@ -127,29 +127,29 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--sample-stability", action="store_true", help="Run only the sample-stability robustness stage from existing canonical analysis outputs.")
     p.add_argument(
-        "--genre-adjustment",
+        "--register-adjustment",
         action="store_true",
         help=(
-            "Run the Appendix B genre-adjustment robustness suite from existing embedded/scored data. "
+            "Run the Appendix B register-adjustment robustness suite from existing embedded/scored data. "
             "This stage is additive only and does not replace the canonical raw semantic gap."
         ),
     )
     p.add_argument("--skip-sample-stability", action="store_true", help="Skip the sample-stability stage during --warm-replay or --full-pipeline.")
-    p.add_argument("--skip-genre-confidence-checks", action="store_true", help="Skip the additional genre-confidence checks inside --genre-adjustment.")
+    p.add_argument("--skip-register-confidence-checks", action="store_true", help="Skip the additional register-confidence checks inside --register-adjustment.")
     p.add_argument(
-        "--sdg-genre-method",
+        "--sdg-register-method",
         choices=["sdg_balanced", "within_sdg", "both"],
         default="both",
         help=(
-            "Method subset for the SDG-aware genre robustness checks inside --genre-adjustment. "
+            "Method subset for the SDG-aware register robustness checks inside --register-adjustment. "
             "The SDG-balanced method is a stronger global sensitivity check; the within-SDG method is an over-subtraction stress test."
         ),
     )
-    p.add_argument("--sdg-genre-random-seed", type=int, default=None, help="Optional seed override for the SDG-aware genre robustness checks.")
-    p.add_argument("--sdg-genre-samples-per-cell", type=int, default=None, help="Optional cap for samples per SDG x genre cell in the SDG-aware genre robustness checks.")
-    p.add_argument("--sdg-genre-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
-    p.add_argument("--sdg-genre-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware genre robustness checks.")
-    p.add_argument("--sdg-genre-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware genre robustness checks.")
+    p.add_argument("--sdg-register-random-seed", type=int, default=None, help="Optional seed override for the SDG-aware register robustness checks.")
+    p.add_argument("--sdg-register-samples-per-cell", type=int, default=None, help="Optional cap for samples per SDG x register cell in the SDG-aware register robustness checks.")
+    p.add_argument("--sdg-register-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
+    p.add_argument("--sdg-register-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware register robustness checks.")
+    p.add_argument("--sdg-register-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware register robustness checks.")
     p.add_argument("--build-pdf", action="store_true", help="Build outputs/dissertation.pdf from existing manuscript tables/figures.")
     p.add_argument("--clean-canon", action="store_true", help="Remove manuscript output artifacts only.")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
@@ -189,7 +189,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.backup_data_snapshot,
             args.refresh_policy_corpus,
             args.sample_stability,
-            args.genre_adjustment,
+            args.register_adjustment,
             args.build_pdf,
             args.clean_canon,
         ]
@@ -205,10 +205,10 @@ def missing_requirements(paths: list[Path]) -> list[Path]:
     return [p for p in paths if not (ROOT / p).exists()]
 
 
-def required_warm_replay_inputs(*, include_genre_adjustment: bool) -> list[Path]:
+def required_warm_replay_inputs(*, include_register_adjustment: bool) -> list[Path]:
     required = list(BASE_WARM_REPLAY_REQUIREMENTS)
-    if include_genre_adjustment:
-        required.extend(WARM_REPLAY_GENRE_EXTRA_REQUIREMENTS)
+    if include_register_adjustment:
+        required.extend(WARM_REPLAY_REGISTER_EXTRA_REQUIREMENTS)
     return required
 
 
@@ -266,15 +266,15 @@ def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, .
     return missing
 
 
-def missing_warm_replay_requirements(*, include_genre_adjustment: bool) -> list[Path]:
-    missing = missing_requirements(required_warm_replay_inputs(include_genre_adjustment=include_genre_adjustment))
+def missing_warm_replay_requirements(*, include_register_adjustment: bool) -> list[Path]:
+    missing = missing_requirements(required_warm_replay_inputs(include_register_adjustment=include_register_adjustment))
     for path in missing_manifest_shard_paths(
         ROOT / "data/2_embedded/research_shards/metadata/manifest.json",
         ("embedding_path", "ids_path"),
     ):
         if path not in missing:
             missing.append(path)
-    if include_genre_adjustment:
+    if include_register_adjustment:
         for path in missing_research_text_shards():
             if path not in missing:
                 missing.append(path)
@@ -306,7 +306,7 @@ def print_status(output_dir: Path) -> None:
     print(f"Project root: {ROOT}")
     print(f"Manuscript output dir: {output_dir}")
 
-    warm_missing = missing_warm_replay_requirements(include_genre_adjustment=False)
+    warm_missing = missing_warm_replay_requirements(include_register_adjustment=False)
     print("")
     print("Warm replay readiness:")
     if warm_missing:
@@ -316,15 +316,15 @@ def print_status(output_dir: Path) -> None:
     else:
         print("  ready: yes")
 
-    warm_genre_missing = missing_warm_replay_requirements(include_genre_adjustment=True)
+    warm_register_missing = missing_warm_replay_requirements(include_register_adjustment=True)
     print("")
-    print("Warm replay + genre-adjustment readiness:")
-    if warm_genre_missing:
+    print("Warm replay + register-adjustment readiness:")
+    if warm_register_missing:
         print("  ready: no")
-        for path in warm_genre_missing[:12]:
+        for path in warm_register_missing[:12]:
             print(f"  missing: {rel(ROOT / path)}")
-        if len(warm_genre_missing) > 12:
-            print(f"  ... and {len(warm_genre_missing) - 12} more")
+        if len(warm_register_missing) > 12:
+            print(f"  ... and {len(warm_register_missing) - 12} more")
     else:
         print("  ready: yes")
 
@@ -454,20 +454,20 @@ def run_semantic_gap_interpretability(output_dir: Path) -> None:
     )
 
 
-def run_genre_adjustment(output_dir: Path, args: argparse.Namespace, *, include_genre_confidence_checks: bool) -> None:
-    cmd = [sys.executable, "code/3_main_analysis/3_appendix/3_genre_adjustment.py", "--output-dir", str(output_dir)]
-    if not include_genre_confidence_checks:
-        cmd.append("--skip-genre-confidence-checks")
-    cmd.extend(["--method", args.sdg_genre_method])
-    cmd.extend(["--test-size", str(args.sdg_genre_test_size)])
-    cmd.extend(["--classifier-type", args.sdg_genre_classifier_type])
-    cmd.extend(["--min-samples-per-class", str(args.sdg_genre_min_samples_per_class)])
-    if args.sdg_genre_random_seed is not None:
-        cmd.extend(["--random-seed", str(args.sdg_genre_random_seed)])
-    if args.sdg_genre_samples_per_cell is not None:
-        cmd.extend(["--samples-per-cell", str(args.sdg_genre_samples_per_cell)])
+def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, include_register_confidence_checks: bool) -> None:
+    cmd = [sys.executable, "code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(output_dir)]
+    if not include_register_confidence_checks:
+        cmd.append("--skip-register-confidence-checks")
+    cmd.extend(["--method", args.sdg_register_method])
+    cmd.extend(["--test-size", str(args.sdg_register_test_size)])
+    cmd.extend(["--classifier-type", args.sdg_register_classifier_type])
+    cmd.extend(["--min-samples-per-class", str(args.sdg_register_min_samples_per_class)])
+    if args.sdg_register_random_seed is not None:
+        cmd.extend(["--random-seed", str(args.sdg_register_random_seed)])
+    if args.sdg_register_samples_per_cell is not None:
+        cmd.extend(["--samples-per-cell", str(args.sdg_register_samples_per_cell)])
     run_step(
-        "appendix B genre-adjustment robustness",
+        "appendix B register-adjustment robustness",
         cmd,
     )
 
@@ -477,10 +477,10 @@ def run_warm_replay(
     args: argparse.Namespace,
     *,
     include_sample_stability: bool,
-    include_genre_adjustment: bool,
-    include_genre_confidence_checks: bool,
+    include_register_adjustment: bool,
+    include_register_confidence_checks: bool,
 ) -> None:
-    missing = missing_warm_replay_requirements(include_genre_adjustment=include_genre_adjustment)
+    missing = missing_warm_replay_requirements(include_register_adjustment=include_register_adjustment)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Warm replay is not ready. Missing required inputs: {missing_str}")
@@ -505,8 +505,8 @@ def run_warm_replay(
     run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
         run_sample_stability(output_dir)
-    if include_genre_adjustment:
-        run_genre_adjustment(output_dir, args, include_genre_confidence_checks=include_genre_confidence_checks)
+    if include_register_adjustment:
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=include_register_confidence_checks)
     build_pdf(output_dir)
 
 
@@ -574,8 +574,8 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
         output_dir,
         args,
         include_sample_stability=not args.skip_sample_stability,
-        include_genre_adjustment=args.genre_adjustment,
-        include_genre_confidence_checks=not args.skip_genre_confidence_checks,
+        include_register_adjustment=args.register_adjustment,
+        include_register_confidence_checks=not args.skip_register_confidence_checks,
     )
 
 
@@ -625,8 +625,8 @@ def selected_backup_profiles(profile_name: str) -> list[str]:
     return [profile_name]
 
 
-def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_genre_adjustment: bool) -> None:
-    missing = missing_warm_replay_requirements(include_genre_adjustment=include_genre_adjustment)
+def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_register_adjustment: bool) -> None:
+    missing = missing_warm_replay_requirements(include_register_adjustment=include_register_adjustment)
     if not missing:
         return
 
@@ -682,45 +682,45 @@ def main() -> None:
     elif args.full_pipeline:
         run_full_pipeline(output_dir, args)
     elif args.pca_semantic_landscape:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_pca_semantic_landscape(output_dir)
     elif args.softmax_multilabel_sdg:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_softmax_multilabel_sdg(output_dir)
     elif args.policy_source_family_sensitivity:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_policy_source_family_sensitivity(output_dir)
     elif args.sdg4_lexical_audit:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=True)
+        ensure_warm_replay_inputs(args, include_register_adjustment=True)
         run_sdg4_lexical_audit(output_dir)
     elif args.sdg17_reference_sensitivity:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_sdg17_reference_sensitivity(output_dir)
     elif args.semantic_gap_interpretability:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=True)
+        ensure_warm_replay_inputs(args, include_register_adjustment=True)
         run_semantic_gap_interpretability(output_dir)
     elif args.within_corpus_centroid_structure:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=False)
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_within_corpus_centroid_structure(output_dir)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
     elif args.warm_replay:
-        ensure_warm_replay_inputs(args, include_genre_adjustment=args.genre_adjustment)
+        ensure_warm_replay_inputs(args, include_register_adjustment=args.register_adjustment)
         run_warm_replay(
             output_dir,
             args,
             include_sample_stability=not args.skip_sample_stability,
-            include_genre_adjustment=args.genre_adjustment,
-            include_genre_confidence_checks=not args.skip_genre_confidence_checks,
+            include_register_adjustment=args.register_adjustment,
+            include_register_confidence_checks=not args.skip_register_confidence_checks,
         )
     elif args.sample_stability:
         run_sample_stability(output_dir)
-        if args.genre_adjustment:
-            run_genre_adjustment(output_dir, args, include_genre_confidence_checks=not args.skip_genre_confidence_checks)
+        if args.register_adjustment:
+            run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.genre_adjustment:
-        run_genre_adjustment(output_dir, args, include_genre_confidence_checks=not args.skip_genre_confidence_checks)
+    elif args.register_adjustment:
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.build_pdf:

@@ -1,9 +1,0 @@
-\begin{tabular}{p{0.24\textwidth}p{0.23\textwidth}p{0.40\textwidth}}
-\toprule
-Method & Headline estimate & Interpretation \\
-\midrule
-SDG-balanced global classifier & Test accuracy \SdgGenreBalancedAccuracy; macro-F1 \SdgGenreBalancedMacroFOne; ROC-AUC \SdgGenreBalancedRocAuc; mean adjusted gap \SdgGenreBalancedMeanGap & One global research-policy direction is learned after equalising the SDG composition of the training sample. \\
-Within-SDG classifiers & Mean test accuracy \SdgGenreWithinMeanAccuracy; mean macro-F1 \SdgGenreWithinMeanMacroFOne; mean ROC-AUC \SdgGenreWithinMeanRocAuc; mean adjusted gap \SdgGenreWithinMeanGap & SDG-specific genre directions are fit where sufficient data exist (\SdgGenreWithinFittedCount{} SDGs fit, \SdgGenreWithinSkippedCount{} skipped). \\
-Direction stability & Global-vs-average cosine \SdgGenreGlobalVsAverageCosine & Higher cosine similarity means the within-SDG genre directions point in roughly the same direction as the SDG-balanced global control. \\
-\bottomrule
-\end{tabular}

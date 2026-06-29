@@ -13,7 +13,7 @@ SNAPSHOT_METADATA_FILE = SNAPSHOT_METADATA_DIR / "snapshot_manifest.json"
 CURATED_EXCLUDED_PATHS = (
     Path("0_raw/openalex"),
     Path("3_scored/paper_sample_seed_42_141"),
-    Path("3_scored/genre_adjustment_cache"),
+    Path("3_scored/register_adjustment_cache"),
     Path("3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
 )
 
@@ -29,7 +29,7 @@ BASE_WARM_REPLAY_PATHS = (
     Path("data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
 )
 
-GENRE_REPLAY_EXTRA_PATHS = (
+REGISTER_REPLAY_EXTRA_PATHS = (
     Path("data/1_preprocessed/research_corpus/metadata/manifest.json"),
     Path("data/1_preprocessed/research_corpus/part-00001.jsonl"),
 )
@@ -61,13 +61,13 @@ SNAPSHOT_PROFILES: dict[str, SnapshotProfile] = {
         name="full",
         description="Literal data/ snapshot, including rebuildable caches and raw OpenAlex fetch artifacts.",
         excluded_data_paths=(),
-        expected_repo_paths=BASE_WARM_REPLAY_PATHS + GENRE_REPLAY_EXTRA_PATHS,
+        expected_repo_paths=BASE_WARM_REPLAY_PATHS + REGISTER_REPLAY_EXTRA_PATHS,
     ),
     "curated": SnapshotProfile(
         name="curated",
         description="Marker-facing replay snapshot with warm-replay inputs preserved and large rebuildable caches removed.",
         excluded_data_paths=CURATED_EXCLUDED_PATHS,
-        expected_repo_paths=BASE_WARM_REPLAY_PATHS + GENRE_REPLAY_EXTRA_PATHS,
+        expected_repo_paths=BASE_WARM_REPLAY_PATHS + REGISTER_REPLAY_EXTRA_PATHS,
     ),
 }
 
