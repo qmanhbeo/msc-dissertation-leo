@@ -11,7 +11,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 3 | Nedungadi2024 | manual_download/Nedungadi2024.pdf | DONE | |
 | 4 | ToneyWails2024 | manual_download/ToneyWails2024.pdf | DONE | |
 | 5 | SioumalasChristodoulou2025 | manual_download/SioumalasChristodoulou2025.pdf | DONE | Line 129: FIXED — "AI research metrics" → "global AI metrics" to match paper |
-| 6 | Gjorgjevikj2025 | manual_download/Gjorgjevikj2025.pdf | PENDING | |
+| 6 | Gjorgjevikj2025 | manual_download/Gjorgjevikj2025.pdf | DONE | Line 143: FIXED — "competitive against fine-tuned" → "competitive baselines; fine-tuning further improves" to match paper |
 | 7 | Heink2015 | manual_download/Heink2015.pdf | DONE | Mild framing: "knowledge utilisation framework" is not Heink2015's own label; CRELE content is accurate | |
 | 8 | Heilinger2023 | manual_download/Heilinger2023.pdf | DONE | Line 155: FIXED — rewrote claim to match paper's actual discussion of corporate greenwashing, not research |
 | 9 | Gibbons1994 | manual_download/Gibbons1994.pdf | DONE | |
@@ -24,19 +24,19 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 11 | Armitage2020 | first/Armitage2020.pdf | DONE | ⚠️ PDF at first/ is wrong (Bornmann disruption index); correct PDF at 3_SDG_mapping/ |
 | 12 | Reimers2019 | first/Reimers2019.pdf | DONE | |
 | 13 | Pukelis2022 | first/Pukelis2022.pdf | DONE | |
-| 14 | Priem2022 | first/Priem2022.pdf | PENDING | |
-| 15 | bornmann2016policy | 5_policy-science-gap/Bornmann2016.pdf | PENDING | |
-| 16 | bornmann2017impact | 5_policy-science-gap/Bornmann2017.pdf | PENDING | |
+| 14 | Priem2022 | first/Priem2022.pdf | DONE | |
+| 15 | bornmann2016policy | 5_policy-science-gap/Bornmann2016.pdf | DONE | |
+| 16 | bornmann2017impact | 5_policy-science-gap/Bornmann2017.pdf | DONE | |
 | 17 | Cash2003 | 1_Knowledge_brokerage_and_boundary_organisations/Cash2003.pdf | DONE | |
-| 18 | Guston2001 | 1_Knowledge_brokerage_and_boundary_organisations/Guston2001.pdf | PENDING | |
+| 18 | Guston2001 | 1_Knowledge_brokerage_and_boundary_organisations/Guston2001.pdf | DONE | |
 | 19 | Cross2013 | 0_Epistemic_community_theory/Cross2013.pdf | DONE | |
 | 20 | Haas1992 | 0_Epistemic_community_theory/Haas1992.pdf | DONE | |
 | 21 | Kashnitsky2024 | 3_SDG_mapping/Kashnitsky2024.pdf | DONE | |
-| 22 | biber1988variation | 4_corpusLinguistic/biber1988variation.pdf | PENDING | |
-| 23 | biberConrad2009register | 4_corpusLinguistic/Biber2009.pdf | PENDING | |
-| 24 | Rodriguez2023 | semanticReg/Rodriguez et al 2023.pdf | PENDING | |
+| 22 | biber1988variation | 4_corpusLinguistic/biber1988variation.pdf | DONE | |
+| 23 | biberConrad2009register | 4_corpusLinguistic/Biber2009.pdf | DONE | |
+| 24 | Rodriguez2023 | semanticReg/Rodriguez et al 2023.pdf | DONE | |
 | 25 | BautistaPuig2021 | BautistaPuig2021.pdf | DONE | |
-| 26 | Strauss2025 | Strauss2025.pdf | PENDING | |
+| 26 | Strauss2025 | Strauss2025.pdf | DONE | Line 129: FIXED — "policy emphasises deployment-stage" removed; now accurately describes research-policy gap |
 
 ## Policy docs / datasets (no PDF to check)
 
