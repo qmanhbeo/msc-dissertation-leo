@@ -14,9 +14,9 @@ conda activate dissertation
 python main.py --warm-replay --overwrite
 ```
 
-In the submitted repository, `outputs/` is committed for direct inspection. The command above rebuilds the canonical outputs and dissertation PDF from the frozen curated data snapshot. `--overwrite` is included because canonical outputs already exist; without it, `main.py` fails closed to prevent accidental replacement.
+In the submitted repository, `4_outputs/` is committed for direct inspection. The command above rebuilds the canonical outputs and dissertation PDF from the frozen curated data snapshot. `--overwrite` is included because canonical outputs already exist; without it, `main.py` fails closed to prevent accidental replacement.
 
-If `data/` is missing, `python main.py --warm-replay --overwrite` should fetch the curated snapshot automatically. If automatic fetch fails, hydrate `data/` explicitly and then rerun warm replay:
+If `2_data/` is missing, `python main.py --warm-replay --overwrite` should fetch the curated snapshot automatically. If automatic fetch fails, hydrate `2_data/` explicitly and then rerun warm replay:
 
 ```bash
 python main.py --fetch-data-snapshot curated
@@ -26,24 +26,24 @@ python main.py --warm-replay --overwrite
 ## What the replay produces
 
 Warm replay rebuilds:
-- `outputs/dissertation.pdf`
-- canonical machine-readable outputs under `outputs/main/data/`
-- manuscript tables and figures under `outputs/main/tables/` and `outputs/main/figures/`
+- `4_outputs/dissertation.pdf`
+- canonical machine-readable outputs under `4_outputs/main/data/`
+- manuscript tables and figures under `4_outputs/main/tables/` and `4_outputs/main/figures/`
 
 ## Tracked vs not tracked
 
 Tracked in Git:
 - `main.py`
-- `code/`
-- `writing/`
+- `1_code/`
+- `3_writing/`
 - environment files
 - `README.md`
-- committed `outputs/`
+- committed `4_outputs/`
 
 Not tracked in Git:
-- `data/`
+- `2_data/`
 
-`data/` is hydrated from the frozen curated snapshot. `outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
+`2_data/` is hydrated from the frozen curated snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
 
 ## Environment assumptions
 
@@ -54,7 +54,7 @@ Not tracked in Git:
 - Linux or WSL is the assumed/tested environment; native Windows is not the main target
 - PDF build requires LaTeX tools including `latexmk`, `pdflatex`, and `biber`
 - CPU is sufficient for `--warm-replay`
-- Network access is needed for initial environment setup and data snapshot download; once `data/` is hydrated, warm replay does not need network access
+- Network access is needed for initial environment setup and data snapshot download; once `2_data/` is hydrated, warm replay does not need network access
 
 ## Additional optional commands
 
@@ -81,14 +81,14 @@ Run only the sample-stability robustness stage from existing canonical analysis 
 ```bash
 python main.py --fetch-data-snapshot curated
 ```
-Explicitly hydrate the default marker-facing curated snapshot into `data/`.
+Explicitly hydrate the default marker-facing curated snapshot into `2_data/`.
 
 ```bash
 python main.py --fetch-data-snapshot full
 ```
 Hydrate the full data snapshot for audit or broader reconstruction; this is optional and not required for normal marking.
 
-The underlying snapshot utilities remain under `code/data_backup_and_fetch/` for debugging or audit use.
+The underlying snapshot utilities remain under `1_code/data_backup_and_fetch/` for debugging or audit use.
 
 ## Reproducibility boundaries
 
@@ -97,8 +97,8 @@ The canonical reproducibility target is warm replay from the frozen curated snap
 ## Repository layout
 
 - `main.py`: canonical entrypoint
-- `code/`: pipeline and analysis code
-- `writing/`: manuscript source and PDF build script
-- `outputs/`: committed dissertation outputs
-- `data/`: hydrated snapshot data after fetch
-- `notes/`: working notes retained in the repository
+- `1_code/`: pipeline and analysis code
+- `3_writing/`: manuscript source and PDF build script
+- `4_outputs/`: committed dissertation outputs
+- `2_data/`: hydrated snapshot data after fetch
+- `5_notes/`: working notes retained in the repository

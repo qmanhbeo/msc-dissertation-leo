@@ -1,5 +1,7 @@
 # Data directories (large downloads)
-data/
+2_data/
+# symlink → 2_data/ for backward compatibility with manifest paths
+data
 
 # Python environments and packages
 venv/
@@ -53,8 +55,8 @@ env
 *.ipynb
 
 # Research/literature cache
-literature/**/cache/
-literature/**/temp/
+0_literature/**/cache/
+0_literature/**/temp/
 
 # Data files (CSV, JSON, large datasets)
 *.csv
@@ -77,9 +79,9 @@ checkpoints/
 *.temp
 *.bak
 *backup*
-!code/data_backup_and_fetch/
-!code/data_backup_and_fetch/**
-code/data_backup_and_fetch/__pycache__/
+!1_code/data_backup_and_fetch/
+!1_code/data_backup_and_fetch/**
+1_code/data_backup_and_fetch/__pycache__/
 .temp/
 
 # Data snapshot archives (backed up to Google Drive via backup_data_snapshot.py)
@@ -88,7 +90,7 @@ code/data_backup_and_fetch/__pycache__/
 
 # PDF generated from LaTeX (but keep source and literature PDFs)
 *.pdf
-!literature/**/*.pdf
+!0_literature/**/*.pdf
 *.aux
 *.bbl
 *.bcf
@@ -98,8 +100,8 @@ code/data_backup_and_fetch/__pycache__/
 *.out
 *.run.xml
 *.toc
-writing/build_meta.tex
-writing/builds/
+3_writing/build_meta.tex
+3_writing/builds/
 
 # OS-specific
 .DS_Store
@@ -125,23 +127,23 @@ build/
 .codex
 
 # Dissertation-specific
-writing/drafts/
-notes/private/
+3_writing/drafts/
+5_notes/private/
 .supervisor-feedback/
 
 # Run-local full-corpus outputs
 # The submitted dissertation outputs/ tree is intentionally tracked below.
 
 # Marker-facing committed dissertation outputs
-!outputs/
-!outputs/**
-outputs/**/*.aux
-outputs/**/*.bbl
-outputs/**/*.bcf
-outputs/**/*.blg
-outputs/**/*.fdb_latexmk
-outputs/**/*.fls
-outputs/**/*.log
-outputs/**/*.out
-outputs/**/*.run.xml
-outputs/**/*.toc
+!4_outputs/
+!4_outputs/**
+4_outputs/**/*.aux
+4_outputs/**/*.bbl
+4_outputs/**/*.bcf
+4_outputs/**/*.blg
+4_outputs/**/*.fdb_latexmk
+4_outputs/**/*.fls
+4_outputs/**/*.log
+4_outputs/**/*.out
+4_outputs/**/*.run.xml
+4_outputs/**/*.toc

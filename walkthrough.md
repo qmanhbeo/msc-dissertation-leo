@@ -955,15 +955,15 @@ It asks:
 If you want to connect the explanation above to the codebase, the project is laid out in the same order as the pipeline:
 
 - `main.py`: the top-level entrypoint
-- `code/0_fetch/`: data collection scripts
-- `code/1_preprocess/`: cleaning, filtering, merging, and chunking
-- `code/2_embed/`: embeddings, SDG centroids, scoring, and validation
-- `code/3_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
-- `code/4_visualization/`: final plots
-- `writing/dissertation.tex`: the paper itself
-- `outputs/`: the canonical results, tables, figures, and final PDF
+- `1_code/0_fetch/`: data collection scripts
+- `1_code/1_preprocess/`: cleaning, filtering, merging, and chunking
+- `1_code/2_embed/`: embeddings, SDG centroids, scoring, and validation
+- `1_code/3_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
+- `1_code/4_visualization/`: final plots
+- `3_writing/dissertation.tex`: the paper itself
+- `4_outputs/`: the canonical results, tables, figures, and final PDF
 
-So if you read the repository from `code/0_fetch/` to `code/3_main_analysis/`, you are basically walking through the same story this document just explained.
+So if you read the repository from `1_code/0_fetch/` to `1_code/3_main_analysis/`, you are basically walking through the same story this document just explained.
 
 ---
 

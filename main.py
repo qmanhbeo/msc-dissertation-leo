@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-CODE_ROOT = Path(__file__).resolve().parent / "code"
+CODE_ROOT = Path(__file__).resolve().parent / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
@@ -19,30 +19,30 @@ from shared_utils import (
 
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_OUTPUT_DIR = ROOT / "outputs"
+DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
 BASE_WARM_REPLAY_REQUIREMENTS = [
-    Path("data/2_embedded/policy.npy"),
-    Path("data/2_embedded/metadata/policy_ids.json"),
-    Path("data/2_embedded/osdg.npy"),
-    Path("data/2_embedded/benchmark.npy"),
-    Path("data/2_embedded/research_shards/metadata/manifest.json"),
-    Path("data/3_scored/sdg_centroids.npy"),
-    Path("data/3_scored/paper_scores_shards/metadata/manifest.json"),
-    Path("data/1_preprocessed/policy_all/policy_chunks_all.jsonl"),
-    Path("data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
-    Path("writing/dissertation.tex"),
-    Path("writing/references.bib"),
+    Path("2_data/2_embedded/policy.npy"),
+    Path("2_data/2_embedded/metadata/policy_ids.json"),
+    Path("2_data/2_embedded/osdg.npy"),
+    Path("2_data/2_embedded/benchmark.npy"),
+    Path("2_data/2_embedded/research_shards/metadata/manifest.json"),
+    Path("2_data/3_scored/sdg_centroids.npy"),
+    Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json"),
+    Path("2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl"),
+    Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
+    Path("3_writing/dissertation.tex"),
+    Path("3_writing/references.bib"),
 ]
 
 WARM_REPLAY_REGISTER_EXTRA_REQUIREMENTS = [
-    Path("data/1_preprocessed/research_corpus/metadata/manifest.json"),
-    Path("data/1_preprocessed/research_corpus/part-00001.jsonl"),
+    Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json"),
+    Path("2_data/1_preprocessed/research_corpus/part-00001.jsonl"),
 ]
 
 POLICY_REFRESH_REQUIREMENTS = [
-    Path("data/3_scored/sdg_centroids.npy"),
-    Path("data/3_scored/research_centroids.npy"),
+    Path("2_data/3_scored/sdg_centroids.npy"),
+    Path("2_data/3_scored/research_centroids.npy"),
 ]
 
 
@@ -58,7 +58,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "Rebuild canonical analysis outputs and PDF. If required replay inputs are missing, "
-            "main.py auto-fetches the curated frozen snapshot into ./data/ first."
+            "main.py auto-fetches the curated frozen snapshot into ./2_data/ first."
         ),
     )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
@@ -103,7 +103,7 @@ def parse_args() -> argparse.Namespace:
         const="curated",
         choices=["curated", "full"],
         help=(
-            "Fetch and extract a frozen dissertation data snapshot into ./data/. "
+            "Fetch and extract a frozen dissertation data snapshot into ./2_data/. "
             "Defaults to curated; full is optional and audit-oriented."
         ),
     )
@@ -213,7 +213,7 @@ def required_warm_replay_inputs(*, include_register_adjustment: bool) -> list[Pa
 
 
 def missing_research_text_shards() -> list[Path]:
-    manifest_path = ROOT / "data/1_preprocessed/research_corpus/metadata/manifest.json"
+    manifest_path = ROOT / "2_data/1_preprocessed/research_corpus/metadata/manifest.json"
     if not manifest_path.exists():
         return [manifest_path.relative_to(ROOT)]
 
@@ -269,7 +269,7 @@ def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, .
 def missing_warm_replay_requirements(*, include_register_adjustment: bool) -> list[Path]:
     missing = missing_requirements(required_warm_replay_inputs(include_register_adjustment=include_register_adjustment))
     for path in missing_manifest_shard_paths(
-        ROOT / "data/2_embedded/research_shards/metadata/manifest.json",
+        ROOT / "2_data/2_embedded/research_shards/metadata/manifest.json",
         ("embedding_path", "ids_path"),
     ):
         if path not in missing:
@@ -361,7 +361,7 @@ def print_status(output_dir: Path) -> None:
         for item in sample_stability_missing:
             print(f"  missing: {item}")
 
-    tex = (ROOT / "writing" / "dissertation.tex").read_text(encoding="utf-8")
+    tex = (ROOT / "3_writing" / "dissertation.tex").read_text(encoding="utf-8")
     legacy_markers = [
         "../data/generated/",
         "_legacy/",
@@ -384,7 +384,7 @@ def build_pdf(output_dir: Path) -> None:
     require_pdf_inputs(output_dir)
     run_step(
         "build pdf",
-        ["bash", str(ROOT / "writing" / "build_pdf.sh"), str(output_dir / "dissertation.pdf")],
+        ["bash", str(ROOT / "3_writing" / "build_pdf.sh"), str(output_dir / "dissertation.pdf")],
     )
 
 
@@ -399,42 +399,42 @@ def run_sample_stability(output_dir: Path) -> None:
     )
     run_step(
         "sample stability",
-        [sys.executable, "code/3_main_analysis/2_robustness/0_sample_stability.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/2_robustness/0_sample_stability.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_pca_semantic_landscape(output_dir: Path) -> None:
     run_step(
         "appendix A pca semantic landscape",
-        [sys.executable, "code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_within_corpus_centroid_structure(output_dir: Path) -> None:
     run_step(
         "appendix A within-corpus centroid structure",
-        [sys.executable, "code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_softmax_multilabel_sdg(output_dir: Path) -> None:
     run_step(
         "appendix A softmax multi-label SDG robustness",
-        [sys.executable, "code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_policy_source_family_sensitivity(output_dir: Path) -> None:
     run_step(
         "appendix A policy source-family sensitivity",
-        [sys.executable, "code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_sdg4_lexical_audit(output_dir: Path) -> None:
     run_step(
         "appendix A SDG 4 lexical artefact audit",
-        [sys.executable, "code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(output_dir)],
     )
 
 
@@ -442,7 +442,7 @@ def run_sdg17_reference_sensitivity(output_dir: Path) -> None:
     require_output_files(output_dir / "main" / "data", ["sdg_conceptual_alignment_cosine_distances.json"])
     run_step(
         "appendix A SDG 17 sparse-reference sensitivity",
-        [sys.executable, "code/3_main_analysis/3_appendix/6_sdg17_reference_sensitivity.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/6_sdg17_reference_sensitivity.py", "--output-dir", str(output_dir)],
     )
 
 
@@ -450,12 +450,12 @@ def run_semantic_gap_interpretability(output_dir: Path) -> None:
     require_output_files(output_dir / "main" / "data", ["sdg_conceptual_alignment_cosine_distances.json"])
     run_step(
         "appendix A semantic-gap text interpretability",
-        [sys.executable, "code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],
     )
 
 
 def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, include_register_confidence_checks: bool) -> None:
-    cmd = [sys.executable, "code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(output_dir)]
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(output_dir)]
     if not include_register_confidence_checks:
         cmd.append("--skip-register-confidence-checks")
     cmd.extend(["--method", args.sdg_register_method])
@@ -485,24 +485,24 @@ def run_warm_replay(
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Warm replay is not ready. Missing required inputs: {missing_str}")
 
-    run_step("rebuild sdg centroids", [sys.executable, "code/2_embed/reference/1_build_sdg_centroids.py"])
-    run_step("validate centroids", [sys.executable, "code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
-    run_step("rebuild research centroids", [sys.executable, "code/2_embed/research/1_score_paper_shards.py"])
-    run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
+    run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"])
+    run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
+    run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"])
+    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
     run_pca_semantic_landscape(output_dir)
     run_within_corpus_centroid_structure(output_dir)
     run_softmax_multilabel_sdg(output_dir)
     run_policy_source_family_sensitivity(output_dir)
     run_sdg4_lexical_audit(output_dir)
-    run_step("coverage gap", [sys.executable, "code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
-    run_step("semantic gap", [sys.executable, "code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
+    run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
+    run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
     run_sdg17_reference_sensitivity(output_dir)
     run_semantic_gap_interpretability(output_dir)
     run_step(
         "coverage semantic interaction",
-        [sys.executable, "code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
     )
-    run_step("plot figures", [sys.executable, "code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
+    run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
         run_sample_stability(output_dir)
     if include_register_adjustment:
@@ -519,48 +519,48 @@ def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
             f"Missing required inputs: {missing_str}"
         )
 
-    run_step("preprocess policy", [sys.executable, "code/1_preprocess/policy/0_preprocess_policy.py"])
-    run_step("build policy corpus", [sys.executable, "code/1_preprocess/policy/1_build_policy_corpus.py"])
-    embed_cmd = [sys.executable, "code/2_embed/reference/0_embed_reference_corpora.py", "--corpora", "policy", "--overwrite"]
+    run_step("preprocess policy", [sys.executable, "1_code/1_preprocess/policy/0_preprocess_policy.py"])
+    run_step("build policy corpus", [sys.executable, "1_code/1_preprocess/policy/1_build_policy_corpus.py"])
+    embed_cmd = [sys.executable, "1_code/2_embed/reference/0_embed_reference_corpora.py", "--corpora", "policy", "--overwrite"]
     if args.local_files_only:
         embed_cmd.append("--local-files-only")
     run_step("embed policy corpus", embed_cmd)
-    run_step("score policy corpus", [sys.executable, "code/2_embed/policy/0_score_policy_corpus.py"])
+    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
 
 
 def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
     print("WARNING: live-source full-pipeline reruns are not expected to be identical to the frozen data snapshot.")
     print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
     pre_steps = [
-        ("fetch policy", [sys.executable, "code/0_fetch/fetch_policy.py"]),
-        ("convert policy manual", [sys.executable, "code/0_fetch/convert_policy_manual.py"]),
-        ("fetch sdgi corpus", [sys.executable, "code/0_fetch/fetch_sdgi_corpus.py"]),
-        ("fetch ungdc", [sys.executable, "code/0_fetch/fetch_ungdc.py"]),
-        ("preprocess policy", [sys.executable, "code/1_preprocess/policy/0_preprocess_policy.py"]),
-        ("integrate sdgi", [sys.executable, "code/1_preprocess/policy/0_integrate_sdgi.py"]),
-        ("filter ungdc", [sys.executable, "code/1_preprocess/policy/0_filter_ungdc_sdg.py"]),
-        ("build policy corpus", [sys.executable, "code/1_preprocess/policy/1_build_policy_corpus.py"]),
-        ("fetch osdg", [sys.executable, "code/0_fetch/fetch_osdg.py"]),
-        ("fetch sdg benchmark", [sys.executable, "code/0_fetch/fetch_sdg_benchmark.py"]),
-        ("preprocess osdg", [sys.executable, "code/1_preprocess/preprocess_osdg.py"]),
-        ("preprocess sdg benchmark", [sys.executable, "code/1_preprocess/preprocess_sdg_benchmark.py"]),
+        ("fetch policy", [sys.executable, "1_code/0_fetch/fetch_policy.py"]),
+        ("convert policy manual", [sys.executable, "1_code/0_fetch/convert_policy_manual.py"]),
+        ("fetch sdgi corpus", [sys.executable, "1_code/0_fetch/fetch_sdgi_corpus.py"]),
+        ("fetch ungdc", [sys.executable, "1_code/0_fetch/fetch_ungdc.py"]),
+        ("preprocess policy", [sys.executable, "1_code/1_preprocess/policy/0_preprocess_policy.py"]),
+        ("integrate sdgi", [sys.executable, "1_code/1_preprocess/policy/0_integrate_sdgi.py"]),
+        ("filter ungdc", [sys.executable, "1_code/1_preprocess/policy/0_filter_ungdc_sdg.py"]),
+        ("build policy corpus", [sys.executable, "1_code/1_preprocess/policy/1_build_policy_corpus.py"]),
+        ("fetch osdg", [sys.executable, "1_code/0_fetch/fetch_osdg.py"]),
+        ("fetch sdg benchmark", [sys.executable, "1_code/0_fetch/fetch_sdg_benchmark.py"]),
+        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/preprocess_osdg.py"]),
+        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/preprocess_sdg_benchmark.py"]),
         (
             "embed policy/osdg/benchmark",
             [
                 sys.executable,
-                "code/2_embed/reference/0_embed_reference_corpora.py",
+                "1_code/2_embed/reference/0_embed_reference_corpora.py",
                 *(["--local-files-only"] if args.local_files_only else []),
             ],
         ),
-        ("fetch openalex", [sys.executable, "code/0_fetch/fetch_openalex.py"]),
-        ("preprocess research shards", [sys.executable, "code/1_preprocess/preprocess_papers_streaming.py"]),
+        ("fetch openalex", [sys.executable, "1_code/0_fetch/fetch_openalex.py"]),
+        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/preprocess_papers_streaming.py"]),
     ]
     for label, cmd in pre_steps:
         run_step(label, cmd)
 
     embed_cmd = [
         sys.executable,
-        "code/2_embed/research/0_embed_paper_shards.py",
+        "1_code/2_embed/research/0_embed_paper_shards.py",
         "--device",
         args.device,
         "--batch-size",
@@ -580,14 +580,14 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
-    cmd = [sys.executable, "code/data_backup_and_fetch/fetch_data_snapshot.py", "--profile", profile_name]
+    cmd = [sys.executable, "1_code/data_backup_and_fetch/fetch_data_snapshot.py", "--profile", profile_name]
     if overwrite_data:
         cmd.append("--overwrite")
     run_step(f"fetch data snapshot ({profile_name})", cmd)
 
 
 def run_backup_data_snapshot(*, profile_name: str) -> None:
-    cmd = [sys.executable, "code/data_backup_and_fetch/backup_data_snapshot.py", "--profile", profile_name]
+    cmd = [sys.executable, "1_code/data_backup_and_fetch/backup_data_snapshot.py", "--profile", profile_name]
     run_step(f"backup data snapshot ({profile_name})", cmd)
 
 
@@ -634,7 +634,7 @@ def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_register_adju
     print(f"[info] warm replay inputs missing: {missing_str}")
     if len(missing) > 12:
         print(f"[info] ... and {len(missing) - 12} more")
-    run_fetch_data_snapshot(args, profile_name="curated", overwrite_data=(ROOT / "data").exists())
+    run_fetch_data_snapshot(args, profile_name="curated", overwrite_data=(ROOT / "2_data").exists())
 
 
 def main() -> None:
