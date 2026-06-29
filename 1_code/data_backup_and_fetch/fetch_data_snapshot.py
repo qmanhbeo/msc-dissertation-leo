@@ -177,7 +177,7 @@ def validate_extraction(profile_name: str, expected_repo_paths: list[str]) -> No
         missing_str = ", ".join(str(path) for path in missing[:8])
         raise RuntimeError(f"snapshot extraction is incomplete for profile '{profile_name}'. Missing: {missing_str}")
 
-    snapshot_meta_path = ROOT / "data" / SNAPSHOT_METADATA_FILE
+    snapshot_meta_path = ROOT / "2_data" / SNAPSHOT_METADATA_FILE
     if not snapshot_meta_path.exists():
         raise RuntimeError(f"snapshot extraction is missing internal metadata: {snapshot_meta_path}")
     payload = json.loads(snapshot_meta_path.read_text(encoding="utf-8"))
@@ -201,7 +201,7 @@ def main() -> None:
 
     ensure_snapshot_available(url, sha256_hex, profile.name)
 
-    data_root = ROOT / "data"
+    data_root = ROOT / "2_data"
     if data_root.exists():
         if not args.overwrite:
             raise RuntimeError("2_data/ already exists. Re-run with --overwrite to replace it.")

@@ -1,7 +1,7 @@
 {
   "balanced_sampling_used": true,
   "chunk_cap_for_policy_gap_overlay": 50,
-  "generated_at_utc": "2026-06-06T19:19:25.095898Z",
+  "generated_at_utc": "2026-06-29T22:18:10.853511Z",
   "n_policy_projected_background": 54082,
   "n_policy_used_for_pca_fit": 54082,
   "n_research_projected_background": 54082,

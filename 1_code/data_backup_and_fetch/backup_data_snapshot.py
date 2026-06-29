@@ -183,9 +183,9 @@ def _build_archive(source_dir: Path, archive_path: Path, *, profile_name: str, z
             with compressor.stream_writer(raw) as compressed:
                 with tarfile.open(fileobj=compressed, mode="w|") as tf:
                     for path in _iter_snapshot_members(source_dir, profile_name):
-                        arcname = Path("data") if path == source_dir else Path("data") / path.relative_to(source_dir)
+                        arcname = Path("2_data") if path == source_dir else Path("2_data") / path.relative_to(source_dir)
                         tf.add(path, arcname=str(arcname), recursive=False)
-                    tf.add(metadata_path, arcname=str(Path("data") / SNAPSHOT_METADATA_FILE), recursive=False)
+                    tf.add(metadata_path, arcname=str(Path("2_data") / SNAPSHOT_METADATA_FILE), recursive=False)
     tmp_path.replace(archive_path)
 
 
@@ -349,8 +349,8 @@ def main() -> None:
     ap.add_argument(
         "--source-dir",
         type=Path,
-        default=WORKSPACE_ROOT / "data",
-        help="Directory to snapshot. Defaults to dissertation data/.",
+        default=WORKSPACE_ROOT / "2_data",
+        help="Directory to snapshot. Defaults to dissertation 2_data/.",
     )
     ap.add_argument(
         "--output-dir",

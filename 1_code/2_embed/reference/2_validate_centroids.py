@@ -49,7 +49,7 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 ROOT = Path(__file__).resolve().parents[3]
-CODE_ROOT = ROOT / "code"
+CODE_ROOT = ROOT / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 from shared_utils import ensure_canonical_outputs

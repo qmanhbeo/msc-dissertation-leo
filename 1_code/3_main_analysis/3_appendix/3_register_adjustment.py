@@ -52,7 +52,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 
 ROOT = Path(__file__).resolve().parents[3]
-CODE_ROOT = ROOT / "code"
+CODE_ROOT = ROOT / "1_code"
 ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
 SHARED_DIR = ANALYSIS_ROOT / "0_shared"
 for path in (CODE_ROOT, SHARED_DIR):
@@ -2185,10 +2185,10 @@ def build_regression_similarity_payload(
         "global_regression_vs_classifier_cosine": round(cosine, 6),
         "agreement_band": interpretation,
         "classifier_vector_source": str(
-            Path("outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "sdg_balanced_register_vector.npy"
+            Path("4_outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "sdg_balanced_register_vector.npy"
         ),
         "regression_vector_source": str(
-            Path("outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "regression_register_vector.npy"
+            Path("4_outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "regression_register_vector.npy"
         ),
         "classifier_alignment_summary": classifier_alignment_summary,
         "regression_alignment_summary": regression_alignment_summary,
