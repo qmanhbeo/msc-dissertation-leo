@@ -13,7 +13,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 5 | SioumalasChristodoulou2025 | manual_download/SioumalasChristodoulou2025.pdf | PENDING | |
 | 6 | Gjorgjevikj2025 | manual_download/Gjorgjevikj2025.pdf | PENDING | |
 | 7 | Heink2015 | manual_download/Heink2015.pdf | DONE | Mild framing: "knowledge utilisation framework" is not Heink2015's own label; CRELE content is accurate | |
-| 8 | Heilinger2023 | manual_download/Heilinger2023.pdf | PENDING | |
+| 8 | Heilinger2023 | manual_download/Heilinger2023.pdf | DONE | Line 155: FIXED — rewrote claim to match paper's actual discussion of corporate greenwashing, not research |
 | 9 | Gibbons1994 | manual_download/Gibbons1994.pdf | DONE | |
 
 ## Thematic Folders
