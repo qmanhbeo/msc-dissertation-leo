@@ -31,7 +31,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 18 | Guston2001 | 1_Knowledge_brokerage_and_boundary_organisations/Guston2001.pdf | PENDING | |
 | 19 | Cross2013 | 0_Epistemic_community_theory/Cross2013.pdf | DONE | |
 | 20 | Haas1992 | 0_Epistemic_community_theory/Haas1992.pdf | DONE | |
-| 21 | Kashnitsky2024 | 3_SDG_mapping/Kashnitsky2024.pdf | PENDING | |
+| 21 | Kashnitsky2024 | 3_SDG_mapping/Kashnitsky2024.pdf | DONE | |
 | 22 | biber1988variation | 4_corpusLinguistic/biber1988variation.pdf | PENDING | |
 | 23 | biberConrad2009register | 4_corpusLinguistic/Biber2009.pdf | PENDING | |
 | 24 | Rodriguez2023 | semanticReg/Rodriguez et al 2023.pdf | PENDING | |
