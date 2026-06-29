@@ -20,7 +20,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
-| 10 | Vinuesa2020 | first/Vinuesa2020.pdf | PENDING | |
+| 10 | Vinuesa2020 | first/Vinuesa2020.pdf | DONE | |
 | 11 | Armitage2020 | first/Armitage2020.pdf | PENDING | |
 | 12 | Reimers2019 | first/Reimers2019.pdf | DONE | |
 | 13 | Pukelis2022 | first/Pukelis2022.pdf | DONE | |
