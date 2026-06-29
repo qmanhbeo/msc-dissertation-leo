@@ -1,7 +1,20 @@
 # Literature PDF Inventory
 
 This directory stores PDF copies of papers cited in the dissertation.
-Flat layout (all citation-key-named PDFs in one place) for easy reference.
+Organised by content area:
+
+| Directory | Content |
+|---|---|
+| `ai_sdg_research/` | Papers studying AI research activity mapped to SDGs |
+| `sdg_classification/` | Papers about how to classify text by SDG |
+| `research_policy_theory/` | Theories of science-policy interaction |
+| `research_policy_gap/` | Empirical studies documenting research-policy divergence |
+| `semantic_methods/` | Methods for comparing meaning across text collections |
+| `research_infrastructure/` | Data source documentation (OpenAlex) |
+| `uncited_kept/` | PDFs on disk but not in `references.bib` |
+| `scispace_exports/` | SciSpace literature mapping exports (`.bib` + `.md`) |
+
+Some papers have `.md` companion files (full-text reproductions).
 
 ---
 
@@ -9,43 +22,44 @@ Flat layout (all citation-key-named PDFs in one place) for easy reference.
 
 | Key | Location | Source | Notes |
 |---|---|---|---|
-| **Vinuesa2020** | `literature/first/Vinuesa2020.pdf` | Nature Comms (OA) | |
-| **Armitage2020** | `literature/first/Armitage2020.pdf` | QSS (OA) | Also in `3_SDG_mapping/` |
-| **Reimers2019** | `literature/first/Reimers2019.pdf` | ACL (OA) | |
-| **Pukelis2022** | `literature/first/Pukelis2022.pdf` | arXiv | |
-| **Priem2022** | `literature/first/Priem2022.pdf` | arXiv | |
-| **Toney2024** | `literature/first/Toney2024.pdf` | — | ⚠️ Different paper (Collective Constitutional AI), not `ToneyWails2024` |
-| **bornmann2016policy** | `literature/5_policy-science-gap/Bornmann2016.pdf` | Springer | |
-| **bornmann2017impact** | `literature/5_policy-science-gap/Bornmann2017.pdf` | Springer | |
-| **Cash2003** | `literature/1_Knowledge_brokerage_and_boundary_organisations/Cash2003.pdf` | PNAS | |
-| **Guston2001** | `literature/1_Knowledge_brokerage_and_boundary_organisations/Guston2001.pdf` | SAGE | |
-| **Cross2013** | `literature/0_Epistemic_community_theory/Cross2013.pdf` | Cambridge UP | |
-| **Haas1992** | `literature/0_Epistemic_community_theory/Haas1992.pdf` | Cambridge UP | |
-| **Kashnitsky2024** | `literature/3_SDG_mapping/Kashnitsky2024.pdf` | MIT Press QSS (OA) | |
-| **biber1988variation** | `literature/4_corpusLinguistic/biber1988variation.pdf` | Cambridge UP | Was `Biber1998.pdf` (reprint) |
-| **biberConrad2009register** | `literature/4_corpusLinguistic/Biber2009.pdf` | Cambridge UP | |
-| **Rodriguez2023** | `literature/semanticReg/Rodriguez et al 2023.pdf` | Cambridge UP | |
-| **BautistaPuig2021** | `literature/BautistaPuig2021.pdf` | Frontiers (OA) | ✅ Downloaded fresh |
-| **Strauss2025** | `literature/Strauss2025.pdf` | arXiv | ✅ Downloaded fresh |
-| **Singh2024** | `literature/manual_download/Singh2024.pdf` | Wiley | ✅ Manually added |
-| **Cowls2021** | `literature/manual_download/Cowls2021.pdf` | Nature | ✅ Manually added |
-| **Nedungadi2024** | `literature/manual_download/Nedungadi2024.pdf` | IEEE Access | ✅ Manually added |
-| **ToneyWails2024** | `literature/manual_download/ToneyWails2024.pdf` | ACM | ✅ Manually added |
-| **SioumalasChristodoulou2025** | `literature/manual_download/SioumalasChristodoulou2025.pdf` | Springer | ✅ Manually added |
-| **Gjorgjevikj2025** | `literature/manual_download/Gjorgjevikj2025.pdf` | IEEE Access | ✅ Manually added |
-| **Heink2015** | `literature/manual_download/Heink2015.pdf` | Oxford | ✅ Manually added |
-| **Heilinger2023** | `literature/manual_download/Heilinger2023.pdf` | Springer | ✅ Manually added |
-| **Gibbons1994** | `literature/manual_download/Gibbons1994.pdf` | Sage | ✅ Manually added |
+| **Vinuesa2020** | `ai_sdg_research/Vinuesa2020.pdf` | Nature Comms (OA) | + `.md` |
+| **Singh2024** | `ai_sdg_research/Singh2024.pdf` | Wiley | |
+| **Cowls2021** | `ai_sdg_research/Cowls2021.pdf` | Nature | |
+| **Nedungadi2024** | `ai_sdg_research/Nedungadi2024.pdf` | IEEE Access | |
+| **BautistaPuig2021** | `ai_sdg_research/BautistaPuig2021.pdf` | Frontiers (OA) | |
+| **Armitage2020** | `sdg_classification/Armitage2020.pdf` | QSS (OA) | |
+| **Kashnitsky2024** | `sdg_classification/Kashnitsky2024.pdf` | MIT Press QSS (OA) | |
+| **Pukelis2022** | `sdg_classification/Pukelis2022.pdf` | arXiv | + `.md` |
+| **Gjorgjevikj2025** | `sdg_classification/Gjorgjevikj2025.pdf` | IEEE Access | |
+| **Haas1992** | `research_policy_theory/Haas1992.pdf` | Cambridge UP | |
+| **Cross2013** | `research_policy_theory/Cross2013.pdf` | Cambridge UP | |
+| **Cash2003** | `research_policy_theory/Cash2003.pdf` | PNAS | |
+| **Guston2001** | `research_policy_theory/Guston2001.pdf` | SAGE | |
+| **Heink2015** | `research_policy_theory/Heink2015.pdf` | Oxford | |
+| **Gibbons1994** | `research_policy_theory/Gibbons1994.pdf` | Sage | |
+| **Strauss2025** | `research_policy_gap/Strauss2025.pdf` | arXiv | |
+| **ToneyWails2024** | `research_policy_gap/ToneyWails2024.pdf` | ACM | |
+| **SioumalasChristodoulou2025** | `research_policy_gap/SioumalasChristodoulou2025.pdf` | Springer | |
+| **bornmann2016policy** | `research_policy_gap/Bornmann2016.pdf` | Springer | |
+| **bornmann2017impact** | `research_policy_gap/Bornmann2017.pdf` | Springer | |
+| **Heilinger2023** | `research_policy_gap/Heilinger2023.pdf` | Springer | |
+| **Rodriguez2023** | `semantic_methods/Rodriguez2023.pdf` | Cambridge UP | Renamed from `Rodriguez et al 2023.pdf` |
+| **biber1988variation** | `semantic_methods/biber1988variation.pdf` | Cambridge UP | Was `Biber1998.pdf` (reprint) |
+| **biberConrad2009register** | `semantic_methods/Biber2009.pdf` | Cambridge UP | |
+| **Reimers2019** | `semantic_methods/Reimers2019.pdf` | ACL (OA) | + `.md` |
+| **Priem2022** | `research_infrastructure/Priem2022.pdf` | arXiv | + `.md` |
 
 ---
 
 ## PDFs on Disk but NOT in `references.bib`
 
-| File | Apparent content | Reason kept |
+| File | Content | Reason kept |
 |---|---|---|
-| `literature/2_evidence_inform_policy/Caplan1979.pdf` | Caplan, "The Two-Communities Theory" | Background reading |
-| `literature/3_SDG_mapping/Vanderfeesten2020.pdf` | Vanderfeesten et al. on SDG classification | Background reading |
-| `literature/3_SDG_mapping/Bautista-Puig2019.pdf` | Earlier Bautista-Puig paper (different year) | Background reading; `BautistaPuig2021` is the cited work |
+| `uncited_kept/Caplan1979.pdf` | Caplan, "The Two-Communities Theory" | Background reading |
+| `uncited_kept/Toney2024.pdf` | Collective Constitutional AI (different paper from ToneyWails2024) | Kept for reference |
+| `sdg_classification/Bautista-Puig2019-full.pdf` | Earlier Bautista-Puig paper (full) | Background reading; `BautistaPuig2021` is cited |
+| `sdg_classification/Bautista-Puig2019.pdf` | Earlier Bautista-Puig paper (short) | Background reading |
+| `sdg_classification/Vanderfeesten2020.pdf` | SDG classification | Background reading |
 
 ---
 
