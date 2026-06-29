@@ -21,7 +21,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
 | 10 | Vinuesa2020 | first/Vinuesa2020.pdf | DONE | |
-| 11 | Armitage2020 | first/Armitage2020.pdf | PENDING | |
+| 11 | Armitage2020 | first/Armitage2020.pdf | DONE | ⚠️ PDF at first/ is wrong (Bornmann disruption index); correct PDF at 3_SDG_mapping/ |
 | 12 | Reimers2019 | first/Reimers2019.pdf | DONE | |
 | 13 | Pukelis2022 | first/Pukelis2022.pdf | DONE | |
 | 14 | Priem2022 | first/Priem2022.pdf | PENDING | |
