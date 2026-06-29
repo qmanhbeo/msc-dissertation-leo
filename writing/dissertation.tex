@@ -132,7 +132,7 @@ Adjacent scientometric work has also used policy documents to measure research-p
 
 A related research-evaluation literature treats the research-policy relationship through the lens of societal impact measurement. Bornmann \parencite{bornmann2017impact} argues that measuring societal impact is harder than measuring scientific impact because the target of impact must first be specified: research may affect policymakers, business, culture, public health, or other social domains. Policy documents are therefore useful as one possible target-oriented source for measuring impact on policymaking, but this is a different task from semantic framing comparison. The present study does not ask whether research has achieved policy impact; it asks whether research and policy-facing texts occupy similar semantic regions when organised through shared SDG labels.
 
-These findings are consistent with theoretical accounts of research-policy misalignment. The knowledge utilisation framework \parencite{Rose2017} identifies relevance, credibility, and legitimacy as the three conditions for research uptake; topical overlap is a necessary but insufficient condition for relevance. In sustainability science, \textcite{Cash2003} make a closely related argument: knowledge systems are more likely to support action when they produce information that is simultaneously salient, credible, and legitimate, and when they manage the boundary between knowledge and action through communication, translation, and mediation. The epistemic communities framework \parencite{Haas1992} provides a theoretical reason why shared framing matters for policy coordination under uncertainty: expert communities can influence policy by articulating cause--effect relationships, framing issues for collective debate, proposing policies, and identifying salient points for negotiation. However, Haas's concept is broader than semantic proximity alone, involving shared normative beliefs, causal beliefs, validity criteria, and a common policy enterprise. The present study therefore does not operationalise an epistemic community directly; it measures the weaker condition of observed semantic proximity between research and policy-facing discourse.
+These findings are consistent with theoretical accounts of research-policy misalignment. The knowledge utilisation framework \parencite{Heink2015} identifies relevance, credibility, and legitimacy as the three conditions for research uptake; topical overlap is a necessary but insufficient condition for relevance. In sustainability science, \textcite{Cash2003} make a closely related argument: knowledge systems are more likely to support action when they produce information that is simultaneously salient, credible, and legitimate, and when they manage the boundary between knowledge and action through communication, translation, and mediation. The epistemic communities framework \parencite{Haas1992} provides a theoretical reason why shared framing matters for policy coordination under uncertainty: expert communities can influence policy by articulating cause--effect relationships, framing issues for collective debate, proposing policies, and identifying salient points for negotiation. However, Haas's concept is broader than semantic proximity alone, involving shared normative beliefs, causal beliefs, validity criteria, and a common policy enterprise. The present study therefore does not operationalise an epistemic community directly; it measures the weaker condition of observed semantic proximity between research and policy-facing discourse.
 
 \textcite{Cross2013} strengthens this caution by arguing that epistemic communities should not be treated as simply present or absent: their influence varies with internal cohesion, professionalism, access to decision-makers, competition with other actors, and broader political context. This means that semantic proximity can at most indicate a possible precondition for knowledge transfer, not the existence, strength, or influence of an epistemic community.
 
@@ -146,7 +146,7 @@ The use of Sentence-BERT \parencite{Reimers2019} and related transformer-based e
 
 An older corpus-linguistic tradition gives a further reason for caution when interpreting cross-corpus semantic distance. Biber's multidimensional analysis of spoken and written English showed that register differences are not simple binary contrasts, but continuous patterns of co-occurring linguistic features across genres \parencite{biber1988variation}. For the present study, this matters because research abstracts and policy documents may differ not only in substantive topic, but also in abstraction, modality, institutional stance, and rhetorical function. Embedding distance is therefore treated as a measure of observed textual-semantic proximity, not as a purified measure of topic alone.
 
-The OSDG Community Dataset \parencite{Pukelis2022} provides the labelled corpus from which the SDG centroids used here are derived. The dataset contains over 40,000 texts validated for SDG relevance by a global community of annotators, covering SDGs 1--16 (SDG 17 is absent from the dataset). OSDG labels are not simply machine-generated labels: volunteers are shown a text and a suggested SDG label, then accept or reject that label, with agreement recorded across multiple annotators. This makes OSDG suitable as a broad human-validated reference corpus, while also introducing a limitation: because annotators validate a suggested label rather than freely choosing among all 17 SDGs, the labels partly inherit the framing of the source documents and the original suggested labels. \textcite{Ingram2025} note that high-quality graded relevance sets for SDG classification do not exist, making community-validated datasets such as OSDG the current best available resource. The SDG Classification Benchmark \parencite{SDGBenchmark} provides an expert-labelled complement covering all 17 SDGs; its labels were annotated and verified by human experts, making it appropriate for independent instrument validation. Consistent with benchmarking evidence that SDG classification lacks a single authoritative validation set \parencite{Kashnitsky2024}, this benchmark is used here as an independent check on instrument discrimination rather than as a definitive adjudication of SDG relevance.
+The OSDG Community Dataset \parencite{Pukelis2022} provides the labelled corpus from which the SDG centroids used here are derived. The dataset contains over 40,000 texts validated for SDG relevance by a global community of annotators, covering SDGs 1--16 (SDG 17 is absent from the dataset). OSDG labels are not simply machine-generated labels: volunteers are shown a text and a suggested SDG label, then accept or reject that label, with agreement recorded across multiple annotators. This makes OSDG suitable as a broad human-validated reference corpus, while also introducing a limitation: because annotators validate a suggested label rather than freely choosing among all 17 SDGs, the labels partly inherit the framing of the source documents and the original suggested labels. High-quality graded relevance sets for SDG classification do not exist, making community-validated datasets such as OSDG the current best available resource \parencite{Kashnitsky2024}. The SDG Classification Benchmark \parencite{SDGBenchmark} provides an expert-labelled complement covering all 17 SDGs; its labels were annotated and verified by human experts, making it appropriate for independent instrument validation. Consistent with this evidence, the benchmark is used here as an independent check on instrument discrimination rather than as a definitive adjudication of SDG relevance.
 
 The nearest-centroid approach --- computing the mean embedding of labelled texts for each SDG and using cosine distance to the nearest centroid as the classification criterion --- is conceptually simple, computationally efficient, and avoids the risk of overfitting that characterises supervised classifiers trained on small labelled sets. This simplicity is a deliberate methodological choice rather than a fallback: the study requires a transparent measurement instrument for corpus-level comparison, not an opaque operational classifier. A fine-tuned classifier might improve individual-document accuracy, but it would also introduce additional training choices, hyperparameters, and overfitting risks that are unnecessary for the present purpose. The centroid represents the ``direction'' in semantic space most characteristic of each SDG, making the resulting score vectors directly interpretable.
 
@@ -593,6 +593,146 @@ These analyses also show that the centroid method should be interpreted as a tra
 \section{Register-Adjustment Robustness and Diagnostics}
 \label{app:register-robustness}
 
-This appendix summarises exploratory register-adjustment procedures that probe whether broad research-policy register differences contribute to the raw semantic gap. Following the register framework \parencite{biberConrad2009register}, a one-direction global sensitivity check estimates a single corpus-level research--policy axis using a balanced logistic-regression classifier, subtracts its projection from each embedding, and recomputes within-SDG semantic gaps. This subtraction reduces the mean gap from \MeanRawSemanticGap{} to \MeanAdjustedSemanticGap{}, with the largest remaining gap at \LargestAdjustedGapSdg{} (\LargestAdjustedGapValue{}). Stronger within-SDG adjustments shrink gaps further but are treated as over-subtraction stress tests because they learn and remove the very within-goal research--policy contrast the dissertation measures. The learned register direction aligns materially with SDG centroid structure (mean absolute cosine = \GenreAlignmentMeanAbsCosine{}), confirming that register and substantive thematic structure are not cleanly separable in this embedding space. The raw within-SDG semantic gap is therefore retained as the primary estimate because it corresponds most directly to the quantity of interest, while the register-adjusted range provides a sensitivity band. Full tables and figures for all procedures are available in the project repository.
+This appendix reports exploratory register-adjustment procedures that probe whether broad research-policy register differences contribute to the raw semantic gap. Following Biber and Conrad's distinction between register, genre, and style, I treat the research-policy contrast primarily as a register contrast: the corpora differ in situation of use, audience, institutional setting, and communicative purpose, not merely in surface wording \parencite{biberConrad2009register}.
 
+The logic of this appendix is informed by multidimensional register analysis: register differences are not merely surface decoration around stable content, but structured patterns of co-occurring linguistic features \parencite{biber1988variation}. A learned research-policy direction in embedding space may therefore capture a mixture of modality, abstraction, institutional stance, and substantive theme. This is why the adjusted results are reported as robustness diagnostics rather than corrected estimates.
+
+\subsection{One-Direction Global Sensitivity Check}
+
+The simplest robustness step estimates one broad research-versus-policy direction in the shared SBERT space using a balanced logistic-regression classifier trained on held-out splits. On the held-out test set, this classifier achieves accuracy \GenreClassifierTestAccuracy{}, ROC-AUC \GenreClassifierTestRocAuc{}, F1 \GenreClassifierTestFOne{}, precision \GenreClassifierTestPrecision{}, and recall \GenreClassifierTestRecall{} using \GenreClassifierSamplePerClass{} sampled texts per class before the train/validation/test split. This shows that a strong corpus-level research--policy axis exists.
+
+Formally, let $\mathbf{x}$ be a unit-normalised embedding and let $\mathbf{g}$ denote the learned global research--policy direction. The one-direction adjustment first subtracts the orthogonal projection of $\mathbf{x}$ onto $\mathbf{g}$,
+\[
+\mathbf{x}^{\perp} = \mathbf{x} - \frac{\mathbf{x} \cdot \mathbf{g}}{\lVert \mathbf{g} \rVert^2}\mathbf{g},
+\]
+and then renormalises the residual to unit length before centroid averaging. I describe the result as \emph{register-adjusted}, not ``debiased'': the subtraction removes one estimated global corpus axis, not every possible register or corpus-composition difference.
+
+Subtracting that one global direction reduces the mean gap from \MeanRawSemanticGap{} to \MeanAdjustedSemanticGap{}, a change of \MeanSemanticGapDelta{}. The largest shrinkage appears in \LargestGapShrinkSdg{} (\LargestGapShrinkDelta{}), while the largest remaining adjusted gap is still \LargestAdjustedGapSdg{} at \LargestAdjustedGapValue{}. The substantive interpretation is limited: this subtraction attenuates one broad corpus-level axis, but it does not cleanly identify a pure substantive gap net of all register effects.
+
+\begin{table}[ht]
+\centering
+\caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the dissertation. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
+\label{tab:register-adjusted-semantic-gap}
+\resizebox{\textwidth}{!}{%
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_adjusted_semgap.tex}
+}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_adjusted_semantic_gap_comparison.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_genre_adjusted_semantic_gap_comparison.pdf}
+\caption{Global one-direction register sensitivity check: raw versus adjusted semantic gap by SDG. Raw gap is shown in grey and the one-direction adjusted gap in blue.}
+\label{fig:register-adjusted-semantic-gap}
+\end{figure}
+}{}
+
+\subsection{Additional Confidence Checks on Global Subtraction}
+
+The one-direction subtraction is itself testable. The adjusted re-separability audit shows that research and policy remain highly separable even after this first direction is removed: the raw held-out ROC-AUC is \GenreConfidenceAdjustedResepRawRocAuc{}, while the adjusted held-out ROC-AUC remains \GenreConfidenceAdjustedResepAdjustedRocAuc{} (relative change \GenreConfidenceAdjustedResepDeltaRocAuc{}). Held-out-SDG generalization is also strong, with mean held-out ROC-AUC \GenreConfidenceHeldoutMeanRocAuc{} and mean held-out F1 \GenreConfidenceHeldoutMeanFOne{}, which indicates that the learned axis is broad rather than purely SDG-specific leakage.
+
+At the same time, the multi-direction subtraction curve shows that the mean adjusted gap continues to decline from \GenreConfidenceMultiKOneMeanGap{} at $k=\GenreConfidenceMultiKOne$ to \GenreConfidenceMultiKMaxMeanGap{} at $k=\GenreConfidenceMultiKMax$, while the residual classifier ROC-AUC at $k=\GenreConfidenceMultiKMax$ is still \GenreConfidenceMultiKMaxResidualRocAuc{}. The topic-matched nearest-neighbor check also remains far from a collapse, moving from \GenreConfidenceTopicRawMatchedGap{} in raw space to \GenreConfidenceTopicAdjustedMatchedGap{} after subtraction. Taken together, these checks show that the one-direction residual cannot be treated as pure substantive divergence. It is therefore best interpreted as a limited sensitivity analysis against one strong global register axis.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Additional checks on the one-direction global register subtraction. These diagnostics test whether the first subtraction plausibly attenuates a broad corpus-level register axis without claiming that the residual is a fully purified substantive gap.}
+\label{tab:register-confidence-checks}
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_confidence_checks.tex}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_confidence_curve.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_genre_confidence_curve.pdf}
+\caption{Confidence checks on global register subtraction. The top panel shows how the mean adjusted semantic gap changes as more discriminative research--policy directions are removed. The bottom panel shows the residual held-out classifier ROC-AUC after the same sequence of removals.}
+\label{fig:register-confidence-curve}
+\end{figure}
+}{}
+
+\subsection{SDG-Balanced Global Controls and Within-SDG Stress Tests}
+
+The global one-direction subtraction may still reflect SDG composition in the sampled classifier data. To probe that, I add an SDG-balanced global classifier that draws equal numbers of research and policy texts from every SDG before learning one shared research--policy direction. This is a stronger global sensitivity check because it targets broad corpus-level register while controlling SDG composition. In the current run, the SDG-balanced classifier remains strongly separable (accuracy \SdgGenreBalancedAccuracy{}, macro-F1 \SdgGenreBalancedMacroFOne{}, ROC-AUC \SdgGenreBalancedRocAuc{}), and the mean gap becomes \SdgGenreBalancedMeanGap{}.
+
+I also fit within-SDG classifiers, but these are interpreted differently. Because each classifier is estimated inside a single SDG, subtracting the resulting direction risks removing the very within-goal research--policy contrast the dissertation is trying to measure. Their mean adjusted gap (\SdgGenreWithinMeanGap{}) is therefore treated as a stress-test result rather than as a better estimate. The cosine similarity between the SDG-balanced global direction and the average within-SDG direction is \SdgGenreGlobalVsAverageCosine{}, which helps show whether the SDG-specific directions mostly line up with the broad global axis or vary goal by goal.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{SDG-aware register robustness hierarchy. The SDG-balanced classifier is treated as a stronger global sensitivity check. The within-SDG design is treated as an over-subtraction stress test because it learns and removes within-goal research--policy contrasts directly.}
+\label{tab:sdg-register-robustness}
+\input{../outputs/robustness/genre_adjustment/tables/tab_sdg_genre_robustness.tex}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_sdg_genre_robustness_comparison.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.90\textwidth]{fig_sdg_genre_robustness_comparison.pdf}
+\caption{Raw semantic gap compared with SDG-aware register procedures. The green bars show the SDG-balanced global sensitivity check. The blue bars show the within-SDG stress test, which is more prone to over-subtraction.}
+\label{fig:sdg-register-robustness}
+\end{figure}
+}{}
+
+\subsection{Interpreting the Learned Register Direction}
+
+The previous appendix checks establish that a strong research--policy direction exists in the embedding space and that its subtraction changes semantic-gap magnitudes. A separate question is what that learned direction is actually capturing. Two descriptive diagnostics help answer that. First, every text can be projected onto the SDG-balanced global register vector, producing ranked lists of the most policy-like and most research-like texts without fitting any new model. Second, the same register direction can be compared directly with the canonical OSDG-derived SDG centroids. If the direction were close to orthogonal to those centroids, it would look more like a broad wrapper-language axis; if it aligns materially with SDG centroids, it likely mixes register and substantive thematic structure.
+
+The projection examples are included for manual inspection rather than automatic summarization. In the current run, the mean score of the top policy-like examples is \GenreProjectionPolicyTopMean{}, while the mean score of the bottom research-like examples is \GenreProjectionResearchBottomMean{}. The SDG-centroid comparison is more formal: the mean absolute cosine between the global register vector and the 17 SDG centroids is \GenreAlignmentMeanAbsCosine{}, the median is \GenreAlignmentMedianAbsCosine{}, and the maximum is \GenreAlignmentMaxAbsCosine{}. The strongest alignment occurs at \GenreAlignmentStrongestSdg{}, while the weakest occurs at \GenreAlignmentWeakestSdg{}. These values indicate overlap with SDG semantic structure rather than a clean separation of style from substance.
+
+\begin{table}[ht]
+\centering
+\caption{Alignment between the SDG-balanced global register direction and the canonical SDG centroids. The final column reports the matching within-SDG register-versus-centroid cosine when an SDG-specific register vector is available.}
+\label{tab:register-sdg-alignment}
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_sdg_alignment.tex}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Manual-inspection examples from the learned global register direction. The policy-like rows have the highest positive projection onto the global register vector; the research-like rows have the lowest projection.}
+\label{tab:register-projection-examples}
+\resizebox{\textwidth}{!}{%
+\input{../outputs/robustness/genre_adjustment/tables/tab_genre_projection_examples.tex}
+}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_projection_distribution.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\textwidth]{fig_genre_projection_distribution.pdf}
+\caption{Distribution of projection scores onto the SDG-balanced global register direction. The figure is descriptive only: it exposes what kinds of texts align most strongly with the learned global axis.}
+\label{fig:register-projection-distribution}
+\end{figure}
+}{}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_genre_sdg_alignment.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.86\textwidth]{fig_genre_sdg_alignment.pdf}
+\caption{Signed cosine similarity between the SDG-balanced global register direction and each OSDG-derived SDG centroid. Larger magnitudes indicate stronger overlap between the learned register direction and a specific SDG axis.}
+\label{fig:register-sdg-alignment}
+\end{figure}
+}{}
+
+\subsection{Regression Decomposition of the Embedding Space}
+
+The classifier-based register direction is discriminative by construction, so a final concern is that its overlap with SDG semantic structure might partly be an artefact of optimizing corpus separation. To probe that possibility, I add a Rodriguez-style embedding regression diagnostic. Each embedding coordinate is treated as an outcome in a linear model with corpus register, SDG fixed effects, and register--SDG interactions. This does not optimize a classifier; it decomposes embedding variation associated with register after controlling for SDG structure.
+
+In the current run, the cosine between the regression-derived global register vector and the SDG-balanced classifier vector is \RegressionGenreVsClassifierCosine{}, which falls in the \RegressionGenreAgreementBand{} range. The regression-derived global register vector remains materially aligned with SDG centroids: mean absolute cosine \RegressionGenreMeanAbsCosine{}, median \RegressionGenreMedianAbsCosine{}, maximum \RegressionGenreMaxAbsCosine{}, strongest alignment \RegressionGenreStrongestSdg{}, weakest \RegressionGenreWeakestSdg{}. The mean regression-global adjusted gap is \RegressionGlobalMeanGap{}, while the mean regression within-SDG adjusted gap is \RegressionWithinMeanGap{}. The latter is interpreted as an especially aggressive over-subtraction stress test because the within-SDG regression vectors are very close to estimating the within-goal policy--research contrast itself.
+
+\begin{table}[ht]
+\centering
+\caption{Regression-derived versus classifier-derived register alignment with the canonical SDG centroids. The second column reports the SDG-balanced classifier direction, the third reports the regression-derived global register direction, and the fourth reports SDG-specific regression register directions.}
+\label{tab:regression-register-alignment}
+\input{../outputs/robustness/genre_adjustment/tables/tab_regression_genre_alignment.tex}
+\end{table}
+
+\IfFileExists{../outputs/robustness/genre_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}
+\caption{Classifier-derived versus regression-derived register alignment with the OSDG centroids. The annotation reports the cosine similarity between the global regression vector and the SDG-balanced classifier vector.}
+\label{fig:regression-vs-classifier-alignment}
+\end{figure}
+}{}
 \end{document}
