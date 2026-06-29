@@ -809,7 +809,7 @@ def main() -> None:
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
-    policy_state = load_policy_state(layout.root)
+    policy_state = load_policy_state(layout.data_dir)
     shards, total_rows = build_research_shards()
     dim = int(policy_state["policy_embeddings"].shape[1])
     log.info("Research corpus rows available for sampling: %d", total_rows)
@@ -850,14 +850,14 @@ def main() -> None:
         full_a15_gap=full_a15_gap,
     )
     write_outputs(
-        layout.root,
+        layout.data_dir,
         layout.tables_dir,
         summary_rows=summary_rows,
         draw_results=draw_results,
         per_sdg_payload=per_sdg_payload,
         total_rows=total_rows,
     )
-    log.info("Saved sample-stability outputs into %s", layout.root)
+    log.info("Saved sample-stability outputs into %s", layout.data_dir)
 
 
 if __name__ == "__main__":

@@ -91,15 +91,15 @@ SDG_SHORT = {
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    require_output_files(layout.root, ["visualization_source_sdg_attention_vs_semantic_distance.csv"])
+    require_output_files(layout.data_dir, ["visualization_source_sdg_attention_vs_semantic_distance.csv"])
     figures_dir = layout.figures_dir
 
-    print(f"Canonical output dir: {layout.root}")
+    print(f"Canonical output dir: {layout.data_dir}")
 
     # -----------------------------------------------------------------------
     # Load data
     # -----------------------------------------------------------------------
-    df = pd.read_csv(layout.root / "visualization_source_sdg_attention_vs_semantic_distance.csv")
+    df = pd.read_csv(layout.data_dir / "visualization_source_sdg_attention_vs_semantic_distance.csv")
     df = df.sort_values("sdg").reset_index(drop=True)
     df["semantic_gap"] = pd.to_numeric(df["semantic_gap"], errors="coerce")
     df["semantic_similarity"] = pd.to_numeric(df["semantic_similarity"], errors="coerce")

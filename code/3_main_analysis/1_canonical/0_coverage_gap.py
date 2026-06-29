@@ -207,10 +207,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_cov_gap = layout.root / "sdg_attention_distribution_document_weighted.json"
-    out_cov_gap_raw = layout.root / "diagnostic_sdg_attention_distribution_unweighted_chunks.json"
+    out_cov_gap = layout.data_dir / "sdg_attention_distribution_document_weighted.json"
+    out_cov_gap_raw = layout.data_dir / "diagnostic_sdg_attention_distribution_unweighted_chunks.json"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.root)
+    log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load scores ----
     log.info("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)

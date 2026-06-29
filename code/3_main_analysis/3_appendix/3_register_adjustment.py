@@ -8,14 +8,14 @@ raw gap, and how aggressively different subtraction schemes begin to remove the
 within-SDG contrast itself.
 
 Outputs:
-  outputs/robustness/register_adjustment/data/*.json
-  outputs/robustness/register_adjustment/data/*.csv
-  outputs/robustness/register_adjustment/data/*.npy
-  outputs/robustness/register_adjustment/data/register_confidence_checks/*
-  outputs/robustness/register_adjustment/tables/*.tex
-  outputs/robustness/register_adjustment/figures/*.pdf
-  outputs/robustness/register_adjustment/figures/*.png
-  outputs/robustness/register_adjustment/README_register_adjustment.md
+  outputs/appendix/register_adjustment/data/*.json
+  outputs/appendix/register_adjustment/data/*.csv
+  outputs/appendix/register_adjustment/data/*.npy
+  outputs/appendix/register_adjustment/data/register_confidence_checks/*
+  outputs/appendix/register_adjustment/tables/*.tex
+  outputs/appendix/register_adjustment/figures/*.pdf
+  outputs/appendix/register_adjustment/figures/*.png
+  outputs/appendix/register_adjustment/README_register_adjustment.md
 """
 
 from __future__ import annotations
@@ -89,7 +89,7 @@ DEFAULT_SAMPLE_PER_CLASS = 20_000
 DEFAULT_TFIDF_SAMPLE_PER_CLASS = 5_000
 DEFAULT_TFIDF_MAX_FEATURES = 20_000
 DEFAULT_EXTREME_TOP_N = 25
-ROBUSTNESS_OUTPUT_SUBDIR = Path("robustness") / "register_adjustment"
+ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "register_adjustment"
 DEFAULT_GENRE_CONFIDENCE_SUBDIR = "register_confidence_checks"
 DEFAULT_MULTI_DIRECTION_KS = (1, 2, 3, 5)
 DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG = 5_000

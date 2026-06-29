@@ -160,14 +160,14 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    require_output_files(layout.root, ["sdg_attention_distribution_document_weighted.json", "sdg_conceptual_alignment_cosine_distances.json"])
+    require_output_files(layout.data_dir, ["sdg_attention_distribution_document_weighted.json", "sdg_conceptual_alignment_cosine_distances.json"])
 
-    coverage_gap_path = layout.root / "sdg_attention_distribution_document_weighted.json"
-    semantic_gap_path = layout.root / "sdg_conceptual_alignment_cosine_distances.json"
-    out_corr = layout.root / "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json"
-    out_scatter = layout.root / "visualization_source_sdg_attention_vs_semantic_distance.csv"
+    coverage_gap_path = layout.data_dir / "sdg_attention_distribution_document_weighted.json"
+    semantic_gap_path = layout.data_dir / "sdg_conceptual_alignment_cosine_distances.json"
+    out_corr = layout.data_dir / "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json"
+    out_scatter = layout.data_dir / "visualization_source_sdg_attention_vs_semantic_distance.csv"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.root)
+    log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load coverage data ----
     log.info("Loading coverage gap: %s", coverage_gap_path)

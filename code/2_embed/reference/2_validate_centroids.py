@@ -127,11 +127,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_results = layout.root / "validation_results.json"
-    out_confusion = layout.root / "confusion_matrix.csv"
-    out_centroid_sim = layout.root / "centroid_similarity_matrix.csv"
+    out_results = layout.data_dir / "validation_results.json"
+    out_confusion = layout.data_dir / "confusion_matrix.csv"
+    out_centroid_sim = layout.data_dir / "centroid_similarity_matrix.csv"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.root)
+    log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load centroids ----
     log.info("Loading centroids: %s", CENTROIDS_PATH)

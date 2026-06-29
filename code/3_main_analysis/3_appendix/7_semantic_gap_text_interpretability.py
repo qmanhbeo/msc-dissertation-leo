@@ -58,7 +58,7 @@ RESEARCH_TEXT_MANIFEST = Path("data/1_preprocessed/research_corpus/metadata/mani
 RESEARCH_EMBED_MANIFEST = Path("data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("data/3_scored/paper_scores_shards/metadata/manifest.json")
 POLICY_TEXT_IDS = Path("data/2_embedded/metadata/policy_ids.json")
-SEMANTIC_GAP_JSON = Path("outputs/sdg_conceptual_alignment_cosine_distances.json")
+SEMANTIC_GAP_JSON = Path("outputs/main/data/sdg_conceptual_alignment_cosine_distances.json")
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -440,8 +440,9 @@ def semantic_gap_map() -> dict[int, float]:
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_dir = layout.root / OUTPUT_SUBDIR
+    output_dir = Path(args.output_dir)
+    layout = ensure_canonical_outputs(output_dir)
+    out_dir = output_dir / "appendix" / OUTPUT_SUBDIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
     gaps = semantic_gap_map()

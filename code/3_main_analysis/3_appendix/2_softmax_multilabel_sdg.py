@@ -382,8 +382,8 @@ def plot_temperature_sensitivity(
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    tables_dir = output_dir / "tables"
-    figures_dir = output_dir / "figures"
+    tables_dir = output_dir / "main" / "tables"
+    figures_dir = output_dir / "main" / "figures"
     tables_dir.mkdir(parents=True, exist_ok=True)
     figures_dir.mkdir(parents=True, exist_ok=True)
 
@@ -392,7 +392,7 @@ def main() -> None:
         raise RuntimeError("At least one temperature is required.")
 
     sdg_centroids = validate_sdg_centroids(SDG_CENTROIDS)
-    hard_research, hard_policy, hard_coverage_gap, hard_semantic_gap = load_hard_baselines(output_dir)
+    hard_research, hard_policy, hard_coverage_gap, hard_semantic_gap = load_hard_baselines(output_dir / "main" / "data")
 
     research_score_shards = load_research_score_shards(RESEARCH_SCORE_MANIFEST)
     research_score_paths = [research_score_shards[k].score_path for k in sorted(research_score_shards)]

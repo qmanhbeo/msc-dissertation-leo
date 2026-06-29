@@ -9,6 +9,7 @@ class DissertationOutputs:
     root: Path
     tables_dir: Path
     figures_dir: Path
+    data_dir: Path
 
 
 CanonicalOutputs = DissertationOutputs
@@ -32,13 +33,16 @@ MANUSCRIPT_ROOT_FILES = [
 ]
 
 MANUSCRIPT_EXTRA_FILES = [
-    "source_family_sensitivity/policy_source_family_summary.csv",
-    "source_family_sensitivity/policy_source_family_coverage.csv",
-    "source_family_sensitivity/policy_source_family_semantic_gaps.csv",
-    "sdg4_audit/sdg4_lexical_audit.csv",
-    "sdg4_audit/sdg4_lexical_audit_summary.json",
-    "sdg17_sensitivity/sdg17_reference_bootstrap_draws.csv",
-    "sdg17_sensitivity/sdg17_reference_bootstrap_summary.json",
+    "appendix/source_family_sensitivity/policy_source_family_summary.csv",
+    "appendix/source_family_sensitivity/policy_source_family_coverage.csv",
+    "appendix/source_family_sensitivity/policy_source_family_semantic_gaps.csv",
+    "appendix/sdg4_audit/sdg4_lexical_audit.csv",
+    "appendix/sdg4_audit/sdg4_lexical_audit_summary.json",
+    "appendix/sdg17_sensitivity/sdg17_reference_bootstrap_draws.csv",
+    "appendix/sdg17_sensitivity/sdg17_reference_bootstrap_summary.json",
+    "appendix/semantic_gap_interpretability/semantic_gap_distinctive_terms.csv",
+    "appendix/semantic_gap_interpretability/semantic_gap_interpretability_summary.json",
+    "appendix/semantic_gap_interpretability/semantic_gap_representative_examples.csv",
 ]
 
 MANUSCRIPT_TABLE_FILES = [
@@ -86,13 +90,15 @@ MANUSCRIPT_FIGURE_FILES = [
 
 
 def ensure_dissertation_outputs(output_dir: Path) -> DissertationOutputs:
-    """Create and return the flat dissertation output layout."""
+    """Create and return the nested dissertation output layout."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    tables_dir = output_dir / "tables"
-    figures_dir = output_dir / "figures"
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    figures_dir.mkdir(parents=True, exist_ok=True)
-    return DissertationOutputs(root=output_dir, tables_dir=tables_dir, figures_dir=figures_dir)
+    root = output_dir / "main"
+    data_dir = root / "data"
+    tables_dir = root / "tables"
+    figures_dir = root / "figures"
+    for path in (data_dir, tables_dir, figures_dir):
+        path.mkdir(parents=True, exist_ok=True)
+    return DissertationOutputs(root=root, tables_dir=tables_dir, figures_dir=figures_dir, data_dir=data_dir)
 
 
 def ensure_canonical_outputs(output_dir: Path) -> DissertationOutputs:
@@ -111,11 +117,11 @@ def require_pdf_inputs(output_dir: Path) -> Path:
     root = Path(output_dir)
     missing = []
     for name in MANUSCRIPT_TABLE_FILES:
-        path = root / "tables" / name
+        path = root / "main" / "tables" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_FIGURE_FILES:
-        path = root / "figures" / name
+        path = root / "main" / "figures" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     if missing:
@@ -128,10 +134,15 @@ def require_pdf_inputs(output_dir: Path) -> Path:
 
 def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     root = Path(output_dir)
-    files = [root / name for name in MANUSCRIPT_ROOT_FILES]
+    files = []
+    for name in MANUSCRIPT_ROOT_FILES:
+        if name == "dissertation.pdf":
+            files.append(root / name)
+        else:
+            files.append(root / "main" / "data" / name)
     files.extend(root / name for name in MANUSCRIPT_EXTRA_FILES)
-    files.extend(root / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
-    files.extend(root / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
+    files.extend(root / "main" / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
+    files.extend(root / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
     return files
 
 

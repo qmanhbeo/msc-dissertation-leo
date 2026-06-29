@@ -27,8 +27,8 @@ python main.py --warm-replay --overwrite
 
 Warm replay rebuilds:
 - `outputs/dissertation.pdf`
-- canonical machine-readable outputs under `outputs/`
-- manuscript tables and figures under `outputs/tables/` and `outputs/figures/`
+- canonical machine-readable outputs under `outputs/main/data/`
+- manuscript tables and figures under `outputs/main/tables/` and `outputs/main/figures/`
 
 ## Tracked vs not tracked
 

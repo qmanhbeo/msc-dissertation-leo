@@ -263,8 +263,9 @@ def write_table(path: Path, summary_rows: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_dir = layout.root / "source_family_sensitivity"
+    output_dir = Path(args.output_dir)
+    layout = ensure_canonical_outputs(output_dir)
+    out_dir = output_dir / "appendix" / "source_family_sensitivity"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     source_family_map = build_source_family_map()

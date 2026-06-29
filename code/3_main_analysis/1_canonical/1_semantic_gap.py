@@ -124,10 +124,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_sem_gap = layout.root / "sdg_conceptual_alignment_cosine_distances.json"
-    out_sem_sens = layout.root / "robustness_check_semantic_distances_by_chunk_cap.json"
+    out_sem_gap = layout.data_dir / "sdg_conceptual_alignment_cosine_distances.json"
+    out_sem_sens = layout.data_dir / "robustness_check_semantic_distances_by_chunk_cap.json"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.root)
+    log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load research centroids/meta ----
     log.info("Loading research centroids: %s", RESEARCH_CENTROIDS)

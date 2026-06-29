@@ -8,7 +8,7 @@ python main.py --build-pdf --overwrite
 
 Canonical artifact:
 - `outputs/dissertation.pdf`
+The manuscript source reads canonical generated tables from `outputs/main/tables/` and figures from `outputs/main/figures/`.
 
-The manuscript source reads canonical generated tables from `outputs/tables/` and figures from `outputs/figures/`.
-When the optional register-adjustment stage is run, the appendix also reads robustness tables and figures from `outputs/robustness/register_adjustment/`.
+When the optional register-adjustment stage is run, the appendix also reads tables and figures from `outputs/appendix/register_adjustment/`.
 Versioned build history under `writing/builds/` is no longer part of the project contract.

@@ -299,16 +299,17 @@ def main() -> None:
     if args.block_size < 1:
         raise ValueError("--block-size must be positive.")
 
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    require_output_files(layout.root, ["sdg_conceptual_alignment_cosine_distances.json"])
-    out_dir = layout.root / OUTPUT_SUBDIR
+    output_dir = Path(args.output_dir)
+    layout = ensure_canonical_outputs(output_dir)
+    require_output_files(layout.data_dir, ["sdg_conceptual_alignment_cosine_distances.json"])
+    out_dir = output_dir / "appendix" / OUTPUT_SUBDIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
     benchmark_emb = np.load(BENCHMARK_EMB).astype(np.float32)
     benchmark_ids = load_json(BENCHMARK_IDS)
     sdg_centroids = np.load(SDG_CENTROIDS).astype(np.float32)
     baseline_unit = sdg_centroids[SDG17_IDX]
-    semgap_payload = load_json(layout.root / "sdg_conceptual_alignment_cosine_distances.json")
+    semgap_payload = load_json(layout.data_dir / "sdg_conceptual_alignment_cosine_distances.json")
     baseline_row = semgap_payload["per_sdg"][SDG17_IDX]
 
     sdg17_indices = [idx for idx, row in enumerate(benchmark_ids) if int(row["sdg"]) == SDG17]

@@ -294,7 +294,7 @@ def clean_canonical_outputs(output_dir: Path) -> None:
     for path in canonical_artifact_paths(output_dir):
         if path.exists():
             remove_if_exists(path)
-    for subdir in [output_dir / "tables", output_dir / "figures"]:
+    for subdir in [output_dir / "main" / "tables", output_dir / "main" / "figures", output_dir / "main" / "data"]:
         if subdir.exists():
             try:
                 subdir.rmdir()
@@ -439,7 +439,7 @@ def run_sdg4_lexical_audit(output_dir: Path) -> None:
 
 
 def run_sdg17_reference_sensitivity(output_dir: Path) -> None:
-    require_output_files(output_dir, ["sdg_conceptual_alignment_cosine_distances.json"])
+    require_output_files(output_dir / "main" / "data", ["sdg_conceptual_alignment_cosine_distances.json"])
     run_step(
         "appendix A SDG 17 sparse-reference sensitivity",
         [sys.executable, "code/3_main_analysis/3_appendix/6_sdg17_reference_sensitivity.py", "--output-dir", str(output_dir)],
@@ -447,7 +447,7 @@ def run_sdg17_reference_sensitivity(output_dir: Path) -> None:
 
 
 def run_semantic_gap_interpretability(output_dir: Path) -> None:
-    require_output_files(output_dir, ["sdg_conceptual_alignment_cosine_distances.json"])
+    require_output_files(output_dir / "main" / "data", ["sdg_conceptual_alignment_cosine_distances.json"])
     run_step(
         "appendix A semantic-gap text interpretability",
         [sys.executable, "code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],

@@ -273,8 +273,9 @@ def write_table(path: Path, rows: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_dir = layout.root / "sdg4_audit"
+    output_dir = Path(args.output_dir)
+    layout = ensure_canonical_outputs(output_dir)
+    out_dir = output_dir / "appendix" / "sdg4_audit"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     score_manifest = load_json(RESEARCH_SCORE_MANIFEST)
