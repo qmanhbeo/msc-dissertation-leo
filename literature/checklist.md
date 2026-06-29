@@ -10,7 +10,7 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 2 | Cowls2021 | manual_download/Cowls2021.pdf | DONE | |
 | 3 | Nedungadi2024 | manual_download/Nedungadi2024.pdf | DONE | |
 | 4 | ToneyWails2024 | manual_download/ToneyWails2024.pdf | DONE | |
-| 5 | SioumalasChristodoulou2025 | manual_download/SioumalasChristodoulou2025.pdf | PENDING | |
+| 5 | SioumalasChristodoulou2025 | manual_download/SioumalasChristodoulou2025.pdf | DONE | Line 129: FIXED — "AI research metrics" → "global AI metrics" to match paper |
 | 6 | Gjorgjevikj2025 | manual_download/Gjorgjevikj2025.pdf | PENDING | |
 | 7 | Heink2015 | manual_download/Heink2015.pdf | DONE | Mild framing: "knowledge utilisation framework" is not Heink2015's own label; CRELE content is accurate | |
 | 8 | Heilinger2023 | manual_download/Heilinger2023.pdf | DONE | Line 155: FIXED — rewrote claim to match paper's actual discussion of corporate greenwashing, not research |
