@@ -86,8 +86,9 @@ code/data_backup_and_fetch/__pycache__/
 *.tar.zst
 *.tar.zst.sha256
 
-# PDF generated from LaTeX (but keep source)
+# PDF generated from LaTeX (but keep source and literature PDFs)
 *.pdf
+!literature/**/*.pdf
 *.aux
 *.bbl
 *.bcf
