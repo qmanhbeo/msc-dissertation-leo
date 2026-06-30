@@ -169,13 +169,13 @@
     }
   },
   "h26": {
-    "hypothesis": "Research papers score lower against OSDG centroids than policy chunks score against research centroids \u2014 research ignores policy framing more than vice versa.",
+    "hypothesis": "Policy-facing texts may score closer to research-derived centroids than papers score to OSDG-derived centroids, but this is treated only as a directional diagnostic.",
     "mean_paper_top_vs_osdg": 0.217817,
     "mean_policy_top_vs_research": 0.370178,
     "asymmetry_gap": 0.152361,
     "supported": true,
     "caveats": [
-      "A15 FLAG: policy scores against OSDG centroids are inflated by 0.321 relative to paper scores. The H26 asymmetry may partly reflect this calibration bias, not genuine research-policy framing asymmetry.",
+      "A15 FLAG: policy scores against OSDG centroids are inflated by 0.321 relative to paper scores. The H26 diagnostic may partly reflect this calibration bias, not genuine directional asymmetry.",
       "Research centroids are built via hard assignment from OSDG centroids \u2014 a circularity that may reduce apparent research-centroid distance."
     ]
   },

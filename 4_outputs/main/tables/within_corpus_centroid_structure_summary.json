@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T22:20:18.757268Z",
+  "generated_at_utc": "2026-06-30T10:05:20.766653Z",
   "note": "Diagnostic only. PCA is fitted separately within each corpus and the two panels do not share a common coordinate system.",
   "policy": {
     "counts_by_sdg": {
@@ -22,7 +22,7 @@
       "9": 4536
     },
     "global_metrics": {
-      "calinski_harabasz_pca2d": 4122.221264793328,
+      "calinski_harabasz_pca2d": 4122.222912499452,
       "davies_bouldin_pca2d": 6.949332988939952,
       "kmeans_adjusted_rand_index": 0.33613027297471215,
       "kmeans_cluster_purity": 0.5526053030583189,
@@ -351,7 +351,7 @@
           1089
         ]
       ],
-      "kmeans_normalized_mutual_info": 0.5185741036529861,
+      "kmeans_normalized_mutual_info": 0.5185741036529858,
       "kmeans_sample_size": 54082,
       "silhouette_cosine_sample": 0.07136832177639008,
       "silhouette_sample_size": 10000
@@ -387,8 +387,8 @@
       "9": 260631
     },
     "global_metrics": {
-      "calinski_harabasz_pca2d": 3112.629716591548,
-      "davies_bouldin_pca2d": 11.528955508998445,
+      "calinski_harabasz_pca2d": 3112.629716712643,
+      "davies_bouldin_pca2d": 11.528955509629531,
       "kmeans_adjusted_rand_index": 0.2001698023591481,
       "kmeans_cluster_purity": 0.43336,
       "kmeans_contingency": [
@@ -716,13 +716,13 @@
           11
         ]
       ],
-      "kmeans_normalized_mutual_info": 0.27641321421211007,
+      "kmeans_normalized_mutual_info": 0.2764132142121097,
       "kmeans_sample_size": 100000,
       "silhouette_cosine_sample": 0.020295079797506332,
       "silhouette_sample_size": 10000
     },
-    "pc1_explained_variance_ratio": 0.06340300186987355,
-    "pc2_explained_variance_ratio": 0.031274846229665046,
+    "pc1_explained_variance_ratio": 0.06340300186978896,
+    "pc2_explained_variance_ratio": 0.031274846229173134,
     "pca_fit_rows": 2543698,
     "pca_fitting_mode": "incremental_full",
     "plotted_rows": 100000,
