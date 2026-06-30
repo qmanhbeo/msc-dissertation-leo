@@ -6,13 +6,13 @@ centroid method produces coherent within-corpus SDG structure, without altering 
 main alignment metrics.
 
 Outputs:
-  4_outputs/figures/fig_within_corpus_research_sdg_pca.pdf
-  4_outputs/figures/fig_within_corpus_research_sdg_pca.png
-  4_outputs/figures/fig_within_corpus_policy_sdg_pca.pdf
-  4_outputs/figures/fig_within_corpus_policy_sdg_pca.png
-  4_outputs/tables/within_corpus_centroid_structure_metrics.csv
-  4_outputs/tables/within_corpus_centroid_structure_summary.json
-  4_outputs/tables/num_within_corpus_centroid_structure.tex
+  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.pdf
+  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.png
+  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_policy_sdg_pca.pdf
+  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_policy_sdg_pca.png
+  4_outputs/appendix/b2_within_corpus_centroid/data/b2_within_corpus_metrics.csv
+  4_outputs/appendix/b2_within_corpus_centroid/data/b2_within_corpus_summary.json
+  4_outputs/appendix/b2_within_corpus_centroid/tables/num_b2_within_corpus_centroid.tex
 
 Run from project root:
     python 1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py
@@ -25,7 +25,6 @@ import csv
 import json
 import logging
 import os
-import shutil
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -59,7 +58,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs
+
 from alignment_core import verify_unit_norms
 from research_embedding_shards import (
     iter_research_embedding_shards,
@@ -89,13 +88,13 @@ DEFAULT_OUTPUT_ROOT = Path("outputs")
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 
-RESEARCH_FIG_PDF = "fig_within_corpus_research_sdg_pca.pdf"
-RESEARCH_FIG_PNG = "fig_within_corpus_research_sdg_pca.png"
-POLICY_FIG_PDF = "fig_within_corpus_policy_sdg_pca.pdf"
-POLICY_FIG_PNG = "fig_within_corpus_policy_sdg_pca.png"
-METRICS_CSV = "within_corpus_centroid_structure_metrics.csv"
-SUMMARY_JSON = "within_corpus_centroid_structure_summary.json"
-NUM_TEX = "num_within_corpus_centroid_structure.tex"
+RESEARCH_FIG_PDF = "fig_b2_research_sdg_pca.pdf"
+RESEARCH_FIG_PNG = "fig_b2_research_sdg_pca.png"
+POLICY_FIG_PDF = "fig_b2_policy_sdg_pca.pdf"
+POLICY_FIG_PNG = "fig_b2_policy_sdg_pca.png"
+METRICS_CSV = "b2_within_corpus_metrics.csv"
+SUMMARY_JSON = "b2_within_corpus_summary.json"
+NUM_TEX = "num_b2_within_corpus_centroid.tex"
 
 RESEARCH_COLOR = "#2166AC"
 POLICY_COLOR = "#D6604D"
@@ -535,15 +534,14 @@ def write_num_tex(path: Path, summary: dict[str, object]) -> None:
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    tables_dir = layout.tables_dir
-    figures_dir = layout.figures_dir
-    out_dir = Path(args.output_dir) / "appendix" / "within_corpus_centroid"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = Path(args.output_dir) / "appendix" / "b2_within_corpus_centroid"
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    figures_dir = out_root / "figures"
+    for d in (data_dir, tables_dir, figures_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(args.seed)
-
-    log.info("Canonical output dir: %s", layout.root)
 
     research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
     verify_unit_norms(research_centroids, "research centroids")
@@ -704,8 +702,6 @@ def main() -> None:
         output_pdf=figures_dir / RESEARCH_FIG_PDF,
         output_png=figures_dir / RESEARCH_FIG_PNG,
     )
-    shutil.copy(figures_dir / RESEARCH_FIG_PDF, out_dir / RESEARCH_FIG_PDF)
-    shutil.copy(figures_dir / RESEARCH_FIG_PNG, out_dir / RESEARCH_FIG_PNG)
     plot_within_corpus_pca(
         policy_plot_2d,
         policy_centroids_2d,
@@ -721,11 +717,9 @@ def main() -> None:
         output_pdf=figures_dir / POLICY_FIG_PDF,
         output_png=figures_dir / POLICY_FIG_PNG,
     )
-    shutil.copy(figures_dir / POLICY_FIG_PDF, out_dir / POLICY_FIG_PDF)
-    shutil.copy(figures_dir / POLICY_FIG_PNG, out_dir / POLICY_FIG_PNG)
 
     metrics_rows = research_metric_rows + policy_metric_rows
-    metrics_path = out_dir / METRICS_CSV
+    metrics_path = data_dir / METRICS_CSV
     write_metrics_csv(metrics_path, metrics_rows)
 
     summary = {
@@ -758,7 +752,7 @@ def main() -> None:
             "global_metrics": policy_global_metrics,
         },
     }
-    summary_path = out_dir / SUMMARY_JSON
+    summary_path = data_dir / SUMMARY_JSON
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     write_num_tex(tables_dir / NUM_TEX, summary)
 

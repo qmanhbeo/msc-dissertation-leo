@@ -8,14 +8,15 @@ raw gap, and how aggressively different subtraction schemes begin to remove the
 within-SDG contrast itself.
 
 Outputs:
-  4_outputs/appendix/register_adjustment/data/*.json
-  4_outputs/appendix/register_adjustment/data/*.csv
-  4_outputs/appendix/register_adjustment/data/*.npy
-  4_outputs/appendix/register_adjustment/data/register_confidence_checks/*
-  4_outputs/appendix/register_adjustment/tables/*.tex
-  4_outputs/appendix/register_adjustment/figures/*.pdf
-  4_outputs/appendix/register_adjustment/figures/*.png
-  4_outputs/appendix/register_adjustment/README_register_adjustment.md
+  4_outputs/appendix/c_register_adjustment/data/*.json
+  4_outputs/appendix/c_register_adjustment/data/*.csv
+  4_outputs/appendix/c_register_adjustment/data/*.npy
+  4_outputs/appendix/c_register_adjustment/register_confidence_checks/*
+  4_outputs/appendix/c_register_adjustment/tables/*.tex
+  4_outputs/appendix/c_register_adjustment/figures/*.pdf
+  4_outputs/appendix/c_register_adjustment/figures/*.png
+  4_outputs/appendix/c_register_adjustment/README_register_adjustment.md
+  4_outputs/appendix/c_register_adjustment/register_direction_interpretation.md
 """
 
 from __future__ import annotations
@@ -89,7 +90,7 @@ DEFAULT_SAMPLE_PER_CLASS = 20_000
 DEFAULT_TFIDF_SAMPLE_PER_CLASS = 5_000
 DEFAULT_TFIDF_MAX_FEATURES = 20_000
 DEFAULT_EXTREME_TOP_N = 25
-ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "register_adjustment"
+ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "c_register_adjustment"
 DEFAULT_GENRE_CONFIDENCE_SUBDIR = "register_confidence_checks"
 DEFAULT_MULTI_DIRECTION_KS = (1, 2, 3, 5)
 DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG = 5_000
@@ -2190,10 +2191,10 @@ def build_regression_similarity_payload(
         "global_regression_vs_classifier_cosine": round(cosine, 6),
         "agreement_band": interpretation,
         "classifier_vector_source": str(
-            Path("4_outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "sdg_balanced_register_vector.npy"
+            Path("4_outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "sdg_balanced_register_vector.npy"
         ),
         "regression_vector_source": str(
-            Path("4_outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "data" / "regression_register_vector.npy"
+            Path("4_outputs") / ROBUSTNESS_OUTPUT_SUBDIR / "regression_register_vector.npy"
         ),
         "classifier_alignment_summary": classifier_alignment_summary,
         "regression_alignment_summary": regression_alignment_summary,
@@ -4381,14 +4382,14 @@ def main() -> None:
     layout = ensure_register_robustness_outputs(Path(args.output_dir))
     cache_root = Path(args.cache_dir)
     ensure_dir(cache_root)
-    out_combined_json = layout.root / "register_adjusted_semantic_gaps.json"
-    out_combined_csv = layout.root / "register_adjusted_semantic_gaps.csv"
-    out_metrics = layout.root / "register_adjustment_classifier_metrics.json"
-    out_val_grid = layout.root / "register_adjustment_classifier_validation_grid.csv"
-    out_extremes = layout.root / "register_extreme_examples.csv"
-    out_tfidf = layout.root / "register_tfidf_terms.csv"
+    out_combined_json = layout.data_dir / "register_adjusted_semantic_gaps.json"
+    out_combined_csv = layout.data_dir / "register_adjusted_semantic_gaps.csv"
+    out_metrics = layout.data_dir / "register_adjustment_classifier_metrics.json"
+    out_val_grid = layout.data_dir / "register_adjustment_classifier_validation_grid.csv"
+    out_extremes = layout.data_dir / "register_extreme_examples.csv"
+    out_tfidf = layout.data_dir / "register_tfidf_terms.csv"
     log.info("Robustness output dir: %s", layout.root.parent)
-    log.info("Register data dir: %s", layout.root)
+    log.info("Register data dir: %s", layout.data_dir)
     log.info("Cache dir: %s", cache_root)
 
     required_paths = [
@@ -4638,6 +4639,7 @@ def main() -> None:
 
     register_methods_seed = args.seed if args.random_seed is None else args.random_seed
     register_adjustment_dir = layout.root
+    register_data_dir = layout.data_dir
     research_indices_by_sdg_signature, research_indices_by_sdg = load_or_build_research_indices_by_sdg_cache(
         cache_root=cache_root,
         base_signature=base_signature,
@@ -4702,8 +4704,8 @@ def main() -> None:
             "metrics": sdg_balanced_method["metrics"],
             "intercept": sdg_balanced_method["intercept"],
         }
-        write_json(register_adjustment_dir / "sdg_balanced_metrics.json", sdg_balanced_metrics_out)
-        np.save(register_adjustment_dir / "sdg_balanced_register_vector.npy", sdg_balanced_unit.astype(np.float32))
+        write_json(register_data_dir / "sdg_balanced_metrics.json", sdg_balanced_metrics_out)
+        np.save(register_data_dir / "sdg_balanced_register_vector.npy", sdg_balanced_unit.astype(np.float32))
 
         _, sdg_balanced_policy_emb = load_or_build_adjusted_policy_cache(
             cache_root=cache_root,
@@ -4738,12 +4740,12 @@ def main() -> None:
             adjusted_similarity_field="sdg_balanced_adjusted_similarity",
         )
         write_gap_comparison_csv(
-            register_adjustment_dir / "sdg_balanced_gap_comparison.csv",
+            register_data_dir / "sdg_balanced_gap_comparison.csv",
             sdg_balanced_rows,
             adjusted_similarity_field="sdg_balanced_adjusted_similarity",
             adjusted_gap_field="sdg_balanced_adjusted_gap",
         )
-        plot_sdg_balanced_gap_comparison(register_adjustment_dir, sdg_balanced_rows)
+        plot_sdg_balanced_gap_comparison(layout.figures_dir, sdg_balanced_rows)
 
     if args.method in ("within_sdg", "both"):
         within_signature, within_method = load_or_build_within_sdg_method_cache(
@@ -4778,7 +4780,7 @@ def main() -> None:
         )
         within_method["cosine_global_vs_average"] = cosine_global_vs_average
         write_rows_csv(
-            register_adjustment_dir / "within_sdg_metrics.csv",
+            register_data_dir / "within_sdg_metrics.csv",
             [
                 "sdg",
                 "available_research",
@@ -4797,14 +4799,14 @@ def main() -> None:
             within_method["metrics_rows"],
         )
         within_sdg_metrics_rows = within_method["metrics_rows"]
-        np.save(register_adjustment_dir / "within_sdg_register_vectors.npy", within_vectors.astype(np.float32))
+        np.save(register_data_dir / "within_sdg_register_vectors.npy", within_vectors.astype(np.float32))
         write_rows_csv(
-            register_adjustment_dir / "register_vector_cosine_similarity.csv",
+            register_data_dir / "register_vector_cosine_similarity.csv",
             ["comparison_type", "left", "right", "cosine_similarity"],
             cosine_rows,
         )
         plot_within_sdg_vector_similarity_heatmap(
-            register_adjustment_dir,
+            layout.figures_dir,
             within_vectors=within_vectors,
             available_sdgs=available_sdgs,
         )
@@ -4843,14 +4845,14 @@ def main() -> None:
             skipped_sdgs=skipped_sdgs,
         )
         write_gap_comparison_csv(
-            register_adjustment_dir / "within_sdg_gap_comparison.csv",
+            register_data_dir / "within_sdg_gap_comparison.csv",
             within_sdg_rows,
             adjusted_similarity_field="within_sdg_adjusted_similarity",
             adjusted_gap_field="within_sdg_adjusted_gap",
         )
 
     write_sdg_register_adjustment_note(
-        layout.root.parent / "README_register_adjustment.md",
+        register_adjustment_dir / "README_register_adjustment.md",
         method=args.method,
         seed=register_methods_seed,
         classifier_type=args.classifier_type,
@@ -4859,7 +4861,7 @@ def main() -> None:
         test_size=args.test_size,
     )
     write_json(
-        register_adjustment_dir / "summary.json",
+        register_data_dir / "summary.json",
         {
             "method": args.method,
             "random_seed": register_methods_seed,
@@ -4886,7 +4888,7 @@ def main() -> None:
         cosine_rows=cosine_rows,
     )
     plot_sdg_register_robustness_comparison(
-        output_dir=register_adjustment_dir,
+        output_dir=layout.figures_dir,
         manuscript_figures_dir=layout.figures_dir,
         sdg_balanced_rows=sdg_balanced_rows,
         within_sdg_rows=within_sdg_rows,
@@ -4904,9 +4906,9 @@ def main() -> None:
         policy_text_ids=policy_text_ids,
         register_unit=sdg_balanced_unit,
     )
-    top_policy_like_path = register_adjustment_dir / "top_policy_like_texts.csv"
-    top_research_like_path = register_adjustment_dir / "top_research_like_texts.csv"
-    register_projection_summary_path = register_adjustment_dir / "register_projection_summary.csv"
+    top_policy_like_path = register_data_dir / "top_policy_like_texts.csv"
+    top_research_like_path = register_data_dir / "top_research_like_texts.csv"
+    register_projection_summary_path = register_data_dir / "register_projection_summary.csv"
     register_direction_report_path = register_adjustment_dir / "register_direction_interpretation.md"
     write_rows_csv(
         top_policy_like_path,
@@ -4933,7 +4935,7 @@ def main() -> None:
         register_direction_report_path,
         report_policy_rows=projection_artifacts["report_policy_rows"],
         report_research_rows=projection_artifacts["report_research_rows"],
-        vector_path=register_adjustment_dir / "sdg_balanced_register_vector.npy",
+        vector_path=register_data_dir / "sdg_balanced_register_vector.npy",
     )
     plot_register_projection_distribution(
         layout.figures_dir,
@@ -4947,7 +4949,7 @@ def main() -> None:
     if args.method in ("within_sdg", "both"):
         within_vectors_for_alignment = within_vectors.astype(np.float32)
     else:
-        within_vectors_path = register_adjustment_dir / "within_sdg_register_vectors.npy"
+        within_vectors_path = register_data_dir / "within_sdg_register_vectors.npy"
         if within_vectors_path.exists():
             within_vectors_for_alignment = np.load(within_vectors_path).astype(np.float32)
 
@@ -4960,9 +4962,9 @@ def main() -> None:
         global_unit=sdg_balanced_unit,
         within_vectors=within_vectors_for_alignment,
     )
-    register_sdg_alignment_path = register_adjustment_dir / "register_sdg_alignment.csv"
-    register_sdg_alignment_summary_path = register_adjustment_dir / "register_sdg_alignment_summary.json"
-    within_sdg_register_centroid_alignment_path = register_adjustment_dir / "within_sdg_register_centroid_alignment.csv"
+    register_sdg_alignment_path = register_data_dir / "register_sdg_alignment.csv"
+    register_sdg_alignment_summary_path = register_data_dir / "register_sdg_alignment_summary.json"
+    within_sdg_register_centroid_alignment_path = register_data_dir / "within_sdg_register_centroid_alignment.csv"
     write_rows_csv(
         register_sdg_alignment_path,
         ["sdg", "cosine_similarity", "abs_cosine_similarity"],
@@ -5000,11 +5002,11 @@ def main() -> None:
     )
     regression_global_unit = np.array(regression_artifacts["global_unit"], dtype=np.float32)
     regression_within_units = np.array(regression_artifacts["within_units"], dtype=np.float32)
-    regression_global_vector_path = register_adjustment_dir / "regression_register_vector.npy"
-    regression_within_vectors_path = register_adjustment_dir / "regression_within_sdg_register_vectors.npy"
-    regression_alignment_path = register_adjustment_dir / "regression_register_sdg_alignment.csv"
-    regression_similarity_path = register_adjustment_dir / "regression_vs_classifier_similarity.json"
-    regression_gap_path = register_adjustment_dir / "regression_gap_comparison.csv"
+    regression_global_vector_path = register_data_dir / "regression_register_vector.npy"
+    regression_within_vectors_path = register_data_dir / "regression_within_sdg_register_vectors.npy"
+    regression_alignment_path = register_data_dir / "regression_register_sdg_alignment.csv"
+    regression_similarity_path = register_data_dir / "regression_vs_classifier_similarity.json"
+    regression_gap_path = register_data_dir / "regression_gap_comparison.csv"
     np.save(regression_global_vector_path, regression_global_unit.astype(np.float32))
     np.save(regression_within_vectors_path, regression_within_units.astype(np.float32))
 
@@ -5127,7 +5129,7 @@ def main() -> None:
     )
 
     write_json(
-        register_adjustment_dir / "summary.json",
+        register_data_dir / "summary.json",
         {
             "method": args.method,
             "random_seed": register_methods_seed,
@@ -5435,8 +5437,8 @@ def main() -> None:
                 "extremes_csv": str(out_extremes),
                 "tfidf_csv": str(out_tfidf),
                 "sdg_register_dir": str(register_adjustment_dir),
-                "register_readme_md": str(layout.root.parent / "README_register_adjustment.md"),
-                "sdg_register_summary_json": str(register_adjustment_dir / "summary.json"),
+                "register_readme_md": str(register_adjustment_dir / "README_register_adjustment.md"),
+                "sdg_register_summary_json": str(register_data_dir / "summary.json"),
                 "register_projection_policy_csv": str(top_policy_like_path),
                 "register_projection_research_csv": str(top_research_like_path),
                 "register_projection_summary_csv": str(register_projection_summary_path),

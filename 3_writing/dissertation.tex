@@ -13,7 +13,7 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{graphicx}
-\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/register_adjustment/figures/}}
+\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/c_register_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -24,20 +24,20 @@
 \providecommand{\DraftVersionTag}{manual-build}
 \InputIfFileExists{build_meta.tex}{}{}
 % Generated analysis outputs — produced by active canon scripts under outputs/tables/
-\input{../4_outputs/main/tables/num_pca_semantic_landscape.tex}
-\input{../4_outputs/main/tables/num_within_corpus_centroid_structure.tex}
-\input{../4_outputs/main/tables/num_softmax_multilabel.tex}
-\InputIfFileExists{../4_outputs/main/tables/num_sdg_source_comparison.tex}{}{}
 \input{../4_outputs/main/tables/num_validation.tex}
 \input{../4_outputs/main/tables/num_coverage.tex}
 \input{../4_outputs/main/tables/num_semantic.tex}
 \input{../4_outputs/main/tables/num_h25.tex}
 \input{../4_outputs/main/tables/num_sample_stability.tex}
-\InputIfFileExists{../4_outputs/appendix/register_adjustment/tables/num_register_adjustment.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/register_adjustment/tables/num_register_confidence_checks.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/register_adjustment/tables/num_sdg_register_robustness.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/register_adjustment/tables/num_register_interpretability.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/register_adjustment/tables/num_regression_register_alignment.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/b2_within_corpus_centroid/tables/num_b2_within_corpus_centroid.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/b4_softmax_multilabel_sdg/tables/num_b4_softmax_multilabel.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_register_adjustment.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_register_confidence_checks.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_sdg_register_robustness.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_register_interpretability.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_regression_register_alignment.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -497,7 +497,7 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \small
 \caption{Per-SDG source comparison: validation F1 and centroid cosine similarity to the canonical combined centroid. A ``--'' indicates no texts for that SDG in the source (OSDG, SDG 17) or a trivial self-similarity of 1.0.}
 \label{tab:sdg-source-comparison-f1cos}
-\input{../4_outputs/main/tables/tab_sdg_source_comparison_f1cos.tex}
+\input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_f1cos.tex}
 \end{table}
 
 \begin{table}[ht]
@@ -505,7 +505,7 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \small
 \caption{Per-SDG source comparison: research coverage (papers assigned) and within-SDG semantic gap for each reference source. Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence.}
 \label{tab:sdg-source-comparison-covgap}
-\input{../4_outputs/main/tables/tab_sdg_source_comparison_covgap.tex}
+\input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_covgap.tex}
 \end{table}
 
 Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.985--0.998), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
@@ -533,7 +533,7 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \caption{Policy source-family sensitivity diagnostic. Coverage rankings are document-weighted within each source family. Mean semantic gap is the mean valid within-SDG research--policy gap for that family using the canonical segment cap.}
 \label{tab:policy-source-family-sensitivity}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/main/tables/tab_policy_source_family_sensitivity.tex}
+\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family.tex}
 }
 \end{table}
 
@@ -552,7 +552,7 @@ The main analysis therefore retains the canonical nearest-centroid assignment bu
 \caption{SDG 4 lexical artefact audit. The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.}
 \label{tab:sdg4-lexical-audit}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/main/tables/tab_sdg4_lexical_audit.tex}
+\input{../4_outputs/appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex}
 }
 \end{table}
 
@@ -569,7 +569,7 @@ The visual placement of the SDG anchors should also be interpreted carefully. Be
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{fig_pca_semantic_landscape.pdf}
+\includegraphics[width=\textwidth]{fig_b1_pca_semantic_landscape.pdf}
 \caption{PCA semantic landscape of the research-policy embedding space. Background points show a balanced research-policy sample used only to fit and visualise the two-dimensional projection. Diamond markers show the 17 SDG reference centroids. Circular and square markers show the full-corpus research and policy SDG centroids respectively, with thin line segments linking each research-policy pair. PCA is fitted on a balanced research-policy sample for visual interpretability. The projection is descriptive only; formal semantic distances are computed in the original embedding space.}
 \label{fig:pca-semantic-landscape}
 \end{figure}
@@ -584,11 +584,11 @@ I pair the visual diagnostics with centroid-coherence and clustering statistics 
 \centering
 \begin{minipage}{0.49\textwidth}
 \centering
-\includegraphics[width=\linewidth]{fig_within_corpus_research_sdg_pca.pdf}
+\includegraphics[width=\linewidth]{fig_b2_research_sdg_pca.pdf}
 \end{minipage}\hfill
 \begin{minipage}{0.49\textwidth}
 \centering
-\includegraphics[width=\linewidth]{fig_within_corpus_policy_sdg_pca.pdf}
+\includegraphics[width=\linewidth]{fig_b2_policy_sdg_pca.pdf}
 \end{minipage}
 \caption{Within-corpus PCA diagnostics for SDG assignments. Left: research embeddings with corpus-specific research SDG centroids overlaid. Right: policy embeddings with corpus-specific policy SDG centroids overlaid. PCA is fitted separately within each corpus and is used only to visualise internal SDG structure. The two panels do not share a coordinate system. Quantitative diagnostics are reported alongside the visualisation.}
 \label{fig:within-corpus-centroid-structure}
@@ -607,7 +607,7 @@ The contrast helps make the embedding distances more legible. In SDGs 17 and 13,
 \caption{Lexical interpretability check for selected semantic-gap cases. Terms are generated from deterministic samples of research and policy texts assigned to each SDG. The table is descriptive only and is not used to relabel records or replace the embedding-based semantic-gap estimates.}
 \label{tab:semantic-gap-text-interpretability}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/main/tables/tab_semantic_gap_text_interpretability.tex}
+\input{../4_outputs/appendix/b3_semantic_gap_interpretability/tables/tab_b3_semantic_gap_interpret.tex}
 }
 \end{table}
 
@@ -628,7 +628,7 @@ The corpus-calibrated variant is the stronger stress test. Across the tested tem
 \small
 \caption{Softmax-weighted multi-label robustness summary. Spearman correlations compare hard-label and softmax-based SDG rankings. Mean absolute differences (MAD) are absolute deviations from the hard-label baseline. The final column shows overlap in the top three semantic-gap SDGs relative to the hard-label ranking.}
 \label{tab:softmax-multilabel-summary}
-\input{../4_outputs/main/tables/tab_softmax_multilabel_summary.tex}
+\input{../4_outputs/appendix/b4_softmax_multilabel_sdg/tables/tab_b4_softmax_summary.tex}
 \end{table}
 
 The substantive conclusion is therefore not that softmax ``fixes'' the centroid method. Rather, low-temperature raw softmax suggests that the main hard-label findings are not merely artefacts of winner-takes-all assignment, while the corpus-calibrated variant shows that exact semantic-gap rankings remain sensitive to corpus-level calibration choices. Broad patterns should therefore be emphasised over exact SDG rank ordering.
@@ -670,11 +670,11 @@ Subtracting that one global direction reduces the mean gap from \MeanRawSemantic
 \caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the dissertation. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
 \label{tab:register-adjusted-semantic-gap}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/register_adjustment/tables/tab_register_adjusted_semgap.tex}
+\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_adjusted_semgap.tex}
 }
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf}{
+\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig_register_adjusted_semantic_gap_comparison.pdf}
@@ -694,10 +694,10 @@ At the same time, the multi-direction subtraction curve shows that the mean adju
 \small
 \caption{Additional checks on the one-direction global register subtraction. These diagnostics test whether the first subtraction plausibly attenuates a broad corpus-level register axis without claiming that the residual is a fully purified substantive gap.}
 \label{tab:register-confidence-checks}
-\input{../4_outputs/appendix/register_adjustment/tables/tab_register_confidence_checks.tex}
+\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_confidence_checks.tex}
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/register_adjustment/figures/fig_register_confidence_curve.pdf}{
+\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_confidence_curve.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.82\textwidth]{fig_register_confidence_curve.pdf}
@@ -717,10 +717,10 @@ I also fit within-SDG classifiers, but these are interpreted differently. Becaus
 \small
 \caption{SDG-aware register robustness hierarchy. The SDG-balanced classifier is treated as a stronger global sensitivity check. The within-SDG design is treated as an over-subtraction stress test because it learns and removes within-goal research--policy contrasts directly.}
 \label{tab:sdg-register-robustness}
-\input{../4_outputs/appendix/register_adjustment/tables/tab_sdg_register_robustness.tex}
+\input{../4_outputs/appendix/c_register_adjustment/tables/tab_sdg_register_robustness.tex}
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf}{
+\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.90\textwidth]{fig_sdg_register_robustness_comparison.pdf}
@@ -739,7 +739,7 @@ The projection examples are included for manual inspection rather than automatic
 \centering
 \caption{Alignment between the SDG-balanced global register direction and the canonical SDG centroids. The final column reports the matching within-SDG register-versus-centroid cosine when an SDG-specific register vector is available.}
 \label{tab:register-sdg-alignment}
-\input{../4_outputs/appendix/register_adjustment/tables/tab_register_sdg_alignment.tex}
+\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_sdg_alignment.tex}
 \end{table}
 
 \begin{table}[ht]
@@ -748,11 +748,11 @@ The projection examples are included for manual inspection rather than automatic
 \caption{Manual-inspection examples from the learned global register direction. The policy-like rows have the highest positive projection onto the global register vector; the research-like rows have the lowest projection.}
 \label{tab:register-projection-examples}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/register_adjustment/tables/tab_register_projection_examples.tex}
+\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_projection_examples.tex}
 }
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/register_adjustment/figures/fig_register_projection_distribution.pdf}{
+\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_projection_distribution.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.92\textwidth]{fig_register_projection_distribution.pdf}
@@ -761,7 +761,7 @@ The projection examples are included for manual inspection rather than automatic
 \end{figure}
 }{}
 
-\IfFileExists{../4_outputs/appendix/register_adjustment/figures/fig_register_sdg_alignment.pdf}{
+\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_sdg_alignment.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.86\textwidth]{fig_register_sdg_alignment.pdf}
@@ -780,10 +780,10 @@ In the current run, the cosine between the regression-derived global register ve
 \centering
 \caption{Regression-derived versus classifier-derived register alignment with the canonical SDG centroids. The second column reports the SDG-balanced classifier direction, the third reports the regression-derived global register direction, and the fourth reports SDG-specific regression register directions.}
 \label{tab:regression-register-alignment}
-\input{../4_outputs/appendix/register_adjustment/tables/tab_regression_register_alignment.tex}
+\input{../4_outputs/appendix/c_register_adjustment/tables/tab_regression_register_alignment.tex}
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
+\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}

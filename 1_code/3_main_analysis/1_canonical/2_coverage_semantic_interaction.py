@@ -44,13 +44,13 @@ Statistics:
   Correlation results are reported with and without SDG 4 to test sensitivity.
 
 Inputs:
-  4_outputs/sdg_attention_distribution_document_weighted.json       per-SDG research + policy profiles (doc-weighted)
-  4_outputs/sdg_conceptual_alignment_cosine_distances.json       per-SDG semantic gap (segment_cap=50)
+  4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
+  4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
 
-  4_outputs/statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json    H25 correlation results + H26 asymmetry
-  4_outputs/visualization_source_sdg_attention_vs_semantic_distance.csv         per-SDG data table for plotting (SDG, research%, policy%,
+  4_outputs/main/data/4_4_interaction_h1_h2_bias.json                H25 correlation results + H26 asymmetry
+  4_outputs/main/data/4_4_interaction_scatter_data.csv               per-SDG data table for plotting (SDG, research%, policy%,
                                   coverage_gap, semantic_gap, semantic_similarity)
-  4_outputs/tables/*.tex            generated LaTeX macros/tables
+  4_outputs/main/tables/*.tex            generated LaTeX macros/tables
 
 Run from project root (after the canonical coverage and semantic outputs exist):
     python 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py
@@ -160,12 +160,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    require_output_files(layout.data_dir, ["sdg_attention_distribution_document_weighted.json", "sdg_conceptual_alignment_cosine_distances.json"])
+    require_output_files(layout.data_dir, ["4_2_coverage_document_weighted.json", "4_3_semantic_gap_distances.json"])
 
-    coverage_gap_path = layout.data_dir / "sdg_attention_distribution_document_weighted.json"
-    semantic_gap_path = layout.data_dir / "sdg_conceptual_alignment_cosine_distances.json"
-    out_corr = layout.data_dir / "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json"
-    out_scatter = layout.data_dir / "visualization_source_sdg_attention_vs_semantic_distance.csv"
+    coverage_gap_path = layout.data_dir / "4_2_coverage_document_weighted.json"
+    semantic_gap_path = layout.data_dir / "4_3_semantic_gap_distances.json"
+    out_corr = layout.data_dir / "4_4_interaction_h1_h2_bias.json"
+    out_scatter = layout.data_dir / "4_4_interaction_scatter_data.csv"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 

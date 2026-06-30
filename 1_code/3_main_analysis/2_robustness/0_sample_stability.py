@@ -9,12 +9,12 @@ recompute the research-side coverage profile, rebuild sampled research SDG centr
 and compare those sampled results against the fixed canonical policy-side quantities.
 
 Outputs:
-  4_outputs/sample_stability_summary.json
-  4_outputs/sample_stability_draws.jsonl
-  4_outputs/sample_stability_per_sdg.json
-  4_outputs/sample_stability_table.csv
-  4_outputs/tables/num_sample_stability.tex
-  4_outputs/tables/tab_sample_stability.tex
+  4_outputs/main/data/4_5_sample_stability_summary.json
+  4_outputs/main/data/4_5_sample_stability_draws.jsonl
+  4_outputs/main/data/4_5_sample_stability_per_sdg.json
+  4_outputs/main/data/4_5_sample_stability_table.csv
+  4_outputs/main/tables/num_sample_stability.tex
+  4_outputs/main/tables/tab_sample_stability.tex
 """
 
 from __future__ import annotations
@@ -58,9 +58,9 @@ POLICY_SCORES = SCORED_DIR / "policy_scores.npy"
 POLICY_IDS = SCORED_DIR / "metadata" / "policy_scores_ids.json"
 POLICY_EMB = EMBEDDINGS_DIR / "policy.npy"
 
-CANONICAL_COVERAGE_JSON = "sdg_attention_distribution_document_weighted.json"
-CANONICAL_SEMANTIC_JSON = "sdg_conceptual_alignment_cosine_distances.json"
-CANONICAL_H25_JSON = "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json"
+CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
+CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
+CANONICAL_H25_JSON = "4_4_interaction_h1_h2_bias.json"
 
 N_SDG = 17
 DRAW_SEEDS = tuple(range(42, 142))
@@ -686,10 +686,10 @@ def write_outputs(
     per_sdg_payload: dict[str, Any],
     total_rows: int,
 ) -> None:
-    summary_path = output_root / "sample_stability_summary.json"
-    draws_path = output_root / "sample_stability_draws.jsonl"
-    per_sdg_path = output_root / "sample_stability_per_sdg.json"
-    table_csv_path = output_root / "sample_stability_table.csv"
+    summary_path = output_root / "4_5_sample_stability_summary.json"
+    draws_path = output_root / "4_5_sample_stability_draws.jsonl"
+    per_sdg_path = output_root / "4_5_sample_stability_per_sdg.json"
+    table_csv_path = output_root / "4_5_sample_stability_table.csv"
 
     summary_payload = {
         "method": "sample_stability_random_subsampling",

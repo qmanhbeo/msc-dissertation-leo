@@ -26,7 +26,7 @@ CODE_ROOT = ROOT / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 
-from shared_utils import ensure_canonical_outputs
+
 
 
 DEFAULT_OUTPUT_ROOT = Path("outputs")
@@ -35,7 +35,7 @@ RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/man
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"
-TABLE_TEX = "tab_sdg4_lexical_audit.tex"
+TABLE_TEX = "tab_a3_sdg4_lexical_audit.tex"
 
 ML_TERMS = [
     "machine learning",
@@ -274,9 +274,11 @@ def write_table(path: Path, rows: list[dict]) -> None:
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    layout = ensure_canonical_outputs(output_dir)
-    out_dir = output_dir / "appendix" / "sdg4_audit"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = output_dir / "appendix" / "a3_sdg4_audit"
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    for d in (data_dir, tables_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     score_manifest = load_json(RESEARCH_SCORE_MANIFEST)
     text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
@@ -326,7 +328,7 @@ def main() -> None:
         summary["subsets"][subset_key] = row
 
     write_csv(
-        out_dir / AUDIT_CSV,
+        data_dir / AUDIT_CSV,
         [
             "subset",
             "subset_label",
@@ -342,12 +344,12 @@ def main() -> None:
         ],
         rows,
     )
-    (out_dir / AUDIT_JSON).write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    write_table(layout.tables_dir / TABLE_TEX, rows)
+    (data_dir / AUDIT_JSON).write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    write_table(tables_dir / TABLE_TEX, rows)
 
-    log.info("Saved: %s", out_dir / AUDIT_CSV)
-    log.info("Saved: %s", out_dir / AUDIT_JSON)
-    log.info("Saved: %s", layout.tables_dir / TABLE_TEX)
+    log.info("Saved: %s", data_dir / AUDIT_CSV)
+    log.info("Saved: %s", data_dir / AUDIT_JSON)
+    log.info("Saved: %s", tables_dir / TABLE_TEX)
 
 
 if __name__ == "__main__":

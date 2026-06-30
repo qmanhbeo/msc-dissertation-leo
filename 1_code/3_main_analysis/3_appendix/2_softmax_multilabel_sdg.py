@@ -15,7 +15,6 @@ import csv
 import json
 import logging
 import os
-import shutil
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
@@ -38,7 +37,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs
+
 from research_embedding_shards import iter_research_embedding_shards
 from research_score_shards import (
     load_json as load_score_manifest_json,
@@ -67,19 +66,19 @@ DEFAULT_TEMPERATURES = [0.03, 0.05, 0.10, 0.20]
 VARIANTS = ("raw_softmax", "corpus_calibrated_softmax")
 EPS = 1e-8
 
-COVERAGE_CSV = "softmax_multilabel_coverage.csv"
-SEMANTIC_CSV = "softmax_multilabel_semantic_gaps.csv"
-SUMMARY_CSV = "softmax_multilabel_comparison_summary.csv"
-METADATA_JSON = "softmax_multilabel_metadata.json"
-NUM_TEX = "num_softmax_multilabel.tex"
-SUMMARY_TEX = "tab_softmax_multilabel_summary.tex"
+COVERAGE_CSV = "b4_softmax_multilabel_coverage.csv"
+SEMANTIC_CSV = "b4_softmax_multilabel_semantic_gaps.csv"
+SUMMARY_CSV = "b4_softmax_multilabel_comparison_summary.csv"
+METADATA_JSON = "b4_softmax_multilabel_metadata.json"
+NUM_TEX = "num_b4_softmax_multilabel.tex"
+SUMMARY_TEX = "tab_b4_softmax_summary.tex"
 
-COVERAGE_SCATTER_PDF = "fig_softmax_vs_hard_coverage_gap.pdf"
-COVERAGE_SCATTER_PNG = "fig_softmax_vs_hard_coverage_gap.png"
-SEMANTIC_SCATTER_PDF = "fig_softmax_vs_hard_semantic_gap.pdf"
-SEMANTIC_SCATTER_PNG = "fig_softmax_vs_hard_semantic_gap.png"
-TEMP_SENS_PDF = "fig_softmax_temperature_sensitivity.pdf"
-TEMP_SENS_PNG = "fig_softmax_temperature_sensitivity.png"
+COVERAGE_SCATTER_PDF = "fig_b4_softmax_vs_hard_coverage_gap.pdf"
+COVERAGE_SCATTER_PNG = "fig_b4_softmax_vs_hard_coverage_gap.png"
+SEMANTIC_SCATTER_PDF = "fig_b4_softmax_vs_hard_semantic_gap.pdf"
+SEMANTIC_SCATTER_PNG = "fig_b4_softmax_vs_hard_semantic_gap.png"
+TEMP_SENS_PDF = "fig_b4_softmax_temperature_sensitivity.pdf"
+TEMP_SENS_PNG = "fig_b4_softmax_temperature_sensitivity.png"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -187,8 +186,8 @@ def document_weighted_policy_soft_profile(weights: np.ndarray, policy_ids: list[
 
 
 def load_hard_baselines(output_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    coverage = json.loads((output_dir / "sdg_attention_distribution_document_weighted.json").read_text())
-    semantic = json.loads((output_dir / "sdg_conceptual_alignment_cosine_distances.json").read_text())
+    coverage = json.loads((output_dir / "4_2_coverage_document_weighted.json").read_text())
+    semantic = json.loads((output_dir / "4_3_semantic_gap_distances.json").read_text())
     def dict_profile_to_array(payload: dict[str, float]) -> np.ndarray:
         return np.asarray([float(payload[f"SDG{i}"]) for i in range(1, N_SDG + 1)], dtype=np.float64)
 
@@ -383,11 +382,12 @@ def plot_temperature_sensitivity(
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    tables_dir = layout.tables_dir
-    figures_dir = layout.figures_dir
-    out_dir = Path(args.output_dir) / "appendix" / "softmax_multilabel_sdg"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = Path(args.output_dir) / "appendix" / "b4_softmax_multilabel_sdg"
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    figures_dir = out_root / "figures"
+    for d in (data_dir, tables_dir, figures_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     temps = [float(t) for t in args.temperatures]
     if not temps:
@@ -575,10 +575,10 @@ def main() -> None:
         if not np.isfinite(arr).all():
             raise RuntimeError(f"Non-finite semantic gap values for {key}")
 
-    coverage_path = out_dir / COVERAGE_CSV
-    semantic_path = out_dir / SEMANTIC_CSV
-    summary_path = out_dir / SUMMARY_CSV
-    metadata_path = out_dir / METADATA_JSON
+    coverage_path = data_dir / COVERAGE_CSV
+    semantic_path = data_dir / SEMANTIC_CSV
+    summary_path = data_dir / SUMMARY_CSV
+    metadata_path = data_dir / METADATA_JSON
     num_tex_path = tables_dir / NUM_TEX
     summary_tex_path = tables_dir / SUMMARY_TEX
 
@@ -656,8 +656,6 @@ def main() -> None:
         hard_coverage_gap,
         soft_coverage_gap_results,
     )
-    shutil.copy(figures_dir / COVERAGE_SCATTER_PDF, out_dir / COVERAGE_SCATTER_PDF)
-    shutil.copy(figures_dir / COVERAGE_SCATTER_PNG, out_dir / COVERAGE_SCATTER_PNG)
     plot_scatter_compare(
         figures_dir / SEMANTIC_SCATTER_PDF,
         figures_dir / SEMANTIC_SCATTER_PNG,
@@ -667,15 +665,11 @@ def main() -> None:
         hard_semantic_gap,
         soft_semantic_gap_results,
     )
-    shutil.copy(figures_dir / SEMANTIC_SCATTER_PDF, out_dir / SEMANTIC_SCATTER_PDF)
-    shutil.copy(figures_dir / SEMANTIC_SCATTER_PNG, out_dir / SEMANTIC_SCATTER_PNG)
     plot_temperature_sensitivity(
         figures_dir / TEMP_SENS_PDF,
         figures_dir / TEMP_SENS_PNG,
         summary_rows,
     )
-    shutil.copy(figures_dir / TEMP_SENS_PDF, out_dir / TEMP_SENS_PDF)
-    shutil.copy(figures_dir / TEMP_SENS_PNG, out_dir / TEMP_SENS_PNG)
 
     log.info("Saved: %s", coverage_path)
     log.info("Saved: %s", semantic_path)

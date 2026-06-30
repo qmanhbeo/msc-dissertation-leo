@@ -43,9 +43,9 @@ Inputs:
   2_data/3_scored/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
-  4_outputs/sdg_attention_distribution_document_weighted.json         per-SDG coverage profiles + gap (canonical analysis)
-  4_outputs/diagnostic_sdg_attention_distribution_unweighted_segments.json     segment-level (unweighted) profiles + gap (diagnostic)
-  4_outputs/tables/*.tex              generated LaTeX macros/tables
+  4_outputs/main/data/4_2_coverage_document_weighted.json              per-SDG coverage profiles + gap (canonical analysis)
+  4_outputs/main/data/4_2_coverage_diagnostic_unweighted.json          segment-level (unweighted) profiles + gap (diagnostic)
+  4_outputs/main/tables/*.tex              generated LaTeX macros/tables
 
 Run from project root (after score materialization for the target run context):
     python 1_code/3_main_analysis/1_canonical/0_coverage_gap.py
@@ -207,8 +207,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_cov_gap = layout.data_dir / "sdg_attention_distribution_document_weighted.json"
-    out_cov_gap_raw = layout.data_dir / "diagnostic_sdg_attention_distribution_unweighted_segments.json"
+    out_cov_gap = layout.data_dir / "4_2_coverage_document_weighted.json"
+    out_cov_gap_raw = layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
@@ -334,7 +334,7 @@ def main() -> None:
         "note": (
             "Each policy segment weighted equally — BIASED by document length. "
             "SDGi VNR/VLR (31,941 segments) and SDSN (5,591 segments) dominate. "
-            "Use sdg_attention_distribution_document_weighted.json (document-weighted) for primary analysis."
+            "Use 4_2_coverage_document_weighted.json (document-weighted) for primary analysis."
         ),
         "n_research_papers": int(research["n_rows"]),
         "n_policy_segments": int(policy_scores.shape[0]),

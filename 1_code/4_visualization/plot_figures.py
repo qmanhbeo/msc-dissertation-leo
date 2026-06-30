@@ -8,12 +8,12 @@ Produces three publication-quality figures for the dissertation:
     Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
 
 Inputs:
-    4_outputs/visualization_source_sdg_attention_vs_semantic_distance.csv                   — per-SDG metrics table from coverage_semantic_interaction.py
+    4_outputs/main/data/4_4_interaction_scatter_data.csv      — per-SDG metrics table from coverage_semantic_interaction.py
 
 Outputs:
-    4_outputs/figures/fig1_coverage_profiles.pdf
-    4_outputs/figures/fig2_semantic_gap.pdf
-    4_outputs/figures/fig3_coverage_semantic_scatter.pdf
+    4_outputs/main/figures/fig1_coverage_profiles.pdf
+    4_outputs/main/figures/fig2_semantic_gap.pdf
+    4_outputs/main/figures/fig3_coverage_semantic_scatter.pdf
 
 Run:
     python 1_code/4_visualization/plot_figures.py
@@ -91,7 +91,7 @@ SDG_SHORT = {
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    require_output_files(layout.data_dir, ["visualization_source_sdg_attention_vs_semantic_distance.csv"])
+    require_output_files(layout.data_dir, ["4_4_interaction_scatter_data.csv"])
     figures_dir = layout.figures_dir
 
     print(f"Canonical output dir: {layout.data_dir}")
@@ -99,7 +99,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     # Load data
     # -----------------------------------------------------------------------
-    df = pd.read_csv(layout.data_dir / "visualization_source_sdg_attention_vs_semantic_distance.csv")
+    df = pd.read_csv(layout.data_dir / "4_4_interaction_scatter_data.csv")
     df = df.sort_values("sdg").reset_index(drop=True)
     df["semantic_gap"] = pd.to_numeric(df["semantic_gap"], errors="coerce")
     df["semantic_similarity"] = pd.to_numeric(df["semantic_similarity"], errors="coerce")

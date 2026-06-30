@@ -373,9 +373,9 @@ def run_sample_stability(output_dir: Path) -> None:
     require_output_files(
         output_dir / "main" / "data",
         [
-            "sdg_attention_distribution_document_weighted.json",
-            "sdg_conceptual_alignment_cosine_distances.json",
-            "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json",
+            "4_2_coverage_document_weighted.json",
+            "4_3_semantic_gap_distances.json",
+            "4_4_interaction_h1_h2_bias.json",
         ],
     )
     run_step(
@@ -419,14 +419,6 @@ def run_sdg4_lexical_audit(output_dir: Path) -> None:
     )
 
 
-def run_sdg17_reference_sensitivity(output_dir: Path) -> None:
-    require_output_files(output_dir / "main" / "data", ["sdg_conceptual_alignment_cosine_distances.json"])
-    run_step(
-        "appendix A SDG 17 sparse-reference sensitivity",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/6_sdg17_reference_sensitivity.py", "--output-dir", str(output_dir)],
-    )
-
-
 def run_sdg_source_comparison(output_dir: Path) -> None:
     run_step(
         "appendix A per-SDG source comparison",
@@ -435,7 +427,7 @@ def run_sdg_source_comparison(output_dir: Path) -> None:
 
 
 def run_semantic_gap_interpretability(output_dir: Path) -> None:
-    require_output_files(output_dir / "main" / "data", ["sdg_conceptual_alignment_cosine_distances.json"])
+    require_output_files(output_dir / "main" / "data", ["4_3_semantic_gap_distances.json"])
     run_step(
         "appendix A semantic-gap text interpretability",
         [sys.executable, "1_code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],

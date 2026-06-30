@@ -42,7 +42,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs
+
 from semantic_gap_shared import (
     POLICY_EMB,
     POLICY_IDS,
@@ -58,7 +58,7 @@ RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/ma
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 POLICY_TEXT_IDS = Path("2_data/2_embedded/metadata/policy_ids.json")
-SEMANTIC_GAP_JSON = Path("4_outputs/main/data/sdg_conceptual_alignment_cosine_distances.json")
+SEMANTIC_GAP_JSON = Path("4_outputs/main/data/4_3_semantic_gap_distances.json")
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -67,11 +67,11 @@ EXAMPLES_PER_SIDE = 3
 MIN_WORDS = 30
 RANDOM_SEED = 42
 
-OUTPUT_SUBDIR = "semantic_gap_interpretability"
+OUTPUT_SUBDIR = "b3_semantic_gap_interpretability"
 TERMS_CSV = "semantic_gap_distinctive_terms.csv"
 EXAMPLES_CSV = "semantic_gap_representative_examples.csv"
 SUMMARY_JSON = "semantic_gap_interpretability_summary.json"
-TABLE_TEX = "tab_semantic_gap_text_interpretability.tex"
+TABLE_TEX = "tab_b3_semantic_gap_interpret.tex"
 
 SDG_LABELS = {
     9: "SDG 9",
@@ -441,9 +441,11 @@ def semantic_gap_map() -> dict[int, float]:
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    layout = ensure_canonical_outputs(output_dir)
-    out_dir = output_dir / "appendix" / OUTPUT_SUBDIR
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = output_dir / "appendix" / OUTPUT_SUBDIR
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    for d in (data_dir, tables_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     gaps = semantic_gap_map()
     research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
@@ -480,7 +482,7 @@ def main() -> None:
         example_rows.extend(policy_examples[sdg])
 
     write_csv(
-        out_dir / TERMS_CSV,
+        data_dir / TERMS_CSV,
         [
             "sdg",
             "sdg_label",
@@ -496,7 +498,7 @@ def main() -> None:
         term_rows,
     )
     write_csv(
-        out_dir / EXAMPLES_CSV,
+        data_dir / EXAMPLES_CSV,
         ["side", "sdg", "item_id", "source", "centroid_similarity", "preview"],
         example_rows,
     )
@@ -514,13 +516,13 @@ def main() -> None:
         ),
         "rows": term_rows,
     }
-    (out_dir / SUMMARY_JSON).write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    write_table(layout.tables_dir / TABLE_TEX, table_rows)
+    (data_dir / SUMMARY_JSON).write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    write_table(tables_dir / TABLE_TEX, table_rows)
 
-    log.info("Saved: %s", out_dir / TERMS_CSV)
-    log.info("Saved: %s", out_dir / EXAMPLES_CSV)
-    log.info("Saved: %s", out_dir / SUMMARY_JSON)
-    log.info("Saved: %s", layout.tables_dir / TABLE_TEX)
+    log.info("Saved: %s", data_dir / TERMS_CSV)
+    log.info("Saved: %s", data_dir / EXAMPLES_CSV)
+    log.info("Saved: %s", data_dir / SUMMARY_JSON)
+    log.info("Saved: %s", tables_dir / TABLE_TEX)
 
 
 if __name__ == "__main__":

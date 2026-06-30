@@ -16,13 +16,13 @@ Expensive research and policy re-scoring results are cached in
 and reused on re-runs unless input files change or --overwrite is passed.
 
 Outputs:
-  4_outputs/appendix/sdg_source_comparison/
+  4_outputs/appendix/a1_sdg_source_comparison/data/
     comparison_summary.json          — all metrics
     comparison_table.csv             — raw CSV
-  4_outputs/main/tables/
-    num_sdg_source_comparison.tex    — LaTeX macros
-    tab_sdg_source_comparison_f1cos.tex — F1 + cosine table
-    tab_sdg_source_comparison_covgap.tex — coverage + gap table
+  4_outputs/appendix/a1_sdg_source_comparison/tables/
+    num_a1_source_comparison.tex    — LaTeX macros
+    tab_a1_source_comparison_f1cos.tex — F1 + cosine table
+    tab_a1_source_comparison_covgap.tex — coverage + gap table
 
 Run from project root:
     python 1_code/3_main_analysis/3_appendix/8_sdg_source_comparison.py
@@ -54,7 +54,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs
+
 from semantic_gap_shared import cap_policy_indices_per_doc
 
 DEFAULT_OUTPUT_ROOT = Path("outputs")
@@ -73,12 +73,12 @@ POLICY_IDS = Path("2_data/3_scored/metadata/policy_scores_ids.json")
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 
-OUTPUT_SUBDIR = "sdg_source_comparison"
+OUTPUT_SUBDIR = "a1_sdg_source_comparison"
 SUMMARY_JSON = "comparison_summary.json"
 TABLE_CSV = "comparison_table.csv"
-NUM_TEX = "num_sdg_source_comparison.tex"
-TABLE_F1COS_TEX = "tab_sdg_source_comparison_f1cos.tex"
-TABLE_COVGAP_TEX = "tab_sdg_source_comparison_covgap.tex"
+NUM_TEX = "num_a1_source_comparison.tex"
+TABLE_F1COS_TEX = "tab_a1_source_comparison_f1cos.tex"
+TABLE_COVGAP_TEX = "tab_a1_source_comparison_covgap.tex"
 
 CACHE_DIR = Path("2_data/3_scored/source_comparison_cache")
 CACHE_RESEARCH_COUNTS = "{}_research_counts.npy"
@@ -525,9 +525,11 @@ def write_table_covgap(path: Path, results: list[dict]) -> None:
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    layout = ensure_canonical_outputs(output_dir)
-    out_dir = output_dir / "appendix" / OUTPUT_SUBDIR
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = output_dir / "appendix" / OUTPUT_SUBDIR
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    for d in (data_dir, tables_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     log.info("=" * 60)
     log.info("PER-SDG SOURCE COMPARISON (with coverage and semantic gap)")
@@ -708,7 +710,7 @@ def main() -> None:
         "sdgi_n", "sdgi_f1", "sdgi_cosine", "sdgi_coverage", "sdgi_gap",
         "knowledgehub_n", "knowledgehub_f1", "knowledgehub_cosine", "knowledgehub_coverage", "knowledgehub_gap",
     ]
-    with (out_dir / TABLE_CSV).open("w", newline="") as f:
+    with (data_dir / TABLE_CSV).open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(results)
@@ -720,19 +722,19 @@ def main() -> None:
         "sources": [s[0] for s in sources],
         "results": results,
     }
-    (out_dir / SUMMARY_JSON).write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    (data_dir / SUMMARY_JSON).write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # ---- Save LaTeX outputs ----
-    write_num_tex(layout.tables_dir / NUM_TEX, results)
-    write_table_f1cos(layout.tables_dir / TABLE_F1COS_TEX, results)
-    write_table_covgap(layout.tables_dir / TABLE_COVGAP_TEX, results)
+    write_num_tex(tables_dir / NUM_TEX, results)
+    write_table_f1cos(tables_dir / TABLE_F1COS_TEX, results)
+    write_table_covgap(tables_dir / TABLE_COVGAP_TEX, results)
 
     log.info("\nSaved:")
-    log.info("  %s", out_dir / SUMMARY_JSON)
-    log.info("  %s", out_dir / TABLE_CSV)
-    log.info("  %s", layout.tables_dir / NUM_TEX)
-    log.info("  %s", layout.tables_dir / TABLE_F1COS_TEX)
-    log.info("  %s", layout.tables_dir / TABLE_COVGAP_TEX)
+    log.info("  %s", data_dir / SUMMARY_JSON)
+    log.info("  %s", data_dir / TABLE_CSV)
+    log.info("  %s", tables_dir / NUM_TEX)
+    log.info("  %s", tables_dir / TABLE_F1COS_TEX)
+    log.info("  %s", tables_dir / TABLE_COVGAP_TEX)
 
     print(f"\n{'='*60}")
     print("Per-SDG Source Comparison Complete")
@@ -740,12 +742,12 @@ def main() -> None:
     for row in results[:5]:
         print(f"  SDG {row['sdg']:2d}  | cov_c={row['combined_coverage']:>6d}  gap_c={fmt_pct(row['combined_gap']):>6s}")
     print("  ...")
-    print(f"\nSaved to: {out_dir}")
+    print(f"\nSaved to: {out_root}")
     print(f"  {SUMMARY_JSON}")
     print(f"  {TABLE_CSV}")
-    print(f"  {layout.tables_dir / NUM_TEX}")
-    print(f"  {layout.tables_dir / TABLE_F1COS_TEX}")
-    print(f"  {layout.tables_dir / TABLE_COVGAP_TEX}")
+    print(f"  {tables_dir / NUM_TEX}")
+    print(f"  {tables_dir / TABLE_F1COS_TEX}")
+    print(f"  {tables_dir / TABLE_COVGAP_TEX}")
     print(f"{'='*60}\n")
 
 

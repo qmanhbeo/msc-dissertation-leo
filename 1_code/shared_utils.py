@@ -16,47 +16,43 @@ CanonicalOutputs = DissertationOutputs
 
 
 MANUSCRIPT_ROOT_FILES = [
-    "sdg_attention_distribution_document_weighted.json",
-    "diagnostic_sdg_attention_distribution_unweighted_segments.json",
-    "sdg_conceptual_alignment_cosine_distances.json",
-    "robustness_check_semantic_distances_by_segment_cap.json",
-    "statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json",
-    "visualization_source_sdg_attention_vs_semantic_distance.csv",
-    "sample_stability_summary.json",
-    "sample_stability_draws.jsonl",
-    "sample_stability_per_sdg.json",
-    "sample_stability_table.csv",
-    "validation_results.json",
-    "confusion_matrix.csv",
-    "centroid_similarity_matrix.csv",
+    "4_1_validation_results.json",
+    "4_1_confusion_matrix.csv",
+    "4_1_centroid_similarity_matrix.csv",
+    "4_2_coverage_document_weighted.json",
+    "4_2_coverage_diagnostic_unweighted.json",
+    "4_3_semantic_gap_distances.json",
+    "4_3_semantic_gap_robustness_caps.json",
+    "4_4_interaction_h1_h2_bias.json",
+    "4_4_interaction_scatter_data.csv",
+    "4_5_sample_stability_summary.json",
+    "4_5_sample_stability_draws.jsonl",
+    "4_5_sample_stability_per_sdg.json",
+    "4_5_sample_stability_table.csv",
     "dissertation.pdf",
 ]
 
 MANUSCRIPT_EXTRA_FILES = [
-    "appendix/source_family_sensitivity/policy_source_family_summary.csv",
-    "appendix/source_family_sensitivity/policy_source_family_coverage.csv",
-    "appendix/source_family_sensitivity/policy_source_family_semantic_gaps.csv",
-    "appendix/sdg4_audit/sdg4_lexical_audit.csv",
-    "appendix/sdg4_audit/sdg4_lexical_audit_summary.json",
-    "appendix/semantic_gap_interpretability/semantic_gap_distinctive_terms.csv",
-    "appendix/semantic_gap_interpretability/semantic_gap_interpretability_summary.json",
-    "appendix/semantic_gap_interpretability/semantic_gap_representative_examples.csv",
+    "appendix/a1_sdg_source_comparison/data/comparison_summary.json",
+    "appendix/a1_sdg_source_comparison/data/comparison_table.csv",
+    "appendix/a2_source_family_sensitivity/data/policy_source_family_summary.csv",
+    "appendix/a2_source_family_sensitivity/data/policy_source_family_coverage.csv",
+    "appendix/a2_source_family_sensitivity/data/policy_source_family_semantic_gaps.csv",
+    "appendix/a3_sdg4_audit/data/sdg4_lexical_audit.csv",
+    "appendix/a3_sdg4_audit/data/sdg4_lexical_audit_summary.json",
+    "appendix/b1_pca_semantic_landscape/data/b1_pca_landscape_metadata.json",
+    "appendix/b2_within_corpus_centroid/data/b2_within_corpus_metrics.csv",
+    "appendix/b2_within_corpus_centroid/data/b2_within_corpus_summary.json",
+    "appendix/b3_semantic_gap_interpretability/data/semantic_gap_distinctive_terms.csv",
+    "appendix/b3_semantic_gap_interpretability/data/semantic_gap_interpretability_summary.json",
+    "appendix/b3_semantic_gap_interpretability/data/semantic_gap_representative_examples.csv",
+    "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_coverage.csv",
+    "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_semantic_gaps.csv",
+    "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_comparison_summary.csv",
+    "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_metadata.json",
 ]
 
 MANUSCRIPT_TABLE_FILES = [
-    "pca_semantic_landscape_metadata.json",
-    "num_pca_semantic_landscape.tex",
-    "within_corpus_centroid_structure_metrics.csv",
-    "within_corpus_centroid_structure_summary.json",
-    "num_within_corpus_centroid_structure.tex",
-    "softmax_multilabel_coverage.csv",
-    "softmax_multilabel_semantic_gaps.csv",
-    "softmax_multilabel_comparison_summary.csv",
-    "softmax_multilabel_metadata.json",
-    "num_softmax_multilabel.tex",
-    "tab_softmax_multilabel_summary.tex",
-    "tab_policy_source_family_sensitivity.tex",
-    "tab_sdg4_lexical_audit.tex",
     "num_validation.tex",
     "tab_validation.tex",
     "num_coverage.tex",
@@ -70,18 +66,57 @@ MANUSCRIPT_TABLE_FILES = [
 ]
 
 MANUSCRIPT_FIGURE_FILES = [
-    "fig_pca_semantic_landscape.pdf",
-    "fig_pca_semantic_landscape.png",
-    "fig_within_corpus_research_sdg_pca.pdf",
-    "fig_within_corpus_research_sdg_pca.png",
-    "fig_within_corpus_policy_sdg_pca.pdf",
-    "fig_within_corpus_policy_sdg_pca.png",
     "fig1_coverage_profiles.pdf",
     "fig1_coverage_profiles.png",
     "fig2_semantic_gap.pdf",
     "fig2_semantic_gap.png",
     "fig3_coverage_semantic_scatter.pdf",
     "fig3_coverage_semantic_scatter.png",
+]
+
+MANUSCRIPT_APPENDIX_TABLE_FILES = [
+    "appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex",
+    "appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_f1cos.tex",
+    "appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_covgap.tex",
+    "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family.tex",
+    "appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex",
+    "appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex",
+    "appendix/b2_within_corpus_centroid/tables/num_b2_within_corpus_centroid.tex",
+    "appendix/b3_semantic_gap_interpretability/tables/tab_b3_semantic_gap_interpret.tex",
+    "appendix/b4_softmax_multilabel_sdg/tables/num_b4_softmax_multilabel.tex",
+    "appendix/b4_softmax_multilabel_sdg/tables/tab_b4_softmax_summary.tex",
+    "appendix/c_register_adjustment/tables/num_register_adjustment.tex",
+    "appendix/c_register_adjustment/tables/num_register_confidence_checks.tex",
+    "appendix/c_register_adjustment/tables/num_register_interpretability.tex",
+    "appendix/c_register_adjustment/tables/num_regression_register_alignment.tex",
+    "appendix/c_register_adjustment/tables/num_sdg_register_robustness.tex",
+    "appendix/c_register_adjustment/tables/tab_register_adjusted_semgap.tex",
+    "appendix/c_register_adjustment/tables/tab_register_confidence_checks.tex",
+    "appendix/c_register_adjustment/tables/tab_register_projection_examples.tex",
+    "appendix/c_register_adjustment/tables/tab_register_sdg_alignment.tex",
+    "appendix/c_register_adjustment/tables/tab_regression_register_alignment.tex",
+    "appendix/c_register_adjustment/tables/tab_sdg_register_robustness.tex",
+]
+
+MANUSCRIPT_APPENDIX_FIGURE_FILES = [
+    "appendix/b1_pca_semantic_landscape/figures/fig_b1_pca_semantic_landscape.pdf",
+    "appendix/b1_pca_semantic_landscape/figures/fig_b1_pca_semantic_landscape.png",
+    "appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.pdf",
+    "appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.png",
+    "appendix/b2_within_corpus_centroid/figures/fig_b2_policy_sdg_pca.pdf",
+    "appendix/b2_within_corpus_centroid/figures/fig_b2_policy_sdg_pca.png",
+    "appendix/c_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf",
+    "appendix/c_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.png",
+    "appendix/c_register_adjustment/figures/fig_register_confidence_curve.pdf",
+    "appendix/c_register_adjustment/figures/fig_register_confidence_curve.png",
+    "appendix/c_register_adjustment/figures/fig_register_projection_distribution.pdf",
+    "appendix/c_register_adjustment/figures/fig_register_projection_distribution.png",
+    "appendix/c_register_adjustment/figures/fig_register_sdg_alignment.pdf",
+    "appendix/c_register_adjustment/figures/fig_register_sdg_alignment.png",
+    "appendix/c_register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf",
+    "appendix/c_register_adjustment/figures/fig_regression_vs_classifier_alignment.png",
+    "appendix/c_register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf",
+    "appendix/c_register_adjustment/figures/fig_sdg_register_robustness_comparison.png",
 ]
 
 
@@ -120,6 +155,18 @@ def require_pdf_inputs(output_dir: Path) -> Path:
         path = root / "main" / "figures" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
+    for name in MANUSCRIPT_EXTRA_FILES:
+        path = root / name
+        if not path.exists():
+            missing.append(str(path.relative_to(root)))
+    for name in MANUSCRIPT_APPENDIX_TABLE_FILES:
+        path = root / name
+        if not path.exists():
+            missing.append(str(path.relative_to(root)))
+    for name in MANUSCRIPT_APPENDIX_FIGURE_FILES:
+        path = root / name
+        if not path.exists():
+            missing.append(str(path.relative_to(root)))
     if missing:
         missing_str = ", ".join(missing)
         raise FileNotFoundError(
@@ -139,6 +186,8 @@ def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     files.extend(root / name for name in MANUSCRIPT_EXTRA_FILES)
     files.extend(root / "main" / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
     files.extend(root / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
+    files.extend(root / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
+    files.extend(root / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
     return files
 
 

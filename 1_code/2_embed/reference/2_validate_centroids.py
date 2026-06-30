@@ -22,10 +22,10 @@ Note on expected accuracy:
   signal even when pairwise overlaps are high.
 
 Outputs:
-  4_outputs/validation_results.json         structured metrics + instrument flag
-  4_outputs/confusion_matrix.csv            17×17 (rows = true SDG, cols = predicted SDG)
-  4_outputs/centroid_similarity_matrix.csv  17×17 pairwise cosine similarities between centroids
-  4_outputs/tables/*.tex                    generated LaTeX macros/tables
+  4_outputs/main/data/4_1_validation_results.json         structured metrics + instrument flag
+  4_outputs/main/data/4_1_confusion_matrix.csv            17x17 (rows = true SDG, cols = predicted SDG)
+  4_outputs/main/data/4_1_centroid_similarity_matrix.csv  17x17 pairwise cosine similarities between centroids
+  4_outputs/main/tables/*.tex                    generated LaTeX macros/tables
 
 Run from project root (after sdg_centroids.py):
     python 1_code/2_embed/reference/2_validate_centroids.py
@@ -123,9 +123,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_results = layout.data_dir / "validation_results.json"
-    out_confusion = layout.data_dir / "confusion_matrix.csv"
-    out_centroid_sim = layout.data_dir / "centroid_similarity_matrix.csv"
+    out_results = layout.data_dir / "4_1_validation_results.json"
+    out_confusion = layout.data_dir / "4_1_confusion_matrix.csv"
+    out_centroid_sim = layout.data_dir / "4_1_centroid_similarity_matrix.csv"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 

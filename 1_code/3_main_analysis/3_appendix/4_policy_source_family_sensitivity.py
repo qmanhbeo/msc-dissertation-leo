@@ -35,7 +35,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs
+
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
@@ -59,7 +59,7 @@ POLICY_PREPROCESSED_ROOT = Path("2_data/1_preprocessed/policy_all")
 SUMMARY_CSV = "policy_source_family_summary.csv"
 COVERAGE_CSV = "policy_source_family_coverage.csv"
 SEMANTIC_CSV = "policy_source_family_semantic_gaps.csv"
-TABLE_TEX = "tab_policy_source_family_sensitivity.tex"
+TABLE_TEX = "tab_a2_policy_source_family.tex"
 
 FAMILY_FILE_MAP = {
     "curated_ai_sdg": [
@@ -264,9 +264,11 @@ def write_table(path: Path, summary_rows: list[dict]) -> None:
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    layout = ensure_canonical_outputs(output_dir)
-    out_dir = output_dir / "appendix" / "source_family_sensitivity"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = output_dir / "appendix" / "a2_source_family_sensitivity"
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    for d in (data_dir, tables_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     source_family_map = build_source_family_map()
 
@@ -356,7 +358,7 @@ def main() -> None:
         )
 
     write_csv(
-        out_dir / SUMMARY_CSV,
+        data_dir / SUMMARY_CSV,
         [
             "family",
             "family_label",
@@ -371,7 +373,7 @@ def main() -> None:
         summary_rows,
     )
     write_csv(
-        out_dir / COVERAGE_CSV,
+        data_dir / COVERAGE_CSV,
         [
             "family",
             "family_label",
@@ -384,7 +386,7 @@ def main() -> None:
         coverage_rows,
     )
     write_csv(
-        out_dir / SEMANTIC_CSV,
+        data_dir / SEMANTIC_CSV,
         [
             "family",
             "sdg",
@@ -401,12 +403,12 @@ def main() -> None:
         ],
         semantic_rows,
     )
-    write_table(layout.tables_dir / TABLE_TEX, summary_rows)
+    write_table(tables_dir / TABLE_TEX, summary_rows)
 
-    log.info("Saved: %s", out_dir / SUMMARY_CSV)
-    log.info("Saved: %s", out_dir / COVERAGE_CSV)
-    log.info("Saved: %s", out_dir / SEMANTIC_CSV)
-    log.info("Saved: %s", layout.tables_dir / TABLE_TEX)
+    log.info("Saved: %s", data_dir / SUMMARY_CSV)
+    log.info("Saved: %s", data_dir / COVERAGE_CSV)
+    log.info("Saved: %s", data_dir / SEMANTIC_CSV)
+    log.info("Saved: %s", tables_dir / TABLE_TEX)
 
 
 if __name__ == "__main__":

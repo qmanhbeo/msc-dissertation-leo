@@ -53,9 +53,9 @@ Inputs:
   2_data/2_embedded/policy.npy                 float32 matrix with one row per policy segment
 
 Outputs:
-  4_outputs/sdg_conceptual_alignment_cosine_distances.json              primary: semantic gap per SDG (SEGMENT_CAP=50)
-  4_outputs/robustness_check_semantic_distances_by_segment_cap.json  sensitivity analysis at SEGMENT_CAP=20 and SEGMENT_CAP=100
-  4_outputs/tables/*.tex                   generated LaTeX macros/tables
+  4_outputs/main/data/4_3_semantic_gap_distances.json                  primary: semantic gap per SDG (SEGMENT_CAP=50)
+  4_outputs/main/data/4_3_semantic_gap_robustness_caps.json             sensitivity analysis at SEGMENT_CAP=20 and SEGMENT_CAP=100
+  4_outputs/main/tables/*.tex                   generated LaTeX macros/tables
 
 Run from project root:
     python 1_code/3_main_analysis/1_canonical/1_semantic_gap.py
@@ -124,8 +124,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    out_sem_gap = layout.data_dir / "sdg_conceptual_alignment_cosine_distances.json"
-    out_sem_sens = layout.data_dir / "robustness_check_semantic_distances_by_segment_cap.json"
+    out_sem_gap = layout.data_dir / "4_3_semantic_gap_distances.json"
+    out_sem_sens = layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
@@ -242,7 +242,7 @@ def main() -> None:
         "method": "centroid_to_centroid",
         "random_seed": RANDOM_SEED,
         "note": (
-            "Sensitivity analysis: same computation as sdg_conceptual_alignment_cosine_distances.json but with different "
+            "Sensitivity analysis: same computation as 4_3_semantic_gap_distances.json but with different "
             "per-document segment caps (20 and 100). Use to verify finding robustness. "
             "Rankings should be broadly stable if findings are robust."
         ),

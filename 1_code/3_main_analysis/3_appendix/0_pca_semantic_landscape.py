@@ -14,10 +14,10 @@ Fitting logic:
      full-corpus research/policy SDG centroids.
 
 Outputs:
-  4_outputs/figures/fig_pca_semantic_landscape.pdf
-  4_outputs/figures/fig_pca_semantic_landscape.png
-  4_outputs/tables/pca_semantic_landscape_metadata.json
-  4_outputs/tables/num_pca_semantic_landscape.tex
+  4_outputs/appendix/b1_pca_semantic_landscape/figures/fig_b1_pca_semantic_landscape.pdf
+  4_outputs/appendix/b1_pca_semantic_landscape/figures/fig_b1_pca_semantic_landscape.png
+  4_outputs/appendix/b1_pca_semantic_landscape/data/b1_pca_landscape_metadata.json
+  4_outputs/appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex
 
 Run from project root:
     python 1_code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py
@@ -52,7 +52,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs
+
 from alignment_core import verify_unit_norms
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 from semantic_gap_shared import (
@@ -74,8 +74,8 @@ from semantic_gap_shared import (
 DEFAULT_OUTPUT_ROOT = Path("outputs")
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 SDG_CENTROIDS = Path("2_data/3_scored/sdg_centroids.npy")
-PCA_METADATA_JSON = "pca_semantic_landscape_metadata.json"
-PCA_NUM_TEX = "num_pca_semantic_landscape.tex"
+PCA_METADATA_JSON = "b1_pca_landscape_metadata.json"
+PCA_NUM_TEX = "num_b1_pca_landscape.tex"
 
 RESEARCH_COLOR = "#2166AC"
 POLICY_COLOR = "#D6604D"
@@ -184,15 +184,16 @@ def write_num_tex(path: Path, payload: dict) -> None:
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
-    tables_dir = layout.tables_dir
-    figures_dir = layout.figures_dir
-    out_dir = Path(args.output_dir) / "appendix" / "pca_semantic_landscape"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_root = Path(args.output_dir) / "appendix" / "b1_pca_semantic_landscape"
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    figures_dir = out_root / "figures"
+    for d in (data_dir, tables_dir, figures_dir):
+        d.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(args.seed)
 
-    log.info("Canonical output dir: %s", layout.root)
+    log.info("Output dir: %s", out_root)
     log.info("Loading policy embeddings: %s", POLICY_EMB)
     policy_emb = np.load(POLICY_EMB).astype(np.float32)
     verify_unit_norms(policy_emb, "policy embeddings")
@@ -413,12 +414,10 @@ def main() -> None:
     fig.text(0.01, 0.01, note, ha="left", va="bottom", fontsize=7)
     fig.tight_layout(rect=(0, 0.04, 1, 1))
 
-    pdf_path = figures_dir / "fig_pca_semantic_landscape.pdf"
-    png_path = figures_dir / "fig_pca_semantic_landscape.png"
+    pdf_path = figures_dir / "fig_b1_pca_semantic_landscape.pdf"
+    png_path = figures_dir / "fig_b1_pca_semantic_landscape.png"
     fig.savefig(pdf_path, bbox_inches="tight")
     fig.savefig(png_path, bbox_inches="tight", dpi=150)
-    fig.savefig(out_dir / "fig_pca_semantic_landscape.pdf", bbox_inches="tight")
-    fig.savefig(out_dir / "fig_pca_semantic_landscape.png", bbox_inches="tight", dpi=150)
     plt.close(fig)
     log.info("Saved: %s", pdf_path)
     log.info("Saved: %s", png_path)
@@ -443,7 +442,7 @@ def main() -> None:
             "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original 384-dimensional embedding space."
         ),
     }
-    metadata_path = out_dir / PCA_METADATA_JSON
+    metadata_path = data_dir / PCA_METADATA_JSON
     write_metadata_json(metadata_path, metadata)
     write_num_tex(tables_dir / PCA_NUM_TEX, metadata)
     log.info("Saved: %s", metadata_path)
