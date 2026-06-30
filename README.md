@@ -9,7 +9,7 @@ This repository contains the dissertation code, manuscript source, committed out
 ```bash
 git clone https://github.com/qmanhbeo/dissertation-bham.git
 cd dissertation-bham
-conda env create -f conda-env-dissertation.yml
+conda env create -f environment.yml
 conda activate dissertation
 python main.py --warm-replay --overwrite
 ```
@@ -47,10 +47,9 @@ Not tracked in Git:
 
 ## Environment assumptions
 
-- Canonical setup path: `conda-env-dissertation.yml`
+- Canonical setup path: `environment.yml`
 - Python version in the canonical environment: `3.11.15`
-- `requirements.txt` is provided as a pip dependency reference or fallback, but the conda environment remains the preferred setup path
-- `requirements.lock.txt` and `conda-explicit-dissertation.txt` are retained as audit/lock artifacts
+- `requirements.txt` is a lightweight human-maintained reference; `environment.yml` is the canonical full rebuild path
 - Linux or WSL is the assumed/tested environment; native Windows is not the main target
 - PDF build requires LaTeX tools including `latexmk`, `pdflatex`, and `biber`
 - CPU is sufficient for `--warm-replay`
