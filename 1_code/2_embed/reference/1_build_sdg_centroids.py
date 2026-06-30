@@ -1,15 +1,19 @@
 """
-Build per-SDG centroid embeddings from the labelled corpora.
+Build per-SDG centroid embeddings from all available labelled corpora.
 
 SDG centroids are the core measurement instrument for this dissertation. Every downstream
 analysis (coverage gap, semantic gap, H25 correlation) scores texts against these centroids
 via cosine similarity. Centroid quality must be validated before use — run validate_centroids.py
 after this script.
 
-Sources:
-  SDGs 1–16 → OSDG Community Dataset (30,534 texts, agreement ≥ 0.5)
-  SDG 17    → SDG Classification Benchmark (31 expert-labelled texts)
-             Note: no OSDG texts exist for SDG 17; this is the only available source.
+Sources (all single-label, all 17 SDGs):
+  OSDG Community Dataset  — 30,534 texts (SDGs 1–16)
+  SDG Knowledge Hub      —  2,221 texts (SDGs 1–17, journalism)
+  SDGi Corpus            —  5,233 texts (SDGs 1–17, policy VNR/VLR)
+
+Each SDG centroid concatenates embeddings from all available sources.
+The SDG Classification Benchmark (616 texts, all 17 SDGs) is held out for
+validation and does not contribute to any centroid.
 
 Normalisation:
   Input embeddings are L2-normalised (‖v‖ = 1). The mean of unit vectors has norm < 1
@@ -18,12 +22,13 @@ Normalisation:
   cohesion) is preserved in metadata — it reflects intra-SDG cluster tightness.
 
 Assumption flags (see 5_notes/ASSUMPTIONS.md for full details):
-  A3  — Equal weighting: each OSDG text is weighted equally regardless of agreement score.
+  A3  — Equal weighting: each text is weighted equally regardless of annotator agreement.
   A6  — Centroid validity: cohesion < 0.50 is flagged, but cohesion alone is not the best
          risk indicator. Use per-SDG F1 from validate_centroids.py instead (see A6 revision).
   A-NORM — Centroid normalisation: raw centroid norm is recorded, unit centroid is saved.
-  A-SDG17 — SDG 17 contamination: benchmark texts used for both building and validating
-             the SDG-17 centroid. Primary validation in validate_centroids.py excludes SDG 17.
+  A-SDG17 — Combined-source centroids: every SDG centroid draws from all available single-label
+             texts across OSDG, Knowledge Hub, and SDGi. The benchmark is held out for
+             validation only, eliminating the contamination issue present in earlier versions.
   A15 — OSDG circularity: not diagnosed here. Deferred to downstream alignment scoring steps.
 
 Row ordering convention (critical for ALL downstream scripts):
@@ -32,8 +37,12 @@ Row ordering convention (critical for ALL downstream scripts):
 
 Inputs:
   2_data/2_embedded/osdg.npy           (30534, 384) float32, L2-normalised
-  2_data/2_embedded/metadata/osdg_ids.json      list of {id, text, sdg} — sdg in 1..16
-  2_data/2_embedded/benchmark.npy      (616, 384)   float32, L2-normalised
+  2_data/2_embedded/metadata/osdg_ids.json          list of {id, text, sdg} — sdg in 1..16
+  2_data/2_embedded/sdg_knowledge_hub.npy  (2221, 384) float32, L2-normalised
+  2_data/2_embedded/metadata/sdg_knowledge_hub_ids.json  list of {id, text, sdg} — sdg in 1..17
+  2_data/2_embedded/sdgi.npy             (5233, 384) float32, L2-normalised
+  2_data/2_embedded/metadata/sdgi_ids.json          list of {id, text, sdg} — sdg in 1..17
+  2_data/2_embedded/benchmark.npy      (616, 384)   float32, L2-normalised  (validation only)
   2_data/2_embedded/metadata/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
 
 Outputs:
@@ -59,7 +68,11 @@ SCORED_METADATA_DIR = OUTPUT_DIR / "metadata"
 
 OSDG_EMB   = EMBEDDINGS_DIR / "osdg.npy"
 OSDG_IDS   = EMBED_METADATA_DIR / "osdg_ids.json"
-BENCH_EMB  = EMBEDDINGS_DIR / "benchmark.npy"
+KH_EMB     = EMBEDDINGS_DIR / "sdg_knowledge_hub.npy"
+KH_IDS     = EMBED_METADATA_DIR / "sdg_knowledge_hub_ids.json"
+SDGI_EMB   = EMBEDDINGS_DIR / "sdgi.npy"
+SDGI_IDS   = EMBED_METADATA_DIR / "sdgi_ids.json"
+BENCH_EMB  = EMBEDDINGS_DIR / "benchmark.npy"      # validation only
 BENCH_IDS  = EMBED_METADATA_DIR / "benchmark_ids.json"
 
 OUT_CENTROIDS = OUTPUT_DIR / "sdg_centroids.npy"
@@ -178,9 +191,19 @@ def main() -> None:
     osdg_ids = load_json(OSDG_IDS)  # list of {id, text, sdg} with sdg in 1..16
     log.info("  shape=%s  dtype=%s", osdg_emb.shape, osdg_emb.dtype)
 
-    log.info("Loading benchmark embeddings: %s", BENCH_EMB)
-    bench_emb = np.load(BENCH_EMB)   # (616, 384) float32 — SDGs 1..17 (including 17)
-    bench_ids = load_json(BENCH_IDS)  # list of {id, text, sdg}
+    log.info("Loading Knowledge Hub embeddings: %s", KH_EMB)
+    kh_emb = np.load(KH_EMB)   # (2221, 384)
+    kh_ids = load_json(KH_IDS)
+    log.info("  shape=%s  dtype=%s", kh_emb.shape, kh_emb.dtype)
+
+    log.info("Loading SDGi embeddings: %s", SDGI_EMB)
+    sdgi_emb = np.load(SDGI_EMB)   # (5233, 384)
+    sdgi_ids = load_json(SDGI_IDS)
+    log.info("  shape=%s  dtype=%s", sdgi_emb.shape, sdgi_emb.dtype)
+
+    log.info("Loading benchmark embeddings (validation only): %s", BENCH_EMB)
+    bench_emb = np.load(BENCH_EMB)   # (616, 384)
+    bench_ids = load_json(BENCH_IDS)
     log.info("  shape=%s  dtype=%s", bench_emb.shape, bench_emb.dtype)
 
     # ---- Verify L2 normalisation ----
@@ -196,81 +219,86 @@ def main() -> None:
         log.info("Embedding norms verified ≈ 1.0 (L2-normalised)")
 
     # ---- Build per-SDG index maps ----
-    # Group row indices by SDG label so build_centroid can slice the embedding matrix.
     osdg_by_sdg: dict[int, list[int]] = {}
     for i, r in enumerate(osdg_ids):
         sdg = r["sdg"]
         osdg_by_sdg.setdefault(sdg, []).append(i)
+
+    kh_by_sdg: dict[int, list[int]] = {}
+    for i, r in enumerate(kh_ids):
+        sdg = r["sdg"]
+        kh_by_sdg.setdefault(sdg, []).append(i)
+
+    sdgi_by_sdg: dict[int, list[int]] = {}
+    for i, r in enumerate(sdgi_ids):
+        sdg = r["sdg"]
+        sdgi_by_sdg.setdefault(sdg, []).append(i)
 
     bench_by_sdg: dict[int, list[int]] = {}
     for i, r in enumerate(bench_ids):
         sdg = r["sdg"]
         bench_by_sdg.setdefault(sdg, []).append(i)
 
-    # Sanity check: OSDG must cover exactly SDGs 1–16 (no 17, none missing).
-    # OSDG was filtered from a version that lacks SDG 17 labels. If this fails, the
-    # data preprocessing step (preprocess_osdg.py) produced unexpected output.
+    # Sanity checks
     osdg_sdgs = sorted(osdg_by_sdg.keys())
     if osdg_sdgs != list(range(1, 17)):
         log.warning("Unexpected OSDG SDG labels: %s", osdg_sdgs)
     else:
         log.info("OSDG SDG coverage confirmed: 1–16")
 
-    # ASSUMPTION (A-SDG17 — SDG 17 source): OSDG has no SDG 17 labels, so we must source
-    # the SDG-17 centroid from the benchmark corpus (31 expert-labelled texts).
-    # Consequence: the SDG-17 centroid is built from a different corpus and annotation process
-    # than SDGs 1–16. Its style may lean academic (benchmark texts are from academic/policy
-    # abstracts) rather than policy-style (OSDG texts). This could make the SDG-17 centroid
-    # slightly less representative of policy framing than the other centroids.
-    # Additionally: the same 31 texts are later used to evaluate the SDG-17 centroid in
-    # validate_centroids.py — a contamination that inflates SDG-17 classification accuracy.
-    # Mitigation: validate_centroids.py reports SDG-17 accuracy as an upper bound only and
-    # uses SDGs 1–16 for the primary (uncontaminated) macro-F1 score.
-    if 17 not in bench_by_sdg:
-        raise RuntimeError("No SDG-17 texts found in benchmark — cannot build SDG-17 centroid")
-    log.info("Benchmark SDG-17 pool: n=%d texts", len(bench_by_sdg[17]))
+    kh_sdgs = sorted(kh_by_sdg.keys())
+    log.info("Knowledge Hub SDG coverage: %s (per-SDG: %s)",
+             kh_sdgs, {s: len(kh_by_sdg[s]) for s in kh_sdgs})
 
-    # ---- Build centroids ----
+    sdgi_sdgs = sorted(sdgi_by_sdg.keys())
+    log.info("SDGi SDG coverage: %s (per-SDG: %s)",
+             sdgi_sdgs, {s: len(sdgi_by_sdg[s]) for s in sdgi_sdgs})
+
+    # ASSUMPTION (A-SDG17 — combined-source centroids): every SDG centroid draws from all
+    # available single-label texts. The benchmark is held out for validation only.
+    # OSDG has no SDG 17 labels, so SDG 17 is sourced from Knowledge Hub + SDGi.
+    log.info("Benchmark available for validation: SDGs %s, %d total texts",
+             sorted(bench_by_sdg.keys()), sum(len(v) for v in bench_by_sdg.values()))
+
+    # ---- Build centroids (all sources combined per SDG) ----
     log.info("")
-    log.info("Building centroids...")
-    log.info("%-8s %-7s %-7s %-10s %-10s %s",
-             "SDG", "n", "source", "raw_norm", "cohesion", "variance_flag")
-    log.info("-" * 60)
+    log.info("Building centroids from all available sources...")
+    log.info("%-8s %-7s %-40s %-10s %-10s %s",
+             "SDG", "n", "source(s)", "raw_norm", "cohesion", "variance_flag")
+    log.info("-" * 85)
 
     centroid_vectors = []
     centroid_meta = []
 
-    # SDGs 1–16: source from OSDG (30,534 texts total, varying counts per SDG)
-    for sdg in range(1, 17):
-        idxs = osdg_by_sdg[sdg]
-        vec, meta = build_centroid(osdg_emb, idxs, sdg, source="osdg")
+    for sdg in range(1, 18):
+        parts = []
+        tags = []
+
+        if sdg in osdg_by_sdg:
+            parts.append(osdg_emb[osdg_by_sdg[sdg]])
+            tags.append(f"osdg({len(osdg_by_sdg[sdg])})")
+        if sdg in kh_by_sdg:
+            parts.append(kh_emb[kh_by_sdg[sdg]])
+            tags.append(f"kh({len(kh_by_sdg[sdg])})")
+        if sdg in sdgi_by_sdg:
+            parts.append(sdgi_emb[sdgi_by_sdg[sdg]])
+            tags.append(f"sdgi({len(sdgi_by_sdg[sdg])})")
+
+        if not parts:
+            raise RuntimeError(f"No reference texts for SDG {sdg}")
+
+        combined = np.concatenate(parts, axis=0)
+        source_label = "+".join(tags)
+        vec, meta = build_centroid(combined, list(range(len(combined))), sdg, source=source_label)
         centroid_vectors.append(vec)
         centroid_meta.append(meta)
 
         flag = " [HIGH VARIANCE — A6 risk]" if meta["high_variance_flag"] else ""
         level = logging.WARNING if meta["high_variance_flag"] else logging.INFO
-        log.log(level, "SDG %2d | n=%5d | osdg      | norm=%.4f | cohesion=%.4f%s",
-                sdg, meta["n"], meta["raw_centroid_norm"], meta["mean_cos_to_centroid"], flag)
-
-    # SDG 17: source from benchmark (see A-SDG17 comment above)
-    sdg17_idxs = bench_by_sdg[17]
-    vec17, meta17 = build_centroid(bench_emb, sdg17_idxs, 17, source="benchmark")
-    centroid_vectors.append(vec17)
-    centroid_meta.append(meta17)
-
-    flag = " [HIGH VARIANCE — A6 risk]" if meta17["high_variance_flag"] else ""
-    level = logging.WARNING if meta17["high_variance_flag"] else logging.INFO
-    log.log(level,
-            "SDG 17 | n=%5d | benchmark | norm=%.4f | cohesion=%.4f%s  "
-            "[NOTE: centroid from benchmark; validate_centroids.py SDG-17 results are contaminated]",
-            meta17["n"], meta17["raw_centroid_norm"], meta17["mean_cos_to_centroid"], flag)
+        log.log(level, "SDG %2d | n=%5d | %-35s | norm=%.4f | cohesion=%.4f%s",
+                sdg, meta["n"], source_label, meta["raw_centroid_norm"], meta["mean_cos_to_centroid"], flag)
 
     # ---- Stack into (17, 384) array ----
-    # ROW ORDERING CONVENTION: centroids[i] = centroid for SDG (i+1).
-    # Row 0 → SDG 1, row 1 → SDG 2, ..., row 16 → SDG 17.
-    # This convention is assumed by every downstream script that loads sdg_centroids.npy.
-    # Changing it here without updating downstream scoring/analysis scripts, including coverage_gap.py, and
-    # semantic_gap.py would silently corrupt all downstream SDG assignments.
     centroids = np.stack(centroid_vectors, axis=0)  # (17, 384)
     assert centroids.shape == (17, 384), f"Unexpected centroid shape: {centroids.shape}"
 

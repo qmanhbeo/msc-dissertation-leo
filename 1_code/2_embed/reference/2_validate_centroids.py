@@ -7,15 +7,11 @@ This is the only independent quality check available before running the full ana
 instrument is too noisy, all downstream coverage/semantic gap findings are unreliable.
 
 Evaluation design:
-  PRIMARY   (uncontaminated) — benchmark texts with SDG labels 1–16 (n = 585)
-            The SDG 1–16 centroids were built from OSDG, which is a *separate* dataset from
-            the benchmark. This evaluation is clean.
+  All 17 SDGs (n = 616) are evaluated in a single held-out evaluation.
+  Every centroid is built from corpora independent of the benchmark (OSDG, Knowledge Hub, SDGi),
+  so no contamination occurs — the benchmark is genuinely independent for all 17 SDGs.
 
-  SUPPLEMENTARY (contaminated) — all 616 benchmark texts including SDG 17
-            The SDG-17 centroid was built from the 31 benchmark SDG-17 texts themselves.
-            This inflates SDG-17 accuracy. Reported as an upper bound only.
-
-Interpretation guide (macro-F1 on SDGs 1–16):
+Interpretation guide (macro-F1 on SDGs 1–17):
   < 0.25   FAIL  — serious concern; consider domain-adapted model; flag in limitations
   0.25–0.50 WARN  — usable signal but moderate noise; acknowledge in methodology
   > 0.50   PASS  — good instrument; proceed with confidence
@@ -173,44 +169,28 @@ def main() -> None:
     # centroids[i] = SDG (i+1), so argmax=0 → SDG 1, argmax=16 → SDG 17.
     pred_sdgs = scores.argmax(axis=1) + 1   # (616,) int, values 1..17
 
-    # ---- Evaluation A: Primary metric — SDGs 1–16, uncontaminated ----
-    # CONTAMINATION EXCLUSION (Assumption A-SDG17): we exclude SDG-17 benchmark texts from
-    # the primary evaluation because the SDG-17 centroid was built from those same 31 texts.
-    # Evaluating a centroid on the data used to build it gives an artificially high score
-    # (the centroid is by definition the closest point to its own training data in expectation).
-    # SDGs 1–16 centroids were built from OSDG — a completely separate dataset from the
-    # benchmark — so the SDGs 1–16 evaluation is genuinely held-out.
-    mask_16 = (true_sdgs != 17)   # boolean mask: True for the 585 SDG 1–16 texts
-    true_16 = true_sdgs[mask_16]
-    pred_16 = pred_sdgs[mask_16]
-    labels_16 = list(range(1, 17))   # explicit label list — see zero_division note below
+    # ---- Evaluation: All 17 SDGs, n = 616, no contamination ----
+    # ASSUMPTION (A-SDG17): every centroid is built from corpora independent of the benchmark.
+    # The benchmark is fully held out — no centroid uses benchmark texts. This evaluation is
+    # genuinely independent for all 17 SDGs.
+    labels_17 = list(range(1, 18))
 
-    acc_16    = float(accuracy_score(true_16, pred_16))
-
-    # labels= is passed explicitly so all 16 SDGs appear in the output arrays even if the
+    # labels= is passed explicitly so all 17 SDGs appear in the output arrays even if the
     # classifier never predicts a given class. Without this, sklearn would silently drop
     # classes with no predictions, making the per-SDG F1 array mis-indexed.
     # zero_division=0: return 0 (not a warning/error) for any SDG with zero true or predicted
     # instances. Possible for low-resource SDGs (e.g. SDG 12, n=43 in benchmark, could have
     # zero predictions if the classifier always prefers a neighbouring centroid).
-    mf1_16    = float(f1_score(true_16, pred_16, average="macro",
-                               labels=labels_16, zero_division=0))
-    per_sdg_f1 = f1_score(true_16, pred_16, average=None,
-                           labels=labels_16, zero_division=0)   # shape (16,)
-
-    # ---- Evaluation B: Supplementary — all 17 SDGs, SDG-17 contaminated ----
-    # Reported for completeness, but SDG-17 accuracy is an upper bound, not a valid estimate.
-    # The supplementary macro-F1 includes SDG 17's inflated contribution.
-    labels_17 = list(range(1, 18))
-    acc_full  = float(accuracy_score(true_sdgs, pred_sdgs))
-    mf1_full  = float(f1_score(true_sdgs, pred_sdgs, average="macro",
-                               labels=labels_17, zero_division=0))
+    acc = float(accuracy_score(true_sdgs, pred_sdgs))
+    mf1 = float(f1_score(true_sdgs, pred_sdgs, average="macro",
+                         labels=labels_17, zero_division=0))
+    per_sdg_f1 = f1_score(true_sdgs, pred_sdgs, average=None,
+                          labels=labels_17, zero_division=0)   # shape (17,)
 
     # ---- Instrument flag ----
-    # Based on THRESH_FAIL and THRESH_PASS defined above (set before running, not post-hoc).
-    if mf1_16 >= THRESH_PASS:
+    if mf1 >= THRESH_PASS:
         flag = "PASS"
-    elif mf1_16 >= THRESH_FAIL:
+    elif mf1 >= THRESH_FAIL:
         flag = "WARN"
     else:
         flag = "FAIL"
@@ -229,35 +209,28 @@ def main() -> None:
     # ---- Console output ----
     log.info("")
     log.info("=" * 60)
-    log.info("CENTROID VALIDATION RESULTS")
+    log.info("CENTROID VALIDATION RESULTS (all 17 SDGs, n=%d, no contamination)", len(true_sdgs))
     log.info("=" * 60)
     log.info("")
-    log.info("PRIMARY (SDGs 1–16, uncontaminated, n=%d)", mask_16.sum())
-    log.info("  Accuracy : %.4f  (random baseline: %.4f)", acc_16, RANDOM_BASELINE)
-    log.info("  Macro-F1 : %.4f  → %s", mf1_16, flag)
+    log.info("  Accuracy : %.4f  (random baseline: %.4f)", acc, RANDOM_BASELINE)
+    log.info("  Macro-F1 : %.4f  → %s", mf1, flag)
     if flag == "FAIL":
         log.warning("  FAIL: Macro-F1 < %.2f — instrument too noisy for reliable analysis.", THRESH_FAIL)
         log.warning("         Consider domain-adapted model (e.g., Aurora-M, SDG-BERT).")
     elif flag == "WARN":
-        log.warning("  WARN: Macro-F1 %.2f–%.2f — usable signal but acknowledge noise in methodology.",
+        log.warning("  WARN: Macro-F1 %.2f–%.2f — usable signal but moderate noise, acknowledge in methodology.",
                     THRESH_FAIL, THRESH_PASS)
     else:
         log.info("  PASS: Macro-F1 ≥ %.2f — instrument validated for analysis.", THRESH_PASS)
 
     log.info("")
-    log.info("SUPPLEMENTARY (all 17 SDGs, n=616 — SDG-17 results contaminated)")
-    log.info("  Accuracy : %.4f", acc_full)
-    log.info("  Macro-F1 : %.4f  [upper bound; SDG-17 centroid = same data as eval]", mf1_full)
-
-    log.info("")
-    log.info("PER-SDG F1 (SDGs 1–16, uncontaminated):")
+    log.info("PER-SDG F1 (SDGs 1–17, all n=%d):", len(true_sdgs))
     log.info("  %-6s  %-8s  %-6s  %s", "SDG", "F1", "n_true", "variance_flag")
     log.info("  " + "-" * 45)
-    for i, sdg in enumerate(labels_16):
-        n_true = int((true_16 == sdg).sum())
+    for i, sdg in enumerate(labels_17):
+        n_true = int((true_sdgs == sdg).sum())
         # meta is a 0-indexed list from sdg_centroid_meta.json.
-        # meta[0] = SDG 1, meta[1] = SDG 2, ..., meta[15] = SDG 16.
-        # SDG label is 1-indexed, so meta index = sdg - 1.
+        # meta[0] = SDG 1, meta[1] = SDG 2, ..., meta[16] = SDG 17.
         m = meta[sdg - 1]
         vflag = "[HIGH VAR]" if m["high_variance_flag"] else ""
         log.info("  SDG %2d   %.4f   n=%3d   %s", sdg, per_sdg_f1[i], n_true, vflag)
@@ -280,24 +253,18 @@ def main() -> None:
 
     # ---- Save outputs ----
     results = {
-        "primary_sdg1_16": {
-            "n": int(mask_16.sum()),
-            "accuracy": round(acc_16, 6),
-            "macro_f1": round(mf1_16, 6),
-            "contaminated": False,
-        },
-        "supplementary_all17": {
+        "evaluation": {
             "n": len(true_sdgs),
-            "accuracy": round(acc_full, 6),
-            "macro_f1": round(mf1_full, 6),
-            "contaminated": True,
-            "contamination_note": (
-                "SDG-17 centroid built from the same 31 benchmark SDG-17 texts. "
-                "SDG-17 classification accuracy is an upper bound, not an independent estimate."
+            "accuracy": round(acc, 6),
+            "macro_f1": round(mf1, 6),
+            "contaminated": False,
+            "note": (
+                "All centroids built from corpora independent of the benchmark "
+                "(OSDG, Knowledge Hub, SDGi). No contamination."
             ),
         },
         "per_sdg_f1": {str(sdg): round(float(per_sdg_f1[i]), 6)
-                       for i, sdg in enumerate(labels_16)},
+                       for i, sdg in enumerate(labels_17)},
         "instrument_flag": flag,
         "random_baseline": round(RANDOM_BASELINE, 6),
         "thresholds": {"fail_below": THRESH_FAIL, "pass_above": THRESH_PASS},
@@ -308,7 +275,7 @@ def main() -> None:
     log.info("\nSaved: %s", out_results)
 
     # Confusion matrix over all 17 SDGs (rows = true, cols = predicted).
-    # The SDG-17 row/column is contaminated but included for completeness.
+    # No contamination: all centroids built from corpora independent of the benchmark.
     # Examining off-diagonal mass reveals which SDG pairs are most confused — this directly
     # informs which per-SDG coverage gap findings should carry extra caveats (A6, A26).
     cm = confusion_matrix(true_sdgs, pred_sdgs, labels=labels_17)
@@ -329,9 +296,9 @@ def main() -> None:
         1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five",
         6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten",
         11: "Eleven", 12: "Twelve", 13: "Thirteen", 14: "Fourteen",
-        15: "Fifteen", 16: "Sixteen",
+        15: "Fifteen", 16: "Sixteen", 17: "Seventeen",
     }
-    _sdg_names_16 = {
+    _sdg_names_all = {
         1: "No Poverty", 2: "Zero Hunger", 3: "Good Health and Well-Being",
         4: "Quality Education", 5: "Gender Equality",
         6: "Clean Water and Sanitation", 7: "Affordable and Clean Energy",
@@ -341,6 +308,7 @@ def main() -> None:
         12: "Responsible Consumption and Production", 13: "Climate Action",
         14: "Life Below Water", 15: "Life on Land",
         16: "Peace, Justice and Strong Institutions",
+        17: "Partnerships for the Goals",
     }
 
     gen_dir = tables_dir
@@ -358,16 +326,16 @@ def main() -> None:
     # num_validation.tex — macro definitions
     num_lines = [
         "% Auto-generated by 1_code/2_embed/reference/2_validate_centroids.py — do not edit manually",
-        rf"\newcommand{{\MacroFOne}}{{{mf1_16:.3f}}}",
-        rf"\newcommand{{\ValidationAccuracy}}{{{acc_16:.3f}}}",
+        rf"\newcommand{{\MacroFOne}}{{{mf1:.3f}}}",
+        rf"\newcommand{{\ValidationAccuracy}}{{{acc:.3f}}}",
         rf"\newcommand{{\RandomBaselineSeventeenClass}}{{{RANDOM_BASELINE:.3f}}}",
-        rf"\newcommand{{\ValidationVsRandomMultiple}}{{{(mf1_16 / RANDOM_BASELINE):.1f}}}",
+        rf"\newcommand{{\ValidationVsRandomMultiple}}{{{(mf1 / RANDOM_BASELINE):.1f}}}",
         rf"\newcommand{{\CentroidSimThirteenSeventeen}}{{{centroid_sim[12, 16]:.3f}}}",
         rf"\newcommand{{\CentroidSimElevenNine}}{{{sim_11_9:.3f}}}",
         rf"\newcommand{{\CentroidSimOneEightTenMin}}{{{min(cluster_sims):.3f}}}",
         rf"\newcommand{{\CentroidSimOneEightTenMax}}{{{max(cluster_sims):.3f}}}",
     ]
-    for i, sdg in enumerate(labels_16):
+    for i, sdg in enumerate(labels_17):
         word = _sdg_num_words[sdg]
         num_lines.append(rf"\newcommand{{\FiSdg{word}}}{{{per_sdg_f1[i]:.3f}}}")
     (gen_dir / "num_validation.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
@@ -380,14 +348,14 @@ def main() -> None:
         r"SDG & Description & F1 \\",
         r"\midrule",
     ]
-    for i, sdg in enumerate(labels_16):
+    for i, sdg in enumerate(labels_17):
         word = _sdg_num_words[sdg]
-        name = _sdg_names_16[sdg]
+        name = _sdg_names_all[sdg]
         footnote = r"$^\ddagger$" if sdg == 4 else ""
         tab_lines.append(rf"SDG {sdg:2d} & {name}{footnote} & \FiSdg{word} \\")
     tab_lines.extend([
         r"\midrule",
-        r"\multicolumn{2}{l}{Macro-F1 (SDGs 1--16)} & \textbf{\MacroFOne} \\",
+        r"\multicolumn{2}{l}{Macro-F1 (SDGs 1--17)} & \textbf{\MacroFOne} \\",
         r"\bottomrule",
         r"\end{tabular}",
     ])

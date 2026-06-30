@@ -1,34 +1,29 @@
 {
-  "primary_sdg1_16": {
-    "n": 585,
-    "accuracy": 0.738462,
-    "macro_f1": 0.73259,
-    "contaminated": false
-  },
-  "supplementary_all17": {
+  "evaluation": {
     "n": 616,
-    "accuracy": 0.728896,
-    "macro_f1": 0.710053,
-    "contaminated": true,
-    "contamination_note": "SDG-17 centroid built from the same 31 benchmark SDG-17 texts. SDG-17 classification accuracy is an upper bound, not an independent estimate."
+    "accuracy": 0.73539,
+    "macro_f1": 0.712308,
+    "contaminated": false,
+    "note": "All centroids built from corpora independent of the benchmark (OSDG, Knowledge Hub, SDGi). No contamination."
   },
   "per_sdg_f1": {
-    "1": 0.69697,
+    "1": 0.698413,
     "2": 0.844444,
-    "3": 0.583333,
+    "3": 0.64,
     "4": 0.91954,
-    "5": 0.722222,
-    "6": 0.868687,
-    "7": 0.888889,
-    "8": 0.53125,
-    "9": 0.692308,
-    "10": 0.727273,
-    "11": 0.518519,
-    "12": 0.657534,
-    "13": 0.716418,
+    "5": 0.710526,
+    "6": 0.877551,
+    "7": 0.877551,
+    "8": 0.533333,
+    "9": 0.666667,
+    "10": 0.709677,
+    "11": 0.545455,
+    "12": 0.708861,
+    "13": 0.712329,
     "14": 0.805556,
-    "15": 0.691358,
-    "16": 0.857143
+    "15": 0.707317,
+    "16": 0.861111,
+    "17": 0.290909
   },
   "instrument_flag": "PASS",
   "random_baseline": 0.058824,

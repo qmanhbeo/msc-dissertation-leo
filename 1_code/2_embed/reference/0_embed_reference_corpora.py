@@ -5,9 +5,11 @@ Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for 
        Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
 
 Inputs:
-  2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl        (policy chunks, field: text)
-  2_data/1_preprocessed/osdg/osdg_clean.jsonl             (30,534 texts, field: text)
-  2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl (616 texts, field: text)
+  2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl         (policy chunks, field: text)
+  2_data/1_preprocessed/osdg/osdg_clean.jsonl              (30,534 texts, field: text)
+  2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  (616 texts, field: text)
+  2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl  (616 SDG-17 texts, journalism)
+   2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl  (5,233 texts, all 17 SDGs, policy VNR/VLR)
 
 Outputs per corpus:
   <name>.npy       float32 matrix (n_texts, 384 for all-MiniLM-L6-v2)
@@ -55,6 +57,20 @@ CORPORA = [
     {
         "name": "benchmark",
         "input": Path("2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl"),
+        "text_field": "text",
+        "id_field": "id",
+        "sdg_field": "sdg",
+    },
+    {
+        "name": "sdg_knowledge_hub",
+        "input": Path("2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl"),
+        "text_field": "text",
+        "id_field": "id",
+        "sdg_field": "sdg",
+    },
+    {
+        "name": "sdgi",
+        "input": Path("2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl"),
         "text_field": "text",
         "id_field": "id",
         "sdg_field": "sdg",
