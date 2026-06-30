@@ -102,9 +102,18 @@ The canonical reproducibility target is warm replay from the frozen curated snap
 
 ## Repository layout
 
-- `main.py`: canonical entrypoint
-- `1_code/`: pipeline and analysis code
-- `3_writing/`: manuscript source and PDF build script
-- `4_outputs/`: committed dissertation outputs
-- `2_data/`: hydrated snapshot data after fetch
-- `5_notes/`: working notes retained in the repository
+The repository uses a numbered directory convention. Each prefix indicates
+the directory's role in the workflow:
+
+- `0_literature/` — cited and consulted sources, organised by paper content
+- `1_code/` — all pipeline and analysis code
+- `2_data/` — frozen data snapshot (hydrated from archive, gitignored)
+- `3_writing/` — manuscript source (`dissertation.tex`, `references.bib`, build script)
+- `4_outputs/` — committed outputs (`dissertation.pdf`, `main/` figures and tables, `appendix/` analyses)
+- `5_notes/` — working notes, assumptions, and workflow logs
+
+Entrypoint and environment files at root:
+- `main.py` — single reproducibility entrypoint
+- `environment.yml` — full conda + pip environment specification
+- `requirements.txt` — lightweight human-readable dependency reference
+- `README.md` — this file
