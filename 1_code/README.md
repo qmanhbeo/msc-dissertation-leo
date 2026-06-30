@@ -1,6 +1,6 @@
 # Code Surface
 
-`code/` contains only the active pipeline used by `main.py`.
+`1_code/` contains only the active pipeline used by `main.py`.
 
 Structure:
 - `0_fetch/` source acquisition
