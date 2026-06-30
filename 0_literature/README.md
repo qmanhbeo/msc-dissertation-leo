@@ -7,6 +7,7 @@ Organised by content area:
 |---|---|
 | `ai_sdg_research/` | Papers studying AI research activity mapped to SDGs |
 | `sdg_classification/` | Papers about how to classify text by SDG |
+| `sdg_critique/` | Critical/political analysis of the SDG framework as a governance instrument |
 | `research_policy_theory/` | Theories of science-policy interaction |
 | `research_policy_gap/` | Empirical studies documenting research-policy divergence |
 | `semantic_methods/` | Methods for comparing meaning across text collections |
@@ -43,6 +44,11 @@ Some papers have `.md` companion files (full-text reproductions).
 | **bornmann2016policy** | `research_policy_gap/Bornmann2016.pdf` | Springer | |
 | **bornmann2017impact** | `research_policy_gap/Bornmann2017.pdf` | Springer | |
 | **Heilinger2023** | `research_policy_gap/Heilinger2023.pdf` | Springer | |
+| **FukudaParr2016** | `sdg_critique/Fukuda-Parr2016.pdf` | Taylor & Francis | |
+| **BexellJonsson2017** | `sdg_critique/Bexell2017.pdf` | Taylor & Francis | |
+| **Hickel2019** | `sdg_critique/Hickel2019.pdf` | Wiley | |
+| **HerasSaizarbitoria2022** | `research_policy_gap/Heras-Saizarbitoria2022.pdf` | Wiley | |
+| **Nilsson2016** | `sdg_classification/Nilsson2016.pdf` | Nature | |
 | **Rodriguez2023** | `semantic_methods/Rodriguez2023.pdf` | Cambridge UP | Renamed from `Rodriguez et al 2023.pdf` |
 | **biber1988variation** | `semantic_methods/biber1988variation.pdf` | Cambridge UP | Was `Biber1998.pdf` (reprint) |
 | **biberConrad2009register** | `semantic_methods/Biber2009.pdf` | Cambridge UP | |
@@ -94,6 +100,6 @@ All 41 cited works now have PDFs on disk. The remaining entries below are policy
 
 ---
 
-## All 41 cited works accounted for.
+## All 46 cited works accounted for.
 
 *Generated 2026-06-29 by the citation-inventory script.*
