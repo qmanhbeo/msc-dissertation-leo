@@ -475,8 +475,89 @@ The central implication is not that the AI-for-sustainability field is aligned o
 %% ============================================================
 \clearpage
 \appendix
-\section{Centroid Diagnostics and Sensitivity Checks}
+\section{Diagnosis for Centroid Construction}
 \label{app:centroid-diagnostics}
+
+\subsection{Per-SDG Reference-Source Comparison}
+\label{app:sdg-source-comparison}
+
+The canonical centroids combine OSDG, SDGi, and Knowledge Hub texts per SDG. This appendix compares each single-source centroid to the canonical combined centroid across four metrics: validation F1, centroid cosine similarity, research coverage (papers assigned per SDG), and within-SDG semantic gap. The purpose is to assess whether any single source dominates the combined centroid and whether the study's headline results are sensitive to the choice of reference corpus.
+
+Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and centroid similarity for all four configurations:
+
+\begin{itemize}
+  \item \textbf{Combined} (canonical): all available single-label texts (OSDG + SDGi + Knowledge Hub) per SDG.
+  \item \textbf{OSDG-only}: the OSDG Community Dataset only (SDGs 1--16; SDG 17 is not available in OSDG).
+  \item \textbf{SDGi-only}: the SDGi Corpus only (VNR/VLR policy reports).
+  \item \textbf{Knowledge Hub-only}: the IISD SDG Knowledge Hub only (journalism).
+\end{itemize}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Per-SDG source comparison: validation F1 and centroid cosine similarity to the canonical combined centroid. A ``--'' indicates no texts for that SDG in the source (OSDG, SDG 17) or a trivial self-similarity of 1.0.}
+\label{tab:sdg-source-comparison-f1cos}
+\input{../4_outputs/main/tables/tab_sdg_source_comparison_f1cos.tex}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Per-SDG source comparison: research coverage (papers assigned) and within-SDG semantic gap for each reference source. Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence.}
+\label{tab:sdg-source-comparison-covgap}
+\input{../4_outputs/main/tables/tab_sdg_source_comparison_covgap.tex}
+\end{table}
+
+Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.985--0.998), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
+
+Second, the supplementary sources (SDGi, Knowledge Hub) introduce modest centroid shifts, with cosine to combined ranging from 0.797 (SDG 16, SDGi) to 0.945 (SDG 12, SDGi) for SDGi, and from 0.499 (SDG 10, KH) to 0.906 (SDG 13, KH) for Knowledge Hub. The largest deviations occur for SDG 10 (KH cosine \SrcTenKnowledgeHubCosine{}) and SDG 1 (KH cosine \SrcOneKnowledgeHubCosine{}), suggesting that these SDGs have heterogeneous semantic scope across policy and journalism genres. These sources have fewer texts (18--364 per SDG) and pull the centroid in different genre-specific directions.
+
+Third, the supplementary sources do not degrade the combined F1 for SDGs 1--16. For most of these SDGs, the combined F1 is close to the best single-source F1. In several cases (SDGs 8, 11, 13), the combined F1 exceeds every single-source F1, confirming that combining sources broadens semantic coverage in a way that improves discriminability rather than diluting it. SDG 17 is a notable exception: the combined F1 (\SrcSeventeenCombinedFOne{}) is lower than either single-source alternative. This is because the combined centroid (937 texts, ~66\% Knowledge Hub by volume) inherits the KH direction, which does not align optimally with the benchmark's policy-excerpt genre, while the SDGi-only centroid (321 texts) benefits from within-genre overlap with the benchmark.
+
+Table~\ref{tab:sdg-source-comparison-covgap} shows that the coverage and gap findings are also qualitatively robust to source choice. The SDG ranking by coverage is largely preserved across all four sources: SDGs 3, 4, 7, 9, 15, and 16 consistently appear among the largest clusters, while SDGs 1, 10, and 12 are consistently among the smallest. The Spearman rank correlation between combined and OSDG-only coverage is near-perfect ($\rho > 0.98$), and between combined and SDGi or KH it remains above 0.85. The semantic gap patterns are similarly stable: SDG 17 has the largest gap under every source except OSDG (where it is unavailable), and the top-three gap SDGs (17, 13, 10--6) are consistent across Combined, OSDG, and SDGi. The KH-only centroids produce larger gap variability, particularly for SDG 1 (\SrcOneKnowledgeHubGap{}) and SDG 10 (\SrcTenKnowledgeHubGap{}), reflecting the small text counts in those SDGs for the journalism corpus.
+
+The overall conclusion is that for SDGs 1--16, the combined centroid is a balanced instrument: it is not dominated by any single source and achieves comparable or better validation F1 than any single-source alternative, while preserving the coverage and gap patterns reported in the main analysis. For SDG 17, where OSDG coverage is absent, the combined centroid is a conservative choice --- it does not overfit to any single annotation genre, but it reflects a compromise direction that is less discriminative on the benchmark than either single-source alternative.
+
+\subsection{Policy Source-Family Sensitivity}
+\label{app:policy-source-family-sensitivity}
+
+The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Table~\ref{tab:policy-source-family-sensitivity} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
+
+The answer is mixed. The broad international-institutional profile is clearly source-family sensitive. The curated AI/SDG family is much more innovation-oriented, with SDG 9 leading its document-weighted profile, while the SDGi and UNGDC families are more strongly concentrated on climate, partnerships, governance, and, in the SDGi case, SDG 11-style institutional review language. At the same time, the broader full-corpus pattern is not driven by one family alone: both the UNGDC speeches and the full corpus are dominated by the climate--partnerships--governance block, and SDG 17 remains the largest semantic-gap case across all three families.
+
+The implication is interpretive rather than corrective. The full policy corpus should be read as international institutional SDG discourse, not as a universal profile of all AI sustainability policy. This does not invalidate the dissertation's main diagnostic purpose, but it narrows the scope of what the policy-side distribution is taken to represent.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Policy source-family sensitivity diagnostic. Coverage rankings are document-weighted within each source family. Mean semantic gap is the mean valid within-SDG research--policy gap for that family using the canonical chunk cap.}
+\label{tab:policy-source-family-sensitivity}
+\resizebox{\textwidth}{!}{%
+\input{../4_outputs/main/tables/tab_policy_source_family_sensitivity.tex}
+}
+\end{table}
+
+\subsection{SDG 4 Lexical Artefact Audit}
+\label{app:sdg4-lexical-audit}
+
+The SDG 4 caveat is not used to relabel research records. Its narrower purpose is to test whether the caveat is empirically plausible. Table~\ref{tab:sdg4-lexical-audit} therefore compares the lexical composition of SDG 4-assigned research records with a matched non-SDG4 sample and with SDG 9, using only two transparent keyword groups: ML-learning vocabulary and education-specific vocabulary.
+
+The audit points to a more nuanced conclusion than a pure false-positive story. More than half of the SDG 4-assigned set contains education-specific vocabulary without ML-only terms, and roughly another third contains both education and ML-learning vocabulary. By contrast, the matched non-SDG4 sample and the SDG 9 comparison set are dominated by ML-only vocabulary. This means the SDG 4 signal is not simply the same technical language that drives SDG 9. However, the large ``both'' share also confirms that ML-learning language and education language overlap materially within the SDG 4-assigned set.
+
+The main analysis therefore retains the canonical nearest-centroid assignment but continues to treat SDG 4 as artefact-caveated. The most accurate reading is not ``clean education'' and not ``pure ML artefact,'' but rather a learning-related assignment whose interpretation is blurred by lexical overlap.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{SDG 4 lexical artefact audit. The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.}
+\label{tab:sdg4-lexical-audit}
+\resizebox{\textwidth}{!}{%
+\input{../4_outputs/main/tables/tab_sdg4_lexical_audit.tex}
+}
+\end{table}
+
+\section{Additional Perspectives on Main Results}
+\label{app:additional-perspectives}
 
 \subsection{Combined Research--Policy PCA Landscape}
 
@@ -532,46 +613,6 @@ The contrast helps make the embedding distances more legible. In SDGs 17 and 13,
 
 
 
-\subsection{Per-SDG Reference-Source Comparison}
-\label{app:sdg-source-comparison}
-
-The canonical centroids combine OSDG, SDGi, and Knowledge Hub texts per SDG. This appendix compares each single-source centroid to the canonical combined centroid across four metrics: validation F1, centroid cosine similarity, research coverage (papers assigned per SDG), and within-SDG semantic gap. The purpose is to assess whether any single source dominates the combined centroid and whether the study's headline results are sensitive to the choice of reference corpus.
-
-Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and centroid similarity for all four configurations:
-
-\begin{itemize}
-  \item \textbf{Combined} (canonical): all available single-label texts (OSDG + SDGi + Knowledge Hub) per SDG.
-  \item \textbf{OSDG-only}: the OSDG Community Dataset only (SDGs 1--16; SDG 17 is not available in OSDG).
-  \item \textbf{SDGi-only}: the SDGi Corpus only (VNR/VLR policy reports).
-  \item \textbf{Knowledge Hub-only}: the IISD SDG Knowledge Hub only (journalism).
-\end{itemize}
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Per-SDG source comparison: validation F1 and centroid cosine similarity to the canonical combined centroid. A ``--'' indicates no texts for that SDG in the source (OSDG, SDG 17) or a trivial self-similarity of 1.0.}
-\label{tab:sdg-source-comparison-f1cos}
-\input{../4_outputs/main/tables/tab_sdg_source_comparison_f1cos.tex}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Per-SDG source comparison: research coverage (papers assigned) and within-SDG semantic gap for each reference source. Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence.}
-\label{tab:sdg-source-comparison-covgap}
-\input{../4_outputs/main/tables/tab_sdg_source_comparison_covgap.tex}
-\end{table}
-
-Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.985--0.998), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
-
-Second, the supplementary sources (SDGi, Knowledge Hub) introduce modest centroid shifts, with cosine to combined ranging from 0.797 (SDG 16, SDGi) to 0.945 (SDG 12, SDGi) for SDGi, and from 0.499 (SDG 10, KH) to 0.906 (SDG 13, KH) for Knowledge Hub. The largest deviations occur for SDG 10 (KH cosine \SrcTenKnowledgeHubCosine{}) and SDG 1 (KH cosine \SrcOneKnowledgeHubCosine{}), suggesting that these SDGs have heterogeneous semantic scope across policy and journalism genres. These sources have fewer texts (18--364 per SDG) and pull the centroid in different genre-specific directions.
-
-Third, the supplementary sources do not degrade the combined F1 for SDGs 1--16. For most of these SDGs, the combined F1 is close to the best single-source F1. In several cases (SDGs 8, 11, 13), the combined F1 exceeds every single-source F1, confirming that combining sources broadens semantic coverage in a way that improves discriminability rather than diluting it. SDG 17 is a notable exception: the combined F1 (\SrcSeventeenCombinedFOne{}) is lower than either single-source alternative. This is because the combined centroid (937 texts, ~66\% Knowledge Hub by volume) inherits the KH direction, which does not align optimally with the benchmark's policy-excerpt genre, while the SDGi-only centroid (321 texts) benefits from within-genre overlap with the benchmark.
-
-Table~\ref{tab:sdg-source-comparison-covgap} shows that the coverage and gap findings are also qualitatively robust to source choice. The SDG ranking by coverage is largely preserved across all four sources: SDGs 3, 4, 7, 9, 15, and 16 consistently appear among the largest clusters, while SDGs 1, 10, and 12 are consistently among the smallest. The Spearman rank correlation between combined and OSDG-only coverage is near-perfect ($\rho > 0.98$), and between combined and SDGi or KH it remains above 0.85. The semantic gap patterns are similarly stable: SDG 17 has the largest gap under every source except OSDG (where it is unavailable), and the top-three gap SDGs (17, 13, 10--6) are consistent across Combined, OSDG, and SDGi. The KH-only centroids produce larger gap variability, particularly for SDG 1 (\SrcOneKnowledgeHubGap{}) and SDG 10 (\SrcTenKnowledgeHubGap{}), reflecting the small text counts in those SDGs for the journalism corpus.
-
-The overall conclusion is that for SDGs 1--16, the combined centroid is a balanced instrument: it is not dominated by any single source and achieves comparable or better validation F1 than any single-source alternative, while preserving the coverage and gap patterns reported in the main analysis. For SDG 17, where OSDG coverage is absent, the combined centroid is a conservative choice --- it does not overfit to any single annotation genre, but it reflects a compromise direction that is less discriminative on the benchmark than either single-source alternative.
-
 \subsection{Softmax Multi-label SDG Membership}
 
 The canonical analysis forces each text into exactly one SDG by nearest-centroid assignment. This is transparent and directly interpretable, but it also imposes a one-SDG-per-text assumption on discourse that is naturally multi-label. A research abstract or policy chunk may simultaneously concern climate, energy, infrastructure, inequality, health, and governance. To stress-test this assumption, I implement an alternative specification in which each text contributes fractionally to all 17 SDGs.
@@ -591,44 +632,6 @@ The corpus-calibrated variant is the stronger stress test. Across the tested tem
 \end{table}
 
 The substantive conclusion is therefore not that softmax ``fixes'' the centroid method. Rather, low-temperature raw softmax suggests that the main hard-label findings are not merely artefacts of winner-takes-all assignment, while the corpus-calibrated variant shows that exact semantic-gap rankings remain sensitive to corpus-level calibration choices. Broad patterns should therefore be emphasised over exact SDG rank ordering.
-
-\subsection{Policy Source-Family Sensitivity}
-\label{app:policy-source-family-sensitivity}
-
-The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Table~\ref{tab:policy-source-family-sensitivity} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
-
-The answer is mixed. The broad international-institutional profile is clearly source-family sensitive. The curated AI/SDG family is much more innovation-oriented, with SDG 9 leading its document-weighted profile, while the SDGi and UNGDC families are more strongly concentrated on climate, partnerships, governance, and, in the SDGi case, SDG 11-style institutional review language. At the same time, the broader full-corpus pattern is not driven by one family alone: both the UNGDC speeches and the full corpus are dominated by the climate--partnerships--governance block, and SDG 17 remains the largest semantic-gap case across all three families.
-
-The implication is interpretive rather than corrective. The full policy corpus should be read as international institutional SDG discourse, not as a universal profile of all AI sustainability policy. This does not invalidate the dissertation's main diagnostic purpose, but it narrows the scope of what the policy-side distribution is taken to represent.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Policy source-family sensitivity diagnostic. Coverage rankings are document-weighted within each source family. Mean semantic gap is the mean valid within-SDG research--policy gap for that family using the canonical chunk cap.}
-\label{tab:policy-source-family-sensitivity}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/main/tables/tab_policy_source_family_sensitivity.tex}
-}
-\end{table}
-
-\subsection{SDG 4 Lexical Artefact Audit}
-\label{app:sdg4-lexical-audit}
-
-The SDG 4 caveat is not used to relabel research records. Its narrower purpose is to test whether the caveat is empirically plausible. Table~\ref{tab:sdg4-lexical-audit} therefore compares the lexical composition of SDG 4-assigned research records with a matched non-SDG4 sample and with SDG 9, using only two transparent keyword groups: ML-learning vocabulary and education-specific vocabulary.
-
-The audit points to a more nuanced conclusion than a pure false-positive story. More than half of the SDG 4-assigned set contains education-specific vocabulary without ML-only terms, and roughly another third contains both education and ML-learning vocabulary. By contrast, the matched non-SDG4 sample and the SDG 9 comparison set are dominated by ML-only vocabulary. This means the SDG 4 signal is not simply the same technical language that drives SDG 9. However, the large ``both'' share also confirms that ML-learning language and education language overlap materially within the SDG 4-assigned set.
-
-The main analysis therefore retains the canonical nearest-centroid assignment but continues to treat SDG 4 as artefact-caveated. The most accurate reading is not ``clean education'' and not ``pure ML artefact,'' but rather a learning-related assignment whose interpretation is blurred by lexical overlap.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{SDG 4 lexical artefact audit. The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.}
-\label{tab:sdg4-lexical-audit}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/main/tables/tab_sdg4_lexical_audit.tex}
-}
-\end{table}
 
 \subsection{Directional Asymmetry Diagnostic}
 \label{app:directional-asymmetry}
