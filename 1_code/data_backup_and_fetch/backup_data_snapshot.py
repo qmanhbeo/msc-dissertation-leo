@@ -355,8 +355,8 @@ def main() -> None:
     ap.add_argument(
         "--output-dir",
         type=Path,
-        default=WORKSPACE_ROOT,
-        help="Where to write the local archive and checksum. Defaults to dissertation root.",
+        default=WORKSPACE_ROOT / "2_data" / "archive",
+        help="Where to write the local archive and checksum. Defaults to 2_data/archive/.",
     )
     ap.add_argument(
         "--remote-root",
