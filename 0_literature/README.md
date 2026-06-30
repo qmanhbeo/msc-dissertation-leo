@@ -54,6 +54,8 @@ Some papers have `.md` companion files (full-text reproductions).
 | **biber1988variation** | `semantic_methods/biber1988variation.pdf` | Cambridge UP | Was `Biber1998.pdf` (reprint) |
 | **biberConrad2009register** | `semantic_methods/Biber2009.pdf` | Cambridge UP | |
 | **Reimers2019** | `semantic_methods/Reimers2019.pdf` | ACL (OA) | + `.md` |
+| **Harris1954** | `semantic_methods/Harris1954.pdf` | Taylor & Francis (OA) | Distributional hypothesis foundation |
+| **Marelli2014** | `semantic_methods/Marelli2014.pdf` | ACL (OA) | STS vs entailment distinction |
 | **Priem2022** | `research_infrastructure/Priem2022.pdf` | arXiv | + `.md` |
 
 ---
@@ -101,6 +103,6 @@ All 41 cited works now have PDFs on disk. The remaining entries below are policy
 
 ---
 
-## All 47 cited works accounted for.
+## All 49 cited works accounted for.
 
 *Generated 2026-06-29 by the citation-inventory script.*

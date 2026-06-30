@@ -62,29 +62,31 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 29 | Rodriguez2023 | semantic_methods/Rodriguez2023.pdf | DONE | Renamed from `Rodriguez et al 2023.pdf` |
 | 30 | biber1988variation | semantic_methods/biber1988variation.pdf | DONE | |
 | 31 | biberConrad2009register | semantic_methods/Biber2009.pdf | DONE | |
+| 32 | Harris1954 | semantic_methods/Harris1954.pdf | DONE | |
+| 33 | Marelli2014 | semantic_methods/Marelli2014.pdf | DONE | |
 
 ## Research Infrastructure
 
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
-| 32 | Priem2022 | research_infrastructure/Priem2022.pdf | DONE | |
+| 34 | Priem2022 | research_infrastructure/Priem2022.pdf | DONE | |
 
 ## Policy docs / datasets (no PDF to check)
 
 | # | Key | Type | Status | Notes |
 |---|---|---|---|---|
-| 33 | UN2015 | UN resolution | SKIP | Webpage only |
-| 34 | Paris2015 | International treaty | SKIP | Webpage only |
-| 35 | IPCC2022 | IPCC report | SKIP | Webpage only |
-| 36 | OECD2019 | OECD principles | SKIP | Webpage only |
-| 37 | EUAI2024 | EU legislation | SKIP | Webpage only |
-| 38 | UNESCO2021 | UNESCO recommendation | SKIP | Webpage only |
-| 39 | UKAI2021 | UK government strategy | SKIP | Webpage only |
-| 40 | UNAI2024 | UN report | SKIP | Webpage only |
-| 41 | AUAI2024 | AU strategy | SKIP | Webpage only |
-| 42 | Sachs2024 | SDG Index report | SKIP | Webpage only |
-| 43 | Sachs2025 | SDG Index report | SKIP | Webpage only |
-| 44 | SDGi2024 | HuggingFace dataset | SKIP | Dataset |
-| 45 | UNGDC2024 | Harvard Dataverse | SKIP | Dataset |
-| 46 | Aurora2020SDGSurvey | Zenodo dataset | SKIP | Dataset |
-| 47 | SDGBenchmark | GitHub repo | SKIP | Software repo |
+| 35 | UN2015 | UN resolution | SKIP | Webpage only |
+| 36 | Paris2015 | International treaty | SKIP | Webpage only |
+| 37 | IPCC2022 | IPCC report | SKIP | Webpage only |
+| 38 | OECD2019 | OECD principles | SKIP | Webpage only |
+| 39 | EUAI2024 | EU legislation | SKIP | Webpage only |
+| 40 | UNESCO2021 | UNESCO recommendation | SKIP | Webpage only |
+| 41 | UKAI2021 | UK government strategy | SKIP | Webpage only |
+| 42 | UNAI2024 | UN report | SKIP | Webpage only |
+| 43 | AUAI2024 | AU strategy | SKIP | Webpage only |
+| 44 | Sachs2024 | SDG Index report | SKIP | Webpage only |
+| 45 | Sachs2025 | SDG Index report | SKIP | Webpage only |
+| 46 | SDGi2024 | HuggingFace dataset | SKIP | Dataset |
+| 47 | UNGDC2024 | Harvard Dataverse | SKIP | Dataset |
+| 48 | Aurora2020SDGSurvey | Zenodo dataset | SKIP | Dataset |
+| 49 | SDGBenchmark | GitHub repo | SKIP | Software repo |
