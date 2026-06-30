@@ -95,3 +95,4 @@ checkpoints/
 4_outputs/**/*.out
 4_outputs/**/*.run.xml
 4_outputs/**/*.toc
+**/__pycache__/
