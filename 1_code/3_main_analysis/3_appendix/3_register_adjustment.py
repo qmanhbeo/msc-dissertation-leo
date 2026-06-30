@@ -61,7 +61,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from shared_utils import DissertationOutputs
 from semantic_gap_shared import (
-    CHUNK_CAP_PRIMARY,
+    SEGMENT_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
     N_SDG,
     POLICY_EMB,
@@ -127,7 +127,7 @@ def ensure_register_robustness_outputs(output_dir: Path) -> DissertationOutputs:
     figures_dir = robustness_root / "figures"
     for path in (data_dir, tables_dir, figures_dir):
         path.mkdir(parents=True, exist_ok=True)
-    return DissertationOutputs(root=data_dir, tables_dir=tables_dir, figures_dir=figures_dir)
+    return DissertationOutputs(root=robustness_root, tables_dir=tables_dir, figures_dir=figures_dir, data_dir=data_dir)
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -162,7 +162,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--val-frac", type=float, default=DEFAULT_VAL_FRAC)
     p.add_argument("--test-frac", type=float, default=DEFAULT_TEST_FRAC)
     p.add_argument("--c-grid", default="0.01,0.1,1.0,10.0")
-    p.add_argument("--chunk-cap", type=int, default=CHUNK_CAP_PRIMARY)
+    p.add_argument("--segment-cap", type=int, default=SEGMENT_CAP_PRIMARY)
     p.add_argument("--extreme-top-n", type=int, default=DEFAULT_EXTREME_TOP_N)
     p.add_argument("--tfidf-sample-per-class", type=int, default=DEFAULT_TFIDF_SAMPLE_PER_CLASS)
     p.add_argument("--tfidf-max-features", type=int, default=DEFAULT_TFIDF_MAX_FEATURES)
@@ -310,10 +310,14 @@ def write_json(path: Path, payload: Any) -> None:
 
 def path_signature(path: Path) -> dict[str, Any]:
     stat = path.stat()
+    size = int(stat.st_size)
+    with path.open("rb") as f:
+        head = f.read(4096)
+    content_digest = hashlib.sha256(head).hexdigest()[:16]
     return {
         "path": str(path),
-        "size": int(stat.st_size),
-        "mtime_ns": int(stat.st_mtime_ns),
+        "size": size,
+        "content_head_digest": content_digest,
     }
 
 
@@ -386,12 +390,12 @@ def build_linear_classifier(classifier_type: str, seed: int, *, c_value: float =
     }[classifier_type]
     max_iter = 2000 if solver == "saga" else 1000
     return LogisticRegression(
-        penalty="l2",
         C=c_value,
         solver=solver,
         max_iter=max_iter,
         random_state=seed,
         class_weight=None,
+        l1_ratio=0,
     )
 
 
@@ -596,11 +600,11 @@ def load_or_build_classifier_cache(
     test_cm = confusion_matrix(y_test, test_preds, labels=[0, 1]).tolist()
 
     final_model = LogisticRegression(
-        penalty="l2",
         C=selected_c,
         solver="liblinear",
         max_iter=1000,
         random_state=seed,
+        l1_ratio=0,
     )
     final_model.fit(X_train_val, y_train_val)
     coef = final_model.coef_[0].astype(np.float32)
@@ -797,11 +801,11 @@ def fit_and_score_model(
     seed: int,
 ) -> tuple[LogisticRegression, dict[str, float], dict[str, float]]:
     model = LogisticRegression(
-        penalty="l2",
         C=c_value,
         solver="liblinear",
         max_iter=1000,
         random_state=seed,
+        l1_ratio=0,
     )
     model.fit(X_train, y_train)
     train_scores = model.decision_function(X_train)
@@ -882,11 +886,11 @@ def merge_gap_results(raw_results: list[dict[str, Any]], adjusted_results: list[
             {
                 "sdg": raw_row["sdg"],
                 "n_papers": raw_row["n_papers"],
-                "n_policy_chunks": raw_row["n_policy_chunks"],
-                "n_policy_chunks_capped": raw_row["n_policy_chunks_capped"],
+                "n_policy_segments": raw_row["n_policy_segments"],
+                "n_policy_segments_capped": raw_row["n_policy_segments_capped"],
                 "n_policy_docs": raw_row["n_policy_docs"],
                 "n_policy_docs_capped": raw_row["n_policy_docs_capped"],
-                "chunk_cap": raw_row["chunk_cap"],
+                "segment_cap": raw_row["segment_cap"],
                 "raw_similarity": raw_row["semantic_similarity"],
                 "raw_gap": raw_row["semantic_gap"],
                 "register_adjusted_similarity": adj_row["semantic_similarity"],
@@ -914,11 +918,11 @@ def write_combined_csv(path: Path, rows: list[dict[str, Any]]) -> None:
             fieldnames=[
                 "sdg",
                 "n_papers",
-                "n_policy_chunks",
-                "n_policy_chunks_capped",
+                "n_policy_segments",
+                "n_policy_segments_capped",
                 "n_policy_docs",
                 "n_policy_docs_capped",
-                "chunk_cap",
+                "segment_cap",
                 "raw_similarity",
                 "raw_gap",
                 "raw_research_cohesion",
@@ -1224,11 +1228,11 @@ def load_or_build_tfidf_cache(
     vectorizer = TfidfVectorizer(max_features=tfidf_max_features, min_df=2)
     X_tfidf = vectorizer.fit_transform(tfidf_texts)
     tfidf_model = LogisticRegression(
-        penalty="l2",
         C=selected_c,
         solver="liblinear",
         max_iter=1000,
         random_state=seed,
+        l1_ratio=0,
     )
     tfidf_model.fit(X_tfidf, tfidf_labels)
     write_tfidf_terms_csv(cache_path, vectorizer, tfidf_model)
@@ -1296,11 +1300,11 @@ def fit_classifier_bundle(
     test_cm = confusion_matrix(y_test, test_preds, labels=[0, 1]).tolist()
 
     final_model = LogisticRegression(
-        penalty="l2",
         C=selected_c,
         solver="liblinear",
         max_iter=1000,
         random_state=seed,
+        l1_ratio=0,
     )
     final_model.fit(X_train_val, y_train_val)
     coef = final_model.coef_[0].astype(np.float32)
@@ -1567,11 +1571,11 @@ def merge_method_gap_results(
             {
                 "sdg": sdg,
                 "n_papers": raw_row["n_papers"],
-                "n_policy_chunks": raw_row["n_policy_chunks"],
-                "n_policy_chunks_capped": raw_row["n_policy_chunks_capped"],
+                "n_policy_segments": raw_row["n_policy_segments"],
+                "n_policy_segments_capped": raw_row["n_policy_segments_capped"],
                 "n_policy_docs": raw_row["n_policy_docs"],
                 "n_policy_docs_capped": raw_row["n_policy_docs_capped"],
-                "chunk_cap": raw_row["chunk_cap"],
+                "segment_cap": raw_row["segment_cap"],
                 "raw_similarity": raw_row["semantic_similarity"],
                 "raw_gap": raw_row["semantic_gap"],
                 adjusted_similarity_field: adjusted_similarity,
@@ -1820,6 +1824,7 @@ def load_or_build_within_sdg_method_cache(
     vectors_by_sdg: dict[int, np.ndarray] = {}
     skipped_sdgs: dict[int, str] = {}
     for sdg_idx in range(N_SDG):
+        log.info("Fitting within-SDG classifier SDG %d/%d", sdg_idx + 1, N_SDG)
         research_pool = research_indices_by_sdg[sdg_idx]
         policy_pool = policy_indices_by_sdg[sdg_idx]
         available_research = int(research_pool.shape[0])
@@ -2219,7 +2224,7 @@ def build_regression_gap_comparison_rows(
             {
                 "sdg": sdg,
                 "n_papers": raw_row["n_papers"],
-                "n_policy_chunks_capped": raw_row["n_policy_chunks_capped"],
+                "n_policy_segments_capped": raw_row["n_policy_segments_capped"],
                 "n_policy_docs_capped": raw_row["n_policy_docs_capped"],
                 "raw_gap": raw_row["semantic_gap"],
                 "classifier_global_adjusted_gap": None if clf_global is None else clf_global["sdg_balanced_adjusted_gap"],
@@ -2243,7 +2248,7 @@ def write_regression_gap_comparison_csv(path: Path, rows: list[dict[str, Any]]) 
         [
             "sdg",
             "n_papers",
-            "n_policy_chunks_capped",
+            "n_policy_segments_capped",
             "n_policy_docs_capped",
             "raw_gap",
             "classifier_global_adjusted_gap",
@@ -2520,6 +2525,7 @@ def load_or_build_local_heldout_sdg_generalization(
 
     fold_rows: list[dict[str, Any]] = []
     for fold_idx, heldout_sdgs in enumerate(HELDOUT_SDG_FOLDS, start=1):
+        log.info("Fitting held-out fold %d/%d (held SDGs: %s)", fold_idx, len(HELDOUT_SDG_FOLDS), heldout_sdgs)
         train_sdgs = tuple(sdg for sdg in all_sdgs if sdg not in heldout_sdgs)
         research_train_pool = combine_index_pools(research_indices_by_sdg, train_sdgs)
         research_test_pool = combine_index_pools(research_indices_by_sdg, heldout_sdgs)
@@ -2647,6 +2653,7 @@ def learn_additional_directions(
     current_train_val = residuals_by_k[1]["train_val"]
 
     for step in range(2, max_k + 1):
+        log.info("Fitting multi-direction step %d/%d", step, max_k)
         bundle = fit_classifier_bundle(
             X_train=current_train,
             y_train=y_train,
@@ -2753,7 +2760,7 @@ def load_or_build_local_multi_direction(
     policy_ids: list[dict[str, Any]],
     shards: list[ResearchShard],
     research_counts: np.ndarray,
-    chunk_cap: int,
+    segment_cap: int,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     payload = {
         "schema_version": CACHE_SCHEMA_VERSION,
@@ -2763,7 +2770,7 @@ def load_or_build_local_multi_direction(
         "c_grid": list(c_grid),
         "seed": seed,
         "ks": list(ks),
-        "chunk_cap": chunk_cap,
+        "segment_cap": segment_cap,
     }
     key = stable_cache_key(payload)
     cache_path = cache_json_path(cache_root, "local_multi_direction", key)
@@ -2809,6 +2816,7 @@ def load_or_build_local_multi_direction(
         policy_by_k[step] = current_policy
 
     for k in ks:
+        log.info("Fitting multi-direction k=%d (ks=%s)", k, ks)
         bundle = fit_classifier_bundle(
             X_train=residuals_by_k[k]["train"],
             y_train=y_train,
@@ -2828,7 +2836,7 @@ def load_or_build_local_multi_direction(
             policy_emb=policy_by_k[k],
             policy_assignments=policy_assignments,
             policy_ids=policy_ids,
-            chunk_cap=chunk_cap,
+            segment_cap=segment_cap,
             rng=np.random.default_rng(seed),
         )
         top_adjusted = sorted(
@@ -2886,14 +2894,14 @@ def build_capped_policy_indices_by_sdg(
     *,
     policy_assignments: np.ndarray,
     policy_ids: list[dict[str, Any]],
-    chunk_cap: int,
+    segment_cap: int,
     seed: int,
 ) -> dict[int, list[int]]:
     rng = np.random.default_rng(seed)
     out: dict[int, list[int]] = {}
     for sdg_idx in range(N_SDG):
         idxs = np.flatnonzero(policy_assignments == sdg_idx).astype(np.int64).tolist()
-        out[sdg_idx] = cap_policy_indices_per_doc(idxs, policy_ids, chunk_cap, rng)
+        out[sdg_idx] = cap_policy_indices_per_doc(idxs, policy_ids, segment_cap, rng)
     return out
 
 
@@ -2943,7 +2951,7 @@ def load_or_build_local_topic_match(
     policy_text_ids: list[dict[str, Any]],
     shards: list[ResearchShard],
     register_unit: np.ndarray,
-    chunk_cap: int,
+    segment_cap: int,
     topic_match_research_per_sdg: int,
     topic_match_top_k: int,
     seed: int,
@@ -2953,7 +2961,7 @@ def load_or_build_local_topic_match(
         "phase": "local_topic_match",
         "base_signature": base_signature,
         "research_indices_by_sdg_signature": research_indices_by_sdg_signature,
-        "chunk_cap": chunk_cap,
+        "segment_cap": segment_cap,
         "topic_match_research_per_sdg": topic_match_research_per_sdg,
         "topic_match_top_k": topic_match_top_k,
         "seed": seed,
@@ -2968,7 +2976,7 @@ def load_or_build_local_topic_match(
     capped_policy_by_sdg = build_capped_policy_indices_by_sdg(
         policy_assignments=policy_assignments,
         policy_ids=policy_ids,
-        chunk_cap=chunk_cap,
+        segment_cap=segment_cap,
         seed=seed,
     )
     per_sdg_rows: list[dict[str, Any]] = []
@@ -3310,11 +3318,11 @@ def write_gap_comparison_csv(
     fieldnames = [
         "sdg",
         "n_papers",
-        "n_policy_chunks",
-        "n_policy_chunks_capped",
+        "n_policy_segments",
+        "n_policy_segments_capped",
         "n_policy_docs",
         "n_policy_docs_capped",
-        "chunk_cap",
+        "segment_cap",
         "raw_similarity",
         "raw_gap",
         "raw_research_cohesion",
@@ -4528,7 +4536,7 @@ def main() -> None:
         policy_emb=policy_emb,
         policy_assignments=policy_assignments,
         policy_ids=policy_score_ids,
-        chunk_cap=args.chunk_cap,
+        segment_cap=args.segment_cap,
         rng=raw_rng,
     )
 
@@ -4557,7 +4565,7 @@ def main() -> None:
         policy_emb=adjusted_policy_emb,
         policy_assignments=policy_assignments,
         policy_ids=policy_score_ids,
-        chunk_cap=args.chunk_cap,
+        segment_cap=args.segment_cap,
         rng=adjusted_rng,
     )
 
@@ -4566,7 +4574,7 @@ def main() -> None:
         "robustness_check": "register_adjusted_semantic_gap",
         "canonical_semantic_gap_remains": "raw semantic gap",
         "seed": args.seed,
-        "chunk_cap": args.chunk_cap,
+        "segment_cap": args.segment_cap,
         "min_cluster_size": MIN_CLUSTER_SIZE,
         "classifier_metrics_file": out_metrics.name,
         "note": (
@@ -4720,7 +4728,7 @@ def main() -> None:
             policy_emb=sdg_balanced_policy_emb,
             policy_assignments=policy_assignments,
             policy_ids=policy_score_ids,
-            chunk_cap=args.chunk_cap,
+            segment_cap=args.segment_cap,
             rng=np.random.default_rng(register_methods_seed),
         )
         sdg_balanced_rows = merge_method_gap_results(
@@ -4824,7 +4832,7 @@ def main() -> None:
             policy_emb=within_policy_emb,
             policy_assignments=policy_assignments,
             policy_ids=policy_score_ids,
-            chunk_cap=args.chunk_cap,
+            segment_cap=args.segment_cap,
             rng=np.random.default_rng(register_methods_seed),
         )
         within_sdg_rows = merge_method_gap_results(
@@ -5050,7 +5058,7 @@ def main() -> None:
         policy_emb=regression_global_policy_emb,
         policy_assignments=policy_assignments,
         policy_ids=policy_score_ids,
-        chunk_cap=args.chunk_cap,
+        segment_cap=args.segment_cap,
         rng=np.random.default_rng(register_methods_seed + 701),
     )
     regression_global_rows = merge_method_gap_results(
@@ -5087,7 +5095,7 @@ def main() -> None:
         policy_emb=regression_within_policy_emb,
         policy_assignments=policy_assignments,
         policy_ids=policy_score_ids,
-        chunk_cap=args.chunk_cap,
+        segment_cap=args.segment_cap,
         rng=np.random.default_rng(register_methods_seed + 702),
     )
     regression_within_rows = merge_method_gap_results(
@@ -5262,7 +5270,7 @@ def main() -> None:
             policy_ids=policy_score_ids,
             shards=shards,
             research_counts=research_counts,
-            chunk_cap=args.chunk_cap,
+            segment_cap=args.segment_cap,
         )
         multi_json_path = confidence_dir / "multi_direction_gap_curve.json"
         multi_curve_csv_path = confidence_dir / "multi_direction_gap_curve.csv"
@@ -5316,7 +5324,7 @@ def main() -> None:
             policy_text_ids=policy_text_ids,
             shards=shards,
             register_unit=register_unit,
-            chunk_cap=args.chunk_cap,
+            segment_cap=args.segment_cap,
             topic_match_research_per_sdg=args.topic_match_research_per_sdg,
             topic_match_top_k=args.topic_match_top_k,
             seed=args.seed,

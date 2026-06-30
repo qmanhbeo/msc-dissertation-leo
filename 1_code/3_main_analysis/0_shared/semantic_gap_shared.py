@@ -19,9 +19,9 @@ RESEARCH_CENTROID_META = SCORED_DIR / "metadata" / "research_centroid_meta.json"
 
 N_SDG = 17
 
-CHUNK_CAP_PRIMARY = 50
-CHUNK_CAP_SENS_LO = 20
-CHUNK_CAP_SENS_HI = 100
+SEGMENT_CAP_PRIMARY = 50
+SEGMENT_CAP_SENS_LO = 20
+SEGMENT_CAP_SENS_HI = 100
 MIN_CLUSTER_SIZE = 10
 RANDOM_SEED = 42
 
@@ -64,13 +64,13 @@ def build_sub_centroid(emb: np.ndarray, idxs: list[int]) -> tuple[np.ndarray | N
 def cap_policy_indices_per_doc(
     policy_idxs: list[int],
     policy_ids: list[dict],
-    chunk_cap: int,
+    segment_cap: int,
     rng: np.random.Generator,
 ) -> list[int]:
     """
-    Apply per-document chunk cap to a list of policy chunk indices.
+    Apply per-document segment cap to a list of policy segment indices.
 
-    Groups indices by source_doc and samples at most `chunk_cap` per document.
+    Groups indices by source_doc and samples at most `segment_cap` per document.
     """
     doc_to_idxs: dict[str, list[int]] = defaultdict(list)
     for i in policy_idxs:
@@ -78,10 +78,10 @@ def cap_policy_indices_per_doc(
 
     result = []
     for doc_idxs in doc_to_idxs.values():
-        if len(doc_idxs) <= chunk_cap:
+        if len(doc_idxs) <= segment_cap:
             result.extend(doc_idxs)
         else:
-            sampled = rng.choice(doc_idxs, size=chunk_cap, replace=False).tolist()
+            sampled = rng.choice(doc_idxs, size=segment_cap, replace=False).tolist()
             result.extend(sampled)
 
     return result
@@ -94,7 +94,7 @@ def compute_sdg_semantic_gaps(
     policy_emb: np.ndarray,
     policy_assignments: np.ndarray,
     policy_ids: list[dict],
-    chunk_cap: int,
+    segment_cap: int,
     rng: np.random.Generator,
 ) -> list[dict]:
     """
@@ -107,25 +107,25 @@ def compute_sdg_semantic_gaps(
         policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
 
         n_papers = int(research_counts[sdg_idx])
-        n_chunks = len(policy_idxs)
+        n_segments = len(policy_idxs)
 
-        policy_idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, chunk_cap, rng)
-        n_chunks_capped = len(policy_idxs_capped)
+        policy_idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, segment_cap, rng)
+        n_segments_capped = len(policy_idxs_capped)
 
         policy_docs_raw = {policy_ids[i]["source_doc"] for i in policy_idxs}
         policy_docs_capped = {policy_ids[i]["source_doc"] for i in policy_idxs_capped}
 
         unreliable_paper = n_papers < MIN_CLUSTER_SIZE
-        unreliable_policy = n_chunks_capped < MIN_CLUSTER_SIZE
+        unreliable_policy = n_segments_capped < MIN_CLUSTER_SIZE
         unreliable = unreliable_paper or unreliable_policy
 
         if unreliable:
             log.warning(
-                "SDG %2d: unreliable gap estimate — n_papers=%d, n_chunks_capped=%d "
+                "SDG %2d: unreliable gap estimate — n_papers=%d, n_segments_capped=%d "
                 "(min=%d required for both)",
                 sdg,
                 n_papers,
-                n_chunks_capped,
+                n_segments_capped,
                 MIN_CLUSTER_SIZE,
             )
 
@@ -139,11 +139,11 @@ def compute_sdg_semantic_gaps(
                 {
                     "sdg": sdg,
                     "n_papers": n_papers,
-                    "n_policy_chunks": n_chunks,
-                    "n_policy_chunks_capped": n_chunks_capped,
+                    "n_policy_segments": n_segments,
+                    "n_policy_segments_capped": n_segments_capped,
                     "n_policy_docs": len(policy_docs_raw),
                     "n_policy_docs_capped": len(policy_docs_capped),
-                    "chunk_cap": chunk_cap,
+                    "segment_cap": segment_cap,
                     "semantic_similarity": None,
                     "semantic_gap": None,
                     "research_cohesion": None,
@@ -161,11 +161,11 @@ def compute_sdg_semantic_gaps(
             {
                 "sdg": sdg,
                 "n_papers": n_papers,
-                "n_policy_chunks": n_chunks,
-                "n_policy_chunks_capped": n_chunks_capped,
+                "n_policy_segments": n_segments,
+                "n_policy_segments_capped": n_segments_capped,
                 "n_policy_docs": len(policy_docs_raw),
                 "n_policy_docs_capped": len(policy_docs_capped),
-                "chunk_cap": chunk_cap,
+                "segment_cap": segment_cap,
                 "semantic_similarity": round(sim, 6),
                 "semantic_gap": round(gap, 6),
                 "research_cohesion": round(res_cohesion, 6),
@@ -174,7 +174,7 @@ def compute_sdg_semantic_gaps(
                 "unreliable_reason": (
                     "n_papers_too_small"
                     if unreliable_paper
-                    else "n_policy_chunks_too_small"
+                    else "n_policy_segments_too_small"
                     if unreliable_policy
                     else None
                 ),
@@ -184,13 +184,13 @@ def compute_sdg_semantic_gaps(
         level = logging.WARNING if unreliable else logging.INFO
         log.log(
             level,
-            "SDG %2d | n_papers=%4d | n_chunks=%5d→%4d (cap=%d) | "
+            "SDG %2d | n_papers=%4d | n_segments=%5d→%4d (cap=%d) | "
             "n_docs=%4d | sim=%.4f | gap=%.4f%s",
             sdg,
             n_papers,
-            n_chunks,
-            n_chunks_capped,
-            chunk_cap,
+            n_segments,
+            n_segments_capped,
+            segment_cap,
             len(policy_docs_capped),
             sim,
             gap,

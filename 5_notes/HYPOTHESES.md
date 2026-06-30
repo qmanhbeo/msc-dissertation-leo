@@ -55,7 +55,7 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 ## H6–H10: Semantic Gap (What is said within each SDG?)
 
 ### H6 — Within SDG 13 (Climate), research is technical; policy is contextual
-> **Research chunks aligned to SDG 13 will discuss modelling, forecasting, and ML methods; policy chunks will discuss adaptation, finance, and equity.**
+> **Research segments aligned to SDG 13 will discuss modelling, forecasting, and ML methods; policy segments will discuss adaptation, finance, and equity.**
 
 - Expected research themes: emissions modelling, climate downscaling, extreme weather prediction, carbon footprint optimisation
 - Expected policy themes: climate finance, loss and damage, adaptation frameworks, vulnerable populations
@@ -63,14 +63,14 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 - **Rationale:** This is the most studied SDG in AI research. The semantic divergence — if large — is a strong finding.
 
 ### H7 — Within SDG 3 (Health), research focuses on diagnosis; policy focuses on access
-> **Research chunks aligned to SDG 3 will cluster around AI diagnostics and drug discovery; policy chunks will emphasise health system access, equity, and prevention.**
+> **Research segments aligned to SDG 3 will cluster around AI diagnostics and drug discovery; policy segments will emphasise health system access, equity, and prevention.**
 
 - AI health research is dominated by medical imaging, genomics, and clinical prediction
 - Policy health discourse centres on universal health coverage, maternal mortality, infectious disease control
 - **Rationale:** The "AI for health" research agenda and the global health policy agenda are well-documented to be misaligned (see existing literature on AI and global health equity).
 
 ### H8 — Within SDG 4 (Education), research is about personalisation; policy is about access
-> **Research chunks will focus on adaptive learning systems and AI tutors; policy chunks will emphasise out-of-school children, teacher training, and foundational literacy.**
+> **Research segments will focus on adaptive learning systems and AI tutors; policy segments will emphasise out-of-school children, teacher training, and foundational literacy.**
 
 - EdTech AI research focuses on optimising learning for connected, enrolled students
 - Policy focuses on the 250+ million children not in school, and low-resource settings
@@ -134,15 +134,15 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 
 ## H16–H20: Structural Hypotheses
 
-### H16 — Research papers will have narrower SDG profiles than policy chunks
-> **Each research paper will score highly on fewer SDGs (more concentrated alignment) than each policy chunk.**
+### H16 — Research papers will have narrower SDG profiles than policy segments
+> **Each research paper will score highly on fewer SDGs (more concentrated alignment) than each policy segment.**
 
 - Abstracts are focused; they address one or two problems
-- Policy document chunks span multiple SDGs within a single passage
+- Policy document segments span multiple SDGs within a single passage
 - **Measured by:** Average number of SDGs scoring above threshold per document type; entropy of SDG score distribution per text
 
-### H17 — Policy chunks from PARIS21 and UN AI Strategy will have different SDG profiles
-> **PARIS21 chunks will align more strongly with SDGs 9, 17, and data-related SDGs; UN AI Strategy chunks will spread more evenly across governance SDGs.**
+### H17 — Policy segments from PARIS21 and UN AI Strategy will have different SDG profiles
+> **PARIS21 segments will align more strongly with SDGs 9, 17, and data-related SDGs; UN AI Strategy segments will spread more evenly across governance SDGs.**
 
 - PARIS21 is about AI for official statistics — naturally SDG 9 and 17
 - UN AI Strategy is broader — covers ethics, national strategies, governance
@@ -239,13 +239,13 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 - **Prediction:** Negative correlation, particularly driven by SDG 13 (high research, divergent language) and SDG 10 (low research, possibly convergent language when it appears)
 
 ### H26 — Research-policy alignment is asymmetric: research ignores policy more than policy ignores research
-> **Research papers will score lower against policy-derived SDG profiles than policy chunks score against research-derived SDG profiles.**
+> **Research papers will score lower against policy-derived SDG profiles than policy segments score against research-derived SDG profiles.**
 
 - Bidirectional alignment test: measure not just "does research align with policy" but "does policy align with research"
 - If research scores low against policy centroids but policy scores high against research centroids → research is ignoring policy priorities, but policy is aware of / using research vocabulary
 - If both score low → mutual incomprehension
 - If research scores higher → policy is setting a narrower agenda than research is addressing
-- **Measured by:** Building centroids from research corpus (paper embeddings averaged per inferred SDG) and scoring policy chunks against them; comparing direction of asymmetry
+- **Measured by:** Building centroids from research corpus (paper embeddings averaged per inferred SDG) and scoring policy segments against them; comparing direction of asymmetry
 - **Rationale:** Policy documents (UN AI Strategy, PARIS21) explicitly cite and reference AI research. They may use research language. But research papers rarely cite UN policy documents in the same way.
 
 ### H27 — The productive/problematic misalignment divide follows technical vs social SDG lines
@@ -253,20 +253,20 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 
 - *Productive misalignment*: Research engages an SDG at greater technical depth than policy; it addresses dimensions policy hasn't yet articulated
 - *Problematic misalignment*: Research is absent from or superficial on dimensions of an SDG that policy considers urgent
-- **Operationalisation:** For each misaligned SDG, qualitatively inspect the highest-scoring research chunks and policy chunks; classify the divergence type
+- **Operationalisation:** For each misaligned SDG, qualitatively inspect the highest-scoring research segments and policy segments; classify the divergence type
 - **This is the core interpretive contribution of the Discussion chapter** — not just measuring gaps but explaining what kind of gap each one is
 
 ---
 
 ## H28–H30: Second Wave Hypotheses from Literature Review (added 2026-04-05)
 
-### H28 — "AI in sustainability" policy chunks will score lowest against research embeddings
-> **Policy chunks discussing AI's own governance, ethics, energy use, or societal risks will be the most semantically distant from research paper embeddings — more distant than even the most neglected SDG topic chunks.**
+### H28 — "AI in sustainability" policy segments will score lowest against research embeddings
+> **Policy segments discussing AI's own governance, ethics, energy use, or societal risks will be the most semantically distant from research paper embeddings — more distant than even the most neglected SDG topic segments.**
 
 - UN policy documents discuss AI *in* sustainability (AI as actor with its own impacts) as well as AI *for* sustainability (AI as tool)
 - Our research corpus almost entirely captures AI *for* sustainability — papers applying AI to solve problems
 - This is not just a topical gap but a *categorical framing gap*: they are not just discussing different problems, they are having different conversations about what AI even is in a sustainability context
-- **Measured by:** After scoring, rank policy chunks by their similarity to research embeddings; qualitatively examine the bottom decile — do they cluster around governance/ethics/risk?
+- **Measured by:** After scoring, rank policy segments by their similarity to research embeddings; qualitatively examine the bottom decile — do they cluster around governance/ethics/risk?
 - **Implication if confirmed:** The framing gap (AI as tool vs AI as actor) is a distinct, additional dimension of misalignment beyond SDG coverage and within-SDG semantic gaps. Deserves its own subsection in Results
 
 ### H29 — Topical overlap on SDG 9 (Innovation) reflects a shared blind spot, not responsive research
@@ -275,7 +275,7 @@ These hypotheses are stated **before** running alignment analysis to prevent HAR
 - This is the "shared blind spot" hypothesis operationalised for the most likely candidate SDG
 - Both AI research and UN policy naturally gravitate to innovation/infrastructure framing because both are produced in institutional contexts that valorise technological progress
 - **Cannot be proven with our data** — but can be argued through: (a) examining *what specific aspects* of SDG 9 each corpus discusses (if research focuses on AI performance while policy focuses on equitable access to technology, this is operational divergence despite surface topical alignment); (b) connecting to the North-South critique (SDG 9 is a Global North priority)
-- **Measured by:** Semantic gap analysis within SDG 9; qualitative inspection of top-scoring research and policy chunks
+- **Measured by:** Semantic gap analysis within SDG 9; qualitative inspection of top-scoring research and policy segments
 
 ### H30 — Papers from 2022–2025 will show higher overall topical overlap with policy than 2018–2021 papers
 > **More recent papers will be more aligned with current policy priorities, indicating that the field is responding — slowly — to the SDG framework adopted in 2015.**
@@ -346,7 +346,7 @@ These hypotheses emerged directly from the centroid nearest-neighbour structure 
 
 ## Notes on Testing
 
-- All hypotheses tested at the level of the full corpus (6,172 papers, 47,005 policy chunks)
+- All hypotheses tested at the level of the full corpus (6,172 papers, 47,005 policy segments)
 - Hypotheses H6–H10 (semantic gap) require qualitative inspection of representative texts to confirm interpretation
 - H18 and H19 require splitting by paper metadata (year, citation count) — sample sizes will be small per cell
 - H25 is the critical structural hypothesis — a negative correlation finding would be the headline result

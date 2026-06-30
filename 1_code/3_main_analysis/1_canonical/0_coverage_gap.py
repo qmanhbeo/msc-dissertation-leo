@@ -5,21 +5,21 @@ Coverage gap = the difference in how much each corpus emphasises each SDG, measu
 the absolute difference in SDG proportion between research and policy.
 
 Two coverage profile methods are computed:
-  1. RAW (chunk-level):       each paper / each policy chunk contributes equally.
+  1. RAW (segment-level):       each paper / each policy segment contributes equally.
   2. DOCUMENT-WEIGHTED:       each *document* contributes equally to the policy profile,
-                              regardless of how many chunks it contains.
+                              regardless of how many segments it contains.
 
 The document-weighted method is required for valid analysis (Assumption A19). Without it,
-SDGi VNR/VLR national reports (31,941 chunks) and SDSN (5,591 chunks) dominate the policy
-profile by chunk count alone, drowning out the curated UN/AI policy documents (8,592 chunks)
-and UNGDC speeches (6,472 chunks). A single large report's SDG emphasis would overwhelm the
+SDGi VNR/VLR national reports (31,941 segments) and SDSN (5,591 segments) dominate the policy
+profile by segment count alone, drowning out the curated UN/AI policy documents (8,592 segments)
+and UNGDC speeches (6,472 segments). A single large report's SDG emphasis would overwhelm the
 full range of policy voices in the corpus.
 
 SDG assignment method:
-  Each paper / chunk is assigned to its top-scoring SDG (argmax). The coverage proportion for
+  Each paper / segment is assigned to its top-scoring SDG (argmax). The coverage proportion for
   SDG j in a corpus is the fraction of items assigned to SDG j. This is the "hard assignment"
   coverage profile. For the document-weighted version, each document's SDG assignment is the
-  argmax of its *mean chunk score vector* (so large documents are averaged before assignment).
+  argmax of its *mean segment score vector* (so large documents are averaged before assignment).
 
   ASSUMPTION (A-COV-HARD): Hard assignment creates a zero-sum profile — every paper/document
   contributes to exactly one SDG. This understates "breadth" items (e.g. a paper covering
@@ -39,12 +39,12 @@ Coverage gap per SDG:
 
 Inputs:
   2_data/3_scored/paper_scores_shards/metadata/manifest.json
-  2_data/3_scored/policy_scores.npy          float32 matrix with one row per policy chunk
+  2_data/3_scored/policy_scores.npy          float32 matrix with one row per policy segment
   2_data/3_scored/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
   4_outputs/sdg_attention_distribution_document_weighted.json         per-SDG coverage profiles + gap (canonical analysis)
-  4_outputs/diagnostic_sdg_attention_distribution_unweighted_chunks.json     chunk-level (unweighted) profiles + gap (diagnostic)
+  4_outputs/diagnostic_sdg_attention_distribution_unweighted_segments.json     segment-level (unweighted) profiles + gap (diagnostic)
   4_outputs/tables/*.tex              generated LaTeX macros/tables
 
 Run from project root (after score materialization for the target run context):
@@ -126,11 +126,11 @@ def document_weighted_policy_profile(
     """
     Compute document-weighted per-SDG profiles for the policy corpus.
 
-    Each *document* (unique source_doc) contributes equally, regardless of how many chunks
+    Each *document* (unique source_doc) contributes equally, regardless of how many segments
     it contains. This counteracts SDSN/SDGi dominance (Assumption A19).
 
     Method:
-      1. For each document, average all its chunk score vectors → document score vector (17,).
+      1. For each document, average all its segment score vectors → document score vector (17,).
       2. Hard-assign the document to its top SDG (argmax of document score vector).
       3. Compute the proportion of documents assigned to each SDG.
       4. Also compute the mean of document score vectors as a soft profile.
@@ -139,7 +139,7 @@ def document_weighted_policy_profile(
       (hard_profile, soft_profile, doc_meta)
       hard_profile: (N_SDG,) proportion of *documents* assigned to each SDG.
       soft_profile: (N_SDG,) mean document-level cosine sim to each SDG centroid.
-      doc_meta: {source_doc: {n_chunks, sdg_assignment, score_vector}} for diagnostics.
+      doc_meta: {source_doc: {n_segments, sdg_assignment, score_vector}} for diagnostics.
     """
     # Group row indices by source_doc.
     doc_to_rows: dict[str, list[int]] = defaultdict(list)
@@ -153,19 +153,19 @@ def document_weighted_policy_profile(
     doc_meta = {}
 
     for d_idx, (source_doc, row_idxs) in enumerate(doc_to_rows.items()):
-        # Average chunk scores for this document.
+        # Average segment scores for this document.
         # This is the document's SDG score profile — its "topical footprint" in SDG space.
-        # ASSUMPTION (A-DOC-MEAN): Averaging chunk scores assumes all chunks of a document
+        # ASSUMPTION (A-DOC-MEAN): Averaging segment scores assumes all segments of a document
         # are equally representative. Long introductions and appendices contribute the same as
-        # substantive body text. A weighted average by chunk word count would be more precise
-        # but requires loading word_count from policy_chunks_all.jsonl. The current
+        # substantive body text. A weighted average by segment word count would be more precise
+        # but requires loading word_count from policy_segments_all.jsonl. The current
         # approach is conservative and avoids introducing another assumption about weights.
         doc_vec = policy_scores[row_idxs].mean(axis=0)   # (17,)
         doc_vectors[d_idx] = doc_vec
 
         top_sdg = int(doc_vec.argmax()) + 1   # 1-indexed
         doc_meta[source_doc] = {
-            "n_chunks": len(row_idxs),
+            "n_segments": len(row_idxs),
             "sdg_assignment": top_sdg,
             "top_score": round(float(doc_vec.max()), 6),
         }
@@ -208,7 +208,7 @@ def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
     out_cov_gap = layout.data_dir / "sdg_attention_distribution_document_weighted.json"
-    out_cov_gap_raw = layout.data_dir / "diagnostic_sdg_attention_distribution_unweighted_chunks.json"
+    out_cov_gap_raw = layout.data_dir / "diagnostic_sdg_attention_distribution_unweighted_segments.json"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
@@ -234,11 +234,11 @@ def main() -> None:
     for i, v in enumerate(res_hard):
         log.info("    SDG %2d: %.4f", i + 1, v)
 
-    # ---- Policy coverage profiles — RAW (chunk-level) ----
-    # Chunk-level profile: each of 47,005 chunks contributes equally.
+    # ---- Policy coverage profiles — RAW (segment-level) ----
+    # Segment-level profile: each of 47,005 segments contributes equally.
     # This is biased by SDSN/SDGi document length — saved as a diagnostic only.
     log.info("")
-    log.info("Computing raw (chunk-level) policy coverage profiles...")
+    log.info("Computing raw (segment-level) policy coverage profiles...")
     pol_raw_hard = hard_assignment_profile(policy_scores)
     pol_raw_soft = mean_score_profile(policy_scores)
 
@@ -296,7 +296,7 @@ def main() -> None:
             "See Assumption A19 for document-weighting rationale."
         ),
         "n_research_papers": int(research["n_rows"]),
-        "n_policy_chunks": int(policy_scores.shape[0]),
+        "n_policy_segments": int(policy_scores.shape[0]),
         "n_policy_documents": len(doc_meta),
         "a15_note": (
             f"A15 FLAG: policy top scores exceed paper top scores by {a15_diff:.3f} "
@@ -328,16 +328,16 @@ def main() -> None:
         "per_document_assignments": doc_meta,
     }
 
-    # Diagnostic output (raw/chunk-level)
+    # Diagnostic output (raw/segment-level)
     coverage_gap_raw_out = {
-        "method": "chunk_level_raw",
+        "method": "segment_level_raw",
         "note": (
-            "Each policy chunk weighted equally — BIASED by document length. "
-            "SDGi VNR/VLR (31,941 chunks) and SDSN (5,591 chunks) dominate. "
+            "Each policy segment weighted equally — BIASED by document length. "
+            "SDGi VNR/VLR (31,941 segments) and SDSN (5,591 segments) dominate. "
             "Use sdg_attention_distribution_document_weighted.json (document-weighted) for primary analysis."
         ),
         "n_research_papers": int(research["n_rows"]),
-        "n_policy_chunks": int(policy_scores.shape[0]),
+        "n_policy_segments": int(policy_scores.shape[0]),
         "research_profile_hard": make_sdg_dict(res_hard),
         "policy_profile_hard_raw": make_sdg_dict(pol_raw_hard),
         "policy_profile_soft_raw": make_sdg_dict(pol_raw_soft),
@@ -395,7 +395,7 @@ def main() -> None:
     num_lines = [
         "% Auto-generated by 1_code/3_main_analysis/1_canonical/0_coverage_gap.py — do not edit manually",
         rf"\newcommand{{\NResearchPapers}}{{{_ltx_num(int(research['n_rows']))}}}",
-        rf"\newcommand{{\NPolicyChunks}}{{{_ltx_num(policy_scores.shape[0])}}}",
+        rf"\newcommand{{\NPolicySegments}}{{{_ltx_num(policy_scores.shape[0])}}}",
         rf"\newcommand{{\NPolicyDocs}}{{{_ltx_num(len(doc_meta))}}}",
         rf"\newcommand{{\PolicyPctSdgThreePlusSeventeen}}{{{pol13 + pol17:.1f}}}",
         rf"\newcommand{{\PolicyTopThreePct}}{{{pol13 + pol16 + pol17:.1f}}}",

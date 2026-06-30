@@ -4,7 +4,7 @@ Materialize active policy scoring artifacts used by downstream analysis.
 Inputs:
   2_data/2_embedded/policy.npy
   2_data/2_embedded/metadata/policy_ids.json
-  2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl
+  2_data/1_preprocessed/policy_all/policy_segments_all.jsonl
   2_data/3_scored/sdg_centroids.npy
   2_data/3_scored/research_centroids.npy
 
@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Score the active policy corpus against SDG and research centroids.")
     p.add_argument("--policy-emb", default="2_data/2_embedded/policy.npy")
     p.add_argument("--policy-ids", default="2_data/2_embedded/metadata/policy_ids.json")
-    p.add_argument("--policy-corpus", default="2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl")
+    p.add_argument("--policy-corpus", default="2_data/1_preprocessed/policy_all/policy_segments_all.jsonl")
     p.add_argument("--sdg-centroids", default="2_data/3_scored/sdg_centroids.npy")
     p.add_argument("--research-centroids", default="2_data/3_scored/research_centroids.npy")
     p.add_argument("--policy-scores-out", default="2_data/3_scored/policy_scores.npy")
@@ -75,7 +75,7 @@ def write_json(path: Path, payload) -> None:
 def load_policy_doc_map(path: Path) -> dict[str, dict[str, str]]:
     mapping: dict[str, dict[str, str]] = {}
     for row in load_jsonl(path):
-        mapping[row["chunk_id"]] = {
+        mapping[row["segment_id"]] = {
             "source_doc": row["source_doc"],
             "text": row["text"],
         }
@@ -125,14 +125,14 @@ def main() -> None:
     missing_ids: list[str] = []
     text_mismatches: list[str] = []
     for row in policy_ids:
-        chunk_id = row["id"]
-        joined = policy_doc_map.get(chunk_id)
+        segment_id = row["id"]
+        joined = policy_doc_map.get(segment_id)
         if joined is None:
-            missing_ids.append(chunk_id)
+            missing_ids.append(segment_id)
             continue
         if row.get("text") and row["text"] != joined["text"]:
-            text_mismatches.append(chunk_id)
-        policy_score_ids.append({"id": chunk_id, "source_doc": joined["source_doc"]})
+            text_mismatches.append(segment_id)
+        policy_score_ids.append({"id": segment_id, "source_doc": joined["source_doc"]})
 
     if missing_ids:
         sample = ", ".join(missing_ids[:5])
@@ -148,9 +148,9 @@ def main() -> None:
             f"Examples: {sample}"
         )
 
-    log.info("Scoring %d policy chunks against SDG centroids", policy_emb.shape[0])
+    log.info("Scoring %d policy segments against SDG centroids", policy_emb.shape[0])
     policy_scores = (policy_emb @ sdg_centroids.T).astype(np.float32)
-    log.info("Scoring %d policy chunks against research centroids", policy_emb.shape[0])
+    log.info("Scoring %d policy segments against research centroids", policy_emb.shape[0])
     policy_vs_research = (policy_emb @ research_centroids.T).astype(np.float32)
 
     policy_scores_out.parent.mkdir(parents=True, exist_ok=True)

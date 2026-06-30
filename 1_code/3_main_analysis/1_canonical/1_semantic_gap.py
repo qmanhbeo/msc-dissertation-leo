@@ -9,9 +9,9 @@ Method:
   For each SDG j:
     1. Research cluster j  = paper embeddings assigned to SDG j (all papers; no cap needed since
                              papers are independently authored, not dominated by one document).
-    2. Policy cluster j    = policy chunk embeddings assigned to SDG j, with per-document chunk cap.
+    2. Policy cluster j    = policy segment embeddings assigned to SDG j, with per-document segment cap.
     3. Research sub-centroid j = L2-normalised mean of research cluster j embeddings.
-    4. Policy sub-centroid j   = L2-normalised mean of policy cluster j embeddings (chunk-capped).
+    4. Policy sub-centroid j   = L2-normalised mean of policy cluster j embeddings (segment-capped).
     5. semantic_similarity[j]  = cosine_sim(research_sub_centroid_j, policy_sub_centroid_j)
                                = dot product (both are unit vectors after normalisation)
     6. semantic_gap[j]         = 1 - semantic_similarity[j]
@@ -21,17 +21,17 @@ Method:
     semantic_gap = 1.0 → orthogonal; the corpora discuss SDG j in completely unrelated ways
     Typical range: 0.1–0.8 (for real-world policy/research text in SBERT space)
 
-Per-document chunk cap (Assumption A-CHUNKCAT):
-  Without capping, SDSN 2024 (~3,179 chunks) and SDGi VNR/VLR reports (31,941 total chunks)
+Per-document segment cap (Assumption A-CHUNKCAT):
+  Without capping, SDSN 2024 (~3,179 segments) and SDGi VNR/VLR reports (31,941 total segments)
   would dominate the policy cluster centroids for whichever SDG they are assigned to.
-  We cap at CHUNK_CAP chunks per source_doc per SDG. Random sampling is seeded for
+  We cap at SEGMENT_CAP segments per source_doc per SDG. Random sampling is seeded for
   reproducibility.
 
-  CHUNK_CAP = 50 was chosen as a round number that:
-    - Prevents any single document from contributing more than 50 chunks to a policy cluster
-    - Still allows documents to contribute substantively (a 50-chunk sample = ~7,500 words)
-    - Is conservative relative to median document size (~14 chunks/document in the corpus)
-  This is Assumption A-CHUNKCAT. Results with CHUNK_CAP = 20 and CHUNK_CAP = 100 are
+  SEGMENT_CAP = 50 was chosen as a round number that:
+    - Prevents any single document from contributing more than 50 segments to a policy cluster
+    - Still allows documents to contribute substantively (a 50-segment sample = ~7,500 words)
+    - Is conservative relative to median document size (~14 segments/document in the corpus)
+  This is Assumption A-CHUNKCAT. Results with SEGMENT_CAP = 20 and SEGMENT_CAP = 100 are
   included as sensitivity checks.
 
 Minimum cluster size:
@@ -48,13 +48,13 @@ Minimum cluster size:
 Inputs:
   2_data/3_scored/research_centroids.npy       (17, 384)    float32
   2_data/3_scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
-  2_data/3_scored/policy_scores.npy            float32 matrix with one row per policy chunk
+  2_data/3_scored/policy_scores.npy            float32 matrix with one row per policy segment
   2_data/3_scored/metadata/policy_scores_ids.json       list of {id, source_doc}
-  2_data/2_embedded/policy.npy                 float32 matrix with one row per policy chunk
+  2_data/2_embedded/policy.npy                 float32 matrix with one row per policy segment
 
 Outputs:
-  4_outputs/sdg_conceptual_alignment_cosine_distances.json              primary: semantic gap per SDG (CHUNK_CAP=50)
-  4_outputs/robustness_check_semantic_distances_by_chunk_cap.json  sensitivity analysis at CHUNK_CAP=20 and CHUNK_CAP=100
+  4_outputs/sdg_conceptual_alignment_cosine_distances.json              primary: semantic gap per SDG (SEGMENT_CAP=50)
+  4_outputs/robustness_check_semantic_distances_by_segment_cap.json  sensitivity analysis at SEGMENT_CAP=20 and SEGMENT_CAP=100
   4_outputs/tables/*.tex                   generated LaTeX macros/tables
 
 Run from project root:
@@ -79,9 +79,9 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from shared_utils import ensure_canonical_outputs
 from semantic_gap_shared import (
-    CHUNK_CAP_PRIMARY,
-    CHUNK_CAP_SENS_HI,
-    CHUNK_CAP_SENS_LO,
+    SEGMENT_CAP_PRIMARY,
+    SEGMENT_CAP_SENS_HI,
+    SEGMENT_CAP_SENS_LO,
     MIN_CLUSTER_SIZE,
     N_SDG,
     POLICY_EMB,
@@ -125,7 +125,7 @@ def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
     out_sem_gap = layout.data_dir / "sdg_conceptual_alignment_cosine_distances.json"
-    out_sem_sens = layout.data_dir / "robustness_check_semantic_distances_by_chunk_cap.json"
+    out_sem_sens = layout.data_dir / "robustness_check_semantic_distances_by_segment_cap.json"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
@@ -156,27 +156,27 @@ def main() -> None:
         n = int(research_counts[sdg_idx])
         log.info("  SDG %2d: %d papers", sdg_idx + 1, n)
 
-    log.info("Policy cluster sizes by SDG (raw chunks):")
+    log.info("Policy cluster sizes by SDG (raw segments):")
     for sdg_idx in range(N_SDG):
         n = int((policy_assignments == sdg_idx).sum())
-        log.info("  SDG %2d: %d chunks", sdg_idx + 1, n)
+        log.info("  SDG %2d: %d segments", sdg_idx + 1, n)
 
-    # ---- Primary analysis (CHUNK_CAP = 50) ----
+    # ---- Primary analysis (SEGMENT_CAP = 50) ----
     log.info("")
     log.info("=" * 60)
-    log.info("PRIMARY SEMANTIC GAP (chunk cap = %d)", CHUNK_CAP_PRIMARY)
+    log.info("PRIMARY SEMANTIC GAP (segment cap = %d)", SEGMENT_CAP_PRIMARY)
     log.info("=" * 60)
     rng_primary = np.random.default_rng(RANDOM_SEED)
     primary_results = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,
-        policy_ids, CHUNK_CAP_PRIMARY, rng_primary
+        policy_ids, SEGMENT_CAP_PRIMARY, rng_primary
     )
 
     # Summary: sort by semantic gap (largest first).
     reliable = [r for r in primary_results if not r["unreliable"] and r["semantic_gap"] is not None]
     log.info("")
-    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", CHUNK_CAP_PRIMARY)
+    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", SEGMENT_CAP_PRIMARY)
     for r in sorted(reliable, key=lambda x: x["semantic_gap"], reverse=True):
         log.info("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
                  r["sdg"], r["semantic_gap"], r["semantic_similarity"],
@@ -185,30 +185,30 @@ def main() -> None:
     # ---- Sensitivity analyses ----
     log.info("")
     log.info("=" * 60)
-    log.info("SENSITIVITY: chunk cap = %d", CHUNK_CAP_SENS_LO)
+    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
     log.info("=" * 60)
     rng_lo = np.random.default_rng(RANDOM_SEED)
     sens_lo = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,
-        policy_ids, CHUNK_CAP_SENS_LO, rng_lo
+        policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
     )
 
     log.info("")
     log.info("=" * 60)
-    log.info("SENSITIVITY: chunk cap = %d", CHUNK_CAP_SENS_HI)
+    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI)
     log.info("=" * 60)
     rng_hi = np.random.default_rng(RANDOM_SEED)
     sens_hi = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,
-        policy_ids, CHUNK_CAP_SENS_HI, rng_hi
+        policy_ids, SEGMENT_CAP_SENS_HI, rng_hi
     )
 
     # Check sensitivity: do rankings change substantially across caps?
     # A finding is robust if its gap rank is stable across all three caps.
     log.info("")
-    log.info("SENSITIVITY CHECK — gap rank stability across chunk caps:")
+    log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
     log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "cap100")
     log.info("  " + "-" * 50)
     for i in range(N_SDG):
@@ -224,13 +224,13 @@ def main() -> None:
     # ---- Build output JSON ----
     primary_out = {
         "method": "centroid_to_centroid",
-        "chunk_cap": CHUNK_CAP_PRIMARY,
+        "segment_cap": SEGMENT_CAP_PRIMARY,
         "min_cluster_size": MIN_CLUSTER_SIZE,
         "random_seed": RANDOM_SEED,
         "note": (
             "semantic_gap[j] = 1 - cosine_sim(research_sub_centroid_j, policy_sub_centroid_j). "
             "Both sub-centroids are L2-normalised means of cluster embeddings. "
-            "Policy clusters are chunk-capped per source_doc to avoid SDSN/SDGi dominance (A19). "
+            "Policy clusters are segment-capped per source_doc to avoid SDSN/SDGi dominance (A19). "
             "SDGs flagged unreliable have fewer than MIN_CLUSTER_SIZE items in research or policy."
         ),
         "per_sdg": primary_results,
@@ -243,11 +243,11 @@ def main() -> None:
         "random_seed": RANDOM_SEED,
         "note": (
             "Sensitivity analysis: same computation as sdg_conceptual_alignment_cosine_distances.json but with different "
-            "per-document chunk caps (20 and 100). Use to verify finding robustness. "
+            "per-document segment caps (20 and 100). Use to verify finding robustness. "
             "Rankings should be broadly stable if findings are robust."
         ),
-        f"cap_{CHUNK_CAP_SENS_LO}": sens_lo,
-        f"cap_{CHUNK_CAP_SENS_HI}": sens_hi,
+        f"cap_{SEGMENT_CAP_SENS_LO}": sens_lo,
+        f"cap_{SEGMENT_CAP_SENS_HI}": sens_hi,
     }
 
     with out_sem_gap.open("w", encoding="utf-8") as f:

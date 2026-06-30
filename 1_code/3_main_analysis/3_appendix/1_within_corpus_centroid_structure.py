@@ -25,6 +25,7 @@ import csv
 import json
 import logging
 import os
+import shutil
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -69,7 +70,7 @@ from research_embedding_shards import (
 from research_score_shards import load_json as load_score_manifest_json
 from research_score_shards import resolve_from_manifest as resolve_score_manifest_path
 from semantic_gap_shared import (
-    CHUNK_CAP_PRIMARY,
+    SEGMENT_CAP_PRIMARY,
     N_SDG,
     POLICY_EMB,
     POLICY_IDS,
@@ -114,8 +115,8 @@ class ScoredResearchShard:
 
 @dataclass
 class SdqMetricAccumulator:
-    own_chunks: list[np.ndarray] = field(default_factory=list)
-    margin_chunks: list[np.ndarray] = field(default_factory=list)
+    own_segments: list[np.ndarray] = field(default_factory=list)
+    margin_segments: list[np.ndarray] = field(default_factory=list)
     second_best_sum: float = 0.0
     competitor_counts: np.ndarray = field(default_factory=lambda: np.zeros(N_SDG, dtype=np.int64))
 
@@ -125,10 +126,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--research-plot-sample-size", type=int, default=100_000)
-    p.add_argument("--policy-plot-sample-size", type=int, default=0, help="0 means use all policy chunks.")
+    p.add_argument("--policy-plot-sample-size", type=int, default=0, help="0 means use all policy segments.")
     p.add_argument("--silhouette-sample-size", type=int, default=10_000)
     p.add_argument("--research-kmeans-sample-size", type=int, default=100_000)
-    p.add_argument("--policy-kmeans-sample-size", type=int, default=0, help="0 means use all policy chunks.")
+    p.add_argument("--policy-kmeans-sample-size", type=int, default=0, help="0 means use all policy segments.")
     p.add_argument("--research-pca-batch-size", type=int, default=16_384)
     return p.parse_args()
 
@@ -178,7 +179,7 @@ def build_policy_centroids(
     policy_emb: np.ndarray,
     policy_scores: np.ndarray,
     policy_ids: list[dict],
-    chunk_cap: int,
+    segment_cap: int,
     rng_seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     assignments = get_cluster_assignments(policy_scores)
@@ -189,12 +190,12 @@ def build_policy_centroids(
         capped = cap_policy_indices_per_doc(
             raw_idxs,
             policy_ids,
-            chunk_cap,
+            segment_cap,
             np.random.default_rng(rng_seed + sdg_idx),
         )
         centroid, _ = build_sub_centroid(policy_emb, capped)
         if centroid is None:
-            log.warning("Policy SDG %2d: centroid unavailable after chunk cap", sdg_idx + 1)
+            log.warning("Policy SDG %2d: centroid unavailable after segment cap", sdg_idx + 1)
             continue
         centroids[sdg_idx] = centroid
         available[sdg_idx] = True
@@ -291,8 +292,8 @@ def update_metric_accumulators(
         if not np.any(mask):
             continue
         acc = accumulators[sdg_idx]
-        acc.own_chunks.append(own[mask])
-        acc.margin_chunks.append(margin[mask])
+        acc.own_segments.append(own[mask])
+        acc.margin_segments.append(margin[mask])
         acc.second_best_sum += float(second_best[mask].sum())
         acc.competitor_counts += np.bincount(second_best_idx[mask], minlength=N_SDG)
 
@@ -326,8 +327,8 @@ def summarise_metric_rows(
             continue
 
         acc = accumulators[sdg_idx]
-        own = np.concatenate(acc.own_chunks) if acc.own_chunks else np.empty(0, dtype=np.float32)
-        margin = np.concatenate(acc.margin_chunks) if acc.margin_chunks else np.empty(0, dtype=np.float32)
+        own = np.concatenate(acc.own_segments) if acc.own_segments else np.empty(0, dtype=np.float32)
+        margin = np.concatenate(acc.margin_segments) if acc.margin_segments else np.empty(0, dtype=np.float32)
         if own.size != n or margin.size != n:
             raise RuntimeError(
                 f"{corpus_name} SDG {sdg_idx + 1}: metric accumulation mismatch own={own.size} margin={margin.size} n={n}"
@@ -537,6 +538,8 @@ def main() -> None:
     layout = ensure_canonical_outputs(Path(args.output_dir))
     tables_dir = layout.tables_dir
     figures_dir = layout.figures_dir
+    out_dir = Path(args.output_dir) / "appendix" / "within_corpus_centroid"
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(args.seed)
 
@@ -630,7 +633,7 @@ def main() -> None:
         policy_emb,
         policy_scores,
         policy_ids,
-        CHUNK_CAP_PRIMARY,
+        SEGMENT_CAP_PRIMARY,
         args.seed,
     )
     verify_unit_norms(policy_centroids[policy_centroid_available], "policy centroids")
@@ -701,11 +704,13 @@ def main() -> None:
         output_pdf=figures_dir / RESEARCH_FIG_PDF,
         output_png=figures_dir / RESEARCH_FIG_PNG,
     )
+    shutil.copy(figures_dir / RESEARCH_FIG_PDF, out_dir / RESEARCH_FIG_PDF)
+    shutil.copy(figures_dir / RESEARCH_FIG_PNG, out_dir / RESEARCH_FIG_PNG)
     plot_within_corpus_pca(
         policy_plot_2d,
         policy_centroids_2d,
         policy_centroid_available,
-        point_label="Policy chunks",
+        point_label="Policy segments",
         point_color=POLICY_COLOR,
         centroid_marker="s",
         centroid_label="Policy SDG centroid",
@@ -716,9 +721,11 @@ def main() -> None:
         output_pdf=figures_dir / POLICY_FIG_PDF,
         output_png=figures_dir / POLICY_FIG_PNG,
     )
+    shutil.copy(figures_dir / POLICY_FIG_PDF, out_dir / POLICY_FIG_PDF)
+    shutil.copy(figures_dir / POLICY_FIG_PNG, out_dir / POLICY_FIG_PNG)
 
     metrics_rows = research_metric_rows + policy_metric_rows
-    metrics_path = tables_dir / METRICS_CSV
+    metrics_path = out_dir / METRICS_CSV
     write_metrics_csv(metrics_path, metrics_rows)
 
     summary = {
@@ -751,7 +758,7 @@ def main() -> None:
             "global_metrics": policy_global_metrics,
         },
     }
-    summary_path = tables_dir / SUMMARY_JSON
+    summary_path = out_dir / SUMMARY_JSON
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     write_num_tex(tables_dir / NUM_TEX, summary)
 

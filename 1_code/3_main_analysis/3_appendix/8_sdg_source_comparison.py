@@ -88,7 +88,7 @@ CACHE_POLICY_SUMS = "{}_policy_sums.npy"
 CACHE_MANIFEST = "{}_manifest.json"
 
 N_SDG = 17
-CHUNK_CAP_PRIMARY = 50
+SEGMENT_CAP_PRIMARY = 50
 MIN_CLUSTER_SIZE = 10
 RANDOM_SEED = 42
 
@@ -241,15 +241,15 @@ def score_research_full(centroids: np.ndarray, shards: list[dict]) -> tuple[np.n
 
 
 # ---------------------------------------------------------------------------
-# Full policy scoring (sub-centroids with chunk cap)
+# Full policy scoring (sub-centroids with segment cap)
 # ---------------------------------------------------------------------------
 
 def score_policy_full(centroids: np.ndarray, policy_emb: np.ndarray, policy_ids: list[dict]) -> tuple[np.ndarray, np.ndarray]:
-    """Score all policy chunks against centroids, with per-document chunk capping.
+    """Score all policy segments against centroids, with per-document segment capping.
     
     Returns:
-        counts: (17,) int64 — capped chunks assigned to each SDG
-        sums:   (17, 384) float64 — sum of capped-chunk embeddings per SDG
+        counts: (17,) int64 — capped segments assigned to each SDG
+        sums:   (17, 384) float64 — sum of capped-segment embeddings per SDG
     """
     dim = centroids.shape[1]
     valid = ~np.isnan(centroids[:, 0])
@@ -267,7 +267,7 @@ def score_policy_full(centroids: np.ndarray, policy_emb: np.ndarray, policy_ids:
     for sdg_idx in valid_indices:
         mask = assignments_full == sdg_idx
         all_idxs = np.where(mask)[0].tolist()
-        capped = cap_policy_indices_per_doc(all_idxs, policy_ids, CHUNK_CAP_PRIMARY, rng)
+        capped = cap_policy_indices_per_doc(all_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
         if not capped:
             continue
         emb_capped = policy_emb[capped]

@@ -1,21 +1,21 @@
 """
-Preprocess policy documents into source-specific text chunks for embedding.
+Preprocess policy documents into source-specific text segments for embedding.
 
 Inputs:
   2_data/0_raw/policy_scrape/texts/*.txt
   2_data/0_raw/policy_manual/texts/*.txt
 
 Outputs:
-  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_chunks.jsonl
-  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_chunks.csv
-  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_chunks.jsonl
-  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_chunks.csv
+  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl
+  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.csv
+  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl
+  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.csv
 
-Chunking strategy:
+Segmentation strategy:
   1. Clean OCR artifacts and page-break markers
   2. Split into paragraphs (blank-line delimited)
   3. Merge short paragraphs into windows of TARGET_WORDS +/- tolerance
-  4. Each chunk has a source label, sequential ID, and word count
+  4. Each segment has a source label, sequential ID, and word count
 
 Run from project root:
     python 1_code/1_preprocess/policy/0_preprocess_policy.py
@@ -33,14 +33,14 @@ SOURCE_CONFIGS = [
     {
         "source_name": "policy_scrape",
         "input_dir": Path("2_data/0_raw/policy_scrape/texts"),
-        "output_jsonl": Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_chunks.jsonl"),
-        "output_csv": Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_chunks.csv"),
+        "output_jsonl": Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl"),
+        "output_csv": Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.csv"),
     },
     {
         "source_name": "policy_manual",
         "input_dir": Path("2_data/0_raw/policy_manual/texts"),
-        "output_jsonl": Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_chunks.jsonl"),
-        "output_csv": Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_chunks.csv"),
+        "output_jsonl": Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl"),
+        "output_csv": Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.csv"),
     },
 ]
 
@@ -103,21 +103,21 @@ def split_paragraphs(text: str) -> list[str]:
 
 def split_long_paragraph(text: str, max_words: int) -> list[str]:
     sentences = re.split(r"(?<=[.!?])\s+", text)
-    chunks: list[str] = []
+    segments: list[str] = []
     current: list[str] = []
     count = 0
     for sentence in sentences:
         word_count = len(sentence.split())
         if count + word_count > max_words and current:
-            chunks.append(" ".join(current))
+            segments.append(" ".join(current))
             current = [sentence]
             count = word_count
         else:
             current.append(sentence)
             count += word_count
     if current:
-        chunks.append(" ".join(current))
-    return chunks
+        segments.append(" ".join(current))
+    return segments
 
 
 def merge_paragraphs(paragraphs: list[str], target_words: int, max_words: int) -> list[str]:
@@ -128,70 +128,70 @@ def merge_paragraphs(paragraphs: list[str], target_words: int, max_words: int) -
         else:
             expanded.append(paragraph)
 
-    chunks: list[str] = []
+    segments: list[str] = []
     current_parts: list[str] = []
     current_count = 0
     for paragraph in expanded:
         word_count = len(paragraph.split())
         if current_count + word_count > target_words and current_parts:
-            chunks.append(" ".join(current_parts))
+            segments.append(" ".join(current_parts))
             current_parts = [paragraph]
             current_count = word_count
         else:
             current_parts.append(paragraph)
             current_count += word_count
     if current_parts:
-        chunks.append(" ".join(current_parts))
-    return chunks
+        segments.append(" ".join(current_parts))
+    return segments
 
 
-def build_chunks_for_docs(docs: dict[str, Path]) -> list[dict]:
-    all_chunks: list[dict] = []
+def build_segments_for_docs(docs: dict[str, Path]) -> list[dict]:
+    all_segments: list[dict] = []
     for doc_name, filepath in docs.items():
         log.info("Processing %s (%s)", doc_name, filepath)
         raw = filepath.read_text(encoding="utf-8", errors="replace")
         cleaned = clean_document(raw)
         paragraphs = split_paragraphs(cleaned)
-        chunks = merge_paragraphs(paragraphs, TARGET_WORDS, MAX_WORDS)
-        log.info("  %s -> %d paragraphs -> %d chunks", doc_name, len(paragraphs), len(chunks))
+        segments = merge_paragraphs(paragraphs, TARGET_WORDS, MAX_WORDS)
+        log.info("  %s -> %d paragraphs -> %d segments", doc_name, len(paragraphs), len(segments))
 
-        for index, text in enumerate(chunks):
-            all_chunks.append(
+        for index, text in enumerate(segments):
+            all_segments.append(
                 {
-                    "chunk_id": f"{doc_name}_{index:04d}",
+                    "segment_id": f"{doc_name}_{index:04d}",
                     "source_doc": doc_name,
-                    "chunk_index": index,
+                    "segment_index": index,
                     "text": text,
                     "word_count": len(text.split()),
                 }
             )
-    return all_chunks
+    return all_segments
 
 
-def write_chunks(output_jsonl: Path, output_csv: Path, chunks: list[dict]) -> None:
+def write_segments(output_jsonl: Path, output_csv: Path, segments: list[dict]) -> None:
     output_jsonl.parent.mkdir(parents=True, exist_ok=True)
     with output_jsonl.open("w", encoding="utf-8") as handle:
-        for chunk in chunks:
-            handle.write(json.dumps(chunk) + "\n")
+        for segment in segments:
+            handle.write(json.dumps(segment) + "\n")
     log.info("Saved JSONL -> %s", output_jsonl)
 
-    csv_fields = ["chunk_id", "source_doc", "chunk_index", "word_count", "text"]
+    csv_fields = ["segment_id", "source_doc", "segment_index", "word_count", "text"]
     with output_csv.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(chunks)
+        writer.writerows(segments)
     log.info("Saved CSV -> %s", output_csv)
 
 
-def log_quality_summary(source_name: str, chunks: list[dict]) -> None:
-    if not chunks:
-        log.info("%s produced no chunks", source_name)
+def log_quality_summary(source_name: str, segments: list[dict]) -> None:
+    if not segments:
+        log.info("%s produced no segments", source_name)
         return
-    word_counts = [chunk["word_count"] for chunk in chunks]
+    word_counts = [segment["word_count"] for segment in segments]
     log.info(
-        "%s total chunks: %d | word count - min: %d median: %d max: %d",
+        "%s total segments: %d | word count - min: %d median: %d max: %d",
         source_name,
-        len(chunks),
+        len(segments),
         min(word_counts),
         sorted(word_counts)[len(word_counts) // 2],
         max(word_counts),
@@ -206,14 +206,14 @@ def process_source(config: dict[str, Path | str]) -> None:
 
     docs = discover_docs(input_dir)
     log.info("Source %s: %d documents", source_name, len(docs))
-    chunks = build_chunks_for_docs(docs)
-    log_quality_summary(source_name, chunks)
-    write_chunks(output_jsonl, output_csv, chunks)
+    segments = build_segments_for_docs(docs)
+    log_quality_summary(source_name, segments)
+    write_segments(output_jsonl, output_csv, segments)
 
-    print(f"\nDone. {source_name}: {len(chunks)} chunks written to {output_jsonl}")
+    print(f"\nDone. {source_name}: {len(segments)} segments written to {output_jsonl}")
     for doc_name in docs:
-        count = sum(1 for chunk in chunks if chunk["source_doc"] == doc_name)
-        print(f"  {doc_name}: {count} chunks")
+        count = sum(1 for segment in segments if segment["source_doc"] == doc_name)
+        print(f"  {doc_name}: {count} segments")
 
 
 def main() -> None:

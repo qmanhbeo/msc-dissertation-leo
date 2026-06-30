@@ -15,6 +15,7 @@ import csv
 import json
 import logging
 import os
+import shutil
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
@@ -37,13 +38,14 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from shared_utils import ensure_canonical_outputs
 from research_embedding_shards import iter_research_embedding_shards
 from research_score_shards import (
     load_json as load_score_manifest_json,
     resolve_from_manifest as resolve_score_manifest_path,
 )
 from semantic_gap_shared import (
-    CHUNK_CAP_PRIMARY,
+    SEGMENT_CAP_PRIMARY,
     N_SDG,
     POLICY_EMB,
     POLICY_IDS,
@@ -179,7 +181,7 @@ def document_weighted_policy_soft_profile(weights: np.ndarray, policy_ids: list[
     for d_idx, (source_doc, idxs) in enumerate(doc_to_rows.items()):
         doc_vec = weights[idxs].mean(axis=0)
         doc_vectors[d_idx] = doc_vec
-        meta[source_doc] = {"n_chunks": len(idxs)}
+        meta[source_doc] = {"n_segments": len(idxs)}
     profile = doc_vectors.mean(axis=0).astype(np.float64)
     return profile, meta
 
@@ -206,7 +208,7 @@ def capped_policy_indices_for_soft_semantics(policy_ids: list[dict], seed: int) 
         capped[sdg_idx] = cap_policy_indices_per_doc(
             all_indices,
             policy_ids,
-            CHUNK_CAP_PRIMARY,
+            SEGMENT_CAP_PRIMARY,
             np.random.default_rng(seed + sdg_idx),
         )
     return capped
@@ -381,18 +383,18 @@ def plot_temperature_sensitivity(
 
 def main() -> None:
     args = parse_args()
-    output_dir = Path(args.output_dir)
-    tables_dir = output_dir / "main" / "tables"
-    figures_dir = output_dir / "main" / "figures"
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    figures_dir.mkdir(parents=True, exist_ok=True)
+    layout = ensure_canonical_outputs(Path(args.output_dir))
+    tables_dir = layout.tables_dir
+    figures_dir = layout.figures_dir
+    out_dir = Path(args.output_dir) / "appendix" / "softmax_multilabel_sdg"
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     temps = [float(t) for t in args.temperatures]
     if not temps:
         raise RuntimeError("At least one temperature is required.")
 
     sdg_centroids = validate_sdg_centroids(SDG_CENTROIDS)
-    hard_research, hard_policy, hard_coverage_gap, hard_semantic_gap = load_hard_baselines(output_dir / "main" / "data")
+    hard_research, hard_policy, hard_coverage_gap, hard_semantic_gap = load_hard_baselines(Path(args.output_dir) / "main" / "data")
 
     research_score_shards = load_research_score_shards(RESEARCH_SCORE_MANIFEST)
     research_score_paths = [research_score_shards[k].score_path for k in sorted(research_score_shards)]
@@ -573,10 +575,10 @@ def main() -> None:
         if not np.isfinite(arr).all():
             raise RuntimeError(f"Non-finite semantic gap values for {key}")
 
-    coverage_path = tables_dir / COVERAGE_CSV
-    semantic_path = tables_dir / SEMANTIC_CSV
-    summary_path = tables_dir / SUMMARY_CSV
-    metadata_path = tables_dir / METADATA_JSON
+    coverage_path = out_dir / COVERAGE_CSV
+    semantic_path = out_dir / SEMANTIC_CSV
+    summary_path = out_dir / SUMMARY_CSV
+    metadata_path = out_dir / METADATA_JSON
     num_tex_path = tables_dir / NUM_TEX
     summary_tex_path = tables_dir / SUMMARY_TEX
 
@@ -620,9 +622,9 @@ def main() -> None:
         "variants_used": list(VARIANTS),
         "total_research_embeddings_processed": int(total_research_rows),
         "total_policy_embeddings_processed": int(total_policy_rows),
-        "policy_coverage_weighting_method": "document_weighted_mean_of_chunk_weight_vectors",
-        "policy_semantic_weighting_method": "per_sdg_weighted_chunk_centroid_with_per_document_chunk_cap",
-        "policy_chunk_cap_used": int(CHUNK_CAP_PRIMARY),
+        "policy_coverage_weighting_method": "document_weighted_mean_of_segment_weight_vectors",
+        "policy_semantic_weighting_method": "per_sdg_weighted_segment_centroid_with_per_document_segment_cap",
+        "policy_segment_cap_used": int(SEGMENT_CAP_PRIMARY),
         "sdg_centroid_file": str(SDG_CENTROIDS),
         "sdg_indexing_confirmation": (
             "No separate SDG mapping file exists in the active pipeline. Canonical convention is row 0 -> SDG 1 ... row 16 -> SDG 17."
@@ -654,6 +656,8 @@ def main() -> None:
         hard_coverage_gap,
         soft_coverage_gap_results,
     )
+    shutil.copy(figures_dir / COVERAGE_SCATTER_PDF, out_dir / COVERAGE_SCATTER_PDF)
+    shutil.copy(figures_dir / COVERAGE_SCATTER_PNG, out_dir / COVERAGE_SCATTER_PNG)
     plot_scatter_compare(
         figures_dir / SEMANTIC_SCATTER_PDF,
         figures_dir / SEMANTIC_SCATTER_PNG,
@@ -663,11 +667,15 @@ def main() -> None:
         hard_semantic_gap,
         soft_semantic_gap_results,
     )
+    shutil.copy(figures_dir / SEMANTIC_SCATTER_PDF, out_dir / SEMANTIC_SCATTER_PDF)
+    shutil.copy(figures_dir / SEMANTIC_SCATTER_PNG, out_dir / SEMANTIC_SCATTER_PNG)
     plot_temperature_sensitivity(
         figures_dir / TEMP_SENS_PDF,
         figures_dir / TEMP_SENS_PNG,
         summary_rows,
     )
+    shutil.copy(figures_dir / TEMP_SENS_PDF, out_dir / TEMP_SENS_PDF)
+    shutil.copy(figures_dir / TEMP_SENS_PNG, out_dir / TEMP_SENS_PNG)
 
     log.info("Saved: %s", coverage_path)
     log.info("Saved: %s", semantic_path)

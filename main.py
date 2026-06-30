@@ -29,7 +29,7 @@ BASE_WARM_REPLAY_REQUIREMENTS = [
     Path("2_data/2_embedded/research_shards/metadata/manifest.json"),
     Path("2_data/3_scored/sdg_centroids.npy"),
     Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json"),
-    Path("2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl"),
+    Path("2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"),
     Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
     Path("3_writing/dissertation.tex"),
     Path("3_writing/references.bib"),
@@ -62,46 +62,23 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
-    p.add_argument(
-        "--pca-semantic-landscape",
-        action="store_true",
-        help="Run only the Appendix A PCA semantic-landscape diagnostic stage from existing embedded/scored data.",
-    )
-    p.add_argument(
-        "--softmax-multilabel-sdg",
-        action="store_true",
-        help="Run only the Appendix A softmax-weighted multi-label SDG robustness stage from existing embedded/scored data.",
-    )
-    p.add_argument(
-        "--policy-source-family-sensitivity",
-        action="store_true",
-        help="Run only the Appendix A policy source-family sensitivity diagnostic from existing embedded/scored data.",
-    )
-    p.add_argument(
-        "--sdg4-lexical-audit",
-        action="store_true",
-        help="Run only the Appendix A SDG 4 lexical artefact audit from existing scored research assignments and text shards.",
-    )
-    p.add_argument(
-        "--sdg17-reference-sensitivity",
-        action="store_true",
-        help="Run only the Appendix A SDG 17 sparse-reference sensitivity diagnostic from existing benchmark embeddings and scored corpora.",
-    )
-    p.add_argument(
-        "--sdg-source-comparison",
-        action="store_true",
-        help="Run only the Appendix A per-SDG source comparison across reference corpora (combined, OSDG, SDGi, Knowledge Hub).",
-    )
-    p.add_argument(
-        "--semantic-gap-interpretability",
-        action="store_true",
-        help="Run only the Appendix A semantic-gap text interpretability diagnostic from existing scored texts.",
-    )
-    p.add_argument(
-        "--within-corpus-centroid-structure",
-        action="store_true",
-        help="Run only the Appendix A within-corpus SDG centroid-structure diagnostics from existing embedded/scored data.",
-    )
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C) during --warm-replay or standalone.")
+    p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
+    p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
+    p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
+    p.add_argument("--appendix-b1-pca", action="store_true", help="Run B.1 Combined Research-Policy PCA Landscape.")
+    p.add_argument("--appendix-b2-centroid", action="store_true", help="Run B.2 Within-Corpus Centroid Structure.")
+    p.add_argument("--appendix-b3-interpret", action="store_true", help="Run B.3 Lexical Illustration of the Semantic Gap.")
+    p.add_argument("--appendix-b4-softmax", action="store_true", help="Run B.4 Softmax Multi-label SDG.")
+    p.add_argument("--appendix-c-register", action="store_true", help="Run C Register-Adjustment Robustness.")
+    # Deprecated aliases (hidden, kept for backward compatibility)
+    p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
+    p.add_argument("--softmax-multilabel-sdg", action="store_true", dest="appendix_b4_softmax", help=argparse.SUPPRESS)
+    p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
+    p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
+    p.add_argument("--sdg-source-comparison", action="store_true", dest="appendix_a1_source", help=argparse.SUPPRESS)
+    p.add_argument("--semantic-gap-interpretability", action="store_true", dest="appendix_b3_interpret", help=argparse.SUPPRESS)
+    p.add_argument("--within-corpus-centroid-structure", action="store_true", dest="appendix_b2_centroid", help=argparse.SUPPRESS)
     p.add_argument(
         "--fetch-data-snapshot",
         nargs="?",
@@ -126,7 +103,7 @@ def parse_args() -> argparse.Namespace:
         "--refresh-policy-corpus",
         action="store_true",
         help=(
-            "Rebuild the active policy corpus snapshot, fully re-embed policy chunks, and re-score policy "
+            "Rebuild the active policy corpus snapshot, fully re-embed policy segments, and re-score policy "
             "against the current SDG and research centroids."
         ),
     )
@@ -134,10 +111,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--register-adjustment",
         action="store_true",
-        help=(
-            "Run the Appendix B register-adjustment robustness suite from existing embedded/scored data. "
-            "This stage is additive only and does not replace the canonical raw semantic gap."
-        ),
+        dest="appendix_c_register",
+        help=argparse.SUPPRESS,
     )
     p.add_argument("--skip-sample-stability", action="store_true", help="Skip the sample-stability stage during --warm-replay or --full-pipeline.")
     p.add_argument("--skip-register-confidence-checks", action="store_true", help="Skip the additional register-confidence checks inside --register-adjustment.")
@@ -183,19 +158,19 @@ def action_requested(args: argparse.Namespace) -> bool:
         [
             args.warm_replay,
             args.full_pipeline,
-            args.pca_semantic_landscape,
-            args.softmax_multilabel_sdg,
-            args.policy_source_family_sensitivity,
-            args.sdg4_lexical_audit,
-            args.sdg17_reference_sensitivity,
-            args.sdg_source_comparison,
-            args.semantic_gap_interpretability,
-            args.within_corpus_centroid_structure,
+            args.appendix_all,
+            args.appendix_a1_source,
+            args.appendix_a2_family,
+            args.appendix_a3_sdg4,
+            args.appendix_b1_pca,
+            args.appendix_b2_centroid,
+            args.appendix_b3_interpret,
+            args.appendix_b4_softmax,
+            args.appendix_c_register,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
             args.refresh_policy_corpus,
             args.sample_stability,
-            args.register_adjustment,
             args.build_pdf,
             args.clean_canon,
         ]
@@ -480,7 +455,7 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
     if args.sdg_register_samples_per_cell is not None:
         cmd.extend(["--samples-per-cell", str(args.sdg_register_samples_per_cell)])
     run_step(
-        "appendix B register-adjustment robustness",
+        "appendix C register-adjustment robustness",
         cmd,
     )
 
@@ -490,10 +465,10 @@ def run_warm_replay(
     args: argparse.Namespace,
     *,
     include_sample_stability: bool,
-    include_register_adjustment: bool,
     include_register_confidence_checks: bool,
 ) -> None:
-    missing = missing_warm_replay_requirements(include_register_adjustment=include_register_adjustment)
+    include_register = args.appendix_all or args.appendix_c_register
+    missing = missing_warm_replay_requirements(include_register_adjustment=include_register)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Warm replay is not ready. Missing required inputs: {missing_str}")
@@ -502,15 +477,22 @@ def run_warm_replay(
     run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
     run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"])
     run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
-    run_pca_semantic_landscape(output_dir)
-    run_within_corpus_centroid_structure(output_dir)
-    run_softmax_multilabel_sdg(output_dir)
-    run_policy_source_family_sensitivity(output_dir)
-    run_sdg4_lexical_audit(output_dir)
+    if args.appendix_all or args.appendix_b1_pca:
+        run_pca_semantic_landscape(output_dir)
+    if args.appendix_all or args.appendix_b2_centroid:
+        run_within_corpus_centroid_structure(output_dir)
+    if args.appendix_all or args.appendix_b4_softmax:
+        run_softmax_multilabel_sdg(output_dir)
+    if args.appendix_all or args.appendix_a2_family:
+        run_policy_source_family_sensitivity(output_dir)
+    if args.appendix_all or args.appendix_a3_sdg4:
+        run_sdg4_lexical_audit(output_dir)
     run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
     run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
-    run_sdg_source_comparison(output_dir)
-    run_semantic_gap_interpretability(output_dir)
+    if args.appendix_all or args.appendix_a1_source:
+        run_sdg_source_comparison(output_dir)
+    if args.appendix_all or args.appendix_b3_interpret:
+        run_semantic_gap_interpretability(output_dir)
     run_step(
         "coverage semantic interaction",
         [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
@@ -518,7 +500,7 @@ def run_warm_replay(
     run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
         run_sample_stability(output_dir)
-    if include_register_adjustment:
+    if include_register:
         run_register_adjustment(output_dir, args, include_register_confidence_checks=include_register_confidence_checks)
     build_pdf(output_dir)
 
@@ -669,20 +651,21 @@ def main() -> None:
     if (
         args.warm_replay
         or args.full_pipeline
-        or args.pca_semantic_landscape
-        or args.softmax_multilabel_sdg
-        or args.policy_source_family_sensitivity
-        or args.sdg4_lexical_audit
-        or args.sdg17_reference_sensitivity
-        or args.sdg_source_comparison
-        or args.semantic_gap_interpretability
-        or args.within_corpus_centroid_structure
+        or args.appendix_all
+        or args.appendix_a1_source
+        or args.appendix_a2_family
+        or args.appendix_a3_sdg4
+        or args.appendix_b1_pca
+        or args.appendix_b2_centroid
+        or args.appendix_b3_interpret
+        or args.appendix_b4_softmax
+        or args.appendix_c_register
         or args.sample_stability
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         raise RuntimeError(
-            "Manuscript outputs already exist. Re-run with --overwrite to replace them, "
-            "or run without action flags to inspect status."
+            "Outputs already exist in 4_outputs/ (the directory is version-controlled). "
+            "Rerun with --overwrite to replace them."
         )
 
     if args.clean_canon:
@@ -695,48 +678,63 @@ def main() -> None:
             run_backup_data_snapshot(profile_name=profile_name)
     elif args.full_pipeline:
         run_full_pipeline(output_dir, args)
-    elif args.pca_semantic_landscape:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_pca_semantic_landscape(output_dir)
-    elif args.softmax_multilabel_sdg:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_softmax_multilabel_sdg(output_dir)
-    elif args.policy_source_family_sensitivity:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_policy_source_family_sensitivity(output_dir)
-    elif args.sdg4_lexical_audit:
-        ensure_warm_replay_inputs(args, include_register_adjustment=True)
-        run_sdg4_lexical_audit(output_dir)
-    elif args.sdg17_reference_sensitivity:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_sdg17_reference_sensitivity(output_dir)
-    elif args.sdg_source_comparison:
+    elif args.appendix_all:
         run_sdg_source_comparison(output_dir)
-    elif args.semantic_gap_interpretability:
-        ensure_warm_replay_inputs(args, include_register_adjustment=True)
-        run_semantic_gap_interpretability(output_dir)
-    elif args.within_corpus_centroid_structure:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
+        run_policy_source_family_sensitivity(output_dir)
+        run_sdg4_lexical_audit(output_dir)
+        run_pca_semantic_landscape(output_dir)
         run_within_corpus_centroid_structure(output_dir)
+        run_semantic_gap_interpretability(output_dir)
+        run_softmax_multilabel_sdg(output_dir)
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_a1_source:
+        run_sdg_source_comparison(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_a2_family:
+        run_policy_source_family_sensitivity(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_a3_sdg4:
+        run_sdg4_lexical_audit(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_b1_pca:
+        run_pca_semantic_landscape(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_b2_centroid:
+        run_within_corpus_centroid_structure(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_b3_interpret:
+        run_semantic_gap_interpretability(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_b4_softmax:
+        run_softmax_multilabel_sdg(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_c_register:
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+        if args.build_pdf:
+            build_pdf(output_dir)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
     elif args.warm_replay:
-        ensure_warm_replay_inputs(args, include_register_adjustment=args.register_adjustment)
+        ensure_warm_replay_inputs(args, include_register_adjustment=args.appendix_all or args.appendix_c_register)
         run_warm_replay(
             output_dir,
             args,
             include_sample_stability=not args.skip_sample_stability,
-            include_register_adjustment=args.register_adjustment,
             include_register_confidence_checks=not args.skip_register_confidence_checks,
         )
     elif args.sample_stability:
         run_sample_stability(output_dir)
-        if args.register_adjustment:
+        if args.appendix_c_register:
             run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
-        if args.build_pdf:
-            build_pdf(output_dir)
-    elif args.register_adjustment:
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.build_pdf:

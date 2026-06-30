@@ -40,9 +40,9 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from shared_utils import ensure_canonical_outputs, require_output_files
 from semantic_gap_shared import (
-    CHUNK_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
-    RANDOM_SEED as POLICY_CHUNK_CAP_SEED,
+    RANDOM_SEED as POLICY_SEGMENT_CAP_SEED,
+    SEGMENT_CAP_PRIMARY,
     build_sub_centroid,
     cap_policy_indices_per_doc,
 )
@@ -244,7 +244,7 @@ def load_policy_state(output_root: Path) -> dict[str, Any]:
     policy_top_vs_osdg = float(policy_scores.max(axis=1).mean())
     policy_assignments = policy_scores.argmax(axis=1)
 
-    rng = np.random.default_rng(POLICY_CHUNK_CAP_SEED)
+    rng = np.random.default_rng(POLICY_SEGMENT_CAP_SEED)
     dim = int(policy_emb.shape[1])
     policy_centroids = np.zeros((N_SDG, dim), dtype=np.float32)
     policy_counts_raw = np.zeros(N_SDG, dtype=np.int64)
@@ -256,7 +256,7 @@ def load_policy_state(output_root: Path) -> dict[str, Any]:
     for sdg_idx in range(N_SDG):
         policy_idxs = np.flatnonzero(policy_assignments == sdg_idx).tolist()
         policy_counts_raw[sdg_idx] = len(policy_idxs)
-        capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, CHUNK_CAP_PRIMARY, rng)
+        capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
         policy_counts_capped[sdg_idx] = len(capped)
         policy_doc_counts_capped[sdg_idx] = len({policy_ids[i]["source_doc"] for i in capped})
         centroid, cohesion = build_sub_centroid(policy_emb, capped)
@@ -697,7 +697,7 @@ def write_outputs(
         "draw_seed_start": DRAW_SEEDS[0],
         "draw_seed_end": DRAW_SEEDS[-1],
         "draw_seeds": list(DRAW_SEEDS),
-        "chunk_cap": CHUNK_CAP_PRIMARY,
+        "segment_cap": SEGMENT_CAP_PRIMARY,
         "min_cluster_size": MIN_CLUSTER_SIZE,
         "sampled_tiers": [
             {"tier_label": label, "sample_size": size} for label, size in TIER_SPECS

@@ -1,4 +1,4 @@
-family,family_label,docs,chunks,top3_sdgs_docweighted,mean_semantic_gap,n_valid_semantic_gap_sdgs,top3_semantic_gaps,interpretation_note
+family,family_label,docs,segments,top3_sdgs_docweighted,mean_semantic_gap,n_valid_semantic_gap_sdgs,top3_semantic_gaps,interpretation_note
 full_policy_corpus,Full corpus,2456,54082,SDG 17 / SDG 13 / SDG 16,0.415307,17,SDG 17 / SDG 13 / SDG 10,Full corpus
 curated_ai_sdg,Curated AI/SDG,95,15639,SDG 9 / SDG 17 / SDG 13,0.409414,17,SDG 17 / SDG 6 / SDG 7,AI/SDG-specific
 sdgi_vnr_vlr,SDGi VNR/VLR,313,31971,SDG 17 / SDG 11 / SDG 13,0.434454,17,SDG 17 / SDG 10 / SDG 13,VNR/VLR institutional reports

@@ -24,7 +24,7 @@ H25 (headline hypothesis):
 
 H26 asymmetry diagnostic:
   Computed from active score artifacts. The mean top-SDG score when papers are scored
-  against OSDG centroids is compared to the mean top-SDG score when policy chunks are scored
+  against OSDG centroids is compared to the mean top-SDG score when policy segments are scored
   against research centroids. This is treated as an appendix-style directional diagnostic,
   not as a headline result.
 
@@ -45,7 +45,7 @@ Statistics:
 
 Inputs:
   4_outputs/sdg_attention_distribution_document_weighted.json       per-SDG research + policy profiles (doc-weighted)
-  4_outputs/sdg_conceptual_alignment_cosine_distances.json       per-SDG semantic gap (chunk_cap=50)
+  4_outputs/sdg_conceptual_alignment_cosine_distances.json       per-SDG semantic gap (segment_cap=50)
 
   4_outputs/statistical_tests_hypothesis_25_hypothesis_26_and_bias_calibration.json    H25 correlation results + H26 asymmetry
   4_outputs/visualization_source_sdg_attention_vs_semantic_distance.csv         per-SDG data table for plotting (SDG, research%, policy%,
@@ -344,7 +344,7 @@ def main() -> None:
     a15_policy_top    = float(policy_scores.max(axis=1).mean())
     a15_gap           = a15_policy_top - mean_paper_top
 
-    # Per-SDG: mean score of policy chunks for their top research centroid.
+    # Per-SDG: mean score of policy segments for their top research centroid.
     pol_assignments = pol_vs_research.argmax(axis=1)
     mean_pol_per_sdg = np.array([
         float(pol_vs_research[pol_assignments == j, j].mean()) if (pol_assignments == j).sum() > 0 else 0.0
@@ -352,7 +352,7 @@ def main() -> None:
     ])
 
     log.info("  Research papers vs OSDG centroids — mean top sim: %.4f", mean_paper_top)
-    log.info("  Policy chunks vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
+    log.info("  Policy segments vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
     h26_supported = mean_pol_vs_res > mean_paper_top
     h26_gap = mean_pol_vs_res - mean_paper_top
     log.info("  Asymmetry gap (policy - research): %.4f  → H26 direction %s",

@@ -1,0 +1,392 @@
+{
+  "payload": {
+    "schema_version": 1,
+    "phase": "local_heldout_sdg",
+    "base_signature": {
+      "required_inputs": {
+        "2_data/2_embedded/research_shards/metadata/manifest.json": {
+          "path": "2_data/2_embedded/research_shards/metadata/manifest.json",
+          "size": 12781,
+          "content_head_digest": "9822d00533887614"
+        },
+        "2_data/3_scored/paper_scores_shards/metadata/manifest.json": {
+          "path": "2_data/3_scored/paper_scores_shards/metadata/manifest.json",
+          "size": 12208,
+          "content_head_digest": "e75d1257dc7d4a92"
+        },
+        "2_data/1_preprocessed/research_corpus/metadata/manifest.json": {
+          "path": "2_data/1_preprocessed/research_corpus/metadata/manifest.json",
+          "size": 18070,
+          "content_head_digest": "2de2e16881c0b153"
+        },
+        "2_data/2_embedded/policy.npy": {
+          "path": "2_data/2_embedded/policy.npy",
+          "size": 83070080,
+          "content_head_digest": "119fbbf57d9d9d81"
+        },
+        "2_data/3_scored/metadata/policy_scores_ids.json": {
+          "path": "2_data/3_scored/metadata/policy_scores_ids.json",
+          "size": 5343199,
+          "content_head_digest": "3f8e7cec2ae2540e"
+        },
+        "2_data/2_embedded/metadata/policy_ids.json": {
+          "path": "2_data/2_embedded/metadata/policy_ids.json",
+          "size": 70914168,
+          "content_head_digest": "1b34fbc6ff4ad6f3"
+        },
+        "2_data/3_scored/policy_scores.npy": {
+          "path": "2_data/3_scored/policy_scores.npy",
+          "size": 3677704,
+          "content_head_digest": "efebbaa34e3ec42a"
+        },
+        "2_data/3_scored/sdg_centroids.npy": {
+          "path": "2_data/3_scored/sdg_centroids.npy",
+          "size": 26240,
+          "content_head_digest": "83c9330a03c464cd"
+        },
+        "2_data/3_scored/research_centroids.npy": {
+          "path": "2_data/3_scored/research_centroids.npy",
+          "size": 26240,
+          "content_head_digest": "5c4caabc1c8b78d8"
+        },
+        "2_data/3_scored/metadata/research_centroid_meta.json": {
+          "path": "2_data/3_scored/metadata/research_centroid_meta.json",
+          "size": 2580,
+          "content_head_digest": "833c60b8cf321cd1"
+        }
+      },
+      "cache_schema_version": 1,
+      "script": "1_code/3_main_analysis/3_appendix/3_register_adjustment.py"
+    },
+    "research_indices_by_sdg_signature": {
+      "schema_version": 1,
+      "phase": "local_research_indices_by_sdg",
+      "base_signature": {
+        "required_inputs": {
+          "2_data/2_embedded/research_shards/metadata/manifest.json": {
+            "path": "2_data/2_embedded/research_shards/metadata/manifest.json",
+            "size": 12781,
+            "content_head_digest": "9822d00533887614"
+          },
+          "2_data/3_scored/paper_scores_shards/metadata/manifest.json": {
+            "path": "2_data/3_scored/paper_scores_shards/metadata/manifest.json",
+            "size": 12208,
+            "content_head_digest": "e75d1257dc7d4a92"
+          },
+          "2_data/1_preprocessed/research_corpus/metadata/manifest.json": {
+            "path": "2_data/1_preprocessed/research_corpus/metadata/manifest.json",
+            "size": 18070,
+            "content_head_digest": "2de2e16881c0b153"
+          },
+          "2_data/2_embedded/policy.npy": {
+            "path": "2_data/2_embedded/policy.npy",
+            "size": 83070080,
+            "content_head_digest": "119fbbf57d9d9d81"
+          },
+          "2_data/3_scored/metadata/policy_scores_ids.json": {
+            "path": "2_data/3_scored/metadata/policy_scores_ids.json",
+            "size": 5343199,
+            "content_head_digest": "3f8e7cec2ae2540e"
+          },
+          "2_data/2_embedded/metadata/policy_ids.json": {
+            "path": "2_data/2_embedded/metadata/policy_ids.json",
+            "size": 70914168,
+            "content_head_digest": "1b34fbc6ff4ad6f3"
+          },
+          "2_data/3_scored/policy_scores.npy": {
+            "path": "2_data/3_scored/policy_scores.npy",
+            "size": 3677704,
+            "content_head_digest": "efebbaa34e3ec42a"
+          },
+          "2_data/3_scored/sdg_centroids.npy": {
+            "path": "2_data/3_scored/sdg_centroids.npy",
+            "size": 26240,
+            "content_head_digest": "83c9330a03c464cd"
+          },
+          "2_data/3_scored/research_centroids.npy": {
+            "path": "2_data/3_scored/research_centroids.npy",
+            "size": 26240,
+            "content_head_digest": "5c4caabc1c8b78d8"
+          },
+          "2_data/3_scored/metadata/research_centroid_meta.json": {
+            "path": "2_data/3_scored/metadata/research_centroid_meta.json",
+            "size": 2580,
+            "content_head_digest": "833c60b8cf321cd1"
+          }
+        },
+        "cache_schema_version": 1,
+        "script": "1_code/3_main_analysis/3_appendix/3_register_adjustment.py"
+      }
+    },
+    "folds": [
+      [
+        1,
+        6,
+        11,
+        16
+      ],
+      [
+        2,
+        7,
+        12,
+        17
+      ],
+      [
+        3,
+        8,
+        13
+      ],
+      [
+        4,
+        9,
+        14
+      ],
+      [
+        5,
+        10,
+        15
+      ]
+    ],
+    "c_grid": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "split_fracs": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15
+    },
+    "seed": 42
+  },
+  "mean_test_metrics": {
+    "test_accuracy": 0.977335,
+    "test_roc_auc": 0.997172,
+    "test_f1": 0.977271,
+    "test_precision": 0.978228,
+    "test_recall": 0.976434
+  },
+  "fold_rows": [
+    {
+      "fold": 1,
+      "heldout_sdgs": [
+        1,
+        6,
+        11,
+        16
+      ],
+      "train_sdgs": [
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        17
+      ],
+      "train_per_class": 42502,
+      "test_per_class": 11580,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.997849,
+      "val_f1": 0.980778,
+      "test_accuracy": 0.976036,
+      "test_roc_auc": 0.997055,
+      "test_f1": 0.976072,
+      "test_precision": 0.974602,
+      "test_recall": 0.977547,
+      "test_confusion_matrix": [
+        [
+          11285,
+          295
+        ],
+        [
+          260,
+          11320
+        ]
+      ]
+    },
+    {
+      "fold": 2,
+      "heldout_sdgs": [
+        2,
+        7,
+        12,
+        17
+      ],
+      "train_sdgs": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16
+      ],
+      "train_per_class": 39207,
+      "test_per_class": 14875,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.997947,
+      "val_f1": 0.979948,
+      "test_accuracy": 0.984773,
+      "test_roc_auc": 0.998343,
+      "test_f1": 0.984857,
+      "test_precision": 0.979455,
+      "test_recall": 0.990319,
+      "test_confusion_matrix": [
+        [
+          14566,
+          309
+        ],
+        [
+          144,
+          14731
+        ]
+      ]
+    },
+    {
+      "fold": 3,
+      "heldout_sdgs": [
+        3,
+        8,
+        13
+      ],
+      "train_sdgs": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17
+      ],
+      "train_per_class": 42506,
+      "test_per_class": 11576,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998076,
+      "val_f1": 0.981172,
+      "test_accuracy": 0.976978,
+      "test_roc_auc": 0.997291,
+      "test_f1": 0.977037,
+      "test_precision": 0.97456,
+      "test_recall": 0.979527,
+      "test_confusion_matrix": [
+        [
+          11280,
+          296
+        ],
+        [
+          237,
+          11339
+        ]
+      ]
+    },
+    {
+      "fold": 4,
+      "heldout_sdgs": [
+        4,
+        9,
+        14
+      ],
+      "train_sdgs": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17
+      ],
+      "train_per_class": 44578,
+      "test_per_class": 9504,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.998428,
+      "val_f1": 0.984185,
+      "test_accuracy": 0.967066,
+      "test_roc_auc": 0.995393,
+      "test_f1": 0.966528,
+      "test_precision": 0.982605,
+      "test_recall": 0.950968,
+      "test_confusion_matrix": [
+        [
+          9344,
+          160
+        ],
+        [
+          466,
+          9038
+        ]
+      ]
+    },
+    {
+      "fold": 5,
+      "heldout_sdgs": [
+        5,
+        10,
+        15
+      ],
+      "train_sdgs": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        16,
+        17
+      ],
+      "train_per_class": 47535,
+      "test_per_class": 6547,
+      "selected_C": 10.0,
+      "val_roc_auc": 0.997865,
+      "val_f1": 0.980773,
+      "test_accuracy": 0.981824,
+      "test_roc_auc": 0.997777,
+      "test_f1": 0.98186,
+      "test_precision": 0.979918,
+      "test_recall": 0.983809,
+      "test_confusion_matrix": [
+        [
+          6415,
+          132
+        ],
+        [
+          106,
+          6441
+        ]
+      ]
+    }
+  ]
+}

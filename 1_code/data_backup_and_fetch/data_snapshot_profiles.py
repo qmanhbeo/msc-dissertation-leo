@@ -25,7 +25,7 @@ BASE_WARM_REPLAY_PATHS = (
     Path("2_data/2_embedded/research_shards/metadata/manifest.json"),
     Path("2_data/3_scored/sdg_centroids.npy"),
     Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json"),
-    Path("2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl"),
+    Path("2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"),
     Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
 )
 

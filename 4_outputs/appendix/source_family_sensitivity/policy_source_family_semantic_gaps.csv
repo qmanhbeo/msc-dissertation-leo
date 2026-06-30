@@ -1,4 +1,4 @@
-family,sdg,n_research_papers,n_policy_chunks,n_policy_chunks_capped,n_policy_docs,n_policy_docs_capped,chunk_cap,semantic_similarity,semantic_gap,policy_cohesion,unreliable
+family,sdg,n_research_papers,n_policy_segments,n_policy_segments_capped,n_policy_docs,n_policy_docs_capped,segment_cap,semantic_similarity,semantic_gap,policy_cohesion,unreliable
 full_policy_corpus,1,17563,2886,2231,359,359,50,0.675123,0.324877,0.629808,False
 full_policy_corpus,2,86745,2155,2049,352,352,50,0.667222,0.332778,0.630222,False
 full_policy_corpus,3,454371,3852,3493,395,395,50,0.560184,0.439816,0.569055,False

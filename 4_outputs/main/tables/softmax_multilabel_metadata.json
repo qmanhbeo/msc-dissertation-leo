@@ -1,11 +1,11 @@
 {
   "calibrated_variant_note": "Corpus-calibrated softmax standardizes SDG similarities within each corpus before applying softmax. This may reduce sensitivity to absolute centroid proximity but does not eliminate benchmark/register bias.",
   "embedding_normalization_convention": "all embeddings and SDG centroids are unit-normalized; semantic gaps remain computed in original 384D space.",
-  "generated_at_utc": "2026-06-30T13:12:48.709968Z",
+  "generated_at_utc": "2026-06-30T20:53:15.299926Z",
   "note": "Robustness/alternative specification only. Softmax weighting treats SDGs as overlapping anchors rather than mutually exclusive clusters.",
-  "policy_chunk_cap_used": 50,
-  "policy_coverage_weighting_method": "document_weighted_mean_of_chunk_weight_vectors",
-  "policy_semantic_weighting_method": "per_sdg_weighted_chunk_centroid_with_per_document_chunk_cap",
+  "policy_coverage_weighting_method": "document_weighted_mean_of_segment_weight_vectors",
+  "policy_segment_cap_used": 50,
+  "policy_semantic_weighting_method": "per_sdg_weighted_segment_centroid_with_per_document_segment_cap",
   "policy_similarity_means": [
     0.3343907296657562,
     0.3367648720741272,

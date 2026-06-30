@@ -69,15 +69,15 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 ## Analytical Assumptions
 
 ### A9 — Coverage gap (proportion difference) is a meaningful proxy for attention allocation
-- **Assumption:** If 30% of research papers score highly on SDG 13 but only 5% of policy chunks do, this reflects a genuine difference in emphasis, not an artefact of corpus size or document style
-- **Risk:** Medium. Policy documents tend to be broader and cover more SDGs per chunk; research abstracts tend to be narrower and more focused. This could inflate apparent research concentration on specific SDGs
+- **Assumption:** If 30% of research papers score highly on SDG 13 but only 5% of policy segments do, this reflects a genuine difference in emphasis, not an artefact of corpus size or document style
+- **Risk:** Medium. Policy documents tend to be broader and cover more SDGs per segment; research abstracts tend to be narrower and more focused. This could inflate apparent research concentration on specific SDGs
 - **Mitigation:** Normalise scores; report per-document SDG profiles, not raw counts; use relative ranking rather than absolute proportions where appropriate
 - **Where to address:** Methodology → Alignment Scoring
 
 ### A10 — Intra-SDG cosine similarity reflects thematic divergence
 - **Assumption:** Low cosine similarity between the research cluster and policy cluster within an SDG means they are discussing genuinely different aspects of that SDG
 - **Risk:** Low-medium. It could also reflect stylistic differences (academic writing vs. policy writing) rather than substantive thematic differences
-- **Mitigation:** Qualitatively inspect representative chunks from each low-similarity cluster to confirm the divergence is substantive; use topic modeling to surface themes
+- **Mitigation:** Qualitatively inspect representative segments from each low-similarity cluster to confirm the divergence is substantive; use topic modeling to surface themes
 - **Where to address:** Methodology → Semantic Gap Analysis; Results → Semantic Gap
 
 ### A11 — Kaggle SDG Index scores are a valid proxy for "real-world need"
@@ -99,7 +99,7 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 ### A15 — OSDG-derived centroids are neutral SDG reference points
 - **Assumption:** Building SDG centroids from OSDG (which was labeled using a tool trained on UN-related documents) produces reference vectors that are independent of our policy corpus
 - **Risk:** Medium-high. OSDG's labeling tool was trained primarily on UN-related sources. Our policy corpus *is* UN documents. The centroids may be implicitly calibrated toward UN-style language, inflating policy alignment scores relative to research alignment scores — not because policy is genuinely more aligned, but because the measurement instrument and the policy corpus share a common linguistic ancestor
-- **Diagnostic test:** After scoring, check whether policy chunks score systematically higher than research papers against OSDG centroids on average. A large systematic gap would indicate calibration bias, not genuine alignment difference
+- **Diagnostic test:** After scoring, check whether policy segments score systematically higher than research papers against OSDG centroids on average. A large systematic gap would indicate calibration bias, not genuine alignment difference
 - **Mitigation:** If bias detected, consider building separate centroids from (a) OSDG only and (b) SDG indicator metadata, and comparing results; flag in methodology chapter
 - **Where to address:** Methodology → SDG Reference Embeddings; Results → Centroid Validation
 
@@ -117,18 +117,18 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
   - *Productive misalignment*: Research addresses dimensions of a problem that policy has not yet framed, or challenges assumptions embedded in policy discourse (e.g., research questioning whether AI is net-positive for SDG 13 while policy assumes it is)
 - **Where to address:** Discussion → Interpretation of Findings; Conclusion
 
-### A19 — Unit-of-analysis asymmetry: papers vs chunks
-- **Assumption:** Comparing 6,172 paper-level vectors (1 abstract = 1 vector) against 1,211 chunk-level vectors (~150 words per chunk, many chunks per document) is a valid basis for SDG profiling
+### A19 — Unit-of-analysis asymmetry: papers vs segments
+- **Assumption:** Comparing 6,172 paper-level vectors (1 abstract = 1 vector) against 1,211 segment-level vectors (~150 words per segment, many segments per document) is a valid basis for SDG profiling
 - **Risk:** High. This is a fundamental unit-of-analysis mismatch with three distinct problems:
-  1. **Unequal granularity:** A research paper is represented by its abstract — a dense, author-curated summary of the whole work. A policy chunk is a 150-word passage that may cover only one corner of a 300-page document. These are not the same kind of object semantically.
-  2. **Coverage inflation:** A policy document that heavily discusses SDG 9 generates ~50 SDG-9-heavy chunks. This inflates the apparent policy emphasis on SDG 9 — not because SDG 9 is more important to policy, but because one editorial decision produces dozens of correlated data points.
-  3. **Autocorrelation:** The 1,211 chunks are not 1,211 independent observations. They are ~13 clusters of highly correlated passages. Treating them as independent observations in any statistical test would be invalid. The research corpus (6,172 papers from thousands of independent authors) is genuinely diverse.
-- **Why chunking is necessary anyway:** Policy documents have no abstract. A 300-page report covers many topics; treating it as one vector would lose all internal structure. Chunking is the standard NLP approach for long-document comparison.
+  1. **Unequal granularity:** A research paper is represented by its abstract — a dense, author-curated summary of the whole work. A policy segment is a 150-word passage that may cover only one corner of a 300-page document. These are not the same kind of object semantically.
+  2. **Coverage inflation:** A policy document that heavily discusses SDG 9 generates ~50 SDG-9-heavy segments. This inflates the apparent policy emphasis on SDG 9 — not because SDG 9 is more important to policy, but because one editorial decision produces dozens of correlated data points.
+  3. **Autocorrelation:** The 1,211 segments are not 1,211 independent observations. They are ~13 clusters of highly correlated passages. Treating them as independent observations in any statistical test would be invalid. The research corpus (6,172 papers from thousands of independent authors) is genuinely diverse.
+- **Why segmenting is necessary anyway:** Policy documents have no abstract. A 300-page report covers many topics; treating it as one vector would lose all internal structure. Segmenting is the standard NLP approach for long-document comparison.
 - **Mitigations (must apply all three):**
   1. **Per-document SDG profiles:** Always report which document drives which SDG signal; never report aggregate policy scores without showing the document breakdown
-  2. **Document-weighted comparisons:** For the coverage gap analysis, weight by document (each of 13 docs = 1 observation) not by chunk count (which would let large documents dominate)
-  3. **Fixed-sample per document:** For semantic gap analysis (within-SDG cluster similarity), cap the number of chunks contributed per document to avoid single-document dominance
-- **Where to address:** Methodology → Data Sources (explain chunking rationale); Methodology → Limitations (name the asymmetry explicitly); Results → Coverage Gap (show per-document breakdown alongside aggregate)
+  2. **Document-weighted comparisons:** For the coverage gap analysis, weight by document (each of 13 docs = 1 observation) not by segment count (which would let large documents dominate)
+  3. **Fixed-sample per document:** For semantic gap analysis (within-SDG cluster similarity), cap the number of segments contributed per document to avoid single-document dominance
+- **Where to address:** Methodology → Data Sources (explain segmenting rationale); Methodology → Limitations (name the asymmetry explicitly); Results → Coverage Gap (show per-document breakdown alongside aggregate)
 
 ### A20 — High topical overlap indicates research is responding to policy (not a shared blind spot)
 - **Assumption:** When research and policy show high topical overlap on an SDG, this means research is addressing what policymakers need
@@ -138,8 +138,8 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 
 ### A21 — Our research corpus captures AI *for* sustainability, not AI *in* sustainability
 - **Assumption:** Papers retrieved via "artificial intelligence" + "sustainable development" query are studying AI as a tool applied to sustainability challenges (AI for sustainability)
-- **Risk:** Medium. UN policy documents discuss *both* AI for sustainability AND AI's own governance, ethics, energy use, and societal risks (AI in sustainability). If policy chunks about AI governance score low against our research-paper-derived topics, this reflects a categorical framing difference — not just a topical gap
-- **Diagnostic:** After scoring, examine which policy chunks score *lowest* against research embeddings. If these cluster around AI governance/ethics/risk topics, it confirms the framing gap
+- **Risk:** Medium. UN policy documents discuss *both* AI for sustainability AND AI's own governance, ethics, energy use, and societal risks (AI in sustainability). If policy segments about AI governance score low against our research-paper-derived topics, this reflects a categorical framing difference — not just a topical gap
+- **Diagnostic:** After scoring, examine which policy segments score *lowest* against research embeddings. If these cluster around AI governance/ethics/risk topics, it confirms the framing gap
 - **Where to address:** Methodology → Corpus Definition; Discussion → "AI for vs AI in" as an additional gap dimension
 
 ### A18 — Our corpus is representative of the AI-for-sustainability research field
@@ -210,9 +210,9 @@ Assumptions made (explicitly or implicitly) at each layer of the research. Each 
 | A16 | Cosine similarity = substantive alignment | High | Reframe as "topical overlap"; qualify all claims |
 | A17 | Misalignment is always bad | Medium | Introduce productive vs problematic misalignment lens |
 | A18 | Research corpus represents current AI-for-sustainability field | Medium-high | Cite Armitage et al. (2020) on method-dependence |
-| A19 | Unit-of-analysis asymmetry: paper abstracts vs 150-word chunks | **High** | Per-doc profiles; document-weighted comparisons; fixed sample per doc in semantic gap |
+| A19 | Unit-of-analysis asymmetry: paper abstracts vs 150-word segments | **High** | Per-doc profiles; document-weighted comparisons; fixed sample per doc in semantic gap |
 | A20 | High alignment = research responding to policy (not shared blind spot) | High | Name ambiguity explicitly; cannot distinguish with our data |
-| A21 | Our corpus captures AI *for* sustainability, not AI *in* sustainability | Medium | Check which policy chunks score lowest; flag framing gap |
+| A21 | Our corpus captures AI *for* sustainability, not AI *in* sustainability | Medium | Check which policy segments score lowest; flag framing gap |
 | A22 | VNR texts reflect genuine policy priorities (not performative) | High | Frame as discourse analysis; consistent with A8 |
 | A23 | SDGi VNRs and AI policy docs must NOT be merged | High | Always treat as separate corpora; compare rather than aggregate |
 | A24 | NLP4SG expert labels serve as external validity check | Low-medium | Report agreement rate; note label-leakage caveat |

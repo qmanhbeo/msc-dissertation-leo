@@ -1,4 +1,4 @@
-family,family_label,sdg,document_weighted_share,document_count_assigned,n_documents_total,n_chunks_total
+family,family_label,sdg,document_weighted_share,document_count_assigned,n_documents_total,n_segments_total
 full_policy_corpus,Full corpus,1,0.017508,43,2456,54082
 full_policy_corpus,Full corpus,2,0.00855,21,2456,54082
 full_policy_corpus,Full corpus,3,0.004479,11,2456,54082

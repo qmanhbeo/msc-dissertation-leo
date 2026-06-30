@@ -1,15 +1,15 @@
 """
-Merge all policy chunk sources into a single policy corpus.
+Merge all policy segment sources into a single policy corpus.
 
 Input sources:
-  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_chunks.jsonl
-  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_chunks.jsonl
-  2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl
-  2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl
+  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl
+  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl
+  2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_segments.jsonl
+  2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl
 
 Output:
-  2_data/1_preprocessed/policy_all/policy_chunks_all.jsonl
-  2_data/1_preprocessed/policy_all/policy_chunks_all.csv
+  2_data/1_preprocessed/policy_all/policy_segments_all.jsonl
+  2_data/1_preprocessed/policy_all/policy_segments_all.csv
 
 Merge rule: concatenate source corpora in order, while keeping the existing
 minimum word-count filter.
@@ -25,15 +25,15 @@ from collections import Counter
 from pathlib import Path
 
 SOURCES = [
-    Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_chunks.jsonl"),
-    Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_chunks.jsonl"),
-    Path("2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl"),
-    Path("2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl"),
+    Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl"),
+    Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl"),
+    Path("2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_segments.jsonl"),
+    Path("2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl"),
 ]
 
 OUTPUT_DIR = Path("2_data/1_preprocessed/policy_all")
-OUTPUT_JSONL = OUTPUT_DIR / "policy_chunks_all.jsonl"
-OUTPUT_CSV = OUTPUT_DIR / "policy_chunks_all.csv"
+OUTPUT_JSONL = OUTPUT_DIR / "policy_segments_all.jsonl"
+OUTPUT_CSV = OUTPUT_DIR / "policy_segments_all.csv"
 MIN_WORD_COUNT = 20
 
 
@@ -41,17 +41,17 @@ def load_jsonl(path: Path) -> list[dict]:
     if not path.exists():
         print(f"  WARNING: {path} not found - skipping")
         return []
-    chunks = []
+    segments = []
     with path.open(encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
             if not line:
                 continue
             try:
-                chunks.append(json.loads(line))
+                segments.append(json.loads(line))
             except json.JSONDecodeError:
                 pass
-    return chunks
+    return segments
 
 
 def csv_safe(row: dict) -> dict:
@@ -64,7 +64,7 @@ def csv_safe(row: dict) -> dict:
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    all_chunks: list[dict] = []
+    all_segments: list[dict] = []
     source_counts: Counter = Counter()
 
     for source_path in SOURCES:
@@ -72,46 +72,46 @@ def main() -> None:
         added = 0
         skipped_short = 0
 
-        for chunk in raw:
-            text = chunk.get("text", "").strip()
+        for segment in raw:
+            text = segment.get("text", "").strip()
             if not text:
                 continue
-            word_count = chunk.get("word_count", len(text.split()))
+            word_count = segment.get("word_count", len(text.split()))
             if word_count < MIN_WORD_COUNT:
                 skipped_short += 1
                 continue
-            all_chunks.append(chunk)
+            all_segments.append(segment)
             added += 1
 
         label = source_path.name
         source_counts[label] = added
         print(f"  {label}: {len(raw)} raw -> {added} kept ({skipped_short} too short)")
 
-    print(f"\nTotal chunks: {len(all_chunks)}")
+    print(f"\nTotal segments: {len(all_segments)}")
 
-    for index, chunk in enumerate(all_chunks):
-        chunk["chunk_id_merged"] = f"merged_{index:06d}"
+    for index, segment in enumerate(all_segments):
+        segment["segment_id_merged"] = f"merged_{index:06d}"
 
-    word_counts = sorted(chunk.get("word_count", len(chunk["text"].split())) for chunk in all_chunks)
+    word_counts = sorted(segment.get("word_count", len(segment["text"].split())) for segment in all_segments)
     if word_counts:
         print(f"Word counts - min: {word_counts[0]}, median: {word_counts[len(word_counts)//2]}, max: {word_counts[-1]}")
 
     with OUTPUT_JSONL.open("w", encoding="utf-8") as handle:
-        for chunk in all_chunks:
-            handle.write(json.dumps(chunk) + "\n")
+        for segment in all_segments:
+            handle.write(json.dumps(segment) + "\n")
     print(f"✓ JSONL -> {OUTPUT_JSONL}")
 
-    csv_fields = ["chunk_id_merged", "chunk_id", "source_doc", "chunk_index", "word_count", "text"]
+    csv_fields = ["segment_id_merged", "segment_id", "source_doc", "segment_index", "word_count", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=csv_fields, extrasaction="ignore", quoting=csv.QUOTE_ALL)
         writer.writeheader()
-        writer.writerows(csv_safe(chunk) for chunk in all_chunks)
+        writer.writerows(csv_safe(segment) for segment in all_segments)
     print(f"✓ CSV  -> {OUTPUT_CSV}")
 
     print("\nSource breakdown:")
     for source, count in source_counts.items():
-        pct = count / max(len(all_chunks), 1) * 100
-        print(f"  {source}: {count} chunks ({pct:.1f}%)")
+        pct = count / max(len(all_segments), 1) * 100
+        print(f"  {source}: {count} segments ({pct:.1f}%)")
 
 
 if __name__ == "__main__":

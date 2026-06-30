@@ -1,11 +1,11 @@
 """
-Convert SDGi corpus (parquet) → policy_chunks.jsonl format.
+Convert SDGi corpus (parquet) → policy_segments.jsonl format.
 
 Input:  2_data/0_raw/sdgi_corpus/sdgi_corpus.parquet
         (~5,880 text excerpts from Voluntary National Reviews and
         Voluntary Local Reviews submitted to the UN HLPF)
 
-Output: 2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl
+Output: 2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_segments.jsonl
 
 These VNR/VLR texts are the gold standard for SDG policy language —
 authored by national and local governments reporting on SDG implementation.
@@ -22,36 +22,36 @@ from pathlib import Path
 import pandas as pd
 
 INPUT_PARQUET = Path("2_data/0_raw/sdgi_corpus/sdgi_corpus.parquet")
-OUTPUT_JSONL = Path("2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_chunks.jsonl")
+OUTPUT_JSONL = Path("2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_segments.jsonl")
 
 # Only English; SDGi has multilingual content — non-English would noise the embedding
 TARGET_LANGUAGE = "en"
 MIN_TEXT_LEN = 80  # characters — discard header-only fragments
 
-# Chunking parameters — match 0_preprocess_policy.py
+# Segmentation parameters — match 0_preprocess_policy.py
 TARGET_WORDS = 150
 MAX_WORDS = 300
 
 
 def split_long_text(text: str) -> list[str]:
-    """Split a long text block into ~TARGET_WORDS chunks at sentence boundaries."""
+    """Split a long text block into ~TARGET_WORDS segments at sentence boundaries."""
     # Split into sentences
     sentences = re.split(r"(?<=[.!?])\s+", text)
-    chunks, current, count = [], [], 0
+    segments, current, count = [], [], 0
     for sent in sentences:
         wc = len(sent.split())
         if count + wc > MAX_WORDS and current:
-            chunks.append(" ".join(current))
+            segments.append(" ".join(current))
             current, count = [sent], wc
         else:
             current.append(sent)
             count += wc
         if count >= TARGET_WORDS:
-            chunks.append(" ".join(current))
+            segments.append(" ".join(current))
             current, count = [], 0
     if current:
-        chunks.append(" ".join(current))
-    return [c for c in chunks if len(c.split()) >= 10]
+        segments.append(" ".join(current))
+    return [c for c in segments if len(c.split()) >= 10]
 
 
 def main() -> None:
@@ -72,7 +72,7 @@ def main() -> None:
     df = df[df["text"].str.len() >= MIN_TEXT_LEN].copy()
     print(f"  After length filter (≥{MIN_TEXT_LEN} chars): {len(df)}")
 
-    chunks: list[dict] = []
+    segments: list[dict] = []
     for idx, row in df.iterrows():
         meta = row["metadata"] if isinstance(row["metadata"], dict) else {}
         labels = row["labels"]
@@ -107,11 +107,11 @@ def main() -> None:
             sub_texts = [text]
 
         for sub_i, sub_text in enumerate(sub_texts):
-            chunks.append(
+            segments.append(
                 {
-                    "chunk_id": f"sdgi_{idx:05d}_{sub_i}",
+                    "segment_id": f"sdgi_{idx:05d}_{sub_i}",
                     "source_doc": source_doc,
-                    "chunk_index": sub_i,
+                    "segment_index": sub_i,
                     "text": sub_text,
                     "word_count": len(sub_text.split()),
                     "sdg_labels": labels,
@@ -123,14 +123,14 @@ def main() -> None:
 
     OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_JSONL.open("w", encoding="utf-8") as f:
-        for chunk in chunks:
-            f.write(json.dumps(chunk) + "\n")
+        for segment in segments:
+            f.write(json.dumps(segment) + "\n")
 
-    print(f"\nDone. {len(chunks)} chunks → {OUTPUT_JSONL}")
+    print(f"\nDone. {len(segments)} segments → {OUTPUT_JSONL}")
 
     # SDG distribution
     sdg_counts: Counter = Counter()
-    for c in chunks:
+    for c in segments:
         for sdg in c["sdg_labels"]:
             sdg_counts[sdg] += 1
     print("\nSDG label distribution:")
@@ -140,7 +140,7 @@ def main() -> None:
 
     # Country distribution (top 15)
     country_counts: Counter = Counter(
-        c["institution"].split("(")[0].strip() for c in chunks
+        c["institution"].split("(")[0].strip() for c in segments
     )
     print("\nTop 15 countries:")
     for country, count in country_counts.most_common(15):

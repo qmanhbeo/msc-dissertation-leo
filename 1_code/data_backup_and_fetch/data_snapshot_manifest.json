@@ -13,7 +13,7 @@
         "data/2_embedded/research_shards/metadata/manifest.json",
         "data/3_scored/sdg_centroids.npy",
         "data/3_scored/paper_scores_shards/metadata/manifest.json",
-        "data/1_preprocessed/policy_all/policy_chunks_all.jsonl",
+        "data/1_preprocessed/policy_all/policy_segments_all.jsonl",
         "data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json",
         "data/1_preprocessed/research_corpus/metadata/manifest.json",
         "data/1_preprocessed/research_corpus/part-00001.jsonl"
@@ -35,7 +35,7 @@
         "data/2_embedded/research_shards/metadata/manifest.json",
         "data/3_scored/sdg_centroids.npy",
         "data/3_scored/paper_scores_shards/metadata/manifest.json",
-        "data/1_preprocessed/policy_all/policy_chunks_all.jsonl",
+        "data/1_preprocessed/policy_all/policy_segments_all.jsonl",
         "data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json",
         "data/1_preprocessed/research_corpus/metadata/manifest.json",
         "data/1_preprocessed/research_corpus/part-00001.jsonl",

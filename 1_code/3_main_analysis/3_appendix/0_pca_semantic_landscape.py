@@ -56,7 +56,7 @@ from shared_utils import ensure_canonical_outputs
 from alignment_core import verify_unit_norms
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 from semantic_gap_shared import (
-    CHUNK_CAP_PRIMARY,
+    SEGMENT_CAP_PRIMARY,
     N_SDG,
     POLICY_EMB,
     POLICY_IDS,
@@ -94,7 +94,7 @@ def parse_args() -> argparse.Namespace:
         "--policy-fit-cap",
         type=int,
         default=0,
-        help="Optional cap on the number of policy chunks used for PCA fitting. Default: 0 (use all policy chunks).",
+        help="Optional cap on the number of policy segments used for PCA fitting. Default: 0 (use all policy segments).",
     )
     return p.parse_args()
 
@@ -110,7 +110,7 @@ def build_policy_centroids(
     policy_emb: np.ndarray,
     policy_scores: np.ndarray,
     policy_ids: list[dict],
-    chunk_cap: int,
+    segment_cap: int,
     rng_seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     assignments = get_cluster_assignments(policy_scores)
@@ -121,7 +121,7 @@ def build_policy_centroids(
         capped = cap_policy_indices_per_doc(
             raw_idxs,
             policy_ids,
-            chunk_cap,
+            segment_cap,
             np.random.default_rng(rng_seed + sdg_idx),
         )
         centroid, _ = build_sub_centroid(policy_emb, capped)
@@ -187,6 +187,8 @@ def main() -> None:
     layout = ensure_canonical_outputs(Path(args.output_dir))
     tables_dir = layout.tables_dir
     figures_dir = layout.figures_dir
+    out_dir = Path(args.output_dir) / "appendix" / "pca_semantic_landscape"
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(args.seed)
 
@@ -255,7 +257,7 @@ def main() -> None:
         policy_emb=policy_emb,
         policy_scores=policy_scores,
         policy_ids=policy_ids,
-        chunk_cap=CHUNK_CAP_PRIMARY,
+        segment_cap=SEGMENT_CAP_PRIMARY,
         rng_seed=args.seed,
     )
     research_centroid_available = np.array(
@@ -300,7 +302,7 @@ def main() -> None:
         alpha=0.08,
         linewidths=0,
         rasterized=True,
-        label="Policy chunks",
+        label="Policy segments",
     )
 
     for sdg_idx in range(N_SDG):
@@ -396,7 +398,7 @@ def main() -> None:
 
     legend_handles = [
         Line2D([0], [0], marker="o", color="none", markerfacecolor=RESEARCH_COLOR, alpha=0.55, markersize=5, label="Research sample"),
-        Line2D([0], [0], marker="o", color="none", markerfacecolor=POLICY_COLOR, alpha=0.55, markersize=5, label="Policy chunks"),
+        Line2D([0], [0], marker="o", color="none", markerfacecolor=POLICY_COLOR, alpha=0.55, markersize=5, label="Policy segments"),
         Line2D([0], [0], marker="D", color="none", markerfacecolor=REFERENCE_COLOR, markeredgecolor="white", markersize=7, label="SDG reference centroid"),
         Line2D([0], [0], marker="o", color="none", markerfacecolor=RESEARCH_COLOR, markeredgecolor="white", markersize=6, label="Research SDG centroid"),
         Line2D([0], [0], marker="s", color="none", markerfacecolor=POLICY_COLOR, markeredgecolor="white", markersize=6, label="Policy SDG centroid"),
@@ -415,6 +417,8 @@ def main() -> None:
     png_path = figures_dir / "fig_pca_semantic_landscape.png"
     fig.savefig(pdf_path, bbox_inches="tight")
     fig.savefig(png_path, bbox_inches="tight", dpi=150)
+    fig.savefig(out_dir / "fig_pca_semantic_landscape.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "fig_pca_semantic_landscape.png", bbox_inches="tight", dpi=150)
     plt.close(fig)
     log.info("Saved: %s", pdf_path)
     log.info("Saved: %s", png_path)
@@ -434,12 +438,12 @@ def main() -> None:
         "research_trimmed_to_policy_count": True,
         "pc1_explained_variance_ratio": float(evr[0]),
         "pc2_explained_variance_ratio": float(evr[1]),
-        "chunk_cap_for_policy_gap_overlay": int(CHUNK_CAP_PRIMARY),
+        "segment_cap_for_policy_gap_overlay": int(SEGMENT_CAP_PRIMARY),
         "note": (
             "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original 384-dimensional embedding space."
         ),
     }
-    metadata_path = tables_dir / PCA_METADATA_JSON
+    metadata_path = out_dir / PCA_METADATA_JSON
     write_metadata_json(metadata_path, metadata)
     write_num_tex(tables_dir / PCA_NUM_TEX, metadata)
     log.info("Saved: %s", metadata_path)

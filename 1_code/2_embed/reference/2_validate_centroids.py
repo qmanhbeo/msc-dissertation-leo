@@ -160,7 +160,7 @@ def main() -> None:
     # For unit vectors: dot(a, b) = cos(θ) = cosine similarity.
     # scores[i, j] = cosine similarity of benchmark text i to centroid for SDG (j+1).
     # This is the *same operation* applied in downstream scoring stages for papers and policy
-    # chunks — validating it here confirms the instrument before it is used at scale.
+    # segments — validating it here confirms the instrument before it is used at scale.
     scores = bench_emb @ centroids.T   # (616, 17)
 
     # Predicted SDG = the centroid with the highest cosine similarity.

@@ -4,14 +4,14 @@ Extract SDG-relevant policy passages from the UN General Debate Corpus (UNGDC).
 Input:  2_data/0_raw/ungdc/TXT/Session <N> - <YEAR>/<ISO>_<session>_<year>.txt
         Sessions 70–80 (2015–2024) — post-SDG-adoption speeches only
 
-Output: 2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_chunks.jsonl
+Output: 2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl
 
 Strategy:
   1. Read all speeches from sessions 70–80 (2015–2024)
   2. Split each speech into paragraphs
   3. Keep paragraphs that contain SDG-relevant keywords
-  4. Merge adjacent kept paragraphs into ~150-word chunks
-  5. Output in the standard policy_chunks format
+  4. Merge adjacent kept paragraphs into ~150-word segments
+  5. Output in the standard policy_segments format
 
 These are official statements by heads of state/government at the UN General
 Assembly — authentic policy discourse on international goals and commitments.
@@ -26,7 +26,7 @@ from pathlib import Path
 
 UNGDC_TXT_DIR = Path("2_data/0_raw/ungdc/TXT")
 OUTPUT_DIR = Path("2_data/1_preprocessed/policy_all/ungdc_sdg")
-OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_chunks.jsonl"
+OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_segments.jsonl"
 
 # Sessions after SDG adoption (September 2015 = Session 70)
 MIN_SESSION = 70
@@ -34,10 +34,10 @@ MAX_SESSION = 80
 
 # Minimum paragraph length to consider (words)
 MIN_PARA_WORDS = 20
-# Target chunk size (words)
-TARGET_CHUNK_WORDS = 150
+# Target segment size (words)
+TARGET_SEGMENT_WORDS = 150
 # Hard cap (words)
-MAX_CHUNK_WORDS = 300
+MAX_SEGMENT_WORDS = 300
 
 # ---------------------------------------------------------------------------
 # SDG relevance keywords — broad enough to catch policy discourse without
@@ -118,23 +118,23 @@ def split_paragraphs(text: str) -> list[str]:
     return result
 
 
-def merge_chunks(paragraphs: list[str], target: int, max_words: int) -> list[str]:
-    """Greedily merge consecutive paragraphs into ~target-word chunks."""
-    chunks, current, current_wc = [], [], 0
+def merge_segments(paragraphs: list[str], target: int, max_words: int) -> list[str]:
+    """Greedily merge consecutive paragraphs into ~target-word segments."""
+    segments, current, current_wc = [], [], 0
     for para in paragraphs:
         wc = len(para.split())
         if current_wc + wc > max_words and current:
-            chunks.append(" ".join(current))
+            segments.append(" ".join(current))
             current, current_wc = [para], wc
         else:
             current.append(para)
             current_wc += wc
         if current_wc >= target:
-            chunks.append(" ".join(current))
+            segments.append(" ".join(current))
             current, current_wc = [], 0
     if current:
-        chunks.append(" ".join(current))
-    return chunks
+        segments.append(" ".join(current))
+    return segments
 
 
 def parse_session_dir(session_dir: Path) -> tuple[int, int] | None:
@@ -171,8 +171,8 @@ def main() -> None:
 
     print(f"Found {len(session_dirs)} sessions ({MIN_SESSION}–{MAX_SESSION})")
 
-    all_chunks: list[dict] = []
-    chunk_idx = 0
+    all_segments: list[dict] = []
+    segment_idx = 0
     speech_count = 0
     kept_speech_count = 0
 
@@ -180,7 +180,7 @@ def main() -> None:
         speech_files = sorted(session_dir.glob("*.txt"))
         print(f"  Session {session_num} ({year}): {len(speech_files)} speeches", end="", flush=True)
 
-        session_chunks = 0
+        session_segments = 0
         for speech_path in speech_files:
             parsed = parse_speech_file(speech_path)
             if not parsed:
@@ -200,38 +200,38 @@ def main() -> None:
                 continue
 
             kept_speech_count += 1
-            merged = merge_chunks(relevant, TARGET_CHUNK_WORDS, MAX_CHUNK_WORDS)
+            merged = merge_segments(relevant, TARGET_SEGMENT_WORDS, MAX_SEGMENT_WORDS)
 
             source_doc = f"ungdc_{iso3}_{session_num}_{year}"
-            for i, chunk_text in enumerate(merged):
-                if len(chunk_text.split()) < MIN_PARA_WORDS:
+            for i, segment_text in enumerate(merged):
+                if len(segment_text.split()) < MIN_PARA_WORDS:
                     continue
-                all_chunks.append(
+                all_segments.append(
                     {
-                        "chunk_id": f"ungdc_{chunk_idx:06d}",
+                        "segment_id": f"ungdc_{segment_idx:06d}",
                         "source_doc": source_doc,
-                        "chunk_index": i,
-                        "text": chunk_text,
-                        "word_count": len(chunk_text.split()),
+                        "segment_index": i,
+                        "text": segment_text,
+                        "word_count": len(segment_text.split()),
                         "institution": f"{iso3} (UNGDC speech)",
                         "year": year,
                         "session": session_num,
                     }
                 )
-                chunk_idx += 1
-                session_chunks += 1
+                segment_idx += 1
+                session_segments += 1
 
-        print(f"  → {session_chunks} chunks")
+        print(f"  → {session_segments} segments")
 
     # Write output
     with OUTPUT_JSONL.open("w", encoding="utf-8") as f:
-        for chunk in all_chunks:
-            f.write(json.dumps(chunk) + "\n")
+        for segment in all_segments:
+            f.write(json.dumps(segment) + "\n")
 
     print(f"\n{'='*60}")
     print(f"Speeches scanned:  {speech_count}")
     print(f"Speeches with SDG content: {kept_speech_count} ({kept_speech_count/max(speech_count,1)*100:.1f}%)")
-    print(f"Total chunks:      {len(all_chunks)}")
+    print(f"Total segments:      {len(all_segments)}")
     print(f"Output:            {OUTPUT_JSONL}")
     print(f"{'='*60}")
 

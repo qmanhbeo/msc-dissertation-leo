@@ -39,7 +39,7 @@ Here is the full pipeline before we slow it down:
 2. Clean them and prepare them into comparable text units.
 3. Turn each text into a vector using an embedding model.
 4. Build 17 SDG "reference points" from labeled examples.
-5. Compare every paper and every policy chunk to those 17 SDG reference points.
+5. Compare every paper and every policy segment to those 17 SDG reference points.
 6. Measure which SDGs each corpus emphasizes.
 7. Measure how similar research and policy are *inside* each SDG.
 8. Run extra checks to make sure the results are not a fluke or a measurement artefact.
@@ -155,9 +155,9 @@ Using all three helps the paper capture:
 
 ### Final policy size
 
-After preprocessing and chunking, the canonical corpus contains:
+After preprocessing and segmenting, the canonical corpus contains:
 
-- **47,005 policy text chunks**
+- **47,005 policy text segments**
 - coming from **2,392 source documents**
 
 ---
@@ -207,7 +207,7 @@ If there is no real text to compare, the paper cannot be placed reliably in sema
 
 ### What does the cleaned research corpus look like?
 
-One important detail: the research corpus is **not chunked** the way the policy corpus is.
+One important detail: the research corpus is **not segmented** the way the policy corpus is.
 
 Each research unit stays as **one paper-level text**, built from:
 
@@ -222,7 +222,7 @@ In the canonical corpus of **2,543,698 papers**:
 - the median combined title+abstract length is **197 words**
 - the middle of the corpus is fairly compact: the 10th to 90th percentile range is **97 to 303 words**
 
-That means the research side is made of short, focused paper summaries rather than long mixed-topic documents. That is exactly why the policy side has to be chunked later, while the research side does not.
+That means the research side is made of short, focused paper summaries rather than long mixed-topic documents. That is exactly why the policy side has to be segmented later, while the research side does not.
 
 ---
 
@@ -241,18 +241,18 @@ So the pipeline does **not** treat each whole policy document as one unit.
 Instead, it:
 
 1. cleans and normalizes the text
-2. splits long documents into chunks of about **150-300 words**
+2. splits long documents into segments of about **150-300 words**
 3. tries to keep sentence boundaries intact
 4. removes very short fragments, especially under **20 words**
 5. deduplicates repeated text after normalization
 
-### Why chunk policy documents?
+### Why segment policy documents?
 
 Because a whole report can talk about many SDGs at once.
 
 If you score a 200-page report as one giant block, you blur everything together.
 
-Chunking lets the paper say:
+Segmenting lets the paper say:
 
 > "This part of the report is mostly about climate."
 >
@@ -264,9 +264,9 @@ That makes the comparison much sharper.
 
 ### Important fairness issue
 
-Chunking creates a problem too:
+Segmenting creates a problem too:
 
-- a long policy report can produce many chunks
+- a long policy report can produce many segments
 - a research paper stays one paper
 
 So later in the analysis, the paper uses **document-weighted coverage** so that one giant report does not dominate just because it was cut into many pieces.
@@ -316,7 +316,7 @@ The goal of the paper is not to train a complicated black-box classifier. The go
 Every text becomes a vector:
 
 - every research paper
-- every policy chunk
+- every policy segment
 - every labeled SDG example in OSDG
 - every benchmark example
 
@@ -466,15 +466,15 @@ Instead of trying to process millions of papers as one giant fragile job, the pi
 
 ## Step 7: Scoring The Policy Text
 
-The paper does the same SDG-centroid comparison for each of the **47,005 policy chunks**.
+The paper does the same SDG-centroid comparison for each of the **47,005 policy segments**.
 
-### What does each policy chunk get?
+### What does each policy segment get?
 
-Just like research papers, each chunk gets a score against all 17 SDGs.
+Just like research papers, each segment gets a score against all 17 SDGs.
 
-So each chunk can be placed on the same SDG meaning-map.
+So each segment can be placed on the same SDG meaning-map.
 
-### Why chunk-level scoring matters here
+### Why segment-level scoring matters here
 
 A long policy report might include:
 
@@ -486,11 +486,11 @@ A long policy report might include:
 
 all in the same document.
 
-Chunk-level scoring avoids flattening all of that into one average blob.
+Segment-level scoring avoids flattening all of that into one average blob.
 
 ### Important fairness correction
 
-Because long documents create many chunks, the paper later uses **document-weighted policy coverage** for the main attention comparison.
+Because long documents create many segments, the paper later uses **document-weighted policy coverage** for the main attention comparison.
 
 Plain English version:
 
@@ -571,7 +571,7 @@ For example, SDG 13:
 
 1. gather the research papers whose strongest alignment is SDG 13
 2. average their vectors into a **research sub-centroid**
-3. gather the policy chunks whose strongest alignment is SDG 13
+3. gather the policy segments whose strongest alignment is SDG 13
 4. average their vectors into a **policy sub-centroid**
 5. compare those two averages
 
@@ -716,13 +716,13 @@ That protects against building the whole thesis on a weak SDG map.
 
 ### 10B. Document-weighted policy coverage
 
-This prevents giant policy reports from dominating just because they create many chunks.
+This prevents giant policy reports from dominating just because they create many segments.
 
 Without this correction, coverage results could be distorted by document length rather than true attention.
 
-### 10C. Chunk-cap sensitivity
+### 10C. Segment-cap sensitivity
 
-For semantic gap, the paper caps how many chunks one document can contribute to an SDG cluster.
+For semantic gap, the paper caps how many segments one document can contribute to an SDG cluster.
 
 It tests multiple caps:
 
@@ -732,7 +732,7 @@ It tests multiple caps:
 
 Why?
 
-Because otherwise one long document with many similar chunks could overpower the semantic center for a goal.
+Because otherwise one long document with many similar segments could overpower the semantic center for a goal.
 
 The rankings remain stable across these checks, which is a good sign.
 
@@ -937,15 +937,15 @@ It asks:
 
 - **Fetch**: collect AI research papers from OpenAlex and policy texts from several institutional sources.
 - **Clean**: remove duplicates, remove unusable text, and standardize the corpora.
-- **Chunk**: split long policy documents into smaller meaningful pieces.
+- **Segment**: split long policy documents into smaller meaningful pieces.
 - **Embed**: turn every text into a 384-dimensional meaning vector using `all-MiniLM-L6-v2`.
 - **Build SDG anchors**: create 17 SDG reference centroids from labeled datasets.
 - **Validate the anchors**: test whether the SDG centroids behave sensibly on benchmark data.
 - **Score research**: compare each research paper to all 17 SDG centroids.
-- **Score policy**: compare each policy chunk to the same 17 centroids.
+- **Score policy**: compare each policy segment to the same 17 centroids.
 - **Compare attention**: measure which SDGs dominate research and which dominate policy.
 - **Compare meaning**: measure whether research and policy talk similarly inside each SDG.
-- **Stress-test the result**: run calibration checks, chunk-cap checks, reliability checks, and repeated subsampling.
+- **Stress-test the result**: run calibration checks, segment-cap checks, reliability checks, and repeated subsampling.
 - **Conclude**: research-policy alignment cannot be inferred from topical overlap alone.
 
 ---
@@ -956,7 +956,7 @@ If you want to connect the explanation above to the codebase, the project is lai
 
 - `main.py`: the top-level entrypoint
 - `1_code/0_fetch/`: data collection scripts
-- `1_code/1_preprocess/`: cleaning, filtering, merging, and chunking
+- `1_code/1_preprocess/`: cleaning, filtering, merging, and segmenting
 - `1_code/2_embed/`: embeddings, SDG centroids, scoring, and validation
 - `1_code/3_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
 - `1_code/4_visualization/`: final plots

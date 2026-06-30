@@ -75,7 +75,7 @@ Research papers and policy documents have fundamentally different linguistic pro
 ### 2. OSDG circularity (medium risk)
 - OSDG was labeled using a tool trained on UN-related documents
 - Our policy corpus is UN documents
-- Risk: policy chunks score higher against OSDG centroids by design, not by genuine alignment
+- Risk: policy segments score higher against OSDG centroids by design, not by genuine alignment
 - Mitigation: post-hoc check — compare mean research vs policy scores; if systematically different, flag
 
 ### 3. Method choice dependence (Armitage et al. 2020)
@@ -85,10 +85,10 @@ Research papers and policy documents have fundamentally different linguistic pro
 
 ### 4. Granularity mismatch
 - We treat research papers at document level (1 abstract = 1 vector)
-- We treat policy documents at chunk level (150-word chunks)
-- Abstracts are already short and focused; policy chunks may cover multiple topics
+- We treat policy documents at segment level (150-word segments)
+- Abstracts are already short and focused; policy segments may cover multiple topics
 - This asymmetry may inflate semantic precision for papers vs policy
-- Flag in methodology; potentially run paper-level chunking as robustness check
+- Flag in methodology; potentially run paper-level segmenting as robustness check
 
 ---
 
@@ -145,7 +145,7 @@ Two distinct conversations are happening under the same umbrella:
 
 These are not just different topics within the same conversation. They are different framings of what AI *is* in relation to sustainability. A policy document saying "AI systems must be governed to avoid exacerbating inequalities" and a research paper on "AI for poverty prediction" are both nominally about SDG 10 but are categorically different in how they position AI.
 
-**Testable:** After scoring, identify policy chunks that score lowest against all research embeddings. If these cluster around governance/ethics/risk language → confirmed framing gap. This would be a standalone finding worth ~1 paragraph in Results.
+**Testable:** After scoring, identify policy segments that score lowest against all research embeddings. If these cluster around governance/ethics/risk language → confirmed framing gap. This would be a standalone finding worth ~1 paragraph in Results.
 
 **Cite:** Sætra (2021); Heilinger et al. (2023); Ghamisi et al. (2024)
 
@@ -167,13 +167,13 @@ Most revealing negative test: if SDGs 10 (Inequalities) and 16 (Peace/Justice) a
 
 **The asymmetry:**
 - Research corpus: 94 papers × 94 independent authorships → high diversity
-- Policy corpus: 253 chunks × 2 documents × 2 authorships → high autocorrelation
+- Policy corpus: 253 segments × 2 documents × 2 authorships → high autocorrelation
 
-The SDG profile of the policy corpus reflects editorial decisions by 2 documents, not 253 independent observations. A single editorial choice ("this report will emphasise SDG 9 heavily") produces dozens of SDG-9-heavy chunks. This could amplify apparent policy emphasis on certain SDGs far beyond their true importance in the broader policy landscape.
+The SDG profile of the policy corpus reflects editorial decisions by 2 documents, not 253 independent observations. A single editorial choice ("this report will emphasise SDG 9 heavily") produces dozens of SDG-9-heavy segments. This could amplify apparent policy emphasis on certain SDGs far beyond their true importance in the broader policy landscape.
 
 **Mitigation steps:**
 1. When reporting coverage gap, show per-document SDG profiles (PARIS21 vs UN AI Strategy separately) alongside the combined figure
-2. Consider weighting policy chunks by document (each document = 1 observation for coverage purposes, not each chunk)
+2. Consider weighting policy segments by document (each document = 1 observation for coverage purposes, not each segment)
 3. Frame findings as "in these two UN documents" rather than "in policy discourse generally" — which we should already be doing per A2
 
 **Cite:** No specific citation needed; this is an observation about corpus construction. But Wang et al. (2023) on heterogeneity across national AI strategies implicitly supports the need for caution
