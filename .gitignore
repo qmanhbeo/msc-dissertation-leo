@@ -1,96 +1,53 @@
-# Data directories (large downloads)
+# === Data (not tracked, hydrated from snapshot) ===
 2_data/
-# symlink → 2_data/ for backward compatibility with manifest paths
-data
 
-# Python environments and packages
-venv/
-env/
-ENV/
-.venv
+# === Python artifacts ===
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
+build/
+dist/
+*.whl
 
-# Virtual environments
-venv
-env
+# === Virtual environments ===
+venv/
+.env
 
-# IDE and editor files
+# === IDE, editors, OS ===
 .vscode/
 .idea/
 *.swp
-*.swo
 *~
 .DS_Store
+Thumbs.db
 ._*
-.project
-.pydevproject
-.settings/
-*.sublime-project
-*.sublime-workspace
 
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb
+# === Secrets ===
+.env.local
+.kaggle/
+credentials.json
+*.key
+*.pem
 
-# Research/literature cache
-0_literature/**/cache/
-0_literature/**/temp/
-
-# Data files (CSV, JSON, large datasets)
-*.csv
-*.json
-data_*
-*.parquet
-*.h5
-*.pkl
-*.pickle
-
-# Model files and checkpoints
-models/
-checkpoints/
-*.pt
-*.pth
-*.bin
-
-# Temporary files
+# === Temporary and backup files ===
 *.tmp
-*.temp
 *.bak
 *backup*
 !1_code/data_backup_and_fetch/
 !1_code/data_backup_and_fetch/**
-1_code/data_backup_and_fetch/__pycache__/
 .temp/
 
-# Data snapshot archives (backed up to Google Drive via backup_data_snapshot.py)
+# === Snapshot archives ===
 *.tar.zst
 *.tar.zst.sha256
 
-# PDF generated from LaTeX (but keep source and literature PDFs)
+# === PDF (keep literature, ignore everything else) ===
 *.pdf
 !0_literature/**/*.pdf
+
+# === LaTeX build artifacts (keep .tex, .bib) ===
 *.aux
 *.bbl
 *.bcf
@@ -100,41 +57,32 @@ checkpoints/
 *.out
 *.run.xml
 *.toc
+*.log
 3_writing/build_meta.tex
 3_writing/builds/
+3_writing/drafts/
 
-# OS-specific
-.DS_Store
-Thumbs.db
+# === Literature cache ===
+0_literature/**/cache/
+0_literature/**/temp/
 
-# Credentials and secrets (CRITICAL - never commit these!)
-.env
-.env.local
-.kaggle/
-credentials.json
-*.key
-*.pem
+# === Models and checkpoints ===
+models/
+checkpoints/
+*.pt
+*.pth
+*.bin
 
-# Build artifacts
-*.log
-dist/
-build/
-
-# Local settings
+# === Local tool config ===
 .claude/
-.claude/settings.local.json
 .agents/
 .codex
 
-# Dissertation-specific
-3_writing/drafts/
+# === Private notes ===
 5_notes/private/
 .supervisor-feedback/
 
-# Run-local full-corpus outputs
-# The submitted dissertation outputs/ tree is intentionally tracked below.
-
-# Marker-facing committed dissertation outputs
+# === Marker-committed outputs ===
 !4_outputs/
 !4_outputs/**
 4_outputs/**/*.aux
