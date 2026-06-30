@@ -390,7 +390,7 @@ def build_pdf(output_dir: Path) -> None:
 
 def run_sample_stability(output_dir: Path) -> None:
     require_output_files(
-        output_dir,
+        output_dir / "main" / "data",
         [
             "sdg_attention_distribution_document_weighted.json",
             "sdg_conceptual_alignment_cosine_distances.json",

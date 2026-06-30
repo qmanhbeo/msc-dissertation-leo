@@ -45,12 +45,19 @@ Not tracked in Git:
 
 `2_data/` is hydrated from the frozen curated snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
 
-## Environment assumptions
+## Environment
 
-- Canonical setup path: `environment.yml`
-- Python version in the canonical environment: `3.11.15`
-- `requirements.txt` is a lightweight human-maintained reference; `environment.yml` is the canonical full rebuild path
-- Linux or WSL is the assumed/tested environment; native Windows is not the main target
+```bash
+conda env create -f environment.yml
+conda activate dissertation   # or: conda activate stocks
+```
+
+- `environment.yml` is the canonical rebuild path. Pins all conda and pip versions
+  for functional reproducibility (identical versions, standard practice).
+- `requirements.txt` is a human-edited core reference (~20 packages). Not needed
+  for rebuild — `environment.yml` already covers the pip layer.
+- Python version: `3.11.15`. Tested on Linux/WSL; native Windows is not the target.
+- GPU acceleration: not required, but supported via `torch==2.5.1+cu121` (CUDA 12.1). Falls back to CPU automatically.
 - PDF build requires LaTeX tools including `latexmk`, `pdflatex`, and `biber`
 - CPU is sufficient for `--warm-replay`
 - Network access is needed for initial environment setup and data snapshot download; once `2_data/` is hydrated, warm replay does not need network access
