@@ -386,7 +386,7 @@ To test whether the headline findings depend heavily on research-corpus size, I 
 
 \noindent\textit{Plain-language guide.\footnote{The four metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy-to-research asymmetry --- whether policy text matches sampled research framing better than the reverse; (4) calibration bias --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$0.413), policy-to-research asymmetry ($\sim$0.152), and calibration bias ($\sim$0.321) already match the full-corpus values at three decimal places. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
 
-\subsection{Register-Sensitivity Note}
+\subsection{Register Sensitivity Check}
 
 Possible corpus-register effects remain an important limitation. Research title-abstract texts and policy documents differ systematically in style, modality, and institutional language, so part of the raw within-SDG distance may reflect broad research--policy register differences rather than topic framing alone. Appendix~\ref{app:register-robustness} reports the register-adjusted estimates alongside the raw values for direct comparison. Additional register-adjustment procedures were therefore explored as appendix-style robustness and diagnostic checks rather than as replacement estimates.
 
@@ -475,7 +475,7 @@ The central implication is not that the AI-for-sustainability field is aligned o
 %% ============================================================
 \clearpage
 \appendix
-\section{Diagnosis for Centroid Construction}
+\section{Diagnostics for Centroid Construction}
 \label{app:centroid-diagnostics}
 
 \subsection{Per-SDG Reference-Source Comparison}
@@ -556,7 +556,7 @@ The main analysis therefore retains the canonical nearest-centroid assignment bu
 }
 \end{table}
 
-\section{Additional Perspectives on Main Results}
+\section{Supplementary Robustness and Sensitivity Checks}
 \label{app:additional-perspectives}
 
 \subsection{Combined Research--Policy PCA Landscape}
@@ -594,7 +594,7 @@ I pair the visual diagnostics with centroid-coherence and clustering statistics 
 \label{fig:within-corpus-centroid-structure}
 \end{figure}
 
-\subsection{What the Semantic Gap Looks Like in Text}
+\subsection{Lexical Illustration of the Semantic Gap}
 \label{app:semantic-gap-text-interpretability}
 
 Table~\ref{tab:semantic-gap-text-interpretability} adds a small lexical interpretability check for two high-gap, policy-dominant cases (SDGs 17 and 13) and one lower-gap comparison case (SDG 9). The table is generated from deterministic samples of existing hard-assigned research and policy texts. It reports distinctive terms rather than selected quotations, so it should be read as a descriptive guide to language patterns rather than as qualitative coding or proof of policy intent.
@@ -633,7 +633,7 @@ The corpus-calibrated variant is the stronger stress test. Across the tested tem
 
 The substantive conclusion is therefore not that softmax ``fixes'' the centroid method. Rather, low-temperature raw softmax suggests that the main hard-label findings are not merely artefacts of winner-takes-all assignment, while the corpus-calibrated variant shows that exact semantic-gap rankings remain sensitive to corpus-level calibration choices. Broad patterns should therefore be emphasised over exact SDG rank ordering.
 
-\subsection{Directional Asymmetry Diagnostic}
+\subsection{Directional Asymmetry Check}
 \label{app:directional-asymmetry}
 
 A bidirectional asymmetry diagnostic was explored to test whether policy-facing discourse appears closer to research-derived SDG centroids than research papers appear to OSDG-derived SDG centroids. In the current run, policy chunks score \HAsymPolicyScore{} against research-derived centroids, while research papers score \HAsymResearchScore{} against OSDG-derived centroids, producing an observed asymmetry of \HAsymGap.
