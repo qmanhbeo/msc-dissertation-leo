@@ -38,6 +38,7 @@ Some papers have `.md` companion files (full-text reproductions).
 | **Guston2001** | `research_policy_theory/Guston2001.pdf` | SAGE | |
 | **Heink2015** | `research_policy_theory/Heink2015.pdf` | Oxford | |
 | **Gibbons1994** | `research_policy_theory/Gibbons1994.pdf` | Sage | |
+| **Caplan1979** | `research_policy_theory/Caplan1979.pdf` | Sage | Moved from `uncited_kept/` |
 | **Strauss2025** | `research_policy_gap/Strauss2025.pdf` | arXiv | |
 | **ToneyWails2024** | `research_policy_gap/ToneyWails2024.pdf` | ACM | |
 | **SioumalasChristodoulou2025** | `research_policy_gap/SioumalasChristodoulou2025.pdf` | Springer | |
@@ -61,7 +62,7 @@ Some papers have `.md` companion files (full-text reproductions).
 
 | File | Content | Reason kept |
 |---|---|---|
-| `uncited_kept/Caplan1979.pdf` | Caplan, "The Two-Communities Theory" | Background reading |
+| ~~`uncited_kept/Caplan1979.pdf`~~ | Caplan (1979) — now in `research_policy_theory/` | Now cited |
 | `uncited_kept/Toney2024.pdf` | Collective Constitutional AI (different paper from ToneyWails2024) | Kept for reference |
 | `sdg_classification/Bautista-Puig2019-full.pdf` | Earlier Bautista-Puig paper (full) | Background reading; `BautistaPuig2021` is cited |
 | `sdg_classification/Bautista-Puig2019.pdf` | Earlier Bautista-Puig paper (short) | Background reading |
@@ -100,6 +101,6 @@ All 41 cited works now have PDFs on disk. The remaining entries below are policy
 
 ---
 
-## All 46 cited works accounted for.
+## All 47 cited works accounted for.
 
 *Generated 2026-06-29 by the citation-inventory script.*

@@ -40,50 +40,51 @@ Status: **PENDING** / **IN PROGRESS** / **DONE** / **ISSUE**
 | 17 | Guston2001 | research_policy_theory/Guston2001.pdf | DONE | |
 | 18 | Heink2015 | research_policy_theory/Heink2015.pdf | DONE | Mild framing: "knowledge utilisation framework" is not Heink2015's own label; CRELE content is accurate |
 | 19 | Gibbons1994 | research_policy_theory/Gibbons1994.pdf | DONE | |
+| 20 | Caplan1979 | research_policy_theory/Caplan1979.pdf | DONE | Moved from uncited_kept/ |
 
 ## Research-Policy Gap
 
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
-| 20 | Strauss2025 | research_policy_gap/Strauss2025.pdf | DONE | Line 129: FIXED — "policy emphasises deployment-stage" removed; now accurately describes research-policy gap |
-| 21 | ToneyWails2024 | research_policy_gap/ToneyWails2024.pdf | DONE | |
-| 22 | SioumalasChristodoulou2025 | research_policy_gap/SioumalasChristodoulou2025.pdf | DONE | Line 129: FIXED — "AI research metrics" → "global AI metrics" to match paper |
-| 23 | bornmann2016policy | research_policy_gap/Bornmann2016.pdf | DONE | |
-| 24 | bornmann2017impact | research_policy_gap/Bornmann2017.pdf | DONE | |
-| 25 | Heilinger2023 | research_policy_gap/Heilinger2023.pdf | DONE | Line 155: FIXED — rewrote claim to match paper's actual discussion of corporate greenwashing, not research |
-| 26 | HerasSaizarbitoria2022 | research_policy_gap/Heras-Saizarbitoria2022.pdf | DONE | |
+| 21 | Strauss2025 | research_policy_gap/Strauss2025.pdf | DONE | Line 129: FIXED — "policy emphasises deployment-stage" removed; now accurately describes research-policy gap |
+| 22 | ToneyWails2024 | research_policy_gap/ToneyWails2024.pdf | DONE | |
+| 23 | SioumalasChristodoulou2025 | research_policy_gap/SioumalasChristodoulou2025.pdf | DONE | Line 129: FIXED — "AI research metrics" → "global AI metrics" to match paper |
+| 24 | bornmann2016policy | research_policy_gap/Bornmann2016.pdf | DONE | |
+| 25 | bornmann2017impact | research_policy_gap/Bornmann2017.pdf | DONE | |
+| 26 | Heilinger2023 | research_policy_gap/Heilinger2023.pdf | DONE | Line 155: FIXED — rewrote claim to match paper's actual discussion of corporate greenwashing, not research |
+| 27 | HerasSaizarbitoria2022 | research_policy_gap/Heras-Saizarbitoria2022.pdf | DONE | |
 
 ## Semantic Methods
 
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
-| 27 | Reimers2019 | semantic_methods/Reimers2019.pdf | DONE | |
-| 28 | Rodriguez2023 | semantic_methods/Rodriguez2023.pdf | DONE | Renamed from `Rodriguez et al 2023.pdf` |
-| 29 | biber1988variation | semantic_methods/biber1988variation.pdf | DONE | |
-| 30 | biberConrad2009register | semantic_methods/Biber2009.pdf | DONE | |
+| 28 | Reimers2019 | semantic_methods/Reimers2019.pdf | DONE | |
+| 29 | Rodriguez2023 | semantic_methods/Rodriguez2023.pdf | DONE | Renamed from `Rodriguez et al 2023.pdf` |
+| 30 | biber1988variation | semantic_methods/biber1988variation.pdf | DONE | |
+| 31 | biberConrad2009register | semantic_methods/Biber2009.pdf | DONE | |
 
 ## Research Infrastructure
 
 | # | Key | File | Status | Notes |
 |---|---|---|---|---|
-| 31 | Priem2022 | research_infrastructure/Priem2022.pdf | DONE | |
+| 32 | Priem2022 | research_infrastructure/Priem2022.pdf | DONE | |
 
 ## Policy docs / datasets (no PDF to check)
 
 | # | Key | Type | Status | Notes |
 |---|---|---|---|---|
-| 32 | UN2015 | UN resolution | SKIP | Webpage only |
-| 33 | Paris2015 | International treaty | SKIP | Webpage only |
-| 34 | IPCC2022 | IPCC report | SKIP | Webpage only |
-| 35 | OECD2019 | OECD principles | SKIP | Webpage only |
-| 36 | EUAI2024 | EU legislation | SKIP | Webpage only |
-| 37 | UNESCO2021 | UNESCO recommendation | SKIP | Webpage only |
-| 38 | UKAI2021 | UK government strategy | SKIP | Webpage only |
-| 39 | UNAI2024 | UN report | SKIP | Webpage only |
-| 40 | AUAI2024 | AU strategy | SKIP | Webpage only |
-| 41 | Sachs2024 | SDG Index report | SKIP | Webpage only |
-| 42 | Sachs2025 | SDG Index report | SKIP | Webpage only |
-| 43 | SDGi2024 | HuggingFace dataset | SKIP | Dataset |
-| 44 | UNGDC2024 | Harvard Dataverse | SKIP | Dataset |
-| 45 | Aurora2020SDGSurvey | Zenodo dataset | SKIP | Dataset |
-| 46 | SDGBenchmark | GitHub repo | SKIP | Software repo |
+| 33 | UN2015 | UN resolution | SKIP | Webpage only |
+| 34 | Paris2015 | International treaty | SKIP | Webpage only |
+| 35 | IPCC2022 | IPCC report | SKIP | Webpage only |
+| 36 | OECD2019 | OECD principles | SKIP | Webpage only |
+| 37 | EUAI2024 | EU legislation | SKIP | Webpage only |
+| 38 | UNESCO2021 | UNESCO recommendation | SKIP | Webpage only |
+| 39 | UKAI2021 | UK government strategy | SKIP | Webpage only |
+| 40 | UNAI2024 | UN report | SKIP | Webpage only |
+| 41 | AUAI2024 | AU strategy | SKIP | Webpage only |
+| 42 | Sachs2024 | SDG Index report | SKIP | Webpage only |
+| 43 | Sachs2025 | SDG Index report | SKIP | Webpage only |
+| 44 | SDGi2024 | HuggingFace dataset | SKIP | Dataset |
+| 45 | UNGDC2024 | Harvard Dataverse | SKIP | Dataset |
+| 46 | Aurora2020SDGSurvey | Zenodo dataset | SKIP | Dataset |
+| 47 | SDGBenchmark | GitHub repo | SKIP | Software repo |
