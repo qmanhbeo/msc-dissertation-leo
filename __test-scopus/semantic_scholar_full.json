@@ -1,0 +1,2160 @@
+[
+  {
+    "doi": "10.1038/s41467-019-14108-y",
+    "title": "The role of artificial intelligence in achieving the Sustainable Development Goals",
+    "abstract": "The emergence of artificial intelligence (AI) and its progressively wider impact on many sectors requires an assessment of its effect on the achievement of the Sustainable Development Goals. Using a consensus-based expert elicitation process, we find that AI can enable the accomplishment of 134 targets across all the goals, but it may also inhibit 59 targets. However, current research foci overlook important aspects. The fast development of AI needs to be supported by the necessary regulatory insight and oversight for AI-based technologies to enable sustainable development. Failure to do so could result in gaps in transparency, safety, and ethical standards. Artificial intelligence (AI) is becoming more and more common in people\u2019s lives. Here, the authors use an expert elicitation method to understand how AI may affect the achievement of the Sustainable Development Goals.",
+    "year": 2019,
+    "venue": "Nature Communications",
+    "authors": [
+      "Ricardo Vinuesa",
+      "Hossein Azizpour",
+      "Iolanda Leite",
+      "Madeline Balaam",
+      "Virginia Dignum",
+      "S. Domisch",
+      "Anna Fell\u00e4nder",
+      "S. Langhans",
+      "Max Tegmark",
+      "F. Nerini"
+    ],
+    "externalIds": {
+      "PubMedCentral": "6957485",
+      "DBLP": "journals/corr/abs-1905-00501",
+      "MAG": "2942528970",
+      "ArXiv": "1905.00501",
+      "DOI": "10.1038/s41467-019-14108-y",
+      "CorpusId": 143425657,
+      "PubMed": "31932590"
+    },
+    "publicationDate": "2019-04-30"
+  },
+  {
+    "doi": "10.1016/j.xinn.2021.100179",
+    "title": "Artificial intelligence: A powerful paradigm for scientific research",
+    "abstract": "Artificial intelligence (AI) coupled with promising machine learning (ML) techniques well known from computer science is broadly affecting many aspects of various fields including science and technology, industry, and even our day-to-day life. The ML techniques have been developed to analyze high-throughput data with a view to obtaining useful insights, categorizing, predicting, and making evidence-based decisions in novel ways, which will promote the growth of novel applications and fuel the sustainable booming of AI. This paper undertakes a comprehensive survey on the development and application of AI in different aspects of fundamental sciences, including information science, mathematics, medical science, materials science, geoscience, life science, physics, and chemistry. The challenges that each discipline of science meets, and the potentials of AI techniques to handle these challenges, are discussed in detail. Moreover, we shed light on new research trends entailing the integration of AI into each scientific discipline. The aim of this paper is to provide a broad research guideline on fundamental sciences with potential infusion of AI, to help motivate researchers to deeply understand the state-of-the-art applications of AI-based fundamental sciences, and thereby to help promote the continuous development of these fundamental sciences.",
+    "year": 2021,
+    "venue": "The Innovation",
+    "authors": [
+      "Yongjun Xu",
+      "Qi Wang",
+      "Zhulin An",
+      "Fei Wang",
+      "Libo Zhang",
+      "Yanjun Wu",
+      "Fengliang Dong",
+      "Cheng-Wei Qiu",
+      "Xin Liu",
+      "Junjun Qiu",
+      "K. Hua",
+      "Wentao Su",
+      "Huiyu Xu",
+      "Yong Han",
+      "Xinya Cao",
+      "En-ju Liu",
+      "C. Fu",
+      "Zhigang Yin",
+      "Miao Liu",
+      "R. Roepman",
+      "S. Dietmann",
+      "M. Virta",
+      "F. Kengara",
+      "Changping Huang",
+      "Ze Zhang",
+      "Lifu Zhang",
+      "Taolan Zhao",
+      "Jianwei Dai",
+      "Jialiang Yang",
+      "L. Lan",
+      "Ming Luo",
+      "Tao Huang",
+      "Zhaofeng Liu",
+      "Sen Qian",
+      "T. An",
+      "Xingchen Liu",
+      "Bin Zhang",
+      "Xiaolei He",
+      "Shan Cong",
+      "Xiaohong Liu",
+      "Wei Zhang",
+      "Fang Wang",
+      "Chuan\u2010Qi Lu",
+      "Zhipeng Cai",
+      "James P. Lewis",
+      "J. Tiedje",
+      "Jiabao Zhang"
+    ],
+    "externalIds": {
+      "PubMedCentral": "8633405",
+      "DOI": "10.1016/j.xinn.2021.100179",
+      "CorpusId": 240261316,
+      "PubMed": "34877560"
+    },
+    "publicationDate": "2021-10-01"
+  },
+  {
+    "doi": "10.1016/S2214-109X(20)30488-5",
+    "title": "The Lancet Global Health Commission on Global Eye Health: vision beyond 2020",
+    "abstract": null,
+    "year": 2021,
+    "venue": "Lancet Global Health",
+    "authors": [
+      "Matthew J. Burton",
+      "Jacqueline Ramke",
+      "A. Marques",
+      "R. Bourne",
+      "N. Congdon",
+      "Iain Jones",
+      "Brandon A M Ah Tong",
+      "S. Arunga",
+      "D. Bachani",
+      "C. Bascaran",
+      "A. Bastawrous",
+      "K. Blanchet",
+      "T. Braithwaite",
+      "J. Buchan",
+      "J. Cairns",
+      "A. Cama",
+      "M. Chagunda",
+      "C. Chuluunkhuu",
+      "Andrew Cooper",
+      "Jessica Crofts-Lawrence",
+      "W. Dean",
+      "A. Denniston",
+      "Joshua R. Ehrlich",
+      "P. Emerson",
+      "Jennifer R. Evans",
+      "K. Frick",
+      "D. Friedman",
+      "J. Furtado",
+      "M. Gichangi",
+      "S. Gichuhi",
+      "S. Gilbert",
+      "R. Gurung",
+      "Esmael Habtamu",
+      "P. Holland",
+      "J. Jonas",
+      "P. Keane",
+      "L. Keay",
+      "R. Khanna",
+      "P. Khaw",
+      "H. Kuper",
+      "F. Kyari",
+      "V. Lansingh",
+      "I. Mactaggart",
+      "M. Mafwiri",
+      "Wanjiku Mathenge",
+      "Ian McCormick",
+      "P. Morjaria",
+      "L. Mowatt",
+      "D. Muirhead",
+      "G. Murthy",
+      "N. Mwangi",
+      "D. Patel",
+      "T. Peto",
+      "B. Qureshi",
+      "S. Salom\u00e3o",
+      "Virginia Sarah",
+      "B. Shilio",
+      "A. Solomon",
+      "B. Swenor",
+      "H. Taylor",
+      "Ningli Wang",
+      "Aubrey Webson",
+      "S. West",
+      "T. Wong",
+      "R. Wormald",
+      "Sumrana Yasmin",
+      "Mayinuer Yusufu",
+      "J. Silva",
+      "S. Resnikoff",
+      "Thulasiraj D. Ravilla",
+      "C. Gilbert",
+      "A. Foster",
+      "H. Faal"
+    ],
+    "externalIds": {
+      "PubMedCentral": "7966694",
+      "DOI": "10.1016/S2214-109X(20)30488-5",
+      "CorpusId": 231969582,
+      "PubMed": "33607016"
+    },
+    "publicationDate": "2021-02-16"
+  },
+  {
+    "doi": "10.1016/j.ijinfomgt.2020.102104",
+    "title": "Artificial intelligence for sustainability: Challenges, opportunities, and a research agenda",
+    "abstract": "Abstract Artificial intelligence (AI) will transform business practices and industries and has the potential to address major societal problems, including sustainability. Degradation of the natural environment and the climate crisis are exceedingly complex phenomena requiring the most advanced and innovative solutions. Aiming to spur groundbreaking research and practical solutions of AI for environmental sustainability, we argue that AI can support the derivation of culturally appropriate organizational processes and individual practices to reduce the natural resource and energy intensity of human activities. The true value of AI will not be in how it enables society to reduce its energy, water, and land use intensities, but rather, at a higher level, how it facilitates and fosters environmental governance. A comprehensive review of the literature indicates that research regarding AI for sustainability is challenged by (1) overreliance on historical data in machine learning models, (2) uncertain human behavioral responses to AI-based interventions, (3) increased cybersecurity risks, (4) adverse impacts of AI applications, and (5) difficulties in measuring effects of intervention strategies. The review indicates that future studies of AI for sustainability should incorporate (1) multilevel views, (2) systems dynamics approaches, (3) design thinking, (4) psychological and sociological considerations, and (5) economic value considerations to show how AI can deliver immediate solutions without introducing long-term threats to environmental sustainability.",
+    "year": 2020,
+    "venue": "International Journal of Information Management",
+    "authors": [
+      "R. Nishant",
+      "M. Kennedy",
+      "J. Corbett"
+    ],
+    "externalIds": {
+      "MAG": "3020807179",
+      "DBLP": "journals/ijinfoman/NishantKC20",
+      "DOI": "10.1016/j.ijinfomgt.2020.102104",
+      "CorpusId": 219087919
+    },
+    "publicationDate": "2020-08-01"
+  },
+  {
+    "doi": "10.1016/j.jclepro.2021.125834",
+    "title": "Artificial intelligence in sustainable energy industry: Status Quo, challenges and opportunities",
+    "abstract": "Abstract The energy industry is at a crossroads. Digital technological developments have the potential to change our energy supply, trade, and consumption dramatically. The new digitalization model is powered by the artificial intelligence (AI) technology. The integration of energy supply, demand, and renewable sources into the power grid will be controlled autonomously by smart software that optimizes decision-making and operations. AI will play an integral role in achieving this goal. This study focuses on the use of AI techniques in the energy sector. This study aims to present a realistic baseline that allows researchers and readers to compare their AI efforts, ambitions, new state-of-the-art applications, challenges, and global roles in policymaking. We covered three major aspects, including: i) the use of AI in solar and hydrogen power generation; (ii) the use of AI in supply and demand management control; and (iii) recent advances in AI technology. This study explored how AI techniques outperform traditional models in controllability, big data handling, cyberattack prevention, smart grid, IoT, robotics, energy efficiency optimization, predictive maintenance control, and computational efficiency. Big data, the development of a machine learning model, and AI will play an important role in the future energy market. Our study\u2019s findings show that AI is becoming a key enabler of a complex, new and data-related energy industry, providing a key magic tool to increase operational performance and efficiency in an increasingly cut-throat environment. As a result, the energy industry, utilities, power system operators, and independent power producers may need to focus more on AI technologies if they want meaningful results to remain competitive. New competitors, new business strategies, and a more active approach to customers would require informed and flexible regulatory engagement with the associated complexities of customer safety, privacy, and information security. Given the pace of development in information technology, AI and data analysis, regulatory approvals for new services and products in the new Era of digital energy markets can be enforced as quickly and efficiently as possible.",
+    "year": 2021,
+    "venue": "Journal of Cleaner Production",
+    "authors": [
+      "Tanveer Ahmad",
+      "Dongdong Zhang",
+      "Chao Huang",
+      "Hongcai Zhang",
+      "Ningyi Dai",
+      "Yonghua Song",
+      "Huanxin Chen"
+    ],
+    "externalIds": {
+      "MAG": "3118831975",
+      "DOI": "10.1016/J.JCLEPRO.2021.125834",
+      "CorpusId": 233666384
+    },
+    "publicationDate": "2021-03-20"
+  },
+  {
+    "doi": "10.1016/j.jbusres.2020.08.019",
+    "title": "Artificial intelligence and business models in the sustainable development goals perspective: A systematic literature review",
+    "abstract": "Abstract This paper investigates the literary corpus on the role of Artificial Intelligence (AI) in the construction of sustainable business models (SBMs). It provides a quantitative overview of the academic literature that constitutes the field. The paper discusses the relationships between AI and rapid developments in machine learning and sustainable development (SD). Specifically, the aim is to understand whether this branch of computer science can influence production and consumption patterns to achieve sustainable resource management according to Sustainable Development Goals (SDGs) outlined in the UN 2030 Agenda. Moreover, the paper aims to highlight the role of Knowledge Management Systems (KMS) in the cultural drift toward the spread of AI for SBMs. Despite the importance of the topic, there is no comprehensive review of the AI and SBM literature in light of SDGs. Based on a database containing 73 publications in English with publication dates from 1990 to 2019, a bibliometric analysis is conducted. The findings show that the innovation challenge involves ethical, social, economic, and legal aspects. Thus, considering that the development potential of AI is linked to the UN 2030 Agenda for SD, especially to SDG#12, our results also outline the framework of the existing literature on AI and SDGs, especially SDG#12, including AI\u2019s association with the cultural drift (CD) in the SBMs. The paper highlights the key contributions, which are: i) a comprehensive review of the key underlying relationship between AI and SBMs, offering a holistic view as needed, ii) identifying a research gap regarding KMS through AI, and iii) the implications of AI concerning SDG#12. Academic and managerial implications are also discussed regarding KMS in the SBMs, where the AI can represent the vehicle to meet the SDGs allowing for the identification of the cultural change required by enterprises to achieve sustainable goals. Thus, business companies, academic research practitioners, and state policy should focus on the further development of the use of AI in SBMs.",
+    "year": 2020,
+    "venue": "Journal of business research",
+    "authors": [
+      "A. D. Vaio",
+      "Rosa Palladino",
+      "Rohail Hassan",
+      "Octavio Escobar"
+    ],
+    "externalIds": {
+      "MAG": "3085940513",
+      "DOI": "10.1016/J.JBUSRES.2020.08.019",
+      "CorpusId": 224927660
+    },
+    "publicationDate": "2020-12-01"
+  },
+  {
+    "doi": "10.1016/j.resconrec.2021.105565",
+    "title": "A Comprehensive Review on Recycled Aggregate and Recycled Aggregate Concrete",
+    "abstract": "Abstract Using recycled aggregate s from construction and demolition waste can preserve natural aggregate resources, reduce demand of landfill, and contribute to sustainable built environment. This study provides a comprehensive review on recycled aggregate (RA) and recycled aggregate concrete (RAC) regarding their history, recycling, reuse and manufacture process, inherent defects (e.g. existing of additional interfacial transition zones in RAC), and materials properties. Specifically, these properties of RAC include fresh concrete workability, physical and chemical properties (i.e. density, carbonation depth, and chloride ion penetration), mechanical properties (i.e. compressive, flexural, and splitting tensile strength as well as elastic modulus), and long-term performance (i.e. freezing-thawing resistance, alkali-silica reaction resistance, creep, and dry shrinkage). On top of that, methods for improving RAC mechanical properties and long-term performance are summarized and categorized into three groups, i.e. (1) reduction of recycled aggregate porosity, (2) reduction of old mortar layer on recycled aggregate surface, and (3) property improvement without recycled aggregate modification (i.e. different concrete mixing design and addition of fibre reinforcement). Next, current regression-based models and artificial intelligence models on the prediction of compressive strength, modulus, and compressive stress-strain curves of RAC are reviewed and the ir limitations of those models are discussed. Furthermore, the state-of-the-art RAC applications are presented. Additionally, challenges of RAC application are reviewed taking China as an example. The link between material from CDW and EU green policy are discussed by analysing the previous research projects funded by European Commission. Finally, future perspectives of RAC research focus are discussed, i.e. development of \u201cgreen\u201d treatment methods on recycled aggregate s , further direction on nanoparticle application in RAC, and the establishment of database for RAC strength prediction.",
+    "year": 2021,
+    "venue": "",
+    "authors": [
+      "Bo Wang",
+      "Libo Yan",
+      "Qiuni Fu",
+      "B. Kasal"
+    ],
+    "externalIds": {
+      "MAG": "3159995911",
+      "DOI": "10.1016/J.RESCONREC.2021.105565",
+      "CorpusId": 236242452
+    },
+    "publicationDate": "2021-08-01"
+  },
+  {
+    "doi": "10.1016/j.techfore.2019.119791",
+    "title": "Digital entrepreneurship ecosystem: How digital technologies and collective intelligence are reshaping the entrepreneurial process",
+    "abstract": "Abstract Digital technologies have nowadays a significant impact on how new business ventures are imagined and created. The arising technology paradigm is leveraging the potential of collaboration and collective intelligence to design and launch more robust and sustainable entrepreneurial initiatives. However, although the topic of digital entrepreneurship is relevant and timely, there is a limited literature discussion on the real impact of digital technologies and collaboration on the entrepreneurial process. Further research is needed to describe the nature and characteristics of the entrepreneurial ecosystem enabled by the new socio-technical paradigm. Based on extant literature, this article proposes a definition of digital entrepreneurship ecosystem by highlighting the integrated digital-output and digital-environment perspectives. A collective intelligence approach is then adopted to define a descriptive framework and identify the distinguishing genes of a digital entrepreneurship ecosystem. Four dimensions associated to digital actors (who), digital activities (what), digital motivations (why), and digital organization (how) are defined and discussed. The framework was also applied to describe 9 real cases of companies and initiatives, which are analyzed as digital entrepreneurship ecosystems along the four key dimensions presented. The article ends with a discussion about the results and a research agenda for future studies.",
+    "year": 2020,
+    "venue": "Technological forecasting & social change",
+    "authors": [
+      "G. Elia",
+      "A. Margherita",
+      "G. Passiante"
+    ],
+    "externalIds": {
+      "MAG": "2987400793",
+      "DOI": "10.1016/j.techfore.2019.119791",
+      "CorpusId": 211390492
+    },
+    "publicationDate": "2020-01-01"
+  },
+  {
+    "doi": "10.1016/S0140-6736(19)32540-1",
+    "title": "A future for the world's children? A WHO-UNICEF-Lancet Commission.",
+    "abstract": "Executive summaryDespite dramatic improvements in survival, nutrition, and education over recent decades, today\u2019s children face an uncertain future. Climate change, ecological degradation, migrating populations, conflict, pervasive inequalities, and predatory commercial practices threaten the health and future of children in every country. In 2015, the world\u2019s countries agreed on the Sustainable Development Goals (SDGs), yet nearly 5 years later, few countries have recorded much progress towards achieving them. This Commission presents the case for placing children, aged 0\u201318 years, at the centre of the SDGs: at the heart of the concept of sustainability and our shared human endeavour. Governments must harness coalitions across sectors to overcome ecological and commercial pressures to ensure children receive their rights and entitlements now and a liveable planet in the years to come.",
+    "year": 2020,
+    "venue": "The Lancet",
+    "authors": [
+      "H. Clark",
+      "A. Coll-Seck",
+      "Anshu Banerjee",
+      "S. Peterson",
+      "Sarah L Dalglish",
+      "S. Ameratunga",
+      "D. Balabanova",
+      "M. Bhan",
+      "Z. Bhutta",
+      "J. Borrazzo",
+      "M. Claeson",
+      "T. Doherty",
+      "F. El-Jardali",
+      "A. George",
+      "Angela Gichaga",
+      "L. Gram",
+      "D. Hipgrave",
+      "A. Kwamie",
+      "Q. Meng",
+      "R. Mercer",
+      "S. Narain",
+      "J. Nsungwa-Sabiiti",
+      "A. Olumide",
+      "D. Osrin",
+      "T. Powell-Jackson",
+      "K. Rasanathan",
+      "Imran Rasul",
+      "Papaarangi Reid",
+      "Jennifer Requejo",
+      "S. Rohde",
+      "N. Rollins",
+      "M. Romedenne",
+      "Harshpal Singh Sachdev",
+      "R. Saleh",
+      "Y. Shawar",
+      "J. Shiffman",
+      "J. Simon",
+      "P. Sly",
+      "K. Stenberg",
+      "M. Tomlinson",
+      "R. Ved",
+      "A. Costello"
+    ],
+    "externalIds": {
+      "MAG": "3006754301",
+      "DOI": "10.1016/s0140-6736(19)32540-1",
+      "CorpusId": 211163182,
+      "PubMed": "32085821"
+    },
+    "publicationDate": "2020-02-01"
+  },
+  {
+    "doi": "10.3390/su151612451",
+    "title": "New Era of Artificial Intelligence in Education: Towards a Sustainable Multifaceted Revolution",
+    "abstract": "The recent high performance of ChatGPT on several standardized academic tests has thrust the topic of artificial intelligence (AI) into the mainstream conversation about the future of education. As deep learning is poised to shift the teaching paradigm, it is essential to have a clear understanding of its effects on the current education system to ensure sustainable development and deployment of AI-driven technologies at schools and universities. This research aims to investigate the potential impact of AI on education through review and analysis of the existing literature across three major axes: applications, advantages, and challenges. Our review focuses on the use of artificial intelligence in collaborative teacher\u2013student learning, intelligent tutoring systems, automated assessment, and personalized learning. We also report on the potential negative aspects, ethical issues, and possible future routes for AI implementation in education. Ultimately, we find that the only way forward is to embrace the new technology, while implementing guardrails to prevent its abuse.",
+    "year": 2023,
+    "venue": "Sustainability",
+    "authors": [
+      "Firuz Kamalov",
+      "David Santandreu Calonge",
+      "Ikhlaas Gurrib"
+    ],
+    "externalIds": {
+      "ArXiv": "2305.18303",
+      "DOI": "10.3390/su151612451",
+      "CorpusId": 258967369
+    },
+    "publicationDate": "2023-05-12"
+  },
+  {
+    "doi": "10.1016/j.susoc.2022.01.008",
+    "title": "Understanding the adoption of Industry 4.0 technologies in improving environmental sustainability",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Sustainable Operations and Computers",
+    "authors": [
+      "M. Javaid",
+      "Abid Haleem",
+      "R. Singh",
+      "R. Suman",
+      "Ernesto DR. Santibanez Gonzalez"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.susoc.2022.01.008",
+      "CorpusId": 246332786
+    },
+    "publicationDate": "2022-01-01"
+  },
+  {
+    "doi": "10.1016/j.annals.2020.102883",
+    "title": "A review of research into automation in tourism: Launching the Annals of Tourism Research Curated Collection on Artificial Intelligence and Robotics in Tourism",
+    "abstract": "Abstract Driven by the advancements in artificial intelligence (AI) and its related technologies, the application of intelligent automation in travel and tourism is expected to increase in the future. This paper unpacks the need to shape an automated future of tourism as a social phenomenon and an economic activity, hence contributes to theory and practice by providing directions for future research in this area. Four research priorities are suggested: designing beneficial AI, facilitating adoption, assessing the impacts of intelligent automation, and creating a sustainable future with artificial intelligence. Research in these areas will allow for a systematic knowledge production that reflects a concerted effort from the scientific community to ensuring the beneficial applications of intelligent automation in tourism. The article also launches the\u00a0Annals of Tourism Research\u00a0Curated Collection on Artificial Intelligence and Robotics. The Collection contains all past articles published in\u00a0Annals of Tourism Research\u00a0on the topic, and continues to grow as new articles are added.",
+    "year": 2020,
+    "venue": "Annals of Tourism Research",
+    "authors": [
+      "Iis P. Tussyadiah"
+    ],
+    "externalIds": {
+      "MAG": "3006615433",
+      "DOI": "10.1016/j.annals.2020.102883",
+      "CorpusId": 214462691
+    },
+    "publicationDate": "2020-03-01"
+  },
+  {
+    "doi": "10.1016/j.scitotenv.2021.148539",
+    "title": "Digitalization to achieve sustainable development goals: Steps towards a Smart Green Planet.",
+    "abstract": "Digitalization provides access to an integrated network of unexploited big data with potential benefits for society and the environment. The development of smart systems connected to the internet of things can generate unique opportunities to strategically address challenges associated with the United Nations Sustainable Development Goals (SDGs) to ensure an equitable, environmentally sustainable, and healthy society. This perspective describes the opportunities that digitalization can provide towards building the sustainable society of the future. Smart technologies are envisioned as game-changing tools, whereby their integration will benefit the three essential elements of the food-water-energy nexus: (i) sustainable food production; (ii) access to clean and safe potable water; and (iii) green energy generation and usage. It then discusses the benefits of digitalization to catalyze the transition towards sustainable manufacturing practices and enhance citizens' health wellbeing by providing digital access to care, particularly for the underserved communities. Finally, the perspective englobes digitalization benefits by providing a holistic view on how it can contribute to address the serious challenges of endangered planet biodiversity and climate change.",
+    "year": 2021,
+    "venue": "Science of the Total Environment",
+    "authors": [
+      "Maria E. Mondejar",
+      "R. Avtar",
+      "Heyker Lellani Ba\u00f1os Diaz",
+      "R. Dubey",
+      "Jes\u00fas Esteban",
+      "Abigail G\u00f3mez-Morales",
+      "B. Hallam",
+      "N. Mbungu",
+      "C. Okolo",
+      "K. A. Prasad",
+      "Qianhong She",
+      "Sergi Garcia-Segura"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.scitotenv.2021.148539",
+      "CorpusId": 236497506,
+      "PubMed": "34323742"
+    },
+    "publicationDate": "2021-06-19"
+  },
+  {
+    "doi": "10.3390/agriculture12101745",
+    "title": "Smart Farming: Internet of Things (IoT)-Based Sustainable Agriculture",
+    "abstract": "Smart farming is a development that has emphasized information and communication technology used in machinery, equipment, and sensors in network-based hi-tech farm supervision cycles. Innovative technologies, the Internet of Things (IoT), and cloud computing are anticipated to inspire growth and initiate the use of robots and artificial intelligence in farming. Such ground-breaking deviations are unsettling current agriculture approaches, while also presenting a range of challenges. This paper investigates the tools and equipment used in applications of wireless sensors in IoT agriculture, and the anticipated challenges faced when merging technology with conventional farming activities. Furthermore, this technical knowledge is helpful to growers during crop periods from sowing to harvest; and applications in both packing and transport are also investigated.",
+    "year": 2022,
+    "venue": "Agriculture",
+    "authors": [
+      "M. Dhanaraju",
+      "Poongodi Chenniappan",
+      "Kumaraperumal Ramalingam",
+      "S. Pazhanivelan",
+      "R. Kaliaperumal"
+    ],
+    "externalIds": {
+      "DOI": "10.3390/agriculture12101745",
+      "CorpusId": 253114092
+    },
+    "publicationDate": "2022-10-21"
+  },
+  {
+    "doi": "10.1016/j.ijme.2019.100330",
+    "title": "Artificial intelligence and sustainable development",
+    "abstract": "Abstract Artificial intelligence (AI) is rapidly opening up a new frontier in the fields of business, corporate practices, and governmental policy. The intelligence of machines and robotics with deep learning capabilities have created profound disrupting and enabling impacts on business, governments, and society. They are also influencing the larger trends in global sustainability. As the AI revolution transforms our world, it could herald a utopian future where humanity co-exists harmoniously with machines, or portend a dystopian world filled with conflict, poverty and suffering. More immediately, would AI accelerate our progress on the United Nations (UN) Sustainable Development Goals (SDGs) or bring us further down the path toward greater economic uncertainty, environmental collapse, and social upheaval? What are some of the implications for business leadership and the education of future business leaders? This article aims to address these questions by analyzing the impacts of AI in three case studies. It draws some preliminary inferences for management education and the business of leading corporations in the midst of rapid technological and social change. This study combines the perspectives of business strategy and public policy to analyze the impacts of AI on sustainable development with a specific focus on the advancement of the SDGs. It also draws some lessons on managerial learning and leadership development for global sustainability.",
+    "year": 2020,
+    "venue": "The International Journal of Management Education",
+    "authors": [
+      "Margaret A. Goralski",
+      "Tay Keong Tan"
+    ],
+    "externalIds": {
+      "MAG": "2985105610",
+      "DOI": "10.1016/j.ijme.2019.100330",
+      "CorpusId": 210539659
+    },
+    "publicationDate": "2020-03-01"
+  },
+  {
+    "doi": "10.1002/inf2.12122",
+    "title": "Progress in wearable electronics/photonics\u2014Moving toward the era of artificial intelligence and internet of things",
+    "abstract": "The past few years have witnessed the significant impacts of wearable electronics/photonics on various aspects of our daily life, for example, healthcare monitoring and treatment, ambient monitoring, soft robotics, prosthetics, flexible display, communication, human-machine interactions, and so on. According to the development in recent years, the next-generation wearable electronics and photonics are advancing rapidly toward the era of artificial intelligence (AI)",
+    "year": 2020,
+    "venue": "InfoMat",
+    "authors": [
+      "Qiongfeng Shi",
+      "B. Dong",
+      "Tianyiyi He",
+      "Zhongda Sun",
+      "Jianxiong Zhu",
+      "Zixuan Zhang",
+      "Chengkuo Lee"
+    ],
+    "externalIds": {
+      "MAG": "3043303465",
+      "DOI": "10.1002/inf2.12122",
+      "CorpusId": 222356201
+    },
+    "publicationDate": "2020-07-12"
+  },
+  {
+    "doi": "10.1016/S0140-6736(20)30226-9",
+    "title": "Artificial intelligence and the future of global health",
+    "abstract": "Concurrent advances in information technology infrastructure and mobile computing power in many low and middle-income countries (LMICs) have raised hopes that artificial intelligence (AI) might help to address challenges unique to the field of global health and accelerate achievement of the health-related sustainable development goals. A series of fundamental questions have been raised about AI-driven health interventions, and whether the tools, methods, and protections traditionally used to make ethical and evidence-based decisions about new technologies can be applied to AI. Deployment of AI has already begun for a broad range of health issues common to LMICs, with interventions focused primarily on communicable diseases, including tuberculosis and malaria. Types of AI vary, but most use some form of machine learning or signal processing. Several types of machine learning methods are frequently used together, as is machine learning with other approaches, most often signal processing. AI-driven health interventions fit into four categories relevant to global health researchers: (1) diagnosis, (2) patient morbidity or mortality risk assessment, (3) disease outbreak prediction and surveillance, and (4) health policy and planning. However, much of the AI-driven intervention research in global health does not describe ethical, regulatory, or practical considerations required for widespread use or deployment at scale. Despite the field remaining nascent, AI-driven health interventions could lead to improved health outcomes in LMICs. Although some challenges of developing and deploying these interventions might not be unique to these settings, the global health community will need to work quickly to establish guidelines for development, testing, and use, and develop a user-driven research agenda to facilitate equitable and ethical use.",
+    "year": 2020,
+    "venue": "The Lancet",
+    "authors": [
+      "N. Schwalbe",
+      "Brian Wahl"
+    ],
+    "externalIds": {
+      "PubMedCentral": "7255280",
+      "MAG": "3023997891",
+      "DOI": "10.1016/S0140-6736(20)30226-9",
+      "CorpusId": 218655954,
+      "PubMed": "32416782"
+    },
+    "publicationDate": "2020-05-01"
+  },
+  {
+    "doi": "10.3390/su12020492",
+    "title": "Artificial Intelligence and Machine Learning Applications in Smart Production: Progress, Trends, and Directions",
+    "abstract": "Adaptation and innovation are extremely important to the manufacturing industry. This development should lead to sustainable manufacturing using new technologies. To promote sustainability, smart production requires global perspectives of smart production application technology. In this regard, thanks to intensive research efforts in the field of artificial intelligence (AI), a number of AI-based techniques, such as machine learning, have already been established in the industry to achieve sustainable manufacturing. Thus, the aim of the present research was to analyze, systematically, the scientific literature relating to the application of artificial intelligence and machine learning (ML) in industry. In fact, with the introduction of the Industry 4.0, artificial intelligence and machine learning are considered the driving force of smart factory revolution. The purpose of this review was to classify the literature, including publication year, authors, scientific sector, country, institution, and keywords. The analysis was done using the Web of Science and SCOPUS database. Furthermore, UCINET and NVivo 12 software were used to complete them. A literature review on ML and AI empirical studies published in the last century was carried out to highlight the evolution of the topic before and after Industry 4.0 introduction, from 1999 to now. Eighty-two articles were reviewed and classified. A first interesting result is the greater number of works published by the USA and the increasing interest after the birth of Industry 4.0.",
+    "year": 2020,
+    "venue": "",
+    "authors": [
+      "R. Cioffi",
+      "Marta Travaglioni",
+      "G. Piscitelli",
+      "A. Petrillo",
+      "F. De Felice"
+    ],
+    "externalIds": {
+      "MAG": "2992584342",
+      "DOI": "10.3390/su12020492",
+      "CorpusId": 213168571
+    },
+    "publicationDate": "2020-01-08"
+  },
+  {
+    "doi": "10.3390/s23115206",
+    "title": "Integration of IoT-Enabled Technologies and Artificial Intelligence (AI) for Smart City Scenario: Recent Advancements and Future Trends",
+    "abstract": "As the global population grows, and urbanization becomes more prevalent, cities often struggle to provide convenient, secure, and sustainable lifestyles due to the lack of necessary smart technologies. Fortunately, the Internet of Things (IoT) has emerged as a solution to this challenge by connecting physical objects using electronics, sensors, software, and communication networks. This has transformed smart city infrastructures, introducing various technologies that enhance sustainability, productivity, and comfort for urban dwellers. By leveraging Artificial Intelligence (AI) to analyze the vast amount of IoT data available, new opportunities are emerging to design and manage futuristic smart cities. In this review article, we provide an overview of smart cities, defining their characteristics and exploring the architecture of IoT. A detailed analysis of various wireless communication technologies employed in smart city applications is presented, with extensive research conducted to determine the most appropriate communication technologies for specific use cases. The article also sheds light on different AI algorithms and their suitability for smart city applications. Furthermore, the integration of IoT and AI in smart city scenarios is discussed, emphasizing the potential contributions of 5G networks coupled with AI in advancing modern urban environments. This article contributes to the existing literature by highlighting the tremendous opportunities presented by integrating IoT and AI, paving the way for the development of smart cities that significantly enhance the quality of life for urban dwellers while promoting sustainability and productivity. By exploring the potential of IoT, AI, and their integration, this review article provides valuable insights into the future of smart cities, demonstrating how these technologies can positively impact urban environments and the well-being of their inhabitants.",
+    "year": 2023,
+    "venue": "Italian National Conference on Sensors",
+    "authors": [
+      "M. Alahi",
+      "A. Sukkuea",
+      "F. Tina",
+      "A. Nag",
+      "W. Kurdthongmee",
+      "K. Suwannarat",
+      "S. Mukhopadhyay"
+    ],
+    "externalIds": {
+      "PubMedCentral": "10256108",
+      "DBLP": "journals/sensors/AlahiSTNKSM23",
+      "DOI": "10.3390/s23115206",
+      "CorpusId": 259008841,
+      "PubMed": "37299934"
+    },
+    "publicationDate": "2023-05-30"
+  },
+  {
+    "doi": "10.1016/j.jclepro.2023.140527",
+    "title": "Navigating the confluence of artificial intelligence and education for sustainable development in the era of industry 4.0: Challenges, opportunities, and ethical dimensions",
+    "abstract": null,
+    "year": 2024,
+    "venue": "Journal of Cleaner Production",
+    "authors": [
+      "A. Abulibdeh",
+      "E. Zaidan",
+      "R. Abulibdeh"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.jclepro.2023.140527",
+      "CorpusId": 266822685
+    },
+    "publicationDate": "2024-01-01"
+  },
+  {
+    "doi": "10.1016/j.scs.2020.102301",
+    "title": "Enabling technologies and sustainable smart cities",
+    "abstract": "Abstract The technological interventions in everyday processes has led to the rise of Smart ecosystems where all aspects of everyday life like governance, transportation, agriculture, logistics, maintenance, education and healthcare are automated in some way or the other and can be controlled, managed and accessed remotely with the help of smart devices. This has led to the concept of Smart cities where Information Communication and Technology (ICT) is merged with the existing traditional infrastructure of a city which is then coordinated and managed using digital technology. This idea of smart cities is slowly but surely coming into reality as many countries around the globe are adopting this idea and coming up with their own model of smart cities. At the core of smart city lies the sensors and actuators embedded in the smart devices that sense the environment for facilitating effective decision making. The microcontrollers available in these devices are programmed to take decisions automatically based on the information received from the sensors. This involves integration of several information and communication technologies like artificial intelligence, protocols, Internet of things (IoT), wireless sensor network (WSN) etc. This paper discusses and extensively reviews the role of enabling technologies in smart cities. The paper further highlights the challenges and limitations in the development of smart cities along with the mitigation strategies. Specifically, three categories of challenges are identified namely technical, socio-economic and environmental giving specifics of each category. Finally, some of the best practices for attaining sustainable smart cities are provided.",
+    "year": 2020,
+    "venue": "Sustainable cities and society",
+    "authors": [
+      "M. Ahad",
+      "Sara Paiva",
+      "Gautami Tripathi",
+      "Noushaba Feroz"
+    ],
+    "externalIds": {
+      "MAG": "3029404970",
+      "DOI": "10.1016/j.scs.2020.102301",
+      "CorpusId": 219765403
+    },
+    "publicationDate": "2020-10-01"
+  },
+  {
+    "doi": "10.1016/j.jclepro.2020.122204",
+    "title": "Unleashing the convergence amid digitalization and sustainability towards pursuing the Sustainable Development Goals (SDGs): A holistic review",
+    "abstract": "Abstract The Sustainable Development Goals (SDGs) within the United Nations 2030 Agenda emerged in 2015, becoming an unprecedented global compass for navigating extant sustainability challenges. Nevertheless, it still represents a nascent field enduring uncertainties and complexities. In this regard, the interplay between digitalization and sustainability unfolds bright opportunities for shaping a greener economy and society, paving the way towards the SDGs. However, little evidence exists so far, about a genuine contribution of digital paradigms to sustainability. Besides, their role to tackle the SDGs research gaps remains unexplored. Thus, a holistic characterization of the aforementioned topics has not been fully explored in the emerging literature, deserving further research. The article endeavors a twofold purpose: (1) categorizing the main SDGs research gaps; (2) coupled with a critical exploration of the potential contribution of digital paradigms, particularly Big Data and Artificial Intelligence, towards overcoming the aforesaid caveats and pursuing the 2030 Agenda. Ultimately, the study seeks to bridge literature gaps by providing a first-of-its-kind overview on the SDGs and their nexus with digitalization, while unraveling policy implications and future research directions. The methodology has consisted of a systematic holistic review and in-depth qualitative analysis of the literature on the realms of the SDGs and digitalization. Our findings evidence that the SDGs present several research gaps, namely: flawed understanding of complexities and interlinkages; design shortcomings and imbalances; implementation and governance hurdles; unsuitable indicators and assessment methodologies; truncated adoption and off-target progress; unclear responsibilities and lacking coordination; untapped role of technological innovation and knowledge management. Moreover, our results show growing expectations about the added value brought by digitalization for pursuing the SDGs, through novel data sources, enhanced analytical capacities and collaborative digital ecosystems. However, current research and practice remains in early-stage, pointing to ethical, social and environmental controversies, along with policy caveats, which merit additional research. In light of the findings, the authors suggest a first-approach exploration of research and policy implications. Results suggest that further multidisciplinary research, dialogue and concerted efforts for transformation are required. Reframing the Agenda, while aligning the sustainable development and digitalization policies, seems advisable to ensure a holistic sustainability. The findings aim at guiding and stimulating further research and science-policy dialogue on the promising nexus amid the SDGs and digitalization.",
+    "year": 2021,
+    "venue": "Journal of Cleaner Production",
+    "authors": [
+      "Gema del R\u00edo Castro",
+      "Mar\u00eda Camino Gonz\u00e1lez Fern\u00e1ndez",
+      "\u00c1ngel Uruburu Colsa"
+    ],
+    "externalIds": {
+      "MAG": "3087516080",
+      "DOI": "10.1016/J.JCLEPRO.2020.122204",
+      "CorpusId": 224899280
+    },
+    "publicationDate": "2021-01-20"
+  },
+  {
+    "doi": "10.3390/smartcities4020024",
+    "title": "IoT in Smart Cities: A Survey of Technologies, Practices and Challenges",
+    "abstract": "Internet of Things (IoT) is a system that integrates different devices and technologies, removing the necessity of human intervention. This enables the capacity of having smart (or smarter) cities around the world. By hosting different technologies and allowing interactions between them, the internet of things has spearheaded the development of smart city systems for sustainable living, increased comfort and productivity for citizens. The IoT for Smart Cities has many different domains and draws upon various underlying systems for its operation. In this paper, we provide a holistic coverage of the Internet of Things in Smart Cities. We start by discussing the fundamental components that make up the IoT based Smart City landscape followed by the technologies that enable these domains to exist in terms of architectures utilized, networking technologies used as well as the Artificial Algorithms deployed in IoT based Smart City systems. This is then followed up by a review of the most prevalent practices and applications in various Smart City domains. Lastly, the challenges that deployment of IoT systems for smart cities encounter along with mitigation measures.",
+    "year": 2021,
+    "venue": "Smart Cities",
+    "authors": [
+      "A. Syed",
+      "Daniel Sierra-Sosa",
+      "Anup Kumar",
+      "Adel Said Elmaghraby"
+    ],
+    "externalIds": {
+      "MAG": "3143407182",
+      "DOI": "10.3390/SMARTCITIES4020024",
+      "CorpusId": 233593177
+    },
+    "publicationDate": "2021-03-30"
+  },
+  {
+    "doi": "10.1016/j.jenvman.2023.119230",
+    "title": "A systematic review of industrial wastewater management: Evaluating challenges and enablers.",
+    "abstract": "The study provides a systematic literature review (SLR) encompassing industrial wastewater management research from the past decade, examining enablers, challenges, and prevailing practices. Originating from manufacturing, energy production, and diverse industrial processes, industrial wastewater's handling is critical due to its potential to impact the environment and public health. The research aims to comprehend the current state of industrial wastewater management, pinpoint gaps, and outline future research prospects. The SLR methodology involves scouring the Scopus database, yielding an initial pool of 253 articles. Refinement via search code leaves 101 articles, followed by abstract screening that reduces articles to 79, and finally 66 well-focused articles left for thorough full-text examination. Results underscore the significance of regulatory frameworks, technological innovation, and sustainability considerations as cornerstones for effective wastewater management. However, substantial impediments like; inadequate infrastructure, resource constraints and the necessity for stakeholder collaboration still exist. The study highlights emerging research domains, exemplified by advanced technologies like nanotechnology and bioremediation, alongside the pivotal role of circular economy principles in wastewater management. The SLR offers an exhaustive view of contemporary industrial wastewater management, accentuating the imperative of an all-encompassing approach that integrates regulatory, technological, and sustainability facets. Notably, the research identifies gaps and opportunities for forthcoming exploration, advocating for interdisciplinary research and intensified stakeholder collaboration. The study's insights cater to policymakers, practitioners, and researchers, equipping them to address the challenges and capitalize on prospects in industrial wastewater management effectively.",
+    "year": 2023,
+    "venue": "Journal of Environmental Management",
+    "authors": [
+      "Bikram Jit Singh",
+      "A. Chakraborty",
+      "Rippin Sehgal"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.jenvman.2023.119230",
+      "CorpusId": 264095756,
+      "PubMed": "37832302"
+    },
+    "publicationDate": "2023-10-10"
+  },
+  {
+    "doi": "10.1007/s12525-020-00441-4",
+    "title": "Trustworthy artificial intelligence",
+    "abstract": "Artificial intelligence (AI) brings forth many opportunities to contribute to the wellbeing of individuals and the advancement of economies and societies, but also a variety of novel ethical, legal, social, and technological challenges. Trustworthy AI (TAI) bases on the idea that trust builds the foundation of societies, economies, and sustainable development, and that individuals, organizations, and societies will therefore only ever be able to realize the full potential of AI, if trust can be established in its development, deployment, and use. With this article we aim to introduce the concept of TAI and its five foundational principles (1) beneficence, (2) non-maleficence, (3) autonomy, (4) justice, and (5) explicability. We further draw on these five principles to develop a data-driven research framework for TAI and demonstrate its utility by delineating fruitful avenues for future research, particularly with regard to the distributed ledger technology-based realization of TAI.",
+    "year": 2020,
+    "venue": "Electronic Markets",
+    "authors": [
+      "Scott Thiebes",
+      "S. Lins",
+      "A. Sunyaev"
+    ],
+    "externalIds": {
+      "MAG": "3090117266",
+      "DBLP": "journals/electronicmarkets/ThiebesLS21",
+      "DOI": "10.1007/s12525-020-00441-4",
+      "CorpusId": 224877177
+    },
+    "publicationDate": "2020-10-01"
+  },
+  {
+    "doi": "10.1016/j.ese.2023.100330",
+    "title": "Smarter eco-cities and their leading-edge artificial intelligence of things solutions for environmental sustainability: A comprehensive systematic review",
+    "abstract": "The recent advancements made in the realms of Artificial Intelligence (AI) and Artificial Intelligence of Things (AIoT) have unveiled transformative prospects and opportunities to enhance and optimize the environmental performance and efficiency of smart cities. These strides have, in turn, impacted smart eco-cities, catalyzing ongoing improvements and driving solutions to address complex environmental challenges. This aligns with the visionary concept of smarter eco-cities, an emerging paradigm of urbanism characterized by the seamless integration of advanced technologies and environmental strategies. However, there remains a significant gap in thoroughly understanding this new paradigm and the intricate spectrum of its multifaceted underlying dimensions. To bridge this gap, this study provides a comprehensive systematic review of the burgeoning landscape of smarter eco-cities and their leading-edge AI and AIoT solutions for environmental sustainability. To ensure thoroughness, the study employs a unified evidence synthesis framework integrating aggregative, configurative, and narrative synthesis approaches. At the core of this study lie these subsequent research inquiries: What are the foundational underpinnings of emerging smarter eco-cities, and how do they intricately interrelate, particularly urbanism paradigms, environmental solutions, and data-driven technologies? What are the key drivers and enablers propelling the materialization of smarter eco-cities? What are the primary AI and AIoT solutions that can be harnessed in the development of smarter eco-cities? In what ways do AI and AIoT technologies contribute to fostering environmental sustainability practices, and what potential benefits and opportunities do they offer for smarter eco-cities? What challenges and barriers arise in the implementation of AI and AIoT solutions for the development of smarter eco-cities? The findings significantly deepen and broaden our understanding of both the significant potential of AI and AIoT technologies to enhance sustainable urban development practices, as well as the formidable nature of the challenges they pose. Beyond theoretical enrichment, these findings offer invaluable insights and new perspectives poised to empower policymakers, practitioners, and researchers to advance the integration of eco-urbanism and AI- and AIoT-driven urbanism. Through an insightful exploration of the contemporary urban landscape and the identification of successfully applied AI and AIoT solutions, stakeholders gain the necessary groundwork for making well-informed decisions, implementing effective strategies, and designing policies that prioritize environmental well-being.",
+    "year": 2023,
+    "venue": "Environmental Science and Ecotechnology",
+    "authors": [
+      "Elias Simon Bibri",
+      "John Krogstie",
+      "Amin Kaboli",
+      "A. Alahi"
+    ],
+    "externalIds": {
+      "PubMedCentral": "10656232",
+      "DOI": "10.1016/j.ese.2023.100330",
+      "CorpusId": 264368124,
+      "PubMed": "38021367"
+    },
+    "publicationDate": "2023-10-01"
+  },
+  {
+    "doi": "10.1016/j.ejrs.2021.08.007",
+    "title": "Smart farming for improving agricultural management",
+    "abstract": null,
+    "year": 2021,
+    "venue": "Egyptian Journal of Remote Sensing and Space Sciences",
+    "authors": [
+      "Elsayed Said Mohamed",
+      "A. Belal",
+      "Sameh Kotb Abd-Elmabod",
+      "M. El-Shirbeny",
+      "A. Gad",
+      "Mohamed Zahran"
+    ],
+    "externalIds": {
+      "MAG": "3198266985",
+      "DOI": "10.1016/j.ejrs.2021.08.007",
+      "CorpusId": 239711612
+    },
+    "publicationDate": "2021-09-01"
+  },
+  {
+    "doi": "10.3390/en13061473",
+    "title": "Contributions and Risks of Artificial Intelligence (AI) in Building Smarter Cities: Insights from a Systematic Review of the Literature",
+    "abstract": "Artificial intelligence (AI) is one of the most disruptive technologies of our time. Interest in the use of AI for urban innovation continues to grow. Particularly, the rise of smart cities\u2014urban locations that are enabled by community, technology, and policy to deliver productivity, innovation, livability, wellbeing, sustainability, accessibility, good governance, and good planning\u2014has increased the demand for AI-enabled innovations. There is, nevertheless, no scholarly work that provides a comprehensive review on the topic. This paper generates insights into how AI can contribute to the development of smarter cities. A systematic review of the literature is selected as the methodologic approach. Results are categorized under the main smart city development dimensions, i.e., economy, society, environment, and governance. The findings of the systematic review containing 93 articles disclose that: (a) AI in the context of smart cities is an emerging field of research and practice. (b) The central focus of the literature is on AI technologies, algorithms, and their current and prospective applications. (c) AI applications in the context of smart cities mainly concentrate on business efficiency, data analytics, education, energy, environmental sustainability, health, land use, security, transport, and urban management areas. (d) There is limited scholarly research investigating the risks of wider AI utilization. (e) Upcoming disruptions of AI in cities and societies have not been adequately examined. Current and potential contributions of AI to the development of smarter cities are outlined in this paper to inform scholars of prospective areas for further research.",
+    "year": 2020,
+    "venue": "Energies",
+    "authors": [
+      "Tan Yigitcanlar",
+      "K. Desouza",
+      "Luke Butler",
+      "Farnoosh Roozkhosh"
+    ],
+    "externalIds": {
+      "MAG": "3011648816",
+      "DOI": "10.3390/en13061473",
+      "CorpusId": 216426611
+    },
+    "publicationDate": "2020-03-20"
+  },
+  {
+    "doi": "10.34190/ejel.20.5.2597",
+    "title": "Artificial Intelligence in Education: AIEd for Personalised Learning Pathways",
+    "abstract": "Artificial intelligence is the driving force of change focusing on the needs and demands of the student. The research explores Artificial Intelligence in Education (AIEd) for building personalised learning systems for students. The research investigates and proposes a framework for AIEd: social networking sites and chatbots, expert systems for education, intelligent mentors and agents, machine learning, personalised educational systems and virtual educational environments. These technologies help educators to develop and introduce personalised approaches to master new knowledge and develop professional competencies. The research presents a case study of AIEd implementation in education. The scholars conducted the experiment in educational establishments using artificial intelligence in the curriculum. The scholars surveyed 184 second-year students of the Institute of Pedagogy and Psychology at the Abay Kazakh National Pedagogical University and the Kuban State Technological University to collect the data. The scholars considered the collective group discussions regarding the application of artificial intelligence in education to improve the effectiveness of learning. The research identified key advantages to creating personalised learning pathways such as access to training in 24/7 mode, training in virtual contexts, adaptation of educational content to personal needs of students, real-time and regular feedback, improvements in the educational process and mental stimulations. The proposed education paradigm reflects the increasing role of artificial intelligence in socio-economic life, the social and ethical concerns artificial intelligence may pose to humanity and its role in the digitalisation of education. The current article may be used as a theoretical framework for many educational institutions planning to exploit the capabilities of artificial intelligence in their adaptation to personalized learning.",
+    "year": 2022,
+    "venue": "Electronic Journal of e-Learning",
+    "authors": [
+      "Olga Tapalova",
+      "N. Zhiyenbayeva",
+      "D. Gura"
+    ],
+    "externalIds": {
+      "DOI": "10.34190/ejel.20.5.2597",
+      "CorpusId": 254558139
+    },
+    "publicationDate": "2022-12-09"
+  },
+  {
+    "doi": "10.1016/j.eiar.2020.106515",
+    "title": "Urban water resource management for sustainable environment planning using artificial intelligence techniques",
+    "abstract": "Abstract In the current era, water is a significant resource for socio-economic growth and the protection of healthy environments. Properly controlled water resources are considered a vital part of development, which reduces poverty and equity. Conventional Water system Management maximizes the existing water flows available to satisfy all competing demands, including on-site water and groundwater. Therefore, Climatic change would intensify the specific challenges in water resource management by contributing to uncertainty. Sustainable water resources management is an essential process for ensuring the earth's life and the future. Nonlinear effects, stochastic dynamics, and hydraulic constraints are challenging in ecological planning for sustainable water development. In this paper, Adaptive Intelligent Dynamic Water Resource Planning (AIDWRP) has been proposed to sustain the urban areas' water environment. Here, an adaptive intelligent approach is a subset of the Artificial Intelligence (AI) technique in which environmental planning for sustainable water development has been modeled effectively. Artificial intelligence modeling improves water efficiency by transforming information into a leaner process, improving decision-making based on data-driven by combining numeric AI tools and human intellectual skills. In AIDWRP, Markov Decision Process (MDP) discusses the dynamic water resource management issue with annual use and released locational constraints that develop sensitivity-driven methods to optimize several efficient environmental planning and management policies. Consequently, there is a specific relief from the engagement of supply and demand for water resources, and substantial improvements in local economic efficiency have been simulated with numerical outcomes.",
+    "year": 2021,
+    "venue": "",
+    "authors": [
+      "X. Xiang",
+      "Qiong Li",
+      "Shahnawaz Khan",
+      "O. I. Khalaf"
+    ],
+    "externalIds": {
+      "MAG": "3099865851",
+      "DOI": "10.1016/j.eiar.2020.106515",
+      "CorpusId": 228899205
+    },
+    "publicationDate": null
+  },
+  {
+    "doi": "10.2196/20346",
+    "title": "The Effectiveness of Artificial Intelligence Conversational Agents in Health Care: Systematic Review",
+    "abstract": "Background The high demand for health care services and the growing capability of artificial intelligence have led to the development of conversational agents designed to support a variety of health-related activities, including behavior change, treatment support, health monitoring, training, triage, and screening support. Automation of these tasks could free clinicians to focus on more complex work and increase the accessibility to health care services for the public. An overarching assessment of the acceptability, usability, and effectiveness of these agents in health care is needed to collate the evidence so that future development can target areas for improvement and potential for sustainable adoption. Objective This systematic review aims to assess the effectiveness and usability of conversational agents in health care and identify the elements that users like and dislike to inform future research and development of these agents. Methods PubMed, Medline (Ovid), EMBASE (Excerpta Medica dataBASE), CINAHL (Cumulative Index to Nursing and Allied Health Literature), Web of Science, and the Association for Computing Machinery Digital Library were systematically searched for articles published since 2008 that evaluated unconstrained natural language processing conversational agents used in health care. EndNote (version X9, Clarivate Analytics) reference management software was used for initial screening, and full-text screening was conducted by 1 reviewer. Data were extracted, and the risk of bias was assessed by one reviewer and validated by another. Results A total of 31 studies were selected and included a variety of conversational agents, including 14 chatbots (2 of which were voice chatbots), 6 embodied conversational agents (3 of which were interactive voice response calls, virtual patients, and speech recognition screening systems), 1 contextual question-answering agent, and 1 voice recognition triage system. Overall, the evidence reported was mostly positive or mixed. Usability and satisfaction performed well (27/30 and 26/31), and positive or mixed effectiveness was found in three-quarters of the studies (23/30). However, there were several limitations of the agents highlighted in specific qualitative feedback. Conclusions The studies generally reported positive or mixed evidence for the effectiveness, usability, and satisfactoriness of the conversational agents investigated, but qualitative user perceptions were more mixed. The quality of many of the studies was limited, and improved study design and reporting are necessary to more accurately evaluate the usefulness of the agents in health care and identify key areas for improvement. Further research should also analyze the cost-effectiveness, privacy, and security of the agents. International Registered Report Identifier (IRRID) RR2-10.2196/16934",
+    "year": 2020,
+    "venue": "Journal of Medical Internet Research",
+    "authors": [
+      "M. Milne-Ives",
+      "Caroline de Cock",
+      "Ernest Lim",
+      "M. H. Shehadeh",
+      "N. de Pennington",
+      "G. Mole",
+      "E. Normando",
+      "E. Meinert"
+    ],
+    "externalIds": {
+      "MAG": "3028484854",
+      "PubMedCentral": "7644372",
+      "DOI": "10.2196/20346",
+      "CorpusId": 224825001,
+      "PubMed": "33090118"
+    },
+    "publicationDate": "2020-10-01"
+  },
+  {
+    "doi": "10.1080/10447318.2022.2153320",
+    "title": "Six Human-Centered Artificial Intelligence Grand Challenges",
+    "abstract": "Abstract Widespread adoption of artificial intelligence (AI) technologies is substantially affecting the human condition in ways that are not yet well understood. Negative unintended consequences abound including the perpetuation and exacerbation of societal inequalities and divisions via algorithmic decision making. We present six grand challenges for the scientific community to create AI technologies that are human-centered, that is, ethical, fair, and enhance the human condition. These grand challenges are the result of an international collaboration across academia, industry and government and represent the consensus views of a group of 26 experts in the field of human-centered artificial intelligence (HCAI). In essence, these challenges advocate for a human-centered approach to AI that (1) is centered in human well-being, (2) is designed responsibly, (3) respects privacy, (4) follows human-centered design principles, (5) is subject to appropriate governance and oversight, and (6) interacts with individuals while respecting human\u2019s cognitive capacities. We hope that these challenges and their associated research directions serve as a call for action to conduct research and development in AI that serves as a force multiplier towards more fair, equitable and sustainable societies.",
+    "year": 2023,
+    "venue": "International journal of human computer interactions",
+    "authors": [
+      "Ozlem Ozmen Garibay",
+      "Brent D. Winslow",
+      "S. Andolina",
+      "M. Antona",
+      "Anja Bodenschatz",
+      "C. Coursaris",
+      "Gregory Falco",
+      "S. Fiore",
+      "Ivan I. Garibay",
+      "Keri Grieman",
+      "John C. Havens",
+      "M. Jirotka",
+      "Hernisa Kacorri",
+      "W. Karwowski",
+      "Joseph T. Kider",
+      "J. Konstan",
+      "Sean Koon",
+      "M. L\u00f3pez-Gonz\u00e1lez",
+      "I. Maifeld-Carucci",
+      "Sean McGregor",
+      "G. Salvendy",
+      "B. Shneiderman",
+      "C. Stephanidis",
+      "Christina Strobel",
+      "C. Ten Holter",
+      "Wei Xu"
+    ],
+    "externalIds": {
+      "DBLP": "journals/ijhci/GaribayWAABCFFG23",
+      "DOI": "10.1080/10447318.2022.2153320",
+      "CorpusId": 255441671
+    },
+    "publicationDate": "2023-01-02"
+  },
+  {
+    "doi": "10.1177/0958305X241256293",
+    "title": "Optimizing renewable energy systems through artificial intelligence: Review and future prospects",
+    "abstract": "The global transition toward sustainable energy sources has prompted a surge in the integration of renewable energy systems (RES) into existing power grids. To improve the efficiency, reliability, and economic viability of these systems, the synergistic application of artificial intelligence (AI) methods has emerged as a promising avenue. This study presents a comprehensive review of the current state of research at the intersection of renewable energy and AI, highlighting key methodologies, challenges, and achievements. It covers a spectrum of AI utilizations in optimizing different facets of RES, including resource assessment, energy forecasting, system monitoring, control strategies, and grid integration. Machine learning algorithms, neural networks, and optimization techniques are explored for their role in complex data sets, enhancing predictive capabilities, and dynamically adapting RES. Furthermore, the study discusses the challenges faced in the implementation of AI in RES, such as data variability, model interpretability, and real-time adaptability. The potential benefits of overcoming these challenges include increased energy yield, reduced operational costs, and improved grid stability. The review concludes with an exploration of prospects and emerging trends in the field. Anticipated advancements in AI, such as explainable AI, reinforcement learning, and edge computing, are discussed in the context of their potential impact on optimizing RES. Additionally, the paper envisions the integration of AI-driven solutions into smart grids, decentralized energy systems, and the development of autonomous energy management systems. This investigation provides important insights into the current landscape of AI applications in RES.",
+    "year": 2024,
+    "venue": "Energy &amp; Environment",
+    "authors": [
+      "K. Ukoba",
+      "Kehinde Oladoke Olatunji",
+      "Eyitayo Adeoye",
+      "T. Jen",
+      "D. Madyira"
+    ],
+    "externalIds": {
+      "DOI": "10.1177/0958305X241256293",
+      "CorpusId": 270042979
+    },
+    "publicationDate": "2024-05-22"
+  },
+  {
+    "doi": "10.1038/s41477-021-00946-6",
+    "title": "Nanotechnology and artificial intelligence to enable sustainable and precision agriculture",
+    "abstract": null,
+    "year": 2021,
+    "venue": "Nature Plants",
+    "authors": [
+      "Peng Zhang",
+      "Zhiling Guo",
+      "S. Ullah",
+      "G. Melagraki",
+      "A. Afantitis",
+      "I. Lynch"
+    ],
+    "externalIds": {
+      "DOI": "10.1038/s41477-021-00946-6",
+      "CorpusId": 235633558,
+      "PubMed": "34168318"
+    },
+    "publicationDate": "2021-06-24"
+  },
+  {
+    "doi": "10.1016/j.techsoc.2021.101741",
+    "title": "Artificial intelligence, systemic risks, and sustainability",
+    "abstract": "such as sensor technology and robotics are likely to change the way individuals, communities, governments and private actors perceive and respond to climate and ecological change. Methods based on various forms of artificial intelligence are already today being applied in a number of research fields related to climate change and environmental monitoring. Investments into applications of these technologies in agriculture, forestry and the extraction of marine resources also seem to be increasing rapidly. Despite a growing interest in, and deployment of AI-technologies in domains critical for sustainability, few have explored possible systemic risks in depth. This article offers a global overview of the progress of such technologies in sectors with high impact potential for sustainability like farming, forestry and the extraction of marine resources. We also identify possible systemic risks in these domains including a) algorithmic bias and allocative harms; b) unequal access and benefits; c) cascading failures and external disruptions",
+    "year": 2021,
+    "venue": "Technology and Society",
+    "authors": [
+      "V. Galaz",
+      "M. Centeno",
+      "Peter W. Callahan",
+      "Amar Causevic",
+      "Thayer S. Patterson",
+      "I. Brass",
+      "S. Baum",
+      "D. Farber",
+      "J. Fischer",
+      "David Garc\u00eda",
+      "T. McPhearson",
+      "Daniel Jimenez",
+      "B. King",
+      "P. Larcey",
+      "Karen Levy"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.techsoc.2021.101741",
+      "CorpusId": 239168156
+    },
+    "publicationDate": "2021-11-01"
+  },
+  {
+    "doi": "10.1016/j.techfore.2021.120650",
+    "title": "Internationalization, digitalization, and sustainability: Are SMEs ready? A survey on synergies and substituting effects among growth paths",
+    "abstract": "ABSTRACT Internationalization, digitalization, and sustainability are three key growth paths for firms. In particular, the contemporary economy stresses the relevance of digital transformation as a central driver towards innovation and business renewal, especially for established small and medium sized enterprises (SMEs). However, little is known about the relationships among the above-mentioned growth paths, whether they are competing or complementary options. Our contribution addresses this gap focusing on two forms of organizational readiness within SMEs. First, it investigates the impact of Artificial Intelligence readiness on international performance. Second, it explores whether the relationship between digitalization and internationalization is affected by sustainability readiness. The empirical survey relies on a sample consisting of 438 SMEs, including both domestic and international companies. Findings confirm, as expected, that Artificial Intelligence readiness positively influences the international performance of SMEs. Moreover, we find that digitalization and sustainability are positively related, but they turn to be competing growth paths when the firm internationalizes..",
+    "year": 2021,
+    "venue": "",
+    "authors": [
+      "S. Denicolai",
+      "A. Zucchella",
+      "Giovanna Magnani"
+    ],
+    "externalIds": {
+      "MAG": "3129161303",
+      "DOI": "10.1016/J.TECHFORE.2021.120650",
+      "CorpusId": 233543891
+    },
+    "publicationDate": "2021-05-01"
+  },
+  {
+    "doi": "10.3390/app11125725",
+    "title": "Industry 4.0 Technologies for Manufacturing Sustainability: A Systematic Review and Future Research Directions",
+    "abstract": "Recent developments in manufacturing processes and automation have led to the new industrial revolution termed \u201cIndustry 4.0\u201d. Industry 4.0 can be considered as a broad domain which includes: data management, manufacturing competitiveness, production processes and efficiency. The term Industry 4.0 includes a variety of key enabling technologies i.e., cyber physical systems, Internet of Things, artificial intelligence, big data analytics and digital twins which can be considered as the major contributors to automated and digital manufacturing environments. Sustainability can be considered as the core of business strategy which is highlighted in the United Nations (UN) Sustainability 2030 agenda and includes smart manufacturing, energy efficient buildings and low-impact industrialization. Industry 4.0 technologies help to achieve sustainability in business practices. However, very limited studies reported about the extensive reviews on these two research areas. This study uses a systematic literature review approach to find out the current research progress and future research potential of Industry 4.0 technologies to achieve manufacturing sustainability. The role and impact of different Industry 4.0 technologies for manufacturing sustainability is discussed in detail. The findings of this study provide new research scopes and future research directions in different research areas of Industry 4.0 which will be valuable for industry and academia in order to achieve manufacturing sustainability with Industry 4.0 technologies.",
+    "year": 2021,
+    "venue": "Applied Sciences",
+    "authors": [
+      "Anbesh Jamwal",
+      "R. Agrawal",
+      "Monica Sharma",
+      "A. Giallanza"
+    ],
+    "externalIds": {
+      "MAG": "3173460341",
+      "DOI": "10.3390/app11125725",
+      "CorpusId": 237864301
+    },
+    "publicationDate": "2021-06-20"
+  },
+  {
+    "doi": "10.1016/j.copbio.2020.09.003",
+    "title": "The potential of remote sensing and artificial intelligence as tools to improve the resilience of agriculture production systems.",
+    "abstract": "Modern agriculture and food production systems are facing increasing pressures from climate change, land and water availability, and, more recently, a pandemic. These factors are threatening the environmental and economic sustainability of current and future food supply systems. Scientific and technological innovations are needed more than ever to secure enough food for a fast-growing global population. Scientific advances have led to a better understanding of how various components of the agricultural system interact, from the cell to the field level. Despite incredible advances in genetic tools over the past few decades, our ability to accurately assess crop status in the field, at scale, has been severely lacking until recently. Thanks to recent advances in remote sensing and Artificial Intelligence (AI), we can now quantify field scale phenotypic information accurately and integrate the big data into predictive and prescriptive management tools. This review focuses on the use of recent technological advances in remote sensing and AI to improve the resilience of agricultural systems, and we will present a unique opportunity for the development of prescriptive tools needed to address the next decade's agricultural and human nutrition challenges.",
+    "year": 2020,
+    "venue": "Current Opinion in Biotechnology",
+    "authors": [
+      "Jinha Jung",
+      "M. Maeda",
+      "Anjin Chang",
+      "Mahendra Bhandari",
+      "Akash Ashapure",
+      "Juan Landivar-Bowles"
+    ],
+    "externalIds": {
+      "MAG": "3092075612",
+      "DOI": "10.1016/j.copbio.2020.09.003",
+      "CorpusId": 222280839,
+      "PubMed": "33038780"
+    },
+    "publicationDate": "2020-10-07"
+  },
+  {
+    "doi": "10.1002/eom2.12059",
+    "title": "Recent progress of triboelectric nanogenerators: From fundamental theory to practical applications",
+    "abstract": "For the development of the internet of things (IoTs), big data, and artificial intelligence, widely distributed sensing network is the most essential element, which has to be driven by the energy storage unit, with a limited lifetime and environmental concerns. Given that the wide distribution and high mobility of these numerous sensors, the success of the IoTs and sustainable development of human society call for renewable distributed energy sources. Since triboelectrification effect is ubiquitous and universal in our living environment, the triboelectric nanogenerator (TENG) for mechanical energy harvesting and self-powered sensing developed by Wang and co-workers is one of the best choices for this energy for the new era. In this review, the recent progress of TENGs from fundamental theory to practical applications is systematically summarized. First, the mechanism of contact electrification, first principle theory, working principle, working modes, and figure of merits of the TENG are introduced. Furthermore, recent important progress in four major TENG applications, including micro/nano power sources, active self-powered sensors, large-scale blue energy, and direct high-voltage power sources are reviewed. In the end, some perspectives and challenges for the future development of TENG are also discussed.",
+    "year": 2020,
+    "venue": "EcoMat",
+    "authors": [
+      "Jianjun Luo",
+      "Zhong Lin Wang"
+    ],
+    "externalIds": {
+      "MAG": "3094302847",
+      "DOI": "10.1002/eom2.12059",
+      "CorpusId": 226338016
+    },
+    "publicationDate": "2020-10-22"
+  },
+  {
+    "doi": "10.3390/su12072789",
+    "title": "Artificial Intelligence, Transport and the Smart City: Definitions and Dimensions of a New Mobility Era",
+    "abstract": "Artificial intelligence (AI) is a powerful concept still in its infancy that has the potential, if utilised responsibly, to provide a vehicle for positive change that could promote sustainable transitions to a more resource-efficient livability paradigm. AI with its deep learning functions and capabilities can be employed as a tool which empowers machines to solve problems that could reform urban landscapes as we have known them for decades now and help with establishing a new era; the era of the \u201csmart city\u201d. One of the key areas that AI can redefine is transport. Mobility provision and its impact on urban development can be significantly improved by the employment of intelligent transport systems in general and automated transport in particular. This new breed of AI-based mobility, despite its machine-orientation, has to be a user-centred technology that \u201cunderstands\u201d and \u201csatisfies\u201d the human user, the markets and the society as a whole. Trust should be built, and risks should be eliminated, for this transition to take off. This paper provides a novel conceptual contribution that thoroughly discusses the scarcely studied nexus of AI, transportation and the smart city and how this will affect urban futures. It specifically covers key smart mobility initiatives referring to Connected and Autonomous Vehicles (CAVs), autonomous Personal and Unmanned Aerial Vehicles (PAVs and UAVs) and Mobility-as-a-Service (MaaS), but also interventions that may work as enabling technologies for transport, such as the Internet of Things (IoT) and Physical Internet (PI) or reflect broader transformations like Industry 4.0. This work is ultimately a reference tool for researchers and city planners that provides clear and systematic definitions of the ambiguous smart mobility terms of tomorrow and describes their individual and collective roles underpinning the nexus in scope.",
+    "year": 2020,
+    "venue": "Sustainability",
+    "authors": [
+      "A. Nikitas",
+      "Kalliopi Michalakopoulou",
+      "E. Njoya",
+      "D. Karampatzakis"
+    ],
+    "externalIds": {
+      "MAG": "3014834477",
+      "DOI": "10.3390/su12072789",
+      "CorpusId": 216426618
+    },
+    "publicationDate": "2020-04-01"
+  },
+  {
+    "doi": "10.1002/sd.3221",
+    "title": "AI\u2010driven adaptive learning for sustainable educational transformation",
+    "abstract": "This paper scrutinizes how adaptive learning technologies and artificial intelligence (AI) are transforming today's education by making it personalized, accessible, and efficient as well as leading people to accepting, addressing, and mitigating sustainable development. Recently, education witnessed a remarkable technological surge driven by various advances in technology, which can be demonstrated by the increase of the number of scientific publications on this topic from just 1 in 1990 to 636 in 2023. Ongoing digitalization and technological revolution in education together with the novel approach to respect each student's unique learning style and abilities paved the way for adaptive learning technologies represented by the innovative tools that personalize educational experiences to cater to individual learners. All of that contributes to preparing more educated and informed citizens, drives innovation, and supports economic growth necessary for achieving a sustainable future. Our bibliographic study employs VOSviewer to conduct a bibliometric analysis of a total number of 3518 selected publications using the keywords \u201cadaptive learning\u201d and \u201cAI\u201d (represented by articles, proceeding papers, and book chapters) indexed in the Web of Science (WoS) database from 1990 to 2024. Our results demonstrate that recent technological changes played a key role in transforming adaptive learning, which was rather reinforced by the \u201cdigital surge\u201d in education brought about by the COVID\u201019 pandemic. Our findings can be useful for further development in the field of adaptive education where they can be employed by the relevant stakeholders and policymakers as well as by the scholars and researchers.",
+    "year": 2024,
+    "venue": "Sustainable Development",
+    "authors": [
+      "W. Strielkowski",
+      "V. Grebennikova",
+      "Alexander Lisovskiy",
+      "G. Rakhimova",
+      "T. Vasileva"
+    ],
+    "externalIds": {
+      "DOI": "10.1002/sd.3221",
+      "CorpusId": 273120700
+    },
+    "publicationDate": "2024-10-03"
+  },
+  {
+    "doi": "10.1016/j.measurement.2021.109057",
+    "title": "A review on state of health estimations and remaining useful life prognostics of lithium-ion batteries",
+    "abstract": "Abstract Lithium-ion batteries have been generally used in industrial applications. In order to ensure the safety of the power system and reduce the operation cost, it is particularly important to accurately and timely estimate the state of health (SOH) and predict the remaining useful life (RUL) of lithium-ion batteries. With the development of intelligent tools such as artificial intelligence, big data analysis and the Internet of Things, the methods of battery health assessment have been gradually diversified. Here, we have compiled four publicly available battery datasets. The SOH estimations and RUL prognostics of lithium-ion batteries are reviewed by analyzing the research status. To this end, after studying different scientific and technical literatures, the respective methods are divided into specific groups, and the advantages and limitations of the battery management system application are discussed. At the end, the future development trend and research challenges are analyzed. All key insights in this review will hopefully drive the development of battery health estimation and life prediction techniques.",
+    "year": 2021,
+    "venue": "",
+    "authors": [
+      "Ming\u2010Feng Ge",
+      "Yiben Liu",
+      "Xingxing Jiang",
+      "Jie Liu"
+    ],
+    "externalIds": {
+      "MAG": "3122086316",
+      "DOI": "10.1016/J.MEASUREMENT.2021.109057",
+      "CorpusId": 233525616
+    },
+    "publicationDate": "2021-04-01"
+  },
+  {
+    "doi": "10.1007/s11831-022-09830-8",
+    "title": "Integrating BIM and AI for Smart Construction Management: Current Status and Future Directions",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Archives of Computational Methods in Engineering",
+    "authors": [
+      "Yue Pan",
+      "Limao Zhang"
+    ],
+    "externalIds": {
+      "DOI": "10.1007/s11831-022-09830-8",
+      "CorpusId": 253330325
+    },
+    "publicationDate": "2022-11-03"
+  },
+  {
+    "doi": "10.1016/j.neucom.2024.128096",
+    "title": "A review of green artificial intelligence: Towards a more sustainable future",
+    "abstract": null,
+    "year": 2024,
+    "venue": "Neurocomputing",
+    "authors": [
+      "V. Bol\u00f3n-Canedo",
+      "L. Mor\u00e1n-Fern\u00e1ndez",
+      "Brais Cancela",
+      "A. Alonso-Betanzos"
+    ],
+    "externalIds": {
+      "DBLP": "journals/ijon/BolonCanedoMCA24",
+      "DOI": "10.1016/j.neucom.2024.128096",
+      "CorpusId": 270696074
+    },
+    "publicationDate": "2024-06-01"
+  },
+  {
+    "doi": "10.3390/s21175745",
+    "title": "Green IoT and Edge AI as Key Technological Enablers for a Sustainable Digital Transition towards a Smart Circular Economy: An Industry 5.0 Use Case",
+    "abstract": "Internet of Things (IoT) can help to pave the way to the circular economy and to a more sustainable world by enabling the digitalization of many operations and processes, such as water distribution, preventive maintenance, or smart manufacturing. Paradoxically, IoT technologies and paradigms such as edge computing, although they have a huge potential for the digital transition towards sustainability, they are not yet contributing to the sustainable development of the IoT sector itself. In fact, such a sector has a significant carbon footprint due to the use of scarce raw materials and its energy consumption in manufacturing, operating, and recycling processes. To tackle these issues, the Green IoT (G-IoT) paradigm has emerged as a research area to reduce such carbon footprint; however, its sustainable vision collides directly with the advent of Edge Artificial Intelligence (Edge AI), which imposes the consumption of additional energy. This article deals with this problem by exploring the different aspects that impact the design and development of Edge-AI G-IoT systems. Moreover, it presents a practical Industry 5.0 use case that illustrates the different concepts analyzed throughout the article. Specifically, the proposed scenario consists in an Industry 5.0 smart workshop that looks for improving operator safety and operation tracking. Such an application case makes use of a mist computing architecture composed of AI-enabled IoT nodes. After describing the application case, it is evaluated its energy consumption and it is analyzed the impact on the carbon footprint that it may have on different countries. Overall, this article provides guidelines that will help future developers to face the challenges that will arise when creating the next generation of Edge-AI G-IoT systems.",
+    "year": 2021,
+    "venue": "Italian National Conference on Sensors",
+    "authors": [
+      "Paula Fraga-Lamas",
+      "S. I. Lopes",
+      "T. Fern\u00e1ndez-Caram\u00e9s"
+    ],
+    "externalIds": {
+      "PubMedCentral": "8434294",
+      "DBLP": "journals/sensors/Fraga-LamasLF21",
+      "DOI": "10.3390/s21175745",
+      "CorpusId": 237444747,
+      "PubMed": "34502637"
+    },
+    "publicationDate": "2021-08-26"
+  },
+  {
+    "doi": "10.1002/adma.202003722",
+    "title": "Moisture\u2010Enabled Electricity Generation: From Physics and Materials to Self\u2010Powered Applications",
+    "abstract": "The exploration of the utilization of sustainable, green energy represents one way in which it is possible to ameliorate the growing threat of the global environmental issues and the crisis in energy. Moisture, which is ubiquitous on Earth, contains a vast reservoir of low\u2010grade energy in the form of gaseous water molecules and water droplets. It has now been found that a number of functionalized materials can generate electricity directly from their interaction with moisture. This suggests that electrical energy can be harvested from atmospheric moisture and enables the creation of a new range of self\u2010powered devices. Herein, the basic mechanisms of moisture\u2010induced electricity generation are discussed, the recent advances in materials (including carbon nanoparticles, graphene materials, metal oxide nanomaterials, biofibers, and polymers) for harvesting electrical energy from moisture are summarized, and some strategies for improving energy conversion efficiency and output power in these devices are provided. The potential applications of moisture electrical generators in self\u2010powered electronics, healthcare, security, information storage, artificial intelligence, and Internet\u2010of\u2010things are also discussed. Some remaining challenges are also considered, together with a number of suggestions for potential new developments of this emerging technology.",
+    "year": 2020,
+    "venue": "Advances in Materials",
+    "authors": [
+      "Daozhi Shen",
+      "W. Duley",
+      "Peng Peng",
+      "M. Xiao",
+      "Jiayun Feng",
+      "Lei Liu",
+      "G. Zou",
+      "Y. Zhou"
+    ],
+    "externalIds": {
+      "MAG": "3103100888",
+      "DOI": "10.1002/adma.202003722",
+      "CorpusId": 226853187,
+      "PubMed": "33185944"
+    },
+    "publicationDate": "2020-11-13"
+  },
+  {
+    "doi": "10.1149/2754-2726/ac5ac6",
+    "title": "Review\u2014Towards 5th Generation AI and IoT Driven Sustainable Intelligent Sensors Based on 2D MXenes and Borophene",
+    "abstract": null,
+    "year": 2022,
+    "venue": "ECS Sensors Plus",
+    "authors": [
+      "Vishal Chaudhary",
+      "A. Kaushik",
+      "H. Furukawa",
+      "A. Khosla"
+    ],
+    "externalIds": {
+      "DOI": "10.1149/2754-2726/ac5ac6",
+      "CorpusId": 247275713
+    },
+    "publicationDate": "2022-03-04"
+  },
+  {
+    "doi": "10.3390/s21196340",
+    "title": "A Survey on AI-Driven Digital Twins in Industry 4.0: Smart Manufacturing and Advanced Robotics",
+    "abstract": "Digital twin (DT) and artificial intelligence (AI) technologies have grown rapidly in recent years and are considered by both academia and industry to be key enablers for Industry 4.0. As a digital replica of a physical entity, the basis of DT is the infrastructure and data, the core is the algorithm and model, and the application is the software and service. The grounding of DT and AI in industrial sectors is even more dependent on the systematic and in-depth integration of domain-specific expertise. This survey comprehensively reviews over 300 manuscripts on AI-driven DT technologies of Industry 4.0 used over the past five years and summarizes their general developments and the current state of AI-integration in the fields of smart manufacturing and advanced robotics. These cover conventional sophisticated metal machining and industrial automation as well as emerging techniques, such as 3D printing and human\u2013robot interaction/cooperation. Furthermore, advantages of AI-driven DTs in the context of sustainable development are elaborated. Practical challenges and development prospects of AI-driven DTs are discussed with a respective focus on different levels. A route for AI-integration in multiscale/fidelity DTs with multiscale/fidelity data sources in Industry 4.0 is outlined.",
+    "year": 2021,
+    "venue": "Italian National Conference on Sensors",
+    "authors": [
+      "Ziqi Huang",
+      "Yang Shen",
+      "Jiayi Li",
+      "M. Fey",
+      "C. Brecher"
+    ],
+    "externalIds": {
+      "PubMedCentral": "8512418",
+      "DBLP": "journals/sensors/HuangSLFB21",
+      "DOI": "10.3390/s21196340",
+      "CorpusId": 238639686,
+      "PubMed": "34640660"
+    },
+    "publicationDate": "2021-09-23"
+  },
+  {
+    "doi": "10.1007/s10796-019-09921-1",
+    "title": "Socio-Technical Perspectives on Smart Working: Creating Meaningful and Sustainable Systems",
+    "abstract": "Technological advances have made possible industrial and commercial applications of artificial intelligence, virtual reality and highly integrated manufacturing systems. It has also freed business activity from a focus on place, as both work activities and markets have been able to harness information and communication technologies in order to operate remotely. As a result, researchers have highlighted a phenomenon of \u2018smart\u2019 working. Some have pointed to a fourth Industrial Revolution (Industry 4.0) in which \u2018smart\u2019 factories use robotics to achieve high performance. There is now a suggestion of progress towards Industry 5.0, in which technological and social systems work in harmony to deliver personalised mass customization of products and services. This paper examines these developments from the perspective of unique, individual understandings of work roles and sustainability, posing the questions \u2018Smart\u2019 from whose point of view? Do smart systems promote sustainable organizations? How should design of smart systems be approached? It suggests that contemporary socio-technical systems approaches to organizational analysis are the best way to support harnessing of smart technologies in organizations.",
+    "year": 2019,
+    "venue": "Information Systems Frontiers",
+    "authors": [
+      "P. Bednar",
+      "Christine E. Welch"
+    ],
+    "externalIds": {
+      "DOI": "10.1007/s10796-019-09921-1",
+      "CorpusId": 254578668
+    },
+    "publicationDate": "2019-05-03"
+  },
+  {
+    "doi": "10.1007/s10311-023-01617-y",
+    "title": "RETRACTED ARTICLE: Artificial intelligence-based solutions for climate change: a review",
+    "abstract": "Climate change is a major threat already causing system damage to urban and natural systems, and inducing global economic losses of over $500 billion. These issues may be partly solved by artificial intelligence because artificial intelligence integrates internet resources to make prompt suggestions based on accurate climate change predictions. Here we review recent research and applications of artificial intelligence in mitigating the adverse effects of climate change, with a focus on energy efficiency, carbon sequestration and storage, weather and renewable energy forecasting, grid management, building design, transportation, precision agriculture, industrial processes, reducing deforestation, and resilient cities. We found that enhancing energy efficiency can significantly contribute to reducing the impact of climate change. Smart manufacturing can reduce energy consumption, waste, and carbon emissions by 30\u201350% and, in particular, can reduce energy consumption in buildings by 30\u201350%. About 70% of the global natural gas industry utilizes artificial intelligence technologies to enhance the accuracy and reliability of weather forecasts. Combining smart grids with artificial intelligence can optimize the efficiency of power systems, thereby reducing electricity bills by 10\u201320%. Intelligent transportation systems can reduce carbon dioxide emissions by approximately 60%. Moreover, the management of natural resources and the design of resilient cities through the application of artificial intelligence can further promote sustainability.",
+    "year": 2023,
+    "venue": "Environmental Chemistry Letters",
+    "authors": [
+      "Lin Chen",
+      "Zhonghao Chen",
+      "Yubing Zhang",
+      "Yunfei Liu",
+      "A. Osman",
+      "Mohamed Farghali",
+      "Jianmin Hua",
+      "A. Al-Fatesh",
+      "I. Ihara",
+      "David W. Rooney",
+      "P. Yap"
+    ],
+    "externalIds": {
+      "DOI": "10.1007/s10311-023-01617-y",
+      "CorpusId": 259445556
+    },
+    "publicationDate": "2023-06-13"
+  },
+  {
+    "doi": "10.3390/su13115788",
+    "title": "Artificial Intelligence in the Industry 4.0, and Its Impact on Poverty, Innovation, Infrastructure Development, and the Sustainable Development Goals: Lessons from Emerging Economies?",
+    "abstract": "Artificial intelligence in the fourth industrial revolution is beginning to live up to its promises of delivering real value necessitated by the availability of relevant data, computational ability, and algorithms. Therefore, this study sought to investigate the influence of artificial intelligence on the attainment of Sustainable Development Goals with a direct focus on poverty reduction, goal one, industry, innovation, and infrastructure development goal 9, in emerging economies. Using content analysis, the result pointed to the fact that artificial intelligence has a strong influence on the attainment of Sustainable Development Goals particularly on poverty reduction, improvement of the certainty and reliability of infrastructure like transport making economic growth and development possible in emerging economies. The results revealed that Artificial intelligence is making poverty reduction possible through improving the collection of poverty-related data through poverty maps, revolutionizing agriculture education and the finance sector through financial inclusion. The study also discovered that AI is also assisting a lot in education, and the financial sector allowing the previously excluded individuals to be able to participate in the mainstream economy. Therefore, it is important that governments in emerging economies need to invest more in the use of AI and increase the research related to it so that the Sustainable Development Goals (SDGs) related to innovation, infrastructure development, poverty reduction are attained.",
+    "year": 2021,
+    "venue": "Sustainability",
+    "authors": [
+      "David Mhlanga"
+    ],
+    "externalIds": {
+      "MAG": "3160733272",
+      "DOI": "10.3390/SU13115788",
+      "CorpusId": 236398991
+    },
+    "publicationDate": "2021-05-21"
+  },
+  {
+    "doi": "10.1016/j.rser.2022.112914",
+    "title": "Pyrolysis of lignocellulosic, algal, plastic, and other biomass wastes for biofuel production and circular bioeconomy: A review of thermogravimetric analysis (TGA) approach",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Renewable & Sustainable Energy Reviews",
+    "authors": [
+      "J. Escalante",
+      "Wei-hsin Chen",
+      "M. Tabatabaei",
+      "Anh Tu\u1ea5n Ho\u00e0ng",
+      "E. Kwon",
+      "Kun-Yi Andrew Lin",
+      "Ayyadurai Saravanakumar"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.rser.2022.112914",
+      "CorpusId": 252095554
+    },
+    "publicationDate": "2022-11-01"
+  },
+  {
+    "doi": "10.1016/j.watres.2022.118973",
+    "title": "The role of deep learning in urban water management: A critical review.",
+    "abstract": "Deep learning techniques and algorithms are emerging as a disruptive technology with the potential to transform global economies, environments and societies. They have been applied to planning and management problems of urban water systems in general, however, there is lack of a systematic review of the current state of deep learning applications and an examination of potential directions where deep learning can contribute to solving urban water challenges. Here we provide such a review, covering water demand forecasting, leakage and contamination detection, sewer defect assessment, wastewater system state prediction, asset monitoring and urban flooding. We find that the application of deep learning techniques is still at an early stage as most studies used benchmark networks, synthetic data, laboratory or pilot systems to test the performance of deep learning methods with no practical adoption reported. Leakage detection is perhaps at the forefront of receiving practical implementation into day-to-day operation and management of urban water systems, compared with other problems reviewed. Five research challenges, i.e., data privacy, algorithmic development, explainability and trustworthiness, multi-agent systems and digital twins, are identified as key areas to advance the application and implementation of deep learning in urban water management. Future research and application of deep learning systems are expected to drive urban water systems towards high intelligence and autonomy. We hope this review will inspire research and development that can harness the power of deep learning to help achieve sustainable water management and digitalise the water sector across the world.",
+    "year": 2022,
+    "venue": "Water Research",
+    "authors": [
+      "G. Fu",
+      "Yiwen Jin",
+      "Siao Sun",
+      "Zhiguo Yuan",
+      "D. Butler"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.watres.2022.118973",
+      "CorpusId": 251521213,
+      "PubMed": "35988335"
+    },
+    "publicationDate": "2022-08-01"
+  },
+  {
+    "doi": "10.1016/j.egyr.2021.11.256",
+    "title": "Energetics Systems and artificial intelligence: Applications of industry 4.0",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Energy Reports",
+    "authors": [
+      "Tanveer Ahmad",
+      "Hongyu Zhu",
+      "Dongdong Zhang",
+      "Rasikh Tariq",
+      "A. Bassam",
+      "Fasee Ullah",
+      "A. Alghamdi",
+      "Sultan S. Alshamrani"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.egyr.2021.11.256",
+      "CorpusId": 245308910
+    },
+    "publicationDate": null
+  },
+  {
+    "doi": "10.1016/j.techfore.2021.121448",
+    "title": "Digital twin for sustainable manufacturing supply chains: Current trends, future perspectives, and an implementation framework",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Technological forecasting & social change",
+    "authors": [
+      "Sachin S. Kamble",
+      "A. Gunasekaran",
+      "H. Parekh",
+      "Venkatesh Mani",
+      "Amine Belhadi",
+      "Rohit Sharma"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.techfore.2021.121448",
+      "CorpusId": 245624830
+    },
+    "publicationDate": "2022-03-01"
+  },
+  {
+    "doi": "10.1016/j.caeai.2021.100008",
+    "title": "Human-centered artificial intelligence in education: Seeing the invisible through the visible",
+    "abstract": "Abstract The inevitable rise and development of artificial intelligence (AI) was not a sudden occurrence. The greater the effect that AI has on humans, the more pressing the need is for us to understand it. This paper addresses research on the use of AI to evaluate new design methods and tools that can be leveraged to advance AI research, education, policy, and practice to improve the human condition. AI has the potential to educate, train, and improve the performance of humans, making them better at their tasks and activities. The use of AI can enhance human welfare in numerous respects, such as through improving the productivity of food, health, water, education, and energy services. However, the misuse of AI due to algorithm bias and a lack of governance could inhibit human rights and result in employment, gender, and racial inequality. We envision that AI can evolve into human-centered AI (HAI), which refers to approaching AI from a human perspective by considering human conditions and contexts. Most current discussions on AI technology focus on how AI can enable human performance. However, we explore AI can also inhibit the human condition and advocate for an in-depth dialog between technology- and humanity-based researchers to improve understanding of HAI from various perspectives.",
+    "year": 2021,
+    "venue": "Computers and Education: Artificial Intelligence",
+    "authors": [
+      "Stephen J. H. Yang",
+      "H. Ogata",
+      "T. Matsui",
+      "N. Chen"
+    ],
+    "externalIds": {
+      "DBLP": "journals/caeai/YangOMC21",
+      "MAG": "3123649662",
+      "DOI": "10.1016/J.CAEAI.2021.100008",
+      "CorpusId": 234249154
+    },
+    "publicationDate": null
+  },
+  {
+    "doi": "10.1016/j.nbt.2023.02.001",
+    "title": "AI for Life: Trends in Artificial Intelligence for Biotechnology.",
+    "abstract": "Due to popular successes (e.g., ChatGPT) Artificial Intelligence (AI) is on everyone's lips today. When advances in biotechnology are combined with advances in AI unprecedented new potential solutions become available. This can help with many global problems and contribute to important Sustainability Development Goals. Current examples include Food Security, Health and Well-being, Clean Water, Clean Energy, Responsible Consumption and Production, Climate Action, Life below Water, or protect, restore and promote sustainable use of terrestrial ecosystems, sustainably manage forests, combat desertification, and halt and reverse land degradation and halt biodiversity loss. AI is ubiquitous in the life sciences today. Topics include a wide range from machine learning and Big Data analytics, knowledge discovery and data mining, biomedical ontologies, knowledge-based reasoning, natural language processing, decision support and reasoning under uncertainty, temporal and spatial representation and inference, and methodological aspects of explainable AI (XAI) with applications of biotechnology. In this pre-Editorial paper, we provide an overview of open research issues and challenges for each of the topics addressed in this special issue. Potential authors can directly use this as a guideline for developing their paper.",
+    "year": 2023,
+    "venue": "New Biotechnology",
+    "authors": [
+      "Andreas Holzinger",
+      "K. Keiblinger",
+      "P. Holub",
+      "K. Zatloukal",
+      "Heimo M\u00fcller"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.nbt.2023.02.001",
+      "CorpusId": 256657273,
+      "PubMed": "36754147"
+    },
+    "publicationDate": "2023-02-01"
+  },
+  {
+    "doi": "10.1080/21681015.2021.1950227",
+    "title": "Sustainable industrial and operation engineering trends and challenges Toward Industry 4.0: a data driven analysis",
+    "abstract": "ABSTRACT This study supplies contributions to the existing literature with a state-of-the-art bibliometric review of sustainable industrial and operation engineering as the field moves toward Industry 4.0, and guidance for future studies and practical achievements. Although industrial and operation engineering is being promoted forward to sustainability, the systematization of the knowledge that forms firms\u2019 manufacturing and operations and encompasses their wide concepts and abundant complementary elements is still absent. This study aims to analyze contemporary sustainable industrial and operations engineering in Industry 4.0 context. The bibliometric analysis and fuzzy Delphi method are proposed. Resulting in a total of 30 indicators that are criticized and clustered into eight study groups, including lean manufacturing in Industry 4.0, cyber-physical production system, big data-driven and smart communications, safety and security, artificial intelligence for sustainability, the circular economy in a digital environment, business intelligence and virtual reality, and environmental sustainability. Graphical Abstract",
+    "year": 2021,
+    "venue": "Journal of Industrial and Production Engineering",
+    "authors": [
+      "M. Tseng",
+      "Thi Phuong Thuy Tran",
+      "Hien Minh Ha",
+      "Tat-Dat Bui",
+      "M. Lim"
+    ],
+    "externalIds": {
+      "MAG": "3195662367",
+      "DOI": "10.1080/21681015.2021.1950227",
+      "CorpusId": 238847983
+    },
+    "publicationDate": "2021-07-11"
+  },
+  {
+    "doi": "10.1093/oso/9780198883098.001.0001",
+    "title": null,
+    "abstract": null,
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "doi": "10.1016/j.scitotenv.2020.141618",
+    "title": "Assessment and management of lake eutrophication: A case study in Lake Erhai, China.",
+    "abstract": "Some wastewater sources, such as agricultural waste and runoff, and industrial sewage, can degrade water quality. This study summarises the sources and corresponding mechanisms that trigger eutrophication in lakes. Additionally, the trophic status index and water quality index (WQI) which are effective tools for evaluating the degree of eutrophication of lakes, have been discussed. This study also explores the main nutrients (nitrogen and phosphorus) driving transformations in the water body and sediment. Lake Erhai was used as a case study, and it was found to be in a mesotrophic state, with N and P co-limitation before 2006, and only P limitation since 2006. Finally, effective measures to maintain sustainable development in the watershed are proposed, along with a framework for an early warning system adopting the latest technologies (geographic information systems (GIS), remote sensing (RS)) for preventing eutrophication.",
+    "year": 2021,
+    "venue": "Science of the Total Environment",
+    "authors": [
+      "Song-Shun Lin",
+      "S. Shen",
+      "Annan Zhou",
+      "H. Lyu"
+    ],
+    "externalIds": {
+      "MAG": "3049044712",
+      "DOI": "10.1016/j.scitotenv.2020.141618",
+      "CorpusId": 225432356,
+      "PubMed": "33167190"
+    },
+    "publicationDate": "2021-01-01"
+  },
+  {
+    "doi": "10.1108/TQM-10-2019-0243",
+    "title": "Role of artificial intelligence in operations environment: a review and bibliometric analysis",
+    "abstract": "Purpose\u201cTechnological intelligence\u201d is the capacity to appreciate and adapt technological advancements, and \u201cartificial intelligence\u201d is the key to achieve persuasive operational transformations in majority of contemporary organizational set-ups. Implicitly, artificial intelligence (the philosophies of machines to think, behave and perform either same or similar to humans) has knocked the doors of business organizations as an imperative activity. Artificial intelligence, as a discipline, initiated by scientist John McCarthy and formally publicized at Dartmouth Conference in 1956, now occupies a central stage for many organizations. Implementation of artificial intelligence provides competitive edge to an organization with a definite augmentation in its social and corporate status. Mere application of a concept will not furnish real output until and unless its performance is reviewed systematically. Technological changes are dynamic and advancing at a rapid rate. Subsequently, it becomes highly crucial to understand that where have the people reached with respect to artificial intelligence research. The present article aims to review significant work by eminent researchers towards artificial intelligence in the form of top contributing universities, authors, keywords, funding sources, journals and citation statistics.Design/methodology/approachAs rightly remarked by past researchers that reviewing is learning from experience, research team has reviewed (by applying systematic literature review through bibliometric analysis) the concept of artificial intelligence in this article. A sum of 1,854 articles extracted from Scopus database for the year 2018\u20132019 (31st of May) with selected keywords (artificial intelligence, genetic algorithms, agent-based systems, expert systems, big data analytics and operations management) along with certain filters (subject\u2013business, management and accounting; language-English; document\u2013article, article in press, review articles and source-journals).FindingsResults obtained from cluster analysis focus on predominant themes for present as well as future researchers in the area of artificial intelligence. Emerged clusters include Cluster 1: Artificial Intelligence and Optimization; Cluster 2: Industrial Engineering/Research and Automation; Cluster 3: Operational Performance and Machine Learning; Cluster 4: Sustainable Supply Chains and Sustainable Development; Cluster 5: Technology Adoption and Green Supply Chain Management and Cluster 6: Internet of Things and Reverse Logistics.Originality/valueThe result of review of selected studies is in itself a unique contribution and a food for thought for operations managers and policy makers.",
+    "year": 2020,
+    "venue": "The TQM Journal",
+    "authors": [
+      "Pavitra Dhamija",
+      "Surajit Bag"
+    ],
+    "externalIds": {
+      "MAG": "3010600010",
+      "DOI": "10.1108/tqm-10-2019-0243",
+      "CorpusId": 216289202
+    },
+    "publicationDate": "2020-03-06"
+  },
+  {
+    "doi": "10.3390/su12145568",
+    "title": "Sustainable Curriculum Planning for Artificial Intelligence Education: A Self-Determination Theory Perspective",
+    "abstract": "The teaching of artificial intelligence (AI) topics in school curricula is an important global strategic initiative in educating the next generation. As AI technologies are new to K-12 schools, there is a lack of studies that inform schools\u2019 teachers about AI curriculum design. How to prepare and engage teachers, and which approaches are suitable for planning the curriculum for sustainable development, are unclear. Therefore, this case study aimed to explore the views of teachers with and without AI teaching experience on key considerations for the preparation, implementation and continuous refinement of a formal AI curriculum for K-12 schools. It drew on the self-determination theory (SDT) and four basic curriculum planning approaches\u2014content, product, process and praxis\u2014as theoretical frameworks to explain the research problems and findings. We conducted semi-structured interviews with 24 teachers\u2014twelve with and twelve without experience in teaching AI\u2014and used thematic analysis to analyze the interview data. Our findings revealed that genuine curriculum creation should encompass all four forms of curriculum design approach that are coordinated by teachers\u2019 self-determination to be orchestrators of student learning experiences. This study also proposed a curriculum development cycle for teachers and curriculum officers.",
+    "year": 2020,
+    "venue": "",
+    "authors": [
+      "Thomas K. F. Chiu",
+      "C. Chai"
+    ],
+    "externalIds": {
+      "MAG": "3041706899",
+      "DOI": "10.3390/su12145568",
+      "CorpusId": 221021654
+    },
+    "publicationDate": "2020-07-10"
+  },
+  {
+    "doi": "10.1016/j.jbusres.2020.08.018",
+    "title": "Productive employment and decent work: The impact of AI adoption on psychological contracts, job engagement and employee trust",
+    "abstract": "This research examines the tension between the aims of the United Nations\u2019 Sustainable Development Goal 8 (SDG 8), to promote productive employment and decent work, and the adoption of Artificial Intelligence (AI). Our findings are based on the analysis of 232 survey results, where we tested the effects of AI adoption on workers\u2019 psychological contract, engagement and trust. We find that psychological contracts had a significant, positive effect on job engagement and on trust. Yet, with AI adoption, the positive effect of psychological contracts fell significantly. A further re-examination of the extant literature leads us to posit that AI adoption fosters the creation of a third type of psychological contract, which we term \u201cAlienational\u201d. Whereas SDG 8 is premised on strengthening relational contracts between an organization and its employees, the adoption of AI has the opposite effect, detracting from the very nature of decent work.",
+    "year": 2020,
+    "venue": "Journal of business research",
+    "authors": [
+      "A. Braganza",
+      "Weifeng Chen",
+      "A. Canhoto",
+      "Serap Sap"
+    ],
+    "externalIds": {
+      "MAG": "3075346249",
+      "PubMedCentral": "7434459",
+      "DOI": "10.1016/j.jbusres.2020.08.018",
+      "CorpusId": 221160068,
+      "PubMed": "32836565"
+    },
+    "publicationDate": "2020-08-18"
+  },
+  {
+    "doi": "10.1002/adfm.202102983",
+    "title": "Piezoelectric Nanogenerators Derived Self\u2010Powered Sensors for Multifunctional Applications and Artificial Intelligence",
+    "abstract": "With the arrival of the Internet of Things (IoTs) era, there is a growing requirement for systems with many sensor nodes in a variety of fields of applications. The demands for wireless, sustainable and independent operation are becoming more and more important for large\u2010scale sensor networks and systems. For these purposes, a self\u2010powered sensory system that can utilize the self\u2010harvested energy from its surroundings to drive the sensors and directly sense external stimuli has attracted great attention. The invention and rapid development of piezoelectric generators (PENGs), which take Maxwell's displacement current as the driving force, has been pushing forward research on self\u2010powered active mechanical sensors, electronic skins, and human\u2010robotic interaction. Here, this review starts with a brief introduction of piezoelectric materials, fabrication, and performance improvement. Then, the energy harvesters used for self\u2010power systems based on recent progress are reviewed. After that, PENGs applications toward recent self\u2010powered active sensors are divided into four aspects and highlighted, respectively. Moreover, some challenges and future directions for the self\u2010powered multifunctional sensors are put forward. It is believed that through the continuous investigations into PENG\u2010based self\u2010powered active sensors, they will soon be used in touch screens, electronic skins, health care, environmental monitoring, and intelligence systems.",
+    "year": 2021,
+    "venue": "Advanced Functional Materials",
+    "authors": [
+      "Xiaole Cao",
+      "Yao Xiong",
+      "Jia Sun",
+      "Xiaoxiao Zhu",
+      "Qijun Sun",
+      "Zhong Lin Wang"
+    ],
+    "externalIds": {
+      "MAG": "3171594106",
+      "DOI": "10.1002/adfm.202102983",
+      "CorpusId": 236280271
+    },
+    "publicationDate": "2021-06-16"
+  },
+  {
+    "doi": "10.1080/10408398.2022.2034735",
+    "title": "The fourth industrial revolution in the food industry\u2014Part I: Industry 4.0 technologies",
+    "abstract": "Abstract Climate change, the growth in world population, high levels of food waste and food loss, and the risk of new disease or pandemic outbreaks are examples of the many challenges that threaten future food sustainability and the security of the planet and urgently need to be addressed. The fourth industrial revolution, or Industry 4.0, has been gaining momentum since 2015, being a significant driver for sustainable development and a successful catalyst to tackle critical global challenges. This review paper summarizes the most relevant food Industry 4.0 technologies including, among others, digital technologies (e.g., artificial intelligence, big data analytics, Internet of Things, and blockchain) and other technological advances (e.g., smart sensors, robotics, digital twins, and cyber-physical systems). Moreover, insights into the new food trends (such as 3D printed foods) that have emerged as a result of the Industry 4.0 technological revolution will also be discussed in Part II of this work. The Industry 4.0 technologies have significantly modified the food industry and led to substantial consequences for the environment, economics, and human health. Despite the importance of each of the technologies mentioned above, ground-breaking sustainable solutions could only emerge by combining many technologies simultaneously. The Food Industry 4.0 era has been characterized by new challenges, opportunities, and trends that have reshaped current strategies and prospects for food production and consumption patterns, paving the way for the move toward Industry 5.0.",
+    "year": 2022,
+    "venue": "Critical reviews in food science and nutrition",
+    "authors": [
+      "A. Hassoun",
+      "A. A\u00eft-Kaddour",
+      "A. Abu-Mahfouz",
+      "N. Rathod",
+      "Farah Bader",
+      "Francisco J. Barba",
+      "A. Biancolillo",
+      "Janna Cropotova",
+      "Charis M. Galanakis",
+      "A. Jambrak",
+      "J. Lorenzo",
+      "I. M\u00e5ge",
+      "F. Ozogul",
+      "J. Regenstein"
+    ],
+    "externalIds": {
+      "DOI": "10.1080/10408398.2022.2034735",
+      "CorpusId": 246530066,
+      "PubMed": "35114860"
+    },
+    "publicationDate": "2022-02-03"
+  },
+  {
+    "doi": "10.1007/s40820-022-00981-8",
+    "title": "Multidiscipline Applications of Triboelectric Nanogenerators for the Intelligent Era of Internet of Things",
+    "abstract": "Multidiscipline application of triboelectric nanogenerators (TENGs) for intelligent Internet of Things (IoTs) are summarized from the aspects of agriculture, industry, city, emergency monitoring, and artificial intelligence. Perspectives on the challenges and future research directions of TENGs in IoTs have been proposed. Multidiscipline application of triboelectric nanogenerators (TENGs) for intelligent Internet of Things (IoTs) are summarized from the aspects of agriculture, industry, city, emergency monitoring, and artificial intelligence. Perspectives on the challenges and future research directions of TENGs in IoTs have been proposed. In the era of 5G and the Internet of things (IoTs), various human\u2013computer interaction systems based on the integration of triboelectric nanogenerators (TENGs) and IoTs technologies demonstrate the feasibility of sustainable and self-powered functional systems. The rapid development of intelligent applications of IoTs based on TENGs mainly relies on supplying the harvested mechanical energy from surroundings and implementing active sensing, which have greatly changed the way of human production and daily life. This review mainly introduced the TENG applications in multidiscipline scenarios of IoTs, including smart agriculture, smart industry, smart city, emergency monitoring, and machine learning-assisted artificial intelligence applications. The challenges and future research directions of TENG toward IoTs have also been proposed. The extensive developments and applications of TENG will push forward the IoTs into an energy autonomy fashion.",
+    "year": 2022,
+    "venue": "Nano-Micro Letters",
+    "authors": [
+      "Xiaole Cao",
+      "Yao Xiong",
+      "Jia Sun",
+      "Xiaoyin Xie",
+      "Qijun Sun",
+      "Zhongqiang Wang"
+    ],
+    "externalIds": {
+      "PubMedCentral": "9768108",
+      "DOI": "10.1007/s40820-022-00981-8",
+      "CorpusId": 254962183,
+      "PubMed": "36538115"
+    },
+    "publicationDate": "2022-12-20"
+  },
+  {
+    "doi": "10.1016/j.scs.2023.104562",
+    "title": "Algorithmic Urban Planning for Smart and Sustainable Development: Systematic Review of the Literature",
+    "abstract": "In recent years, artificial intelligence (AI) has been increasingly put into use to address cities \u2019 economic, social, environmental, and governance challenges. Thanks to its advanced capabilities, AI is set to become one of local governments \u2019 principal means of achieving smart and sustainable development. AI utilisation for urban planning, nonetheless, is a relatively understudied area of research, particularly in terms of the gap between theory and practice. This study presents a comprehensive review of the areas of urban planning in which AI technologies are contemplated or applied, and it is analysed how AI technologies support or could potentially support smart and sustainable development. Regarding the methodological approach, this is a systematic literature review following the PRISMA protocol. The obtained insights include: (a) Early adopters \u2019 real-world AI applications in urban planning are paving the way to wider local government AI adoption; (b) Achieving wider AI adoption for urban planning involves collaboration and partnership between key stakeholders; (c) Big data is an integral element for effective AI utilisation in urban planning, and; (d) Convergence of artificial and human intelligence is crucial to address urbanisation issues adequately and to achieve smart and sustainable development. These insights highlight the importance of making planning smarter through advanced data and analytical methods.",
+    "year": 2023,
+    "venue": "Sustainable cities and society",
+    "authors": [
+      "T.H. Son",
+      "Zack Weedon",
+      "Tan Yigitcanlar",
+      "T. Sanchez",
+      "J. Corchado",
+      "Rashid Mehmood"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.scs.2023.104562",
+      "CorpusId": 257842565
+    },
+    "publicationDate": "2023-03-01"
+  },
+  {
+    "doi": "10.3390/s21062143",
+    "title": "Enabling Technologies for Urban Smart Mobility: Recent Trends, Opportunities and Challenges",
+    "abstract": "The increasing population across the globe makes it essential to link smart and sustainable city planning with the logistics of transporting people and goods, which will significantly contribute to how societies will face mobility in the coming years. The concept of smart mobility emerged with the popularity of smart cities and is aligned with the sustainable development goals defined by the United Nations. A reduction in traffic congestion and new route optimizations with reduced ecological footprint are some of the essential factors of smart mobility; however, other aspects must also be taken into account, such as the promotion of active mobility and inclusive mobility, encouraging the use of other types of environmentally friendly fuels and engagement with citizens. The Internet of Things (IoT), Artificial Intelligence (AI), Blockchain and Big Data technology will serve as the main entry points and fundamental pillars to promote the rise of new innovative solutions that will change the current paradigm for cities and their citizens. Mobility-as-a-service, traffic flow optimization, the optimization of logistics and autonomous vehicles are some of the services and applications that will encompass several changes in the coming years with the transition of existing cities into smart cities. This paper provides an extensive review of the current trends and solutions presented in the scope of smart mobility and enabling technologies that support it. An overview of how smart mobility fits into smart cities is provided by characterizing its main attributes and the key benefits of using smart mobility in a smart city ecosystem. Further, this paper highlights other various opportunities and challenges related to smart mobility. Lastly, the major services and applications that are expected to arise in the coming years within smart mobility are explored with the prospective future trends and scope.",
+    "year": 2021,
+    "venue": "Italian National Conference on Sensors",
+    "authors": [
+      "Sara Paiva",
+      "M. Ahad",
+      "Gautami Tripathi",
+      "Noushaba Feroz",
+      "Gabriella Casalino"
+    ],
+    "externalIds": {
+      "DBLP": "journals/sensors/PaivaATFC21",
+      "PubMedCentral": "8003137",
+      "DOI": "10.3390/s21062143",
+      "CorpusId": 232383658,
+      "PubMed": "33803903"
+    },
+    "publicationDate": "2021-03-01"
+  },
+  {
+    "doi": "10.1016/j.jclepro.2022.134120",
+    "title": "How can artificial intelligence impact sustainability: A systematic literature review:",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Journal of Cleaner Production",
+    "authors": [
+      "A. Kar",
+      "S. Choudhary",
+      "Vinay Singh"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.jclepro.2022.134120",
+      "CorpusId": 252456395
+    },
+    "publicationDate": "2022-09-01"
+  },
+  {
+    "doi": "10.1007/s00146-021-01294-x",
+    "title": "The AI gambit: leveraging artificial intelligence to combat climate change\u2014opportunities, challenges, and recommendations",
+    "abstract": "In this article, we analyse the role that artificial intelligence (AI) could play, and is playing, to combat global climate change. We identify two crucial opportunities that AI offers in this domain: it can help improve and expand current understanding of climate change, and it can contribute to combatting the climate crisis effectively. However, the development of AI also raises two sets of problems when considering climate change: the possible exacerbation of social and ethical challenges already associated with AI, and the contribution to climate change of the greenhouse gases emitted by training data and computation-intensive AI systems. We assess the carbon footprint of AI research, and the factors that influence AI\u2019s greenhouse gas (GHG) emissions in this domain. We find that the carbon footprint of AI research may be significant and highlight the need for more evidence concerning the trade-off between the GHG emissions generated by AI research and the energy and resource efficiency gains that AI can offer. In light of our analysis, we argue that leveraging the opportunities offered by AI for global climate change whilst limiting its risks is a gambit which requires responsive, evidence-based, and effective governance to become a winning strategy. We conclude by identifying the European Union as being especially well-placed to play a leading role in this policy response and provide 13 recommendations that are designed to identify and harness the opportunities of AI for combatting climate change, while reducing its impact on the environment.",
+    "year": 2021,
+    "venue": "Ai & Society",
+    "authors": [
+      "Josh Cowls",
+      "Andreas Tsamados",
+      "M. Taddeo",
+      "L. Floridi"
+    ],
+    "externalIds": {
+      "DBLP": "journals/ais/CowlsTTF23",
+      "PubMedCentral": "8522259",
+      "DOI": "10.1007/s00146-021-01294-x",
+      "CorpusId": 233652015,
+      "PubMed": "34690449"
+    },
+    "publicationDate": "2021-10-18"
+  },
+  {
+    "doi": "10.1002/bse.3099",
+    "title": null,
+    "abstract": null,
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "doi": "10.1002/sd.2773",
+    "title": "Artificial intelligence \u2010 driven sustainable development: Examining organizational, technical, and processing approaches to achieving global goals",
+    "abstract": "This study presents a comprehensive literature review using a systematic approach to explore the role of artificial intelligence (AI) in promoting sustainable development in line with the United Nations Sustainable Development Goals (SDGs). The systematic review approach was applied to collect and analyze topics, and the literature search was conducted in two stages, encompassing 57 articles that met the research requirements. Our analysis reveals that AI's contribution to sustainability is concentrated within three key areas: organizational, technical, and processing aspects. The organizational aspect focuses on the integration of AI in companies and industries, addressing barriers to implementation and the relationship between companies, partners, and customers. The technical aspect highlights the development of AI algorithms that can address global challenges and contribute to the growth of stability and development in society. The processing aspect emphasizes the internal transformation of companies, their business models, and strategies in response to AI integration. Our proposed conceptual model outlines the essential elements organizations must consider when incorporating AI into their sustainability efforts, such as strategic alignment, infrastructure development, change management, and continuous improvement. By addressing these critical aspects, organizations can harness the potential of AI to drive positive social, environmental, and economic outcomes, ultimately contributing to the achievement of the SDGs. The model serves as a comprehensive framework for organizations seeking to leverage AI for sustainable development, but it should be adapted to individual contexts to ensure its relevance and effectiveness.",
+    "year": 2023,
+    "venue": "Sustainable Development",
+    "authors": [
+      "I. Kulkov",
+      "Julia Kulkova",
+      "Ren\u00e9 Rohrbeck",
+      "Loick Menvielle",
+      "V. Kaartemo",
+      "Hannu Makkonen"
+    ],
+    "externalIds": {
+      "DOI": "10.1002/sd.2773",
+      "CorpusId": 263808382
+    },
+    "publicationDate": "2023-10-06"
+  },
+  {
+    "doi": "10.1007/s12008-023-01217-8",
+    "title": "Industry 5.0 or industry 4.0S? Introduction to industry 4.0 and a peek into the prospective industry 5.0 technologies",
+    "abstract": "The Industrial Revolution can be termed as the transformation of traditional industrial practices into new techniques dominated by the technologies available at that time. The first three industrial revolutions were driven respectively by mechanization, electrification, and automation which had gradually transformed the agrarian economy into a manufacturing-based economy. It helped in enhancing the lifestyle of the factory workers and the healthcare system, which improved the overall quality of living. The industries that adapted to the change witnessed a tremendous increase in the production of goods, competitive advantage, and cross-border business opportunities. While we are currently living to see the fourth industrial revolution (also known as Industry 4.0) unfolding around us, the world is poised for the next big leap, the fifth industrial revolution or Industry 5.0. Hence, the first half of the paper outlines the enabling technologies of Industry 4.0 and conceptualizes how they would act as the foundation for the fifth industrial revolution. The socio-economic challenges of the technologies and the need for Industry 5.0 technologies are also discussed. The second half of the paper outlines the prospective technologies of Industry 5.0, their potential applications from the perspective of industry leaders and scholars and conceptualizes how they can overcome the challenges of Industry 4.0. The definition of \u201csustainability trilemma\u201d a new term coined by the authors, and the reasoning for calling the next industrial revolution \u201cIndustry 4.0S\u201d (another new term) rather than Industry 5.0 are also presented.",
+    "year": 2023,
+    "venue": "International Journal on Interactive Design and Manufacturing (ijidem)",
+    "authors": [
+      "Abirami Raja Santhi",
+      "Padmakumar Muthuswamy"
+    ],
+    "externalIds": {
+      "PubMedCentral": "9899508",
+      "DOI": "10.1007/s12008-023-01217-8",
+      "CorpusId": 256623448,
+      "PubMed": "40478102"
+    },
+    "publicationDate": "2023-02-05"
+  },
+  {
+    "doi": "10.1007/s00366-020-01003-0",
+    "title": "A novel artificial intelligence technique to predict compressive strength of recycled aggregate concrete using ICA-XGBoost model",
+    "abstract": null,
+    "year": 2020,
+    "venue": "Engineering computations",
+    "authors": [
+      "Jin Duan",
+      "P. Asteris",
+      "Hoang Nguyen",
+      "X. Bui",
+      "H. Moayedi"
+    ],
+    "externalIds": {
+      "MAG": "3011540643",
+      "DBLP": "journals/ewc/DuanANBM21",
+      "DOI": "10.1007/s00366-020-01003-0",
+      "CorpusId": 212690335
+    },
+    "publicationDate": "2020-03-13"
+  },
+  {
+    "doi": "10.1016/j.resourpol.2023.103445",
+    "title": "Tourism, urbanization and natural resources rents matter for environmental sustainability: The leading role of AI and ICT on sustainable development goals in the digital era",
+    "abstract": null,
+    "year": 2023,
+    "venue": "Resources policy",
+    "authors": [
+      "D. Balsalobre-lorente",
+      "Jaffar Abbas",
+      "Chang He",
+      "L. Pila\u0159",
+      "Syed Ale Raza Shah"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.resourpol.2023.103445",
+      "CorpusId": 257947615
+    },
+    "publicationDate": "2023-05-01"
+  },
+  {
+    "doi": "10.3390/agriculture14071141",
+    "title": "A Review of Precision Irrigation Water-Saving Technology under Changing Climate for Enhancing Water Use Efficiency, Crop Yield, and Environmental Footprints",
+    "abstract": "Water is considered one of the vital natural resources and factors for performing short- and long-term agricultural practices on Earth. Meanwhile, globally, most of the available freshwater resources are utilized for irrigation purposes in agriculture. Currently, many world regions are facing extreme water shortage problems, which can worsen if not managed properly. In the literature, numerous methods and remedies are used to cope with the increasing global water crises. The use of precision irrigation water-saving systems (PISs) for efficient water management under climate change is one of them and is a highly recommended approach by researchers. It can mitigate the adverse effects of changing climate and help enhance water use efficiency, crop yield, and environmental footprints. Thus, the present study aimed to comprehensively examine and review PISs, focusing on their development, implementation, and positive impacts on sustainable water management. In addition, we searched the literature using different online search engines and reviewed and summarized the main results of the previously published papers on PISs. We discussed the traditional irrigation method and its modernization for enhancing water use efficiency, PIS monitoring and controlling, architecture, data sharing communication technologies, the role of artificial intelligence for irrigation water-saving, and the future prospects of the PIS. Based on the brief literature review, the present study concluded that the future of PISs seems bright, driven by the need for efficient irrigation water management systems, technological advancements, and increasing environmental awareness. As the water scarcity problem intensifies due to climate change and population growth, the PIS is poised to play a critical role in optimizing and modernizing water usage, increasing water use efficiency, and reducing environmental footprints, thus ensuring sustainable agriculture development.",
+    "year": 2024,
+    "venue": "Agriculture",
+    "authors": [
+      "Imran Ali Lakhiar",
+      "Haofang Yan",
+      "Chuan Zhang",
+      "Guoqing Wang",
+      "Bin He",
+      "Beibei Hao",
+      "Yujing Han",
+      "Biyu Wang",
+      "Rongxuan Bao",
+      "Tabinda Naz Syed",
+      "J. N. Chauhdary",
+      "Md. Rakibuzzaman"
+    ],
+    "externalIds": {
+      "DOI": "10.3390/agriculture14071141",
+      "CorpusId": 271225935
+    },
+    "publicationDate": "2024-07-14"
+  },
+  {
+    "doi": "10.1007/s10479-021-04410-8",
+    "title": "Past, present, and future of sustainable finance: insights from big data analytics through machine learning of scholarly research",
+    "abstract": "Sustainable finance is a rich field of research. Yet, existing reviews remain limited due to the piecemeal insights offered through a sub-set rather than the entire corpus of sustainable finance. To address this gap, this study aims to conduct a large-scale review that would provide a state-of-the-art overview of the performance and intellectual structure of sustainable finance. To do so, this study engages in a review of sustainable finance research using big data analytics through machine learning of scholarly research. In doing so, this study unpacks the most influential articles and top contributing journals, authors, institutions, and countries, as well as the methodological choices and research contexts for sustainable finance research. In addition, this study reveals insights into seven major themes of sustainable finance research, namely socially responsible investing, climate financing, green financing, impact investing, carbon financing, energy financing, and governance of sustainable financing and investing. To drive the field forward, this study proposes several suggestions for future sustainable finance research, which include developing and diffusing innovative sustainable financing instruments, magnifying and managing the profitability and returns of sustainable financing, making sustainable finance more sustainable, devising and unifying policies and frameworks for sustainable finance, tackling greenwashing of corporate sustainability reporting in sustainable finance, shining behavioral finance on sustainable finance, and leveraging the power of new-age technologies such as artificial intelligence, blockchain, internet of things, and machine learning for sustainable finance.",
+    "year": 2022,
+    "venue": "Annals of Operations Research",
+    "authors": [
+      "Satish Kumar",
+      "Dipasha Sharma",
+      "Sandeep Rao",
+      "Weng Marc Lim",
+      "S. Mangla"
+    ],
+    "externalIds": {
+      "PubMedCentral": "8723819",
+      "DBLP": "journals/anor/KumarSRLM25",
+      "DOI": "10.1007/s10479-021-04410-8",
+      "CorpusId": 245702225,
+      "PubMed": "35002001"
+    },
+    "publicationDate": "2022-01-04"
+  },
+  {
+    "doi": "10.1038/s41467-020-15871-z",
+    "title": "AI for social good: unlocking the opportunity for positive impact",
+    "abstract": "Advances in machine learning (ML) and artificial intelligence (AI) present an opportunity to build better tools and solutions to help address some of the world\u2019s most pressing challenges, and deliver positive social impact in accordance with the priorities outlined in the United Nations\u2019 17 Sustainable Development Goals (SDGs). The AI for Social Good (AI4SG) movement aims to establish interdisciplinary partnerships centred around AI applications towards SDGs. We provide a set of guidelines for establishing successful long-term collaborations between AI researchers and application-domain experts, relate them to existing AI4SG projects and identify key opportunities for future AI applications targeted towards social good. The AI for Social Good movement aims to apply AI/ML tools to help in delivering on the United Nations\u2019 sustainable development goals (SDGs). Here, the authors identify the challenges and propose guidelines for designing and implementing successful partnerships between AI researchers and application - domain experts.",
+    "year": 2020,
+    "venue": "Nature Communications",
+    "authors": [
+      "Nenad Toma\u0161ev",
+      "Julien Cornebise",
+      "F. Hutter",
+      "S. Mohamed",
+      "A. Picciariello",
+      "Bec Connelly",
+      "D. Belgrave",
+      "Daphne Ezer",
+      "Fanny Cachat van der Haert",
+      "F. Mugisha",
+      "Gerald Abila",
+      "Hiromi Arai",
+      "Hisham Almiraat",
+      "Julia Proskurnia",
+      "Kyle P. Snyder",
+      "M. Otake-Matsuura",
+      "M. Othman",
+      "T. Glasmachers",
+      "W. D. Wever",
+      "Y. Teh",
+      "M. E. Khan",
+      "Ruben De Winne",
+      "T. Schaul",
+      "C. Clopath"
+    ],
+    "externalIds": {
+      "MAG": "3025490408",
+      "PubMedCentral": "7235077",
+      "DOI": "10.1038/s41467-020-15871-z",
+      "CorpusId": 218670798,
+      "PubMed": "32424119"
+    },
+    "publicationDate": "2020-05-18"
+  },
+  {
+    "doi": "10.1002/adma.202500162",
+    "title": "Electrospinning and Nanofiber Technology: Fundamentals, Innovations, and Applications",
+    "abstract": "Electrospinning has emerged as a transformative technique for fabricating nanofibers (NFs), offering precise control over their morphology, composition, and functionality. This versatile process facilitates the production of fibers ranging from nanoscale to microscale with customized properties, integrating diverse materials and architectures for advanced research and industrial applications. This review presents recent advancements in electrospinning, addressing its fundamental principles, nanomaterial synthesis methods, and examples from a wide range of applications. The significant progress that are made in fabricating polymer, metal oxide, carbon, and composite NFs with diverse architectures such as porous, core\u2013shell, hollow, and aligned structures is highlighted. Advanced electrospinning techniques, including coaxial electrospinning, aligned electrospinning, yarn electrospinning, and roll\u2010to\u2010roll processes, demonstrate the scalability and adaptability of electrospinning for the development of next\u2010generation nanomaterials. Electrospun NFs are being actively applied to functional membranes, gas sensors, energy systems, and catalytic processes, addressing critical challenges in these respective areas. In conclusion, the groundbreaking potential of integrating artificial intelligence (AI)\u2010driven optimization with sustainable material design, such as the use of environmentally\u2010friendly \u201cgreen\u201d solvents, is emphasized. In the end, leveraging robotics\u2010based electrospinning and AI\u2010enhanced methodologies is essential to achieve stable scalability, optimized performance, and sustainability for research and industry.",
+    "year": 2025,
+    "venue": "Advances in Materials",
+    "authors": [
+      "Yujang Cho",
+      "Jong-Myeong Beak",
+      "Mingyu Sagong",
+      "Seongcheol Ahn",
+      "J. Nam",
+      "Iljin Kim"
+    ],
+    "externalIds": {
+      "PubMedCentral": "12272013",
+      "DOI": "10.1002/adma.202500162",
+      "CorpusId": 277609703,
+      "PubMed": "40190229"
+    },
+    "publicationDate": "2025-04-07"
+  },
+  {
+    "doi": "10.1016/j.dsm.2021.12.002",
+    "title": "Machine learning-based approach: Global trends, research directions, and regulatory standpoints",
+    "abstract": null,
+    "year": 2021,
+    "venue": "Data Science and Management",
+    "authors": [
+      "R. Pugliese",
+      "S. Regondi",
+      "Riccardo Marini"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.dsm.2021.12.002",
+      "CorpusId": 273172676
+    },
+    "publicationDate": "2021-12-01"
+  },
+  {
+    "doi": "10.3390/su13116348",
+    "title": "Circular Digital Built Environment: An Emerging Framework",
+    "abstract": "Digital technologies are considered to be an essential enabler of the circular economy in various industries. However, to date, very few studies have investigated which digital technologies could enable the circular economy in the built environment. This study specifically focuses on the built environment as one of the largest, most energy- and material-intensive industries globally, and investigates the following question: which digital technologies potentially enable a circular economy in the built environment, and in what ways? The research uses an iterative stepwise method: (1) framework development based on regenerating, narrowing, slowing and closing resource loop principles; (2) expert workshops to understand the usage of digital technologies in a circular built environment; (3) a literature and practice review to further populate the emerging framework with relevant digital technologies; and (4) the final mapping of digital technologies onto the framework. This study develops a novel Circular Digital Built Environment framework. It identifies and maps ten enabling digital technologies to facilitate a circular economy in the built environment. These include: (1) additive/robotic manufacturing, (2) artificial intelligence, (3) big data and analytics, (4) blockchain technology, (5) building information modelling, (6) digital platforms/marketplaces, (7) digital twins, (8) the geographical information system, (9) material passports/databanks, and (10) the internet of things. The framework provides a fruitful starting point for the novel research avenue at the intersection of circular economy, digital technology and the built environment, and gives practitioners inspiration for sustainable innovation in the sector.",
+    "year": 2021,
+    "venue": "Sustainability",
+    "authors": [
+      "Sultan \u00c7etin",
+      "Catherine De Wolf",
+      "N. Bocken"
+    ],
+    "externalIds": {
+      "MAG": "3172997754",
+      "DOI": "10.3390/SU13116348",
+      "CorpusId": 235456083
+    },
+    "publicationDate": "2021-06-03"
+  },
+  {
+    "doi": "10.1007/s10676-021-09593-z",
+    "title": "Artificial Intelligence Regulation: a framework for governance",
+    "abstract": null,
+    "year": 2021,
+    "venue": "Ethics and Information Technology",
+    "authors": [
+      "Patricia Gomes R\u00eago de Almeida",
+      "Carlos Denner dos Santos",
+      "J. Farias"
+    ],
+    "externalIds": {
+      "DBLP": "journals/ethicsit/AlmeidaSF21",
+      "MAG": "3154266813",
+      "DOI": "10.1007/s10676-021-09593-z",
+      "CorpusId": 234831317
+    },
+    "publicationDate": "2021-04-21"
+  },
+  {
+    "doi": "10.1016/j.crm.2021.100387",
+    "title": null,
+    "abstract": null,
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "doi": "10.1016/j.adhoc.2019.102047",
+    "title": "An intelligent Edge-IoT platform for monitoring livestock and crops in a dairy farming scenario",
+    "abstract": "Abstract Today\u2019s globalized and highly competitive world market has broadened the spectrum of requirements in all the sectors of the agri-food industry. This paper focuses on the dairy industry, on its need to adapt to the current market by becoming more resource efficient, environment-friendly, transparent and secure. The Internet of Things (IoT), Edge Computing (EC) and Distributed Ledger Technologies (DLT) are all crucial to the achievement of those improvements because they allow to digitize all parts of the value chain, providing detailed information to the consumer on the final product and ensuring its safety and quality. In Smart Farming environments, IoT and DLT enable resource monitoring and traceability in the value chain, allowing producers to optimize processes, provide the origin of the produce and guarantee its quality to consumers. In comparison to a centralized cloud, EC manages the Big Data generated by IoT devices by processing them at the network edge, allowing for the implementation of services with shorter response times, and a higher Quality of Service (QoS) and security. This work presents a platform oriented to the application of IoT, Edge Computing, Artificial Intelligence and Blockchain techniques in Smart Farming environments, by means of the novel Global Edge Computing Architecture, and designed to monitor the state of dairy cattle and feed grain in real time, as well as ensure the traceability and sustainability of the different processes involved in production. The platform is deployed and tested in a real scenario on a dairy farm, demonstrating that the implementation of EC contributes to a reduction in data traffic and an improvement in the reliability in communications between the IoT-Edge layers and the Cloud.",
+    "year": 2020,
+    "venue": "Ad hoc networks",
+    "authors": [
+      "R. Alonso",
+      "In\u00e9s Sitt\u00f3n-Candanedo",
+      "\u00d3. Garc\u00eda",
+      "Javier Prieto",
+      "Sara Rodr\u00edguez"
+    ],
+    "externalIds": {
+      "DBLP": "journals/adhoc/AlonsoSGPR20",
+      "MAG": "2992245519",
+      "DOI": "10.1016/j.adhoc.2019.102047",
+      "CorpusId": 210700938
+    },
+    "publicationDate": "2020-03-01"
+  },
+  {
+    "doi": "10.3390/su151813493",
+    "title": "Deep Learning and Artificial Intelligence in Sustainability: A Review of SDGs, Renewable Energy, and Environmental Health",
+    "abstract": "Artificial intelligence (AI) and deep learning (DL) have shown tremendous potential in driving sustainability across various sectors. This paper reviews recent advancements in AI and DL and explores their applications in achieving sustainable development goals (SDGs), renewable energy, environmental health, and smart building energy management. AI has the potential to contribute to 134 of the 169 targets across all SDGs, but the rapid development of these technologies necessitates comprehensive regulatory oversight to ensure transparency, safety, and ethical standards. In the renewable energy sector, AI and DL have been effectively utilized in optimizing energy management, fault detection, and power grid stability. They have also demonstrated promise in enhancing waste management and predictive analysis in photovoltaic power plants. In the field of environmental health, the integration of AI and DL has facilitated the analysis of complex spatial data, improving exposure modeling and disease prediction. However, challenges such as the explainability and transparency of AI and DL models, the scalability and high dimensionality of data, the integration with next-generation wireless networks, and ethics and privacy concerns need to be addressed. Future research should focus on enhancing the explainability and transparency of AI and DL models, developing scalable algorithms for processing large datasets, exploring the integration of AI with next-generation wireless networks, and addressing ethical and privacy considerations. Additionally, improving the energy efficiency of AI and DL models is crucial to ensure the sustainable use of these technologies. By addressing these challenges and fostering responsible and innovative use, AI and DL can significantly contribute to a more sustainable future.",
+    "year": 2023,
+    "venue": "Sustainability",
+    "authors": [
+      "Zhencheng Fan",
+      "Zheng Yan",
+      "Shiping Wen"
+    ],
+    "externalIds": {
+      "DOI": "10.3390/su151813493",
+      "CorpusId": 261782253
+    },
+    "publicationDate": "2023-09-08"
+  },
+  {
+    "doi": "10.1016/j.techfore.2023.122579",
+    "title": "Evolution of artificial intelligence research in Technological Forecasting and Social Change: Research topics, trends, and future directions",
+    "abstract": "Artificial intelligence (AI) is a set of rapidly expanding disruptive technologies that are radically transforming various aspects related to people, business, society, and the environment. With the proliferation of digital computing devices and the emergence of big data, AI is increasingly offering significant opportunities for society and business organizations. The growing interest of scholars and practitioners in AI has resulted in the diversity of research topics explored in bulks of scholarly literature published in leading research outlets. This study aims to map the intellectual structure and evolution of the conceptual structure of overall AI research published in Technological Forecasting and Social Change ( TF & SC ). This study uses machine learning-based structural topic modeling (STM) to extract, report, and visualize the latent topics from the AI research literature. Further, the disciplinary patterns in the intellectual structure of AI research are examined with the additional objective of assessing the disciplinary impact of AI. The results of the topic modeling reveal eight key topics, out of which the topics concerning healthcare, circular economy and sustainable supply chain, adoption of AI by consumers, and AI for decision-making are showing a rising trend over the years. AI research has a significant influence on disciplines such as business, management, and accounting, social science, engineering, computer science, and mathematics. The study provides an insightful agenda for the future based on evidence-based research directions that would benefit future AI scholars to identify contemporary research issues and develop impactful research to solve complex societal problems.",
+    "year": 2023,
+    "venue": "Technological forecasting & social change",
+    "authors": [
+      "Yogesh K. Dwivedi",
+      "Anuj Sharma",
+      "Nripendra P. Rana",
+      "M. Giannakis",
+      "P. Goel",
+      "Vincent Dutot"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.techfore.2023.122579",
+      "CorpusId": 258289130
+    },
+    "publicationDate": "2023-07-01"
+  },
+  {
+    "doi": "10.1016/j.scs.2019.101869",
+    "title": "A conceptual framework for understanding the contribution of building materials in the achievement of Sustainable Development Goals (SDGs)",
+    "abstract": "Abstract The UN 17 Sustainable Development Goals (SDGs) and the 169 targets have been considered in multidisciplinary approaches worldwide. Whereas, several environmental, economic and social development concerns have been covered by the UN 2030 Agenda. The aim of this research is to investigate the complexity of the interactions between building materials and the SDGs, in an attempt to establish a knowledge-based decision support system for policy-makers, designers and construction stakeholders regarding the implementation of 2030 agenda. A conceptual framework based on a systematic and comprehensive literature review, coupled with critical content analysis, was developed. This research proved that building materials can contribute significantly to the achievement of 13 goals and 25 targets of SDGs. The framework showed that direct positive contribution of building materials on the SDGs has been noticed in SDG 3, SDG 7, SDG 9, SDG 11, SDG 12, SDG 13, and SDG 15 while invisible contribution has been shown in SDG 2, SDG 5, SDG 10 and SDG 16. Additionally, indirect and negative contributions have been presented entirely in the framework. The present study offered a possibility to motivate future research and further critical discussions on the topic.",
+    "year": 2020,
+    "venue": "Sustainable cities and society",
+    "authors": [
+      "Mohamed Ahmed Omer",
+      "T. Noguchi"
+    ],
+    "externalIds": {
+      "MAG": "2977585128",
+      "DOI": "10.1016/j.scs.2019.101869",
+      "CorpusId": 208832017
+    },
+    "publicationDate": "2020-01-01"
+  },
+  {
+    "doi": "10.3390/s24082647",
+    "title": "Smart Sensors and Smart Data for Precision Agriculture: A Review",
+    "abstract": "Precision agriculture, driven by the convergence of smart sensors and advanced technologies, has emerged as a transformative force in modern farming practices. The present review synthesizes insights from a multitude of research papers, exploring the dynamic landscape of precision agriculture. The main focus is on the integration of smart sensors, coupled with technologies such as the Internet of Things (IoT), big data analytics, and Artificial Intelligence (AI). This analysis is set in the context of optimizing crop management, using resources wisely, and promoting sustainability in the agricultural sector. This review aims to provide an in-depth understanding of emerging trends and key developments in the field of precision agriculture. By highlighting the benefits of integrating smart sensors and innovative technologies, it aspires to enlighten farming practitioners, researchers, and policymakers on best practices, current challenges, and prospects. It aims to foster a transition towards more sustainable, efficient, and intelligent farming practices while encouraging the continued adoption and adaptation of new technologies.",
+    "year": 2024,
+    "venue": "Italian National Conference on Sensors",
+    "authors": [
+      "Abdellatif Soussi",
+      "E. Zero",
+      "R. Sacile",
+      "Daniele Trinchero",
+      "Marco Fossa"
+    ],
+    "externalIds": {
+      "DBLP": "journals/sensors/SoussiZSTF24",
+      "PubMedCentral": "11053448",
+      "DOI": "10.3390/s24082647",
+      "CorpusId": 269306115,
+      "PubMed": "38676264"
+    },
+    "publicationDate": "2024-04-01"
+  },
+  {
+    "doi": "10.1002/widm.1507",
+    "title": "A systematic review of Green AI",
+    "abstract": "With the ever\u2010growing adoption of artificial intelligence (AI)\u2010based systems, the carbon footprint of AI is no longer negligible. AI researchers and practitioners are therefore urged to hold themselves accountable for the carbon emissions of the AI models they design and use. This led in recent years to the appearance of researches tackling AI environmental sustainability, a field referred to as Green AI. Despite the rapid growth of interest in the topic, a comprehensive overview of Green AI research is to date still missing. To address this gap, in this article, we present a systematic review of the Green AI literature. From the analysis of 98 primary studies, different patterns emerge. The topic experienced a considerable growth from 2020 onward. Most studies consider monitoring AI model footprint, tuning hyperparameters to improve model sustainability, or benchmarking models. A mix of position papers, observational studies, and solution papers are present. Most papers focus on the training phase, are algorithm\u2010agnostic or study neural networks, and use image data. Laboratory experiments are the most common research strategy. Reported Green AI energy savings go up to 115%, with savings over 50% being rather common. Industrial parties are involved in Green AI studies, albeit most target academic readers. Green AI tool provisioning is scarce. As a conclusion, the Green AI research field results to have reached a considerable level of maturity. Therefore, from this review emerges that the time is suitable to adopt other Green AI research strategies, and port the numerous promising academic results to industrial practice.",
+    "year": 2023,
+    "venue": "WIREs Data. Mining. Knowl. Discov.",
+    "authors": [
+      "Roberto Verdecchia",
+      "June Sallou",
+      "Lu\u00eds Cruz"
+    ],
+    "externalIds": {
+      "ArXiv": "2301.11047",
+      "DBLP": "journals/corr/abs-2301-11047",
+      "DOI": "10.1002/widm.1507",
+      "CorpusId": 256274885
+    },
+    "publicationDate": "2023-01-26"
+  },
+  {
+    "doi": "10.1002/aesr.202400011",
+    "title": "Membrane Technology for Energy Saving: Principles, Techniques, Applications, Challenges, and Prospects",
+    "abstract": "Membrane technology emerges as a transformative solution for global challenges, excelling in water treatment, gas purification, and waste recycling. This comprehensive review navigates the principles, advantages, challenges, and prospects of membrane technology, emphasizing its pivotal role in addressing contemporary environmental and sustainability issues. The goal is to contribute to environmental objectives by exploring the principles, mechanisms, advantages, and limitations of membrane technology. Noteworthy features include energy efficiency, selectivity, and minimal environmental footprint, distinguishing it from conventional methods. Advances in nanomembranes, organic porous membranes, and metal\u2010organic frameworks\u2010based membranes highlight their potential for energy\u2010efficient contaminant removal. The review underscores the integration of renewable energy sources for eco\u2010friendly desalination and separation processes. The future trajectory unfolds with next\u2010gen nanocomposite membranes, sustainable polymers, and optimized energy consumption through electrochemical and hybrid approaches. In healthcare, membrane technology reshapes gas exchange, hemodialysis, biosensors, wound healing, and drug delivery, while in chemical industries, it streamlines organic solvent separation. Challenges like fouling, material stability, and energy efficiency are acknowledged, with the integration of artificial intelligence recognized as a progressing frontier. Despite limitations, membrane technology holds promise for sustainability and revolutionizing diverse industries.",
+    "year": 2024,
+    "venue": "Advanced Energy and Sustainability Research",
+    "authors": [
+      "Ahmed I. Osman",
+      "Zhonghao Chen",
+      "A. Elgarahy",
+      "Mohamed Farghali",
+      "Israa M A Mohamed",
+      "A. Priya",
+      "H. B. Hawash",
+      "P. Yap",
+      "P. Yap"
+    ],
+    "externalIds": {
+      "DOI": "10.1002/aesr.202400011",
+      "CorpusId": 268000064
+    },
+    "publicationDate": "2024-02-19"
+  },
+  {
+    "doi": "10.1016/j.cie.2023.109113",
+    "title": "Leveraging digital capabilities toward a circular economy: Reinforcing sustainable supply chain management with Industry 4.0 technologies",
+    "abstract": null,
+    "year": 2023,
+    "venue": "Computers & industrial engineering",
+    "authors": [
+      "Lingdi Liu",
+      "Wenyan Song",
+      "Yang Liu"
+    ],
+    "externalIds": {
+      "DBLP": "journals/candie/LiuSL23",
+      "DOI": "10.1016/j.cie.2023.109113",
+      "CorpusId": 257191380
+    },
+    "publicationDate": "2023-02-01"
+  },
+  {
+    "doi": "10.3389/fsufs.2020.00016",
+    "title": "Food Security, Safety, and Sustainability\u2014Getting the Trade-Offs Right",
+    "abstract": "The United Nations sustainable development goals include eradication of hunger. To feed 10 billion persons 2050, we need to get the trade-offs right between sustainability, food security, food safety, and make better use of food already produced. The hierarchy of strategies for reducing food losses and waste are in descending order source reduction, reusing or reprocessing surplus foods, recycle food as feed for animals, recover the energy as biofuels, nutrients as compost, or raw materials for industry, while as last resorts one may consider recovering the energy by incineration or dumping as garbage in landfills. This paper will explore the trade-offs inherent when aiming at triple goals of sustainability, food security, and safety looking at these strategies for reducing food losses and waste and resource footprints. Intensification of food production and circular food systems could be parts of these solutions to future food security. In this regard could our future trade-offs be informed by the experiences from the use of antimicrobials to intensify food production and from the outbreak of bovine spongiform encephalopathy (BSE) in terms of circular food production? There is no trade-off between intensification of food production aided by antimicrobials and the public health risks from antimicrobial resistance due to the zoo-technical use of antimicrobials. A sustainable future requires control of antimicrobial resistance. If one avoids that cycles of nutrients become cycles of pathogens and/or hazards, circular food production systems will a major contribution to the future sustainable food security. Source reduction i.e., limiting food losses and waste appears to the strategy most promising for achieving sustainability. By using artificial intelligence and intelligent packaging major progress is possible, with the added benefit of better control of food fraud. A changed diet\u2014eating more plant-based foods and not eating animal protein produced by edible feedstuffs, and source reduction of the food lost or wasted should enable us to feed at least an additional billion persons. Solutions to sustainability and food security should integrate food safety considerations from the start.",
+    "year": 2020,
+    "venue": "Frontiers in Sustainable Food Systems",
+    "authors": [
+      "I. V\u00e5gsholm",
+      "N. Arzoomand",
+      "S. Boqvist"
+    ],
+    "externalIds": {
+      "MAG": "3007091919",
+      "DOI": "10.3389/fsufs.2020.00016",
+      "CorpusId": 211212489
+    },
+    "publicationDate": "2020-02-21"
+  },
+  {
+    "doi": "10.3390/agronomy11040667",
+    "title": "Characterising the Agriculture 4.0 Landscape\u2014Emerging Trends, Challenges and Opportunities",
+    "abstract": "Investment in technological research is imperative to stimulate the development of sustainable solutions for the agricultural sector. Advances in Internet of Things, sensors and sensor networks, robotics, artificial intelligence, big data, cloud computing, etc. foster the transition towards the Agriculture 4.0 era. This fourth revolution is currently seen as a possible solution for improving agricultural growth, ensuring the future needs of the global population in a fair, resilient and sustainable way. In this context, this article aims at characterising the current Agriculture 4.0 landscape. Emerging trends were compiled using a semi-automated process by analysing relevant scientific publications published in the past ten years. Subsequently, a literature review focusing these trends was conducted, with a particular emphasis on their applications in real environments. From the results of the study, some challenges are discussed, as well as opportunities for future research. Finally, a high-level cloud-based IoT architecture is presented, serving as foundation for designing future smart agricultural systems. It is expected that this work will positively impact the research around Agriculture 4.0 systems, providing a clear characterisation of the concept along with guidelines to assist the actors in a successful transition towards the digitalisation of the sector.",
+    "year": 2021,
+    "venue": "Agronomy",
+    "authors": [
+      "S. Ara\u00fajo",
+      "Ricardo Silva Peres",
+      "Jos\u00e9 Barata",
+      "F. Lidon",
+      "J. Ramalho"
+    ],
+    "externalIds": {
+      "MAG": "3142507861",
+      "DOI": "10.3390/AGRONOMY11040667",
+      "CorpusId": 233565525
+    },
+    "publicationDate": "2021-04-01"
+  },
+  {
+    "doi": "10.1021/acs.energyfuels.2c01006",
+    "title": "Recent Advances in Machine Learning Research for Nanofluid-Based Heat Transfer in Renewable Energy System",
+    "abstract": null,
+    "year": 2022,
+    "venue": "Energy &amp; Fuels",
+    "authors": [
+      "Prabhakar Sharma",
+      "Zafar Said",
+      "Anurag Kumar",
+      "S. Ni\u017eeti\u0107",
+      "Ashok Pandey",
+      "Anh Tuan Hoang",
+      "Zuohua Huang",
+      "A. Afzal",
+      "Changhe Li",
+      "A. Le",
+      "X. Nguyen",
+      "V. Tr\u1ea7n"
+    ],
+    "externalIds": {
+      "DOI": "10.1021/acs.energyfuels.2c01006",
+      "CorpusId": 249662353
+    },
+    "publicationDate": "2022-06-13"
+  },
+  {
+    "doi": "10.1016/j.nanoen.2020.105414",
+    "title": "Technology evolution from self-powered sensors to AIoT enabled smart homes",
+    "abstract": "Abstract The need of self-powered sensors and self-sustainable micro-/nano-systems is increasing for smart home applications. With the aid of the fifth-generation (5G) wireless communication and the artificial intelligence (AI) technology, numerous sensors can form an artificial intelligence of things (AIoT) system with a cloud computing server to collect, store, process, analyze data, and control the system. In this review, we briefly introduce the major sensor transducing mechanisms and the corresponding representative sensors. Then we emphasize the discussion of triboelectric sensors and their use as various types of human machine interfaces (HMIs). Regarding integrated self-sustainable systems with energy storage function for more general application scenarios, we present the recent advances of integration of triboelectric nanogenerator with supercapacitors, lithium-ion batteries, and solar cells. The development of materials and configurations with novel functionalities to improve the system performance are discussed. We present the state-of-the-art works based on the synergy between wearable sensors and AI technology, highlighting the system-level function of analyzing abundant sensory data, recognizing events, and making decisions accordingly. We wrap up the review by providing our perspectives of future development of self-powered sensors and self-sustainable micro-/nano-systems towards improved wearability, multifunctionality, better self-sustainability via multi-domain energy harvesting and storage technology integration, and higher-level intelligence for complex scenarios.",
+    "year": 2021,
+    "venue": "Nano Energy",
+    "authors": [
+      "B. Dong",
+      "Qiongfeng Shi",
+      "Yanqin Yang",
+      "Feng Wen",
+      "Zixuan Zhang",
+      "Chengkuo Lee"
+    ],
+    "externalIds": {
+      "MAG": "3088194607",
+      "DOI": "10.1016/J.NANOEN.2020.105414",
+      "CorpusId": 222356654
+    },
+    "publicationDate": "2021-01-01"
+  },
+  {
+    "doi": "10.1109/ICICCS48265.2020.9121067",
+    "title": "Potato Leaf Diseases Detection Using Deep Learning",
+    "abstract": "With the enhancement in agricultural technology and the use of artificial intelligence in diagnosing plant diseases, it becomes important to make pertinent research to sustainable agricultural development. Various diseases like early blight and late blight immensely influence the quality and quantity of the potatoes and manual interpretation of these leaf diseases is quite time-taking and cumbersome. As it requires tremendously a good level of expertise, efficient and automated detection of these diseases in the budding phase can assist in ameliorating the potato crop production. Previously, various models have been proposed to detect several plant diseases. In this paper, a model is presented that uses pre-trained models like VGG19 for fine-tuning(transfer learning) to extract the relevant features from the dataset. Then, with the help of multiple classifiers results were perceived among which logistic regression outperformed others by a substantial margin of classification accuracy obtaining 97.8% over the test dataset.",
+    "year": 2020,
+    "venue": "International Conference Intelligent Computing and Control Systems",
+    "authors": [
+      "Divyansh Tiwari",
+      "M. Ashish",
+      "Nitish Gangwar",
+      "Abhishek Sharma",
+      "Suhanshu Patel",
+      "Suyash Bhardwaj"
+    ],
+    "externalIds": {
+      "MAG": "3035830381",
+      "DOI": "10.1109/ICICCS48265.2020.9121067",
+      "CorpusId": 219990325
+    },
+    "publicationDate": "2020-05-01"
+  },
+  {
+    "doi": "10.1016/j.rcim.2024.102769",
+    "title": "Exploring the synergies between collaborative robotics, digital twins, augmentation, and industry 5.0 for smart manufacturing: A state-of-the-art review",
+    "abstract": null,
+    "year": 2024,
+    "venue": "Robotics Comput. Integr. Manuf.",
+    "authors": [
+      "M. H. Zafar",
+      "Even Falkenberg Lang\u00e5s",
+      "Filippo Sanfilippo"
+    ],
+    "externalIds": {
+      "DBLP": "journals/rcim/ZafarLS24",
+      "DOI": "10.1016/j.rcim.2024.102769",
+      "CorpusId": 268993575
+    },
+    "publicationDate": null
+  },
+  {
+    "doi": "10.1016/j.envres.2021.112574",
+    "title": "IoT enabled environmental toxicology for air pollution monitoring using AI techniques.",
+    "abstract": "In past decades, the industrial and technological developments have increased exponentially and accompanied by non-judicial and un-sustainable utilization of non-renewable resources. At the same time, the environmental branch of toxicology has gained significant attention in understanding the effect of toxic chemicals on human health. Environmental toxic agents cause several diseases, particularly high risk among children, pregnant women, geriatrics and clinical patients. Since air pollution affects human health and results in increased morbidity and mortality increased the toxicological studies focusing on industrial air pollution absorbed by the common people. Therefore, it is needed to design an automated Environmental Toxicology based Air Pollution Monitoring System. To resolve the limitations of traditional monitoring system and to reduce the overall cost, this paper designs an IoT enabled Environmental Toxicology for Air Pollution Monitoring using Artificial Intelligence technique (ETAPM-AIT) to improve human health. The proposed ETAPM-AIT model includes a set of IoT based sensor array to sense eight pollutants namely NH3, CO, NO2, CH4, CO2, PM2.5, temperature and humidity. The sensor array measures the pollutant level and transmits it to the cloud server via gateways for analytic process. The proposed model aims to report the status of air quality in real time by using cloud server and sends an alarm in the presence of hazardous pollutants level in the air. For the classification of air pollutants and determining air quality, Artificial Algae Algorithm (AAA) based Elman Neural Network (ENN) model is used as a classifier, which predicts the air quality in the forthcoming time stamps. The AAA is applied as a parameter tuning technique to optimally determine the parameter values of the ENN model. In-order to examine the air quality monitoring performance of the proposed ETAPM-AIT model, an extensive set of simulation analysis is performed and the results are inspected in 5, 15, 30 and 60\u202fmin of duration respectively. The experimental outcome highlights the optimal performance of the proposed ETAPM-AIT model over the recent techniques.",
+    "year": 2021,
+    "venue": "Environmental Research",
+    "authors": [
+      "P. Asha",
+      "L. Natrayan",
+      "B. Geetha",
+      "J. Beulah",
+      "R. Sumathy",
+      "G. Varalakshmi",
+      "S. Neelakandan"
+    ],
+    "externalIds": {
+      "DOI": "10.1016/j.envres.2021.112574",
+      "CorpusId": 245231295,
+      "PubMed": "34919959"
+    },
+    "publicationDate": "2021-12-14"
+  },
+  {
+    "doi": "10.1016/j.compag.2023.107655",
+    "title": "YOLOWeeds: A novel benchmark of YOLO object detectors for multi-class weed detection in cotton production systems",
+    "abstract": null,
+    "year": 2023,
+    "venue": "Computers and Electronics in Agriculture",
+    "authors": [
+      "Fengying Dang",
+      "Dong Chen",
+      "Yuzhen Lu",
+      "Zhao Li"
+    ],
+    "externalIds": {
+      "DBLP": "journals/cea/DangCLL23",
+      "DOI": "10.1016/j.compag.2023.107655",
+      "CorpusId": 256140924
+    },
+    "publicationDate": "2023-02-01"
+  },
+  {
+    "doi": "10.1109/JIOT.2024.3359297",
+    "title": "Edge Computing for Industry 5.0: Fundamental, Applications, and Research Challenges",
+    "abstract": "Industry 5.0 is the next stage in industrial evolution, collaborating between human ingenuity and intelligent technologies to provide manufacturing solutions. Integrating modern technology like artificial intelligence (AI), robotics, and the Internet of Things (IoT) into manufacturing and production processes characterizes Industry 5.0. On the other hand, edge computing provides real-time data processing and analysis at the network\u2019s edge, closer to the data source and a vital component of Industry 5.0. Edge computing enables Industry 5.0 to access and communicate information about their industrial sectors using more accessible, standard hardware and software resources. However, no recent survey papers have examined the importance of edge computing in Industry 5.0. This study aims to fill that gap by presenting a survey on the importance of edge computing in Industry 5.0 and discussing a variety of technologies that could be used to implement and support this new industrial paradigm. First, we outline an overview and fundamentals of edge computing in Industry 5.0 architecture. Then objectives of Industry 5.0 are summarized to address various research challenges, including privacy, human\u2013robot co-working, sustainability, and robust networks. Afterward, this article provides an extensive overview of emerging technologies for Industry 5.0, such as collaborative robots, AI, Digital Twins, and many more. In addition, this survey highlights various open research challenges and potential solutions that should be addressed further to achieve Industry 5.0.",
+    "year": 2024,
+    "venue": "IEEE Internet of Things Journal",
+    "authors": [
+      "Megha Sharma",
+      "Abhinav Tomar",
+      "A. Hazra"
+    ],
+    "externalIds": {
+      "DBLP": "journals/iotj/SharmaTH24",
+      "DOI": "10.1109/JIOT.2024.3359297",
+      "CorpusId": 268283803
+    },
+    "publicationDate": "2024-06-01"
+  }
+]

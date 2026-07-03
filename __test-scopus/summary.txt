@@ -1,0 +1,203 @@
+Query: TITLE-ABS-KEY(artificial intelligence AND sustainable development) AND PUBYEAR > 2019
+Total fetched: 100
+
+  1. [2020] The role of artificial intelligence in achieving the Sustainable Development Goals
+     Vinuesa R.  |  cited: 2443
+  2. [2021] Artificial intelligence: A powerful paradigm for scientific research
+     Xu Y.  |  cited: 1571
+  3. [2021] The Lancet Global Health Commission on Global Eye Health: vision beyond 2020
+     Burton M.J.  |  cited: 1408
+  4. [2020] Artificial intelligence for sustainability: Challenges, opportunities, and a research agenda
+     Nishant R.  |  cited: 1174
+  5. [2021] Artificial intelligence in sustainable energy industry: Status Quo, challenges and opportunities
+     Ahmad T.  |  cited: 1090
+  6. [2020] Artificial intelligence and business models in the sustainable development goals perspective: A systematic literature review
+     Di Vaio A.  |  cited: 983
+  7. [2021] A Comprehensive Review on Recycled Aggregate and Recycled Aggregate Concrete
+     Wang B.  |  cited: 929
+  8. [2020] Digital entrepreneurship ecosystem: How digital technologies and collective intelligence are reshaping the entrepreneurial process
+     Elia G.  |  cited: 880
+  9. [2020] A future for the world's children? A WHO–UNICEF–Lancet Commission
+     Clark H.  |  cited: 865
+ 10. [2023] New Era of Artificial Intelligence in Education: Towards a Sustainable Multifaceted Revolution
+     Kamalov F.  |  cited: 833
+ 11. [2022] Understanding the adoption of Industry 4.0 technologies in improving environmental sustainability
+     Javaid M.  |  cited: 824
+ 12. [2020] A review of research into automation in tourism: Launching the Annals of Tourism Research Curated Collection on Artificial Intelligence and Robotics in Tourism
+     Tussyadiah I.  |  cited: 816
+ 13. [2021] Digitalization to achieve sustainable development goals: Steps towards a Smart Green Planet
+     Mondejar M.E.  |  cited: 790
+ 14. [2022] Smart Farming: Internet of Things (IoT)-Based Sustainable Agriculture
+     Dhanaraju M.  |  cited: 693
+ 15. [2020] Artificial intelligence and sustainable development
+     Goralski M.A.  |  cited: 680
+ 16. [2020] Progress in wearable electronics/photonics—Moving toward the era of artificial intelligence and internet of things
+     Shi Q.  |  cited: 633
+ 17. [2020] Artificial intelligence and the future of global health
+     Schwalbe N.  |  cited: 620
+ 18. [2020] Artificial intelligence and machine learning applications in smart production: Progress, trends, and directions
+     Cioffi R.  |  cited: 615
+ 19. [2023] Integration of IoT-Enabled Technologies and Artificial Intelligence (AI) for Smart City Scenario: Recent Advancements and Future Trends
+     Alahi M.E.E.  |  cited: 596
+ 20. [2024] Navigating the confluence of artificial intelligence and education for sustainable development in the era of industry 4.0: Challenges, opportunities, and ethical dimensions
+     Abulibdeh A.  |  cited: 568
+ 21. [2020] Enabling technologies and sustainable smart cities
+     Ahad M.A.  |  cited: 552
+ 22. [2021] Unleashing the convergence amid digitalization and sustainability towards pursuing the Sustainable Development Goals (SDGs): A holistic review
+     Del Río Castro G.  |  cited: 528
+ 23. [2021] Iot in smart cities: A survey of technologies, practices and challenges
+     Syed A.S.  |  cited: 523
+ 24. [2023] A systematic review of industrial wastewater management: Evaluating challenges and enablers
+     Singh B.J.  |  cited: 514
+ 25. [2021] Trustworthy artificial intelligence
+     Thiebes S.  |  cited: 503
+ 26. [2024] Smarter eco-cities and their leading-edge artificial intelligence of things solutions for environmental sustainability: A comprehensive systematic review
+     Bibri S.E.  |  cited: 501
+ 27. [2021] Smart farming for improving agricultural management
+     Said Mohamed E.  |  cited: 491
+ 28. [2020] Contributions and risks of artificial intelligence (AI) in building smarter cities: Insights from a systematic review of the literature
+     Yigitcanlar T.  |  cited: 485
+ 29. [2022] Artificial Intelligence in Education: AIEd for Personalised Learning Pathways
+     Tapalova O.  |  cited: 480
+ 30. [2021] Urban water resource management for sustainable environment planning using artificial intelligence techniques
+     Xiang X.  |  cited: 475
+ 31. [2020] The Effectiveness of Artificial Intelligence Conversational Agents in Health Care: Systematic Review
+     Milne-Ives M.  |  cited: 459
+ 32. [2023] Six Human-Centered Artificial Intelligence Grand Challenges
+     Ozmen Garibay O.  |  cited: 431
+ 33. [2024] Optimizing renewable energy systems through artificial intelligence: Review and future prospects
+     Ukoba K.  |  cited: 430
+ 34. [2021] Nanotechnology and artificial intelligence to enable sustainable and precision agriculture
+     Zhang P.  |  cited: 427
+ 35. [2021] Artificial intelligence, systemic risks, and sustainability
+     Galaz V.  |  cited: 426
+ 36. [2021] Internationalization, digitalization, and sustainability: Are SMEs ready? A survey on synergies and substituting effects among growth paths
+     Denicolai S.  |  cited: 425
+ 37. [2021] Industry 4.0 technologies for manufacturing sustainability: A systematic review and future research directions
+     Jamwal A.  |  cited: 425
+ 38. [2021] The potential of remote sensing and artificial intelligence as tools to improve the resilience of agriculture production systems
+     Jung J.  |  cited: 413
+ 39. [2020] Recent progress of triboelectric nanogenerators: From fundamental theory to practical applications
+     Luo J.  |  cited: 407
+ 40. [2020] Artificial intelligence, transport and the smart city: Definitions and dimensions of a new mobility era
+     Nikitas A.  |  cited: 397
+ 41. [2025] AI-driven adaptive learning for sustainable educational transformation
+     Strielkowski W.  |  cited: 394
+ 42. [2021] A review on state of health estimations and remaining useful life prognostics of lithium-ion batteries
+     Ge M.F.  |  cited: 389
+ 43. [2023] Integrating BIM and AI for Smart Construction Management: Current Status and Future Directions
+     Pan Y.  |  cited: 389
+ 44. [2024] A review of green artificial intelligence: Towards a more sustainable future
+     Bolón-Canedo V.  |  cited: 387
+ 45. [2021] Green iot and edge AI as key technological enablers for a sustainable digital transition towards a smart circular economy: An industry 5.0 use case
+     Fraga-Lamas P.  |  cited: 382
+ 46. [2020] Moisture-Enabled Electricity Generation: From Physics and Materials to Self-Powered Applications
+     Shen D.  |  cited: 378
+ 47. [2022] Review—Towards 5th Generation AI and IoT Driven Sustainable Intelligent Sensors Based on 2D MXenes and Borophene
+     Chaudhary V.  |  cited: 377
+ 48. [2021] A survey on AI-driven digital twins in industry 4.0: Smart manufacturing and advanced robotics
+     Huang Z.  |  cited: 375
+ 49. [2020] Socio-Technical Perspectives on Smart Working: Creating Meaningful and Sustainable Systems
+     Bednar P.M.  |  cited: 369
+ 50. [2023] Artificial intelligence-based solutions for climate change: a review
+     Chen L.  |  cited: 369
+ 51. [2021] Artificial intelligence in the industry 4.0, and its impact on poverty, innovation, infrastructure development, and the sustainable development goals: Lessons from emerging economies?
+     Mhlanga D.  |  cited: 367
+ 52. [2022] Pyrolysis of lignocellulosic, algal, plastic, and other biomass wastes for biofuel production and circular bioeconomy: A review of thermogravimetric analysis (TGA) approach
+     Escalante J.  |  cited: 367
+ 53. [2022] The role of deep learning in urban water management: A critical review
+     Fu G.  |  cited: 363
+ 54. [2022] Energetics Systems and artificial intelligence: Applications of industry 4.0
+     Ahmad T.  |  cited: 361
+ 55. [2022] Digital twin for sustainable manufacturing supply chains: Current trends, future perspectives, and an implementation framework
+     Kamble S.S.  |  cited: 360
+ 56. [2021] Human-centered artificial intelligence in education: Seeing the invisible through the visible
+     Yang S.J.H.  |  cited: 360
+ 57. [2023] AI for life: Trends in artificial intelligence for biotechnology
+     Holzinger A.  |  cited: 359
+ 58. [2021] Sustainable industrial and operation engineering trends and challenges Toward Industry 4.0: a data driven analysis
+     Tseng M.L.  |  cited: 358
+ 59. [2023] The Ethics of Artificial Intelligence: Principles, Challenges, and Opportunities
+     Floridi L.  |  cited: 356
+ 60. [2021] Assessment and management of lake eutrophication: A case study in Lake Erhai, China
+     Lin S.S.  |  cited: 354
+ 61. [2020] Role of artificial intelligence in operations environment: a review and bibliometric analysis
+     Dhamija P.  |  cited: 353
+ 62. [2020] Sustainable curriculum planning for artificial intelligence education: A self-determination theory perspective
+     Chiu T.K.F.  |  cited: 352
+ 63. [2021] Productive employment and decent work: The impact of AI adoption on psychological contracts, job engagement and employee trust
+     Braganza A.  |  cited: 350
+ 64. [2021] Piezoelectric Nanogenerators Derived Self-Powered Sensors for Multifunctional Applications and Artificial Intelligence
+     Cao X.  |  cited: 345
+ 65. [2023] The fourth industrial revolution in the food industry—Part I: Industry 4.0 technologies
+     Hassoun A.  |  cited: 344
+ 66. [2023] Multidiscipline Applications of Triboelectric Nanogenerators for the Intelligent Era of Internet of Things
+     Cao X.  |  cited: 342
+ 67. [2023] Algorithmic urban planning for smart and sustainable development: Systematic review of the literature
+     Son T.H.  |  cited: 342
+ 68. [2021] Enabling technologies for urban smart mobility: Recent trends, opportunities and challenges
+     Paiva S.  |  cited: 341
+ 69. [2022] How can artificial intelligence impact sustainability: A systematic literature review
+     Kar A.K.  |  cited: 338
+ 70. [2023] The AI gambit: leveraging artificial intelligence to combat climate change—opportunities, challenges, and recommendations
+     Cowls J.  |  cited: 338
+ 71. [2023] Application of digital technologies for sustainable product management in a circular economy: A review
+     Rusch M.  |  cited: 335
+ 72. [2024] Artificial intelligence - driven sustainable development: Examining organizational, technical, and processing approaches to achieving global goals
+     Kulkov I.  |  cited: 334
+ 73. [2023] Industry 5.0 or industry 4.0S? Introduction to industry 4.0 and a peek into the prospective industry 5.0 technologies
+     Raja Santhi A.  |  cited: 334
+ 74. [2021] A novel artificial intelligence technique to predict compressive strength of recycled aggregate concrete using ICA-XGBoost model
+     Duan J.  |  cited: 329
+ 75. [2023] Tourism, urbanization and natural resources rents matter for environmental sustainability: The leading role of AI and ICT on sustainable development goals in the digital era
+     Balsalobre-Lorente D.  |  cited: 329
+ 76. [2024] A Review of Precision Irrigation Water-Saving Technology under Changing Climate for Enhancing Water Use Efficiency, Crop Yield, and Environmental Footprints
+     Lakhiar I.A.  |  cited: 319
+ 77. [2025] Past, present, and future of sustainable finance: insights from big data analytics through machine learning of scholarly research
+     Kumar S.  |  cited: 316
+ 78. [2020] AI for social good: unlocking the opportunity for positive impact
+     Tomašev N.  |  cited: 316
+ 79. [2025] Electrospinning and Nanofiber Technology: Fundamentals, Innovations, and Applications
+     Cho Y.  |  cited: 315
+ 80. [2021] Machine learning-based approach: Global trends, research directions, and regulatory standpoints
+     Pugliese R.  |  cited: 314
+ 81. [2021] Circular digital built environment: An emerging framework
+     Çetin S.  |  cited: 313
+ 82. [2021] Artificial Intelligence Regulation: a framework for governance
+     de Almeida P.G.R.  |  cited: 312
+ 83. [2022] Digital technologies can enhance climate resilience of critical infrastructure
+     Argyroudis S.A.  |  cited: 309
+ 84. [2020] An intelligent Edge-IoT platform for monitoring livestock and crops in a dairy farming scenario
+     Alonso R.S.  |  cited: 308
+ 85. [2023] Deep Learning and Artificial Intelligence in Sustainability: A Review of SDGs, Renewable Energy, and Environmental Health
+     Fan Z.  |  cited: 308
+ 86. [2023] Evolution of artificial intelligence research in Technological Forecasting and Social Change: Research topics, trends, and future directions
+     Dwivedi Y.K.  |  cited: 307
+ 87. [2020] A conceptual framework for understanding the contribution of building materials in the achievement of Sustainable Development Goals (SDGs)
+     Omer M.A.B.  |  cited: 307
+ 88. [2024] Smart Sensors and Smart Data for Precision Agriculture: A Review
+     Soussi A.  |  cited: 307
+ 89. [2023] A systematic review of Green AI
+     Verdecchia R.  |  cited: 306
+ 90. [2024] Membrane Technology for Energy Saving: Principles, Techniques, Applications, Challenges, and Prospects
+     Osman A.I.  |  cited: 304
+ 91. [2023] Leveraging digital capabilities toward a circular economy: Reinforcing sustainable supply chain management with Industry 4.0 technologies
+     Liu L.  |  cited: 303
+ 92. [2020] Food Security, Safety, and Sustainability—Getting the Trade-Offs Right
+     Vågsholm I.  |  cited: 302
+ 93. [2021] Characterising the agriculture 4.0 landscape—emerging trends, challenges and opportunities
+     Araújo S.O.  |  cited: 302
+ 94. [2022] Recent Advances in Machine Learning Research for Nanofluid-Based Heat Transfer in Renewable Energy System
+     Sharma P.  |  cited: 301
+ 95. [2021] Technology evolution from self-powered sensors to AIoT enabled smart homes
+     Dong B.  |  cited: 300
+ 96. [2020] Potato Leaf Diseases Detection Using Deep Learning
+     Tiwari D.  |  cited: 299
+ 97. [2024] Exploring the synergies between collaborative robotics, digital twins, augmentation, and industry 5.0 for smart manufacturing: A state-of-the-art review
+     Zafar M.H.  |  cited: 297
+ 98. [2022] IoT enabled environmental toxicology for air pollution monitoring using AI techniques
+     Asha P.  |  cited: 291
+ 99. [2023] YOLOWeeds: A novel benchmark of YOLO object detectors for multi-class weed detection in cotton production systems
+     Dang F.  |  cited: 289
+100. [2024] Edge Computing for Industry 5.0: Fundamental, Applications, and Research Challenges
+     Sharma M.  |  cited: 284
