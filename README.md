@@ -17,14 +17,7 @@ conda activate dissertation
 python main.py --warm-replay --overwrite
 ```
 
-In the submitted repository, `4_outputs/` is committed for direct inspection. The command above rebuilds the canonical outputs and dissertation PDF from the frozen curated data snapshot. `--overwrite` is included because canonical outputs already exist; without it, `main.py` fails closed to prevent accidental replacement.
-
-If `2_data/` is missing, `python main.py --warm-replay --overwrite` should fetch the curated snapshot automatically. If automatic fetch fails, hydrate `2_data/` explicitly and then rerun warm replay:
-
-```bash
-python main.py --fetch-data-snapshot curated
-python main.py --warm-replay --overwrite
-```
+In the submitted repository, `4_outputs/` is committed for direct inspection. The command above rebuilds the canonical outputs and dissertation PDF from the frozen curated data snapshot. `--overwrite` is included because canonical outputs already exist; without it, `main.py` fails closed to prevent accidental replacement. If the snapshot download fails, run `python main.py --fetch-data-snapshot curated` then retry.
 
 ## What the replay produces
 
@@ -48,14 +41,7 @@ Not tracked in Git:
 
 `2_data/` is hydrated from the frozen curated snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
 
-## Environment
-
-```bash
-conda env create -f environment.yml
-conda activate dissertation
-# optional: if you have an NVIDIA GPU with CUDA 12.1:
-# pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
-```
+### Environment notes
 
 - `environment.yml` is the canonical rebuild path. Pins 13 core Python packages;
   platform-specific libraries (CUDA, Linux libs) are handled by conda/pip per-OS.
@@ -68,37 +54,14 @@ conda activate dissertation
 
 ## Additional optional commands
 
-```bash
-python main.py
-```
-Read-only status check for warm-replay readiness and current artifact presence.
-
-```bash
-python main.py --build-pdf --overwrite
-```
-Rebuild only the dissertation PDF from existing tables and figures.
-
-```bash
-python main.py --appendix-c-register --overwrite
-```
-Run the Appendix C register-adjustment robustness suite from existing embedded/scored data.
-
-```bash
-python main.py --sample-stability --overwrite
-```
-Run only the sample-stability robustness stage from existing canonical analysis outputs.
-
-```bash
-python main.py --fetch-data-snapshot curated
-```
-Explicitly hydrate the default marker-facing curated snapshot into `2_data/`.
-
-```bash
-python main.py --fetch-data-snapshot full
-```
-Hydrate the full data snapshot for audit or broader reconstruction; this is optional and not required for normal marking.
-
-The underlying snapshot utilities remain under `1_code/data_backup_and_fetch/` for debugging or audit use.
+| Command | What it does |
+|---|---|
+| `python main.py` | Read-only status check |
+| `python main.py --build-pdf --overwrite` | Rebuild PDF from existing outputs |
+| `python main.py --appendix-c-register --overwrite` | Run Appendix C register-adjustment robustness |
+| `python main.py --sample-stability --overwrite` | Run sample-stability robustness stage |
+| `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
+| `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
 
 ## Reproducibility boundaries
 
