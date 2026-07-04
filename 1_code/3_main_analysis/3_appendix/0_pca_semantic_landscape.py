@@ -71,7 +71,7 @@ from semantic_gap_shared import (
 )
 
 
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 SDG_CENTROIDS = Path("2_data/3_scored/sdg_centroids.npy")
 PCA_METADATA_JSON = "b1_pca_landscape_metadata.json"

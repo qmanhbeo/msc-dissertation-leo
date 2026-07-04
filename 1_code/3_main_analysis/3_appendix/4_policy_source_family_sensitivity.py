@@ -53,7 +53,7 @@ from semantic_gap_shared import (
 )
 
 
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 POLICY_PREPROCESSED_ROOT = Path("2_data/1_preprocessed/policy_all")
 
 SUMMARY_CSV = "policy_source_family_summary.csv"

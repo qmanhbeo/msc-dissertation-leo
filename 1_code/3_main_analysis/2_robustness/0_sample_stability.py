@@ -48,7 +48,7 @@ from semantic_gap_shared import (
 )
 
 
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 SCORED_DIR = Path("2_data/3_scored")
 EMBEDDINGS_DIR = Path("2_data/2_embedded")
 

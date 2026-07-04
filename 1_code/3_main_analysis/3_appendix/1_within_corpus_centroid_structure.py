@@ -84,7 +84,7 @@ from semantic_gap_shared import (
 )
 
 
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 

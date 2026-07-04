@@ -2,8 +2,9 @@
 Fetch Aurora survey accepted papers from OpenAlex by DOI.
 
 The Aurora dataset (Vanderfeesten et al., 2020) provides 5,695 research-domain
-expert-validated SDG labels. This script fetches their titles and abstracts
-from OpenAlex, then saves as a JSONL corpus ready for embedding.
+expert-validated SDG labels. This script auto-downloads the raw survey ZIP from
+Zenodo (doi:10.5281/zenodo.3813230) if not already present, then fetches titles
+and abstracts from OpenAlex, and saves as a JSONL corpus ready for embedding.
 
 Resumable: writes incrementally to aurora_texts.jsonl and tracks fetched DOIs
 in aurora_fetched.log for crash recovery.
@@ -11,9 +12,10 @@ in aurora_fetched.log for crash recovery.
 Uses the same credential rotation as fetch_openalex.py.
 
 Output:
-  2_data/1_preprocessed/aurora/aurora_texts.jsonl   — {text, sdg, doi, title, has_abstract}
-  2_data/1_preprocessed/aurora/aurora_fetched.log   — one DOI per line (already fetched)
-  2_data/1_preprocessed/aurora/aurora_manifest.json — {n_total, n_with_abstract, per_sdg_counts}
+  2_data/0_raw/aurora/aurora.zip                              — downloaded from Zenodo
+  2_data/1_preprocessed/aurora/aurora_texts.jsonl             — {text, sdg, doi, title, has_abstract}
+  2_data/1_preprocessed/aurora/aurora_fetched.log             — one DOI per line (already fetched)
+  2_data/1_preprocessed/aurora/aurora_manifest.json           — {n_total, n_with_abstract, per_sdg_counts}
 """
 
 import csv
@@ -30,6 +32,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import requests
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -37,6 +40,7 @@ log = logging.getLogger(__name__)
 load_dotenv()
 
 AURORA_ZIP = Path("2_data/0_raw/aurora/aurora.zip")
+AURORA_ZENODO_RECORD = "https://zenodo.org/api/records/3813230"
 OUTPUT_DIR = Path("2_data/1_preprocessed/aurora")
 OUTPUT_JSONL = OUTPUT_DIR / "aurora_texts.jsonl"
 FETCHED_LOG = OUTPUT_DIR / "aurora_fetched.log"
@@ -69,6 +73,45 @@ def load_credentials() -> list[dict]:
     if not creds:
         raise RuntimeError("No OpenAlex credentials found in environment. Set OPENALEX_MAILTO at minimum.")
     return creds
+
+
+def download_aurora_zip() -> Path:
+    """Download the Aurora survey data ZIP from Zenodo if not already present."""
+    if AURORA_ZIP.exists():
+        log.info("aurora.zip already exists at %s", AURORA_ZIP)
+        return AURORA_ZIP
+
+    log.info("Fetching Zenodo record metadata from %s ...", AURORA_ZENODO_RECORD)
+    resp = requests.get(AURORA_ZENODO_RECORD, timeout=15)
+    resp.raise_for_status()
+    record = resp.json()
+
+    zip_url = None
+    for f in record.get("files", []):
+        if f["key"] == "aurora-sdg-survey-result-data-public.zip":
+            zip_url = f["links"]["self"]
+            break
+
+    if not zip_url:
+        log.warning("Could not find aurora-sdg-survey-result-data-public.zip on Zenodo record %s", AURORA_ZENODO_RECORD)
+        raise FileNotFoundError(
+            f"Aurora ZIP not available for download from Zenodo. "
+            f"Place aurora.zip manually at {AURORA_ZIP}"
+        )
+
+    AURORA_ZIP.parent.mkdir(parents=True, exist_ok=True)
+    log.info("Downloading %s → %s (31 MB) ...", zip_url, AURORA_ZIP)
+    with requests.get(zip_url, stream=True, timeout=120) as r:
+        r.raise_for_status()
+        total = int(r.headers.get("content-length", 0))
+        with open(AURORA_ZIP, "wb") as f:
+            with tqdm(total=total, unit="B", unit_scale=True, desc="Downloading aurora.zip") as pbar:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    pbar.update(len(chunk))
+
+    log.info("Downloaded aurora.zip (%d MB)", AURORA_ZIP.stat().st_size // (1024 * 1024))
+    return AURORA_ZIP
 
 
 def extract_dois_from_zip(zip_path: Path) -> dict[int, list[dict]]:
@@ -108,9 +151,12 @@ def main():
     credential_sets = load_credentials()
     log.info("Loaded %d credential sets", len(credential_sets))
 
+    # Step 0: Download Aurora ZIP from Zenodo if not present
+    aurora_zip = download_aurora_zip()
+
     # Step 1: Extract all DOIs
     log.info("Extracting DOIs from Aurora zip...")
-    dois_by_sdg = extract_dois_from_zip(AURORA_ZIP)
+    dois_by_sdg = extract_dois_from_zip(aurora_zip)
     all_entries = []
     for sdg in sorted(dois_by_sdg):
         for entry in dois_by_sdg[sdg]:

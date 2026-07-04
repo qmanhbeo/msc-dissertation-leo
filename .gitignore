@@ -61,6 +61,7 @@ credentials.json
 3_writing/build_meta.tex
 3_writing/builds/
 3_writing/drafts/
+3_writing/artifact/
 
 # === Literature cache ===
 0_literature/**/cache/

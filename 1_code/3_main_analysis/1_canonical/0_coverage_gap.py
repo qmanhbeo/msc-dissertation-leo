@@ -74,7 +74,7 @@ from shared_utils import ensure_canonical_outputs
 # Config
 # ---------------------------------------------------------------------------
 SCORED_DIR = Path("2_data/3_scored")
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
 POLICY_SCORES   = SCORED_DIR / "policy_scores.npy"

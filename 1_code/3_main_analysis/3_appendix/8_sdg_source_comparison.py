@@ -57,7 +57,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from semantic_gap_shared import cap_policy_indices_per_doc
 
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 SDG_CENTROIDS = Path("2_data/3_scored/sdg_centroids.npy")
 BENCHMARK_EMB = Path("2_data/2_embedded/benchmark.npy")

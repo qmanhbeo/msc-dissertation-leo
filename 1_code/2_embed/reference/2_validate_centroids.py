@@ -57,7 +57,7 @@ EMBEDDINGS_DIR = Path("2_data/2_embedded")
 EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
 SCORED_DIR = Path("2_data/3_scored")
 SCORED_METADATA_DIR = SCORED_DIR / "metadata"
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 CENTROIDS_PATH   = SCORED_DIR / "sdg_centroids.npy"
 META_PATH        = SCORED_METADATA_DIR / "sdg_centroid_meta.json"

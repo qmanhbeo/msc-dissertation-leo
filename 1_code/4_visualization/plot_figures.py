@@ -41,7 +41,7 @@ if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 from shared_utils import ensure_canonical_outputs, require_output_files
 
-DEFAULT_OUTPUT_ROOT = Path("outputs")
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 
 def parse_args() -> argparse.Namespace:
