@@ -159,8 +159,6 @@ def download_snapshot(url: str, out_path: Path) -> None:
         content_type = response.headers.get("Content-Type", "")
         content_length = response.headers.get("Content-Length")
         total = int(content_length) if content_length else None
-        if total:
-            log(f"archive size: {total / (1024**3):.2f} GB")
 
         # Google Drive virus-scan warning — read a small head to extract confirm URL
         if "text/html" in content_type.lower():
@@ -180,6 +178,8 @@ def download_snapshot(url: str, out_path: Path) -> None:
             raise RuntimeError(f"snapshot URL returned HTML instead of an archive: {failure}")
 
         # Actual archive download — stream with progress
+        if total:
+            log(f"archive size: {total / (1024**3):.2f} GB")
         stream_to_file(response, out_path, total=total)
 
 
