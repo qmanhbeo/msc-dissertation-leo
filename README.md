@@ -49,7 +49,7 @@ Not tracked in Git:
 
 ```bash
 conda env create -f environment.yml
-conda activate dissertation   # or: conda activate stocks
+conda activate dissertation
 ```
 
 - `environment.yml` is the canonical rebuild path. Pins all conda and pip versions
@@ -75,9 +75,9 @@ python main.py --build-pdf --overwrite
 Rebuild only the dissertation PDF from existing tables and figures.
 
 ```bash
-python main.py --register-adjustment --overwrite
+python main.py --appendix-c-register --overwrite
 ```
-Run the Appendix B register-adjustment robustness suite from existing embedded/scored data.
+Run the Appendix C register-adjustment robustness suite from existing embedded/scored data.
 
 ```bash
 python main.py --sample-stability --overwrite
