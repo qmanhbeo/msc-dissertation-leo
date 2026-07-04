@@ -121,10 +121,10 @@ MANUSCRIPT_APPENDIX_FIGURE_FILES = [
 ]
 
 
-def ensure_dissertation_outputs(output_dir: Path) -> DissertationOutputs:
+def ensure_dissertation_outputs(output_dir: Path, subdir: str = "main") -> DissertationOutputs:
     """Create and return the nested dissertation output layout."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    root = output_dir / "main"
+    root = output_dir / subdir
     data_dir = root / "data"
     tables_dir = root / "tables"
     figures_dir = root / "figures"

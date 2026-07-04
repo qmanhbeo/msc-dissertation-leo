@@ -28,7 +28,7 @@
 \input{../4_outputs/main/tables/num_coverage.tex}
 \input{../4_outputs/main/tables/num_semantic.tex}
 \input{../4_outputs/main/tables/num_h25.tex}
-\input{../4_outputs/main/tables/num_sample_stability.tex}
+\InputIfFileExists{../4_outputs/appendix/d_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b2_within_corpus_centroid/tables/num_b2_within_corpus_centroid.tex}{}{}
@@ -369,20 +369,7 @@ Figure~\ref{fig:typology_scatter} illustrates this diagnostic refinement. High-c
 
 A bidirectional asymmetry diagnostic was also explored, but it is not treated as a headline result. The observed asymmetry (\HAsymGap) is smaller than the A1 OSDG calibration bias (\AffFifteenDiff), so Appendix~\ref{app:directional-asymmetry} reports it only as an inconclusive appendix sensitivity check rather than as substantive evidence about directionality.
 
-\subsection{Sample Stability Robustness Check}
-
-To test whether the headline findings depend heavily on research-corpus size, I reran the downstream research-side analysis on repeated random subsamples drawn from the pre-embedded, pre-scored OpenAlex corpus. For each of \SampleStabilitySampledTierCount{} sampled tiers (from 1{,}000 to 2{,}000{,}000 papers), I drew \SampleStabilityDraws{} independent samples without replacement, recomputed the research coverage profile, rebuilt sampled research centroids, recalculated the mean within-SDG semantic gap, and re-estimated the policy-to-research asymmetry and policy-text calibration-bias summaries. Policy-side quantities were held fixed. The full \SampleStabilityFullCorpusN{}-paper analysis is shown as a deterministic anchor row rather than as another repeated sample.
-
-\begin{table}[ht]
-\centering
-\caption{Sample-stability ladder for the research corpus. Mean SD of SDG coverage shares is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.}
-\label{tab:sample-stability}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/main/tables/tab_sample_stability.tex}
-}
-\end{table}
-
-\noindent\textit{Plain-language guide.\footnote{The four metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy-to-research asymmetry --- whether policy text matches sampled research framing better than the reverse; (4) calibration bias --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$0.413), policy-to-research asymmetry ($\sim$0.152), and calibration bias ($\sim$0.321) already match the full-corpus values at three decimal places. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
+Appendix~\ref{app:sample-stability} reports a sample-stability ladder showing that the headline findings are not artefacts of corpus size: once the research subsamples reach roughly 200{,}000 papers, the mean semantic gap, policy-to-research asymmetry, and calibration bias already match the full-corpus values at three decimal places.
 
 \subsection{Register Sensitivity Check}
 
@@ -816,5 +803,21 @@ In the current run, the cosine between the regression-derived global register ve
 \label{fig:regression-vs-classifier-alignment}
 \end{figure}
 }{}
+
+\section{Sample-Stability Robustness Check}
+\label{app:sample-stability}
+
+To test whether the headline findings depend heavily on research-corpus size, I reran the downstream research-side analysis on repeated random subsamples drawn from the pre-embedded, pre-scored OpenAlex corpus. For each of \SampleStabilitySampledTierCount{} sampled tiers (from 1{,}000 to 2{,}000{,}000 papers), I drew \SampleStabilityDraws{} independent samples without replacement, recomputed the research coverage profile, rebuilt sampled research centroids, recalculated the mean within-SDG semantic gap, and re-estimated the policy-to-research asymmetry and policy-text calibration-bias summaries. Policy-side quantities were held fixed. The full \SampleStabilityFullCorpusN{}-paper analysis is shown as a deterministic anchor row rather than as another repeated sample.
+
+\begin{table}[ht]
+\centering
+\caption{Sample-stability ladder for the research corpus. Mean SD of SDG coverage shares is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.}
+\label{tab:sample-stability}
+\resizebox{\textwidth}{!}{%
+\input{../4_outputs/appendix/d_sample_stability/tables/tab_sample_stability.tex}
+}
+\end{table}
+
+\noindent\textit{Plain-language guide.\footnote{The four metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy-to-research asymmetry --- whether policy text matches sampled research framing better than the reverse; (4) calibration bias --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$0.413), policy-to-research asymmetry ($\sim$0.152), and calibration bias ($\sim$0.321) already match the full-corpus values at three decimal places. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
 
 \end{document}

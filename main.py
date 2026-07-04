@@ -80,7 +80,7 @@ def parse_args() -> argparse.Namespace:
         help="Rebuild canonical analysis outputs from frozen embeddings (main text only, no appendix, no PDF).",
     )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
@@ -89,6 +89,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-b3-interpret", action="store_true", help="Run B.3 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-b4-softmax", action="store_true", help="Run B.4 Softmax Multi-label SDG.")
     p.add_argument("--appendix-c-register", action="store_true", help="Run C Register-Adjustment Robustness.")
+    p.add_argument("--appendix-d-sample-stability", action="store_true", help="Run D Sample-Stability Robustness (appendix).")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
     p.add_argument("--softmax-multilabel-sdg", action="store_true", dest="appendix_b4_softmax", help=argparse.SUPPRESS)
@@ -132,7 +133,6 @@ def parse_args() -> argparse.Namespace:
         dest="appendix_c_register",
         help=argparse.SUPPRESS,
     )
-    p.add_argument("--skip-sample-stability", action="store_true", help="Skip the sample-stability stage during --warm-replay or --full-pipeline.")
     p.add_argument("--skip-register-confidence-checks", action="store_true", help="Skip the additional register-confidence checks inside --register-adjustment.")
     p.add_argument(
         "--sdg-register-method",
@@ -186,6 +186,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_b3_interpret,
             args.appendix_b4_softmax,
             args.appendix_c_register,
+            args.appendix_d_sample_stability,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
             args.refresh_policy_corpus,
@@ -399,7 +400,7 @@ def run_sample_stability(output_dir: Path) -> None:
     )
     run_step(
         "sample stability",
-        [sys.executable, "1_code/3_main_analysis/2_robustness/0_sample_stability.py", "--output-dir", str(output_dir)],
+        [sys.executable, "1_code/3_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(output_dir)],
     )
 
 
@@ -474,8 +475,6 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
 def run_main_text(
     output_dir: Path,
     args: argparse.Namespace,
-    *,
-    include_sample_stability: bool,
 ) -> None:
     missing = missing_warm_replay_requirements(include_register_adjustment=False)
     if missing:
@@ -493,17 +492,13 @@ def run_main_text(
         [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
     )
     run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
-    if include_sample_stability:
-        run_sample_stability(output_dir)
 
 
 def run_warm_replay(
     output_dir: Path,
     args: argparse.Namespace,
-    *,
-    include_sample_stability: bool,
 ) -> None:
-    run_main_text(output_dir, args, include_sample_stability=include_sample_stability)
+    run_main_text(output_dir, args)
     build_pdf(output_dir)
 
 
@@ -572,7 +567,7 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
         embed_cmd.append("--local-files-only")
     run_step("embed paper shards", embed_cmd)
 
-    run_main_text(output_dir, args, include_sample_stability=not args.skip_sample_stability)
+    run_main_text(output_dir, args)
     run_pca_semantic_landscape(output_dir)
     run_within_corpus_centroid_structure(output_dir)
     run_softmax_multilabel_sdg(output_dir)
@@ -581,6 +576,7 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
     run_sdg_source_comparison(output_dir)
     run_semantic_gap_interpretability(output_dir)
     run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+    run_sample_stability(output_dir)
     build_pdf(output_dir)
 
 
@@ -670,7 +666,8 @@ def main() -> None:
         or args.appendix_b2_centroid
         or args.appendix_b3_interpret
         or args.appendix_b4_softmax
-        or args.appendix_c_register
+        or         args.appendix_c_register
+        or args.appendix_d_sample_stability
         or args.sample_stability
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
@@ -732,22 +729,18 @@ def main() -> None:
         run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
+    elif args.appendix_d_sample_stability:
+        run_sample_stability(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
     elif args.main_text:
         ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_main_text(
-            output_dir,
-            args,
-            include_sample_stability=not args.skip_sample_stability,
-        )
+        run_main_text(output_dir, args)
     elif args.warm_replay:
         ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_warm_replay(
-            output_dir,
-            args,
-            include_sample_stability=not args.skip_sample_stability,
-        )
+        run_warm_replay(output_dir, args)
     elif args.sample_stability:
         run_sample_stability(output_dir)
         if args.appendix_c_register:
