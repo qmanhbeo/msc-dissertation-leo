@@ -11,6 +11,9 @@ git clone https://github.com/qmanhbeo/dissertation-bham.git
 cd dissertation-bham
 conda env create -f environment.yml
 conda activate dissertation
+# optional: if you have an NVIDIA GPU with CUDA 12.1:
+# pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
+
 python main.py --warm-replay --overwrite
 ```
 
