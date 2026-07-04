@@ -50,14 +50,15 @@ Not tracked in Git:
 ```bash
 conda env create -f environment.yml
 conda activate dissertation
+# optional: if you have an NVIDIA GPU with CUDA 12.1:
+# pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 ```
 
-- `environment.yml` is the canonical rebuild path. Pins all conda and pip versions
-  for functional reproducibility (identical versions, standard practice).
-- `requirements.txt` is a human-edited core reference (~20 packages). Not needed
+- `environment.yml` is the canonical rebuild path. Pins 13 core Python packages;
+  platform-specific libraries (CUDA, Linux libs) are handled by conda/pip per-OS.
+- `requirements.txt` is a human-edited core reference (13 packages). Not needed
   for rebuild — `environment.yml` already covers the pip layer.
-- Python version: `3.11.15`. Tested on Linux/WSL; native Windows is not the target.
-- GPU acceleration: not required, but supported via `torch==2.5.1+cu121` (CUDA 12.1). Falls back to CPU automatically.
+- Python version: `3.11`. Tested on Linux/WSL and Windows.
 - PDF build requires LaTeX tools including `latexmk`, `pdflatex`, and `biber`
 - CPU is sufficient for `--warm-replay`
 - Network access is needed for initial environment setup and data snapshot download; once `2_data/` is hydrated, warm replay does not need network access

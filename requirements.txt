@@ -1,34 +1,19 @@
-# Minimal dependency set for active dissertation core pipeline
-# (fetch -> embed/score -> analyze/visualize)
-# CUDA PyTorch wheels:
---extra-index-url https://download.pytorch.org/whl/cu121
+# Core pipeline dependencies for dissertation reproducibility.
+# environment.yml is the canonical build path; this file is a
+# lightweight reference for manual pip installs on any platform.
+# GPU acceleration (optional): after pip install -r requirements.txt
+# run: pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 
-# Fetch / preprocessing
+numpy==2.4.4
+scipy==1.17.1
+pandas==3.0.3
+scikit-learn==1.8.0
+sentence-transformers==5.5.1
+torch==2.5.1
+matplotlib==3.10.7
 requests==2.31.0
 tqdm==4.66.1
 pdfplumber==0.10.4
-beautifulsoup4==4.14.3
-python-dotenv==1.0.1
-
-# Data / corpus loaders
-pandas==3.0.3
-datasets==2.19.1
-
-# Embedding / ML
-sentence-transformers==5.5.1
-transformers==4.57.6
-tokenizers==0.22.2
-scikit-learn==1.8.0
-scipy==1.17.1
-numpy==2.4.4
-
-# Plotting
-matplotlib==3.10.7
-
-# GPU runtime stack
-torch==2.5.1+cu121
-torchvision==0.20.1+cu121
-torchaudio==2.5.1+cu121
-
-# Backup utility support
+python-dotenv==1.2.2
 zstandard==0.25.0
+datasets==2.19.1
