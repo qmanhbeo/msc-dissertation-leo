@@ -10,6 +10,7 @@ Sources (all single-label, all 17 SDGs):
   OSDG Community Dataset  — 30,534 texts (SDGs 1–16)
   SDG Knowledge Hub      —  2,221 texts (SDGs 1–17, journalism)
   SDGi Corpus            —  5,233 texts (SDGs 1–17, policy VNR/VLR)
+  Aurora Survey Dataset  —  5,619 texts (SDGs 1–17, expert-validated research)
 
 Each SDG centroid concatenates embeddings from all available sources.
 The SDG Classification Benchmark (616 texts, all 17 SDGs) is held out for
@@ -27,8 +28,8 @@ Assumption flags (see 5_notes/ASSUMPTIONS.md for full details):
          risk indicator. Use per-SDG F1 from validate_centroids.py instead (see A6 revision).
   A-NORM — Centroid normalisation: raw centroid norm is recorded, unit centroid is saved.
   A-SDG17 — Combined-source centroids: every SDG centroid draws from all available single-label
-             texts across OSDG, Knowledge Hub, and SDGi. The benchmark is held out for
-             validation only, eliminating the contamination issue present in earlier versions.
+              texts across OSDG, Knowledge Hub, SDGi, and Aurora. The benchmark is held out for
+              validation only, eliminating the contamination issue present in earlier versions.
   A15 — OSDG circularity: not diagnosed here. Deferred to downstream alignment scoring steps.
 
 Row ordering convention (critical for ALL downstream scripts):
@@ -72,6 +73,8 @@ KH_EMB     = EMBEDDINGS_DIR / "sdg_knowledge_hub.npy"
 KH_IDS     = EMBED_METADATA_DIR / "sdg_knowledge_hub_ids.json"
 SDGI_EMB   = EMBEDDINGS_DIR / "sdgi.npy"
 SDGI_IDS   = EMBED_METADATA_DIR / "sdgi_ids.json"
+AURORA_EMB = EMBEDDINGS_DIR / "aurora.npy"
+AURORA_IDS = EMBED_METADATA_DIR / "aurora_ids.json"
 BENCH_EMB  = EMBEDDINGS_DIR / "benchmark.npy"      # validation only
 BENCH_IDS  = EMBED_METADATA_DIR / "benchmark_ids.json"
 
@@ -201,6 +204,11 @@ def main() -> None:
     sdgi_ids = load_json(SDGI_IDS)
     log.info("  shape=%s  dtype=%s", sdgi_emb.shape, sdgi_emb.dtype)
 
+    log.info("Loading Aurora embeddings: %s", AURORA_EMB)
+    aurora_emb = np.load(AURORA_EMB)   # (5619, 384)
+    aurora_ids = load_json(AURORA_IDS)
+    log.info("  shape=%s  dtype=%s", aurora_emb.shape, aurora_emb.dtype)
+
     log.info("Loading benchmark embeddings (validation only): %s", BENCH_EMB)
     bench_emb = np.load(BENCH_EMB)   # (616, 384)
     bench_ids = load_json(BENCH_IDS)
@@ -234,6 +242,11 @@ def main() -> None:
         sdg = r["sdg"]
         sdgi_by_sdg.setdefault(sdg, []).append(i)
 
+    aurora_by_sdg: dict[int, list[int]] = {}
+    for i, r in enumerate(aurora_ids):
+        sdg = r["sdg"]
+        aurora_by_sdg.setdefault(sdg, []).append(i)
+
     bench_by_sdg: dict[int, list[int]] = {}
     for i, r in enumerate(bench_ids):
         sdg = r["sdg"]
@@ -253,6 +266,10 @@ def main() -> None:
     sdgi_sdgs = sorted(sdgi_by_sdg.keys())
     log.info("SDGi SDG coverage: %s (per-SDG: %s)",
              sdgi_sdgs, {s: len(sdgi_by_sdg[s]) for s in sdgi_sdgs})
+
+    aurora_sdgs = sorted(aurora_by_sdg.keys())
+    log.info("Aurora SDG coverage: %s (per-SDG: %s)",
+             aurora_sdgs, {s: len(aurora_by_sdg[s]) for s in aurora_sdgs})
 
     # ASSUMPTION (A-SDG17 — combined-source centroids): every SDG centroid draws from all
     # available single-label texts. The benchmark is held out for validation only.
@@ -283,6 +300,9 @@ def main() -> None:
         if sdg in sdgi_by_sdg:
             parts.append(sdgi_emb[sdgi_by_sdg[sdg]])
             tags.append(f"sdgi({len(sdgi_by_sdg[sdg])})")
+        if sdg in aurora_by_sdg:
+            parts.append(aurora_emb[aurora_by_sdg[sdg]])
+            tags.append(f"aurora({len(aurora_by_sdg[sdg])})")
 
         if not parts:
             raise RuntimeError(f"No reference texts for SDG {sdg}")

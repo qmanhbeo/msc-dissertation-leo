@@ -32,8 +32,8 @@
     "correlations_primary_observed": {
       "a_res_prop_vs_sem_gap": {
         "n": 17,
-        "pearson_r": -0.151186,
-        "pearson_p": 0.562439,
+        "pearson_r": -0.161354,
+        "pearson_p": 0.536127,
         "spearman_rho": -0.093137,
         "spearman_p": 0.722186,
         "sdgs": [
@@ -59,10 +59,10 @@
       },
       "b_cov_gap_abs_vs_sem_gap": {
         "n": 17,
-        "pearson_r": 0.537387,
-        "pearson_p": 0.026105,
-        "spearman_rho": 0.333333,
-        "spearman_p": 0.191058,
+        "pearson_r": 0.537491,
+        "pearson_p": 0.02607,
+        "spearman_rho": 0.343137,
+        "spearman_p": 0.177531,
         "sdgs": [
           1,
           2,
@@ -86,8 +86,8 @@
       },
       "c_res_dominance_vs_sem_gap": {
         "n": 17,
-        "pearson_r": -0.524061,
-        "pearson_p": 0.030823,
+        "pearson_r": -0.531714,
+        "pearson_p": 0.02804,
         "spearman_rho": -0.230392,
         "spearman_p": 0.373665,
         "sdgs": [
@@ -116,8 +116,8 @@
     "correlations_excl_sdg4": {
       "a_res_prop_vs_sem_gap": {
         "n": 16,
-        "pearson_r": -0.031854,
-        "pearson_p": 0.906774,
+        "pearson_r": -0.043622,
+        "pearson_p": 0.872559,
         "spearman_rho": 0.026471,
         "spearman_p": 0.922481,
         "sdgs": [
@@ -142,10 +142,10 @@
       },
       "b_cov_gap_abs_vs_sem_gap": {
         "n": 16,
-        "pearson_r": 0.604233,
-        "pearson_p": 0.013174,
-        "spearman_rho": 0.45,
-        "spearman_p": 0.080296,
+        "pearson_r": 0.600071,
+        "pearson_p": 0.013993,
+        "spearman_rho": 0.461765,
+        "spearman_p": 0.071768,
         "sdgs": [
           1,
           2,
@@ -175,7 +175,7 @@
     "asymmetry_gap": 0.152361,
     "supported": true,
     "caveats": [
-      "A15 FLAG: policy scores against OSDG centroids are inflated by 0.340 relative to paper scores. The H26 diagnostic may partly reflect this calibration bias, not genuine directional asymmetry.",
+      "A15 FLAG: policy scores against OSDG centroids are inflated by 0.342 relative to paper scores. The H26 diagnostic may partly reflect this calibration bias, not genuine directional asymmetry.",
       "Research centroids are built via hard assignment from OSDG centroids \u2014 a circularity that may reduce apparent research-centroid distance."
     ]
   },
@@ -183,31 +183,31 @@
     {
       "sdg": 1,
       "research_proportion": 0.006905,
-      "policy_proportion_docweighted": 0.017508,
-      "coverage_gap_abs": 0.010604,
-      "research_dominance": -0.010603,
-      "semantic_gap": 0.324877,
-      "semantic_similarity": 0.675123,
+      "policy_proportion_docweighted": 0.017915,
+      "coverage_gap_abs": 0.011011,
+      "research_dominance": -0.01101,
+      "semantic_gap": 0.32716,
+      "semantic_similarity": 0.67284,
       "reliable": true
     },
     {
       "sdg": 2,
       "research_proportion": 0.034102,
-      "policy_proportion_docweighted": 0.00855,
-      "coverage_gap_abs": 0.025551,
-      "research_dominance": 0.025552,
-      "semantic_gap": 0.332647,
-      "semantic_similarity": 0.667353,
+      "policy_proportion_docweighted": 0.008143,
+      "coverage_gap_abs": 0.025959,
+      "research_dominance": 0.025959,
+      "semantic_gap": 0.334189,
+      "semantic_similarity": 0.665811,
       "reliable": true
     },
     {
       "sdg": 3,
       "research_proportion": 0.178626,
-      "policy_proportion_docweighted": 0.004479,
-      "coverage_gap_abs": 0.174147,
-      "research_dominance": 0.174147,
-      "semantic_gap": 0.438868,
-      "semantic_similarity": 0.561132,
+      "policy_proportion_docweighted": 0.004072,
+      "coverage_gap_abs": 0.174554,
+      "research_dominance": 0.174554,
+      "semantic_gap": 0.441318,
+      "semantic_similarity": 0.558682,
       "reliable": true
     },
     {
@@ -216,28 +216,28 @@
       "policy_proportion_docweighted": 0.001629,
       "coverage_gap_abs": 0.136755,
       "research_dominance": 0.136754,
-      "semantic_gap": 0.286374,
-      "semantic_similarity": 0.713626,
+      "semantic_gap": 0.285961,
+      "semantic_similarity": 0.714039,
       "reliable": true
     },
     {
       "sdg": 5,
       "research_proportion": 0.022897,
-      "policy_proportion_docweighted": 0.00855,
-      "coverage_gap_abs": 0.014346,
-      "research_dominance": 0.014347,
-      "semantic_gap": 0.249662,
-      "semantic_similarity": 0.750338,
+      "policy_proportion_docweighted": 0.007736,
+      "coverage_gap_abs": 0.01516,
+      "research_dominance": 0.015161,
+      "semantic_gap": 0.249579,
+      "semantic_similarity": 0.750421,
       "reliable": true
     },
     {
       "sdg": 6,
       "research_proportion": 0.040331,
-      "policy_proportion_docweighted": 0.004886,
-      "coverage_gap_abs": 0.035445,
-      "research_dominance": 0.035445,
-      "semantic_gap": 0.512054,
-      "semantic_similarity": 0.487946,
+      "policy_proportion_docweighted": 0.004072,
+      "coverage_gap_abs": 0.036259,
+      "research_dominance": 0.036259,
+      "semantic_gap": 0.511792,
+      "semantic_similarity": 0.488208,
       "reliable": true
     },
     {
@@ -246,28 +246,28 @@
       "policy_proportion_docweighted": 0.004072,
       "coverage_gap_abs": 0.079618,
       "research_dominance": 0.079618,
-      "semantic_gap": 0.495869,
-      "semantic_similarity": 0.504131,
+      "semantic_gap": 0.495355,
+      "semantic_similarity": 0.504645,
       "reliable": true
     },
     {
       "sdg": 8,
       "research_proportion": 0.014762,
-      "policy_proportion_docweighted": 0.009365,
-      "coverage_gap_abs": 0.005397,
-      "research_dominance": 0.005397,
-      "semantic_gap": 0.293761,
-      "semantic_similarity": 0.706239,
+      "policy_proportion_docweighted": 0.009772,
+      "coverage_gap_abs": 0.00499,
+      "research_dominance": 0.00499,
+      "semantic_gap": 0.295821,
+      "semantic_similarity": 0.704179,
       "reliable": true
     },
     {
       "sdg": 9,
       "research_proportion": 0.102461,
-      "policy_proportion_docweighted": 0.024023,
-      "coverage_gap_abs": 0.078439,
-      "research_dominance": 0.078438,
-      "semantic_gap": 0.235833,
-      "semantic_similarity": 0.764167,
+      "policy_proportion_docweighted": 0.02443,
+      "coverage_gap_abs": 0.078031,
+      "research_dominance": 0.078031,
+      "semantic_gap": 0.233338,
+      "semantic_similarity": 0.766662,
       "reliable": true
     },
     {
@@ -276,18 +276,18 @@
       "policy_proportion_docweighted": 0.000407,
       "coverage_gap_abs": 0.008978,
       "research_dominance": 0.008978,
-      "semantic_gap": 0.512733,
-      "semantic_similarity": 0.487267,
+      "semantic_gap": 0.530335,
+      "semantic_similarity": 0.469665,
       "reliable": true
     },
     {
       "sdg": 11,
       "research_proportion": 0.054506,
-      "policy_proportion_docweighted": 0.028909,
-      "coverage_gap_abs": 0.025597,
-      "research_dominance": 0.025597,
-      "semantic_gap": 0.457773,
-      "semantic_similarity": 0.542227,
+      "policy_proportion_docweighted": 0.02728,
+      "coverage_gap_abs": 0.027226,
+      "research_dominance": 0.027226,
+      "semantic_gap": 0.453787,
+      "semantic_similarity": 0.546213,
       "reliable": true
     },
     {
@@ -296,58 +296,58 @@
       "policy_proportion_docweighted": 0.004479,
       "coverage_gap_abs": 0.032785,
       "research_dominance": 0.032784,
-      "semantic_gap": 0.431931,
-      "semantic_similarity": 0.568069,
+      "semantic_gap": 0.429385,
+      "semantic_similarity": 0.570615,
       "reliable": true
     },
     {
       "sdg": 13,
       "research_proportion": 0.052316,
-      "policy_proportion_docweighted": 0.30741,
-      "coverage_gap_abs": 0.255094,
-      "research_dominance": -0.255094,
-      "semantic_gap": 0.536984,
-      "semantic_similarity": 0.463016,
+      "policy_proportion_docweighted": 0.250407,
+      "coverage_gap_abs": 0.198091,
+      "research_dominance": -0.198091,
+      "semantic_gap": 0.534508,
+      "semantic_similarity": 0.465492,
       "reliable": true
     },
     {
       "sdg": 14,
       "research_proportion": 0.03884,
-      "policy_proportion_docweighted": 0.002036,
-      "coverage_gap_abs": 0.036804,
-      "research_dominance": 0.036804,
-      "semantic_gap": 0.489305,
-      "semantic_similarity": 0.510695,
+      "policy_proportion_docweighted": 0.001629,
+      "coverage_gap_abs": 0.037211,
+      "research_dominance": 0.037211,
+      "semantic_gap": 0.48908,
+      "semantic_similarity": 0.51092,
       "reliable": true
     },
     {
       "sdg": 15,
       "research_proportion": 0.074239,
-      "policy_proportion_docweighted": 0.008958,
-      "coverage_gap_abs": 0.065282,
-      "research_dominance": 0.065281,
-      "semantic_gap": 0.463327,
-      "semantic_similarity": 0.536673,
+      "policy_proportion_docweighted": 0.006922,
+      "coverage_gap_abs": 0.067317,
+      "research_dominance": 0.067317,
+      "semantic_gap": 0.461776,
+      "semantic_similarity": 0.538224,
       "reliable": true
     },
     {
       "sdg": 16,
       "research_proportion": 0.084023,
-      "policy_proportion_docweighted": 0.150244,
-      "coverage_gap_abs": 0.066221,
-      "research_dominance": -0.066221,
-      "semantic_gap": 0.341255,
-      "semantic_similarity": 0.658745,
+      "policy_proportion_docweighted": 0.145358,
+      "coverage_gap_abs": 0.061335,
+      "research_dominance": -0.061335,
+      "semantic_gap": 0.340377,
+      "semantic_similarity": 0.659623,
       "reliable": true
     },
     {
       "sdg": 17,
       "research_proportion": 0.027271,
-      "policy_proportion_docweighted": 0.414495,
-      "coverage_gap_abs": 0.387224,
-      "research_dominance": -0.387224,
-      "semantic_gap": 0.654344,
-      "semantic_similarity": 0.345656,
+      "policy_proportion_docweighted": 0.481678,
+      "coverage_gap_abs": 0.454406,
+      "research_dominance": -0.454407,
+      "semantic_gap": 0.657645,
+      "semantic_similarity": 0.342355,
       "reliable": true
     }
   ]
