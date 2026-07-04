@@ -18,20 +18,10 @@ CURATED_EXCLUDED_PATHS = (
 )
 
 BASE_WARM_REPLAY_PATHS = (
-    Path("2_data/2_embedded/policy.npy"),
-    Path("2_data/2_embedded/metadata/policy_ids.json"),
-    Path("2_data/2_embedded/osdg.npy"),
-    Path("2_data/2_embedded/benchmark.npy"),
-    Path("2_data/2_embedded/research_shards/metadata/manifest.json"),
-    Path("2_data/3_scored/sdg_centroids.npy"),
-    Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json"),
-    Path("2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"),
-    Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
-)
-
-REGISTER_REPLAY_EXTRA_PATHS = (
-    Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json"),
-    Path("2_data/1_preprocessed/research_corpus/part-00001.jsonl"),
+    Path("2_data/0_raw"),
+    Path("2_data/1_preprocessed"),
+    Path("2_data/2_embedded"),
+    Path("2_data/3_scored"),
 )
 
 FULL_PIPELINE_WARNING_LINES = (
@@ -61,13 +51,13 @@ SNAPSHOT_PROFILES: dict[str, SnapshotProfile] = {
         name="full",
         description="Literal data/ snapshot, including rebuildable caches and raw OpenAlex fetch artifacts.",
         excluded_data_paths=(),
-        expected_repo_paths=BASE_WARM_REPLAY_PATHS + REGISTER_REPLAY_EXTRA_PATHS,
+        expected_repo_paths=BASE_WARM_REPLAY_PATHS,
     ),
     "curated": SnapshotProfile(
         name="curated",
         description="Marker-facing replay snapshot with warm-replay inputs preserved and large rebuildable caches removed.",
         excluded_data_paths=CURATED_EXCLUDED_PATHS,
-        expected_repo_paths=BASE_WARM_REPLAY_PATHS + REGISTER_REPLAY_EXTRA_PATHS,
+        expected_repo_paths=BASE_WARM_REPLAY_PATHS,
     ),
 }
 

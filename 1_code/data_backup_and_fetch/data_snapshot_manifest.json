@@ -6,17 +6,10 @@
       "url": "https://drive.usercontent.google.com/download?id=19l49swobHEhWQQVyhBfolwjJX85WXny1&export=download",
       "sha256": "f11de67fd63776f59663d19539e2be12816fefee982e122fb192f999cacaa45d",
       "expected_repo_paths": [
-        "data/2_embedded/policy.npy",
-        "data/2_embedded/metadata/policy_ids.json",
-        "data/2_embedded/osdg.npy",
-        "data/2_embedded/benchmark.npy",
-        "data/2_embedded/research_shards/metadata/manifest.json",
-        "data/3_scored/sdg_centroids.npy",
-        "data/3_scored/paper_scores_shards/metadata/manifest.json",
-        "data/1_preprocessed/policy_all/policy_segments_all.jsonl",
-        "data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json",
-        "data/1_preprocessed/research_corpus/metadata/manifest.json",
-        "data/1_preprocessed/research_corpus/part-00001.jsonl"
+        "2_data/0_raw",
+        "2_data/1_preprocessed",
+        "2_data/2_embedded",
+        "2_data/3_scored"
       ],
       "notes": [
         "Default marker-facing replay snapshot.",
@@ -28,18 +21,10 @@
       "url": "https://drive.usercontent.google.com/download?id=15gsY8hcaU9MmSIn0qSnMZ0a1ILD-gTcT&export=download",
       "sha256": "fcba8bb3eaff5298a304933afe50cb7c6f51f1c8f899494dd2d19133a67647b6",
       "expected_repo_paths": [
-        "data/2_embedded/policy.npy",
-        "data/2_embedded/metadata/policy_ids.json",
-        "data/2_embedded/osdg.npy",
-        "data/2_embedded/benchmark.npy",
-        "data/2_embedded/research_shards/metadata/manifest.json",
-        "data/3_scored/sdg_centroids.npy",
-        "data/3_scored/paper_scores_shards/metadata/manifest.json",
-        "data/1_preprocessed/policy_all/policy_segments_all.jsonl",
-        "data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json",
-        "data/1_preprocessed/research_corpus/metadata/manifest.json",
-        "data/1_preprocessed/research_corpus/part-00001.jsonl",
-        "data/0_raw/openalex/artifact/metadata.json"
+        "2_data/0_raw",
+        "2_data/1_preprocessed",
+        "2_data/2_embedded",
+        "2_data/3_scored"
       ],
       "notes": [
         "Literal data/ snapshot including raw OpenAlex and rebuildable caches."
