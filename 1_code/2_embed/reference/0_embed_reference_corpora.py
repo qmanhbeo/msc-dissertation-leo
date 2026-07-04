@@ -75,6 +75,13 @@ CORPORA = [
         "id_field": "id",
         "sdg_field": "sdg",
     },
+    {
+        "name": "aurora",
+        "input": Path("2_data/1_preprocessed/aurora/aurora_texts.jsonl"),
+        "text_field": "text",
+        "id_field": "doi",
+        "sdg_field": "sdg",
+    },
 ]
 
 # ---------------------------------------------------------------------------

@@ -11,9 +11,9 @@ in aurora_fetched.log for crash recovery.
 Uses the same credential rotation as fetch_openalex.py.
 
 Output:
-  2_data/1_raw/aurora/aurora_texts.jsonl   — {text, sdg, doi, title, has_abstract}
-  2_data/1_raw/aurora/aurora_fetched.log   — one DOI per line (already fetched)
-  2_data/1_raw/aurora/aurora_manifest.json — {n_total, n_with_abstract, per_sdg_counts}
+  2_data/1_preprocessed/aurora/aurora_texts.jsonl   — {text, sdg, doi, title, has_abstract}
+  2_data/1_preprocessed/aurora/aurora_fetched.log   — one DOI per line (already fetched)
+  2_data/1_preprocessed/aurora/aurora_manifest.json — {n_total, n_with_abstract, per_sdg_counts}
 """
 
 import csv
@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 load_dotenv()
 
 AURORA_ZIP = Path("2_data/0_raw/aurora/aurora.zip")
-OUTPUT_DIR = Path("2_data/1_raw/aurora")
+OUTPUT_DIR = Path("2_data/1_preprocessed/aurora")
 OUTPUT_JSONL = OUTPUT_DIR / "aurora_texts.jsonl"
 FETCHED_LOG = OUTPUT_DIR / "aurora_fetched.log"
 

@@ -540,7 +540,7 @@ The overall conclusion is that for SDGs 1--16, the combined centroid is a balanc
 \subsection{Policy Source-Family Sensitivity}
 \label{app:policy-source-family-sensitivity}
 
-The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Table~\ref{tab:policy-source-family-sensitivity} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
+The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Tables~\ref{tab:policy-source-family-covshare} and~\ref{tab:policy-source-family-gap} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
 
 The answer is mixed. The broad international-institutional profile is clearly source-family sensitive. The curated AI/SDG family is much more innovation-oriented, with SDG 9 leading its document-weighted profile, while the SDGi and UNGDC families are more strongly concentrated on climate, partnerships, governance, and, in the SDGi case, SDG 11-style institutional review language. At the same time, the broader full-corpus pattern is not driven by one family alone: both the UNGDC speeches and the full corpus are dominated by the climate--partnerships--governance block, and SDG 17 remains the largest semantic-gap case across all three families.
 
@@ -549,11 +549,17 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \begin{table}[ht]
 \centering
 \small
-\caption{Policy source-family sensitivity diagnostic. Coverage rankings are document-weighted within each source family. Mean semantic gap is the mean valid within-SDG research--policy gap for that family using the canonical segment cap.}
-\label{tab:policy-source-family-sensitivity}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family.tex}
-}
+\caption{Per-SDG policy source-family sensitivity: coverage share. For each policy source family, the table reports the number of policy segments assigned to each SDG and the document-weighted share (\%) of that family's documents assigned to each SDG.}
+\label{tab:policy-source-family-covshare}
+\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Per-SDG policy source-family sensitivity: semantic gap. For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap.}
+\label{tab:policy-source-family-gap}
+\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
 \end{table}
 
 \subsection{SDG 4 Lexical Artefact Audit}

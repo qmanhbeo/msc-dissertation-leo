@@ -564,8 +564,8 @@ def main() -> None:
     aurora_emb = np.load(AURORA_EMB).astype(np.float32)
     aurora_ids = load_json(AURORA_IDS)
     log.info("  shape=%s", aurora_emb.shape)
-    n_with_abstract = sum(1 for r in aurora_ids if r.get("abstract", "").strip())
-    log.info("  texts with abstract: %d / %d", n_with_abstract, len(aurora_ids))
+    n_with_text = sum(1 for r in aurora_ids if len(r.get("text", "").strip()) > 50)
+    log.info("  texts with abstract-like text: %d / %d", n_with_text, len(aurora_ids))
 
     log.info("Loading benchmark: %s", BENCHMARK_EMB)
     bench_emb = np.load(BENCHMARK_EMB).astype(np.float32)
