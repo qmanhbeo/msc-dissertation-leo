@@ -69,8 +69,10 @@ def parse_args() -> argparse.Namespace:
         "--warm-replay",
         action="store_true",
         help=(
-            "Rebuild canonical analysis outputs and PDF. If required replay inputs are missing, "
-            "main.py auto-fetches the curated frozen snapshot into ./2_data/ first."
+            "Rebuild canonical analysis outputs, appendices, and PDF from frozen embeddings. "
+            "Auto-fetches the curated snapshot if 2_data/ is missing. "
+            "Note: --appendix-all is auto-enabled because the LaTeX source unconditionally "
+            "includes appendix tables."
         ),
     )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
@@ -471,6 +473,19 @@ def run_warm_replay(
     include_sample_stability: bool,
     include_register_confidence_checks: bool,
 ) -> None:
+    # Auto-enable --appendix-all if no appendix flag was explicitly set.
+    # The LaTeX source unconditionally includes appendix tables, so the PDF
+    # build will fail without them.
+    has_appendix_flag = any([
+        args.appendix_all,
+        args.appendix_a1_source, args.appendix_a2_family, args.appendix_a3_sdg4,
+        args.appendix_b1_pca, args.appendix_b2_centroid, args.appendix_b3_interpret,
+        args.appendix_b4_softmax, args.appendix_c_register,
+    ])
+    if not has_appendix_flag:
+        print("[info] --appendix-all auto-enabled (required by LaTeX for PDF build)")
+        args.appendix_all = True
+
     include_register = args.appendix_all or args.appendix_c_register
     missing = missing_warm_replay_requirements(include_register_adjustment=include_register)
     if missing:
