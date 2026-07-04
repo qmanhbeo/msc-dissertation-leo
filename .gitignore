@@ -43,6 +43,7 @@ credentials.json
 .temp/
 
 # === Snapshot archives ===
+data_archive_fetch/
 *.tar.zst
 *.tar.zst.sha256
 

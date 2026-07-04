@@ -38,7 +38,6 @@ import re
 import shutil
 import sys
 import tarfile
-import tempfile
 import urllib.request
 from pathlib import Path
 from urllib.parse import urlencode, urljoin
@@ -234,6 +233,30 @@ def main() -> None:
 
     ensure_snapshot_available(url, sha256_hex, profile.name)
 
+    archive_dir = ROOT / "data_archive_fetch"
+    archive_path = archive_dir / f"{profile.name}.tar.zst"
+
+    # Cache hit: skip download if archive exists and SHA matches
+    if archive_path.exists():
+        cached_sha = compute_sha256(archive_path)
+        if cached_sha.lower() == sha256_hex.lower():
+            log(f"cached archive {archive_path.name} matches sha256 — skipping download")
+        else:
+            log(f"cached archive {archive_path.name} has wrong sha256 ({cached_sha[:16]}...) — re-downloading")
+            archive_path.unlink()
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            download_snapshot(url, archive_path)
+    else:
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        download_snapshot(url, archive_path)
+
+    observed_sha = compute_sha256(archive_path)
+    if observed_sha.lower() != sha256_hex.lower():
+        raise RuntimeError(
+            f"SHA256 mismatch for {archive_path.name}: expected {sha256_hex}, observed {observed_sha}"
+        )
+    log(f"verified sha256 {observed_sha}")
+
     data_root = ROOT / "2_data"
     if data_root.exists():
         if not args.overwrite:
@@ -241,17 +264,7 @@ def main() -> None:
         log(f"removing existing {data_root}")
         shutil.rmtree(data_root)
 
-    with tempfile.TemporaryDirectory(prefix=f"snapshot-{profile.name}-", dir="/tmp") as tmpdir:
-        archive_path = Path(tmpdir) / Path(url).name
-        download_snapshot(url, archive_path)
-        observed_sha = compute_sha256(archive_path)
-        if observed_sha.lower() != sha256_hex.lower():
-            raise RuntimeError(
-                f"SHA256 mismatch for {archive_path.name}: expected {sha256_hex}, observed {observed_sha}"
-            )
-        log(f"verified sha256 {observed_sha}")
-        safe_extract_tar_zst(archive_path, ROOT)
-
+    safe_extract_tar_zst(archive_path, ROOT)
     validate_extraction(profile.name, expected_repo_paths)
     log(f"snapshot ready for profile '{profile.name}'")
 
