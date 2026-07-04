@@ -112,9 +112,9 @@ def stream_to_file(response: urllib.request.addinfourl, out_path: Path, *, total
             if not chunk:
                 break
             f.write(chunk)
-            if pbar:
+            if pbar is not None:
                 pbar.update(len(chunk))
-        if pbar:
+        if pbar is not None:
             pbar.close()
     log(f"downloaded {out_path.stat().st_size / (1024**3):.2f} GB → {out_path.name}")
 
