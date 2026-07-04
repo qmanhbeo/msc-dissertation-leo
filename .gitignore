@@ -24,6 +24,9 @@ venv/
 Thumbs.db
 ._*
 
+# === Windows NTFS alternate data streams (incompatible with colons in paths) ===
+*:Zone.Identifier
+
 # === Secrets ===
 .env.local
 .kaggle/
