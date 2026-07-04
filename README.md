@@ -18,15 +18,15 @@ conda activate dissertation
 # optional: if you have an NVIDIA GPU with CUDA 12.1:
 # pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 
-python main.py --warm-replay --appendix-all --overwrite
+python main.py --warm-replay --overwrite
 ```
 
-This rebuilds all canonical outputs, appendix analyses, and the dissertation PDF
-from the frozen curated data snapshot. `--appendix-all` is required because the
-LaTeX source unconditionally includes appendix tables. `--overwrite` is included
-because canonical outputs already exist in the repo; without it `main.py` fails
-closed to prevent accidental replacement. If the snapshot download fails, run
-`python main.py --fetch-data-snapshot curated` then retry.
+This rebuilds main text outputs and the dissertation PDF from the frozen curated
+data snapshot. Appendix outputs are already committed in the repo and do not need
+regeneration. `--overwrite` is included because canonical outputs already exist
+in the repo; without it `main.py` fails closed to prevent accidental replacement.
+If the snapshot download fails, run `python main.py --fetch-data-snapshot curated`
+then retry.
 
 ## What the replay produces
 
@@ -66,7 +66,8 @@ Not tracked in Git:
 | Command | What it does |
 |---|---|
 | `python main.py` | Read-only status check |
-| `python main.py --warm-replay --appendix-all --overwrite` | Full warm replay from snapshot (includes appendices — required for PDF) |
+| `python main.py --warm-replay --overwrite` | Rebuild main text analysis + PDF from snapshot |
+| `python main.py --main-text --overwrite` | Rebuild main text analysis only (no appendix, no PDF) |
 | `python main.py --full-pipeline --overwrite` | Full live-source pipeline (not snapshot-reproducible) |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C) standalone |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |

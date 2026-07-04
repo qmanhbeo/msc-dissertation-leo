@@ -69,14 +69,18 @@ def parse_args() -> argparse.Namespace:
         "--warm-replay",
         action="store_true",
         help=(
-            "Rebuild canonical analysis outputs, appendices, and PDF from frozen embeddings. "
-            "Auto-fetches the curated snapshot if 2_data/ is missing. "
-            "Note: --appendix-all is auto-enabled because the LaTeX source unconditionally "
-            "includes appendix tables."
+            "Rebuild main text analysis and dissertation PDF from frozen embeddings. "
+            "Appendix outputs remain committed in the repo and are not regenerated. "
+            "Auto-fetches the curated snapshot if 2_data/ is missing."
         ),
     )
+    p.add_argument(
+        "--main-text",
+        action="store_true",
+        help="Rebuild canonical analysis outputs from frozen embeddings (main text only, no appendix, no PDF).",
+    )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C) during --warm-replay or standalone.")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
@@ -171,6 +175,7 @@ def action_requested(args: argparse.Namespace) -> bool:
     return any(
         [
             args.warm_replay,
+            args.main_text,
             args.full_pipeline,
             args.appendix_all,
             args.appendix_a1_source,
@@ -466,52 +471,23 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
     )
 
 
-def run_warm_replay(
+def run_main_text(
     output_dir: Path,
     args: argparse.Namespace,
     *,
     include_sample_stability: bool,
-    include_register_confidence_checks: bool,
 ) -> None:
-    # Auto-enable --appendix-all if no appendix flag was explicitly set.
-    # The LaTeX source unconditionally includes appendix tables, so the PDF
-    # build will fail without them.
-    has_appendix_flag = any([
-        args.appendix_all,
-        args.appendix_a1_source, args.appendix_a2_family, args.appendix_a3_sdg4,
-        args.appendix_b1_pca, args.appendix_b2_centroid, args.appendix_b3_interpret,
-        args.appendix_b4_softmax, args.appendix_c_register,
-    ])
-    if not has_appendix_flag:
-        print("[info] --appendix-all auto-enabled (required by LaTeX for PDF build)")
-        args.appendix_all = True
-
-    include_register = args.appendix_all or args.appendix_c_register
-    missing = missing_warm_replay_requirements(include_register_adjustment=include_register)
+    missing = missing_warm_replay_requirements(include_register_adjustment=False)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
-        raise RuntimeError(f"Warm replay is not ready. Missing required inputs: {missing_str}")
+        raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
 
     run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"])
     run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
     run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"])
     run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
-    if args.appendix_all or args.appendix_b1_pca:
-        run_pca_semantic_landscape(output_dir)
-    if args.appendix_all or args.appendix_b2_centroid:
-        run_within_corpus_centroid_structure(output_dir)
-    if args.appendix_all or args.appendix_b4_softmax:
-        run_softmax_multilabel_sdg(output_dir)
-    if args.appendix_all or args.appendix_a2_family:
-        run_policy_source_family_sensitivity(output_dir)
-    if args.appendix_all or args.appendix_a3_sdg4:
-        run_sdg4_lexical_audit(output_dir)
     run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
     run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
-    if args.appendix_all or args.appendix_a1_source:
-        run_sdg_source_comparison(output_dir)
-    if args.appendix_all or args.appendix_b3_interpret:
-        run_semantic_gap_interpretability(output_dir)
     run_step(
         "coverage semantic interaction",
         [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
@@ -519,8 +495,15 @@ def run_warm_replay(
     run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
     if include_sample_stability:
         run_sample_stability(output_dir)
-    if include_register:
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=include_register_confidence_checks)
+
+
+def run_warm_replay(
+    output_dir: Path,
+    args: argparse.Namespace,
+    *,
+    include_sample_stability: bool,
+) -> None:
+    run_main_text(output_dir, args, include_sample_stability=include_sample_stability)
     build_pdf(output_dir)
 
 
@@ -589,13 +572,16 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
         embed_cmd.append("--local-files-only")
     run_step("embed paper shards", embed_cmd)
 
-    run_warm_replay(
-        output_dir,
-        args,
-        include_sample_stability=not args.skip_sample_stability,
-        include_register_adjustment=args.register_adjustment,
-        include_register_confidence_checks=not args.skip_register_confidence_checks,
-    )
+    run_main_text(output_dir, args, include_sample_stability=not args.skip_sample_stability)
+    run_pca_semantic_landscape(output_dir)
+    run_within_corpus_centroid_structure(output_dir)
+    run_softmax_multilabel_sdg(output_dir)
+    run_policy_source_family_sensitivity(output_dir)
+    run_sdg4_lexical_audit(output_dir)
+    run_sdg_source_comparison(output_dir)
+    run_semantic_gap_interpretability(output_dir)
+    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+    build_pdf(output_dir)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
@@ -674,6 +660,7 @@ def main() -> None:
 
     if (
         args.warm_replay
+        or args.main_text
         or args.full_pipeline
         or args.appendix_all
         or args.appendix_a1_source
@@ -747,13 +734,19 @@ def main() -> None:
             build_pdf(output_dir)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
+    elif args.main_text:
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
+        run_main_text(
+            output_dir,
+            args,
+            include_sample_stability=not args.skip_sample_stability,
+        )
     elif args.warm_replay:
-        ensure_warm_replay_inputs(args, include_register_adjustment=args.appendix_all or args.appendix_c_register)
+        ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_warm_replay(
             output_dir,
             args,
             include_sample_stability=not args.skip_sample_stability,
-            include_register_confidence_checks=not args.skip_register_confidence_checks,
         )
     elif args.sample_stability:
         run_sample_stability(output_dir)
