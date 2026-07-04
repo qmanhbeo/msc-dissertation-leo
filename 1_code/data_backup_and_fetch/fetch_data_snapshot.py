@@ -99,6 +99,27 @@ def compute_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def stream_to_file(response: urllib.request.addinfourl, out_path: Path, *, total: int | None = None) -> None:
+    """Stream an HTTP response to disk with a tqdm progress bar (1 MB chunks)."""
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        tqdm = None
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("wb") as f:
+        pbar = tqdm(total=total, unit="B", unit_scale=True, desc=out_path.name) if tqdm else None
+        while True:
+            chunk = response.read(1024 * 1024)
+            if not chunk:
+                break
+            f.write(chunk)
+            if pbar:
+                pbar.update(len(chunk))
+        if pbar:
+            pbar.close()
+    log(f"downloaded {out_path.stat().st_size / (1024**3):.2f} GB → {out_path.name}")
+
+
 def build_url_opener() -> urllib.request.OpenerDirector:
     cookie_jar = http.cookiejar.CookieJar()
     return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
@@ -137,38 +158,50 @@ def download_snapshot(url: str, out_path: Path) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "dissertation-snapshot-fetch/1.0"})
     with opener.open(request) as response:
         content_type = response.headers.get("Content-Type", "")
-        body = response.read()
+        content_length = response.headers.get("Content-Length")
+        total = int(content_length) if content_length else None
+        if total:
+            log(f"archive size: {total / (1024**3):.2f} GB")
 
-    if is_google_drive_warning_page(content_type, body):
-        warning_html = body.decode("utf-8", errors="replace")
-        confirm_url = extract_google_drive_confirm_url(url, warning_html)
-        log("Google Drive returned a virus-scan warning page; retrying via confirmed download URL")
-        confirm_request = urllib.request.Request(confirm_url, headers={"User-Agent": "dissertation-snapshot-fetch/1.0"})
-        with opener.open(confirm_request) as response, out_path.open("wb") as out:
-            shutil.copyfileobj(response, out)
-        return
+        # Google Drive virus-scan warning — read a small head to extract confirm URL
+        if "text/html" in content_type.lower():
+            head = response.read(8192)
+            body = head + response.read()
+            if is_google_drive_warning_page(content_type, body):
+                warning_html = body.decode("utf-8", errors="replace")
+                confirm_url = extract_google_drive_confirm_url(url, warning_html)
+                log("Google Drive returned a virus-scan warning page; retrying via confirmed download URL")
+                confirm_request = urllib.request.Request(
+                    confirm_url, headers={"User-Agent": "dissertation-snapshot-fetch/1.0"}
+                )
+                with opener.open(confirm_request) as confirm_resp:
+                    stream_to_file(confirm_resp, out_path)
+                return
+            failure = describe_html_download_failure(body)
+            raise RuntimeError(f"snapshot URL returned HTML instead of an archive: {failure}")
 
-    if "text/html" in content_type.lower():
-        failure = describe_html_download_failure(body)
-        raise RuntimeError(f"snapshot URL returned HTML instead of an archive: {failure}")
-
-    with out_path.open("wb") as out:
-        out.write(body)
+        # Actual archive download — stream with progress
+        stream_to_file(response, out_path, total=total)
 
 
 def safe_extract_tar_zst(archive_path: Path, dest_root: Path) -> None:
     log(f"extracting {archive_path.name} into {dest_root}")
+    count = 0
     with archive_path.open("rb") as raw:
         dctx = zstd.ZstdDecompressor()
         with dctx.stream_reader(raw) as reader:
             with tarfile.open(fileobj=reader, mode="r|") as tf:
                 for member in tf:
+                    count += 1
+                    if count == 1 or count % 2000 == 0:
+                        log(f"  extracting entry {count}: {member.name}")
                     if member.name.startswith("/") or ".." in Path(member.name).parts:
                         raise RuntimeError(f"unsafe archive member path: {member.name}")
                     target = (dest_root / member.name).resolve()
                     if ROOT not in target.parents and target != ROOT:
                         raise RuntimeError(f"archive member escapes repo root: {member.name}")
                     tf.extract(member, path=dest_root, set_attrs=True)
+    log(f"extraction complete ({count} entries)")
 
 
 def validate_extraction(profile_name: str, expected_repo_paths: list[str]) -> None:
