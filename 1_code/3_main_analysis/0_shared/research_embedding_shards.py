@@ -32,7 +32,7 @@ def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not str(raw).startswith("2_data/2_embedded/"):
+    if not raw.as_posix().startswith("2_data/2_embedded/"):
         raise RuntimeError(
             f"Hard pivot violation: expected data path under 2_data/2_embedded/, got: {stored_path}"
         )
