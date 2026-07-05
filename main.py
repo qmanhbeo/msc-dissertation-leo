@@ -47,7 +47,7 @@ BASE_WARM_REPLAY_REQUIREMENTS = [
     Path("3_writing/references.bib"),
 ]
 
-WARM_REPLAY_REGISTER_EXTRA_REQUIREMENTS = [
+WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS = [
     Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json"),
     Path("2_data/1_preprocessed/research_corpus/part-00001.jsonl"),
 ]
@@ -198,10 +198,10 @@ def missing_requirements(paths: list[Path]) -> list[Path]:
     return [p for p in paths if not (ROOT / p).exists()]
 
 
-def required_warm_replay_inputs(*, include_register_adjustment: bool) -> list[Path]:
+def required_warm_replay_inputs(*, include_appendix_extra: bool) -> list[Path]:
     required = list(BASE_WARM_REPLAY_REQUIREMENTS)
-    if include_register_adjustment:
-        required.extend(WARM_REPLAY_REGISTER_EXTRA_REQUIREMENTS)
+    if include_appendix_extra:
+        required.extend(WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS)
     return required
 
 
@@ -259,15 +259,15 @@ def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, .
     return missing
 
 
-def missing_warm_replay_requirements(*, include_register_adjustment: bool) -> list[Path]:
-    missing = missing_requirements(required_warm_replay_inputs(include_register_adjustment=include_register_adjustment))
+def missing_warm_replay_requirements(*, include_appendix_extra: bool) -> list[Path]:
+    missing = missing_requirements(required_warm_replay_inputs(include_appendix_extra=include_appendix_extra))
     for path in missing_manifest_shard_paths(
         ROOT / "2_data/2_embedded/research_shards/metadata/manifest.json",
         ("embedding_path", "ids_path"),
     ):
         if path not in missing:
             missing.append(path)
-    if include_register_adjustment:
+    if include_appendix_extra:
         for path in missing_research_text_shards():
             if path not in missing:
                 missing.append(path)
@@ -282,7 +282,7 @@ def print_status(output_dir: Path) -> None:
     print(f"Project root: {ROOT}")
     print(f"Manuscript output dir: {output_dir}")
 
-    warm_missing = missing_warm_replay_requirements(include_register_adjustment=False)
+    warm_missing = missing_warm_replay_requirements(include_appendix_extra=False)
     print("")
     print("Warm replay readiness:")
     if warm_missing:
@@ -292,15 +292,15 @@ def print_status(output_dir: Path) -> None:
     else:
         print("  ready: yes")
 
-    warm_register_missing = missing_warm_replay_requirements(include_register_adjustment=True)
+    warm_appendix_missing = missing_warm_replay_requirements(include_appendix_extra=True)
     print("")
-    print("Warm replay + register-adjustment readiness:")
-    if warm_register_missing:
+    print("Warm replay + appendix readiness:")
+    if warm_appendix_missing:
         print("  ready: no")
-        for path in warm_register_missing[:12]:
+        for path in warm_appendix_missing[:12]:
             print(f"  missing: {rel(ROOT / path)}")
-        if len(warm_register_missing) > 12:
-            print(f"  ... and {len(warm_register_missing) - 12} more")
+        if len(warm_appendix_missing) > 12:
+            print(f"  ... and {len(warm_appendix_missing) - 12} more")
     else:
         print("  ready: yes")
 
@@ -309,51 +309,6 @@ def print_status(output_dir: Path) -> None:
     print("Manuscript output status:")
     print(f"  present: {len(status['present'])}")
     print(f"  missing: {len(status['missing'])}")
-    if status["present"]:
-        print("  sample present:")
-        for item in status["present"][:6]:
-            print(f"    - {item}")
-    if status["missing"]:
-        print("  sample missing:")
-        for item in status["missing"][:6]:
-            print(f"    - {item}")
-
-    sample_stability_missing = [
-        name
-        for name in [
-            "sample_stability_summary.json",
-            "sample_stability_draws.jsonl",
-            "sample_stability_per_sdg.json",
-            "sample_stability_table.csv",
-            "tables/num_sample_stability.tex",
-            "tables/tab_sample_stability.tex",
-        ]
-        if name in status["missing"]
-    ]
-    print("")
-    print("Sample stability status:")
-    print(f"  present: {'yes' if not sample_stability_missing else 'no'}")
-    if sample_stability_missing:
-        for item in sample_stability_missing:
-            print(f"  missing: {item}")
-
-    tex = (ROOT / "3_writing" / "dissertation.tex").read_text(encoding="utf-8")
-    legacy_markers = [
-        "../data/generated/",
-        "_legacy/",
-        "num_context.tex",
-        "num_sdg4.tex",
-        "tab_sdgindex.tex",
-        "AnalysisSnapshotDate",
-    ]
-    active_only = not any(marker in tex for marker in legacy_markers)
-    print("")
-    print("Manuscript active-only contract:")
-    print(f"  clean: {'yes' if active_only else 'no'}")
-    if not active_only:
-        for marker in legacy_markers:
-            if marker in tex:
-                print(f"  found legacy marker: {marker}")
 
 
 def build_pdf(output_dir: Path) -> None:
@@ -451,7 +406,7 @@ def run_main_text(
     output_dir: Path,
     args: argparse.Namespace,
 ) -> None:
-    missing = missing_warm_replay_requirements(include_register_adjustment=False)
+    missing = missing_warm_replay_requirements(include_appendix_extra=False)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
@@ -604,8 +559,8 @@ def selected_backup_profiles(profile_name: str) -> list[str]:
     return [profile_name]
 
 
-def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_register_adjustment: bool) -> None:
-    missing = missing_warm_replay_requirements(include_register_adjustment=include_register_adjustment)
+def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_appendix_extra: bool) -> None:
+    missing = missing_warm_replay_requirements(include_appendix_extra=include_appendix_extra)
     if not missing:
         return
 
@@ -709,7 +664,7 @@ def main() -> None:
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
     elif args.warm_replay:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
+        ensure_warm_replay_inputs(args, include_appendix_extra=False)
         run_warm_replay(output_dir, args)
     elif args.sample_stability:
         run_sample_stability(output_dir)
