@@ -68,7 +68,7 @@ Not tracked in Git:
 |---|---|
 | `python main.py` | Read-only status check |
 | `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
-| `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; OpenAlex live changes may break reproducibility). |
+| `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
