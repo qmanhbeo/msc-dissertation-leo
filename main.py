@@ -610,10 +610,8 @@ def main() -> None:
         or args.sample_stability
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
-        raise RuntimeError(
-            "Outputs already exist in 4_outputs/ (the directory is version-controlled). "
-            "Rerun with --overwrite to replace them."
-        )
+        print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
+        sys.exit(1)
 
     if fetch_profile is not None:
         run_fetch_data_snapshot(args, profile_name=fetch_profile, overwrite_data=args.overwrite)
