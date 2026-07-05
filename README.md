@@ -82,9 +82,7 @@ Not tracked in Git:
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
-| `python main.py --backup-data-snapshot curated` | Create and upload a curated snapshot archive |
-| `python main.py --backup-data-snapshot full` | Create and upload a full snapshot archive |
-| `python main.py --backup-data-snapshot both` | Create and upload both snapshot archives |
+| `python main.py --backup-data-snapshot {curated\|full\|both}` | Create and upload a snapshot archive (maintainer-only — requires rclone on WSL) |
 
 ## Reproducibility boundaries
 
