@@ -41,6 +41,7 @@ credentials.json
 !1_code/data_backup_and_fetch/
 !1_code/data_backup_and_fetch/**
 .temp/
+__test-scopus
 
 # === Snapshot archives ===
 data_archive_fetch/
@@ -82,6 +83,7 @@ checkpoints/
 .claude/
 .agents/
 .codex
+.opencode/plans/
 
 # === Private notes ===
 5_notes/private/
