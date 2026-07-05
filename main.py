@@ -52,10 +52,6 @@ WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS = [
     Path("2_data/1_preprocessed/research_corpus/part-00001.jsonl"),
 ]
 
-POLICY_REFRESH_REQUIREMENTS = [
-    Path("2_data/3_scored/sdg_centroids.npy"),
-    Path("2_data/3_scored/research_centroids.npy"),
-]
 
 
 def parse_args() -> argparse.Namespace:
@@ -111,14 +107,6 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Create a dissertation data snapshot archive via the backup utility. "
             "Defaults to curated; 'both' runs curated then full."
-        ),
-    )
-    p.add_argument(
-        "--refresh-policy-corpus",
-        action="store_true",
-        help=(
-            "Rebuild the active policy corpus snapshot, fully re-embed policy segments, and re-score policy "
-            "against the current SDG and research centroids."
         ),
     )
     p.add_argument(
@@ -180,8 +168,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_c_register,
             args.appendix_d_sample_stability,
             args.fetch_data_snapshot,
-            args.backup_data_snapshot,
-            args.refresh_policy_corpus,
             args.build_pdf,
         ]
     )
@@ -443,24 +429,6 @@ def run_warm_replay(
     )
 
 
-def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
-    missing = missing_requirements(POLICY_REFRESH_REQUIREMENTS)
-    if missing:
-        missing_str = ", ".join(rel(ROOT / p) for p in missing)
-        raise RuntimeError(
-            "Policy refresh requires existing SDG and research centroids. "
-            f"Missing required inputs: {missing_str}"
-        )
-
-    run_step("preprocess policy", [sys.executable, "1_code/1_preprocess/policy/0_preprocess_policy.py"])
-    run_step("build policy corpus", [sys.executable, "1_code/1_preprocess/policy/1_build_policy_corpus.py"])
-    embed_cmd = [sys.executable, "1_code/2_embed/reference/0_embed_reference_corpora.py", "--corpora", "policy", "--overwrite"]
-    if args.local_files_only:
-        embed_cmd.append("--local-files-only")
-    run_step("embed policy corpus", embed_cmd)
-    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
-
-
 def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     print("WARNING: live-source --cold-replay reruns are not expected to be identical to the frozen data snapshot.")
     print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
@@ -589,9 +557,6 @@ def main() -> None:
         print_status(output_dir)
         return
 
-    if args.refresh_policy_corpus and not args.overwrite:
-        raise RuntimeError("--refresh-policy-corpus requires --overwrite.")
-
     if (
         args.warm_replay
         or args.cold_replay
@@ -665,8 +630,6 @@ def main() -> None:
         run_sample_stability(output_dir)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.refresh_policy_corpus:
-        run_refresh_policy_corpus(args)
     elif args.warm_replay:
         ensure_warm_replay_inputs(args, include_appendix_extra=False)
         run_warm_replay(output_dir, args)
