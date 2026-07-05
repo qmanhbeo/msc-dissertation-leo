@@ -55,15 +55,11 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from alignment_core import verify_unit_norms
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
+import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     N_SDG,
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
     RANDOM_SEED,
-    RESEARCH_CENTROID_META,
-    RESEARCH_CENTROIDS,
     build_sub_centroid,
     cap_policy_indices_per_doc,
     get_cluster_assignments,
@@ -96,6 +92,7 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Optional cap on the number of policy segments used for PCA fitting. Default: 0 (use all policy segments).",
     )
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -184,6 +181,11 @@ def write_num_tex(path: Path, payload: dict) -> None:
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
     out_root = Path(args.output_dir) / "appendix" / "b1_pca_semantic_landscape"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
@@ -194,11 +196,11 @@ def main() -> None:
     rng = np.random.default_rng(args.seed)
 
     log.info("Output dir: %s", out_root)
-    log.info("Loading policy embeddings: %s", POLICY_EMB)
-    policy_emb = np.load(POLICY_EMB).astype(np.float32)
+    log.info("Loading policy embeddings: %s", _POLICY_EMB)
+    policy_emb = np.load(_POLICY_EMB).astype(np.float32)
     verify_unit_norms(policy_emb, "policy embeddings")
-    policy_scores = np.load(POLICY_SCORES).astype(np.float32)
-    policy_ids = load_json(POLICY_IDS)
+    policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
+    policy_ids = load_json(_POLICY_IDS)
     if policy_emb.shape[0] != policy_scores.shape[0] or policy_emb.shape[0] != len(policy_ids):
         raise RuntimeError(
             f"Policy alignment mismatch for PCA stage: emb={policy_emb.shape[0]} "
@@ -243,8 +245,8 @@ def main() -> None:
     research_bg_2d = pca.transform(research_fit_emb)
 
     sdg_centroids = np.load(SDG_CENTROIDS).astype(np.float32)
-    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
-    research_meta = load_json(RESEARCH_CENTROID_META)
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+    research_meta = load_json(_RESEARCH_CENTROID_META)
     verify_unit_norms(sdg_centroids, "sdg centroids", n_sample=17)
     verify_unit_norms(research_centroids, "research centroids", n_sample=17)
     if sdg_centroids.shape != research_centroids.shape:

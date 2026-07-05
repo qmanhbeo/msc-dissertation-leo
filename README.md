@@ -79,6 +79,7 @@ Not tracked in Git:
 | `python main.py --appendix-b4-softmax --overwrite` | Run B.4 Softmax Multi-label SDG |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
 | `python main.py --appendix-d-register --overwrite` | Run D Register-Adjustment Robustness |
+| `python main.py --appendix-e-sensitivity --overwrite` | Run E Model Sensitivity (all-mpnet-base-v2 vs MiniLM). Requires pre-embedded MPNet data (see below). |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
@@ -113,6 +114,33 @@ The fetch stage cannot be reproduced because its sources change continuously.
 | Manual policy supplement | 64 PDFs from non-API sources — not automatable |
 | GitHub benchmark | `SDGClassification/benchmark@main` — moving branch |
 | HF dataset / Dataverse | `UNDP/sdgi-corpus` and UNGDC may be versioned |
+
+### Model sensitivity (Appendix E)
+
+`--appendix-e-sensitivity` compares `all-mpnet-base-v2` (768-d) against the canonical
+`all-MiniLM-L6-v2` (384-d).  This requires the MPNet data files
+(`2_data/2b_embedded_mpnet/*.npy`, research shards, and scored outputs under
+`2_data/3b_scored_mpnet/`) to have been produced by the one-time embedding
+pipeline:
+
+```bash
+# One-time: embed reference corpora with MPNet (GPU recommended, ~2-3h)
+python 1_code/2_embed/reference/0_embed_reference_corpora.py \
+    --model all-mpnet-base-v2 \
+    --corpora policy osdg benchmark sdg_knowledge_hub sdgi aurora
+
+# One-time: embed research paper shards with MPNet (GPU recommended, ~8-16h)
+python 1_code/2_embed/research/0_embed_paper_shards.py \
+    --model all-mpnet-base-v2 --device cuda
+
+# After embed files exist, run the comparison appendix:
+python main.py --appendix-e-sensitivity --overwrite
+```
+
+Once the MPNet embed files are frozen, `--appendix-e-sensitivity` is fully
+deterministic — it runs the same centroid/scoring/analysis pipeline on the
+MPNet embeddings and compares results against canonical MiniLM outputs.
+All outputs land under `4_outputs/appendix/e_model_sensitivity/`.
 
 ### Credentials
 

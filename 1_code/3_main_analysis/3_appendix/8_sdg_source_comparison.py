@@ -55,6 +55,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
+import semantic_gap_shared
 from semantic_gap_shared import cap_policy_indices_per_doc
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
@@ -70,8 +71,6 @@ SDGI_EMB = Path("2_data/2_embedded/sdgi.npy")
 SDGI_IDS = Path("2_data/2_embedded/metadata/sdgi_ids.json")
 AURORA_EMB = Path("2_data/2_embedded/aurora.npy")
 AURORA_IDS = Path("2_data/2_embedded/metadata/aurora_ids.json")
-POLICY_EMB = Path("2_data/2_embedded/policy.npy")
-POLICY_IDS = Path("2_data/3_scored/metadata/policy_scores_ids.json")
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 
@@ -113,6 +112,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Per-SDG source comparison.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--overwrite", action="store_true", help="Recompute and overwrite cache.")
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -341,8 +341,8 @@ def compute_cosine_to_combined(source_centroids: np.ndarray, combined_centroids:
 # Cache for research + policy scoring
 # ---------------------------------------------------------------------------
 
-def _cache_input_mtimes(research_shards: list[dict], policy_emb_path: Path, source_emb_path: Path | None) -> dict[str, float]:
-    paths = [policy_emb_path]
+def _cache_input_mtimes(research_shards: list[dict], policy_emb_path: Path, policy_ids_path: Path, source_emb_path: Path | None) -> dict[str, float]:
+    paths = [policy_emb_path, policy_ids_path]
     if source_emb_path is not None:
         paths.append(source_emb_path)
     for shard in research_shards:
@@ -394,6 +394,8 @@ def compute_or_load_research_policy(
     research_shards: list[dict],
     policy_emb: np.ndarray,
     policy_ids: list[dict],
+    policy_emb_path: Path,
+    policy_ids_path: Path,
     source_emb_path: Path | None,
     *,
     overwrite: bool,
@@ -402,7 +404,7 @@ def compute_or_load_research_policy(
     
     Uses cache unless overwrite=True or inputs have changed.
     """
-    input_mtimes = _cache_input_mtimes(research_shards, POLICY_EMB, source_emb_path)
+    input_mtimes = _cache_input_mtimes(research_shards, policy_emb_path, policy_ids_path, source_emb_path)
 
     if not overwrite and _cache_valid(source_name, input_mtimes):
         log.info("  %s: cache hit — loading cached research + policy scores", source_name)
@@ -528,6 +530,8 @@ def write_table_covgap(path: Path, results: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
     output_dir = Path(args.output_dir)
     out_root = output_dir / "appendix" / OUTPUT_SUBDIR
     data_dir = out_root / "data"
@@ -619,9 +623,9 @@ def main() -> None:
     research_shards = load_aligned_research_shards()
     log.info("  %d research shards", len(research_shards))
 
-    log.info("Loading policy embeddings: %s", POLICY_EMB)
-    policy_emb = np.load(POLICY_EMB).astype(np.float32)
-    policy_ids = load_json(POLICY_IDS)
+    log.info("Loading policy embeddings: %s", _POLICY_EMB)
+    policy_emb = np.load(_POLICY_EMB).astype(np.float32)
+    policy_ids = load_json(_POLICY_IDS)
     log.info("  shape=%s", policy_emb.shape)
 
     # ---- Score research + policy for each source (cached) ----
@@ -654,6 +658,7 @@ def main() -> None:
         # Research + policy scoring (cached)
         rc, rs, pc, ps = compute_or_load_research_policy(
             source_name, centroids, research_shards, policy_emb, policy_ids,
+            _POLICY_EMB, _POLICY_IDS,
             source_emb_path if source_name != "combined" else None,
             overwrite=args.overwrite,
         )

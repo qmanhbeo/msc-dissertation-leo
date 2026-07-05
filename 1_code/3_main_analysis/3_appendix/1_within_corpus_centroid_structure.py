@@ -68,15 +68,11 @@ from research_embedding_shards import (
 )
 from research_score_shards import load_json as load_score_manifest_json
 from research_score_shards import resolve_from_manifest as resolve_score_manifest_path
+import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     N_SDG,
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
     RANDOM_SEED,
-    RESEARCH_CENTROID_META,
-    RESEARCH_CENTROIDS,
     build_sub_centroid,
     cap_policy_indices_per_doc,
     get_cluster_assignments,
@@ -130,6 +126,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--research-kmeans-sample-size", type=int, default=100_000)
     p.add_argument("--policy-kmeans-sample-size", type=int, default=0, help="0 means use all policy segments.")
     p.add_argument("--research-pca-batch-size", type=int, default=16_384)
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -534,6 +531,11 @@ def write_num_tex(path: Path, summary: dict[str, object]) -> None:
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
     out_root = Path(args.output_dir) / "appendix" / "b2_within_corpus_centroid"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
@@ -543,9 +545,9 @@ def main() -> None:
 
     rng = np.random.default_rng(args.seed)
 
-    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     verify_unit_norms(research_centroids, "research centroids")
-    research_meta = validate_research_centroid_order(RESEARCH_CENTROID_META, research_centroids)
+    research_meta = validate_research_centroid_order(_RESEARCH_CENTROID_META, research_centroids)
     research_centroid_available = np.array(
         [not bool(row.get("zero_flag", False)) for row in research_meta],
         dtype=bool,
@@ -621,10 +623,10 @@ def main() -> None:
     research_global_metrics["silhouette_sample_size"] = int(research_silhouette_emb.shape[0])
     research_global_metrics["kmeans_sample_size"] = int(research_kmeans_emb.shape[0])
 
-    policy_emb = np.load(POLICY_EMB).astype(np.float32)
+    policy_emb = np.load(_POLICY_EMB).astype(np.float32)
     verify_unit_norms(policy_emb, "policy embeddings")
-    policy_scores = np.load(POLICY_SCORES).astype(np.float32)
-    policy_ids = load_json(POLICY_IDS)
+    policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
+    policy_ids = load_json(_POLICY_IDS)
     policy_assignments = get_cluster_assignments(policy_scores)
     policy_counts = np.bincount(policy_assignments, minlength=N_SDG).astype(np.int64)
     policy_centroids, policy_centroid_available = build_policy_centroids(

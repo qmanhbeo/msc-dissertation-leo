@@ -34,6 +34,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
+from model_slug_utils import embed_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -43,8 +44,8 @@ STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input-manifest", default="2_data/1_preprocessed/research_corpus/metadata/manifest.json")
-    p.add_argument("--out-dir", default="2_data/2_embedded/research_shards")
-    p.add_argument("--status-dir", default="2_data/2_embedded/research_shards/metadata")
+    p.add_argument("--out-dir", default=None)
+    p.add_argument("--status-dir", default=None)
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--model", default="all-MiniLM-L6-v2")
     p.add_argument("--batch-size", type=int, default=256)
@@ -92,7 +93,8 @@ def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not raw.as_posix().startswith("2_data/1_preprocessed/"):
+    prefix = raw.as_posix()
+    if not prefix.startswith("2_data/1_preprocessed/"):
         raise RuntimeError(
             f"Hard pivot violation: expected data path under 2_data/1_preprocessed/, got: {stored_path}"
         )
@@ -106,10 +108,13 @@ def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
+    embed_root = embed_dir_for_model(args.model)
+    embed_root_slugged = embed_root
+
     input_manifest = Path(args.input_manifest)
-    out_dir = Path(args.out_dir)
+    out_dir = Path(args.out_dir) if args.out_dir else embed_root_slugged / "research_shards"
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir)
+    status_dir = Path(args.status_dir) if args.status_dir else embed_root_slugged / "research_shards" / "metadata"
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)

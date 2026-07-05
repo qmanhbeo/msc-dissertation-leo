@@ -27,17 +27,25 @@ Run from project root:
 import argparse
 import json
 import logging
+import sys
 import numpy as np
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
+CODE_ROOT = Path(__file__).resolve().parents[2]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+
+from model_slug_utils import embed_dir_for_model
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-MODEL_NAME = "all-MiniLM-L6-v2"
 BATCH_SIZE = 128
-OUTPUT_DIR = Path("2_data/2_embedded")
-METADATA_DIR = OUTPUT_DIR / "metadata"
+DEFAULT_MODEL = "all-MiniLM-L6-v2"
 
 CORPORA = [
     {
@@ -112,6 +120,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Load the sentence-transformer model from the local Hugging Face cache only.",
     )
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help="Sentence-transformer model name (default: %(default)s).",
+    )
     return parser.parse_args()
 
 
@@ -120,10 +133,11 @@ def load_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool) -> None:
+def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path) -> None:
     name = corpus["name"]
-    emb_path = OUTPUT_DIR / f"{name}.npy"
-    ids_path = METADATA_DIR / f"{name}_ids.json"
+    metadata_dir = output_dir / "metadata"
+    emb_path = output_dir / f"{name}.npy"
+    ids_path = metadata_dir / f"{name}_ids.json"
 
     if emb_path.exists() and not overwrite:
         log.info("Skipping %s — %s already exists", name, emb_path)
@@ -151,8 +165,8 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool) -
         ids_meta.append(entry)
 
     # Save
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    METADATA_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    metadata_dir.mkdir(parents=True, exist_ok=True)
     np.save(emb_path, embeddings)
     with ids_path.open("w") as f:
         json.dump(ids_meta, f)
@@ -168,17 +182,19 @@ def main() -> None:
     selected_names = list(args.corpora or [corpus["name"] for corpus in CORPORA])
     selected_corpora = [corpus for corpus in CORPORA if corpus["name"] in selected_names]
 
-    log.info("Loading model: %s", MODEL_NAME)
-    model = SentenceTransformer(MODEL_NAME, local_files_only=args.local_files_only)
+    output_dir = embed_dir_for_model(args.model)
+
+    log.info("Loading model: %s", args.model)
+    model = SentenceTransformer(args.model, local_files_only=args.local_files_only)
     log.info("Embedding dimension: %d", model.get_sentence_embedding_dimension())
 
     for corpus in selected_corpora:
-        embed_corpus(corpus, model, overwrite=args.overwrite)
+        embed_corpus(corpus, model, overwrite=args.overwrite, output_dir=output_dir)
 
     # Final summary
     print("\nEmbedding complete:")
     for corpus in selected_corpora:
-        path = OUTPUT_DIR / f"{corpus['name']}.npy"
+        path = output_dir / f"{corpus['name']}.npy"
         if path.exists():
             shape = np.load(path).shape
             print(f"  {corpus['name']:12s} {str(shape):15s} → {path}")

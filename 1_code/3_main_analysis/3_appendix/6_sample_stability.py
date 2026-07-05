@@ -38,6 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
@@ -54,10 +55,6 @@ EMBEDDINGS_DIR = Path("2_data/2_embedded")
 
 PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
 RESEARCH_EMBED_MANIFEST = EMBEDDINGS_DIR / "research_shards" / "metadata" / "manifest.json"
-POLICY_SCORES = SCORED_DIR / "policy_scores.npy"
-POLICY_IDS = SCORED_DIR / "metadata" / "policy_scores_ids.json"
-POLICY_EMB = EMBEDDINGS_DIR / "policy.npy"
-
 CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
 CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
@@ -133,6 +130,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the sample-stability robustness stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--cache-dir", default=str(DEFAULT_CACHE_ROOT))
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -215,7 +213,7 @@ def normalize_centroid(raw: np.ndarray) -> tuple[np.ndarray, float]:
     return (raw / norm).astype(np.float32), norm
 
 
-def load_policy_state(canonical_data_dir: Path) -> dict[str, Any]:
+def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_ids_path: Path, policy_scores_path: Path) -> dict[str, Any]:
     require_output_files(
         canonical_data_dir,
         [CANONICAL_COVERAGE_JSON, CANONICAL_SEMANTIC_JSON, CANONICAL_INTERACTION_JSON],
@@ -225,9 +223,9 @@ def load_policy_state(canonical_data_dir: Path) -> dict[str, Any]:
     semantic_out = load_json(canonical_data_dir / CANONICAL_SEMANTIC_JSON)
     interaction_data = load_json(canonical_data_dir / CANONICAL_INTERACTION_JSON)
 
-    policy_scores = np.load(POLICY_SCORES).astype(np.float32)
-    policy_ids = load_json(POLICY_IDS)
-    policy_emb = np.load(POLICY_EMB).astype(np.float32)
+    policy_scores = np.load(policy_scores_path).astype(np.float32)
+    policy_ids = load_json(policy_ids_path)
+    policy_emb = np.load(policy_emb_path).astype(np.float32)
     if policy_scores.shape[0] != len(policy_ids) or policy_emb.shape[0] != len(policy_ids):
         raise RuntimeError(
             "Policy score/embedding/id row mismatch: "
@@ -804,12 +802,15 @@ def write_outputs(
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
     layout = ensure_dissertation_outputs(Path(args.output_dir), subdir="appendix/c_sample_stability")
     cache_root = Path(args.cache_dir)
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
-    policy_state = load_policy_state(Path(args.output_dir) / "main" / "data")
+    policy_state = load_policy_state(Path(args.output_dir) / "main" / "data", _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES)
     shards, total_rows = build_research_shards()
     dim = int(policy_state["policy_embeddings"].shape[1])
     log.info("Research corpus rows available for sampling: %d", total_rows)

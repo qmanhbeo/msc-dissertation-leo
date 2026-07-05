@@ -35,6 +35,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
+from model_slug_utils import embed_dir_for_model, scored_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -43,12 +44,13 @@ STATUS_STAGE = "openalex_embeddings_to_sdg_scores"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--embedding-manifest", default="2_data/2_embedded/research_shards/metadata/manifest.json")
-    p.add_argument("--centroids", default="2_data/3_scored/sdg_centroids.npy")
-    p.add_argument("--out-dir", default="2_data/3_scored/paper_scores_shards")
-    p.add_argument("--status-dir", default="2_data/2_embedded/research_shards/metadata")
-    p.add_argument("--research-centroids-out", default="2_data/3_scored/research_centroids.npy")
-    p.add_argument("--research-meta-out", default="2_data/3_scored/metadata/research_centroid_meta.json")
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--embedding-manifest", default=None)
+    p.add_argument("--centroids", default=None)
+    p.add_argument("--out-dir", default=None)
+    p.add_argument("--status-dir", default=None)
+    p.add_argument("--research-centroids-out", default=None)
+    p.add_argument("--research-meta-out", default=None)
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--limit-shards", type=int, default=0)
     p.add_argument(
@@ -107,15 +109,19 @@ def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    emb_manifest_path = Path(args.embedding_manifest)
-    centroids_path = Path(args.centroids)
-    out_dir = Path(args.out_dir)
+    model = args.model
+    embed_dir = embed_dir_for_model(model)
+    scored_dir = scored_dir_for_model(model)
+
+    emb_manifest_path = Path(args.embedding_manifest) if args.embedding_manifest is not None else embed_dir / "research_shards" / "metadata" / "manifest.json"
+    centroids_path = Path(args.centroids) if args.centroids is not None else scored_dir / "sdg_centroids.npy"
+    out_dir = Path(args.out_dir) if args.out_dir is not None else scored_dir / "paper_scores_shards"
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir)
-    research_centroids_out = Path(args.research_centroids_out)
-    research_meta_out = Path(args.research_meta_out)
-    default_research_centroids_out = Path("2_data/3_scored/research_centroids.npy")
-    default_research_meta_out = Path("2_data/3_scored/metadata/research_centroid_meta.json")
+    status_dir = Path(args.status_dir) if args.status_dir is not None else embed_dir / "research_shards" / "metadata"
+    research_centroids_out = Path(args.research_centroids_out) if args.research_centroids_out is not None else scored_dir / "research_centroids.npy"
+    research_meta_out = Path(args.research_meta_out) if args.research_meta_out is not None else scored_dir / "metadata" / "research_centroid_meta.json"
+    default_research_centroids_out = scored_dir / "research_centroids.npy"
+    default_research_meta_out = scored_dir / "metadata" / "research_centroid_meta.json"
 
     if (
         args.limit_shards > 0

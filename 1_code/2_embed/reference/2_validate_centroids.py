@@ -49,20 +49,16 @@ CODE_ROOT = ROOT / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 from shared_utils import ensure_canonical_outputs
+ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+
+from model_slug_utils import embed_dir_for_model, scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-EMBEDDINGS_DIR = Path("2_data/2_embedded")
-EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
-SCORED_DIR = Path("2_data/3_scored")
-SCORED_METADATA_DIR = SCORED_DIR / "metadata"
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-
-CENTROIDS_PATH   = SCORED_DIR / "sdg_centroids.npy"
-META_PATH        = SCORED_METADATA_DIR / "sdg_centroid_meta.json"
-BENCH_EMB        = EMBEDDINGS_DIR / "benchmark.npy"
-BENCH_IDS        = EMBED_METADATA_DIR / "benchmark_ids.json"
 
 # Macro-F1 thresholds for the instrument pass/warn/fail flag (SDGs 1–16, uncontaminated).
 # These are judgment calls (Assumption A-THRESH in the implementation plan):
@@ -114,6 +110,7 @@ def save_csv_matrix(matrix: np.ndarray, labels: list, path: Path) -> None:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Validate SDG centroids into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -122,6 +119,19 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
+    model = args.model
+    embed_dir = embed_dir_for_model(model)
+    scored_dir = scored_dir_for_model(model)
+    EMBEDDINGS_DIR = embed_dir
+    EMBED_METADATA_DIR = embed_dir / "metadata"
+    SCORED_DIR = scored_dir
+    SCORED_METADATA_DIR = scored_dir / "metadata"
+
+    CENTROIDS_PATH   = SCORED_DIR / "sdg_centroids.npy"
+    META_PATH        = SCORED_METADATA_DIR / "sdg_centroid_meta.json"
+    BENCH_EMB        = EMBEDDINGS_DIR / "benchmark.npy"
+    BENCH_IDS        = EMBED_METADATA_DIR / "benchmark_ids.json"
+
     layout = ensure_canonical_outputs(Path(args.output_dir))
     out_results = layout.data_dir / "4_1_validation_results.json"
     out_confusion = layout.data_dir / "4_1_confusion_matrix.csv"

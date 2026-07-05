@@ -43,11 +43,8 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
+import semantic_gap_shared
 from semantic_gap_shared import (
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
-    RESEARCH_CENTROIDS,
     get_cluster_assignments,
     load_json,
 )
@@ -126,6 +123,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--sample-per-side", type=int, default=SAMPLE_PER_SIDE)
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -286,9 +284,10 @@ def collect_policy(
     seed: int,
     policy_scores: np.ndarray,
     policy_emb: np.ndarray,
+    policy_ids_path: Path,
 ) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
     policy_text_rows = load_json(POLICY_TEXT_IDS)
-    policy_score_rows = load_json(POLICY_IDS)
+    policy_score_rows = load_json(policy_ids_path)
     if len(policy_text_rows) != policy_scores.shape[0] or len(policy_score_rows) != policy_scores.shape[0]:
         raise RuntimeError("Policy text, score metadata, and score matrix row counts do not align.")
 
@@ -439,6 +438,10 @@ def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
     output_dir = Path(args.output_dir)
     out_root = output_dir / "appendix" / OUTPUT_SUBDIR
     data_dir = out_root / "data"
@@ -447,12 +450,12 @@ def main() -> None:
         d.mkdir(parents=True, exist_ok=True)
 
     gaps = semantic_gap_map(Path(args.output_dir) / "main" / "data")
-    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
-    policy_scores = np.load(POLICY_SCORES).astype(np.float32)
-    policy_emb = np.load(POLICY_EMB, mmap_mode="r")
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+    policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
+    policy_emb = np.load(_POLICY_EMB, mmap_mode="r")
 
     log.info("Collecting policy samples and representative audit examples")
-    policy_samples, policy_counts, policy_examples = collect_policy(args.sample_per_side, args.seed, policy_scores, policy_emb)
+    policy_samples, policy_counts, policy_examples = collect_policy(args.sample_per_side, args.seed, policy_scores, policy_emb, _POLICY_IDS)
     log.info("Collecting research samples and representative audit examples")
     research_samples, research_counts, research_examples = collect_research(args.sample_per_side, args.seed, research_centroids)
 

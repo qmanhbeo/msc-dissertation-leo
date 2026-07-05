@@ -61,16 +61,12 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from shared_utils import DissertationOutputs
+import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
     N_SDG,
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
     RANDOM_SEED,
-    RESEARCH_CENTROID_META,
-    RESEARCH_CENTROIDS,
     build_sub_centroid,
     cap_policy_indices_per_doc,
     compute_sdg_semantic_gaps,
@@ -214,6 +210,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--multi-direction-ks", default="1,2,3,5")
     p.add_argument("--topic-match-research-per-sdg", type=int, default=DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG)
     p.add_argument("--topic-match-top-k", type=int, default=DEFAULT_TOPIC_MATCH_TOP_K)
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -4364,6 +4361,11 @@ def plot_gap_comparison(figures_dir: Path, merged_rows: list[dict[str, Any]]) ->
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
     validate_split_fracs(args.train_frac, args.val_frac, args.test_frac)
     validate_test_size(args.test_size)
     c_grid = parse_c_grid(args.c_grid)
@@ -4396,13 +4398,13 @@ def main() -> None:
         EMBED_MANIFEST,
         SCORE_MANIFEST,
         TEXT_MANIFEST,
-        POLICY_EMB,
-        POLICY_IDS,
+        _POLICY_EMB,
+        _POLICY_IDS,
         POLICY_TEXT_IDS,
-        POLICY_SCORES,
+        _POLICY_SCORES,
         SDG_CENTROIDS,
-        RESEARCH_CENTROIDS,
-        RESEARCH_CENTROID_META,
+        _RESEARCH_CENTROIDS,
+        _RESEARCH_CENTROID_META,
     ]
     missing = [str(path) for path in required_paths if not path.exists()]
     if missing:
@@ -4416,8 +4418,8 @@ def main() -> None:
     shards, total_research_rows = build_research_shards()
     log.info("Research shards aligned: %d shards, %d rows", len(shards), total_research_rows)
 
-    policy_emb = np.load(POLICY_EMB).astype(np.float32)
-    policy_score_ids = load_json(POLICY_IDS)
+    policy_emb = np.load(_POLICY_EMB).astype(np.float32)
+    policy_score_ids = load_json(_POLICY_IDS)
     policy_text_ids = load_json(POLICY_TEXT_IDS)
     if policy_emb.shape[0] != len(policy_score_ids) or policy_emb.shape[0] != len(policy_text_ids):
         raise RuntimeError(
@@ -4522,11 +4524,11 @@ def main() -> None:
     out_metrics.write_text(json.dumps(metrics_payload, indent=2) + "\n", encoding="utf-8")
     log.info("Saved classifier metrics: %s", out_metrics)
 
-    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
-    research_meta = load_json(RESEARCH_CENTROID_META)
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+    research_meta = load_json(_RESEARCH_CENTROID_META)
     research_counts = np.array([int(row["n_papers_assigned"]) for row in research_meta], dtype=np.int64)
     research_cohesions = np.array([float(row["mean_cos_to_centroid"]) for row in research_meta], dtype=np.float32)
-    policy_scores = np.load(POLICY_SCORES).astype(np.float32)
+    policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_assignments = get_cluster_assignments(policy_scores)
 
     raw_rng = np.random.default_rng(args.seed)

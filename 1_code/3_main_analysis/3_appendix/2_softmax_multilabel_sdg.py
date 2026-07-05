@@ -43,12 +43,10 @@ from research_score_shards import (
     load_json as load_score_manifest_json,
     resolve_from_manifest as resolve_score_manifest_path,
 )
+import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     N_SDG,
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
     RANDOM_SEED,
     build_sub_centroid,
     cap_policy_indices_per_doc,
@@ -97,6 +95,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--temperatures", nargs="*", type=float, default=DEFAULT_TEMPERATURES)
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -382,6 +381,9 @@ def plot_temperature_sensitivity(
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
     out_root = Path(args.output_dir) / "appendix" / "b4_softmax_multilabel_sdg"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
@@ -400,9 +402,9 @@ def main() -> None:
     research_score_paths = [research_score_shards[k].score_path for k in sorted(research_score_shards)]
     research_means, research_stds, total_research_rows = compute_column_stats_streaming(research_score_paths)
 
-    policy_scores = np.load(POLICY_SCORES).astype(np.float32)
-    policy_emb = np.load(POLICY_EMB).astype(np.float32)
-    policy_ids = load_json(POLICY_IDS)
+    policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
+    policy_emb = np.load(_POLICY_EMB).astype(np.float32)
+    policy_ids = load_json(_POLICY_IDS)
     if policy_scores.shape[0] != policy_emb.shape[0] or policy_scores.shape[0] != len(policy_ids):
         raise RuntimeError("Policy score/embedding/id row mismatch.")
     policy_means, policy_stds, total_policy_rows = compute_column_stats_in_memory(policy_scores)

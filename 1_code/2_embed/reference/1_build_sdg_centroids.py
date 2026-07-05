@@ -54,32 +54,27 @@ Run from project root:
     python 1_code/2_embed/reference/1_build_sdg_centroids.py
 """
 
+import argparse
 import json
 import logging
+import sys
 import numpy as np
 from pathlib import Path
+
+CODE_ROOT = Path(__file__).resolve().parents[2]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+
+from model_slug_utils import VALID_DIMS, embed_dir_for_model, scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 EMBEDDINGS_DIR = Path("2_data/2_embedded")
-EMBED_METADATA_DIR = EMBEDDINGS_DIR / "metadata"
 OUTPUT_DIR = Path("2_data/3_scored")
-SCORED_METADATA_DIR = OUTPUT_DIR / "metadata"
-
-OSDG_EMB   = EMBEDDINGS_DIR / "osdg.npy"
-OSDG_IDS   = EMBED_METADATA_DIR / "osdg_ids.json"
-KH_EMB     = EMBEDDINGS_DIR / "sdg_knowledge_hub.npy"
-KH_IDS     = EMBED_METADATA_DIR / "sdg_knowledge_hub_ids.json"
-SDGI_EMB   = EMBEDDINGS_DIR / "sdgi.npy"
-SDGI_IDS   = EMBED_METADATA_DIR / "sdgi_ids.json"
-AURORA_EMB = EMBEDDINGS_DIR / "aurora.npy"
-AURORA_IDS = EMBED_METADATA_DIR / "aurora_ids.json"
-BENCH_EMB  = EMBEDDINGS_DIR / "benchmark.npy"      # validation only
-BENCH_IDS  = EMBED_METADATA_DIR / "benchmark_ids.json"
-
-OUT_CENTROIDS = OUTPUT_DIR / "sdg_centroids.npy"
-OUT_META      = SCORED_METADATA_DIR / "sdg_centroid_meta.json"
 
 # Cohesion threshold for the high-variance flag (Assumption A6).
 # "Cohesion" = mean cosine similarity of an SDG's member vectors to its own unit centroid.
@@ -182,36 +177,66 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
 
 
 # ---------------------------------------------------------------------------
+# Args
+# ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Build SDG centroids from labelled reference corpora.")
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    SCORED_METADATA_DIR.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    model = args.model
+
+    embed_dir = embed_dir_for_model(model)
+    scored_dir = scored_dir_for_model(model)
+    scored_meta_dir = scored_dir / "metadata"
+    embed_meta_dir = embed_dir / "metadata"
+
+    osdg_emb_path   = embed_dir / "osdg.npy"
+    osdg_ids_path   = embed_meta_dir / "osdg_ids.json"
+    kh_emb_path     = embed_dir / "sdg_knowledge_hub.npy"
+    kh_ids_path     = embed_meta_dir / "sdg_knowledge_hub_ids.json"
+    sdgi_emb_path   = embed_dir / "sdgi.npy"
+    sdgi_ids_path   = embed_meta_dir / "sdgi_ids.json"
+    aurora_emb_path = embed_dir / "aurora.npy"
+    aurora_ids_path = embed_meta_dir / "aurora_ids.json"
+    bench_emb_path  = embed_dir / "benchmark.npy"
+    bench_ids_path  = embed_meta_dir / "benchmark_ids.json"
+    out_centroids   = scored_dir / "sdg_centroids.npy"
+    out_meta        = scored_meta_dir / "sdg_centroid_meta.json"
+
+    scored_dir.mkdir(parents=True, exist_ok=True)
+    scored_meta_dir.mkdir(parents=True, exist_ok=True)
 
     # ---- Load embeddings and ID metadata ----
-    log.info("Loading OSDG embeddings: %s", OSDG_EMB)
-    osdg_emb = np.load(OSDG_EMB)   # (30534, 384) float32 — produced by 0_embed_reference_corpora.py
-    osdg_ids = load_json(OSDG_IDS)  # list of {id, text, sdg} with sdg in 1..16
+    log.info("Loading OSDG embeddings: %s", osdg_emb_path)
+    osdg_emb = np.load(osdg_emb_path)   # (30534, d) float32
+    osdg_ids = load_json(osdg_ids_path)
     log.info("  shape=%s  dtype=%s", osdg_emb.shape, osdg_emb.dtype)
 
-    log.info("Loading Knowledge Hub embeddings: %s", KH_EMB)
-    kh_emb = np.load(KH_EMB)   # (2221, 384)
-    kh_ids = load_json(KH_IDS)
+    log.info("Loading Knowledge Hub embeddings: %s", kh_emb_path)
+    kh_emb = np.load(kh_emb_path)
+    kh_ids = load_json(kh_ids_path)
     log.info("  shape=%s  dtype=%s", kh_emb.shape, kh_emb.dtype)
 
-    log.info("Loading SDGi embeddings: %s", SDGI_EMB)
-    sdgi_emb = np.load(SDGI_EMB)   # (5233, 384)
-    sdgi_ids = load_json(SDGI_IDS)
+    log.info("Loading SDGi embeddings: %s", sdgi_emb_path)
+    sdgi_emb = np.load(sdgi_emb_path)
+    sdgi_ids = load_json(sdgi_ids_path)
     log.info("  shape=%s  dtype=%s", sdgi_emb.shape, sdgi_emb.dtype)
 
-    log.info("Loading Aurora embeddings: %s", AURORA_EMB)
-    aurora_emb = np.load(AURORA_EMB)   # (5619, 384)
-    aurora_ids = load_json(AURORA_IDS)
+    log.info("Loading Aurora embeddings: %s", aurora_emb_path)
+    aurora_emb = np.load(aurora_emb_path)
+    aurora_ids = load_json(aurora_ids_path)
     log.info("  shape=%s  dtype=%s", aurora_emb.shape, aurora_emb.dtype)
 
-    log.info("Loading benchmark embeddings (validation only): %s", BENCH_EMB)
-    bench_emb = np.load(BENCH_EMB)   # (616, 384)
-    bench_ids = load_json(BENCH_IDS)
+    log.info("Loading benchmark embeddings (validation only): %s", bench_emb_path)
+    bench_emb = np.load(bench_emb_path)
+    bench_ids = load_json(bench_ids_path)
     log.info("  shape=%s  dtype=%s", bench_emb.shape, bench_emb.dtype)
 
     # ---- Verify L2 normalisation ----
@@ -318,9 +343,12 @@ def main() -> None:
         log.log(level, "SDG %2d | n=%5d | %-35s | norm=%.4f | cohesion=%.4f%s",
                 sdg, meta["n"], source_label, meta["raw_centroid_norm"], meta["mean_cos_to_centroid"], flag)
 
-    # ---- Stack into (17, 384) array ----
-    centroids = np.stack(centroid_vectors, axis=0)  # (17, 384)
-    assert centroids.shape == (17, 384), f"Unexpected centroid shape: {centroids.shape}"
+    # ---- Stack into (17, d) array ----
+    centroids = np.stack(centroid_vectors, axis=0)  # (17, d)
+    assert centroids.shape[0] == 17, f"Expected 17 SDG centroids, got {centroids.shape}"
+    assert centroids.shape[1] in VALID_DIMS, (
+        f"Unexpected embedding dimension {centroids.shape[1]}; expected one of {VALID_DIMS}"
+    )
 
     # Final normalisation check — each row should be a unit vector after build_centroid.
     norms = np.linalg.norm(centroids, axis=1)
@@ -330,12 +358,12 @@ def main() -> None:
         log.info("\nAll 17 centroid norms ≈ 1.0 ✓")
 
     # ---- Save ----
-    np.save(OUT_CENTROIDS, centroids)
-    log.info("Saved: %s  shape=%s  dtype=%s", OUT_CENTROIDS, centroids.shape, centroids.dtype)
+    np.save(out_centroids, centroids)
+    log.info("Saved: %s  shape=%s  dtype=%s", out_centroids, centroids.shape, centroids.dtype)
 
-    with OUT_META.open("w", encoding="utf-8") as f:
+    with out_meta.open("w", encoding="utf-8") as f:
         json.dump(centroid_meta, f, indent=2)
-    log.info("Saved: %s", OUT_META)
+    log.info("Saved: %s", out_meta)
 
     # ---- Summary ----
     high_var = [m["sdg"] for m in centroid_meta if m["high_variance_flag"]]

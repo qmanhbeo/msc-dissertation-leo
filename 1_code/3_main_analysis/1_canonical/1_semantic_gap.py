@@ -77,6 +77,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+import semantic_gap_shared
 from shared_utils import ensure_canonical_outputs
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -84,12 +85,7 @@ from semantic_gap_shared import (
     SEGMENT_CAP_SENS_LO,
     MIN_CLUSTER_SIZE,
     N_SDG,
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
     RANDOM_SEED,
-    RESEARCH_CENTROID_META,
-    RESEARCH_CENTROIDS,
     build_sub_centroid,
     cap_policy_indices_per_doc,
     compute_sdg_semantic_gaps,
@@ -115,6 +111,7 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute semantic gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -123,6 +120,13 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
+
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
+
     layout = ensure_canonical_outputs(Path(args.output_dir))
     out_sem_gap = layout.data_dir / "4_3_semantic_gap_distances.json"
     out_sem_sens = layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
@@ -130,9 +134,9 @@ def main() -> None:
     log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load research centroids/meta ----
-    log.info("Loading research centroids: %s", RESEARCH_CENTROIDS)
-    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
-    research_meta = load_json(RESEARCH_CENTROID_META)
+    log.info("Loading research centroids: %s", _RESEARCH_CENTROIDS)
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+    research_meta = load_json(_RESEARCH_CENTROID_META)
     if research_centroids.shape[0] != N_SDG:
         raise RuntimeError(f"Expected research centroids shape ({N_SDG}, d), got {research_centroids.shape}")
     if len(research_meta) != N_SDG:
@@ -140,13 +144,13 @@ def main() -> None:
     research_counts = np.array([int(r["n_papers_assigned"]) for r in research_meta], dtype=np.int64)
     research_cohesions = np.array([float(r["mean_cos_to_centroid"]) for r in research_meta], dtype=np.float32)
 
-    log.info("Loading policy embeddings: %s", POLICY_EMB)
-    policy_emb = np.load(POLICY_EMB)
-    policy_ids = load_json(POLICY_IDS)
+    log.info("Loading policy embeddings: %s", _POLICY_EMB)
+    policy_emb = np.load(_POLICY_EMB)
+    policy_ids = load_json(_POLICY_IDS)
 
     # ---- Load score matrices for cluster assignments ----
     log.info("Loading score matrices...")
-    policy_scores = np.load(POLICY_SCORES)
+    policy_scores = np.load(_POLICY_SCORES)
 
     # Hard assignment (0-indexed SDG index).
     policy_assignments = get_cluster_assignments(policy_scores)

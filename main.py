@@ -9,6 +9,9 @@ from pathlib import Path
 CODE_ROOT = Path(__file__).resolve().parent / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shared_utils import (
     canonical_artifact_paths,
@@ -16,41 +19,46 @@ from shared_utils import (
     require_output_files,
     require_pdf_inputs,
 )
+from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
-BASE_WARM_REPLAY_REQUIREMENTS = [
-    Path("2_data/2_embedded/policy.npy"),
-    Path("2_data/2_embedded/metadata/policy_ids.json"),
-    Path("2_data/2_embedded/osdg.npy"),
-    Path("2_data/2_embedded/metadata/osdg_ids.json"),
-    Path("2_data/2_embedded/benchmark.npy"),
-    Path("2_data/2_embedded/metadata/benchmark_ids.json"),
-    Path("2_data/2_embedded/sdg_knowledge_hub.npy"),
-    Path("2_data/2_embedded/metadata/sdg_knowledge_hub_ids.json"),
-    Path("2_data/2_embedded/sdgi.npy"),
-    Path("2_data/2_embedded/metadata/sdgi_ids.json"),
-    Path("2_data/2_embedded/aurora.npy"),
-    Path("2_data/2_embedded/metadata/aurora_ids.json"),
-    Path("2_data/2_embedded/research_shards/metadata/manifest.json"),
-    Path("2_data/3_scored/sdg_centroids.npy"),
-    Path("2_data/3_scored/metadata/sdg_centroid_meta.json"),
-    Path("2_data/3_scored/research_centroids.npy"),
-    Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json"),
-    Path("2_data/3_scored/policy_scores.npy"),
-    Path("2_data/3_scored/policy_scores_vs_research.npy"),
-    Path("2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"),
-    Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
-    Path("3_writing/dissertation.tex"),
-    Path("3_writing/references.bib"),
-]
-
 WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS = [
     Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json"),
     Path("2_data/1_preprocessed/research_corpus/part-00001.jsonl"),
 ]
+
+
+def base_warm_replay_requirements(model: str = "") -> list[Path]:
+    embed_root = embed_dir_for_model(model)
+    scored_root = scored_dir_for_model(model)
+    return [
+        embed_root / "policy.npy",
+        embed_root / "metadata" / "policy_ids.json",
+        embed_root / "osdg.npy",
+        embed_root / "metadata" / "osdg_ids.json",
+        embed_root / "benchmark.npy",
+        embed_root / "metadata" / "benchmark_ids.json",
+        embed_root / "sdg_knowledge_hub.npy",
+        embed_root / "metadata" / "sdg_knowledge_hub_ids.json",
+        embed_root / "sdgi.npy",
+        embed_root / "metadata" / "sdgi_ids.json",
+        embed_root / "aurora.npy",
+        embed_root / "metadata" / "aurora_ids.json",
+        embed_root / "research_shards" / "metadata" / "manifest.json",
+        scored_root / "sdg_centroids.npy",
+        scored_root / "metadata" / "sdg_centroid_meta.json",
+        scored_root / "research_centroids.npy",
+        scored_root / "paper_scores_shards" / "metadata" / "manifest.json",
+        scored_root / "policy_scores.npy",
+        scored_root / "policy_scores_vs_research.npy",
+        Path("2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"),
+        Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
+        Path("3_writing/dissertation.tex"),
+        Path("3_writing/references.bib"),
+    ]
 
 
 
@@ -81,6 +89,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-b4-softmax", action="store_true", help="Run B.4 Softmax Multi-label SDG.")
     p.add_argument("--appendix-d-register", action="store_true", help="Run D Register-Adjustment Robustness.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
+    p.add_argument("--appendix-e-sensitivity", action="store_true", help="Run E Model Sensitivity (all-mpnet-base-v2 vs MiniLM comparison). Requires pre-embedded MPNet data (see README).")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
     p.add_argument("--softmax-multilabel-sdg", action="store_true", dest="appendix_b4_softmax", help=argparse.SUPPRESS)
@@ -142,6 +151,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
     p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --cold-replay mode.")
     p.add_argument("--local-files-only", action="store_true", help="Pass --local-files-only to embed_paper_shards.py in --cold-replay mode.")
+    p.add_argument(
+        "--embed-model",
+        default=DEFAULT_EMBED_MODEL,
+        help="Sentence-transformer model name (default: %(default)s). Override for model sensitivity.",
+    )
     return p.parse_args()
 
 
@@ -167,6 +181,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_b4_softmax,
             args.appendix_d_register,
             args.appendix_c_sample_stability,
+            args.appendix_e_sensitivity,
             args.fetch_data_snapshot,
             args.build_pdf,
         ]
@@ -187,8 +202,8 @@ def missing_requirements(paths: list[Path]) -> list[Path]:
     return [p for p in paths if not (ROOT / p).exists()]
 
 
-def required_warm_replay_inputs(*, include_appendix_extra: bool) -> list[Path]:
-    required = list(BASE_WARM_REPLAY_REQUIREMENTS)
+def required_warm_replay_inputs(*, include_appendix_extra: bool, model: str = DEFAULT_EMBED_MODEL) -> list[Path]:
+    required = base_warm_replay_requirements(model)
     if include_appendix_extra:
         required.extend(WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS)
     return required
@@ -248,10 +263,11 @@ def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, .
     return missing
 
 
-def missing_warm_replay_requirements(*, include_appendix_extra: bool) -> list[Path]:
-    missing = missing_requirements(required_warm_replay_inputs(include_appendix_extra=include_appendix_extra))
+def missing_warm_replay_requirements(*, include_appendix_extra: bool, model: str = DEFAULT_EMBED_MODEL) -> list[Path]:
+    missing = missing_requirements(required_warm_replay_inputs(include_appendix_extra=include_appendix_extra, model=model))
+    embed_manifest = embed_dir_for_model(model) / "research_shards/metadata/manifest.json"
     for path in missing_manifest_shard_paths(
-        ROOT / "2_data/2_embedded/research_shards/metadata/manifest.json",
+        embed_manifest,
         ("embedding_path", "ids_path"),
     ):
         if path not in missing:
@@ -397,18 +413,22 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
 def run_main_text(
     output_dir: Path,
     args: argparse.Namespace,
+    *,
+    model: str = DEFAULT_EMBED_MODEL,
 ) -> None:
-    missing = missing_warm_replay_requirements(include_appendix_extra=False)
+    missing = missing_warm_replay_requirements(include_appendix_extra=False, model=model)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
 
-    run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"], step_id="1")
-    run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)], step_id="2")
-    run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"], step_id="3")
-    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"], step_id="4")
-    run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)], step_id="5")
-    run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)], step_id="6")
+    model_args = ["--model", model] if model != DEFAULT_EMBED_MODEL else []
+
+    run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"] + model_args, step_id="1")
+    run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)] + model_args, step_id="2")
+    run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"] + model_args, step_id="3")
+    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"] + model_args, step_id="4")
+    run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="5")
+    run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="6")
     run_step(
         "coverage semantic interaction",
         [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
@@ -417,11 +437,31 @@ def run_main_text(
     run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
 
 
+def run_model_sensitivity(output_dir: Path, args: argparse.Namespace) -> None:
+    model = "all-mpnet-base-v2"
+    mpnet_output_dir = output_dir / "appendix" / "e_model_sensitivity"
+    run_main_text(mpnet_output_dir, args, model=model)
+    run_step(
+        "model sensitivity comparison",
+        [
+            sys.executable,
+            "1_code/3_main_analysis/3_appendix/e_model_sensitivity/comparison.py",
+            "--output-dir", str(output_dir),
+        ],
+        step_id="E",
+    )
+
+
 def run_warm_replay(
     output_dir: Path,
     args: argparse.Namespace,
 ) -> None:
-    run_main_text(output_dir, args)
+    model = args.embed_model
+    if model != DEFAULT_EMBED_MODEL:
+        analysis_output_dir = ROOT / "4_outputs" / "appendix" / "e_model_sensitivity"
+        run_main_text(analysis_output_dir, args, model=model)
+    else:
+        run_main_text(output_dir, args)
     print(
         "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -432,6 +472,11 @@ def run_warm_replay(
 def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     print("WARNING: live-source --cold-replay reruns are not expected to be identical to the frozen data snapshot.")
     print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
+
+    model = args.embed_model
+    model_is_nondefault = model != DEFAULT_EMBED_MODEL
+    model_args = ["--model", model] if model_is_nondefault else []
+
     pre_steps = [
         ("fetch policy", [sys.executable, "1_code/0_fetch/fetch_policy.py"]),
         ("convert policy manual", [sys.executable, "1_code/0_fetch/convert_policy_manual.py"]),
@@ -456,7 +501,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
                 "1_code/2_embed/reference/0_embed_reference_corpora.py",
                 "--corpora", "policy", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
                 *(["--local-files-only"] if args.local_files_only else []),
-            ],
+            ] + model_args,
         ),
         ("fetch openalex", [sys.executable, "1_code/0_fetch/fetch_openalex.py"]),
         ("preprocess research shards", [sys.executable, "1_code/1_preprocess/preprocess_papers_streaming.py"]),
@@ -474,18 +519,24 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     ]
     if args.local_files_only:
         embed_cmd.append("--local-files-only")
+    embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
 
-    run_main_text(output_dir, args)
-    run_pca_semantic_landscape(output_dir)
-    run_within_corpus_centroid_structure(output_dir)
-    run_softmax_multilabel_sdg(output_dir)
-    run_policy_source_family_sensitivity(output_dir)
-    run_sdg4_lexical_audit(output_dir)
-    run_sdg_source_comparison(output_dir)
-    run_semantic_gap_interpretability(output_dir)
-    run_sample_stability(output_dir)
-    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+    analysis_output_dir = ROOT / "4_outputs" / "appendix" / "e_model_sensitivity" if model_is_nondefault else output_dir
+    run_main_text(analysis_output_dir, args, model=model)
+
+    # Skip appendix scripts for model-sensitivity runs (they read canonical MiniLM data
+    # and would overwrite existing canonical outputs if re-run with MPNet paths).
+    if not model_is_nondefault:
+        run_pca_semantic_landscape(output_dir)
+        run_within_corpus_centroid_structure(output_dir)
+        run_softmax_multilabel_sdg(output_dir)
+        run_policy_source_family_sensitivity(output_dir)
+        run_sdg4_lexical_audit(output_dir)
+        run_sdg_source_comparison(output_dir)
+        run_semantic_gap_interpretability(output_dir)
+        run_sample_stability(output_dir)
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
@@ -534,7 +585,10 @@ def selected_backup_profiles(profile_name: str) -> list[str]:
     return [profile_name]
 
 
-def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_appendix_extra: bool) -> None:
+def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_appendix_extra: bool, model: str = DEFAULT_EMBED_MODEL) -> None:
+    if model != DEFAULT_EMBED_MODEL:
+        # Model-sensitivity runs use model-specific embed files that are not in the snapshot.
+        return
     missing = missing_warm_replay_requirements(include_appendix_extra=include_appendix_extra)
     if not missing:
         return
@@ -570,6 +624,7 @@ def main() -> None:
         or args.appendix_b4_softmax
         or         args.appendix_d_register
         or args.appendix_c_sample_stability
+        or args.appendix_e_sensitivity
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
@@ -628,6 +683,10 @@ def main() -> None:
             build_pdf(output_dir)
     elif args.appendix_c_sample_stability:
         run_sample_stability(output_dir)
+        if args.build_pdf:
+            build_pdf(output_dir)
+    elif args.appendix_e_sensitivity:
+        run_model_sensitivity(output_dir, args)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.warm_replay:

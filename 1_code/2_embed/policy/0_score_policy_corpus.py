@@ -36,6 +36,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from alignment_core import verify_unit_norms
+from model_slug_utils import embed_dir_for_model, scored_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -43,14 +44,15 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Score the active policy corpus against SDG and research centroids.")
-    p.add_argument("--policy-emb", default="2_data/2_embedded/policy.npy")
-    p.add_argument("--policy-ids", default="2_data/2_embedded/metadata/policy_ids.json")
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--policy-emb", default=None)
+    p.add_argument("--policy-ids", default=None)
     p.add_argument("--policy-corpus", default="2_data/1_preprocessed/policy_all/policy_segments_all.jsonl")
-    p.add_argument("--sdg-centroids", default="2_data/3_scored/sdg_centroids.npy")
-    p.add_argument("--research-centroids", default="2_data/3_scored/research_centroids.npy")
-    p.add_argument("--policy-scores-out", default="2_data/3_scored/policy_scores.npy")
-    p.add_argument("--policy-vs-research-out", default="2_data/3_scored/policy_scores_vs_research.npy")
-    p.add_argument("--policy-score-ids-out", default="2_data/3_scored/metadata/policy_scores_ids.json")
+    p.add_argument("--sdg-centroids", default=None)
+    p.add_argument("--research-centroids", default=None)
+    p.add_argument("--policy-scores-out", default=None)
+    p.add_argument("--policy-vs-research-out", default=None)
+    p.add_argument("--policy-score-ids-out", default=None)
     return p.parse_args()
 
 
@@ -86,14 +88,18 @@ def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    policy_emb_path = Path(args.policy_emb)
-    policy_ids_path = Path(args.policy_ids)
+    model = args.model
+    embed_dir = embed_dir_for_model(model)
+    scored_dir = scored_dir_for_model(model)
+
+    policy_emb_path = Path(args.policy_emb) if args.policy_emb is not None else embed_dir / "policy.npy"
+    policy_ids_path = Path(args.policy_ids) if args.policy_ids is not None else embed_dir / "metadata" / "policy_ids.json"
     policy_corpus_path = Path(args.policy_corpus)
-    sdg_centroids_path = Path(args.sdg_centroids)
-    research_centroids_path = Path(args.research_centroids)
-    policy_scores_out = Path(args.policy_scores_out)
-    policy_vs_research_out = Path(args.policy_vs_research_out)
-    policy_score_ids_out = Path(args.policy_score_ids_out)
+    sdg_centroids_path = Path(args.sdg_centroids) if args.sdg_centroids is not None else scored_dir / "sdg_centroids.npy"
+    research_centroids_path = Path(args.research_centroids) if args.research_centroids is not None else scored_dir / "research_centroids.npy"
+    policy_scores_out = Path(args.policy_scores_out) if args.policy_scores_out is not None else scored_dir / "policy_scores.npy"
+    policy_vs_research_out = Path(args.policy_vs_research_out) if args.policy_vs_research_out is not None else scored_dir / "policy_scores_vs_research.npy"
+    policy_score_ids_out = Path(args.policy_score_ids_out) if args.policy_score_ids_out is not None else scored_dir / "metadata" / "policy_scores_ids.json"
 
     log.info("Loading policy embeddings: %s", policy_emb_path)
     policy_emb = np.load(policy_emb_path).astype(np.float32)

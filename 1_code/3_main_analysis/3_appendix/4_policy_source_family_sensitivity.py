@@ -36,16 +36,12 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
+import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
     N_SDG,
-    POLICY_EMB,
-    POLICY_IDS,
-    POLICY_SCORES,
     RANDOM_SEED,
-    RESEARCH_CENTROID_META,
-    RESEARCH_CENTROIDS,
     build_sub_centroid,
     cap_policy_indices_per_doc,
     get_cluster_assignments,
@@ -102,6 +98,7 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run policy source-family sensitivity diagnostic.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -288,6 +285,11 @@ def write_table_gap(path: Path, semantic_rows: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
     output_dir = Path(args.output_dir)
     out_root = output_dir / "appendix" / "a2_source_family_sensitivity"
     data_dir = out_root / "data"
@@ -297,11 +299,11 @@ def main() -> None:
 
     source_family_map = build_source_family_map()
 
-    policy_scores = np.load(POLICY_SCORES)
-    policy_emb = np.load(POLICY_EMB)
-    policy_ids = load_json(POLICY_IDS)
-    research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
-    research_meta = load_json(RESEARCH_CENTROID_META)
+    policy_scores = np.load(_POLICY_SCORES)
+    policy_emb = np.load(_POLICY_EMB)
+    policy_ids = load_json(_POLICY_IDS)
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+    research_meta = load_json(_RESEARCH_CENTROID_META)
     policy_assignments = get_cluster_assignments(policy_scores)
 
     row_family: list[str] = []
