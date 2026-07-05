@@ -189,10 +189,11 @@ def action_requested(args: argparse.Namespace) -> bool:
     )
 
 
-def run_step(label: str, cmd: list[str]) -> None:
+def run_step(label: str, cmd: list[str], step_id: str | None = None) -> None:
+    header = f"[{step_id}] {label}" if step_id else f"[{label}]"
     sep = "=" * 70
     print(f"\n{sep}")
-    print(f"  [{label}]")
+    print(f"  {header}")
     print(sep)
     subprocess.run(cmd, cwd=ROOT, check=True)
     print()
@@ -329,56 +330,64 @@ def run_sample_stability(output_dir: Path) -> None:
     run_step(
         "sample stability",
         [sys.executable, "1_code/3_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(output_dir)],
+        step_id="D",
     )
 
 
 def run_pca_semantic_landscape(output_dir: Path) -> None:
     run_step(
-        "appendix A pca semantic landscape",
+        "combined research-policy PCA landscape",
         [sys.executable, "1_code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
+        step_id="B1",
     )
 
 
 def run_within_corpus_centroid_structure(output_dir: Path) -> None:
     run_step(
-        "appendix A within-corpus centroid structure",
+        "within-corpus centroid structure",
         [sys.executable, "1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
+        step_id="B2",
     )
 
 
 def run_softmax_multilabel_sdg(output_dir: Path) -> None:
     run_step(
-        "appendix A softmax multi-label SDG robustness",
+        "softmax multi-label SDG robustness",
         [sys.executable, "1_code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
+        step_id="B4",
     )
 
 
 def run_policy_source_family_sensitivity(output_dir: Path) -> None:
     run_step(
-        "appendix A policy source-family sensitivity",
+        "policy source-family sensitivity",
         [sys.executable, "1_code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(output_dir)],
+        step_id="A2",
     )
 
 
 def run_sdg4_lexical_audit(output_dir: Path) -> None:
     run_step(
-        "appendix A SDG 4 lexical artefact audit",
+        "SDG 4 lexical artefact audit",
         [sys.executable, "1_code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(output_dir)],
+        step_id="A3",
     )
 
 
 def run_sdg_source_comparison(output_dir: Path) -> None:
     run_step(
-        "appendix A per-SDG source comparison",
+        "per-SDG source comparison",
         [sys.executable, "1_code/3_main_analysis/3_appendix/8_sdg_source_comparison.py", "--output-dir", str(output_dir)],
+        step_id="A1",
     )
 
 
 def run_semantic_gap_interpretability(output_dir: Path) -> None:
     require_output_files(output_dir / "main" / "data", ["4_3_semantic_gap_distances.json"])
     run_step(
-        "appendix A semantic-gap text interpretability",
+        "lexical illustration of the semantic gap",
         [sys.executable, "1_code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],
+        step_id="B3",
     )
 
 
@@ -395,8 +404,9 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
     if args.sdg_register_samples_per_cell is not None:
         cmd.extend(["--samples-per-cell", str(args.sdg_register_samples_per_cell)])
     run_step(
-        "appendix C register-adjustment robustness",
+        "register-adjustment robustness",
         cmd,
+        step_id="C",
     )
 
 
@@ -409,17 +419,18 @@ def run_main_text(
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
 
-    run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"])
-    run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)])
-    run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"])
-    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
-    run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)])
-    run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)])
+    run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"], step_id="1")
+    run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)], step_id="2")
+    run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"], step_id="3")
+    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"], step_id="4")
+    run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)], step_id="5")
+    run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)], step_id="6")
     run_step(
         "coverage semantic interaction",
         [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
+        step_id="7",
     )
-    run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)])
+    run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
 
 
 def run_warm_replay(
