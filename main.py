@@ -79,8 +79,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-b2-centroid", action="store_true", help="Run B.2 Within-Corpus Centroid Structure.")
     p.add_argument("--appendix-b3-interpret", action="store_true", help="Run B.3 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-b4-softmax", action="store_true", help="Run B.4 Softmax Multi-label SDG.")
-    p.add_argument("--appendix-c-register", action="store_true", help="Run C Register-Adjustment Robustness.")
-    p.add_argument("--appendix-d-sample-stability", action="store_true", help="Run D Sample-Stability Robustness (appendix).")
+    p.add_argument("--appendix-d-register", action="store_true", help="Run D Register-Adjustment Robustness.")
+    p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
     p.add_argument("--softmax-multilabel-sdg", action="store_true", dest="appendix_b4_softmax", help=argparse.SUPPRESS)
@@ -112,7 +112,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--register-adjustment",
         action="store_true",
-        dest="appendix_c_register",
+        dest="appendix_d_register",
         help=argparse.SUPPRESS,
     )
     p.add_argument("--skip-register-confidence-checks", action="store_true", help="Skip the additional register-confidence checks inside --register-adjustment.")
@@ -165,8 +165,8 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_b2_centroid,
             args.appendix_b3_interpret,
             args.appendix_b4_softmax,
-            args.appendix_c_register,
-            args.appendix_d_sample_stability,
+            args.appendix_d_register,
+            args.appendix_c_sample_stability,
             args.fetch_data_snapshot,
             args.build_pdf,
         ]
@@ -314,7 +314,7 @@ def run_sample_stability(output_dir: Path) -> None:
     run_step(
         "sample stability",
         [sys.executable, "1_code/3_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(output_dir)],
-        step_id="D",
+        step_id="C",
     )
 
 
@@ -390,7 +390,7 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
     run_step(
         "register-adjustment robustness",
         cmd,
-        step_id="C",
+        step_id="D",
     )
 
 
@@ -484,8 +484,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     run_sdg4_lexical_audit(output_dir)
     run_sdg_source_comparison(output_dir)
     run_semantic_gap_interpretability(output_dir)
-    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
     run_sample_stability(output_dir)
+    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
@@ -568,8 +568,8 @@ def main() -> None:
         or args.appendix_b2_centroid
         or args.appendix_b3_interpret
         or args.appendix_b4_softmax
-        or         args.appendix_c_register
-        or args.appendix_d_sample_stability
+        or         args.appendix_d_register
+        or args.appendix_c_sample_stability
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
@@ -590,8 +590,8 @@ def main() -> None:
         run_within_corpus_centroid_structure(output_dir)
         run_semantic_gap_interpretability(output_dir)
         run_softmax_multilabel_sdg(output_dir)
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         run_sample_stability(output_dir)
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a1_source:
@@ -622,11 +622,11 @@ def main() -> None:
         run_softmax_multilabel_sdg(output_dir)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.appendix_c_register:
+    elif args.appendix_d_register:
         run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.appendix_d_sample_stability:
+    elif args.appendix_c_sample_stability:
         run_sample_stability(output_dir)
         if args.build_pdf:
             build_pdf(output_dir)

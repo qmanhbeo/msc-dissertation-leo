@@ -8,15 +8,15 @@ raw gap, and how aggressively different subtraction schemes begin to remove the
 within-SDG contrast itself.
 
 Outputs:
-  4_outputs/appendix/c_register_adjustment/data/*.json
-  4_outputs/appendix/c_register_adjustment/data/*.csv
-  4_outputs/appendix/c_register_adjustment/data/*.npy
-  4_outputs/appendix/c_register_adjustment/register_confidence_checks/*
-  4_outputs/appendix/c_register_adjustment/tables/*.tex
-  4_outputs/appendix/c_register_adjustment/figures/*.pdf
-  4_outputs/appendix/c_register_adjustment/figures/*.png
-  4_outputs/appendix/c_register_adjustment/README_register_adjustment.md
-  4_outputs/appendix/c_register_adjustment/register_direction_interpretation.md
+  4_outputs/appendix/d_register_adjustment/data/*.json
+  4_outputs/appendix/d_register_adjustment/data/*.csv
+  4_outputs/appendix/d_register_adjustment/data/*.npy
+  4_outputs/appendix/d_register_adjustment/register_confidence_checks/*
+  4_outputs/appendix/d_register_adjustment/tables/*.tex
+  4_outputs/appendix/d_register_adjustment/figures/*.pdf
+  4_outputs/appendix/d_register_adjustment/figures/*.png
+  4_outputs/appendix/d_register_adjustment/README_register_adjustment.md
+  4_outputs/appendix/d_register_adjustment/register_direction_interpretation.md
 """
 
 from __future__ import annotations
@@ -90,7 +90,7 @@ DEFAULT_SAMPLE_PER_CLASS = 20_000
 DEFAULT_TFIDF_SAMPLE_PER_CLASS = 5_000
 DEFAULT_TFIDF_MAX_FEATURES = 20_000
 DEFAULT_EXTREME_TOP_N = 25
-ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "c_register_adjustment"
+ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "d_register_adjustment"
 DEFAULT_GENRE_CONFIDENCE_SUBDIR = "register_confidence_checks"
 DEFAULT_MULTI_DIRECTION_KS = (1, 2, 3, 5)
 DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG = 5_000

@@ -13,7 +13,7 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{graphicx}
-\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/c_register_adjustment/figures/}}
+\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/d_register_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -28,16 +28,16 @@
 \input{../4_outputs/main/tables/num_coverage.tex}
 \input{../4_outputs/main/tables/num_semantic.tex}
 \input{../4_outputs/main/tables/num_interaction.tex}
-\InputIfFileExists{../4_outputs/appendix/d_sample_stability/tables/num_sample_stability.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b2_within_corpus_centroid/tables/num_b2_within_corpus_centroid.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b4_softmax_multilabel_sdg/tables/num_b4_softmax_multilabel.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_register_adjustment.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_register_confidence_checks.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_sdg_register_robustness.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_register_interpretability.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/c_register_adjustment/tables/num_regression_register_alignment.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/d_register_adjustment/tables/num_register_adjustment.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/d_register_adjustment/tables/num_register_confidence_checks.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/d_register_adjustment/tables/num_sdg_register_robustness.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/d_register_adjustment/tables/num_register_interpretability.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/d_register_adjustment/tables/num_regression_register_alignment.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -658,6 +658,22 @@ These diagnostics are not treated as failed repairs to the method. They are meth
 
 These analyses also show that the centroid method should be interpreted as a transparent semantic anchoring procedure rather than a definitive operational SDG classifier. Attempts to address multi-label overlap and corpus-register bias improve some aspects of the design but introduce new modelling choices. For this dissertation, the hard-label centroid method is therefore retained as the canonical specification, while the alternatives are reported as robustness and boundary-condition checks.
 
+\section{Sample-Stability Robustness Check}
+\label{app:sample-stability}
+
+To test whether the headline findings depend heavily on research-corpus size, I reran the downstream research-side analysis on repeated random subsamples drawn from the pre-embedded, pre-scored OpenAlex corpus. For each of \SampleStabilitySampledTierCount{} sampled tiers (from 1{,}000 to 2{,}000{,}000 papers), I drew \SampleStabilityDraws{} independent samples without replacement, recomputed the research coverage profile, rebuilt sampled research centroids, recalculated the mean within-SDG semantic gap, and re-estimated the policy-to-research asymmetry and policy-text calibration-bias summaries. Policy-side quantities were held fixed. The full \SampleStabilityFullCorpusN{}-paper analysis is shown as a deterministic anchor row rather than as another repeated sample.
+
+\begin{table}[ht]
+\centering
+\caption{Sample-stability ladder for the research corpus. Mean SD of SDG coverage shares is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.}
+\label{tab:sample-stability}
+\resizebox{\textwidth}{!}{%
+\input{../4_outputs/appendix/c_sample_stability/tables/tab_sample_stability.tex}
+}
+\end{table}
+
+\noindent\textit{Plain-language guide.\footnote{The four metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy-to-research asymmetry --- whether policy text matches sampled research framing better than the reverse; (4) calibration bias --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$0.413), policy-to-research asymmetry ($\sim$0.152), and calibration bias ($\sim$0.321) already match the full-corpus values at three decimal places. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
+
 \section{Register-Adjustment Robustness and Diagnostics}
 \label{app:register-robustness}
 
@@ -682,11 +698,11 @@ Subtracting that one global direction reduces the mean gap from \MeanRawSemantic
 \caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the dissertation. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
 \label{tab:register-adjusted-semantic-gap}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_adjusted_semgap.tex}
+\input{../4_outputs/appendix/d_register_adjustment/tables/tab_register_adjusted_semgap.tex}
 }
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf}{
+\IfFileExists{../4_outputs/appendix/d_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig_register_adjusted_semantic_gap_comparison.pdf}
@@ -706,10 +722,10 @@ At the same time, the multi-direction subtraction curve shows that the mean adju
 \small
 \caption{Additional checks on the one-direction global register subtraction. These diagnostics test whether the first subtraction plausibly attenuates a broad corpus-level register axis without claiming that the residual is a fully purified substantive gap.}
 \label{tab:register-confidence-checks}
-\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_confidence_checks.tex}
+\input{../4_outputs/appendix/d_register_adjustment/tables/tab_register_confidence_checks.tex}
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_confidence_curve.pdf}{
+\IfFileExists{../4_outputs/appendix/d_register_adjustment/figures/fig_register_confidence_curve.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.82\textwidth]{fig_register_confidence_curve.pdf}
@@ -729,10 +745,10 @@ I also fit within-SDG classifiers, but these are interpreted differently. Becaus
 \small
 \caption{SDG-aware register robustness hierarchy. The SDG-balanced classifier is treated as a stronger global sensitivity check. The within-SDG design is treated as an over-subtraction stress test because it learns and removes within-goal research--policy contrasts directly.}
 \label{tab:sdg-register-robustness}
-\input{../4_outputs/appendix/c_register_adjustment/tables/tab_sdg_register_robustness.tex}
+\input{../4_outputs/appendix/d_register_adjustment/tables/tab_sdg_register_robustness.tex}
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf}{
+\IfFileExists{../4_outputs/appendix/d_register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.90\textwidth]{fig_sdg_register_robustness_comparison.pdf}
@@ -751,7 +767,7 @@ The projection examples are included for manual inspection rather than automatic
 \centering
 \caption{Alignment between the SDG-balanced global register direction and the canonical SDG centroids. The final column reports the matching within-SDG register-versus-centroid cosine when an SDG-specific register vector is available.}
 \label{tab:register-sdg-alignment}
-\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_sdg_alignment.tex}
+\input{../4_outputs/appendix/d_register_adjustment/tables/tab_register_sdg_alignment.tex}
 \end{table}
 
 \begin{table}[ht]
@@ -760,11 +776,11 @@ The projection examples are included for manual inspection rather than automatic
 \caption{Manual-inspection examples from the learned global register direction. The policy-like rows have the highest positive projection onto the global register vector; the research-like rows have the lowest projection.}
 \label{tab:register-projection-examples}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/c_register_adjustment/tables/tab_register_projection_examples.tex}
+\input{../4_outputs/appendix/d_register_adjustment/tables/tab_register_projection_examples.tex}
 }
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_projection_distribution.pdf}{
+\IfFileExists{../4_outputs/appendix/d_register_adjustment/figures/fig_register_projection_distribution.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.92\textwidth]{fig_register_projection_distribution.pdf}
@@ -773,7 +789,7 @@ The projection examples are included for manual inspection rather than automatic
 \end{figure}
 }{}
 
-\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_register_sdg_alignment.pdf}{
+\IfFileExists{../4_outputs/appendix/d_register_adjustment/figures/fig_register_sdg_alignment.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.86\textwidth]{fig_register_sdg_alignment.pdf}
@@ -792,10 +808,10 @@ In the current run, the cosine between the regression-derived global register ve
 \centering
 \caption{Regression-derived versus classifier-derived register alignment with the canonical SDG centroids. The second column reports the SDG-balanced classifier direction, the third reports the regression-derived global register direction, and the fourth reports SDG-specific regression register directions.}
 \label{tab:regression-register-alignment}
-\input{../4_outputs/appendix/c_register_adjustment/tables/tab_regression_register_alignment.tex}
+\input{../4_outputs/appendix/d_register_adjustment/tables/tab_regression_register_alignment.tex}
 \end{table}
 
-\IfFileExists{../4_outputs/appendix/c_register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
+\IfFileExists{../4_outputs/appendix/d_register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf}{
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.90\textwidth]{fig_regression_vs_classifier_alignment.pdf}
@@ -803,21 +819,5 @@ In the current run, the cosine between the regression-derived global register ve
 \label{fig:regression-vs-classifier-alignment}
 \end{figure}
 }{}
-
-\section{Sample-Stability Robustness Check}
-\label{app:sample-stability}
-
-To test whether the headline findings depend heavily on research-corpus size, I reran the downstream research-side analysis on repeated random subsamples drawn from the pre-embedded, pre-scored OpenAlex corpus. For each of \SampleStabilitySampledTierCount{} sampled tiers (from 1{,}000 to 2{,}000{,}000 papers), I drew \SampleStabilityDraws{} independent samples without replacement, recomputed the research coverage profile, rebuilt sampled research centroids, recalculated the mean within-SDG semantic gap, and re-estimated the policy-to-research asymmetry and policy-text calibration-bias summaries. Policy-side quantities were held fixed. The full \SampleStabilityFullCorpusN{}-paper analysis is shown as a deterministic anchor row rather than as another repeated sample.
-
-\begin{table}[ht]
-\centering
-\caption{Sample-stability ladder for the research corpus. Mean SD of SDG coverage shares is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.}
-\label{tab:sample-stability}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/d_sample_stability/tables/tab_sample_stability.tex}
-}
-\end{table}
-
-\noindent\textit{Plain-language guide.\footnote{The four metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy-to-research asymmetry --- whether policy text matches sampled research framing better than the reverse; (4) calibration bias --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$0.413), policy-to-research asymmetry ($\sim$0.152), and calibration bias ($\sim$0.321) already match the full-corpus values at three decimal places. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
 
 \end{document}

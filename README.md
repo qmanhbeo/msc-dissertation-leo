@@ -77,8 +77,8 @@ Not tracked in Git:
 | `python main.py --appendix-b2-centroid --overwrite` | Run B.2 Within-Corpus Centroid Structure |
 | `python main.py --appendix-b3-interpret --overwrite` | Run B.3 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-b4-softmax --overwrite` | Run B.4 Softmax Multi-label SDG |
-| `python main.py --appendix-c-register --overwrite` | Run C Register-Adjustment Robustness |
-| `python main.py --appendix-d-sample-stability --overwrite` | Run D Sample-Stability Robustness |
+| `python main.py --appendix-d-register --overwrite` | Run D Register-Adjustment Robustness |
+| `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |

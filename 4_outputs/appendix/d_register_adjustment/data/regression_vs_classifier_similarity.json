@@ -3,8 +3,8 @@
   "baseline_sdg": 1,
   "global_regression_vs_classifier_cosine": 0.613216,
   "agreement_band": "partial_agreement",
-  "classifier_vector_source": "4_outputs/appendix/c_register_adjustment/sdg_balanced_register_vector.npy",
-  "regression_vector_source": "4_outputs/appendix/c_register_adjustment/regression_register_vector.npy",
+  "classifier_vector_source": "4_outputs/appendix/d_register_adjustment/sdg_balanced_register_vector.npy",
+  "regression_vector_source": "4_outputs/appendix/d_register_adjustment/regression_register_vector.npy",
   "classifier_alignment_summary": {
     "mean_absolute_cosine": 0.37944,
     "median_absolute_cosine": 0.386947,
