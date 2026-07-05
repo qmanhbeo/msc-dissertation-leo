@@ -68,7 +68,6 @@ Not tracked in Git:
 |---|---|
 | `python main.py` | Read-only status check |
 | `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
-| `python main.py --main-text --overwrite` | Rebuild main text analysis only (no appendix, no PDF) |
 | `python main.py --full-pipeline --overwrite` | Full live-source pipeline (not snapshot-reproducible) |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |

@@ -74,11 +74,6 @@ def parse_args() -> argparse.Namespace:
             "Auto-fetches the curated snapshot if 2_data/ is missing."
         ),
     )
-    p.add_argument(
-        "--main-text",
-        action="store_true",
-        help="Rebuild canonical analysis outputs from frozen embeddings (main text only, no appendix, no PDF).",
-    )
     p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through all appendix analyses (no PDF).")
     p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
@@ -175,7 +170,6 @@ def action_requested(args: argparse.Namespace) -> bool:
     return any(
         [
             args.warm_replay,
-            args.main_text,
             args.full_pipeline,
             args.appendix_all,
             args.appendix_a1_source,
@@ -659,7 +653,6 @@ def main() -> None:
 
     if (
         args.warm_replay
-        or args.main_text
         or args.full_pipeline
         or args.appendix_all
         or args.appendix_a1_source
@@ -739,9 +732,6 @@ def main() -> None:
             build_pdf(output_dir)
     elif args.refresh_policy_corpus:
         run_refresh_policy_corpus(args)
-    elif args.main_text:
-        ensure_warm_replay_inputs(args, include_register_adjustment=False)
-        run_main_text(output_dir, args)
     elif args.warm_replay:
         ensure_warm_replay_inputs(args, include_register_adjustment=False)
         run_warm_replay(output_dir, args)
