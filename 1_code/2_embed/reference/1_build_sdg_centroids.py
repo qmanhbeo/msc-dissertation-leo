@@ -189,30 +189,30 @@ def main() -> None:
     SCORED_METADATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # ---- Load embeddings and ID metadata ----
-    log.debug("Loading OSDG embeddings: %s", OSDG_EMB)
+    log.info("Loading OSDG embeddings: %s", OSDG_EMB)
     osdg_emb = np.load(OSDG_EMB)   # (30534, 384) float32 — produced by 0_embed_reference_corpora.py
     osdg_ids = load_json(OSDG_IDS)  # list of {id, text, sdg} with sdg in 1..16
-    log.debug("  shape=%s  dtype=%s", osdg_emb.shape, osdg_emb.dtype)
+    log.info("  shape=%s  dtype=%s", osdg_emb.shape, osdg_emb.dtype)
 
-    log.debug("Loading Knowledge Hub embeddings: %s", KH_EMB)
+    log.info("Loading Knowledge Hub embeddings: %s", KH_EMB)
     kh_emb = np.load(KH_EMB)   # (2221, 384)
     kh_ids = load_json(KH_IDS)
-    log.debug("  shape=%s  dtype=%s", kh_emb.shape, kh_emb.dtype)
+    log.info("  shape=%s  dtype=%s", kh_emb.shape, kh_emb.dtype)
 
-    log.debug("Loading SDGi embeddings: %s", SDGI_EMB)
+    log.info("Loading SDGi embeddings: %s", SDGI_EMB)
     sdgi_emb = np.load(SDGI_EMB)   # (5233, 384)
     sdgi_ids = load_json(SDGI_IDS)
-    log.debug("  shape=%s  dtype=%s", sdgi_emb.shape, sdgi_emb.dtype)
+    log.info("  shape=%s  dtype=%s", sdgi_emb.shape, sdgi_emb.dtype)
 
-    log.debug("Loading Aurora embeddings: %s", AURORA_EMB)
+    log.info("Loading Aurora embeddings: %s", AURORA_EMB)
     aurora_emb = np.load(AURORA_EMB)   # (5619, 384)
     aurora_ids = load_json(AURORA_IDS)
-    log.debug("  shape=%s  dtype=%s", aurora_emb.shape, aurora_emb.dtype)
+    log.info("  shape=%s  dtype=%s", aurora_emb.shape, aurora_emb.dtype)
 
-    log.debug("Loading benchmark embeddings (validation only): %s", BENCH_EMB)
+    log.info("Loading benchmark embeddings (validation only): %s", BENCH_EMB)
     bench_emb = np.load(BENCH_EMB)   # (616, 384)
     bench_ids = load_json(BENCH_IDS)
-    log.debug("  shape=%s  dtype=%s", bench_emb.shape, bench_emb.dtype)
+    log.info("  shape=%s  dtype=%s", bench_emb.shape, bench_emb.dtype)
 
     # ---- Verify L2 normalisation ----
     # ASSUMPTION (embeddings.py): all embeddings were produced with normalize_embeddings=True
@@ -224,7 +224,7 @@ def main() -> None:
     if not np.allclose(sample_norms, 1.0, atol=1e-4):
         log.warning("OSDG embeddings may not be L2-normalised (norms: %s)", sample_norms[:5])
     else:
-        log.debug("Embedding norms verified ≈ 1.0 (L2-normalised)")
+        log.info("Embedding norms verified ≈ 1.0 (L2-normalised)")
 
     # ---- Build per-SDG index maps ----
     osdg_by_sdg: dict[int, list[int]] = {}
@@ -257,32 +257,32 @@ def main() -> None:
     if osdg_sdgs != list(range(1, 17)):
         log.warning("Unexpected OSDG SDG labels: %s", osdg_sdgs)
     else:
-        log.debug("OSDG SDG coverage confirmed: 1–16")
+        log.info("OSDG SDG coverage confirmed: 1–16")
 
     kh_sdgs = sorted(kh_by_sdg.keys())
-    log.debug("Knowledge Hub SDG coverage: %s (per-SDG: %s)",
+    log.info("Knowledge Hub SDG coverage: %s (per-SDG: %s)",
              kh_sdgs, {s: len(kh_by_sdg[s]) for s in kh_sdgs})
 
     sdgi_sdgs = sorted(sdgi_by_sdg.keys())
-    log.debug("SDGi SDG coverage: %s (per-SDG: %s)",
+    log.info("SDGi SDG coverage: %s (per-SDG: %s)",
              sdgi_sdgs, {s: len(sdgi_by_sdg[s]) for s in sdgi_sdgs})
 
     aurora_sdgs = sorted(aurora_by_sdg.keys())
-    log.debug("Aurora SDG coverage: %s (per-SDG: %s)",
+    log.info("Aurora SDG coverage: %s (per-SDG: %s)",
              aurora_sdgs, {s: len(aurora_by_sdg[s]) for s in aurora_sdgs})
 
     # ASSUMPTION (A-SDG17 — combined-source centroids): every SDG centroid draws from all
     # available single-label texts. The benchmark is held out for validation only.
     # OSDG has no SDG 17 labels, so SDG 17 is sourced from Knowledge Hub + SDGi.
-    log.debug("Benchmark available for validation: SDGs %s, %d total texts",
-              sorted(bench_by_sdg.keys()), sum(len(v) for v in bench_by_sdg.values()))
+    log.info("Benchmark available for validation: SDGs %s, %d total texts",
+             sorted(bench_by_sdg.keys()), sum(len(v) for v in bench_by_sdg.values()))
 
     # ---- Build centroids (all sources combined per SDG) ----
-    log.debug("")
-    log.debug("Building centroids from all available sources...")
-    log.debug("%-8s %-7s %-40s %-10s %-10s %s",
+    log.info("")
+    log.info("Building centroids from all available sources...")
+    log.info("%-8s %-7s %-40s %-10s %-10s %s",
              "SDG", "n", "source(s)", "raw_norm", "cohesion", "variance_flag")
-    log.debug("-" * 85)
+    log.info("-" * 85)
 
     centroid_vectors = []
     centroid_meta = []
@@ -314,7 +314,7 @@ def main() -> None:
         centroid_meta.append(meta)
 
         flag = " [HIGH VARIANCE — A6 risk]" if meta["high_variance_flag"] else ""
-        level = logging.DEBUG
+        level = logging.WARNING if meta["high_variance_flag"] else logging.INFO
         log.log(level, "SDG %2d | n=%5d | %-35s | norm=%.4f | cohesion=%.4f%s",
                 sdg, meta["n"], source_label, meta["raw_centroid_norm"], meta["mean_cos_to_centroid"], flag)
 
@@ -327,20 +327,20 @@ def main() -> None:
     if not np.allclose(norms, 1.0, atol=1e-5):
         log.warning("Post-normalisation centroid norms not all ≈ 1.0: %s", norms)
     else:
-        log.debug("\nAll 17 centroid norms ≈ 1.0 ✓")
+        log.info("\nAll 17 centroid norms ≈ 1.0 ✓")
 
     # ---- Save ----
     np.save(OUT_CENTROIDS, centroids)
-    log.debug("Saved: %s  shape=%s  dtype=%s", OUT_CENTROIDS, centroids.shape, centroids.dtype)
+    log.info("Saved: %s  shape=%s  dtype=%s", OUT_CENTROIDS, centroids.shape, centroids.dtype)
 
     with OUT_META.open("w", encoding="utf-8") as f:
         json.dump(centroid_meta, f, indent=2)
-    log.debug("Saved: %s", OUT_META)
+    log.info("Saved: %s", OUT_META)
 
     # ---- Summary ----
     high_var = [m["sdg"] for m in centroid_meta if m["high_variance_flag"]]
     if high_var:
-        log.debug(
+        log.warning(
             "\nHigh-variance SDGs (cohesion < %.2f): %s\n"
             "  → These SDG centroids are internally diffuse but may still be discriminable\n"
             "    from other centroids (see A6 in ASSUMPTIONS.md). Run validate_centroids.py\n"
@@ -348,15 +348,13 @@ def main() -> None:
             COHESION_WARN_THRESHOLD, high_var
         )
     else:
-        log.debug("\nNo high-variance SDGs detected at threshold %.2f", COHESION_WARN_THRESHOLD)
+        log.info("\nNo high-variance SDGs detected at threshold %.2f", COHESION_WARN_THRESHOLD)
 
-    log.debug(
+    log.info(
         "\nRow ordering: centroids[i] = SDG (i+1)  "
         "(row 0 → SDG 1, row 16 → SDG 17)\n"
         "Next step: python 1_code/2_embed/reference/2_validate_centroids.py"
     )
-
-    log.info("Done — 17 centroids built")
 
 
 if __name__ == "__main__":

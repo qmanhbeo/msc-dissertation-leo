@@ -94,6 +94,8 @@ def main() -> None:
     require_output_files(layout.data_dir, ["4_4_interaction_scatter_data.csv"])
     figures_dir = layout.figures_dir
 
+    print(f"Canonical output dir: {layout.data_dir}")
+
     # -----------------------------------------------------------------------
     # Load data
     # -----------------------------------------------------------------------
@@ -154,6 +156,7 @@ def main() -> None:
     fig1.savefig(figures_dir / "fig1_coverage_profiles.pdf", bbox_inches="tight")
     fig1.savefig(figures_dir / "fig1_coverage_profiles.png", bbox_inches="tight", dpi=150)
     plt.close(fig1)
+    print("Saved: fig1_coverage_profiles.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 2 — Semantic gap by SDG
@@ -189,6 +192,7 @@ def main() -> None:
     fig2.savefig(figures_dir / "fig2_semantic_gap.pdf", bbox_inches="tight")
     fig2.savefig(figures_dir / "fig2_semantic_gap.png", bbox_inches="tight", dpi=150)
     plt.close(fig2)
+    print("Saved: fig2_semantic_gap.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
@@ -230,7 +234,8 @@ def main() -> None:
     fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.pdf", bbox_inches="tight")
     fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.png", bbox_inches="tight", dpi=150)
     plt.close(fig3)
-    print("Done — 3 figures saved")
+    print("Saved: fig3_coverage_semantic_scatter.pdf")
+    print(f"\\nAll figures saved to {figures_dir}")
 
 
 if __name__ == "__main__":

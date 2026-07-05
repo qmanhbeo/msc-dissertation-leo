@@ -117,7 +117,7 @@ def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
         "spearman_rho": round(float(rho), 6),
         "spearman_p": round(float(s_p), 6),
     }
-    log.debug(
+    log.info(
         "  %-55s  Pearson r=%.3f (p=%.3f)  Spearman ρ=%.3f (p=%.3f)",
         label, r, r_p, rho, s_p
     )
@@ -167,10 +167,10 @@ def main() -> None:
     out_corr = layout.data_dir / "4_4_interaction_correlation_asymmetry.json"
     out_scatter = layout.data_dir / "4_4_interaction_scatter_data.csv"
     tables_dir = layout.tables_dir
-    log.debug("Canonical output dir: %s", layout.data_dir)
+    log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load coverage data ----
-    log.debug("Loading coverage gap: %s", coverage_gap_path)
+    log.info("Loading coverage gap: %s", coverage_gap_path)
     cov_data = load_json(coverage_gap_path)
 
     # Extract per-SDG arrays (1-indexed labels, so SDG{i} = SDG i, row index i-1)
@@ -182,7 +182,7 @@ def main() -> None:
     res_dominance = res_hard - pol_dw_hard
 
     # ---- Load semantic gap data ----
-    log.debug("Loading semantic gap: %s", semantic_gap_path)
+    log.info("Loading semantic gap: %s", semantic_gap_path)
     sem_data = load_json(semantic_gap_path)
 
     per_sdg = {r["sdg"]: r for r in sem_data["per_sdg"]}
@@ -208,18 +208,18 @@ def main() -> None:
     reliable_mask = available_mask & ~unreliable
     reliable_sdgs = [i + 1 for i, keep in enumerate(reliable_mask) if keep]
     missing_sdgs = [i + 1 for i, keep in enumerate(available_mask) if not keep]
-    log.debug("Semantic-gap SDGs available for correlation: %s  (n=%d)", available_sdgs, len(available_sdgs))
+    log.info("Semantic-gap SDGs available for correlation: %s  (n=%d)", available_sdgs, len(available_sdgs))
     if missing_sdgs:
         log.warning("Excluded from correlation due to missing semantic gap: %s", missing_sdgs)
-    log.debug("Reliable SDGs for correlation: %s  (n=%d)", reliable_sdgs, len(reliable_sdgs))
+    log.info("Reliable SDGs for correlation: %s  (n=%d)", reliable_sdgs, len(reliable_sdgs))
 
     # ---- Build per-SDG table ----
-    log.debug("")
-    log.debug("Per-SDG data table:")
-    log.debug("  %-6s %-12s %-12s %-12s %-12s %-10s", "SDG", "res%", "pol%", "cov_gap", "sem_gap", "reliable")
+    log.info("")
+    log.info("Per-SDG data table:")
+    log.info("  %-6s %-12s %-12s %-12s %-12s %-10s", "SDG", "res%", "pol%", "cov_gap", "sem_gap", "reliable")
     for i in range(N_SDG):
         sem_gap_display = "N/A" if not np.isfinite(sem_gap[i]) else f"{sem_gap[i]:.4f}"
-        log.debug(
+        log.info(
             "  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %10s  %s",
             i + 1,
             res_hard[i] * 100,
@@ -231,12 +231,12 @@ def main() -> None:
 
     # ---- Correlation tests ----
     # Use all SDGs with finite semantic gaps first, then re-check with only reliable ones.
-    log.debug("")
-    log.debug("=" * 70)
-    log.debug("CORRELATION TESTS")
-    log.debug("=" * 70)
-    log.debug("")
-    log.debug("OBSERVED SDGs WITH FINITE SEMANTIC GAP (n=%d):", int(available_mask.sum()))
+    log.info("")
+    log.info("=" * 70)
+    log.info("CORRELATION TESTS")
+    log.info("=" * 70)
+    log.info("")
+    log.info("OBSERVED SDGs WITH FINITE SEMANTIC GAP (n=%d):", int(available_mask.sum()))
     corr_primary = {
         "a_res_prop_vs_sem_gap": correlation_or_skip(
             res_hard, sem_gap, available_mask, "(a) research_proportion vs semantic_gap"
@@ -251,8 +251,8 @@ def main() -> None:
 
     # Reliable SDGs only (excludes SDG 10 if flagged).
     if reliable_mask.sum() < available_mask.sum():
-        log.debug("")
-        log.debug("RELIABLE SDGs ONLY (n=%d):", reliable_mask.sum())
+        log.info("")
+        log.info("RELIABLE SDGs ONLY (n=%d):", reliable_mask.sum())
         corr_reliable = {
             "a_res_prop_vs_sem_gap": correlation_or_skip(
                 res_hard, sem_gap, reliable_mask, "(a) research_proportion vs semantic_gap [reliable only]"
@@ -272,8 +272,8 @@ def main() -> None:
     # If SDG 4 is an artefact inflating the research proportion → excluding it tests robustness.
     excl4_mask = available_mask.copy()
     excl4_mask[3] = False   # SDG 4 is index 3
-    log.debug("")
-    log.debug("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact):")
+    log.info("")
+    log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact):")
     corr_excl4 = {
         "a_res_prop_vs_sem_gap": correlation_or_skip(
             res_hard, sem_gap, excl4_mask, "(a) research_proportion vs semantic_gap [excl SDG4]"
@@ -292,10 +292,10 @@ def main() -> None:
     rho_primary = primary_stats["spearman_rho"]
     p_primary = primary_stats["pearson_p"]
 
-    log.debug("")
-    log.debug("=" * 70)
-    log.debug("CORRELATION INTERPRETATION (PRIMARY TEST: research_proportion vs semantic_gap)")
-    log.debug("=" * 70)
+    log.info("")
+    log.info("=" * 70)
+    log.info("CORRELATION INTERPRETATION (PRIMARY TEST: research_proportion vs semantic_gap)")
+    log.info("=" * 70)
     if r_primary > 0.3:
         correlation_direction = "SUPPORTED"
         correlation_story = (
@@ -314,27 +314,27 @@ def main() -> None:
             "Near-zero correlation: research attention does not predict semantic gap direction. "
             "Coverage and semantic divergence are largely independent dimensions."
         )
-    log.debug("  Correlation direction: %s", correlation_direction)
-    log.debug("  Pearson r=%.3f  p=%.3f  Spearman ρ=%.3f", r_primary, p_primary, rho_primary)
-    log.debug("  %s", correlation_story)
+    log.info("  Correlation direction: %s", correlation_direction)
+    log.info("  Pearson r=%.3f  p=%.3f  Spearman ρ=%.3f", r_primary, p_primary, rho_primary)
+    log.info("  %s", correlation_story)
 
     # Top-3 outliers (SDGs furthest from the trend line).
-    log.debug("")
-    log.debug("NOTABLE SDGS (highest research %% + gap relationship):")
+    log.info("")
+    log.info("NOTABLE SDGS (highest research % + gap relationship):")
     pairs = sorted(
         [(i + 1, res_hard[i], sem_gap[i]) for i in range(N_SDG) if np.isfinite(sem_gap[i])],
         key=lambda x: x[1], reverse=True
     )[:5]
     for sdg, rp, sg in pairs:
-        log.debug("  SDG %2d  res=%.1f%%  sem_gap=%.3f  (%s)",
+        log.info("  SDG %2d  res=%.1f%%  sem_gap=%.3f  (%s)",
                  sdg, rp*100, sg,
                  "high_coverage_high_gap" if sg > 0.25 else "high_coverage_low_gap")
 
     # ---- Asymmetry diagnostic ----
-    log.debug("")
-    log.debug("=" * 70)
-    log.debug("DIRECTIONAL ASYMMETRY DIAGNOSTIC")
-    log.debug("=" * 70)
+    log.info("")
+    log.info("=" * 70)
+    log.info("DIRECTIONAL ASYMMETRY DIAGNOSTIC")
+    log.info("=" * 70)
     research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
     pol_vs_research = np.load(POL_VS_RES_PATH)
     policy_scores = np.load(POLICY_SCORES_PATH)
@@ -351,19 +351,19 @@ def main() -> None:
         for j in range(N_SDG)
     ])
 
-    log.debug("  Research papers vs OSDG centroids — mean top sim: %.4f", mean_paper_top)
-    log.debug("  Policy segments vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
+    log.info("  Research papers vs OSDG centroids — mean top sim: %.4f", mean_paper_top)
+    log.info("  Policy segments vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
     asym_supported = mean_pol_vs_res > mean_paper_top
     asym_gap = mean_pol_vs_res - mean_paper_top
-    log.debug("  Asymmetry gap (policy - research): %.4f  → Asymmetry direction %s",
+    log.info("  Asymmetry gap (policy - research): %.4f  → Asymmetry direction %s",
              asym_gap, "OBSERVED" if asym_supported else "NOT OBSERVED")
     if asym_supported:
-        log.debug(
+        log.info(
             "  Diagnostic reading: policy-facing texts score closer to research-derived "
             "centroids than papers score to OSDG-derived centroids."
         )
     else:
-        log.debug(
+        log.info(
             "  Diagnostic reading: the observed direction does not favour the asymmetry claim."
         )
 
@@ -426,7 +426,7 @@ def main() -> None:
 
     with out_corr.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    log.debug("Saved: %s", out_corr)
+    log.info("Saved: %s", out_corr)
 
     # CSV scatter table for plotting.
     with out_scatter.open("w", newline="", encoding="utf-8") as f:
@@ -447,10 +447,10 @@ def main() -> None:
                 "semantic_similarity": "" if not np.isfinite(sem_sim[i]) else round(float(sem_sim[i]), 6),
                 "reliable": int(reliable_mask[i]),
             })
-    log.debug("Saved: %s", out_scatter)
+    log.info("Saved: %s", out_scatter)
 
-    log.debug("")
-    log.debug("Next step: python 1_code/4_visualization/plot_figures.py")
+    log.info("")
+    log.info("Next step: python 1_code/4_visualization/plot_figures.py")
 
     # ---- Write LaTeX generated outputs ----
     gen_dir = tables_dir
@@ -497,7 +497,7 @@ def main() -> None:
         rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.2f}}}",
     ]
     (gen_dir / "num_interaction.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.debug("Saved: %s", gen_dir / "num_interaction.tex")
+    log.info("Saved: %s", gen_dir / "num_interaction.tex")
 
     # tab_interaction.tex — full tabular block
     tab_lines = [
@@ -513,10 +513,7 @@ def main() -> None:
         r"\end{tabular}",
     ]
     (gen_dir / "tab_interaction.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.debug("Saved: %s", gen_dir / "tab_interaction.tex")
-    asym_str = "OBSERVED" if asym_supported else "NOT OBSERVED"
-    log.info("Done — Correlation: r=%.3f (%s), Asymmetry: gap=%.4f (%s)",
-             r_primary, correlation_direction, asym_gap, asym_str)
+    log.info("Saved: %s", gen_dir / "tab_interaction.tex")
 
 
 if __name__ == "__main__":

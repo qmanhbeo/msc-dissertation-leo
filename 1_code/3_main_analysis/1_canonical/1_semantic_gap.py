@@ -127,10 +127,10 @@ def main() -> None:
     out_sem_gap = layout.data_dir / "4_3_semantic_gap_distances.json"
     out_sem_sens = layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
     tables_dir = layout.tables_dir
-    log.debug("Canonical output dir: %s", layout.data_dir)
+    log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load research centroids/meta ----
-    log.debug("Loading research centroids: %s", RESEARCH_CENTROIDS)
+    log.info("Loading research centroids: %s", RESEARCH_CENTROIDS)
     research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
     research_meta = load_json(RESEARCH_CENTROID_META)
     if research_centroids.shape[0] != N_SDG:
@@ -140,32 +140,32 @@ def main() -> None:
     research_counts = np.array([int(r["n_papers_assigned"]) for r in research_meta], dtype=np.int64)
     research_cohesions = np.array([float(r["mean_cos_to_centroid"]) for r in research_meta], dtype=np.float32)
 
-    log.debug("Loading policy embeddings: %s", POLICY_EMB)
+    log.info("Loading policy embeddings: %s", POLICY_EMB)
     policy_emb = np.load(POLICY_EMB)
     policy_ids = load_json(POLICY_IDS)
 
     # ---- Load score matrices for cluster assignments ----
-    log.debug("Loading score matrices...")
+    log.info("Loading score matrices...")
     policy_scores = np.load(POLICY_SCORES)
 
     # Hard assignment (0-indexed SDG index).
     policy_assignments = get_cluster_assignments(policy_scores)
 
-    log.debug("Paper cluster sizes by SDG:")
+    log.info("Paper cluster sizes by SDG:")
     for sdg_idx in range(N_SDG):
         n = int(research_counts[sdg_idx])
-        log.debug("  SDG %2d: %d papers", sdg_idx + 1, n)
+        log.info("  SDG %2d: %d papers", sdg_idx + 1, n)
 
-    log.debug("Policy cluster sizes by SDG (raw segments):")
+    log.info("Policy cluster sizes by SDG (raw segments):")
     for sdg_idx in range(N_SDG):
         n = int((policy_assignments == sdg_idx).sum())
-        log.debug("  SDG %2d: %d segments", sdg_idx + 1, n)
+        log.info("  SDG %2d: %d segments", sdg_idx + 1, n)
 
     # ---- Primary analysis (SEGMENT_CAP = 50) ----
-    log.debug("")
-    log.debug("=" * 60)
-    log.debug("PRIMARY SEMANTIC GAP (segment cap = %d)", SEGMENT_CAP_PRIMARY)
-    log.debug("=" * 60)
+    log.info("")
+    log.info("=" * 60)
+    log.info("PRIMARY SEMANTIC GAP (segment cap = %d)", SEGMENT_CAP_PRIMARY)
+    log.info("=" * 60)
     rng_primary = np.random.default_rng(RANDOM_SEED)
     primary_results = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
@@ -175,18 +175,18 @@ def main() -> None:
 
     # Summary: sort by semantic gap (largest first).
     reliable = [r for r in primary_results if not r["unreliable"] and r["semantic_gap"] is not None]
-    log.debug("")
-    log.debug("Sorted by semantic gap (reliable SDGs only, cap=%d):", SEGMENT_CAP_PRIMARY)
+    log.info("")
+    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", SEGMENT_CAP_PRIMARY)
     for r in sorted(reliable, key=lambda x: x["semantic_gap"], reverse=True):
-        log.debug("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
+        log.info("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
                  r["sdg"], r["semantic_gap"], r["semantic_similarity"],
                  r["n_papers"], r["n_policy_docs_capped"])
 
     # ---- Sensitivity analyses ----
-    log.debug("")
-    log.debug("=" * 60)
-    log.debug("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
-    log.debug("=" * 60)
+    log.info("")
+    log.info("=" * 60)
+    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
+    log.info("=" * 60)
     rng_lo = np.random.default_rng(RANDOM_SEED)
     sens_lo = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
@@ -194,10 +194,10 @@ def main() -> None:
         policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
     )
 
-    log.debug("")
-    log.debug("=" * 60)
-    log.debug("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI)
-    log.debug("=" * 60)
+    log.info("")
+    log.info("=" * 60)
+    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI)
+    log.info("=" * 60)
     rng_hi = np.random.default_rng(RANDOM_SEED)
     sens_hi = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
@@ -207,19 +207,19 @@ def main() -> None:
 
     # Check sensitivity: do rankings change substantially across caps?
     # A finding is robust if its gap rank is stable across all three caps.
-    log.debug("")
-    log.debug("SENSITIVITY CHECK — gap rank stability across segment caps:")
-    log.debug("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "cap100")
-    log.debug("  " + "-" * 50)
+    log.info("")
+    log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
+    log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "cap100")
+    log.info("  " + "-" * 50)
     for i in range(N_SDG):
         sdg = i + 1
         g20   = sens_lo[i]["semantic_gap"]
         g50   = primary_results[i]["semantic_gap"]
         g100  = sens_hi[i]["semantic_gap"]
         if g20 is None or g50 is None or g100 is None:
-            log.debug("  SDG %2d  %-12s  %-12s  %-12s", sdg, "N/A", "N/A", "N/A")
+            log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, "N/A", "N/A", "N/A")
         else:
-            log.debug("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, g100)
+            log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, g100)
 
     # ---- Build output JSON ----
     primary_out = {
@@ -252,14 +252,14 @@ def main() -> None:
 
     with out_sem_gap.open("w", encoding="utf-8") as f:
         json.dump(primary_out, f, indent=2)
-    log.debug("Saved: %s", out_sem_gap)
+    log.info("Saved: %s", out_sem_gap)
 
     with out_sem_sens.open("w", encoding="utf-8") as f:
         json.dump(sensitivity_out, f, indent=2)
-    log.debug("Saved: %s", out_sem_sens)
+    log.info("Saved: %s", out_sem_sens)
 
-    log.debug("")
-    log.debug("Next step: python 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py")
+    log.info("")
+    log.info("Next step: python 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {
@@ -317,7 +317,7 @@ def main() -> None:
             rf"\newcommand{{\NPolicyDocsSdg{word}}}{{{_ltx_num(int(row['n_policy_docs_capped']))}}}"
         )
     (gen_dir / "num_semantic.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.debug("Saved: %s", gen_dir / "num_semantic.tex")
+    log.info("Saved: %s", gen_dir / "num_semantic.tex")
 
     # tab_semantic_gap.tex — full tabular block
     sorted_results = sorted(
@@ -347,8 +347,7 @@ def main() -> None:
         r"\end{tabular}",
     ])
     (gen_dir / "tab_semantic_gap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.debug("Saved: %s", gen_dir / "tab_semantic_gap.tex")
-    log.info("Done — Primary gap computed (cap=%d)", SEGMENT_CAP_PRIMARY)
+    log.info("Saved: %s", gen_dir / "tab_semantic_gap.tex")
 
 
 if __name__ == "__main__":

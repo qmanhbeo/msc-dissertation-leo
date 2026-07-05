@@ -171,8 +171,6 @@ def main() -> None:
     sums = np.zeros((17, d), dtype=np.float64)
     counts = np.zeros(17, dtype=np.int64)
 
-    skipped = 0
-
     for shard in shards:
         shard_id = int(shard["shard_id"])
         shard_name = shard["name"]
@@ -187,12 +185,11 @@ def main() -> None:
             raise RuntimeError(f"Row mismatch in shard {shard_name}: emb={emb.shape[0]} ids={len(ids_rows)}")
 
         if shard_id in completed and score_path.exists() and ids_out.exists():
-            log.debug("Skip scoring shard %s (already complete)", shard_name)
-            skipped += 1
+            log.info("Skip scoring shard %s (already complete)", shard_name)
             scored_ids = load_ids(ids_out)
             assigned = np.array([int(r["assigned_sdg"]) - 1 for r in scored_ids], dtype=np.int64)
         else:
-            log.debug("Scoring shard %s", shard_name)
+            log.info("Scoring shard %s", shard_name)
             scores = (emb @ centroids.T).astype(np.float32)
             tmp_score = score_path.with_suffix(".npy.tmp")
             with tmp_score.open("wb") as f:
@@ -291,10 +288,6 @@ def main() -> None:
         },
     )
     log.info("Scoring complete. rows=%d", int(counts.sum()))
-    if skipped:
-        log.info("Done — %d rows (%d shards reused)", int(counts.sum()), skipped)
-    else:
-        log.info("Done — %d rows", int(counts.sum()))
 
 
 if __name__ == "__main__":

@@ -181,7 +181,7 @@ def compute_sdg_semantic_gaps(
             }
         )
 
-        level = logging.DEBUG
+        level = logging.WARNING if unreliable else logging.INFO
         log.log(
             level,
             "SDG %2d | n_papers=%4d | n_segments=%5d→%4d (cap=%d) | "

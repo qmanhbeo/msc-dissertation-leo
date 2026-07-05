@@ -190,8 +190,12 @@ def action_requested(args: argparse.Namespace) -> bool:
 
 
 def run_step(label: str, cmd: list[str]) -> None:
-    print(f"[run] {label}: {' '.join(cmd)}")
+    sep = "=" * 70
+    print(f"\n{sep}")
+    print(f"  [{label}]")
+    print(sep)
     subprocess.run(cmd, cwd=ROOT, check=True)
+    print()
 
 
 def missing_requirements(paths: list[Path]) -> list[Path]:

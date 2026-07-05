@@ -95,7 +95,7 @@ def main() -> None:
     policy_vs_research_out = Path(args.policy_vs_research_out)
     policy_score_ids_out = Path(args.policy_score_ids_out)
 
-    log.debug("Loading policy embeddings: %s", policy_emb_path)
+    log.info("Loading policy embeddings: %s", policy_emb_path)
     policy_emb = np.load(policy_emb_path).astype(np.float32)
     policy_ids = load_json(policy_ids_path)
     if policy_emb.shape[0] != len(policy_ids):
@@ -104,19 +104,19 @@ def main() -> None:
         )
     verify_unit_norms(policy_emb, "policy embeddings")
 
-    log.debug("Loading SDG centroids: %s", sdg_centroids_path)
+    log.info("Loading SDG centroids: %s", sdg_centroids_path)
     sdg_centroids = np.load(sdg_centroids_path).astype(np.float32)
     if sdg_centroids.shape[0] != 17:
         raise RuntimeError(f"Expected 17 SDG centroids, got {sdg_centroids.shape}")
     verify_unit_norms(sdg_centroids, "sdg centroids", n_sample=17)
 
-    log.debug("Loading research centroids: %s", research_centroids_path)
+    log.info("Loading research centroids: %s", research_centroids_path)
     research_centroids = np.load(research_centroids_path).astype(np.float32)
     if research_centroids.shape[0] != 17:
         raise RuntimeError(f"Expected 17 research centroids, got {research_centroids.shape}")
     verify_unit_norms(research_centroids, "research centroids", n_sample=17)
 
-    log.debug("Indexing policy corpus metadata: %s", policy_corpus_path)
+    log.info("Indexing policy corpus metadata: %s", policy_corpus_path)
     policy_doc_map = load_policy_doc_map(policy_corpus_path)
     if len(policy_doc_map) == 0:
         raise RuntimeError(f"No policy corpus rows found in {policy_corpus_path}")
@@ -148,25 +148,26 @@ def main() -> None:
             f"Examples: {sample}"
         )
 
-    log.debug("Scoring %d policy segments against SDG centroids", policy_emb.shape[0])
+    log.info("Scoring %d policy segments against SDG centroids", policy_emb.shape[0])
     policy_scores = (policy_emb @ sdg_centroids.T).astype(np.float32)
-    log.debug("Scoring %d policy segments against research centroids", policy_emb.shape[0])
+    log.info("Scoring %d policy segments against research centroids", policy_emb.shape[0])
     policy_vs_research = (policy_emb @ research_centroids.T).astype(np.float32)
 
     policy_scores_out.parent.mkdir(parents=True, exist_ok=True)
     np.save(policy_scores_out, policy_scores)
-    log.debug("Saved: %s  shape=%s", policy_scores_out, policy_scores.shape)
+    log.info("Saved: %s  shape=%s", policy_scores_out, policy_scores.shape)
 
     policy_vs_research_out.parent.mkdir(parents=True, exist_ok=True)
     np.save(policy_vs_research_out, policy_vs_research)
-    log.debug("Saved: %s  shape=%s", policy_vs_research_out, policy_vs_research.shape)
+    log.info("Saved: %s  shape=%s", policy_vs_research_out, policy_vs_research.shape)
 
     write_json(policy_score_ids_out, policy_score_ids)
-    log.debug("Saved: %s  n=%d", policy_score_ids_out, len(policy_score_ids))
+    log.info("Saved: %s  n=%d", policy_score_ids_out, len(policy_score_ids))
 
     log.info(
-        "Done — %d segments scored",
-        policy_emb.shape[0],
+        "Policy scoring complete. mean top SDG score=%.4f, mean top research score=%.4f",
+        float(policy_scores.max(axis=1).mean()),
+        float(policy_vs_research.max(axis=1).mean()),
     )
 
 
