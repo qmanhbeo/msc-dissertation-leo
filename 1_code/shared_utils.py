@@ -25,10 +25,6 @@ MANUSCRIPT_ROOT_FILES = [
     "4_3_semantic_gap_robustness_caps.json",
     "4_4_interaction_h1_h2_bias.json",
     "4_4_interaction_scatter_data.csv",
-    "4_5_sample_stability_summary.json",
-    "4_5_sample_stability_draws.jsonl",
-    "4_5_sample_stability_per_sdg.json",
-    "4_5_sample_stability_table.csv",
     "dissertation.pdf",
 ]
 
@@ -50,6 +46,10 @@ MANUSCRIPT_EXTRA_FILES = [
     "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_semantic_gaps.csv",
     "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_comparison_summary.csv",
     "appendix/b4_softmax_multilabel_sdg/data/b4_softmax_multilabel_metadata.json",
+    "appendix/d_sample_stability/data/4_5_sample_stability_summary.json",
+    "appendix/d_sample_stability/data/4_5_sample_stability_draws.jsonl",
+    "appendix/d_sample_stability/data/4_5_sample_stability_per_sdg.json",
+    "appendix/d_sample_stability/data/4_5_sample_stability_table.csv",
 ]
 
 MANUSCRIPT_TABLE_FILES = [

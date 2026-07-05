@@ -9,10 +9,10 @@ recompute the research-side coverage profile, rebuild sampled research SDG centr
 and compare those sampled results against the fixed canonical policy-side quantities.
 
 Outputs:
-  4_outputs/main/data/4_5_sample_stability_summary.json
-  4_outputs/main/data/4_5_sample_stability_draws.jsonl
-  4_outputs/main/data/4_5_sample_stability_per_sdg.json
-  4_outputs/main/data/4_5_sample_stability_table.csv
+  4_outputs/appendix/d_sample_stability/data/4_5_sample_stability_summary.json
+  4_outputs/appendix/d_sample_stability/data/4_5_sample_stability_draws.jsonl
+  4_outputs/appendix/d_sample_stability/data/4_5_sample_stability_per_sdg.json
+  4_outputs/appendix/d_sample_stability/data/4_5_sample_stability_table.csv
   4_outputs/main/tables/num_sample_stability.tex
   4_outputs/main/tables/tab_sample_stability.tex
 """
