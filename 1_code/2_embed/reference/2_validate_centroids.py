@@ -127,13 +127,13 @@ def main() -> None:
     out_confusion = layout.data_dir / "4_1_confusion_matrix.csv"
     out_centroid_sim = layout.data_dir / "4_1_centroid_similarity_matrix.csv"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.data_dir)
+    log.debug("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load centroids ----
-    log.info("Loading centroids: %s", CENTROIDS_PATH)
+    log.debug("Loading centroids: %s", CENTROIDS_PATH)
     centroids = np.load(CENTROIDS_PATH)   # (17, 384) float32, unit-normalised
     meta = load_json(META_PATH)           # list of 17 dicts from sdg_centroid_meta.json
-    log.info("  shape=%s", centroids.shape)
+    log.debug("  shape=%s", centroids.shape)
 
     # Verify centroid normalisation before computing dot products.
     # ASSUMPTION: sdg_centroids.py saved unit-normalised centroids. If this fails, the
@@ -207,13 +207,13 @@ def main() -> None:
     centroid_sim = centroids @ centroids.T   # (17, 17)
 
     # ---- Console output ----
-    log.info("")
-    log.info("=" * 60)
-    log.info("CENTROID VALIDATION RESULTS (all 17 SDGs, n=%d, no contamination)", len(true_sdgs))
-    log.info("=" * 60)
-    log.info("")
-    log.info("  Accuracy : %.4f  (random baseline: %.4f)", acc, RANDOM_BASELINE)
-    log.info("  Macro-F1 : %.4f  → %s", mf1, flag)
+    log.debug("")
+    log.debug("=" * 60)
+    log.debug("CENTROID VALIDATION RESULTS (all 17 SDGs, n=%d, no contamination)", len(true_sdgs))
+    log.debug("=" * 60)
+    log.debug("")
+    log.debug("  Accuracy : %.4f  (random baseline: %.4f)", acc, RANDOM_BASELINE)
+    log.debug("  Macro-F1 : %.4f  → %s", mf1, flag)
     if flag == "FAIL":
         log.warning("  FAIL: Macro-F1 < %.2f — instrument too noisy for reliable analysis.", THRESH_FAIL)
         log.warning("         Consider domain-adapted model (e.g., Aurora-M, SDG-BERT).")
@@ -221,7 +221,7 @@ def main() -> None:
         log.warning("  WARN: Macro-F1 %.2f–%.2f — usable signal but moderate noise, acknowledge in methodology.",
                     THRESH_FAIL, THRESH_PASS)
     else:
-        log.info("  PASS: Macro-F1 ≥ %.2f — instrument validated for analysis.", THRESH_PASS)
+        log.debug("  PASS: Macro-F1 ≥ %.2f — instrument validated for analysis.", THRESH_PASS)
 
     log.info("")
     log.debug("PER-SDG F1 (SDGs 1–17, all n=%d):", len(true_sdgs))
@@ -272,24 +272,16 @@ def main() -> None:
 
     with out_results.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    log.info("\nSaved: %s", out_results)
+    log.debug("Saved: %s", out_results)
 
-    # Confusion matrix over all 17 SDGs (rows = true, cols = predicted).
-    # No contamination: all centroids built from corpora independent of the benchmark.
-    # Examining off-diagonal mass reveals which SDG pairs are most confused — this directly
-    # informs which per-SDG coverage gap findings should carry extra caveats (A6, A26).
     cm = confusion_matrix(true_sdgs, pred_sdgs, labels=labels_17)
     save_csv_matrix(cm.astype(float), labels_17, out_confusion)
-    log.info("Saved: %s  (17×17, rows=true, cols=predicted)", out_confusion)
+    log.debug("Saved: %s  (17×17, rows=true, cols=predicted)", out_confusion)
 
-    # Centroid similarity matrix: how close each pair of SDG centroids is in SBERT space.
-    # Used downstream to: (1) predict which SDG pairs will have leakage in coverage scoring,
-    # (2) interpret H14 (SDG 1 ↔ SDG 10), (3) contextualise H35 (SDG 17 ↔ SDG 13),
-    # (4) flag A26 (SDG 1-8-10 cluster collinearity).
     save_csv_matrix(centroid_sim, labels_17, out_centroid_sim)
-    log.info("Saved: %s  (17×17 pairwise centroid cosine sim)", out_centroid_sim)
+    log.debug("Saved: %s  (17×17 pairwise centroid cosine sim)", out_centroid_sim)
 
-    log.info("\nNext step: run the active scoring path (shard scoring or bridge materialisation).")
+    log.debug("Next step: run the active scoring path (shard scoring or bridge materialisation).")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_num_words = {
@@ -339,7 +331,7 @@ def main() -> None:
         word = _sdg_num_words[sdg]
         num_lines.append(rf"\newcommand{{\FiSdg{word}}}{{{per_sdg_f1[i]:.3f}}}")
     (gen_dir / "num_validation.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "num_validation.tex")
+    log.debug("Saved: %s", gen_dir / "num_validation.tex")
 
     # tab_validation.tex — full tabular block
     tab_lines = [
@@ -360,7 +352,9 @@ def main() -> None:
         r"\end{tabular}",
     ])
     (gen_dir / "tab_validation.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "tab_validation.tex")
+    log.debug("Saved: %s", gen_dir / "tab_validation.tex")
+
+    log.info("Done — Macro-F1: %.4f (%s)", mf1, flag)
 
 
 if __name__ == "__main__":

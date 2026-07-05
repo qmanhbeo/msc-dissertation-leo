@@ -147,7 +147,7 @@ def document_weighted_policy_profile(
         doc_to_rows[r["source_doc"]].append(i)
 
     n_docs = len(doc_to_rows)
-    log.info("  Document-weighted: %d unique source_docs", n_docs)
+    log.debug("  Document-weighted: %d unique source_docs", n_docs)
 
     doc_vectors = np.zeros((n_docs, N_SDG), dtype=np.float32)
     doc_meta = {}
@@ -210,23 +210,23 @@ def main() -> None:
     out_cov_gap = layout.data_dir / "4_2_coverage_document_weighted.json"
     out_cov_gap_raw = layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.data_dir)
+    log.debug("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load scores ----
-    log.info("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)
+    log.debug("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)
     research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
-    log.info("  rows=%d", research["n_rows"])
+    log.debug("  rows=%d", research["n_rows"])
 
-    log.info("Loading policy scores: %s", POLICY_SCORES)
+    log.debug("Loading policy scores: %s", POLICY_SCORES)
     policy_scores = np.load(POLICY_SCORES)
     policy_ids    = load_json(POLICY_IDS)
-    log.info("  shape=%s  n_ids=%d", policy_scores.shape, len(policy_ids))
+    log.debug("  shape=%s  n_ids=%d", policy_scores.shape, len(policy_ids))
 
     # ---- Research coverage profiles ----
     # Papers = 1 abstract = 1 vector. No document-weighting needed for research corpus.
     # Each paper is independently authored; treating them as equal is appropriate.
-    log.info("")
-    log.info("Computing research coverage profiles...")
+    log.debug("")
+    log.debug("Computing research coverage profiles...")
     res_hard = research["hard_profile"].astype(np.float64)
     res_soft = research["soft_profile"].astype(np.float64)
 
@@ -237,15 +237,15 @@ def main() -> None:
     # ---- Policy coverage profiles — RAW (segment-level) ----
     # Segment-level profile: each of 47,005 segments contributes equally.
     # This is biased by SDSN/SDGi document length — saved as a diagnostic only.
-    log.info("")
-    log.info("Computing raw (segment-level) policy coverage profiles...")
+    log.debug("")
+    log.debug("Computing raw (segment-level) policy coverage profiles...")
     pol_raw_hard = hard_assignment_profile(policy_scores)
     pol_raw_soft = mean_score_profile(policy_scores)
 
     # ---- Policy coverage profiles — DOCUMENT-WEIGHTED (canonical) ----
     # Each document contributes equally. This is the primary analysis profile.
-    log.info("")
-    log.info("Computing document-weighted policy coverage profiles...")
+    log.debug("")
+    log.debug("Computing document-weighted policy coverage profiles...")
     pol_dw_hard, pol_dw_soft, doc_meta = document_weighted_policy_profile(
         policy_scores, policy_ids
     )
@@ -258,10 +258,10 @@ def main() -> None:
     gap_dw   = compute_coverage_gap(res_hard, pol_dw_hard)    # canonical
     gap_raw  = compute_coverage_gap(res_hard, pol_raw_hard)   # diagnostic
 
-    log.info("")
-    log.info("=" * 70)
-    log.info("COVERAGE GAP (document-weighted policy vs research, hard assignment)")
-    log.info("=" * 70)
+    log.debug("")
+    log.debug("=" * 70)
+    log.debug("COVERAGE GAP (document-weighted policy vs research, hard assignment)")
+    log.debug("=" * 70)
     log.debug("  %-6s  %-12s  %-12s  %-12s  %-12s", "SDG", "Research%", "Policy%", "Gap", "Direction")
     log.debug("  " + "-" * 65)
     for i in range(N_SDG):
@@ -273,9 +273,8 @@ def main() -> None:
         log.debug("  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %s",
                   sdg, r * 100, p * 100, g, direction)
 
-    log.info("")
-    log.info("Total coverage gap (sum of absolute differences): %.4f", gap_dw.sum())
-    log.info("Mean coverage gap per SDG:                        %.4f", gap_dw.mean())
+    log.debug("")
+    log.info("Done — Total gap: %.4f, Mean: %.4f", gap_dw.sum(), gap_dw.mean())
 
     # ---- Build output dicts ----
     sdg_labels = [f"SDG{i+1}" for i in range(N_SDG)]
@@ -349,14 +348,14 @@ def main() -> None:
     # ---- Save ----
     with out_cov_gap.open("w", encoding="utf-8") as f:
         json.dump(coverage_gap_out, f, indent=2)
-    log.info("Saved: %s", out_cov_gap)
+    log.debug("Saved: %s", out_cov_gap)
 
     with out_cov_gap_raw.open("w", encoding="utf-8") as f:
         json.dump(coverage_gap_raw_out, f, indent=2)
-    log.info("Saved: %s", out_cov_gap_raw)
+    log.debug("Saved: %s", out_cov_gap_raw)
 
-    log.info("")
-    log.info("Next step: python 1_code/3_main_analysis/1_canonical/1_semantic_gap.py")
+    log.debug("")
+    log.debug("Next step: python 1_code/3_main_analysis/1_canonical/1_semantic_gap.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {
@@ -418,7 +417,7 @@ def main() -> None:
             rf"\newcommand{{\CoverageGapSdg{word}}}{{{g:.3f}}}",
         ])
     (gen_dir / "num_coverage.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "num_coverage.tex")
+    log.debug("Saved: %s", gen_dir / "num_coverage.tex")
 
     # tab_coverage.tex — full tabular block
     tab_lines = [
@@ -445,7 +444,7 @@ def main() -> None:
         r"\end{tabular}",
     ])
     (gen_dir / "tab_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "tab_coverage.tex")
+    log.debug("Saved: %s", gen_dir / "tab_coverage.tex")
 
 
 if __name__ == "__main__":

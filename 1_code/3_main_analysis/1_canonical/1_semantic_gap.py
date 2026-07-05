@@ -127,10 +127,10 @@ def main() -> None:
     out_sem_gap = layout.data_dir / "4_3_semantic_gap_distances.json"
     out_sem_sens = layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
     tables_dir = layout.tables_dir
-    log.info("Canonical output dir: %s", layout.data_dir)
+    log.debug("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load research centroids/meta ----
-    log.info("Loading research centroids: %s", RESEARCH_CENTROIDS)
+    log.debug("Loading research centroids: %s", RESEARCH_CENTROIDS)
     research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
     research_meta = load_json(RESEARCH_CENTROID_META)
     if research_centroids.shape[0] != N_SDG:
@@ -140,12 +140,12 @@ def main() -> None:
     research_counts = np.array([int(r["n_papers_assigned"]) for r in research_meta], dtype=np.int64)
     research_cohesions = np.array([float(r["mean_cos_to_centroid"]) for r in research_meta], dtype=np.float32)
 
-    log.info("Loading policy embeddings: %s", POLICY_EMB)
+    log.debug("Loading policy embeddings: %s", POLICY_EMB)
     policy_emb = np.load(POLICY_EMB)
     policy_ids = load_json(POLICY_IDS)
 
     # ---- Load score matrices for cluster assignments ----
-    log.info("Loading score matrices...")
+    log.debug("Loading score matrices...")
     policy_scores = np.load(POLICY_SCORES)
 
     # Hard assignment (0-indexed SDG index).
@@ -162,10 +162,10 @@ def main() -> None:
         log.debug("  SDG %2d: %d segments", sdg_idx + 1, n)
 
     # ---- Primary analysis (SEGMENT_CAP = 50) ----
-    log.info("")
-    log.info("=" * 60)
-    log.info("PRIMARY SEMANTIC GAP (segment cap = %d)", SEGMENT_CAP_PRIMARY)
-    log.info("=" * 60)
+    log.debug("")
+    log.debug("=" * 60)
+    log.debug("PRIMARY SEMANTIC GAP (segment cap = %d)", SEGMENT_CAP_PRIMARY)
+    log.debug("=" * 60)
     rng_primary = np.random.default_rng(RANDOM_SEED)
     primary_results = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
@@ -183,10 +183,10 @@ def main() -> None:
                  r["n_papers"], r["n_policy_docs_capped"])
 
     # ---- Sensitivity analyses ----
-    log.info("")
-    log.info("=" * 60)
-    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
-    log.info("=" * 60)
+    log.debug("")
+    log.debug("=" * 60)
+    log.debug("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
+    log.debug("=" * 60)
     rng_lo = np.random.default_rng(RANDOM_SEED)
     sens_lo = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
@@ -194,10 +194,10 @@ def main() -> None:
         policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
     )
 
-    log.info("")
-    log.info("=" * 60)
-    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI)
-    log.info("=" * 60)
+    log.debug("")
+    log.debug("=" * 60)
+    log.debug("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI)
+    log.debug("=" * 60)
     rng_hi = np.random.default_rng(RANDOM_SEED)
     sens_hi = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
@@ -252,14 +252,14 @@ def main() -> None:
 
     with out_sem_gap.open("w", encoding="utf-8") as f:
         json.dump(primary_out, f, indent=2)
-    log.info("Saved: %s", out_sem_gap)
+    log.debug("Saved: %s", out_sem_gap)
 
     with out_sem_sens.open("w", encoding="utf-8") as f:
         json.dump(sensitivity_out, f, indent=2)
-    log.info("Saved: %s", out_sem_sens)
+    log.debug("Saved: %s", out_sem_sens)
 
-    log.info("")
-    log.info("Next step: python 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py")
+    log.debug("")
+    log.debug("Next step: python 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py")
 
     # ---- Write LaTeX generated outputs ----
     _sdg_names_17 = {
@@ -317,7 +317,7 @@ def main() -> None:
             rf"\newcommand{{\NPolicyDocsSdg{word}}}{{{_ltx_num(int(row['n_policy_docs_capped']))}}}"
         )
     (gen_dir / "num_semantic.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "num_semantic.tex")
+    log.debug("Saved: %s", gen_dir / "num_semantic.tex")
 
     # tab_semantic_gap.tex — full tabular block
     sorted_results = sorted(
@@ -347,7 +347,8 @@ def main() -> None:
         r"\end{tabular}",
     ])
     (gen_dir / "tab_semantic_gap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "tab_semantic_gap.tex")
+    log.debug("Saved: %s", gen_dir / "tab_semantic_gap.tex")
+    log.info("Done — Primary gap computed (cap=%d)", SEGMENT_CAP_PRIMARY)
 
 
 if __name__ == "__main__":

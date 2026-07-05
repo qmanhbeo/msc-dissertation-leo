@@ -192,7 +192,7 @@ def main() -> None:
             scored_ids = load_ids(ids_out)
             assigned = np.array([int(r["assigned_sdg"]) - 1 for r in scored_ids], dtype=np.int64)
         else:
-            log.info("Scoring shard %s", shard_name)
+            log.debug("Scoring shard %s", shard_name)
             scores = (emb @ centroids.T).astype(np.float32)
             tmp_score = score_path.with_suffix(".npy.tmp")
             with tmp_score.open("wb") as f:
@@ -292,7 +292,9 @@ def main() -> None:
     )
     log.info("Scoring complete. rows=%d", int(counts.sum()))
     if skipped:
-        log.info("Skipped %d shards (already complete)", skipped)
+        log.info("Done — %d rows (%d shards reused)", int(counts.sum()), skipped)
+    else:
+        log.info("Done — %d rows", int(counts.sum()))
 
 
 if __name__ == "__main__":
