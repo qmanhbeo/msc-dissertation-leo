@@ -284,25 +284,19 @@ def print_status(output_dir: Path) -> None:
 
     warm_missing = missing_warm_replay_requirements(include_appendix_extra=False)
     print("")
-    print("Warm replay readiness:")
+    print(f"Warm replay readiness: {'yes' if not warm_missing else 'no'}")
     if warm_missing:
-        print("  ready: no")
         for path in warm_missing:
             print(f"  missing: {rel(ROOT / path)}")
-    else:
-        print("  ready: yes")
 
     warm_appendix_missing = missing_warm_replay_requirements(include_appendix_extra=True)
     print("")
-    print("Warm replay + appendix readiness:")
+    print(f"Warm replay + appendix readiness: {'yes' if not warm_appendix_missing else 'no'}")
     if warm_appendix_missing:
-        print("  ready: no")
         for path in warm_appendix_missing[:12]:
             print(f"  missing: {rel(ROOT / path)}")
         if len(warm_appendix_missing) > 12:
             print(f"  ... and {len(warm_appendix_missing) - 12} more")
-    else:
-        print("  ready: yes")
 
     status = canonical_artifact_status(output_dir)
     print("")
