@@ -21,8 +21,8 @@ conda activate dissertation
 python main.py --warm-replay --overwrite
 ```
 
-This rebuilds main text outputs and the dissertation PDF from the frozen curated
-data snapshot. Appendix outputs are already committed in the repo and do not need
+This rebuilds main text outputs from the frozen curated data snapshot.
+Appendix outputs are already committed in the repo and do not need
 regeneration. `--overwrite` is included because canonical outputs already exist
 in the repo; without it `main.py` fails closed to prevent accidental replacement.
 If the snapshot download fails, run `python main.py --fetch-data-snapshot curated`
@@ -31,9 +31,10 @@ then retry.
 ## What the replay produces
 
 Warm replay rebuilds:
-- `4_outputs/dissertation.pdf`
 - canonical machine-readable outputs under `4_outputs/main/data/`
 - manuscript tables and figures under `4_outputs/main/tables/` and `4_outputs/main/figures/`
+
+To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only).
 
 ## Tracked vs not tracked
 
@@ -66,10 +67,10 @@ Not tracked in Git:
 | Command | What it does |
 |---|---|
 | `python main.py` | Read-only status check |
-| `python main.py --warm-replay --overwrite` | Rebuild main text analysis + PDF from snapshot |
+| `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
 | `python main.py --main-text --overwrite` | Rebuild main text analysis only (no appendix, no PDF) |
 | `python main.py --full-pipeline --overwrite` | Full live-source pipeline (not snapshot-reproducible) |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C) standalone |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
@@ -78,9 +79,10 @@ Not tracked in Git:
 | `python main.py --appendix-b3-interpret --overwrite` | Run B.3 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-b4-softmax --overwrite` | Run B.4 Softmax Multi-label SDG |
 | `python main.py --appendix-c-register --overwrite` | Run C Register-Adjustment Robustness |
+| `python main.py --appendix-d-sample-stability --overwrite` | Run D Sample-Stability Robustness |
 | `python main.py --refresh-policy-corpus --overwrite` | Re-fetch, re-embed, re-score policy corpus |
 | `python main.py --sample-stability --overwrite` | Run sample-stability robustness stage |
-| `python main.py --build-pdf --overwrite` | Rebuild PDF from existing outputs |
+| `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --clean-canon --overwrite` | Remove manuscript output artifacts |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |

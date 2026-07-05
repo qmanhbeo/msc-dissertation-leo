@@ -69,7 +69,7 @@ def parse_args() -> argparse.Namespace:
         "--warm-replay",
         action="store_true",
         help=(
-            "Rebuild main text analysis and dissertation PDF from frozen embeddings. "
+            "Rebuild main text analysis from frozen embeddings. "
             "Appendix outputs remain committed in the repo and are not regenerated. "
             "Auto-fetches the curated snapshot if 2_data/ is missing."
         ),
@@ -79,7 +79,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Rebuild canonical analysis outputs from frozen embeddings (main text only, no appendix, no PDF).",
     )
-    p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through PDF.")
+    p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through all appendix analyses (no PDF).")
     p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
@@ -148,7 +148,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--sdg-register-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
     p.add_argument("--sdg-register-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware register robustness checks.")
     p.add_argument("--sdg-register-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware register robustness checks.")
-    p.add_argument("--build-pdf", action="store_true", help="Build outputs/dissertation.pdf from existing manuscript tables/figures.")
+    p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
     p.add_argument("--clean-canon", action="store_true", help="Remove manuscript output artifacts only.")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: outputs/")
@@ -499,7 +499,11 @@ def run_warm_replay(
     args: argparse.Namespace,
 ) -> None:
     run_main_text(output_dir, args)
-    build_pdf(output_dir)
+    print(
+        "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
+        "  python main.py --build-pdf --overwrite\n"
+        "Note: --build-pdf requires bash (WSL/Linux) and is not supported on bare Windows."
+    )
 
 
 def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
@@ -577,7 +581,6 @@ def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
     run_semantic_gap_interpretability(output_dir)
     run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
     run_sample_stability(output_dir)
-    build_pdf(output_dir)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
@@ -695,6 +698,7 @@ def main() -> None:
         run_semantic_gap_interpretability(output_dir)
         run_softmax_multilabel_sdg(output_dir)
         run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+        run_sample_stability(output_dir)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a1_source:
