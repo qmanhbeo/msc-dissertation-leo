@@ -142,7 +142,7 @@ def resolve_manifest_path(stored_path: str, required_prefix: str) -> Path:
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not str(raw).startswith(required_prefix):
+    if not raw.as_posix().startswith(required_prefix):
         raise RuntimeError(f"Expected path under {required_prefix}, got: {stored_path}")
     resolved = ROOT / raw
     if not resolved.exists():
