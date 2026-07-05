@@ -280,9 +280,9 @@ def main() -> None:
     # ---- Build centroids (all sources combined per SDG) ----
     log.info("")
     log.info("Building centroids from all available sources...")
-    log.info("%-8s %-7s %-40s %-10s %-10s %s",
+    log.debug("%-8s %-7s %-40s %-10s %-10s %s",
              "SDG", "n", "source(s)", "raw_norm", "cohesion", "variance_flag")
-    log.info("-" * 85)
+    log.debug("-" * 85)
 
     centroid_vectors = []
     centroid_meta = []
@@ -314,7 +314,7 @@ def main() -> None:
         centroid_meta.append(meta)
 
         flag = " [HIGH VARIANCE — A6 risk]" if meta["high_variance_flag"] else ""
-        level = logging.WARNING if meta["high_variance_flag"] else logging.INFO
+        level = logging.DEBUG
         log.log(level, "SDG %2d | n=%5d | %-35s | norm=%.4f | cohesion=%.4f%s",
                 sdg, meta["n"], source_label, meta["raw_centroid_norm"], meta["mean_cos_to_centroid"], flag)
 

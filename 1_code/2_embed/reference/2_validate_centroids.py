@@ -224,24 +224,24 @@ def main() -> None:
         log.info("  PASS: Macro-F1 ≥ %.2f — instrument validated for analysis.", THRESH_PASS)
 
     log.info("")
-    log.info("PER-SDG F1 (SDGs 1–17, all n=%d):", len(true_sdgs))
-    log.info("  %-6s  %-8s  %-6s  %s", "SDG", "F1", "n_true", "variance_flag")
-    log.info("  " + "-" * 45)
+    log.debug("PER-SDG F1 (SDGs 1–17, all n=%d):", len(true_sdgs))
+    log.debug("  %-6s  %-8s  %-6s  %s", "SDG", "F1", "n_true", "variance_flag")
+    log.debug("  " + "-" * 45)
     for i, sdg in enumerate(labels_17):
         n_true = int((true_sdgs == sdg).sum())
         # meta is a 0-indexed list from sdg_centroid_meta.json.
         # meta[0] = SDG 1, meta[1] = SDG 2, ..., meta[16] = SDG 17.
         m = meta[sdg - 1]
         vflag = "[HIGH VAR]" if m["high_variance_flag"] else ""
-        log.info("  SDG %2d   %.4f   n=%3d   %s", sdg, per_sdg_f1[i], n_true, vflag)
+        log.debug("  SDG %2d   %.4f   n=%3d   %s", sdg, per_sdg_f1[i], n_true, vflag)
 
     # ---- Nearest centroid neighbours ----
     # These top-2 nearest neighbours per centroid predict the most common classification
     # errors and pre-register which SDG pairs are most likely to be confused in alignment
     # scoring. Useful for interpreting coverage gap results (e.g. if SDG 10 coverage
     # appears low, check whether SDG 1 and SDG 8 are absorbing its signal — see A26).
-    log.info("")
-    log.info("CENTROID NEAREST NEIGHBOURS (top-2, excluding self):")
+    log.debug("")
+    log.debug("CENTROID NEAREST NEIGHBOURS (top-2, excluding self):")
     for i in range(17):
         sim_row = centroid_sim[i].copy()
         # Set self-similarity to -1 so argsort does not rank the centroid as its own
@@ -249,7 +249,7 @@ def main() -> None:
         sim_row[i] = -1.0
         top2_idx = np.argsort(sim_row)[::-1][:2]
         top2_str = ", ".join(f"SDG{j+1} ({centroid_sim[i,j]:.3f})" for j in top2_idx)
-        log.info("  SDG %2d ← nearest: %s", i + 1, top2_str)
+        log.debug("  SDG %2d ← nearest: %s", i + 1, top2_str)
 
     # ---- Save outputs ----
     results = {

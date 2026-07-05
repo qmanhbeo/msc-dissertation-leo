@@ -214,12 +214,12 @@ def main() -> None:
     log.info("Reliable SDGs for correlation: %s  (n=%d)", reliable_sdgs, len(reliable_sdgs))
 
     # ---- Build per-SDG table ----
-    log.info("")
-    log.info("Per-SDG data table:")
-    log.info("  %-6s %-12s %-12s %-12s %-12s %-10s", "SDG", "res%", "pol%", "cov_gap", "sem_gap", "reliable")
+    log.debug("")
+    log.debug("Per-SDG data table:")
+    log.debug("  %-6s %-12s %-12s %-12s %-12s %-10s", "SDG", "res%", "pol%", "cov_gap", "sem_gap", "reliable")
     for i in range(N_SDG):
         sem_gap_display = "N/A" if not np.isfinite(sem_gap[i]) else f"{sem_gap[i]:.4f}"
-        log.info(
+        log.debug(
             "  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %10s  %s",
             i + 1,
             res_hard[i] * 100,

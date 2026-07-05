@@ -151,15 +151,15 @@ def main() -> None:
     # Hard assignment (0-indexed SDG index).
     policy_assignments = get_cluster_assignments(policy_scores)
 
-    log.info("Paper cluster sizes by SDG:")
+    log.debug("Paper cluster sizes by SDG:")
     for sdg_idx in range(N_SDG):
         n = int(research_counts[sdg_idx])
-        log.info("  SDG %2d: %d papers", sdg_idx + 1, n)
+        log.debug("  SDG %2d: %d papers", sdg_idx + 1, n)
 
-    log.info("Policy cluster sizes by SDG (raw segments):")
+    log.debug("Policy cluster sizes by SDG (raw segments):")
     for sdg_idx in range(N_SDG):
         n = int((policy_assignments == sdg_idx).sum())
-        log.info("  SDG %2d: %d segments", sdg_idx + 1, n)
+        log.debug("  SDG %2d: %d segments", sdg_idx + 1, n)
 
     # ---- Primary analysis (SEGMENT_CAP = 50) ----
     log.info("")
@@ -175,10 +175,10 @@ def main() -> None:
 
     # Summary: sort by semantic gap (largest first).
     reliable = [r for r in primary_results if not r["unreliable"] and r["semantic_gap"] is not None]
-    log.info("")
-    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", SEGMENT_CAP_PRIMARY)
+    log.debug("")
+    log.debug("Sorted by semantic gap (reliable SDGs only, cap=%d):", SEGMENT_CAP_PRIMARY)
     for r in sorted(reliable, key=lambda x: x["semantic_gap"], reverse=True):
-        log.info("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
+        log.debug("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
                  r["sdg"], r["semantic_gap"], r["semantic_similarity"],
                  r["n_papers"], r["n_policy_docs_capped"])
 
@@ -207,19 +207,19 @@ def main() -> None:
 
     # Check sensitivity: do rankings change substantially across caps?
     # A finding is robust if its gap rank is stable across all three caps.
-    log.info("")
-    log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
-    log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "cap100")
-    log.info("  " + "-" * 50)
+    log.debug("")
+    log.debug("SENSITIVITY CHECK — gap rank stability across segment caps:")
+    log.debug("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "cap100")
+    log.debug("  " + "-" * 50)
     for i in range(N_SDG):
         sdg = i + 1
         g20   = sens_lo[i]["semantic_gap"]
         g50   = primary_results[i]["semantic_gap"]
         g100  = sens_hi[i]["semantic_gap"]
         if g20 is None or g50 is None or g100 is None:
-            log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, "N/A", "N/A", "N/A")
+            log.debug("  SDG %2d  %-12s  %-12s  %-12s", sdg, "N/A", "N/A", "N/A")
         else:
-            log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, g100)
+            log.debug("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, g100)
 
     # ---- Build output JSON ----
     primary_out = {
