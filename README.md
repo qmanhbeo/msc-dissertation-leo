@@ -86,7 +86,51 @@ Not tracked in Git:
 
 ## Reproducibility boundaries
 
-The canonical reproducibility target is warm replay from the frozen curated snapshot. Live-source refetching is not the marker-facing target. `--cold-replay`, OpenAlex refetching, and policy-source refreshes are heavier and not expected to be byte-identical to the submitted snapshot state. The curated snapshot is the submitted marker-facing data state; the full snapshot is retained only for broader audit or reconstruction if needed.
+### Warm replay (canonical target)
+
+Deterministic from the frozen curated snapshot. No network needed after
+hydration. Byte-identical across runs and platforms.
+
+### Full cold-replay pipeline
+
+```mermaid
+flowchart LR
+    Fetch["1. Fetch<br><em>live sources</em>"] --> Preproc["2. Preprocess<br><em>deterministic</em>"]
+    Preproc --> Embed["3. Embed<br><em>deterministic</em>"]
+    Embed --> Analyse["4. Analyse<br><em>deterministic</em>"]
+    Fetch -.-|"❌ will drift"| Note["OpenAlex changes daily,<br>policy URLs fragile,<br>manual PDFs not automatable"]
+```
+
+Three deterministic stages produce identical results given frozen inputs.
+The fetch stage cannot be reproduced because its sources change continuously.
+
+### What drifts on live re-fetch
+
+| Source | Drift mechanism |
+|---|---|
+| OpenAlex API | Papers added/deleted daily; abstracts and SDG classifications change |
+| Policy scrape URLs | ~42 hardcoded HTTP links; many unconfirmed; PDFs may 403/redirect |
+| Manual policy supplement | 64 PDFs from non-API sources — not automatable |
+| GitHub benchmark | `SDGClassification/benchmark@main` — moving branch |
+| HF dataset / Dataverse | `UNDP/sdgi-corpus` and UNGDC may be versioned |
+
+### Credentials
+
+`--cold-replay` requires OpenAlex API credentials. Copy `.env.example` to
+`.env` and fill in your key (free at https://openalex.org/keys). Without
+these the fetch stage raises `RuntimeError`. The 4 rate-limit fallback slots
+are optional — only `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are strictly
+required.
+
+### Snapshot scope
+
+- **Curated snapshot**: excludes raw OpenAlex JSONL and rebuildable caches.
+  Warm replay from curated is the canonical reproducibility target.
+  Cold replay from curated will re-fetch OpenAlex live — outputs will differ
+  from the submitted state.
+- **Full snapshot**: preserves everything including raw API artifacts.
+  Available for bit-exact reconstruction if the original OpenAlex state is
+  needed.
 
 ## Repository layout
 
