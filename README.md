@@ -34,7 +34,7 @@ Warm replay rebuilds:
 - canonical machine-readable outputs under `4_outputs/main/data/`
 - manuscript tables and figures under `4_outputs/main/tables/` and `4_outputs/main/figures/`
 
-To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only).
+To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler.
 
 ## Tracked vs not tracked
 
