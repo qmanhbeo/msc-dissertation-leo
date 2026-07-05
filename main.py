@@ -121,7 +121,6 @@ def parse_args() -> argparse.Namespace:
             "against the current SDG and research centroids."
         ),
     )
-    p.add_argument("--sample-stability", action="store_true", help="Run only the sample-stability robustness stage from existing canonical analysis outputs.")
     p.add_argument(
         "--register-adjustment",
         action="store_true",
@@ -183,7 +182,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
             args.refresh_policy_corpus,
-            args.sample_stability,
             args.build_pdf,
         ]
     )
@@ -607,7 +605,6 @@ def main() -> None:
         or args.appendix_b4_softmax
         or         args.appendix_c_register
         or args.appendix_d_sample_stability
-        or args.sample_stability
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
@@ -673,12 +670,6 @@ def main() -> None:
     elif args.warm_replay:
         ensure_warm_replay_inputs(args, include_appendix_extra=False)
         run_warm_replay(output_dir, args)
-    elif args.sample_stability:
-        run_sample_stability(output_dir)
-        if args.appendix_c_register:
-            run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
-        if args.build_pdf:
-            build_pdf(output_dir)
     elif args.build_pdf:
         build_pdf(output_dir)
 

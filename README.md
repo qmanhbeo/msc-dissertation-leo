@@ -80,7 +80,6 @@ Not tracked in Git:
 | `python main.py --appendix-c-register --overwrite` | Run C Register-Adjustment Robustness |
 | `python main.py --appendix-d-sample-stability --overwrite` | Run D Sample-Stability Robustness |
 | `python main.py --refresh-policy-corpus --overwrite` | Re-fetch, re-embed, re-score policy corpus |
-| `python main.py --sample-stability --overwrite` | Run sample-stability robustness stage |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
