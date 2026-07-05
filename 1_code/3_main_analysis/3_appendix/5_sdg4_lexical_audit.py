@@ -171,10 +171,8 @@ def scan_and_sample_score_shards(score_manifest: dict, seed: int) -> tuple[dict[
     return sdg4_refs, sdg9_refs, non_sdg4_refs
 
 
-def _audit_single_shard(
-    data_path_str: str,
-    targets_per_subset: dict[str, set[int]],
-) -> dict[str, Counter]:
+def _audit_single_shard(args: tuple[str, dict[str, set[int]]]) -> dict[str, Counter]:
+    data_path_str, targets_per_subset = args
     """Process a single text shard. Returns per-subset category counters."""
     counters = {subset: Counter() for subset in targets_per_subset}
     data_path = Path(data_path_str)
