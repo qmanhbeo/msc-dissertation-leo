@@ -215,15 +215,15 @@ def normalize_centroid(raw: np.ndarray) -> tuple[np.ndarray, float]:
     return (raw / norm).astype(np.float32), norm
 
 
-def load_policy_state(output_root: Path) -> dict[str, Any]:
+def load_policy_state(canonical_data_dir: Path) -> dict[str, Any]:
     require_output_files(
-        output_root,
+        canonical_data_dir,
         [CANONICAL_COVERAGE_JSON, CANONICAL_SEMANTIC_JSON, CANONICAL_H25_JSON],
     )
 
-    coverage_out = load_json(output_root / CANONICAL_COVERAGE_JSON)
-    semantic_out = load_json(output_root / CANONICAL_SEMANTIC_JSON)
-    h25_out = load_json(output_root / CANONICAL_H25_JSON)
+    coverage_out = load_json(canonical_data_dir / CANONICAL_COVERAGE_JSON)
+    semantic_out = load_json(canonical_data_dir / CANONICAL_SEMANTIC_JSON)
+    h25_out = load_json(canonical_data_dir / CANONICAL_H25_JSON)
 
     policy_scores = np.load(POLICY_SCORES).astype(np.float32)
     policy_ids = load_json(POLICY_IDS)
@@ -809,7 +809,7 @@ def main() -> None:
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
-    policy_state = load_policy_state(layout.data_dir)
+    policy_state = load_policy_state(Path(args.output_dir) / "main" / "data")
     shards, total_rows = build_research_shards()
     dim = int(policy_state["policy_embeddings"].shape[1])
     log.info("Research corpus rows available for sampling: %d", total_rows)

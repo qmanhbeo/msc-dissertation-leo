@@ -58,7 +58,6 @@ RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/ma
 RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
 RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 POLICY_TEXT_IDS = Path("2_data/2_embedded/metadata/policy_ids.json")
-SEMANTIC_GAP_JSON = Path("4_outputs/main/data/4_3_semantic_gap_distances.json")
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -433,8 +432,8 @@ def write_table(path: Path, rows: list[dict[str, Any]]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def semantic_gap_map() -> dict[int, float]:
-    payload = load_json(SEMANTIC_GAP_JSON)
+def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
+    payload = load_json(canonical_data_dir / "4_3_semantic_gap_distances.json")
     return {int(row["sdg"]): float(row["semantic_gap"]) for row in payload["per_sdg"]}
 
 
@@ -447,7 +446,7 @@ def main() -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    gaps = semantic_gap_map()
+    gaps = semantic_gap_map(Path(args.output_dir) / "main" / "data")
     research_centroids = np.load(RESEARCH_CENTROIDS).astype(np.float32)
     policy_scores = np.load(POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(POLICY_EMB, mmap_mode="r")
