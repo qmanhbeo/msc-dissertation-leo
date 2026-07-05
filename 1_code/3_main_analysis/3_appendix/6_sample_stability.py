@@ -826,16 +826,18 @@ def main() -> None:
         accumulate_draws(shards, pending_draws)
         write_draw_caches(cache_root, pending_draws)
 
+    LOG_INTERVAL = 100
     draw_results = []
     for idx, draw in enumerate(draws, start=1):
-        log.info(
-            "Scoring sampled draw %d/%d: tier=%s draw=%d n=%d",
-            idx,
-            len(draws),
-            draw.tier_label,
-            draw.draw_index,
-            draw.sample_size,
-        )
+        if idx == 1 or idx % LOG_INTERVAL == 0:
+            log.info(
+                "Scoring sampled draw %d/%d: tier=%s draw=%d n=%d",
+                idx,
+                len(draws),
+                draw.tier_label,
+                draw.draw_index,
+                draw.sample_size,
+            )
         draw_results.append(compute_draw_metrics(draw, policy_state))
 
     full_a15_gap = float(
