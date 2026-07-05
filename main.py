@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
             "Auto-fetches the curated snapshot if 2_data/ is missing."
         ),
     )
-    p.add_argument("--full-pipeline", action="store_true", help="Run the full active pipeline facade from fetch through all appendix analyses (no PDF).")
+    p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
     p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
@@ -153,9 +153,9 @@ def parse_args() -> argparse.Namespace:
         default="curated",
         help=argparse.SUPPRESS,
     )
-    p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --full-pipeline mode.")
-    p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --full-pipeline mode.")
-    p.add_argument("--local-files-only", action="store_true", help="Pass --local-files-only to embed_paper_shards.py in --full-pipeline mode.")
+    p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
+    p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --cold-replay mode.")
+    p.add_argument("--local-files-only", action="store_true", help="Pass --local-files-only to embed_paper_shards.py in --cold-replay mode.")
     return p.parse_args()
 
 
@@ -170,7 +170,7 @@ def action_requested(args: argparse.Namespace) -> bool:
     return any(
         [
             args.warm_replay,
-            args.full_pipeline,
+            args.cold_replay,
             args.appendix_all,
             args.appendix_a1_source,
             args.appendix_a2_family,
@@ -519,7 +519,7 @@ def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
 
 
 def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
-    print("WARNING: live-source full-pipeline reruns are not expected to be identical to the frozen data snapshot.")
+    print("WARNING: live-source --cold-replay reruns are not expected to be identical to the frozen data snapshot.")
     print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
     pre_steps = [
         ("fetch policy", [sys.executable, "1_code/0_fetch/fetch_policy.py"]),
@@ -653,7 +653,7 @@ def main() -> None:
 
     if (
         args.warm_replay
-        or args.full_pipeline
+        or args.cold_replay
         or args.appendix_all
         or args.appendix_a1_source
         or args.appendix_a2_family
@@ -680,7 +680,7 @@ def main() -> None:
     elif args.backup_data_snapshot:
         for profile_name in selected_backup_profiles(args.backup_data_snapshot):
             run_backup_data_snapshot(profile_name=profile_name)
-    elif args.full_pipeline:
+    elif args.cold_replay:
         run_full_pipeline(output_dir, args)
     elif args.appendix_all:
         run_sdg_source_comparison(output_dir)

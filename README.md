@@ -68,7 +68,7 @@ Not tracked in Git:
 |---|---|
 | `python main.py` | Read-only status check |
 | `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
-| `python main.py --full-pipeline --overwrite` | Full live-source pipeline (not snapshot-reproducible) |
+| `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; OpenAlex live changes may break reproducibility). |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
@@ -91,7 +91,7 @@ Not tracked in Git:
 
 ## Reproducibility boundaries
 
-The canonical reproducibility target is warm replay from the frozen curated snapshot. Live-source refetching is not the marker-facing target. `--full-pipeline`, OpenAlex refetching, and policy-source refreshes are heavier and not expected to be byte-identical to the submitted snapshot state. The curated snapshot is the submitted marker-facing data state; the full snapshot is retained only for broader audit or reconstruction if needed.
+The canonical reproducibility target is warm replay from the frozen curated snapshot. Live-source refetching is not the marker-facing target. `--cold-replay`, OpenAlex refetching, and policy-source refreshes are heavier and not expected to be byte-identical to the submitted snapshot state. The curated snapshot is the submitted marker-facing data state; the full snapshot is retained only for broader audit or reconstruction if needed.
 
 ## Repository layout
 
