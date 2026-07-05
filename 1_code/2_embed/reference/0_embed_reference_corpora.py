@@ -44,7 +44,6 @@ from model_slug_utils import embed_dir_for_model
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-BATCH_SIZE = 128
 DEFAULT_MODEL = "all-MiniLM-L6-v2"
 
 CORPORA = [
@@ -125,6 +124,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_MODEL,
         help="Sentence-transformer model name (default: %(default)s).",
     )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=128,
+        help="Batch size for embedding (default: %(default)s). Reduce to 32–64 for MPNet on 4GB GPUs.",
+    )
     return parser.parse_args()
 
 
@@ -133,7 +138,7 @@ def load_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path) -> None:
+def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path, batch_size: int) -> None:
     name = corpus["name"]
     metadata_dir = output_dir / "metadata"
     emb_path = output_dir / f"{name}.npy"
@@ -149,7 +154,7 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
 
     embeddings = model.encode(
         texts,
-        batch_size=BATCH_SIZE,
+        batch_size=batch_size,
         show_progress_bar=True,
         convert_to_numpy=True,
         normalize_embeddings=True,   # L2-normalised → cosine sim = dot product
@@ -189,7 +194,7 @@ def main() -> None:
     log.info("Embedding dimension: %d", model.get_sentence_embedding_dimension())
 
     for corpus in selected_corpora:
-        embed_corpus(corpus, model, overwrite=args.overwrite, output_dir=output_dir)
+        embed_corpus(corpus, model, overwrite=args.overwrite, output_dir=output_dir, batch_size=args.batch_size)
 
     # Final summary
     print("\nEmbedding complete:")
