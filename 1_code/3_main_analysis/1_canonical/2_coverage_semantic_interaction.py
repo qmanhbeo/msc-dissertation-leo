@@ -47,7 +47,7 @@ Inputs:
   4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
   4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
 
-  4_outputs/main/data/4_4_interaction_h1_h2_bias.json                H25 correlation results + H26 asymmetry
+  4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results + H26 asymmetry
   4_outputs/main/data/4_4_interaction_scatter_data.csv               per-SDG data table for plotting (SDG, research%, policy%,
                                   coverage_gap, semantic_gap, semantic_similarity)
   4_outputs/main/tables/*.tex            generated LaTeX macros/tables
@@ -149,7 +149,7 @@ def correlation_or_skip(
 # Args
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Compute H25/H26 outputs into the canonical output folder.")
+    p = argparse.ArgumentParser(description="Compute correlation and asymmetry outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     return p.parse_args()
 
@@ -164,7 +164,7 @@ def main() -> None:
 
     coverage_gap_path = layout.data_dir / "4_2_coverage_document_weighted.json"
     semantic_gap_path = layout.data_dir / "4_3_semantic_gap_distances.json"
-    out_corr = layout.data_dir / "4_4_interaction_h1_h2_bias.json"
+    out_corr = layout.data_dir / "4_4_interaction_correlation_asymmetry.json"
     out_scatter = layout.data_dir / "4_4_interaction_scatter_data.csv"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
@@ -229,11 +229,11 @@ def main() -> None:
             "✓" if reliable_mask[i] else "✗",
         )
 
-    # ---- H25 Correlations ----
+    # ---- Correlation tests ----
     # Use all SDGs with finite semantic gaps first, then re-check with only reliable ones.
     log.info("")
     log.info("=" * 70)
-    log.info("H25 CORRELATION TESTS")
+    log.info("CORRELATION TESTS")
     log.info("=" * 70)
     log.info("")
     log.info("OBSERVED SDGs WITH FINITE SEMANTIC GAP (n=%d):", int(available_mask.sum()))
@@ -283,7 +283,7 @@ def main() -> None:
         ),
     }
 
-    # ---- H25 interpretation ----
+    # ---- Correlation interpretation ----
     # Primary test: correlation (a) research_proportion vs semantic_gap.
     primary_stats = corr_primary["a_res_prop_vs_sem_gap"]
     if primary_stats["skipped"]:
@@ -294,29 +294,29 @@ def main() -> None:
 
     log.info("")
     log.info("=" * 70)
-    log.info("H25 INTERPRETATION (PRIMARY TEST: research_proportion vs semantic_gap)")
+    log.info("CORRELATION INTERPRETATION (PRIMARY TEST: research_proportion vs semantic_gap)")
     log.info("=" * 70)
     if r_primary > 0.3:
-        h25_direction = "SUPPORTED"
-        h25_story = (
+        correlation_direction = "SUPPORTED"
+        correlation_story = (
             "Positive correlation: SDGs with higher research attention show greater within-SDG "
             "semantic divergence from policy."
         )
     elif r_primary < -0.3:
-        h25_direction = "CONTRADICTED"
-        h25_story = (
+        correlation_direction = "CONTRADICTED"
+        correlation_story = (
             "Negative correlation: SDGs with more research attention are MORE semantically aligned "
             "with policy — suggests research reduces semantic divergence over time."
         )
     else:
-        h25_direction = "NOT SUPPORTED (WEAK CORRELATION)"
-        h25_story = (
+        correlation_direction = "NOT SUPPORTED (WEAK CORRELATION)"
+        correlation_story = (
             "Near-zero correlation: research attention does not predict semantic gap direction. "
             "Coverage and semantic divergence are largely independent dimensions."
         )
-    log.info("  H25 direction: %s", h25_direction)
+    log.info("  Correlation direction: %s", correlation_direction)
     log.info("  Pearson r=%.3f  p=%.3f  Spearman ρ=%.3f", r_primary, p_primary, rho_primary)
-    log.info("  %s", h25_story)
+    log.info("  %s", correlation_story)
 
     # Top-3 outliers (SDGs furthest from the trend line).
     log.info("")
@@ -330,10 +330,10 @@ def main() -> None:
                  sdg, rp*100, sg,
                  "high_coverage_high_gap" if sg > 0.25 else "high_coverage_low_gap")
 
-    # ---- H26 asymmetry ----
+    # ---- Asymmetry diagnostic ----
     log.info("")
     log.info("=" * 70)
-    log.info("H26 DIRECTIONAL ASYMMETRY DIAGNOSTIC")
+    log.info("DIRECTIONAL ASYMMETRY DIAGNOSTIC")
     log.info("=" * 70)
     research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
     pol_vs_research = np.load(POL_VS_RES_PATH)
@@ -353,23 +353,23 @@ def main() -> None:
 
     log.info("  Research papers vs OSDG centroids — mean top sim: %.4f", mean_paper_top)
     log.info("  Policy segments vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
-    h26_supported = mean_pol_vs_res > mean_paper_top
-    h26_gap = mean_pol_vs_res - mean_paper_top
-    log.info("  Asymmetry gap (policy - research): %.4f  → H26 direction %s",
-             h26_gap, "OBSERVED" if h26_supported else "NOT OBSERVED")
-    if h26_supported:
+    asym_supported = mean_pol_vs_res > mean_paper_top
+    asym_gap = mean_pol_vs_res - mean_paper_top
+    log.info("  Asymmetry gap (policy - research): %.4f  → Asymmetry direction %s",
+             asym_gap, "OBSERVED" if asym_supported else "NOT OBSERVED")
+    if asym_supported:
         log.info(
             "  Diagnostic reading: policy-facing texts score closer to research-derived "
             "centroids than papers score to OSDG-derived centroids."
         )
     else:
         log.info(
-            "  Diagnostic reading: the observed direction does not favour the H26 asymmetry claim."
+            "  Diagnostic reading: the observed direction does not favour the asymmetry claim."
         )
 
     # ---- Save outputs ----
     results = {
-        "h25": {
+        "correlation": {
             "hypothesis": (
                 "SDGs with the highest research attention show the largest within-SDG semantic "
                 "gaps (research and policy talk past each other at points of engagement)."
@@ -378,8 +378,8 @@ def main() -> None:
                 "research_proportion vs semantic_gap "
                 f"(Pearson r, Spearman rho, n={primary_stats['n']})"
             ),
-            "direction_found": h25_direction,
-            "story": h25_story,
+            "direction_found": correlation_direction,
+            "story": correlation_story,
             "caveats": [
                 f"n={primary_stats['n']} SDGs in the primary test gives low statistical power.",
                 "SDG 4 research proportion (22%) may be inflated by ML 'learning' terminology.",
@@ -392,18 +392,18 @@ def main() -> None:
             "correlations_reliable_only": corr_reliable,
             "correlations_excl_sdg4": corr_excl4,
         },
-        "h26": {
+        "asymmetry": {
             "hypothesis": (
                 "Policy-facing texts may score closer to research-derived centroids than papers score "
                 "to OSDG-derived centroids, but this is treated only as a directional diagnostic."
             ),
             "mean_paper_top_vs_osdg": round(mean_paper_top, 6),
             "mean_policy_top_vs_research": round(mean_pol_vs_res, 6),
-            "asymmetry_gap": round(h26_gap, 6),
-            "supported": h26_supported,
+            "asymmetry_gap": round(asym_gap, 6),
+            "supported": asym_supported,
             "caveats": [
                 f"A15 FLAG: policy scores against OSDG centroids are inflated by {a15_gap:.3f} relative "
-                "to paper scores. The H26 diagnostic may partly reflect this calibration bias, "
+                "to paper scores. The asymmetry diagnostic may partly reflect this calibration bias, "
                 "not genuine directional asymmetry.",
                 "Research centroids are built via hard assignment from OSDG centroids — a "
                 "circularity that may reduce apparent research-centroid distance.",
@@ -493,7 +493,7 @@ def main() -> None:
         rf"\newcommand{{\HExclSdgFourSpearmanP}}{{{excl4['spearman_p']:.3f}}}",
         rf"\newcommand{{\HAsymPolicyScore}}{{{mean_pol_vs_res:.3f}}}",
         rf"\newcommand{{\HAsymResearchScore}}{{{mean_paper_top:.3f}}}",
-        rf"\newcommand{{\HAsymGap}}{{{_fmt(h26_gap)}}}",
+        rf"\newcommand{{\HAsymGap}}{{{_fmt(asym_gap)}}}",
         rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.2f}}}",
     ]
     (gen_dir / "num_interaction.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")

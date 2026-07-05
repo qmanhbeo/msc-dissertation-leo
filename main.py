@@ -319,7 +319,7 @@ def run_sample_stability(output_dir: Path) -> None:
         [
             "4_2_coverage_document_weighted.json",
             "4_3_semantic_gap_distances.json",
-            "4_4_interaction_h1_h2_bias.json",
+            "4_4_interaction_correlation_asymmetry.json",
         ],
     )
     run_step(

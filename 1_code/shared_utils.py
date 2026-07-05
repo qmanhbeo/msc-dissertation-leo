@@ -23,7 +23,7 @@ MANUSCRIPT_ROOT_FILES = [
     "4_2_coverage_diagnostic_unweighted.json",
     "4_3_semantic_gap_distances.json",
     "4_3_semantic_gap_robustness_caps.json",
-    "4_4_interaction_h1_h2_bias.json",
+    "4_4_interaction_correlation_asymmetry.json",
     "4_4_interaction_scatter_data.csv",
     "dissertation.pdf",
 ]

@@ -60,7 +60,7 @@ POLICY_EMB = EMBEDDINGS_DIR / "policy.npy"
 
 CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
-CANONICAL_H25_JSON = "4_4_interaction_h1_h2_bias.json"
+CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
 
 N_SDG = 17
 DRAW_SEEDS = tuple(range(42, 142))
@@ -218,12 +218,12 @@ def normalize_centroid(raw: np.ndarray) -> tuple[np.ndarray, float]:
 def load_policy_state(canonical_data_dir: Path) -> dict[str, Any]:
     require_output_files(
         canonical_data_dir,
-        [CANONICAL_COVERAGE_JSON, CANONICAL_SEMANTIC_JSON, CANONICAL_H25_JSON],
+        [CANONICAL_COVERAGE_JSON, CANONICAL_SEMANTIC_JSON, CANONICAL_INTERACTION_JSON],
     )
 
     coverage_out = load_json(canonical_data_dir / CANONICAL_COVERAGE_JSON)
     semantic_out = load_json(canonical_data_dir / CANONICAL_SEMANTIC_JSON)
-    h25_out = load_json(canonical_data_dir / CANONICAL_H25_JSON)
+    interaction_data = load_json(canonical_data_dir / CANONICAL_INTERACTION_JSON)
 
     policy_scores = np.load(POLICY_SCORES).astype(np.float32)
     policy_ids = load_json(POLICY_IDS)
@@ -272,8 +272,8 @@ def load_policy_state(canonical_data_dir: Path) -> dict[str, Any]:
         if per_sdg_semantic[sdg]["semantic_gap"] is not None
     ]
     full_mean_semantic_gap = float(np.mean(full_semantic_gaps))
-    full_mean_paper_top_vs_osdg = float(h25_out["h26"]["mean_paper_top_vs_osdg"])
-    full_h26_gap = float(h25_out["h26"]["asymmetry_gap"])
+    full_mean_paper_top_vs_osdg = float(interaction_data["asymmetry"]["mean_paper_top_vs_osdg"])
+    full_asym_gap = float(interaction_data["asymmetry"]["asymmetry_gap"])
 
     return {
         "policy_profile_hard_docweighted": policy_profile_hard,
@@ -287,7 +287,7 @@ def load_policy_state(canonical_data_dir: Path) -> dict[str, Any]:
         "policy_centroid_available": policy_centroid_available,
         "full_mean_semantic_gap": full_mean_semantic_gap,
         "full_mean_paper_top_vs_osdg": full_mean_paper_top_vs_osdg,
-        "full_h26_gap": full_h26_gap,
+        "full_asym_gap": full_asym_gap,
     }
 
 def cache_dir_for_tier(cache_root: Path, tier_label: str) -> Path:
@@ -504,7 +504,7 @@ def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) ->
     policy_vs_sample_research = (
         policy_state["policy_embeddings"] @ research_centroids.T
     ).max(axis=1).mean()
-    h26_gap = float(policy_vs_sample_research - mean_paper_top_vs_osdg)
+    asym_gap = float(policy_vs_sample_research - mean_paper_top_vs_osdg)
     a15_gap = float(policy_state["policy_top_vs_osdg"] - mean_paper_top_vs_osdg)
 
     mean_semantic_gap = float(np.mean(semantic_values_all)) if semantic_values_all else None
@@ -520,7 +520,7 @@ def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) ->
         "coverage_profile_hard": to_sdg_dict(coverage_profile),
         "mean_paper_top_vs_osdg": round(mean_paper_top_vs_osdg, 6),
         "policy_top_vs_sample_research": round(float(policy_vs_sample_research), 6),
-        "h26_asymmetry_gap": round(h26_gap, 6),
+        "asymmetry_gap": round(asym_gap, 6),
         "a15_calibration_bias": round(a15_gap, 6),
         "mean_semantic_gap": None if mean_semantic_gap is None else round(mean_semantic_gap, 6),
         "mean_semantic_gap_reliable_only": (
@@ -550,7 +550,7 @@ def summarize_tiers(
     *,
     total_rows: int,
     full_mean_semantic_gap: float,
-    full_h26_gap: float,
+    full_asym_gap: float,
     full_a15_gap: float,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     summary_rows: list[dict[str, Any]] = []
@@ -588,7 +588,7 @@ def summarize_tiers(
         macro_coverage_variance = float(macro_coverage_sd_by_sdg.mean())
 
         semantic_means = np.array([row["mean_semantic_gap"] for row in tier_draws], dtype=np.float64)
-        h26_values = np.array([row["h26_asymmetry_gap"] for row in tier_draws], dtype=np.float64)
+        h26_values = np.array([row["asymmetry_gap"] for row in tier_draws], dtype=np.float64)
         a15_values = np.array([row["a15_calibration_bias"] for row in tier_draws], dtype=np.float64)
 
         summary_rows.append(
@@ -600,8 +600,8 @@ def summarize_tiers(
                 "macro_coverage_variance": round(macro_coverage_variance, 6),
                 "mean_semantic_gap": round(float(semantic_means.mean()), 6),
                 "std_semantic_gap": round(float(semantic_means.std()), 6),
-                "mean_h26_asymmetry_gap": round(float(h26_values.mean()), 6),
-                "std_h26_asymmetry_gap": round(float(h26_values.std()), 6),
+                "mean_asymmetry_gap": round(float(h26_values.mean()), 6),
+                "std_asymmetry_gap": round(float(h26_values.std()), 6),
                 "mean_a15_calibration_bias": round(float(a15_values.mean()), 6),
                 "std_a15_calibration_bias": round(float(a15_values.std()), 6),
                 "mean_observed_semantic_sdgs": round(
@@ -653,8 +653,8 @@ def summarize_tiers(
             "macro_coverage_variance": None,
             "mean_semantic_gap": round(full_mean_semantic_gap, 6),
             "std_semantic_gap": None,
-            "mean_h26_asymmetry_gap": round(full_h26_gap, 6),
-            "std_h26_asymmetry_gap": None,
+            "mean_asymmetry_gap": round(full_asym_gap, 6),
+            "std_asymmetry_gap": None,
             "mean_a15_calibration_bias": round(full_a15_gap, 6),
             "std_a15_calibration_bias": None,
             "mean_observed_semantic_sdgs": None,
@@ -671,7 +671,7 @@ def summarize_tiers(
         "full_corpus": {
             "sample_size": total_rows,
             "mean_semantic_gap": round(full_mean_semantic_gap, 6),
-            "mean_h26_asymmetry_gap": round(full_h26_gap, 6),
+            "mean_asymmetry_gap": round(full_asym_gap, 6),
             "mean_a15_calibration_bias": round(full_a15_gap, 6),
         },
     }
@@ -724,8 +724,8 @@ def write_outputs(
                 "macro_coverage_variance",
                 "mean_semantic_gap",
                 "std_semantic_gap",
-                "mean_h26_asymmetry_gap",
-                "std_h26_asymmetry_gap",
+                "mean_asymmetry_gap",
+                "std_asymmetry_gap",
                 "mean_a15_calibration_bias",
                 "std_a15_calibration_bias",
                 "mean_observed_semantic_sdgs",
@@ -790,7 +790,7 @@ def write_outputs(
                     label,
                     format_variance(row["macro_coverage_variance"]),
                     format_pm(row["mean_semantic_gap"], row["std_semantic_gap"]),
-                    format_pm(row["mean_h26_asymmetry_gap"], row["std_h26_asymmetry_gap"]),
+                    format_pm(row["mean_asymmetry_gap"], row["std_asymmetry_gap"]),
                     format_pm(row["mean_a15_calibration_bias"], row["std_a15_calibration_bias"]),
                 ]
             )
@@ -846,7 +846,7 @@ def main() -> None:
         draw_results,
         total_rows=total_rows,
         full_mean_semantic_gap=policy_state["full_mean_semantic_gap"],
-        full_h26_gap=policy_state["full_h26_gap"],
+        full_asym_gap=policy_state["full_asym_gap"],
         full_a15_gap=full_a15_gap,
     )
     write_outputs(
