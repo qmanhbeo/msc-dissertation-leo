@@ -18,6 +18,7 @@ import logging
 import random
 import re
 import sys
+from multiprocessing import Pool
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -123,41 +124,11 @@ def classify_text(text: str) -> str:
     return "neither_unclear"
 
 
-def reservoir_sample_non_sdg4(target_n: int, seed: int, score_manifest: dict) -> dict[int, set[int]]:
+def scan_and_sample_score_shards(score_manifest: dict, seed: int) -> tuple[dict[int, set[int]], dict[int, set[int]], dict[int, set[int]]]:
     rng = random.Random(seed)
-    reservoir: list[tuple[int, int]] = []
-    seen = 0
-    n_shards = len(score_manifest["shards"])
-    for shard_idx, shard in enumerate(score_manifest["shards"], start=1):
-        shard_id = int(shard["shard_id"])
-        ids_path = ROOT / shard["ids_path"]
-        for row in iter_jsonl(ids_path):
-            assigned_sdg = int(row["assigned_sdg"])
-            if assigned_sdg == 4:
-                continue
-            ref = (shard_id, int(row["row_in_shard"]))
-            seen += 1
-            if len(reservoir) < target_n:
-                reservoir.append(ref)
-            else:
-                j = rng.randrange(seen)
-                if j < target_n:
-                    reservoir[j] = ref
-        log.info(
-            "Reservoir sampled non-SDG4 candidates from score shard %s/%s (%s seen so far)",
-            shard_idx,
-            n_shards,
-            seen,
-        )
-    out: dict[int, set[int]] = defaultdict(set)
-    for shard_id, row_idx in reservoir:
-        out[shard_id].add(row_idx)
-    return out
-
-
-def scan_assignment_refs(score_manifest: dict) -> tuple[dict[int, set[int]], dict[int, set[int]], int]:
     sdg4_refs: dict[int, set[int]] = defaultdict(set)
     sdg9_refs: dict[int, set[int]] = defaultdict(set)
+    non_sdg4_candidates: list[tuple[int, int]] = []
     n_sdg4 = 0
     n_shards = len(score_manifest["shards"])
     for shard_idx, shard in enumerate(score_manifest["shards"], start=1):
@@ -169,60 +140,98 @@ def scan_assignment_refs(score_manifest: dict) -> tuple[dict[int, set[int]], dic
             if assigned_sdg == 4:
                 sdg4_refs[shard_id].add(row_in_shard)
                 n_sdg4 += 1
-            elif assigned_sdg == 9:
-                sdg9_refs[shard_id].add(row_in_shard)
+            else:
+                if assigned_sdg == 9:
+                    sdg9_refs[shard_id].add(row_in_shard)
+                non_sdg4_candidates.append((shard_id, row_in_shard))
         log.info(
-            "Scanned score shard %s/%s for SDG 4 and SDG 9 assignments (%s SDG4 rows found so far)",
+            "Scanned score shard %s/%s (%s SDG4, %s non-SDG4 candidates so far)",
             shard_idx,
             n_shards,
             n_sdg4,
+            len(non_sdg4_candidates),
         )
     if n_sdg4 == 0:
         raise RuntimeError("No SDG 4-assigned research records were found.")
-    return sdg4_refs, sdg9_refs, n_sdg4
+
+    # Reservoir-sample non-SDG4 in memory (identical algorithm to original two-pass)
+    reservoir: list[tuple[int, int]] = []
+    for i, ref in enumerate(non_sdg4_candidates):
+        seen = i + 1
+        if len(reservoir) < n_sdg4:
+            reservoir.append(ref)
+        else:
+            j = rng.randrange(seen)
+            if j < n_sdg4:
+                reservoir[j] = ref
+
+    non_sdg4_refs: dict[int, set[int]] = defaultdict(set)
+    for shard_id, row_idx in reservoir:
+        non_sdg4_refs[shard_id].add(row_idx)
+    return sdg4_refs, sdg9_refs, non_sdg4_refs
+
+
+def _audit_single_shard(
+    data_path_str: str,
+    targets_per_subset: dict[str, set[int]],
+) -> dict[str, Counter]:
+    """Process a single text shard. Returns per-subset category counters."""
+    counters = {subset: Counter() for subset in targets_per_subset}
+    data_path = Path(data_path_str)
+    with data_path.open(encoding="utf-8") as f:
+        for row_idx, line in enumerate(f):
+            matching = [subset for subset, rows in targets_per_subset.items() if row_idx in rows]
+            if not matching:
+                continue
+            payload = json.loads(line)
+            text = str(payload.get("combined_text") or "")
+            category = classify_text(text)
+            for subset in matching:
+                counters[subset][category] += 1
+    return counters
 
 
 def audit_subsets(
     text_manifest: dict,
     subset_refs: dict[str, dict[int, set[int]]],
 ) -> dict[str, Counter]:
-    counters = {subset: Counter() for subset in subset_refs}
-    subset_sizes = {subset: 0 for subset in subset_refs}
-
     n_shards = len(text_manifest["shards"])
-    for shard_idx, shard in enumerate(text_manifest["shards"], start=1):
+
+    jobs: list[tuple[str, dict[str, set[int]]]] = []
+    for shard in text_manifest["shards"]:
         shard_id = int(shard["shard_id"])
-        data_path = ROOT / shard["data_path"]
+        data_path = str(ROOT / shard["data_path"])
         targets = {
             subset: refs.get(shard_id, set())
             for subset, refs in subset_refs.items()
             if refs.get(shard_id)
         }
-        if not targets:
-            continue
-        with data_path.open(encoding="utf-8") as f:
-            for row_idx, line in enumerate(f):
-                matching = [subset for subset, rows in targets.items() if row_idx in rows]
-                if not matching:
-                    continue
-                payload = json.loads(line)
-                text = str(payload.get("combined_text") or "")
-                category = classify_text(text)
-                for subset in matching:
-                    counters[subset][category] += 1
-                    subset_sizes[subset] += 1
-        log.info(
-            "Scanned text shard %s/%s for lexical audit (%s SDG4, %s non-SDG4 sample, %s SDG9 rows matched so far)",
-            shard_idx,
-            n_shards,
-            subset_sizes["sdg4_assigned"],
-            subset_sizes["non_sdg4_sample"],
-            subset_sizes["sdg9_assigned"],
-        )
+        if targets:
+            jobs.append((data_path, targets))
+
+    if not jobs:
+        raise RuntimeError("No shards matched any subset")
+
+    counters = {subset: Counter() for subset in subset_refs}
+    completed = 0
+    with Pool() as pool:
+        for partial in pool.imap_unordered(_audit_single_shard, jobs):
+            completed += 1
+            for subset, c in partial.items():
+                counters[subset] += c
+            if "sdg4_assigned" in counters and "non_sdg4_sample" in counters and "sdg9_assigned" in counters:
+                log.info(
+                    "Processed shard %s/%s for lexical audit (%s SDG4, %s non-SDG4 sample, %s SDG9 rows matched so far)",
+                    completed,
+                    len(jobs),
+                    sum(counters["sdg4_assigned"].values()),
+                    sum(counters["non_sdg4_sample"].values()),
+                    sum(counters["sdg9_assigned"].values()),
+                )
 
     for subset, refs in subset_refs.items():
         expected = sum(len(rows) for rows in refs.values())
-        observed = subset_sizes[subset]
+        observed = sum(counters[subset].values())
         if observed != expected:
             raise RuntimeError(f"Subset '{subset}' row mismatch: expected {expected}, observed {observed}")
     return counters
@@ -285,10 +294,11 @@ def main() -> None:
     log.info("Loaded research score manifest with %s shards", len(score_manifest["shards"]))
     log.info("Loaded research text manifest with %s shards", len(text_manifest["shards"]))
 
-    sdg4_refs, sdg9_refs, n_sdg4 = scan_assignment_refs(score_manifest)
-    log.info("Found %s SDG 4-assigned research records", n_sdg4)
-    non_sdg4_refs = reservoir_sample_non_sdg4(n_sdg4, args.seed, score_manifest)
-    log.info("Built matched non-SDG4 reservoir sample with %s records using seed %s", n_sdg4, args.seed)
+    sdg4_refs, sdg9_refs, non_sdg4_refs = scan_and_sample_score_shards(score_manifest, args.seed)
+    all_sdg4 = sum(len(v) for v in sdg4_refs.values())
+    all_sample = sum(len(v) for v in non_sdg4_refs.values())
+    log.info("Found %s SDG 4-assigned research records", all_sdg4)
+    log.info("Built matched non-SDG4 reservoir sample with %s records using seed %s", all_sample, args.seed)
 
     subset_refs = {
         "sdg4_assigned": sdg4_refs,

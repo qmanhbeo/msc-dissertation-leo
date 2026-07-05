@@ -37,12 +37,12 @@
         "2_data/3_scored/policy_scores.npy": {
           "path": "2_data/3_scored/policy_scores.npy",
           "size": 3677704,
-          "content_head_digest": "efebbaa34e3ec42a"
+          "content_head_digest": "bd5efaa0d10f1d3c"
         },
         "2_data/3_scored/sdg_centroids.npy": {
           "path": "2_data/3_scored/sdg_centroids.npy",
           "size": 26240,
-          "content_head_digest": "83c9330a03c464cd"
+          "content_head_digest": "5f294bc649896bf7"
         },
         "2_data/3_scored/research_centroids.npy": {
           "path": "2_data/3_scored/research_centroids.npy",
@@ -96,12 +96,12 @@
           "2_data/3_scored/policy_scores.npy": {
             "path": "2_data/3_scored/policy_scores.npy",
             "size": 3677704,
-            "content_head_digest": "efebbaa34e3ec42a"
+            "content_head_digest": "bd5efaa0d10f1d3c"
           },
           "2_data/3_scored/sdg_centroids.npy": {
             "path": "2_data/3_scored/sdg_centroids.npy",
             "size": 26240,
-            "content_head_digest": "83c9330a03c464cd"
+            "content_head_digest": "5f294bc649896bf7"
           },
           "2_data/3_scored/research_centroids.npy": {
             "path": "2_data/3_scored/research_centroids.npy",
@@ -124,181 +124,181 @@
     "seed": 42
   },
   "overall": {
-    "raw_mean_matched_cosine": 0.573552,
-    "adjusted_mean_matched_cosine": 0.568085,
-    "raw_mean_matched_gap": 0.426448,
-    "adjusted_mean_matched_gap": 0.431915
+    "raw_mean_matched_cosine": 0.573234,
+    "adjusted_mean_matched_cosine": 0.567754,
+    "raw_mean_matched_gap": 0.426766,
+    "adjusted_mean_matched_gap": 0.432246
   },
   "per_sdg_rows": [
     {
       "sdg": 1,
-      "pair_count": 2231,
+      "pair_count": 2214,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.601442,
-      "adjusted_mean_matched_cosine": 0.595258,
-      "delta_mean_cosine": -0.006185,
-      "raw_mean_matched_gap": 0.398558,
-      "adjusted_mean_matched_gap": 0.404742
+      "raw_mean_matched_cosine": 0.598709,
+      "adjusted_mean_matched_cosine": 0.592505,
+      "delta_mean_cosine": -0.006205,
+      "raw_mean_matched_gap": 0.401291,
+      "adjusted_mean_matched_gap": 0.407495
     },
     {
       "sdg": 2,
-      "pair_count": 2049,
+      "pair_count": 2020,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.591635,
-      "adjusted_mean_matched_cosine": 0.586373,
-      "delta_mean_cosine": -0.005263,
-      "raw_mean_matched_gap": 0.408365,
-      "adjusted_mean_matched_gap": 0.413627
+      "raw_mean_matched_cosine": 0.593401,
+      "adjusted_mean_matched_cosine": 0.588154,
+      "delta_mean_cosine": -0.005247,
+      "raw_mean_matched_gap": 0.406599,
+      "adjusted_mean_matched_gap": 0.411846
     },
     {
       "sdg": 3,
-      "pair_count": 3493,
+      "pair_count": 3506,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.542791,
-      "adjusted_mean_matched_cosine": 0.5381,
-      "delta_mean_cosine": -0.004691,
-      "raw_mean_matched_gap": 0.457209,
-      "adjusted_mean_matched_gap": 0.4619
+      "raw_mean_matched_cosine": 0.542206,
+      "adjusted_mean_matched_cosine": 0.537586,
+      "delta_mean_cosine": -0.00462,
+      "raw_mean_matched_gap": 0.457794,
+      "adjusted_mean_matched_gap": 0.462414
     },
     {
       "sdg": 4,
-      "pair_count": 2941,
+      "pair_count": 2994,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.56331,
-      "adjusted_mean_matched_cosine": 0.559395,
-      "delta_mean_cosine": -0.003915,
-      "raw_mean_matched_gap": 0.43669,
-      "adjusted_mean_matched_gap": 0.440605
+      "raw_mean_matched_cosine": 0.561838,
+      "adjusted_mean_matched_cosine": 0.557867,
+      "delta_mean_cosine": -0.003971,
+      "raw_mean_matched_gap": 0.438162,
+      "adjusted_mean_matched_gap": 0.442133
     },
     {
       "sdg": 5,
-      "pair_count": 3112,
+      "pair_count": 3066,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.600866,
-      "adjusted_mean_matched_cosine": 0.594481,
-      "delta_mean_cosine": -0.006384,
-      "raw_mean_matched_gap": 0.399134,
-      "adjusted_mean_matched_gap": 0.405519
+      "raw_mean_matched_cosine": 0.601144,
+      "adjusted_mean_matched_cosine": 0.594769,
+      "delta_mean_cosine": -0.006375,
+      "raw_mean_matched_gap": 0.398856,
+      "adjusted_mean_matched_gap": 0.405231
     },
     {
       "sdg": 6,
-      "pair_count": 1965,
+      "pair_count": 1941,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.580981,
-      "adjusted_mean_matched_cosine": 0.575611,
-      "delta_mean_cosine": -0.00537,
-      "raw_mean_matched_gap": 0.419019,
-      "adjusted_mean_matched_gap": 0.424389
+      "raw_mean_matched_cosine": 0.581721,
+      "adjusted_mean_matched_cosine": 0.576354,
+      "delta_mean_cosine": -0.005367,
+      "raw_mean_matched_gap": 0.418279,
+      "adjusted_mean_matched_gap": 0.423646
     },
     {
       "sdg": 7,
-      "pair_count": 2360,
+      "pair_count": 2343,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.574433,
-      "adjusted_mean_matched_cosine": 0.570402,
-      "delta_mean_cosine": -0.004032,
-      "raw_mean_matched_gap": 0.425567,
-      "adjusted_mean_matched_gap": 0.429598
+      "raw_mean_matched_cosine": 0.574768,
+      "adjusted_mean_matched_cosine": 0.570739,
+      "delta_mean_cosine": -0.00403,
+      "raw_mean_matched_gap": 0.425232,
+      "adjusted_mean_matched_gap": 0.429261
     },
     {
       "sdg": 8,
-      "pair_count": 2361,
+      "pair_count": 2415,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.561188,
-      "adjusted_mean_matched_cosine": 0.554476,
-      "delta_mean_cosine": -0.006712,
-      "raw_mean_matched_gap": 0.438812,
-      "adjusted_mean_matched_gap": 0.445524
+      "raw_mean_matched_cosine": 0.559013,
+      "adjusted_mean_matched_cosine": 0.552319,
+      "delta_mean_cosine": -0.006694,
+      "raw_mean_matched_gap": 0.440987,
+      "adjusted_mean_matched_gap": 0.447681
     },
     {
       "sdg": 9,
-      "pair_count": 3553,
+      "pair_count": 3626,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.574019,
-      "adjusted_mean_matched_cosine": 0.569917,
-      "delta_mean_cosine": -0.004102,
-      "raw_mean_matched_gap": 0.425981,
-      "adjusted_mean_matched_gap": 0.430083
+      "raw_mean_matched_cosine": 0.573278,
+      "adjusted_mean_matched_cosine": 0.56921,
+      "delta_mean_cosine": -0.004068,
+      "raw_mean_matched_gap": 0.426722,
+      "adjusted_mean_matched_gap": 0.43079
     },
     {
       "sdg": 10,
-      "pair_count": 686,
+      "pair_count": 732,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.541447,
-      "adjusted_mean_matched_cosine": 0.536548,
-      "delta_mean_cosine": -0.004899,
-      "raw_mean_matched_gap": 0.458553,
-      "adjusted_mean_matched_gap": 0.463452
+      "raw_mean_matched_cosine": 0.538154,
+      "adjusted_mean_matched_cosine": 0.533125,
+      "delta_mean_cosine": -0.005029,
+      "raw_mean_matched_gap": 0.461846,
+      "adjusted_mean_matched_gap": 0.466875
     },
     {
       "sdg": 11,
-      "pair_count": 2807,
+      "pair_count": 2735,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.55353,
-      "adjusted_mean_matched_cosine": 0.550345,
-      "delta_mean_cosine": -0.003185,
-      "raw_mean_matched_gap": 0.44647,
-      "adjusted_mean_matched_gap": 0.449655
+      "raw_mean_matched_cosine": 0.553754,
+      "adjusted_mean_matched_cosine": 0.550588,
+      "delta_mean_cosine": -0.003165,
+      "raw_mean_matched_gap": 0.446246,
+      "adjusted_mean_matched_gap": 0.449412
     },
     {
       "sdg": 12,
-      "pair_count": 2007,
+      "pair_count": 1951,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.582599,
-      "adjusted_mean_matched_cosine": 0.577142,
-      "delta_mean_cosine": -0.005456,
-      "raw_mean_matched_gap": 0.417401,
-      "adjusted_mean_matched_gap": 0.422858
+      "raw_mean_matched_cosine": 0.583051,
+      "adjusted_mean_matched_cosine": 0.577442,
+      "delta_mean_cosine": -0.005609,
+      "raw_mean_matched_gap": 0.416949,
+      "adjusted_mean_matched_gap": 0.422558
     },
     {
       "sdg": 13,
-      "pair_count": 4702,
+      "pair_count": 4530,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.607085,
-      "adjusted_mean_matched_cosine": 0.599949,
-      "delta_mean_cosine": -0.007136,
-      "raw_mean_matched_gap": 0.392915,
-      "adjusted_mean_matched_gap": 0.400051
+      "raw_mean_matched_cosine": 0.607728,
+      "adjusted_mean_matched_cosine": 0.60066,
+      "delta_mean_cosine": -0.007068,
+      "raw_mean_matched_gap": 0.392272,
+      "adjusted_mean_matched_gap": 0.39934
     },
     {
       "sdg": 14,
-      "pair_count": 1696,
+      "pair_count": 1675,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.59138,
-      "adjusted_mean_matched_cosine": 0.585481,
-      "delta_mean_cosine": -0.005899,
-      "raw_mean_matched_gap": 0.40862,
-      "adjusted_mean_matched_gap": 0.414519
+      "raw_mean_matched_cosine": 0.592134,
+      "adjusted_mean_matched_cosine": 0.586206,
+      "delta_mean_cosine": -0.005929,
+      "raw_mean_matched_gap": 0.407866,
+      "adjusted_mean_matched_gap": 0.413794
     },
     {
       "sdg": 15,
-      "pair_count": 2228,
+      "pair_count": 2156,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.565126,
-      "adjusted_mean_matched_cosine": 0.560451,
-      "delta_mean_cosine": -0.004674,
-      "raw_mean_matched_gap": 0.434874,
-      "adjusted_mean_matched_gap": 0.439549
+      "raw_mean_matched_cosine": 0.565514,
+      "adjusted_mean_matched_cosine": 0.560794,
+      "delta_mean_cosine": -0.004719,
+      "raw_mean_matched_gap": 0.434486,
+      "adjusted_mean_matched_gap": 0.439206
     },
     {
       "sdg": 16,
-      "pair_count": 3515,
+      "pair_count": 3408,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.559566,
-      "adjusted_mean_matched_cosine": 0.555671,
-      "delta_mean_cosine": -0.003895,
-      "raw_mean_matched_gap": 0.440434,
-      "adjusted_mean_matched_gap": 0.444329
+      "raw_mean_matched_cosine": 0.558599,
+      "adjusted_mean_matched_cosine": 0.554668,
+      "delta_mean_cosine": -0.00393,
+      "raw_mean_matched_gap": 0.441401,
+      "adjusted_mean_matched_gap": 0.445332
     },
     {
       "sdg": 17,
-      "pair_count": 6280,
+      "pair_count": 6651,
       "research_sample_n": 5000,
-      "raw_mean_matched_cosine": 0.558981,
-      "adjusted_mean_matched_cosine": 0.547843,
-      "delta_mean_cosine": -0.011139,
-      "raw_mean_matched_gap": 0.441019,
-      "adjusted_mean_matched_gap": 0.452157
+      "raw_mean_matched_cosine": 0.559968,
+      "adjusted_mean_matched_cosine": 0.548826,
+      "delta_mean_cosine": -0.011142,
+      "raw_mean_matched_gap": 0.440032,
+      "adjusted_mean_matched_gap": 0.451174
     }
   ],
   "example_rows": [
@@ -422,15 +422,15 @@
     {
       "sdg": 2,
       "rank_within_sdg": 5,
-      "policy_item_id": "India_National_AI_Strategy_NITI_2018_0049",
-      "policy_source_doc": "India_National_AI_Strategy_NITI_2018",
-      "research_item_id": "https://openalex.org/W4404030041",
-      "research_publication_year": 2024,
-      "raw_cosine": 0.77501,
-      "adjusted_cosine": 0.776525,
-      "delta_cosine": 0.001514,
-      "policy_text_snippet": "Discussion Paper National Strategy for Artificial Intelligence with roots in India, uses ML techniques to assess images of farms and predict economic value of their future yield. Use of AI and related technologies have the potential to impact productivity and efficiency at all of",
-      "research_text_snippet": "Deep Learning for Crop Disease Detection using YOLOv8. Agriculture, deeply rooted in India's history, remains as the root of the country's economy and a primary source of employment. Despite the ageold practice, smallholder farmers in India sometimes face problems, especially in "
+      "policy_item_id": "sdgi_00487_15",
+      "policy_source_doc": "sdgi_GBR_VNR_2019",
+      "research_item_id": "https://openalex.org/W4381987939",
+      "research_publication_year": 2023,
+      "raw_cosine": 0.771656,
+      "adjusted_cosine": 0.766257,
+      "delta_cosine": -0.0054,
+      "policy_text_snippet": "The Programme has also reached over 10,000 young people, teachers and parents through their Big Breakfast and Healthy Living Days. These events link local retailers, schools and communities together by helping young people to learn about nutritious food. The Data Picture: Food In",
+      "research_text_snippet": "Food insecurity - what can local government do?. Key points\u2022 Good food is a fundamental building block of health.Everyone should be able to access and afford enough nutritious food to lead a healthy life.However, more than 1 in 6 households in the UK reported that they had experi"
     },
     {
       "sdg": 3,
@@ -448,40 +448,40 @@
     {
       "sdg": 3,
       "rank_within_sdg": 2,
-      "policy_item_id": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health_0038",
+      "policy_item_id": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health_0302",
       "policy_source_doc": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health",
-      "research_item_id": "https://openalex.org/W3083327046",
-      "research_publication_year": 2020,
-      "raw_cosine": 0.798404,
-      "adjusted_cosine": 0.796079,
-      "delta_cosine": -0.002325,
-      "policy_text_snippet": "ETHICS AND GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH 3. APPLICATIONS OF ARTIFICIAL INTELLIGENCE FOR HEALTH Health-care workers will have to adapt their clinical practice significantly as use of AI increases. AI could automate tasks, giving doctors time to listen to patient",
-      "research_text_snippet": "Demystifying Artificial Intelligence in Medicine. The Artificial Intelligence (AI) revolution is disrupting a variety of industries - from manufacturing to agriculture, intellectual property, or retail. Healthcare, a complex industry with countless areas for improvement, will be "
+      "research_item_id": "https://openalex.org/W4387251463",
+      "research_publication_year": 2023,
+      "raw_cosine": 0.810663,
+      "adjusted_cosine": 0.811282,
+      "delta_cosine": 0.000618,
+      "policy_text_snippet": "ETHICS AND GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH ANNEX regulated, with the informed consent of data providers (patients). \u2022 Access to and use of data from digital self-care applications and/or wearable technologies should also be regulated. Data from these applications",
+      "research_text_snippet": "AI Deployment in Medical Devices-Ethical and Regulaltory Reflections, Beyond Data Protection and Bias - EU perspective. Legal regulations do not eliminate existing ethical problems related to the use of modern technology in medical devices for disease diagnosis and treatment. Amo"
     },
     {
       "sdg": 3,
       "rank_within_sdg": 3,
-      "policy_item_id": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health_0182",
+      "policy_item_id": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health_0246",
       "policy_source_doc": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health",
-      "research_item_id": "https://openalex.org/W3137650920",
-      "research_publication_year": 2021,
-      "raw_cosine": 0.79531,
-      "adjusted_cosine": 0.79238,
-      "delta_cosine": -0.00293,
-      "policy_text_snippet": "ETHICS AND GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH 9. ELEMENTS OF A FRAMEWORK FOR GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH Evolving approaches to consent As the types, quantity and applications of health data, including for commercial use, have grown, a patchwork",
-      "research_text_snippet": "Problematic Interactions between AI and Health Privacy. The interaction of artificial intelligence (AI) and health privacy is a two-way street. Both directions are problematic. This Essay makes two main points. First, the advent of artificial intelligence weakens the legal protec"
+      "research_item_id": "https://openalex.org/W4410227175",
+      "research_publication_year": 2025,
+      "raw_cosine": 0.797774,
+      "adjusted_cosine": 0.797798,
+      "delta_cosine": 2.4e-05,
+      "policy_text_snippet": "Xiong Y, Ba X, Hou A, Zhang K, Chen L, Li T. Automatic detection of Mycobacterium tuberculosis using artificial intelligence. J Thorac Dis. 2018;10(3):1936-40. 13. Mandavilli A. These algorithms could bring an end to the world's deadliest killer. New York Times. 20 November 2020 ",
+      "research_text_snippet": "Towards Precision Medicine: Deep Learning-Based Pulmonary Tuberculosis Detection in Radiographic Imaging. The approach taken here uses a deep learning-based one for detecting pulmonary tuberculosis from chest radiographic images for the improvement of precision medicine in the di"
     },
     {
       "sdg": 3,
       "rank_within_sdg": 4,
-      "policy_item_id": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health_0202",
+      "policy_item_id": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health_0072",
       "policy_source_doc": "WHO_2021_Ethics_and_Governance_of_Artificial_Intelligence_for_Health",
       "research_item_id": "https://openalex.org/W3137650920",
       "research_publication_year": 2021,
-      "raw_cosine": 0.790001,
-      "adjusted_cosine": 0.786983,
-      "delta_cosine": -0.003018,
-      "policy_text_snippet": "ETHICS AND GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH 9. ELEMENTS OF A FRAMEWORK FOR GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH advance scientific progress and the development of AI for health care and medicine (93, 295). Public or private \"owners\" of health big data ",
+      "raw_cosine": 0.788621,
+      "adjusted_cosine": 0.785613,
+      "delta_cosine": -0.003008,
+      "policy_text_snippet": "ETHICS AND GOVERNANCE OF ARTIFICIAL INTELLIGENCE FOR HEALTH 5. KEY ETHICAL PRINCIPLES FOR USE OF ARTIFICIAL INTELLIGENCE FOR HEALTH can ensure a clinician can override decisions made by AI systems and that machine autonomy can be restricted and made \"intrinsically reversible\". Re",
       "research_text_snippet": "Problematic Interactions between AI and Health Privacy. The interaction of artificial intelligence (AI) and health privacy is a two-way street. Both directions are problematic. This Essay makes two main points. First, the advent of artificial intelligence weakens the legal protec"
     },
     {
@@ -773,6 +773,19 @@
     {
       "sdg": 8,
       "rank_within_sdg": 2,
+      "policy_item_id": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence_0153",
+      "policy_source_doc": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence",
+      "research_item_id": "https://openalex.org/W4393945111",
+      "research_publication_year": 2024,
+      "raw_cosine": 0.820768,
+      "adjusted_cosine": 0.820149,
+      "delta_cosine": -0.000619,
+      "policy_text_snippet": "PUBLICATIONS OF THE MINISTRY OF ECONOMIC AFFAIRS AND EMPLOYMENT 21/2018 WORK IN THE AGE OF ARTIFICIAL INTELLIGENCE: FOUR PERSPECTIVES ON THE ECONOMY, EMPLOYMENT, SKILLS AND ETHICS At the same time, mechanisms that increase demand for labour are at work in the economy. Due to the ",
+      "research_text_snippet": "Comprehensive View on the Effect of Artificial Intelligence and Employment. The effects of technological innovation and automation in general on employment and economic growth have long been the subject of economic research.Conventional economic models balance a positive compleme"
+    },
+    {
+      "sdg": 8,
+      "rank_within_sdg": 3,
       "policy_item_id": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence_0130",
       "policy_source_doc": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence",
       "research_item_id": "https://openalex.org/W4393945111",
@@ -785,7 +798,7 @@
     },
     {
       "sdg": 8,
-      "rank_within_sdg": 3,
+      "rank_within_sdg": 4,
       "policy_item_id": "UN_AI_Advisory_Body_Final_Report_2024_0046",
       "policy_source_doc": "UN_AI_Advisory_Body_Final_Report_2024",
       "research_item_id": "https://openalex.org/W4409363349",
@@ -798,7 +811,7 @@
     },
     {
       "sdg": 8,
-      "rank_within_sdg": 4,
+      "rank_within_sdg": 5,
       "policy_item_id": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence_0135",
       "policy_source_doc": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence",
       "research_item_id": "https://openalex.org/W3116987432",
@@ -808,19 +821,6 @@
       "delta_cosine": 5.8e-05,
       "policy_text_snippet": "The second one focuses on qualitative changes in working life: what types of changes will take place within tasks and modes of work, including employment relationship models or the times, places and organisation of work, and whether the entire set of concepts relevant to work and",
       "research_text_snippet": "Artificial Intelligence, Automation, and Changing Forms of Work. This paper critically evaluates the impact of Artificial Intelligence-based automation on the nature of work. Contrary to the conventional belief that automation replaces human-labour, or that it makes the human-lab"
-    },
-    {
-      "sdg": 8,
-      "rank_within_sdg": 5,
-      "policy_item_id": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence_0125",
-      "policy_source_doc": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence",
-      "research_item_id": "https://openalex.org/W4393945111",
-      "research_publication_year": 2024,
-      "raw_cosine": 0.783788,
-      "adjusted_cosine": 0.784085,
-      "delta_cosine": 0.000298,
-      "policy_text_snippet": "PUBLICATIONS OF THE MINISTRY OF ECONOMIC AFFAIRS AND EMPLOYMENT 21/2018 WORK IN THE AGE OF ARTIFICIAL INTELLIGENCE: FOUR PERSPECTIVES ON THE ECONOMY, EMPLOYMENT, SKILLS AND ETHICS While the rate at which jobs will disappear appears fast, it is considerably lower than rates Finlan",
-      "research_text_snippet": "Comprehensive View on the Effect of Artificial Intelligence and Employment. The effects of technological innovation and automation in general on employment and economic growth have long been the subject of economic research.Conventional economic models balance a positive compleme"
     },
     {
       "sdg": 9,
@@ -864,14 +864,14 @@
     {
       "sdg": 9,
       "rank_within_sdg": 4,
-      "policy_item_id": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence_0001",
-      "policy_source_doc": "SteeringGroupOfTheArtificialIntelligenceProgramme_2017_Finlands_Age_of_Artificial_Intelligence",
+      "policy_item_id": "EuropeanCommissionJointResearchCentre_2020_National_Strategies_on_Artificial_Intelligence_A_European_Perspective_in_2019_0068",
+      "policy_source_doc": "EuropeanCommissionJointResearchCentre_2020_National_Strategies_on_Artificial_Intelligence_A_European_Perspective_in_2019",
       "research_item_id": "https://openalex.org/W3003489189",
       "research_publication_year": 2019,
-      "raw_cosine": 0.803152,
-      "adjusted_cosine": 0.799778,
-      "delta_cosine": -0.003373,
-      "policy_text_snippet": "Description sheet Published by Ministry of Economic Affairs and Employment 18 December 2017 Authors Steering Group of the Artificial Intelligence Programme Finland's age of artificial intelligence Title of publication Turning Finland into a leading country in the application of a",
+      "raw_cosine": 0.804417,
+      "adjusted_cosine": 0.801612,
+      "delta_cosine": -0.002805,
+      "policy_text_snippet": "12 Finland In October 2017, the Finnish Ministry of Economic Affairs and Employment published a national AI strategy entitled Finland's Age of Artificial Intelligence (Finland, 2017). This report fits under the umbrella of a broader Artificial Intelligence Programme in Finland (a",
       "research_text_snippet": "General perception of Artificial Intelligence and impacts on the financial sector in Finland. With the expansion of the Internet, digitization and big data, the Artificial intelligence (AI) has quickly become a topic of discussion and attention for the business community, directl"
     },
     {
@@ -890,6 +890,19 @@
     {
       "sdg": 10,
       "rank_within_sdg": 1,
+      "policy_item_id": "TheFoundationForLawAndInternationalAffairs_2017_In_Their_Own_Words_A_Next_Generation_Artificial_Intelligence_Development_Plan_0062",
+      "policy_source_doc": "TheFoundationForLawAndInternationalAffairs_2017_In_Their_Own_Words_A_Next_Generation_Artificial_Intelligence_Development_Plan",
+      "research_item_id": "https://openalex.org/W4229057428",
+      "research_publication_year": 2022,
+      "raw_cosine": 0.871878,
+      "adjusted_cosine": 0.870659,
+      "delta_cosine": -0.001219,
+      "policy_text_snippet": "\u4ef6\u5e73\u53f0,\u5f62\u6210\u96c6\u805a\u5404\u7c7b\u8d44\u6e90\u7684\u521b\u65b0\u751f\u6001,\u4fc3\u8fdb\u4eba\u5de5\u667a\u80fd\u4e2d\u5c0f\u5fae\u4f01\u4e1a\u53d1\u5c55\u548c\u5404\u9886\u57df\u5e94\u7528\u3002\u652f\u6301\u5404\u7c7b\u673a\u6784\u548c \u5e73\u53f0\u9762\u5411\u4eba\u5de5\u667a\u80fd\u4f01\u4e1a\u63d0\u4f9b\u4e13\u4e1a\u5316\u670d\u52a1\u3002 4.\u6253\u9020\u4eba\u5de5\u667a\u80fd\u521b\u65b0\u9ad8\u5730\u3002 \u7ed3\u5408\u5404\u5730\u533a\u57fa\u7840\u548c\u4f18\u52bf,\u6309\u4eba\u5de5\u667a\u80fd\u5e94\u7528\u9886\u57df\u5206\u95e8\u522b\u7c7b\u8fdb\u884c\u76f8\u5173\u4ea7\u4e1a\u5e03\u5c40\u3002\u9f13\u52b1\u5730\u65b9\u56f4\u7ed5\u4eba\u5de5\u667a\u80fd \u4ea7\u4e1a\u94fe\u548c\u521b\u65b0\u94fe,\u96c6\u805a\u9ad8\u7aef\u8981\u7d20\u3001\u9ad8\u7aef\u4f01\u4e1a\u3001\u9ad8\u7aef\u4eba\u624d,\u6253\u9020\u4eba\u5de5\u667a\u80fd\u4ea7\u4e1a\u96c6\u7fa4\u548c\u521b\u65b0\u9ad8\u5730\u3002 \u5f00\u5c55\u4eba\u5de5\u667a\u80fd\u521b\u65b0\u5e94\u7528\u8bd5\u70b9\u793a\u8303\u3002\u5728\u4eba\u5de5\u667a\u80fd\u57fa\u7840\u8f83\u597d\u3001\u53d1\u5c55\u6f5c\u529b\u8f83\u5927\u7684\u5730\u533a,\u7ec4\u7ec7\u5f00\u5c55\u56fd\u5bb6\u4eba\u5de5 \u667a\u80fd\u521b\u65b0\u8bd5\u9a8c,\u63a2\u7d22\u4f53\u5236\u673a\u5236\u3001\u653f\u7b56\u6cd5\u89c4\u3001\u4eba\u624d\u57f9\u80b2\u7b49\u65b9\u9762\u7684\u91cd\u5927\u6539\u9769,\u63a8\u52a8\u4eba\u5de5\u667a\u80fd\u6210\u679c\u8f6c\u5316\u3001\u91cd\u5927 \u4ea7\u54c1\u96c6\u6210\u521b\u65b0\u548c\u793a\u8303\u5e94\u7528,\u5f62\u6210\u53ef\u590d\u5236\u3001\u53ef\u63a8\u5e7f\u7684\u7ecf\u9a8c,",
+      "research_text_snippet": "2022\u667a\u6167\u57ce\u5e02\u5c55\u5c08\u984c\u5831\u5c0e-\u91ab\u7642\u8207\u79d1\u6280\u7522\u696d\u7684\u5c0d\u8a71. &lt;p&gt;\u667a\u6167\u91ab\u9662\u70ba\u73fe\u4eca\u91ab\u754c\u5171\u540c\u767c\u5c55\u7684\u9996\u8981\u4efb\u52d9,\u672c\u6703\u81ea2021\u5e74\u5e95\u81f32022\u5e74\u521d\u57f7\u884c\u5e02\u5834\u8abf\u67e5,\u7d50\u679c\u53cd\u6620\u51fa\u91ab\u754c\u9996\u9577\u3001\u8cc7\u8a0a\u9577\u8207\u79d1\u6280\u7522\u696d\u4ee3\u8868\u6709\u63a5\u8fd1\u534a\u6578\u8868\u793a\u5c0d\u65bc\u667a\u6167\u91ab\u7642\u7684\u767c\u5c55\u65b9\u5411\u611f\u5230\u5fac\u5fa8,\u800c\u76ee\u524d\u667a\u6167\u91ab\u9662\u7684\u767c\u5c55\u73fe\u6cc1,\u5404\u5c64\u7d1a\u91ab\u9662\u5448\u73fe\u4e00\u81f4\u7684\u8da8\u52e2,\u5340\u57df\u8207\u5730\u5340\u91ab\u9662\u5c0e\u5165\u7684\u7cfb\u7d71\u591a\u70ba\u57fa\u790e\u61c9\u7528\u8207\u6d41\u7a0b\u81ea\u52d5\u5316,\u91ab\u5b78\u4e2d\u5fc3\u5247\u8f03\u591a\u5148\u9032\u6280\u8853\u7684\u61c9\u7528\u5982\u4eba\u5de5\u667a\u6167\u3001\u6a5f\u5668\u4eba,5G\u7b49\u3002\u91ab\u754c\u5c0d\u767c\u5c55AI\u5448\u73fe\u9ad8\u5ea6\u8208\u8da3,\u7136\u76ee\u524d\u6210\u529f\u6848\u4f8b\u537b\u4e0d\u591a,\u9081\u5411\u667a\u6167\u91ab\u9662\u4e4b\u8def\u4e0a,\u4ecd\u9762\u81e8\u8a31\u591a\u5167\u5916\u90e8\u56f0\u96e3\u53ca\u6311\u6230,\u6700\u5927\u7684\u52d5\u529b\u4f86\u81ea\u5167\u90e8\u7684\u9700\u6c42,\u800c\u975e\u653f\u7b56\u6216\u8a55\u9451\u898f\u5b9a,\u800c\u6700\u5927\u7684\u56f0\u96e3\u5305\u62ec\u7f3a"
+    },
+    {
+      "sdg": 10,
+      "rank_within_sdg": 2,
       "policy_item_id": "TheFoundationForLawAndInternationalAffairs_2017_In_Their_Own_Words_A_Next_Generation_Artificial_Intelligence_Development_Plan_0060",
       "policy_source_doc": "TheFoundationForLawAndInternationalAffairs_2017_In_Their_Own_Words_A_Next_Generation_Artificial_Intelligence_Development_Plan",
       "research_item_id": "https://openalex.org/W4229057428",
@@ -902,7 +915,7 @@
     },
     {
       "sdg": 10,
-      "rank_within_sdg": 2,
+      "rank_within_sdg": 3,
       "policy_item_id": "UN_SDG_Progress_Report_2022_0126",
       "policy_source_doc": "UN_SDG_Progress_Report_2022",
       "research_item_id": "https://openalex.org/W4324292610",
@@ -915,7 +928,7 @@
     },
     {
       "sdg": 10,
-      "rank_within_sdg": 3,
+      "rank_within_sdg": 4,
       "policy_item_id": "UN_2022_The_Sustainable_Development_Goals_Report_2022_0126",
       "policy_source_doc": "UN_2022_The_Sustainable_Development_Goals_Report_2022",
       "research_item_id": "https://openalex.org/W4324292610",
@@ -928,7 +941,7 @@
     },
     {
       "sdg": 10,
-      "rank_within_sdg": 4,
+      "rank_within_sdg": 5,
       "policy_item_id": "UN_SDG_Progress_Report_2023_0112",
       "policy_source_doc": "UN_SDG_Progress_Report_2023",
       "research_item_id": "https://openalex.org/W4324292610",
@@ -938,19 +951,6 @@
       "delta_cosine": -0.001161,
       "policy_text_snippet": "reduction of 1.8 per cent between 1991 and 2014. And although there had -2 been increases in global between-country inequality in only 5 of the 29 years before the pandemic, the onslaught of COVID-19 has caused the largest -4 increase in between-country inequality in three decade",
       "research_text_snippet": "Global Inequality in the Current Era. One of the most vehement criticisms to the current global era refers to the issue of huge income disparities within and between countries. At present, global inequality is higher than it was 200 years ago but, at the same time, up to COVID 19"
-    },
-    {
-      "sdg": 10,
-      "rank_within_sdg": 5,
-      "policy_item_id": "sdgi_03055_5",
-      "policy_source_doc": "sdgi_EU_VNR_2023",
-      "research_item_id": "https://openalex.org/W4405710560",
-      "research_publication_year": 2024,
-      "raw_cosine": 0.759189,
-      "adjusted_cosine": 0.757439,
-      "delta_cosine": -0.00175,
-      "policy_text_snippet": "The Commission has also stepped up its efforts to help EU countries reduce inequalities from the outset, by publishing a Communication on \u2018Better assessing the distributional impact of Member States\u2019 policies\u2019 and a Communication on \u2018Harnessing Talent in EU\u2019s regions\u2019, addressing",
-      "research_text_snippet": "The Effectiveness of European Union Regional Policies - A Longitudinal Review. To improve the economic well-being of regions to avoid regional disparities in the EU, the EU sets the Cohesion Policy to boost regions that are lacking behind. The aim of this paper is to make an over"
     },
     {
       "sdg": 11,
@@ -968,19 +968,6 @@
     {
       "sdg": 11,
       "rank_within_sdg": 2,
-      "policy_item_id": "UN_SDG_Progress_Report_2018_0066",
-      "policy_source_doc": "UN_SDG_Progress_Report_2018",
-      "research_item_id": "https://openalex.org/W4392674544",
-      "research_publication_year": 2024,
-      "raw_cosine": 0.79173,
-      "adjusted_cosine": 0.788154,
-      "delta_cosine": -0.003576,
-      "policy_text_snippet": "Ninety per cent of urban dwellers worldwide are Annual exposure to ambient fine particulate matter (PM2.5) in urban areas, population weighted (micrograms per cubic metre) breathing unsafe air, resulting in millions of deaths Air pollution threatens the health of most city dwelle",
-      "research_text_snippet": "EO data and AI techniques for measuring PM concentration and exposure at intra-urban scale: the APEMAIA Project. A large number of medical research studies have shown that particulate air pollution poses a significant risk to health. In urban areas, where 55% of the global popula"
-    },
-    {
-      "sdg": 11,
-      "rank_within_sdg": 3,
       "policy_item_id": "sdgi_03220_23",
       "policy_source_doc": "sdgi_DEU_VLR_stuttgart_2021",
       "research_item_id": "https://openalex.org/W4385800574",
@@ -993,7 +980,7 @@
     },
     {
       "sdg": 11,
-      "rank_within_sdg": 4,
+      "rank_within_sdg": 3,
       "policy_item_id": "UN_SDG_Progress_Report_2020_0126",
       "policy_source_doc": "UN_SDG_Progress_Report_2020",
       "research_item_id": "https://openalex.org/W3210733493",
@@ -1006,16 +993,29 @@
     },
     {
       "sdg": 11,
+      "rank_within_sdg": 4,
+      "policy_item_id": "sdgi_03449_6",
+      "policy_source_doc": "sdgi_VNM_VNR_2023",
+      "research_item_id": "https://openalex.org/W4409761230",
+      "research_publication_year": 2025,
+      "raw_cosine": 0.760071,
+      "adjusted_cosine": 0.766904,
+      "delta_cosine": 0.006833,
+      "policy_text_snippet": "Target 11.2:By 2030, ensure access to safe, afordable, accessible, and sustainable transport systems for all, improving road safe, notably by expanding, public transport, with special attention the needs of women, children, persons with disabilities and older persons (Global targ",
+      "research_text_snippet": "A Review on Disability-Inclusive Public Transportation: Current Barriers and Prospects. People with disabilities face significant barriers in using public transport, limiting their access to healthcare, employment, education, and daily life activities. A comprehensive review of e"
+    },
+    {
+      "sdg": 11,
       "rank_within_sdg": 5,
-      "policy_item_id": "sdgi_02361_0",
-      "policy_source_doc": "sdgi_GRC_VLR_skiathos_2020",
-      "research_item_id": "https://openalex.org/W4283833863",
-      "research_publication_year": 2022,
-      "raw_cosine": 0.763624,
-      "adjusted_cosine": 0.768958,
-      "delta_cosine": 0.005334,
-      "policy_text_snippet": "page / 33 5.1.1 / Skiathos collaborates with UNWTO on tourism recovery post-covid 19 After the dramatic reduction of tourist arrivals due to the COVID-19 pandemic, tourism destinations such as Skiathos will be willing to start welcoming visitors again as soon as the situation imp",
-      "research_text_snippet": "Lessons from COVID-19 for the future: destination crisis management, tourist behaviour and tourism industry trends. Purpose This research aims at arriving at a broad scope of the lessons learnt after two years of the coronavirus disease 2019 (COVID-19) pandemic outbreak by analys"
+      "policy_item_id": "sdgi_03196_0",
+      "policy_source_doc": "sdgi_BRA_VLR_para\u0301_2021",
+      "research_item_id": "https://openalex.org/W4385800574",
+      "research_publication_year": 2023,
+      "raw_cosine": 0.75849,
+      "adjusted_cosine": 0.754418,
+      "delta_cosine": -0.004072,
+      "policy_text_snippet": "GOAL 11. Make cities inclusive, safe, resilient and sustainable. Chapter 11 VOLUNTARY LOCAL REPORT ABOUT THE SUSTAINABLE DEVELOPMENT GOALS IN THE STATE OF PAR\u00c1 2021 Chapter 11 - SDG 11. Sustainable Cities and Communities. 138 VOLUNTARY LOCAL REPORT ABOUT THE SUSTAINABLE DEVELOPME",
+      "research_text_snippet": "Introduction to A Research Agenda for Sustainable Cities and Communities. As we stand part way through the period for achieving the Sustainable Development Goals (SDGs), this book takes stock of how the global research community has contributed to the delivery of SDG11. It also l"
     },
     {
       "sdg": 12,
@@ -1267,15 +1267,15 @@
     {
       "sdg": 15,
       "rank_within_sdg": 5,
-      "policy_item_id": "sdgi_04478_2",
-      "policy_source_doc": "sdgi_HUN_VNR_2018",
-      "research_item_id": "https://openalex.org/W4403576033",
-      "research_publication_year": 2024,
-      "raw_cosine": 0.730326,
-      "adjusted_cosine": 0.731191,
-      "delta_cosine": 0.000865,
-      "policy_text_snippet": "An additional important element of the Strategy is the adaptation of forests and forest management to climate change. A wide range of adaptation measures has been outlined, including close to nature forest management, assisted migration, the favouring of drought-tolerant species,",
-      "research_text_snippet": "Evaluation of the Performance of Climatic Scenarios in the Basal Area Model of Trees (Case Study: the Farim Forest). Background: Currently, forests are not only considered an economic pole but also a support for the survival of other sectors.For this reason, decision-making, as t"
+      "policy_item_id": "India_National_AI_Strategy_NITI_2018_0049",
+      "policy_source_doc": "India_National_AI_Strategy_NITI_2018",
+      "research_item_id": "https://openalex.org/W3164850391",
+      "research_publication_year": 2021,
+      "raw_cosine": 0.758086,
+      "adjusted_cosine": 0.758079,
+      "delta_cosine": -7e-06,
+      "policy_text_snippet": "Discussion Paper National Strategy for Artificial Intelligence with roots in India, uses ML techniques to assess images of farms and predict economic value of their future yield. Use of AI and related technologies have the potential to impact productivity and efficiency at all of",
+      "research_text_snippet": "Simplificando a Interpreta\u00e7\u00e3o de Laudos de An\u00e1lise de Solo com Deep Learning em Nuvem. Since the soil impacts directly on agricultural productivity, its conservation through the correct application of nutrients and fertilization is of paramount importance. In this work, we propos"
     },
     {
       "sdg": 16,
@@ -1384,6 +1384,19 @@
     {
       "sdg": 17,
       "rank_within_sdg": 4,
+      "policy_item_id": "OECD_2022_Global_Outlook_on_Financing_for_Sustainable_Development_2023_No_Sustainability_Without_Equity_0099",
+      "policy_source_doc": "OECD_2022_Global_Outlook_on_Financing_for_Sustainable_Development_2023_No_Sustainability_Without_Equity",
+      "research_item_id": "https://openalex.org/W4390234375",
+      "research_publication_year": 2023,
+      "raw_cosine": 0.79308,
+      "adjusted_cosine": 0.790416,
+      "delta_cosine": -0.002664,
+      "policy_text_snippet": "This estimate includes all developing countries except for Bulgaria, the People's Republic of [93] China (hereinafter China), Romania and Russia and is based on the WHO global vaccination strategy target of vaccinating 70% of the world's population. Despite the progress achieved ",
+      "research_text_snippet": "Key learnings from the development and early use of global guidance on the integration of COVID-19 vaccination into broader health systems. More than 13.5 billion COVID-19 vaccine doses have so far been delivered between 2021 and 2023 through a mix of delivery platforms, with mas"
+    },
+    {
+      "sdg": 17,
+      "rank_within_sdg": 5,
       "policy_item_id": "African_Union_Continental_AI_Strategy_2024_0048",
       "policy_source_doc": "African_Union_Continental_AI_Strategy_2024",
       "research_item_id": "https://openalex.org/W4387183644",
@@ -1393,19 +1406,6 @@
       "delta_cosine": -0.004201,
       "policy_text_snippet": "2.4.1 AI Governance and Regulation Effective governance is a key mechanism for ensuring that the use and development of AI are inclusive of diverse populations, serve African agendas, and do not harm African people, societies or environments. Developing robust governance regimes ",
       "research_text_snippet": "Responsible artificial intelligence in Africa: Towards policy learning. Several African countries are developing artificial intelligence (AI) strategies and ethics frameworks with the goal of accelerating responsible AI development and adoption. However, many of these governance "
-    },
-    {
-      "sdg": 17,
-      "rank_within_sdg": 5,
-      "policy_item_id": "sdgi_05464_0",
-      "policy_source_doc": "sdgi_DEU_VLR_hanover_2020",
-      "research_item_id": "https://openalex.org/W4412423735",
-      "research_publication_year": 2025,
-      "raw_cosine": 0.790084,
-      "adjusted_cosine": 0.788273,
-      "delta_cosine": -0.00181,
-      "policy_text_snippet": "STRATEGIC GOAL 20 Establish sustainability as broadly as possible, strengthen participation at all levels GLOBAL CONTEXT The 196 countries signing the United Nations\u2019 \u201c2030 Agenda for Sustainable Development\u201d [218] have pledged to implement the 17 Sustainable Development Goals (S",
-      "research_text_snippet": "Essential concepts for implementing the Sustainable Development Goals. This introductory chapter contextualizes the A-Z Guide 'Essential Concepts for Implementing the Sustainable Development Goals' into existing research and political developments concerning the 17 Sustainable De"
     }
   ]
 }

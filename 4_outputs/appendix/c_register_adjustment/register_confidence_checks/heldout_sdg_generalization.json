@@ -37,12 +37,12 @@
         "2_data/3_scored/policy_scores.npy": {
           "path": "2_data/3_scored/policy_scores.npy",
           "size": 3677704,
-          "content_head_digest": "efebbaa34e3ec42a"
+          "content_head_digest": "bd5efaa0d10f1d3c"
         },
         "2_data/3_scored/sdg_centroids.npy": {
           "path": "2_data/3_scored/sdg_centroids.npy",
           "size": 26240,
-          "content_head_digest": "83c9330a03c464cd"
+          "content_head_digest": "5f294bc649896bf7"
         },
         "2_data/3_scored/research_centroids.npy": {
           "path": "2_data/3_scored/research_centroids.npy",
@@ -96,12 +96,12 @@
           "2_data/3_scored/policy_scores.npy": {
             "path": "2_data/3_scored/policy_scores.npy",
             "size": 3677704,
-            "content_head_digest": "efebbaa34e3ec42a"
+            "content_head_digest": "bd5efaa0d10f1d3c"
           },
           "2_data/3_scored/sdg_centroids.npy": {
             "path": "2_data/3_scored/sdg_centroids.npy",
             "size": 26240,
-            "content_head_digest": "83c9330a03c464cd"
+            "content_head_digest": "5f294bc649896bf7"
           },
           "2_data/3_scored/research_centroids.npy": {
             "path": "2_data/3_scored/research_centroids.npy",
@@ -161,11 +161,11 @@
     "seed": 42
   },
   "mean_test_metrics": {
-    "test_accuracy": 0.977335,
-    "test_roc_auc": 0.997172,
-    "test_f1": 0.977271,
-    "test_precision": 0.978228,
-    "test_recall": 0.976434
+    "test_accuracy": 0.977151,
+    "test_roc_auc": 0.997125,
+    "test_f1": 0.977071,
+    "test_precision": 0.978374,
+    "test_recall": 0.975908
   },
   "fold_rows": [
     {
@@ -191,24 +191,24 @@
         15,
         17
       ],
-      "train_per_class": 42502,
-      "test_per_class": 11580,
+      "train_per_class": 42554,
+      "test_per_class": 11528,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997849,
-      "val_f1": 0.980778,
-      "test_accuracy": 0.976036,
-      "test_roc_auc": 0.997055,
-      "test_f1": 0.976072,
-      "test_precision": 0.974602,
-      "test_recall": 0.977547,
+      "val_roc_auc": 0.997427,
+      "val_f1": 0.980585,
+      "test_accuracy": 0.976882,
+      "test_roc_auc": 0.997184,
+      "test_f1": 0.976947,
+      "test_precision": 0.974209,
+      "test_recall": 0.979702,
       "test_confusion_matrix": [
         [
-          11285,
-          295
+          11229,
+          299
         ],
         [
-          260,
-          11320
+          234,
+          11294
         ]
       ]
     },
@@ -235,24 +235,24 @@
         15,
         16
       ],
-      "train_per_class": 39207,
-      "test_per_class": 14875,
+      "train_per_class": 39038,
+      "test_per_class": 15044,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997947,
-      "val_f1": 0.979948,
-      "test_accuracy": 0.984773,
-      "test_roc_auc": 0.998343,
-      "test_f1": 0.984857,
-      "test_precision": 0.979455,
-      "test_recall": 0.990319,
+      "val_roc_auc": 0.997398,
+      "val_f1": 0.978223,
+      "test_accuracy": 0.985476,
+      "test_roc_auc": 0.998442,
+      "test_f1": 0.98556,
+      "test_precision": 0.979894,
+      "test_recall": 0.991292,
       "test_confusion_matrix": [
         [
-          14566,
-          309
+          14738,
+          306
         ],
         [
-          144,
-          14731
+          131,
+          14913
         ]
       ]
     },
@@ -279,24 +279,24 @@
         16,
         17
       ],
-      "train_per_class": 42506,
-      "test_per_class": 11576,
+      "train_per_class": 42594,
+      "test_per_class": 11488,
       "selected_C": 10.0,
-      "val_roc_auc": 0.998076,
-      "val_f1": 0.981172,
-      "test_accuracy": 0.976978,
-      "test_roc_auc": 0.997291,
-      "test_f1": 0.977037,
-      "test_precision": 0.97456,
-      "test_recall": 0.979527,
+      "val_roc_auc": 0.997866,
+      "val_f1": 0.980079,
+      "test_accuracy": 0.976367,
+      "test_roc_auc": 0.997148,
+      "test_f1": 0.97639,
+      "test_precision": 0.975415,
+      "test_recall": 0.977368,
       "test_confusion_matrix": [
         [
-          11280,
-          296
+          11205,
+          283
         ],
         [
-          237,
-          11339
+          260,
+          11228
         ]
       ]
     },
@@ -323,24 +323,24 @@
         16,
         17
       ],
-      "train_per_class": 44578,
-      "test_per_class": 9504,
+      "train_per_class": 44414,
+      "test_per_class": 9668,
       "selected_C": 10.0,
-      "val_roc_auc": 0.998428,
-      "val_f1": 0.984185,
-      "test_accuracy": 0.967066,
-      "test_roc_auc": 0.995393,
-      "test_f1": 0.966528,
-      "test_precision": 0.982605,
-      "test_recall": 0.950968,
+      "val_roc_auc": 0.998331,
+      "val_f1": 0.98374,
+      "test_accuracy": 0.965918,
+      "test_roc_auc": 0.995151,
+      "test_f1": 0.965314,
+      "test_precision": 0.982746,
+      "test_recall": 0.94849,
       "test_confusion_matrix": [
         [
-          9344,
-          160
+          9507,
+          161
         ],
         [
-          466,
-          9038
+          498,
+          9170
         ]
       ]
     },
@@ -367,24 +367,24 @@
         16,
         17
       ],
-      "train_per_class": 47535,
-      "test_per_class": 6547,
+      "train_per_class": 47728,
+      "test_per_class": 6354,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997865,
-      "val_f1": 0.980773,
-      "test_accuracy": 0.981824,
-      "test_roc_auc": 0.997777,
-      "test_f1": 0.98186,
-      "test_precision": 0.979918,
-      "test_recall": 0.983809,
+      "val_roc_auc": 0.997875,
+      "val_f1": 0.981466,
+      "test_accuracy": 0.981114,
+      "test_roc_auc": 0.997698,
+      "test_f1": 0.981144,
+      "test_precision": 0.979605,
+      "test_recall": 0.982688,
       "test_confusion_matrix": [
         [
-          6415,
-          132
+          6224,
+          130
         ],
         [
-          106,
-          6441
+          110,
+          6244
         ]
       ]
     }
