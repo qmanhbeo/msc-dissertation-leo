@@ -319,7 +319,7 @@ def main() -> None:
     (gen_dir / "num_semantic.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "num_semantic.tex")
 
-    # tab_semgap.tex — full tabular block
+    # tab_semantic_gap.tex — full tabular block
     sorted_results = sorted(
         [r for r in primary_results if r["semantic_gap"] is not None],
         key=lambda x: x["semantic_gap"],
@@ -346,8 +346,8 @@ def main() -> None:
         r"\bottomrule",
         r"\end{tabular}",
     ])
-    (gen_dir / "tab_semgap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "tab_semgap.tex")
+    (gen_dir / "tab_semantic_gap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+    log.info("Saved: %s", gen_dir / "tab_semantic_gap.tex")
 
 
 if __name__ == "__main__":

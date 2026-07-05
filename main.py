@@ -144,9 +144,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--sdg-register-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware register robustness checks.")
     p.add_argument("--sdg-register-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware register robustness checks.")
     p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
-    p.add_argument("--clean-canon", action="store_true", help="Remove manuscript output artifacts only.")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
-    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: outputs/")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
     p.add_argument(
         "--snapshot-profile",
         choices=["curated", "full"],
@@ -186,7 +185,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.refresh_policy_corpus,
             args.sample_stability,
             args.build_pdf,
-            args.clean_canon,
         ]
     )
 
@@ -278,23 +276,6 @@ def missing_warm_replay_requirements(*, include_register_adjustment: bool) -> li
 
 def canonical_exists(output_dir: Path) -> bool:
     return any(path.exists() for path in canonical_artifact_paths(output_dir))
-
-
-def remove_if_exists(path: Path) -> None:
-    if path.is_file() or path.is_symlink():
-        path.unlink()
-
-
-def clean_canonical_outputs(output_dir: Path) -> None:
-    for path in canonical_artifact_paths(output_dir):
-        if path.exists():
-            remove_if_exists(path)
-    for subdir in [output_dir / "main" / "tables", output_dir / "main" / "figures", output_dir / "main" / "data"]:
-        if subdir.exists():
-            try:
-                subdir.rmdir()
-            except OSError:
-                pass
 
 
 def print_status(output_dir: Path) -> None:
@@ -518,7 +499,7 @@ def run_refresh_policy_corpus(args: argparse.Namespace) -> None:
     run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"])
 
 
-def run_full_pipeline(output_dir: Path, args: argparse.Namespace) -> None:
+def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     print("WARNING: live-source --cold-replay reruns are not expected to be identical to the frozen data snapshot.")
     print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
     pre_steps = [
@@ -646,8 +627,6 @@ def main() -> None:
         print_status(output_dir)
         return
 
-    if args.clean_canon and not args.overwrite:
-        raise RuntimeError("--clean-canon requires --overwrite.")
     if args.refresh_policy_corpus and not args.overwrite:
         raise RuntimeError("--refresh-policy-corpus requires --overwrite.")
 
@@ -672,16 +651,13 @@ def main() -> None:
             "Rerun with --overwrite to replace them."
         )
 
-    if args.clean_canon:
-        clean_canonical_outputs(output_dir)
-
     if fetch_profile is not None:
         run_fetch_data_snapshot(args, profile_name=fetch_profile, overwrite_data=args.overwrite)
     elif args.backup_data_snapshot:
         for profile_name in selected_backup_profiles(args.backup_data_snapshot):
             run_backup_data_snapshot(profile_name=profile_name)
     elif args.cold_replay:
-        run_full_pipeline(output_dir, args)
+        run_cold_replay(output_dir, args)
     elif args.appendix_all:
         run_sdg_source_comparison(output_dir)
         run_policy_source_family_sensitivity(output_dir)

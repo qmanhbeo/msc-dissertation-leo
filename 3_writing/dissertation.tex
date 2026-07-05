@@ -27,7 +27,7 @@
 \input{../4_outputs/main/tables/num_validation.tex}
 \input{../4_outputs/main/tables/num_coverage.tex}
 \input{../4_outputs/main/tables/num_semantic.tex}
-\input{../4_outputs/main/tables/num_h25.tex}
+\input{../4_outputs/main/tables/num_interaction.tex}
 \InputIfFileExists{../4_outputs/appendix/d_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex}{}{}
@@ -323,13 +323,13 @@ $^{(b)}$ SDG 4 F1 = \FiSdgFour{} in the validation table (Table~\ref{tab:validat
 
 \subsection{Semantic Gap: How Differently Research and Policy Discuss Each SDG}
 
-Table~\ref{tab:semgap} reports the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgFive{} (SDG 5) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. Rankings are stable across segment caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
+Table~\ref{tab:semantic-gap} reports the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgFive{} (SDG 5) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. Rankings are stable across segment caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
 
 \begin{table}[ht]
 \centering
 \caption{Within-SDG semantic gap (segment cap = 50). Semantic gap = 1 $-$ cosine similarity between research sub-centroid and policy sub-centroid for each SDG. Higher gap = greater within-SDG semantic divergence. n$_{\text{res}}$ = papers assigned to SDG; n$_{\text{pol docs}}$ = unique policy documents with segments assigned to SDG.}
-\label{tab:semgap}
-\input{../4_outputs/main/tables/tab_semgap.tex}
+\label{tab:semantic-gap}
+\input{../4_outputs/main/tables/tab_semantic_gap.tex}
 \end{table}
 
 \begin{figure}[ht]
@@ -345,13 +345,13 @@ Table~\ref{tab:semgap} reports the within-SDG semantic gap for all 17 SDGs. Sema
 
 \subsection{Coverage--Semantic Interaction: Two Distinct Dimensions of Observed Divergence}
 
-Table~\ref{tab:h25} reports the H1 coverage–semantic correlation tests between coverage measures and semantic gap scores across the SDGs.
+Table~\ref{tab:interaction} reports the H1 coverage–semantic correlation tests between coverage measures and semantic gap scores across the SDGs.
 
 \begin{table}[ht]
 \centering
-\caption{H1 coverage–semantic correlation tests: research coverage proportion vs.\ semantic gap, across 17 SDGs.}
-\label{tab:h25}
-\input{../4_outputs/main/tables/tab_h25.tex}
+\caption{H1 correlation tests (Pearson $r$, Spearman $\rho$) between coverage measures and within-SDG semantic gap. The primary test uses all 17 observed SDGs; the sensitivity test excludes SDG 4 to check robustness to the suspected ML terminology artefact.}
+\label{tab:interaction}
+\input{../4_outputs/main/tables/tab_interaction.tex}
 \end{table}
 
 The primary H1 test is \textbf{not supported}. Research coverage proportion and semantic gap are almost uncorrelated across SDGs ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$). The 95\% confidence interval (the range plausibly containing the true value) for $r$ spans approximately $[\HPrimaryPearsonCiLower, +\HPrimaryPearsonCiUpper]$, so the result should be read as low-evidence for a linear relationship rather than proof of full independence.

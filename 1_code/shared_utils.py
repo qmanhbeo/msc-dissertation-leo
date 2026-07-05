@@ -58,9 +58,9 @@ MANUSCRIPT_TABLE_FILES = [
     "num_coverage.tex",
     "tab_coverage.tex",
     "num_semantic.tex",
-    "tab_semgap.tex",
-    "num_h25.tex",
-    "tab_h25.tex",
+    "tab_semantic_gap.tex",
+    "num_interaction.tex",
+    "tab_interaction.tex",
     "num_sample_stability.tex",
     "tab_sample_stability.tex",
 ]
