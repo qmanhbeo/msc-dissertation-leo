@@ -195,6 +195,8 @@ def main() -> None:
     colors = [RESEARCH_COLOR if v > median_semantic_gap else "#92C5DE" for v in df_sem["semantic_gap"]]
 
     ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
+    for i, val in enumerate(df_sem["semantic_gap"]):
+        ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=6)
     ax2.axvline(median_semantic_gap, color="grey", linestyle="--", linewidth=1,
                 label=f"Median ({median_semantic_gap:.3f})")
     ax2.axvline(mean_semantic_gap, color="black", linestyle=":", linewidth=1,
