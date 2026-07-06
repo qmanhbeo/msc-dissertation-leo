@@ -11,13 +11,13 @@ SNAPSHOT_METADATA_DIR = Path("_snapshot_metadata")
 SNAPSHOT_METADATA_FILE = SNAPSHOT_METADATA_DIR / "snapshot_manifest.json"
 
 CURATED_EXCLUDED_PATHS = (
-    Path("2_data/0_raw/openalex"),
-    Path("2_data/3_scored/paper_sample_seed_42_141"),
-    Path("2_data/3_scored/register_adjustment_cache"),
-    Path("2_data/3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
-    Path("2_data/3b_scored_mpnet/paper_sample_seed_42_141"),
-    Path("2_data/3b_scored_mpnet/register_adjustment_cache"),
-    Path("2_data/3b_scored_mpnet/paper_scores_shards/metadata/subset_index.sqlite"),
+    Path("0_raw/openalex"),
+    Path("3_scored/paper_sample_seed_42_141"),
+    Path("3_scored/register_adjustment_cache"),
+    Path("3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
+    Path("3b_scored_mpnet/paper_sample_seed_42_141"),
+    Path("3b_scored_mpnet/register_adjustment_cache"),
+    Path("3b_scored_mpnet/paper_scores_shards/metadata/subset_index.sqlite"),
 )
 
 BASE_WARM_REPLAY_PATHS = (
