@@ -230,6 +230,7 @@ def missing_research_text_shards() -> list[Path]:
 
 
 def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, ...]) -> list[Path]:
+    manifest_path = ROOT / manifest_path
     if not manifest_path.exists():
         return [manifest_path.relative_to(ROOT)]
 
