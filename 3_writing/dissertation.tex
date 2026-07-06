@@ -320,19 +320,12 @@ Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverag
 
 \subsection{Semantic Gap: How Differently Research and Policy Discuss Each SDG}
 
-Table~\ref{tab:semantic-gap} reports the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgNine{} (SDG 9) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. Rankings are stable across segment caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
-
-\begin{table}[ht]
-\centering
-\caption{Within-SDG semantic gap (segment cap = 50). Semantic gap = 1 $-$ cosine similarity between research sub-centroid and policy sub-centroid for each SDG. Higher gap = greater within-SDG semantic divergence. n$_{\text{res}}$ = papers assigned to SDG; n$_{\text{pol docs}}$ = unique policy documents with segments assigned to SDG.}
-\label{tab:semantic-gap}
-\input{../4_outputs/main/tables/tab_semantic_gap.tex}
-\end{table}
+Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgNine{} (SDG 9) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. Rankings are stable across segment caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.85\textwidth]{fig2_semantic_gap.pdf}
-\caption{Within-SDG semantic gap by SDG, sorted descending. Semantic gap = $1 -$ cosine similarity between the research sub-centroid and the policy sub-centroid for each SDG (segment cap = 50 per source document). Dashed line = median semantic gap (\MedianSemanticGap). Dark bars exceed the median; light bars fall below it.}
+\caption{Within-SDG semantic gap by SDG, sorted descending. Semantic gap = $1 -$ cosine similarity between the research sub-centroid and the policy sub-centroid for each SDG (segment cap = 50 per source document). Dashed line = median (\MedianSemanticGap); dotted line = mean (\MeanSemanticGap). Dark bars exceed the median; light bars fall below it.}
 \label{fig:semantic_gap}
 \end{figure}
 

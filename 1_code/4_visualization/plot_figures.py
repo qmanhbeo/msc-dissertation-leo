@@ -113,6 +113,7 @@ def main() -> None:
     # Medians for the diagonal thresholds used in the diagnostic map
     median_research_pct = df["research_pct"].median()
     median_semantic_gap = df_sem_valid["semantic_gap"].median()
+    mean_semantic_gap = df_sem_valid["semantic_gap"].mean()
 
     # Load corpus-level counts for legend labels
     with open(layout.data_dir / "4_2_coverage_document_weighted.json") as f:
@@ -196,6 +197,8 @@ def main() -> None:
     ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
     ax2.axvline(median_semantic_gap, color="grey", linestyle="--", linewidth=1,
                 label=f"Median ({median_semantic_gap:.3f})")
+    ax2.axvline(mean_semantic_gap, color="black", linestyle=":", linewidth=1,
+                label=f"Mean ({mean_semantic_gap:.3f})")
     ax2.set_yticks(y)
     ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=7.5)
     ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
@@ -208,8 +211,11 @@ def main() -> None:
 
     high_patch = mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap")
     low_patch = mpatches.Patch(color="#92C5DE", alpha=0.88, label="Below median gap")
-    ax2.legend(handles=[high_patch, low_patch, plt.Line2D([0], [0], color="grey", linestyle="--",
-               label=f"Median ({median_semantic_gap:.3f})")], fontsize=7.5)
+    ax2.legend(handles=[
+        high_patch, low_patch,
+        plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median ({median_semantic_gap:.3f})"),
+        plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean ({mean_semantic_gap:.3f})"),
+    ], fontsize=7.5)
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
     ax2.invert_yaxis()
