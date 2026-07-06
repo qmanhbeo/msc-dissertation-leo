@@ -273,6 +273,7 @@ def main():
         r"\footnotesize",
         r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. A ``--'' indicates that the source does not cover that SDG.}",
         r"\label{tab:cross-sensitivity-robustness}",
+        r"\resizebox{\textwidth}{!}{%",
         r"\begin{tabular}{lccccccccccc}",
         r"\toprule",
         r"& \multicolumn{2}{c}{Model}",
@@ -289,6 +290,7 @@ def main():
     lines.extend([
         r"\bottomrule",
         r"\end{tabular}",
+        r"}",
         r"\end{table}",
     ])
 
