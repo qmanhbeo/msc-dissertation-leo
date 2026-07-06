@@ -636,8 +636,8 @@ def main() -> None:
         run_semantic_gap_interpretability(output_dir, model=model)
         run_softmax_multilabel_sdg(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
-        run_register_adjustment(output_dir, model=model)
         run_model_sensitivity(output_dir, args)
+        run_register_adjustment(output_dir, model=model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a1_source:
