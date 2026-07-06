@@ -4,6 +4,22 @@
 
 This repository contains the dissertation code, manuscript source, committed outputs, and the canonical reproducibility entrypoint for the submitted MSc project. The dissertation measures research-policy divergence in AI-for-SDG discourse using coverage and semantic-gap outputs. The README is operational only; the manuscript explains the research design, findings, and limitations.
 
+## Prerequisites
+
+| Requirement | Details |
+|---|---|
+| **Disk space** | Curated snapshot: ~14 GB archive + 24.6 GB extracted ≈ 39 GB total. Full snapshot: ~22 GB archive + 43.5 GB extracted ≈ 66 GB total |
+| **Platform** | Tested on Linux, WSL, and Windows (native). `--build-pdf` requires bash (WSL/Linux only) |
+| **Conda** | Required — environment is defined in `environment.yml` |
+| **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
+| **Network** | Required for `conda env create` and `--fetch-data-snapshot`. Optional for `--cold-replay` (live OpenAlex fetch) |
+| **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
+| **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for `--cold-replay`. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
+| **Embedding runtimes** (one-time, cold replay only) | MiniLM (`all-MiniLM-L6-v2`): ~2.5 hours on CPU. MPNet (`all-mpnet-base-v2`): ~17 hours on CPU |
+| **Git** | Required for cloning and pulling updates |
+
+All other dependencies (Python packages, LaTeX packages) are handled by Conda.
+
 ## Quick start for markers
 
 "Warm replay" means running the full analysis pipeline from pre-computed
@@ -27,6 +43,12 @@ regeneration. `--overwrite` is included because canonical outputs already exist
 in the repo; without it `main.py` fails closed to prevent accidental replacement.
 If the snapshot download fails, run `python main.py --fetch-data-snapshot curated`
 then retry.
+
+```bash
+# Or if you want to fetch the full data snapshot with all the raw, embedded, preprocessed, and scored data, do:
+python main.py --fetch-data-snapshot full
+python main.py --warm-replay --overwrite
+```
 
 ## What the replay produces
 
@@ -57,10 +79,8 @@ Not tracked in Git:
   platform-specific libraries (CUDA, Linux libs) are handled by conda/pip per-OS.
 - `requirements.txt` is a human-edited core reference (13 packages). Not needed
   for rebuild — `environment.yml` already covers the pip layer.
-- Python version: `3.11`. Tested on Linux/WSL and Windows.
-- PDF build requires LaTeX tools including `latexmk`, `pdflatex`, and `biber`
+- Python version: `3.11`.
 - CPU is sufficient for `--warm-replay`
-- Network access is needed for initial environment setup and data snapshot download; once `2_data/` is hydrated, warm replay does not need network access
 
 ## Additional optional commands
 
