@@ -117,7 +117,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     fig1, ax1 = plt.subplots(figsize=(8.5, 6))
 
-    df_sorted = df.sort_values("policy_pct_docweighted", ascending=False).reset_index(drop=True)
+    df_sorted = df.sort_values("sdg", ascending=True).reset_index(drop=True)
     y = np.arange(len(df_sorted))
     height = 0.38
 
@@ -142,11 +142,7 @@ def main() -> None:
     ax1.set_yticks(y)
     ax1.set_yticklabels(labels, fontsize=7.5)
     ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
-    ax1.set_title(
-        "Coverage profiles by SDG",
-        fontsize=8.5,
-        loc="left",
-    )
+    # ax1.set_title("Coverage profiles by SDG", fontsize=8.5, loc="left")
     ax1.legend(loc="lower right")
     ax1.axvline(0, color="black", linewidth=0.5)
     ax1.spines["top"].set_visible(False)
