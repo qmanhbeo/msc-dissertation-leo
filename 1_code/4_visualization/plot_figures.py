@@ -8,7 +8,8 @@ Produces three publication-quality figures for the dissertation:
     Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
 
 Inputs:
-    4_outputs/main/data/4_4_interaction_scatter_data.csv      — per-SDG metrics table from coverage_semantic_interaction.py
+     4_outputs/main/data/4_4_interaction_scatter_data.csv      — per-SDG metrics table from coverage_semantic_interaction.py
+     4_outputs/main/data/4_2_coverage_document_weighted.json  — corpus-level n counts for legend labels
 
 Outputs:
     4_outputs/main/figures/fig1_coverage_profiles.pdf
@@ -22,6 +23,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
@@ -92,7 +94,7 @@ SDG_SHORT = {
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir))
-    require_output_files(layout.data_dir, ["4_4_interaction_scatter_data.csv"])
+    require_output_files(layout.data_dir, ["4_4_interaction_scatter_data.csv", "4_2_coverage_document_weighted.json"])
     figures_dir = layout.figures_dir
 
     print(f"Canonical output dir: {layout.data_dir}")
@@ -112,6 +114,12 @@ def main() -> None:
     median_research_pct = df["research_pct"].median()
     median_semantic_gap = df_sem_valid["semantic_gap"].median()
 
+    # Load corpus-level counts for legend labels
+    with open(layout.data_dir / "4_2_coverage_document_weighted.json") as f:
+        _cov_counts = json.load(f)
+    N_RESEARCH_PAPERS = _cov_counts["n_research_papers"]
+    N_POLICY_DOCS = _cov_counts["n_policy_documents"]
+
     # -----------------------------------------------------------------------
     # Figure 1 — Coverage profiles comparison
     # -----------------------------------------------------------------------
@@ -127,7 +135,7 @@ def main() -> None:
         height=height,
         color=POLICY_COLOR,
         alpha=0.88,
-        label="Policy (document-weighted %)",
+        label=f"Policy (document-weighted %, n = {N_POLICY_DOCS})",
     )
     ax1.barh(
         y + height / 2,
@@ -135,7 +143,7 @@ def main() -> None:
         height=height,
         color=RESEARCH_COLOR,
         alpha=0.88,
-        label="Research (%)",
+        label=f"Research (%, n = {N_RESEARCH_PAPERS})",
     )
 
     labels = [SDG_SHORT[int(row["sdg"])].replace("\n", " ") for _, row in df_sorted.iterrows()]
@@ -143,7 +151,7 @@ def main() -> None:
     ax1.set_yticklabels(labels, fontsize=7.5)
     ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
     # ax1.set_title("Coverage profiles by SDG", fontsize=8.5, loc="left")
-    ax1.legend(loc="lower right")
+    ax1.legend(loc="upper right")
     ax1.axvline(0, color="black", linewidth=0.5)
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
