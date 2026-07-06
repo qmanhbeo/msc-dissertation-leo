@@ -9,7 +9,7 @@ This repository contains the dissertation code, manuscript source, committed out
 | Requirement | Details |
 |---|---|
 | **Disk space** | Curated snapshot: ~14 GB archive + 24.6 GB extracted ≈ 39 GB total. Full snapshot: ~22 GB archive + 43.5 GB extracted ≈ 66 GB total |
-| **Platform** | Tested on Linux, WSL, and Windows (native). `--build-pdf` requires bash (WSL/Linux only) |
+| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
 | **Network** | Required for `conda env create` and `--fetch-data-snapshot`. Optional for `--cold-replay` (live OpenAlex fetch) |
