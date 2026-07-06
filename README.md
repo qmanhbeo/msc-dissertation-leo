@@ -69,7 +69,7 @@ Not tracked in Git:
 | `python main.py` | Read-only status check |
 | `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D) standalone (no PDF) |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D, E) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
@@ -78,8 +78,8 @@ Not tracked in Git:
 | `python main.py --appendix-b3-interpret --overwrite` | Run B.3 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-b4-softmax --overwrite` | Run B.4 Softmax Multi-label SDG |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
-| `python main.py --appendix-d-register --overwrite` | Run D Register-Adjustment Robustness |
-| `python main.py --appendix-e-sensitivity --overwrite` | Run E Model Sensitivity (all-mpnet-base-v2 vs MiniLM). Requires pre-embedded MPNet data (see below). |
+| `python main.py --appendix-d-sensitivity --overwrite` | Run D Model Sensitivity (all-mpnet-base-v2 vs MiniLM). Requires pre-embedded MPNet data (see below). |
+| `python main.py --appendix-e-register --overwrite` | Run E Register-Adjustment Robustness |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
@@ -115,9 +115,9 @@ The fetch stage cannot be reproduced because its sources change continuously.
 | GitHub benchmark | `SDGClassification/benchmark@main` — moving branch |
 | HF dataset / Dataverse | `UNDP/sdgi-corpus` and UNGDC may be versioned |
 
-### Model sensitivity (Appendix E)
+### Model sensitivity (Appendix D)
 
-`--appendix-e-sensitivity` compares `all-mpnet-base-v2` (768-d) against the canonical
+`--appendix-d-sensitivity` compares `all-mpnet-base-v2` (768-d) against the canonical
 `all-MiniLM-L6-v2` (384-d).  This requires the MPNet data files
 (`2_data/2b_embedded_mpnet/*.npy`, research shards, and scored outputs under
 `2_data/3b_scored_mpnet/`) to have been produced by the one-time embedding
@@ -134,13 +134,13 @@ python 1_code/2_embed/research/0_embed_paper_shards.py \
     --model all-mpnet-base-v2 --device cuda
 
 # After embed files exist, run the comparison appendix:
-python main.py --appendix-e-sensitivity --overwrite
+python main.py --appendix-d-sensitivity --overwrite
 ```
 
-Once the MPNet embed files are frozen, `--appendix-e-sensitivity` is fully
+Once the MPNet embed files are frozen, `--appendix-d-sensitivity` is fully
 deterministic — it runs the same centroid/scoring/analysis pipeline on the
 MPNet embeddings and compares results against canonical MiniLM outputs.
-All outputs land under `4_outputs/appendix/e_model_sensitivity/`.
+All outputs land under `4_outputs/appendix/d_model_sensitivity/`.
 
 ### Credentials
 

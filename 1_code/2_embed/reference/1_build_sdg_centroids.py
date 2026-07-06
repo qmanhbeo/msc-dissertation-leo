@@ -73,8 +73,6 @@ from model_slug_utils import VALID_DIMS, embed_dir_for_model, scored_dir_for_mod
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-EMBEDDINGS_DIR = Path("2_data/2_embedded")
-OUTPUT_DIR = Path("2_data/3_scored")
 
 # Cohesion threshold for the high-variance flag (Assumption A6).
 # "Cohesion" = mean cosine similarity of an SDG's member vectors to its own unit centroid.

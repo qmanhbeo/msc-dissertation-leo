@@ -156,6 +156,7 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_EMBED_MODEL,
         help="Sentence-transformer model name (default: %(default)s). Override for model sensitivity.",
     )
+    p.add_argument("--model", dest="embed_model", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -164,6 +165,12 @@ def rel(path: Path) -> str:
         return str(path.relative_to(ROOT))
     except ValueError:
         return str(path)
+
+
+def _appendix_output_dir(base_output_dir: Path, model: str) -> Path:
+    if model != DEFAULT_EMBED_MODEL:
+        return base_output_dir / "appendix" / "d_model_sensitivity"
+    return base_output_dir
 
 
 def action_requested(args: argparse.Namespace) -> bool:
@@ -318,7 +325,8 @@ def build_pdf(output_dir: Path) -> None:
     )
 
 
-def run_sample_stability(output_dir: Path) -> None:
+def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
     require_output_files(
         output_dir / "main" / "data",
         [
@@ -327,72 +335,72 @@ def run_sample_stability(output_dir: Path) -> None:
             "4_4_interaction_correlation_asymmetry.json",
         ],
     )
-    run_step(
-        "sample stability",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(output_dir)],
-        step_id="C",
-    )
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("sample stability", cmd, step_id="C")
 
 
-def run_pca_semantic_landscape(output_dir: Path) -> None:
-    run_step(
-        "combined research-policy PCA landscape",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)],
-        step_id="B1",
-    )
+def run_pca_semantic_landscape(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("combined research-policy PCA landscape", cmd, step_id="B1")
 
 
-def run_within_corpus_centroid_structure(output_dir: Path) -> None:
-    run_step(
-        "within-corpus centroid structure",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(output_dir)],
-        step_id="B2",
-    )
+def run_within_corpus_centroid_structure(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("within-corpus centroid structure", cmd, step_id="B2")
 
 
-def run_softmax_multilabel_sdg(output_dir: Path) -> None:
-    run_step(
-        "softmax multi-label SDG robustness",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(output_dir)],
-        step_id="B4",
-    )
+def run_softmax_multilabel_sdg(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("softmax multi-label SDG robustness", cmd, step_id="B4")
 
 
-def run_policy_source_family_sensitivity(output_dir: Path) -> None:
-    run_step(
-        "policy source-family sensitivity",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(output_dir)],
-        step_id="A2",
-    )
+def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("policy source-family sensitivity", cmd, step_id="A2")
 
 
-def run_sdg4_lexical_audit(output_dir: Path) -> None:
-    run_step(
-        "SDG 4 lexical artefact audit",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(output_dir)],
-        step_id="A3",
-    )
+def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
 
 
-def run_sdg_source_comparison(output_dir: Path) -> None:
-    run_step(
-        "per-SDG source comparison",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/8_sdg_source_comparison.py", "--output-dir", str(output_dir)],
-        step_id="A1",
-    )
+def run_sdg_source_comparison(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/8_sdg_source_comparison.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("per-SDG source comparison", cmd, step_id="A1")
 
 
-def run_semantic_gap_interpretability(output_dir: Path) -> None:
+def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     require_output_files(output_dir / "main" / "data", ["4_3_semantic_gap_distances.json"])
-    run_step(
-        "lexical illustration of the semantic gap",
-        [sys.executable, "1_code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(output_dir)],
-        step_id="B3",
-    )
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
+    run_step("lexical illustration of the semantic gap", cmd, step_id="B3")
 
 
-def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, include_register_confidence_checks: bool) -> None:
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(output_dir)]
+def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, include_register_confidence_checks: bool, model: str = DEFAULT_EMBED_MODEL) -> None:
+    actual_output_dir = _appendix_output_dir(output_dir, model)
+    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if not include_register_confidence_checks:
         cmd.append("--skip-register-confidence-checks")
     cmd.extend(["--method", args.sdg_register_method])
@@ -403,6 +411,8 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
         cmd.extend(["--random-seed", str(args.sdg_register_random_seed)])
     if args.sdg_register_samples_per_cell is not None:
         cmd.extend(["--samples-per-cell", str(args.sdg_register_samples_per_cell)])
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--model", model]
     run_step(
         "register-adjustment robustness",
         cmd,
@@ -465,6 +475,15 @@ def run_warm_replay(
         _run_main_analysis_steps(analysis_output_dir, model=model)
     else:
         run_main_text(output_dir, args)
+    run_pca_semantic_landscape(output_dir, model=model)
+    run_within_corpus_centroid_structure(output_dir, model=model)
+    run_softmax_multilabel_sdg(output_dir, model=model)
+    run_semantic_gap_interpretability(output_dir, model=model)
+    run_policy_source_family_sensitivity(output_dir, model=model)
+    run_sdg4_lexical_audit(output_dir, model=model)
+    run_sdg_source_comparison(output_dir, model=model)
+    run_sample_stability(output_dir, model=model)
+    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=model)
     print(
         "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -528,18 +547,15 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" if model_is_nondefault else output_dir
     run_main_text(analysis_output_dir, args, model=model)
 
-    # Skip appendix scripts for model-sensitivity runs (they read canonical MiniLM data
-    # and would overwrite existing canonical outputs if re-run with MPNet paths).
-    if not model_is_nondefault:
-        run_pca_semantic_landscape(output_dir)
-        run_within_corpus_centroid_structure(output_dir)
-        run_softmax_multilabel_sdg(output_dir)
-        run_policy_source_family_sensitivity(output_dir)
-        run_sdg4_lexical_audit(output_dir)
-        run_sdg_source_comparison(output_dir)
-        run_semantic_gap_interpretability(output_dir)
-        run_sample_stability(output_dir)
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+    run_pca_semantic_landscape(output_dir, model=model)
+    run_within_corpus_centroid_structure(output_dir, model=model)
+    run_softmax_multilabel_sdg(output_dir, model=model)
+    run_policy_source_family_sensitivity(output_dir, model=model)
+    run_sdg4_lexical_audit(output_dir, model=model)
+    run_sdg_source_comparison(output_dir, model=model)
+    run_semantic_gap_interpretability(output_dir, model=model)
+    run_sample_stability(output_dir, model=model)
+    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=model)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
@@ -641,44 +657,45 @@ def main() -> None:
     elif args.cold_replay:
         run_cold_replay(output_dir, args)
     elif args.appendix_all:
-        run_sdg_source_comparison(output_dir)
-        run_policy_source_family_sensitivity(output_dir)
-        run_sdg4_lexical_audit(output_dir)
-        run_pca_semantic_landscape(output_dir)
-        run_within_corpus_centroid_structure(output_dir)
-        run_semantic_gap_interpretability(output_dir)
-        run_softmax_multilabel_sdg(output_dir)
-        run_sample_stability(output_dir)
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+        model = args.embed_model
+        run_sdg_source_comparison(output_dir, model=model)
+        run_policy_source_family_sensitivity(output_dir, model=model)
+        run_sdg4_lexical_audit(output_dir, model=model)
+        run_pca_semantic_landscape(output_dir, model=model)
+        run_within_corpus_centroid_structure(output_dir, model=model)
+        run_semantic_gap_interpretability(output_dir, model=model)
+        run_softmax_multilabel_sdg(output_dir, model=model)
+        run_sample_stability(output_dir, model=model)
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=model)
         run_model_sensitivity(output_dir, args)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a1_source:
-        run_sdg_source_comparison(output_dir)
+        run_sdg_source_comparison(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a2_family:
-        run_policy_source_family_sensitivity(output_dir)
+        run_policy_source_family_sensitivity(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a3_sdg4:
-        run_sdg4_lexical_audit(output_dir)
+        run_sdg4_lexical_audit(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_b1_pca:
-        run_pca_semantic_landscape(output_dir)
+        run_pca_semantic_landscape(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_b2_centroid:
-        run_within_corpus_centroid_structure(output_dir)
+        run_within_corpus_centroid_structure(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_b3_interpret:
-        run_semantic_gap_interpretability(output_dir)
+        run_semantic_gap_interpretability(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_b4_softmax:
-        run_softmax_multilabel_sdg(output_dir)
+        run_softmax_multilabel_sdg(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_d_sensitivity:
@@ -686,11 +703,11 @@ def main() -> None:
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_c_sample_stability:
-        run_sample_stability(output_dir)
+        run_sample_stability(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_e_register:
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.warm_replay:

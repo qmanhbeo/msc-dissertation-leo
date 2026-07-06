@@ -2,7 +2,7 @@
 
 This file is an automatic manual-inspection aid. It exposes raw examples aligned with the learned global register direction.
 
-- Vector source: `/home/manh/dissertation/4_outputs/appendix/d_register_adjustment/data/sdg_balanced_register_vector.npy`
+- Vector source: `/home/manh/dissertation/4_outputs/appendix/e_register_adjustment/data/sdg_balanced_register_vector.npy`
 - Projection score: `dot(x, g)` where `g` is the SDG-balanced global register unit vector
 - No LLM summarization was applied.
 

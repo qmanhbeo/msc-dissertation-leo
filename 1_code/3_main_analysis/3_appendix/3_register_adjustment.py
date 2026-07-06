@@ -8,15 +8,15 @@ raw gap, and how aggressively different subtraction schemes begin to remove the
 within-SDG contrast itself.
 
 Outputs:
-  4_outputs/appendix/d_register_adjustment/data/*.json
-  4_outputs/appendix/d_register_adjustment/data/*.csv
-  4_outputs/appendix/d_register_adjustment/data/*.npy
-  4_outputs/appendix/d_register_adjustment/register_confidence_checks/*
-  4_outputs/appendix/d_register_adjustment/tables/*.tex
-  4_outputs/appendix/d_register_adjustment/figures/*.pdf
-  4_outputs/appendix/d_register_adjustment/figures/*.png
-  4_outputs/appendix/d_register_adjustment/README_register_adjustment.md
-  4_outputs/appendix/d_register_adjustment/register_direction_interpretation.md
+  4_outputs/appendix/e_register_adjustment/data/*.json
+  4_outputs/appendix/e_register_adjustment/data/*.csv
+  4_outputs/appendix/e_register_adjustment/data/*.npy
+  4_outputs/appendix/e_register_adjustment/register_confidence_checks/*
+  4_outputs/appendix/e_register_adjustment/tables/*.tex
+  4_outputs/appendix/e_register_adjustment/figures/*.pdf
+  4_outputs/appendix/e_register_adjustment/figures/*.png
+  4_outputs/appendix/e_register_adjustment/README_register_adjustment.md
+  4_outputs/appendix/e_register_adjustment/register_direction_interpretation.md
 """
 
 from __future__ import annotations
@@ -60,6 +60,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from model_slug_utils import embed_dir_for_model, scored_dir_for_model
 from shared_utils import DissertationOutputs
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -75,18 +76,13 @@ from semantic_gap_shared import (
 
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-DEFAULT_CACHE_ROOT = Path("2_data/3_scored/register_adjustment_cache")
-EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
-SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
-POLICY_TEXT_IDS = Path("2_data/2_embedded/metadata/policy_ids.json")
-SDG_CENTROIDS = Path("2_data/3_scored/sdg_centroids.npy")
 
 DEFAULT_SAMPLE_PER_CLASS = 20_000
 DEFAULT_TFIDF_SAMPLE_PER_CLASS = 5_000
 DEFAULT_TFIDF_MAX_FEATURES = 20_000
 DEFAULT_EXTREME_TOP_N = 25
-ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "d_register_adjustment"
+ROBUSTNESS_OUTPUT_SUBDIR = Path("appendix") / "e_register_adjustment"
 DEFAULT_GENRE_CONFIDENCE_SUBDIR = "register_confidence_checks"
 DEFAULT_MULTI_DIRECTION_KS = (1, 2, 3, 5)
 DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG = 5_000
@@ -152,7 +148,7 @@ def parse_args() -> argparse.Namespace:
         )
     )
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--cache-dir", default=str(DEFAULT_CACHE_ROOT))
+    p.add_argument("--cache-dir", default=None)
     p.add_argument("--sample-per-class", type=int, default=DEFAULT_SAMPLE_PER_CLASS)
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--train-frac", type=float, default=DEFAULT_TRAIN_FRAC)
@@ -235,15 +231,17 @@ def iter_jsonl(path: Path):
                 yield json.loads(line)
 
 
-def resolve_manifest_path(stored_path: str, required_prefix: str) -> Path:
+def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -> Path:
     raw = Path(stored_path)
     if raw.is_absolute():
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not raw.as_posix().startswith(required_prefix):
+    posix = raw.as_posix()
+    allowed = (str(embed_dir) + "/", str(scored_dir) + "/", "2_data/1_preprocessed/")
+    if not any(posix.startswith(p) for p in allowed):
         raise RuntimeError(
-            f"Hard pivot violation: expected path under {required_prefix}, got: {stored_path}"
+            f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
         )
     resolved = Path.cwd() / raw
     if resolved.exists():
@@ -251,9 +249,9 @@ def resolve_manifest_path(stored_path: str, required_prefix: str) -> Path:
     raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
-def build_research_shards() -> tuple[list[ResearchShard], int]:
-    emb_manifest = load_json(EMBED_MANIFEST)
-    score_manifest = load_json(SCORE_MANIFEST)
+def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
+    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
     text_manifest = load_json(TEXT_MANIFEST)
 
     emb_shards = sorted(emb_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
@@ -287,10 +285,10 @@ def build_research_shards() -> tuple[list[ResearchShard], int]:
                 rows=rows,
                 start=offset,
                 stop=offset + rows,
-                emb_path=resolve_manifest_path(emb_shard["embedding_path"], "2_data/2_embedded/"),
-                score_path=resolve_manifest_path(score_shard["score_path"], "2_data/3_scored/"),
-                score_ids_path=resolve_manifest_path(score_shard["ids_path"], "2_data/3_scored/"),
-                text_path=resolve_manifest_path(text_shard["data_path"], "2_data/1_preprocessed/"),
+                emb_path=resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
+                score_path=resolve_manifest_path(score_shard["score_path"], embed_dir, scored_dir),
+                score_ids_path=resolve_manifest_path(score_shard["ids_path"], embed_dir, scored_dir),
+                text_path=resolve_manifest_path(text_shard["data_path"], embed_dir, scored_dir),
             )
         )
         offset += rows
@@ -4361,6 +4359,8 @@ def plot_gap_comparison(figures_dir: Path, merged_rows: list[dict[str, Any]]) ->
 
 def main() -> None:
     args = parse_args()
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
@@ -4381,8 +4381,13 @@ def main() -> None:
     if args.min_samples_per_class <= 1:
         raise ValueError("--min-samples-per-class must be greater than 1.")
 
+    embed_manifest_path = embed_dir / "research_shards" / "metadata" / "manifest.json"
+    score_manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
+    policy_text_ids_path = embed_dir / "metadata" / "policy_ids.json"
+    sdg_centroids_path = scored_dir / "sdg_centroids.npy"
+
     layout = ensure_register_robustness_outputs(Path(args.output_dir))
-    cache_root = Path(args.cache_dir)
+    cache_root = Path(args.cache_dir) if args.cache_dir is not None else scored_dir / "register_adjustment_cache"
     ensure_dir(cache_root)
     out_combined_json = layout.data_dir / "register_adjusted_semantic_gaps.json"
     out_combined_csv = layout.data_dir / "register_adjusted_semantic_gaps.csv"
@@ -4395,14 +4400,14 @@ def main() -> None:
     log.info("Cache dir: %s", cache_root)
 
     required_paths = [
-        EMBED_MANIFEST,
-        SCORE_MANIFEST,
+        embed_manifest_path,
+        score_manifest_path,
         TEXT_MANIFEST,
         _POLICY_EMB,
         _POLICY_IDS,
-        POLICY_TEXT_IDS,
+        policy_text_ids_path,
         _POLICY_SCORES,
-        SDG_CENTROIDS,
+        sdg_centroids_path,
         _RESEARCH_CENTROIDS,
         _RESEARCH_CENTROID_META,
     ]
@@ -4415,12 +4420,12 @@ def main() -> None:
         "script": "1_code/3_main_analysis/3_appendix/3_register_adjustment.py",
     }
 
-    shards, total_research_rows = build_research_shards()
+    shards, total_research_rows = build_research_shards(embed_dir, scored_dir)
     log.info("Research shards aligned: %d shards, %d rows", len(shards), total_research_rows)
 
     policy_emb = np.load(_POLICY_EMB).astype(np.float32)
     policy_score_ids = load_json(_POLICY_IDS)
-    policy_text_ids = load_json(POLICY_TEXT_IDS)
+    policy_text_ids = load_json(policy_text_ids_path)
     if policy_emb.shape[0] != len(policy_score_ids) or policy_emb.shape[0] != len(policy_text_ids):
         raise RuntimeError(
             "Policy embeddings, policy score IDs, and policy text IDs must have matching row counts."
@@ -4955,7 +4960,7 @@ def main() -> None:
         if within_vectors_path.exists():
             within_vectors_for_alignment = np.load(within_vectors_path).astype(np.float32)
 
-    sdg_centroids = np.load(SDG_CENTROIDS).astype(np.float32)
+    sdg_centroids = np.load(sdg_centroids_path).astype(np.float32)
     alignment_signature, alignment_artifacts = load_or_build_register_sdg_alignment_cache(
         cache_root=cache_root,
         base_signature=base_signature,

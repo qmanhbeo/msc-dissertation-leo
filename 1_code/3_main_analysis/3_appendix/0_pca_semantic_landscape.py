@@ -54,6 +54,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
+from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -68,8 +69,6 @@ from semantic_gap_shared import (
 
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
-SDG_CENTROIDS = Path("2_data/3_scored/sdg_centroids.npy")
 PCA_METADATA_JSON = "b1_pca_landscape_metadata.json"
 PCA_NUM_TEX = "num_b1_pca_landscape.tex"
 
@@ -211,7 +210,11 @@ def main() -> None:
     policy_fit_indices = fit_policy_sample_indices(n_policy_total, args.policy_fit_cap, rng)
     policy_fit_emb = policy_emb[policy_fit_indices]
 
-    total_research = total_research_embedding_rows(RESEARCH_EMBED_MANIFEST)
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
+    sdg_centroids_path = scored_dir / "sdg_centroids.npy"
+    research_manifest = embed_dir / "research_shards" / "metadata" / "manifest.json"
+    total_research = total_research_embedding_rows(research_manifest, embed_dir)
     n_research_fit = int(policy_fit_emb.shape[0])
     if total_research < n_research_fit:
         raise RuntimeError(
@@ -227,7 +230,7 @@ def main() -> None:
         research_sample_indices.size,
         total_research,
     )
-    research_fit_emb = load_sampled_research_embeddings(RESEARCH_EMBED_MANIFEST, research_sample_indices)
+    research_fit_emb = load_sampled_research_embeddings(research_manifest, research_sample_indices, embed_dir)
     verify_unit_norms(research_fit_emb, "sampled research embeddings")
 
     fit_matrix = np.concatenate([policy_fit_emb, research_fit_emb], axis=0).astype(np.float32)
@@ -244,7 +247,7 @@ def main() -> None:
     policy_bg_2d = pca.transform(policy_fit_emb)
     research_bg_2d = pca.transform(research_fit_emb)
 
-    sdg_centroids = np.load(SDG_CENTROIDS).astype(np.float32)
+    sdg_centroids = np.load(sdg_centroids_path).astype(np.float32)
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     research_meta = load_json(_RESEARCH_CENTROID_META)
     verify_unit_norms(sdg_centroids, "sdg centroids", n_sample=17)

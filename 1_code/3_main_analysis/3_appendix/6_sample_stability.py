@@ -13,8 +13,8 @@ Outputs:
   4_outputs/appendix/c_sample_stability/data/4_5_sample_stability_draws.jsonl
   4_outputs/appendix/c_sample_stability/data/4_5_sample_stability_per_sdg.json
   4_outputs/appendix/c_sample_stability/data/4_5_sample_stability_table.csv
-  4_outputs/main/tables/num_sample_stability.tex
-  4_outputs/main/tables/tab_sample_stability.tex
+  4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex
+  4_outputs/appendix/c_sample_stability/tables/tab_sample_stability.tex
 """
 
 from __future__ import annotations
@@ -38,6 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from model_slug_utils import embed_dir_for_model, scored_dir_for_model
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from semantic_gap_shared import (
@@ -50,11 +51,6 @@ from semantic_gap_shared import (
 
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-SCORED_DIR = Path("2_data/3_scored")
-EMBEDDINGS_DIR = Path("2_data/2_embedded")
-
-PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
-RESEARCH_EMBED_MANIFEST = EMBEDDINGS_DIR / "research_shards" / "metadata" / "manifest.json"
 CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
 CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
@@ -62,7 +58,6 @@ CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
 N_SDG = 17
 DRAW_SEEDS = tuple(range(42, 142))
 DRAWS_PER_TIER = len(DRAW_SEEDS)
-DEFAULT_CACHE_ROOT = SCORED_DIR / f"paper_sample_seed_{DRAW_SEEDS[0]}_{DRAW_SEEDS[-1]}"
 TIER_SPECS: list[tuple[str, int]] = [
     ("1k", 1_000),
     ("2k", 2_000),
@@ -110,15 +105,17 @@ def load_json(path: Path) -> Any:
         return json.load(f)
 
 
-def resolve_manifest_path(stored_path: str, required_prefix: str) -> Path:
+def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -> Path:
     raw = Path(stored_path)
     if raw.is_absolute():
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not raw.as_posix().startswith(required_prefix):
+    posix = raw.as_posix()
+    allowed = (str(embed_dir) + "/", str(scored_dir) + "/", "2_data/1_preprocessed/")
+    if not any(posix.startswith(p) for p in allowed):
         raise RuntimeError(
-            f"Hard pivot violation: expected path under {required_prefix}, got: {stored_path}"
+            f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
         )
     resolved = Path.cwd() / raw
     if resolved.exists():
@@ -129,14 +126,14 @@ def resolve_manifest_path(stored_path: str, required_prefix: str) -> Path:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the sample-stability robustness stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--cache-dir", default=str(DEFAULT_CACHE_ROOT))
+    p.add_argument("--cache-dir", default=None)
     p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
-def build_research_shards() -> tuple[list[ResearchShard], int]:
-    score_manifest = load_json(PAPER_SCORES_MANIFEST)
-    emb_manifest = load_json(RESEARCH_EMBED_MANIFEST)
+def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
     score_shards = sorted(score_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     emb_shards = sorted(emb_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     if len(score_shards) != len(emb_shards):
@@ -167,8 +164,8 @@ def build_research_shards() -> tuple[list[ResearchShard], int]:
                 rows=rows,
                 start=offset,
                 stop=offset + rows,
-                score_path=resolve_manifest_path(score_shard["score_path"], "2_data/3_scored/"),
-                emb_path=resolve_manifest_path(emb_shard["embedding_path"], "2_data/2_embedded/"),
+                score_path=resolve_manifest_path(score_shard["score_path"], embed_dir, scored_dir),
+                emb_path=resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
             )
         )
         offset += rows
@@ -802,16 +799,18 @@ def write_outputs(
 
 def main() -> None:
     args = parse_args()
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
     layout = ensure_dissertation_outputs(Path(args.output_dir), subdir="appendix/c_sample_stability")
-    cache_root = Path(args.cache_dir)
+    cache_root = Path(args.cache_dir) if args.cache_dir is not None else scored_dir / f"paper_sample_seed_{DRAW_SEEDS[0]}_{DRAW_SEEDS[-1]}"
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
     policy_state = load_policy_state(Path(args.output_dir) / "main" / "data", _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES)
-    shards, total_rows = build_research_shards()
+    shards, total_rows = build_research_shards(embed_dir, scored_dir)
     dim = int(policy_state["policy_embeddings"].shape[1])
     log.info("Research corpus rows available for sampling: %d", total_rows)
     log.info("Sampling %d tiers x %d draws each", len(TIER_SPECS), DRAWS_PER_TIER)

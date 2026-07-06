@@ -24,17 +24,18 @@ def load_json(path: Path) -> Any:
         return json.load(f)
 
 
-def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
-    """Resolve a canonical hard-pivot path recorded in a research-embedding manifest."""
+def resolve_from_manifest(manifest_path: Path, stored_path: str, embed_dir: Path) -> Path:
+    """Resolve a model-aware hard-pivot path recorded in a research-embedding manifest."""
     del manifest_path  # hard pivot: no location fallback based on manifest placement
     raw = Path(stored_path)
     if raw.is_absolute():
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not raw.as_posix().startswith("2_data/2_embedded/"):
+    expected_prefix = str(embed_dir) + "/"
+    if not raw.as_posix().startswith(expected_prefix):
         raise RuntimeError(
-            f"Hard pivot violation: expected data path under 2_data/2_embedded/, got: {stored_path}"
+            f"Hard pivot violation: expected data path under {expected_prefix}, got: {stored_path}"
         )
     resolved = Path.cwd() / raw
     if resolved.exists():
@@ -42,7 +43,7 @@ def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
     raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
-def iter_research_embedding_shards(manifest_path: Path) -> Iterator[ResearchEmbeddingShard]:
+def iter_research_embedding_shards(manifest_path: Path, embed_dir: Path) -> Iterator[ResearchEmbeddingShard]:
     manifest = load_json(manifest_path)
     shards = sorted(manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     offset = 0
@@ -56,15 +57,15 @@ def iter_research_embedding_shards(manifest_path: Path) -> Iterator[ResearchEmbe
             start=start,
             stop=stop,
             rows=rows,
-            embedding_path=resolve_from_manifest(manifest_path, shard["embedding_path"]),
-            ids_path=resolve_from_manifest(manifest_path, shard["ids_path"]),
+            embedding_path=resolve_from_manifest(manifest_path, shard["embedding_path"], embed_dir),
+            ids_path=resolve_from_manifest(manifest_path, shard["ids_path"], embed_dir),
         )
         offset = stop
 
 
-def total_research_embedding_rows(manifest_path: Path) -> int:
+def total_research_embedding_rows(manifest_path: Path, embed_dir: Path) -> int:
     total = 0
-    for shard in iter_research_embedding_shards(manifest_path):
+    for shard in iter_research_embedding_shards(manifest_path, embed_dir):
         total += shard.rows
     return total
 
@@ -72,6 +73,7 @@ def total_research_embedding_rows(manifest_path: Path) -> int:
 def load_sampled_research_embeddings(
     manifest_path: Path,
     sampled_global_indices: np.ndarray,
+    embed_dir: Path,
 ) -> np.ndarray:
     """
     Load only the requested global row indices from research embedding shards.
@@ -89,7 +91,7 @@ def load_sampled_research_embeddings(
     cursor = 0
     n_total = int(sampled_global_indices.size)
 
-    for shard in iter_research_embedding_shards(manifest_path):
+    for shard in iter_research_embedding_shards(manifest_path, embed_dir):
         if cursor >= n_total:
             break
         left = int(np.searchsorted(sampled_global_indices, shard.start, side="left"))

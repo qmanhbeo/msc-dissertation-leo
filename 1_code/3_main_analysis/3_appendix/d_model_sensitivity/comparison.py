@@ -9,11 +9,11 @@ Computes Spearman correlations between the two models' outputs for:
 
  
 Outputs:
-  4_outputs/appendix/e_model_sensitivity/data/sensitivity_comparison.json
-  4_outputs/appendix/e_model_sensitivity/tables/tab_model_sensitivity.tex
+  4_outputs/appendix/d_model_sensitivity/data/sensitivity_comparison.json
+  4_outputs/appendix/d_model_sensitivity/tables/tab_model_sensitivity.tex
 
 Run from project root:
-    python 1_code/3_main_analysis/3_appendix/e_model_sensitivity/comparison.py
+    python 1_code/3_main_analysis/3_appendix/d_model_sensitivity/comparison.py
 """
 
 from __future__ import annotations
@@ -29,9 +29,8 @@ from scipy.stats import spearmanr, pearsonr, rankdata
 
 ROOT = Path(__file__).resolve().parents[3]
 PROJECT_ROOT = ROOT.parent
-CODE_ROOT = ROOT / "1_code"
-if str(CODE_ROOT) not in sys.path:
-    sys.path.insert(0, str(CODE_ROOT))
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -92,7 +91,7 @@ def main() -> None:
     p.add_argument("--output-dir", default=str(PROJECT_ROOT / "4_outputs"))
     args_inner = p.parse_args()
 
-    mpnet_root = Path(args_inner.output_dir) / "appendix" / "e_model_sensitivity"
+    mpnet_root = Path(args_inner.output_dir) / "appendix" / "d_model_sensitivity"
     comparison_output = mpnet_root / "main" / "data"
 
     log.info("Canonical output dir: %s", CANONICAL_OUTPUT)

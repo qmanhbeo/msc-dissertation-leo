@@ -57,22 +57,9 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 import semantic_gap_shared
 from semantic_gap_shared import cap_policy_indices_per_doc
+from model_slug_utils import embed_dir_for_model, scored_dir_for_model
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-
-SDG_CENTROIDS = Path("2_data/3_scored/sdg_centroids.npy")
-BENCHMARK_EMB = Path("2_data/2_embedded/benchmark.npy")
-BENCHMARK_IDS = Path("2_data/2_embedded/metadata/benchmark_ids.json")
-OSDG_EMB = Path("2_data/2_embedded/osdg.npy")
-OSDG_IDS = Path("2_data/2_embedded/metadata/osdg_ids.json")
-KH_EMB = Path("2_data/2_embedded/sdg_knowledge_hub.npy")
-KH_IDS = Path("2_data/2_embedded/metadata/sdg_knowledge_hub_ids.json")
-SDGI_EMB = Path("2_data/2_embedded/sdgi.npy")
-SDGI_IDS = Path("2_data/2_embedded/metadata/sdgi_ids.json")
-AURORA_EMB = Path("2_data/2_embedded/aurora.npy")
-AURORA_IDS = Path("2_data/2_embedded/metadata/aurora_ids.json")
-RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
-RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 
 OUTPUT_SUBDIR = "a1_sdg_source_comparison"
 SUMMARY_JSON = "comparison_summary.json"
@@ -81,7 +68,6 @@ NUM_TEX = "num_a1_source_comparison.tex"
 TABLE_F1COS_TEX = "tab_a1_source_comparison_f1cos.tex"
 TABLE_COVGAP_TEX = "tab_a1_source_comparison_covgap.tex"
 
-CACHE_DIR = Path("2_data/3_scored/source_comparison_cache")
 CACHE_RESEARCH_COUNTS = "{}_research_counts.npy"
 CACHE_RESEARCH_SUMS = "{}_research_sums.npy"
 CACHE_POLICY_COUNTS = "{}_policy_counts.npy"
@@ -193,9 +179,9 @@ def compute_validation_f1(centroids: np.ndarray, bench_emb: np.ndarray, bench_id
 # Full research scoring (coverage + sub-centroids)
 # ---------------------------------------------------------------------------
 
-def load_aligned_research_shards() -> list[dict[str, Any]]:
-    score_manifest = load_json(RESEARCH_SCORE_MANIFEST)
-    emb_manifest = load_json(RESEARCH_EMBED_MANIFEST)
+def load_aligned_research_shards(embed_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
     score_shards = {int(row["shard_id"]): row for row in score_manifest["shards"]}
     emb_shards = {int(row["shard_id"]): row for row in emb_manifest["shards"]}
     shard_ids = sorted(score_shards)
@@ -350,8 +336,8 @@ def _cache_input_mtimes(research_shards: list[dict], policy_emb_path: Path, poli
     return {str(p): os.path.getmtime(p) for p in paths}
 
 
-def _cache_valid(source_name: str, input_mtimes: dict[str, float]) -> bool:
-    manifest_path = CACHE_DIR / CACHE_MANIFEST.format(source_name)
+def _cache_valid(source_name: str, input_mtimes: dict[str, float], cache_dir: Path) -> bool:
+    manifest_path = cache_dir / CACHE_MANIFEST.format(source_name)
     if not manifest_path.exists():
         return False
     try:
@@ -363,28 +349,28 @@ def _cache_valid(source_name: str, input_mtimes: dict[str, float]) -> bool:
 
 def _cache_save(source_name: str, research_counts: np.ndarray, research_sums: np.ndarray,
                 policy_counts: np.ndarray, policy_sums: np.ndarray,
-                input_mtimes: dict[str, float]) -> None:
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    np.save(CACHE_DIR / CACHE_RESEARCH_COUNTS.format(source_name), research_counts)
-    np.save(CACHE_DIR / CACHE_RESEARCH_SUMS.format(source_name), research_sums)
-    np.save(CACHE_DIR / CACHE_POLICY_COUNTS.format(source_name), policy_counts)
-    np.save(CACHE_DIR / CACHE_POLICY_SUMS.format(source_name), policy_sums)
+                input_mtimes: dict[str, float], cache_dir: Path) -> None:
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    np.save(cache_dir / CACHE_RESEARCH_COUNTS.format(source_name), research_counts)
+    np.save(cache_dir / CACHE_RESEARCH_SUMS.format(source_name), research_sums)
+    np.save(cache_dir / CACHE_POLICY_COUNTS.format(source_name), policy_counts)
+    np.save(cache_dir / CACHE_POLICY_SUMS.format(source_name), policy_sums)
     manifest = {
         "source": source_name,
         "type": "full",
         "input_mtimes": input_mtimes,
         "computed_at": datetime.now().isoformat(),
     }
-    (CACHE_DIR / CACHE_MANIFEST.format(source_name)).write_text(
+    (cache_dir / CACHE_MANIFEST.format(source_name)).write_text(
         json.dumps(manifest, indent=2), encoding="utf-8"
     )
 
 
-def _cache_load(source_name: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    rc = np.load(CACHE_DIR / CACHE_RESEARCH_COUNTS.format(source_name))
-    rs = np.load(CACHE_DIR / CACHE_RESEARCH_SUMS.format(source_name))
-    pc = np.load(CACHE_DIR / CACHE_POLICY_COUNTS.format(source_name))
-    ps = np.load(CACHE_DIR / CACHE_POLICY_SUMS.format(source_name))
+def _cache_load(source_name: str, cache_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rc = np.load(cache_dir / CACHE_RESEARCH_COUNTS.format(source_name))
+    rs = np.load(cache_dir / CACHE_RESEARCH_SUMS.format(source_name))
+    pc = np.load(cache_dir / CACHE_POLICY_COUNTS.format(source_name))
+    ps = np.load(cache_dir / CACHE_POLICY_SUMS.format(source_name))
     return rc, rs, pc, ps
 
 
@@ -397,6 +383,7 @@ def compute_or_load_research_policy(
     policy_emb_path: Path,
     policy_ids_path: Path,
     source_emb_path: Path | None,
+    cache_dir: Path,
     *,
     overwrite: bool,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -406,17 +393,17 @@ def compute_or_load_research_policy(
     """
     input_mtimes = _cache_input_mtimes(research_shards, policy_emb_path, policy_ids_path, source_emb_path)
 
-    if not overwrite and _cache_valid(source_name, input_mtimes):
+    if not overwrite and _cache_valid(source_name, input_mtimes, cache_dir):
         log.info("  %s: cache hit — loading cached research + policy scores", source_name)
-        return _cache_load(source_name)
+        return _cache_load(source_name, cache_dir)
 
     log.info("  %s: computing research scores...", source_name)
     rc, rs = score_research_full(centroids, research_shards)
     log.info("  %s: computing policy scores...", source_name)
     pc, ps = score_policy_full(centroids, policy_emb, policy_ids)
 
-    _cache_save(source_name, rc, rs, pc, ps, input_mtimes)
-    log.info("  %s: cached to %s", source_name, CACHE_DIR)
+    _cache_save(source_name, rc, rs, pc, ps, input_mtimes, cache_dir)
+    log.info("  %s: cached to %s", source_name, cache_dir)
     return rc, rs, pc, ps
 
 
@@ -530,6 +517,8 @@ def write_table_covgap(path: Path, results: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
     output_dir = Path(args.output_dir)
@@ -539,41 +528,55 @@ def main() -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
+    # Model-aware data paths
+    sdg_centroids_path = scored_dir / "sdg_centroids.npy"
+    benchmark_emb = embed_dir / "benchmark.npy"
+    benchmark_ids = embed_dir / "metadata" / "benchmark_ids.json"
+    osdg_emb_path = embed_dir / "osdg.npy"
+    osdg_ids_path = embed_dir / "metadata" / "osdg_ids.json"
+    sdgi_emb_path = embed_dir / "sdgi.npy"
+    sdgi_ids_path = embed_dir / "metadata" / "sdgi_ids.json"
+    kh_emb_path = embed_dir / "sdg_knowledge_hub.npy"
+    kh_ids_path = embed_dir / "metadata" / "sdg_knowledge_hub_ids.json"
+    aurora_emb_path = embed_dir / "aurora.npy"
+    aurora_ids_path = embed_dir / "metadata" / "aurora_ids.json"
+    cache_dir = scored_dir / "source_comparison_cache"
+
     log.info("=" * 60)
     log.info("PER-SDG SOURCE COMPARISON (with coverage and semantic gap)")
     log.info("=" * 60)
 
     # ---- Load canonical combined centroids ----
-    log.info("Loading canonical combined centroids: %s", SDG_CENTROIDS)
-    combined_centroids = np.load(SDG_CENTROIDS).astype(np.float32)
+    log.info("Loading canonical combined centroids: %s", sdg_centroids_path)
+    combined_centroids = np.load(sdg_centroids_path).astype(np.float32)
     log.info("  shape=%s", combined_centroids.shape)
 
     # ---- Load per-source embeddings ----
-    log.info("Loading OSDG embeddings: %s", OSDG_EMB)
-    osdg_emb = np.load(OSDG_EMB).astype(np.float32)
-    osdg_ids = load_json(OSDG_IDS)
+    log.info("Loading OSDG embeddings: %s", osdg_emb_path)
+    osdg_emb = np.load(osdg_emb_path).astype(np.float32)
+    osdg_ids = load_json(osdg_ids_path)
     log.info("  shape=%s (SDGs 1-16 only)", osdg_emb.shape)
 
-    log.info("Loading SDGi embeddings: %s", SDGI_EMB)
-    sdgi_emb = np.load(SDGI_EMB).astype(np.float32)
-    sdgi_ids = load_json(SDGI_IDS)
+    log.info("Loading SDGi embeddings: %s", sdgi_emb_path)
+    sdgi_emb = np.load(sdgi_emb_path).astype(np.float32)
+    sdgi_ids = load_json(sdgi_ids_path)
     log.info("  shape=%s", sdgi_emb.shape)
 
-    log.info("Loading Knowledge Hub embeddings: %s", KH_EMB)
-    kh_emb = np.load(KH_EMB).astype(np.float32)
-    kh_ids = load_json(KH_IDS)
+    log.info("Loading Knowledge Hub embeddings: %s", kh_emb_path)
+    kh_emb = np.load(kh_emb_path).astype(np.float32)
+    kh_ids = load_json(kh_ids_path)
     log.info("  shape=%s", kh_emb.shape)
 
-    log.info("Loading Aurora embeddings: %s", AURORA_EMB)
-    aurora_emb = np.load(AURORA_EMB).astype(np.float32)
-    aurora_ids = load_json(AURORA_IDS)
+    log.info("Loading Aurora embeddings: %s", aurora_emb_path)
+    aurora_emb = np.load(aurora_emb_path).astype(np.float32)
+    aurora_ids = load_json(aurora_ids_path)
     log.info("  shape=%s", aurora_emb.shape)
     n_with_text = sum(1 for r in aurora_ids if len(r.get("text", "").strip()) > 50)
     log.info("  texts with abstract-like text: %d / %d", n_with_text, len(aurora_ids))
 
-    log.info("Loading benchmark: %s", BENCHMARK_EMB)
-    bench_emb = np.load(BENCHMARK_EMB).astype(np.float32)
-    bench_ids = load_json(BENCHMARK_IDS)
+    log.info("Loading benchmark: %s", benchmark_emb)
+    bench_emb = np.load(benchmark_emb).astype(np.float32)
+    bench_ids = load_json(benchmark_ids)
     log.info("  shape=%s", bench_emb.shape)
 
     # ---- Build per-source centroid matrices ----
@@ -620,7 +623,7 @@ def main() -> None:
 
     # ---- Load research shards and policy data ----
     log.info("\nLoading research shards...")
-    research_shards = load_aligned_research_shards()
+    research_shards = load_aligned_research_shards(embed_dir, scored_dir)
     log.info("  %d research shards", len(research_shards))
 
     log.info("Loading policy embeddings: %s", _POLICY_EMB)
@@ -630,11 +633,11 @@ def main() -> None:
 
     # ---- Score research + policy for each source (cached) ----
     sources = [
-        ("combined", combined_centroids, SDG_CENTROIDS),
-        ("osdg", osdg_centroids, OSDG_EMB),
-        ("sdgi", sdgi_centroids, SDGI_EMB),
-        ("knowledgehub", kh_centroids, KH_EMB),
-        ("aurora", aurora_centroids, AURORA_EMB),
+        ("combined", combined_centroids, sdg_centroids_path),
+        ("osdg", osdg_centroids, osdg_emb_path),
+        ("sdgi", sdgi_centroids, sdgi_emb_path),
+        ("knowledgehub", kh_centroids, kh_emb_path),
+        ("aurora", aurora_centroids, aurora_emb_path),
     ]
 
     source_metrics = {}
@@ -660,6 +663,7 @@ def main() -> None:
             source_name, centroids, research_shards, policy_emb, policy_ids,
             _POLICY_EMB, _POLICY_IDS,
             source_emb_path if source_name != "combined" else None,
+            cache_dir,
             overwrite=args.overwrite,
         )
 

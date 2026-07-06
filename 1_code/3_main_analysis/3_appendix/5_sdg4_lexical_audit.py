@@ -24,15 +24,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = ROOT / "1_code"
-if str(CODE_ROOT) not in sys.path:
-    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
+SHARED_DIR = ANALYSIS_ROOT / "0_shared"
+for path in (CODE_ROOT, SHARED_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 
 
+
+from model_slug_utils import scored_dir_for_model
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
-RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"
@@ -89,6 +93,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run SDG 4 lexical artefact audit.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -287,7 +292,8 @@ def main() -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    score_manifest = load_json(RESEARCH_SCORE_MANIFEST)
+    scored_dir = scored_dir_for_model(args.model)
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
     text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
     log.info("Loaded research score manifest with %s shards", len(score_manifest["shards"]))
     log.info("Loaded research text manifest with %s shards", len(text_manifest["shards"]))

@@ -38,6 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
+from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import iter_research_embedding_shards
 from research_score_shards import (
     load_json as load_score_manifest_json,
@@ -55,10 +56,6 @@ from semantic_gap_shared import (
 
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-SCORED_DIR = Path("2_data/3_scored")
-RESEARCH_SCORE_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
-RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
-SDG_CENTROIDS = SCORED_DIR / "sdg_centroids.npy"
 
 DEFAULT_TEMPERATURES = [0.03, 0.05, 0.10, 0.20]
 VARIANTS = ("raw_softmax", "corpus_calibrated_softmax")
@@ -122,7 +119,8 @@ def normalize_centroid(raw_vec: np.ndarray) -> np.ndarray | None:
     return (raw_vec / norm).astype(np.float32)
 
 
-def load_research_score_shards(manifest_path: Path) -> dict[int, ResearchScoreShard]:
+def load_research_score_shards(scored_dir: Path) -> dict[int, ResearchScoreShard]:
+    manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
     manifest = load_score_manifest_json(manifest_path)
     out: dict[int, ResearchScoreShard] = {}
     for shard in manifest.get("shards", []):
@@ -131,7 +129,7 @@ def load_research_score_shards(manifest_path: Path) -> dict[int, ResearchScoreSh
             shard_id=shard_id,
             name=str(shard["name"]),
             rows=int(shard["rows"]),
-            score_path=resolve_score_manifest_path(manifest_path, shard["score_path"]),
+            score_path=resolve_score_manifest_path(manifest_path, shard["score_path"], scored_dir),
         )
     return out
 
@@ -395,10 +393,14 @@ def main() -> None:
     if not temps:
         raise RuntimeError("At least one temperature is required.")
 
-    sdg_centroids = validate_sdg_centroids(SDG_CENTROIDS)
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
+    research_embed_manifest = embed_dir / "research_shards" / "metadata" / "manifest.json"
+    sdg_centroids_path = scored_dir / "sdg_centroids.npy"
+    sdg_centroids = validate_sdg_centroids(sdg_centroids_path)
     hard_research, hard_policy, hard_coverage_gap, hard_semantic_gap = load_hard_baselines(Path(args.output_dir) / "main" / "data")
 
-    research_score_shards = load_research_score_shards(RESEARCH_SCORE_MANIFEST)
+    research_score_shards = load_research_score_shards(scored_dir)
     research_score_paths = [research_score_shards[k].score_path for k in sorted(research_score_shards)]
     research_means, research_stds, total_research_rows = compute_column_stats_streaming(research_score_paths)
 
@@ -418,7 +420,7 @@ def main() -> None:
             }
 
     log.info("Streaming research corpus for softmax robustness: rows=%d", total_research_rows)
-    for emb_shard in iter_research_embedding_shards(RESEARCH_EMBED_MANIFEST):
+    for emb_shard in iter_research_embedding_shards(research_embed_manifest, embed_dir):
         score_shard = research_score_shards.get(emb_shard.shard_id)
         if score_shard is None:
             raise RuntimeError(f"Missing research score shard for embedding shard {emb_shard.shard_id}")
@@ -627,7 +629,7 @@ def main() -> None:
         "policy_coverage_weighting_method": "document_weighted_mean_of_segment_weight_vectors",
         "policy_semantic_weighting_method": "per_sdg_weighted_segment_centroid_with_per_document_segment_cap",
         "policy_segment_cap_used": int(SEGMENT_CAP_PRIMARY),
-        "sdg_centroid_file": str(SDG_CENTROIDS),
+        "sdg_centroid_file": str(sdg_centroids_path),
         "sdg_indexing_confirmation": (
             "No separate SDG mapping file exists in the active pipeline. Canonical convention is row 0 -> SDG 1 ... row 16 -> SDG 17."
         ),

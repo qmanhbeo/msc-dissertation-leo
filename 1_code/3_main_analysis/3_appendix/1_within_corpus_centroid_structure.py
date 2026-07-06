@@ -60,6 +60,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
+from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import (
     iter_research_embedding_shards,
     load_json as load_embedding_manifest_json,
@@ -81,8 +82,6 @@ from semantic_gap_shared import (
 
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
-RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
 
 RESEARCH_FIG_PDF = "fig_b2_research_sdg_pca.pdf"
 RESEARCH_FIG_PNG = "fig_b2_research_sdg_pca.png"
@@ -142,7 +141,8 @@ def validate_research_centroid_order(meta_path: Path, centroids: np.ndarray) -> 
     return meta
 
 
-def load_scored_research_shards(manifest_path: Path) -> dict[int, ScoredResearchShard]:
+def load_scored_research_shards(scored_dir: Path) -> dict[int, ScoredResearchShard]:
+    manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
     manifest = load_score_manifest_json(manifest_path)
     out: dict[int, ScoredResearchShard] = {}
     for shard in manifest.get("shards", []):
@@ -151,7 +151,7 @@ def load_scored_research_shards(manifest_path: Path) -> dict[int, ScoredResearch
             shard_id=shard_id,
             name=str(shard["name"]),
             rows=int(shard["rows"]),
-            ids_path=resolve_score_manifest_path(manifest_path, shard["ids_path"]),
+            ids_path=resolve_score_manifest_path(manifest_path, shard["ids_path"], scored_dir),
         )
     return out
 
@@ -211,11 +211,13 @@ def sample_indices(total_rows: int, sample_size: int, seed: int) -> np.ndarray:
 def load_sampled_research_assignments(
     sampled_global_indices: np.ndarray,
     score_shards: dict[int, ScoredResearchShard],
+    embed_dir: Path,
 ) -> np.ndarray:
     if sampled_global_indices.ndim != 1 or sampled_global_indices.size == 0:
         raise ValueError("sampled_global_indices must be a non-empty 1D array")
+    manifest_path = embed_dir / "research_shards" / "metadata" / "manifest.json"
     parts: list[np.ndarray] = []
-    for shard in iter_research_embedding_shards(RESEARCH_EMBED_MANIFEST):
+    for shard in iter_research_embedding_shards(manifest_path, embed_dir):
         left = int(np.searchsorted(sampled_global_indices, shard.start, side="left"))
         right = int(np.searchsorted(sampled_global_indices, shard.stop, side="left"))
         if right <= left:
@@ -234,10 +236,10 @@ def load_sampled_research_assignments(
     return result
 
 
-def fit_incremental_research_pca(manifest_path: Path, batch_size: int) -> IncrementalPCA:
+def fit_incremental_research_pca(manifest_path: Path, batch_size: int, embed_dir: Path) -> IncrementalPCA:
     pca = IncrementalPCA(n_components=2, batch_size=batch_size)
     total_rows = 0
-    for shard in iter_research_embedding_shards(manifest_path):
+    for shard in iter_research_embedding_shards(manifest_path, embed_dir):
         log.info("Research PCA partial_fit on shard %s (%d rows)", shard.name, shard.rows)
         emb = np.load(shard.embedding_path, mmap_mode="r")
         for start in range(0, shard.rows, batch_size):
@@ -545,6 +547,10 @@ def main() -> None:
 
     rng = np.random.default_rng(args.seed)
 
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
+    research_manifest = embed_dir / "research_shards" / "metadata" / "manifest.json"
+
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     verify_unit_norms(research_centroids, "research centroids")
     research_meta = validate_research_centroid_order(_RESEARCH_CENTROID_META, research_centroids)
@@ -553,24 +559,24 @@ def main() -> None:
         dtype=bool,
     )
 
-    total_research = total_research_embedding_rows(RESEARCH_EMBED_MANIFEST)
-    scored_research_shards = load_scored_research_shards(RESEARCH_SCORE_MANIFEST)
+    total_research = total_research_embedding_rows(research_manifest, embed_dir)
+    scored_research_shards = load_scored_research_shards(scored_dir)
 
     log.info("Fitting research-only IncrementalPCA on %d rows", total_research)
-    research_pca = fit_incremental_research_pca(RESEARCH_EMBED_MANIFEST, args.research_pca_batch_size)
+    research_pca = fit_incremental_research_pca(research_manifest, args.research_pca_batch_size, embed_dir)
     research_evr = np.asarray(research_pca.explained_variance_ratio_, dtype=float)
     log.info("Research PCA explained variance ratio: PC1=%.4f, PC2=%.4f", research_evr[0], research_evr[1])
 
     research_plot_indices = sample_indices(total_research, args.research_plot_sample_size, args.seed)
-    research_plot_emb = load_sampled_research_embeddings(RESEARCH_EMBED_MANIFEST, research_plot_indices)
+    research_plot_emb = load_sampled_research_embeddings(research_manifest, research_plot_indices, embed_dir)
     verify_unit_norms(research_plot_emb, "research plot sample embeddings")
-    research_plot_labels = load_sampled_research_assignments(research_plot_indices, scored_research_shards)
+    research_plot_labels = load_sampled_research_assignments(research_plot_indices, scored_research_shards, embed_dir)
     research_plot_2d = research_pca.transform(research_plot_emb)
     research_centroids_2d = research_pca.transform(research_centroids)
 
     research_accumulators = init_metric_accumulators()
     research_counts = np.zeros(N_SDG, dtype=np.int64)
-    for shard in iter_research_embedding_shards(RESEARCH_EMBED_MANIFEST):
+    for shard in iter_research_embedding_shards(research_manifest, embed_dir):
         score_shard = scored_research_shards.get(shard.shard_id)
         if score_shard is None:
             raise RuntimeError(f"Missing scored research shard for shard_id={shard.shard_id}")
@@ -600,16 +606,16 @@ def main() -> None:
         min(args.silhouette_sample_size, total_research),
         args.seed + 1,
     )
-    research_silhouette_emb = load_sampled_research_embeddings(RESEARCH_EMBED_MANIFEST, research_silhouette_indices)
-    research_silhouette_labels = load_sampled_research_assignments(research_silhouette_indices, scored_research_shards)
+    research_silhouette_emb = load_sampled_research_embeddings(research_manifest, research_silhouette_indices, embed_dir)
+    research_silhouette_labels = load_sampled_research_assignments(research_silhouette_indices, scored_research_shards, embed_dir)
 
     research_kmeans_indices = sample_indices(
         total_research,
         min(args.research_kmeans_sample_size, total_research),
         args.seed + 2,
     )
-    research_kmeans_emb = load_sampled_research_embeddings(RESEARCH_EMBED_MANIFEST, research_kmeans_indices)
-    research_kmeans_labels = load_sampled_research_assignments(research_kmeans_indices, scored_research_shards)
+    research_kmeans_emb = load_sampled_research_embeddings(research_manifest, research_kmeans_indices, embed_dir)
+    research_kmeans_labels = load_sampled_research_assignments(research_kmeans_indices, scored_research_shards, embed_dir)
     research_global_metrics = compute_clustering_metrics(
         research_silhouette_emb,
         research_silhouette_labels,
