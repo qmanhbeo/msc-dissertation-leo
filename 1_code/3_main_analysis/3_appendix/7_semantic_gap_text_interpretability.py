@@ -48,13 +48,11 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
+from model_utils import embed_dir_for_model, scored_dir_for_model
 
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
-RESEARCH_EMBED_MANIFEST = Path("2_data/2_embedded/research_shards/metadata/manifest.json")
-RESEARCH_SCORE_MANIFEST = Path("2_data/3_scored/paper_scores_shards/metadata/manifest.json")
-POLICY_TEXT_IDS = Path("2_data/2_embedded/metadata/policy_ids.json")
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -134,24 +132,28 @@ def iter_jsonl(path: Path):
                 yield json.loads(line)
 
 
-def resolve_manifest_path(stored_path: str, required_prefix: str) -> Path:
+def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -> Path:
     raw = Path(stored_path)
     if raw.is_absolute():
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not raw.as_posix().startswith(required_prefix):
-        raise RuntimeError(f"Expected path under {required_prefix}, got: {stored_path}")
-    resolved = ROOT / raw
-    if not resolved.exists():
-        raise FileNotFoundError(f"Manifest path does not exist: {stored_path}")
-    return resolved
+    posix = raw.as_posix()
+    allowed = (str(embed_dir) + "/", str(scored_dir) + "/", "2_data/1_preprocessed/")
+    if not any(posix.startswith(p) for p in allowed):
+        raise RuntimeError(
+            f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
+        )
+    resolved = Path.cwd() / raw
+    if resolved.exists():
+        return resolved
+    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
-def load_research_shards() -> list[dict[str, Any]]:
+def load_research_shards(embed_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
     text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
-    emb_manifest = load_json(RESEARCH_EMBED_MANIFEST)
-    score_manifest = load_json(RESEARCH_SCORE_MANIFEST)
+    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
 
     text_shards = sorted(text_manifest["shards"], key=lambda x: int(x["shard_id"]))
     emb_shards = sorted(emb_manifest["shards"], key=lambda x: int(x["shard_id"]))
@@ -172,9 +174,9 @@ def load_research_shards() -> list[dict[str, Any]]:
                 "shard_id": shard_id,
                 "name": text_shard["name"],
                 "rows": int(text_shard["rows"]),
-                "text_path": resolve_manifest_path(text_shard["data_path"], "2_data/1_preprocessed/"),
-                "emb_path": resolve_manifest_path(emb_shard["embedding_path"], "2_data/2_embedded/"),
-                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], "2_data/3_scored/"),
+                "text_path": resolve_manifest_path(text_shard["data_path"], embed_dir, scored_dir),
+                "emb_path": resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
+                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], embed_dir, scored_dir),
             }
         )
     return shards
@@ -227,6 +229,8 @@ def collect_research(
     sample_cap: int,
     seed: int,
     research_centroids: np.ndarray,
+    embed_dir: Path,
+    scored_dir: Path,
 ) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
     samples_heap: dict[int, list[tuple[float, str]]] = {sdg: [] for sdg in TARGET_SDGS}
     rngs = {sdg: random.Random(seed + sdg * 101 + 1) for sdg in TARGET_SDGS}
@@ -234,7 +238,7 @@ def collect_research(
     example_heaps: dict[int, list[tuple[float, int, dict[str, Any]]]] = {sdg: [] for sdg in TARGET_SDGS}
     seq = 0
 
-    shards = load_research_shards()
+    shards = load_research_shards(embed_dir, scored_dir)
     for shard_idx, shard in enumerate(shards, start=1):
         emb = np.load(shard["emb_path"], mmap_mode="r")
         score_rows = list(iter_jsonl(shard["score_ids_path"]))
@@ -285,8 +289,9 @@ def collect_policy(
     policy_scores: np.ndarray,
     policy_emb: np.ndarray,
     policy_ids_path: Path,
+    policy_text_path: Path,
 ) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
-    policy_text_rows = load_json(POLICY_TEXT_IDS)
+    policy_text_rows = load_json(policy_text_path)
     policy_score_rows = load_json(policy_ids_path)
     if len(policy_text_rows) != policy_scores.shape[0] or len(policy_score_rows) != policy_scores.shape[0]:
         raise RuntimeError("Policy text, score metadata, and score matrix row counts do not align.")
@@ -438,6 +443,8 @@ def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
 
 def main() -> None:
     args = parse_args()
+    embed_dir = embed_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
@@ -454,10 +461,16 @@ def main() -> None:
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(_POLICY_EMB, mmap_mode="r")
 
+    policy_text_path = embed_dir / "metadata" / "policy_ids.json"
+
     log.info("Collecting policy samples and representative audit examples")
-    policy_samples, policy_counts, policy_examples = collect_policy(args.sample_per_side, args.seed, policy_scores, policy_emb, _POLICY_IDS)
+    policy_samples, policy_counts, policy_examples = collect_policy(
+        args.sample_per_side, args.seed, policy_scores, policy_emb, _POLICY_IDS, policy_text_path
+    )
     log.info("Collecting research samples and representative audit examples")
-    research_samples, research_counts, research_examples = collect_research(args.sample_per_side, args.seed, research_centroids)
+    research_samples, research_counts, research_examples = collect_research(
+        args.sample_per_side, args.seed, research_centroids, embed_dir, scored_dir
+    )
 
     term_rows: list[dict[str, Any]] = []
     table_rows: list[dict[str, Any]] = []

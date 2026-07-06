@@ -1,0 +1,964 @@
+{
+  "payload": {
+    "schema_version": 1,
+    "phase": "local_multi_direction",
+    "base_signature": {
+      "required_inputs": {
+        "2_data/2b_embedded_mpnet/research_shards/metadata/manifest.json": {
+          "path": "2_data/2b_embedded_mpnet/research_shards/metadata/manifest.json",
+          "size": 13195,
+          "content_head_digest": "c817a5e62f952c8c"
+        },
+        "2_data/3b_scored_mpnet/paper_scores_shards/metadata/manifest.json": {
+          "path": "2_data/3b_scored_mpnet/paper_scores_shards/metadata/manifest.json",
+          "size": 12623,
+          "content_head_digest": "9c24f440bd395fc9"
+        },
+        "2_data/1_preprocessed/research_corpus/metadata/manifest.json": {
+          "path": "2_data/1_preprocessed/research_corpus/metadata/manifest.json",
+          "size": 18070,
+          "content_head_digest": "2de2e16881c0b153"
+        },
+        "2_data/2b_embedded_mpnet/policy.npy": {
+          "path": "2_data/2b_embedded_mpnet/policy.npy",
+          "size": 166140032,
+          "content_head_digest": "0e27e624d4525d75"
+        },
+        "2_data/3b_scored_mpnet/metadata/policy_scores_ids.json": {
+          "path": "2_data/3b_scored_mpnet/metadata/policy_scores_ids.json",
+          "size": 5343199,
+          "content_head_digest": "3f8e7cec2ae2540e"
+        },
+        "2_data/2b_embedded_mpnet/metadata/policy_ids.json": {
+          "path": "2_data/2b_embedded_mpnet/metadata/policy_ids.json",
+          "size": 70914168,
+          "content_head_digest": "1b34fbc6ff4ad6f3"
+        },
+        "2_data/3b_scored_mpnet/policy_scores.npy": {
+          "path": "2_data/3b_scored_mpnet/policy_scores.npy",
+          "size": 3677704,
+          "content_head_digest": "5a75f0f29d6d62e3"
+        },
+        "2_data/3b_scored_mpnet/sdg_centroids.npy": {
+          "path": "2_data/3b_scored_mpnet/sdg_centroids.npy",
+          "size": 52352,
+          "content_head_digest": "161175b27abac6ff"
+        },
+        "2_data/3b_scored_mpnet/research_centroids.npy": {
+          "path": "2_data/3b_scored_mpnet/research_centroids.npy",
+          "size": 52352,
+          "content_head_digest": "542371f1df3a832f"
+        },
+        "2_data/3b_scored_mpnet/metadata/research_centroid_meta.json": {
+          "path": "2_data/3b_scored_mpnet/metadata/research_centroid_meta.json",
+          "size": 2584,
+          "content_head_digest": "2edb81436ca5ea91"
+        }
+      },
+      "cache_schema_version": 1,
+      "script": "1_code/3_main_analysis/3_appendix/3_register_adjustment.py"
+    },
+    "classifier_signature": {
+      "schema_version": 1,
+      "phase": "classifier",
+      "sample_signature": {
+        "schema_version": 1,
+        "phase": "sample",
+        "base_signature": {
+          "required_inputs": {
+            "2_data/2b_embedded_mpnet/research_shards/metadata/manifest.json": {
+              "path": "2_data/2b_embedded_mpnet/research_shards/metadata/manifest.json",
+              "size": 13195,
+              "content_head_digest": "c817a5e62f952c8c"
+            },
+            "2_data/3b_scored_mpnet/paper_scores_shards/metadata/manifest.json": {
+              "path": "2_data/3b_scored_mpnet/paper_scores_shards/metadata/manifest.json",
+              "size": 12623,
+              "content_head_digest": "9c24f440bd395fc9"
+            },
+            "2_data/1_preprocessed/research_corpus/metadata/manifest.json": {
+              "path": "2_data/1_preprocessed/research_corpus/metadata/manifest.json",
+              "size": 18070,
+              "content_head_digest": "2de2e16881c0b153"
+            },
+            "2_data/2b_embedded_mpnet/policy.npy": {
+              "path": "2_data/2b_embedded_mpnet/policy.npy",
+              "size": 166140032,
+              "content_head_digest": "0e27e624d4525d75"
+            },
+            "2_data/3b_scored_mpnet/metadata/policy_scores_ids.json": {
+              "path": "2_data/3b_scored_mpnet/metadata/policy_scores_ids.json",
+              "size": 5343199,
+              "content_head_digest": "3f8e7cec2ae2540e"
+            },
+            "2_data/2b_embedded_mpnet/metadata/policy_ids.json": {
+              "path": "2_data/2b_embedded_mpnet/metadata/policy_ids.json",
+              "size": 70914168,
+              "content_head_digest": "1b34fbc6ff4ad6f3"
+            },
+            "2_data/3b_scored_mpnet/policy_scores.npy": {
+              "path": "2_data/3b_scored_mpnet/policy_scores.npy",
+              "size": 3677704,
+              "content_head_digest": "5a75f0f29d6d62e3"
+            },
+            "2_data/3b_scored_mpnet/sdg_centroids.npy": {
+              "path": "2_data/3b_scored_mpnet/sdg_centroids.npy",
+              "size": 52352,
+              "content_head_digest": "161175b27abac6ff"
+            },
+            "2_data/3b_scored_mpnet/research_centroids.npy": {
+              "path": "2_data/3b_scored_mpnet/research_centroids.npy",
+              "size": 52352,
+              "content_head_digest": "542371f1df3a832f"
+            },
+            "2_data/3b_scored_mpnet/metadata/research_centroid_meta.json": {
+              "path": "2_data/3b_scored_mpnet/metadata/research_centroid_meta.json",
+              "size": 2584,
+              "content_head_digest": "2edb81436ca5ea91"
+            }
+          },
+          "cache_schema_version": 1,
+          "script": "1_code/3_main_analysis/3_appendix/3_register_adjustment.py"
+        },
+        "sample_per_class": 20000,
+        "seed": 42,
+        "total_research_rows": 2543698,
+        "policy_rows": 54082
+      },
+      "c_grid": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "split_fracs": {
+        "train": 0.7,
+        "validation": 0.15,
+        "test": 0.15
+      },
+      "split_sizes": {
+        "train": 28000,
+        "validation": 6000,
+        "test": 6000,
+        "train_plus_validation": 34000
+      },
+      "sample_class_balance": {
+        "research": 20000,
+        "policy": 20000
+      },
+      "seed": 42
+    },
+    "c_grid": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "seed": 42,
+    "ks": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "segment_cap": 50
+  },
+  "direction_rows": [
+    {
+      "step": 1,
+      "source": "canonical_register_direction"
+    },
+    {
+      "step": 2,
+      "source": "residual_classifier",
+      "selected_C": 10.0,
+      "val_accuracy": 0.975,
+      "val_roc_auc": 0.996149,
+      "val_f1": 0.975058,
+      "coefficient_norm": 70.023575,
+      "intercept": -7.45488
+    },
+    {
+      "step": 3,
+      "source": "residual_classifier",
+      "selected_C": 10.0,
+      "val_accuracy": 0.964667,
+      "val_roc_auc": 0.992118,
+      "val_f1": 0.964796,
+      "coefficient_norm": 67.583885,
+      "intercept": -6.317747
+    },
+    {
+      "step": 4,
+      "source": "residual_classifier",
+      "selected_C": 10.0,
+      "val_accuracy": 0.953333,
+      "val_roc_auc": 0.988213,
+      "val_f1": 0.953411,
+      "coefficient_norm": 66.011337,
+      "intercept": -5.634219
+    },
+    {
+      "step": 5,
+      "source": "residual_classifier",
+      "selected_C": 10.0,
+      "val_accuracy": 0.940667,
+      "val_roc_auc": 0.98277,
+      "val_f1": 0.940883,
+      "coefficient_norm": 67.46389,
+      "intercept": -4.838783
+    }
+  ],
+  "curve_rows": [
+    {
+      "k": 1,
+      "test_accuracy": 0.9765,
+      "test_roc_auc": 0.99689,
+      "test_f1": 0.976543,
+      "test_precision": 0.974759,
+      "test_recall": 0.978333,
+      "mean_adjusted_gap": 0.360167,
+      "mean_delta_vs_raw": -0.016182,
+      "top_adjusted_sdgs": [
+        17,
+        7,
+        11,
+        3,
+        14
+      ]
+    },
+    {
+      "k": 2,
+      "test_accuracy": 0.964333,
+      "test_roc_auc": 0.993231,
+      "test_f1": 0.964428,
+      "test_precision": 0.96187,
+      "test_recall": 0.967,
+      "mean_adjusted_gap": 0.350344,
+      "mean_delta_vs_raw": -0.026006,
+      "top_adjusted_sdgs": [
+        17,
+        7,
+        11,
+        3,
+        14
+      ]
+    },
+    {
+      "k": 3,
+      "test_accuracy": 0.951167,
+      "test_roc_auc": 0.98953,
+      "test_f1": 0.951224,
+      "test_precision": 0.950116,
+      "test_recall": 0.952333,
+      "mean_adjusted_gap": 0.341561,
+      "mean_delta_vs_raw": -0.034788,
+      "top_adjusted_sdgs": [
+        17,
+        7,
+        11,
+        3,
+        14
+      ]
+    },
+    {
+      "k": 5,
+      "test_accuracy": 0.921,
+      "test_roc_auc": 0.974457,
+      "test_f1": 0.921053,
+      "test_precision": 0.920439,
+      "test_recall": 0.921667,
+      "mean_adjusted_gap": 0.32863,
+      "mean_delta_vs_raw": -0.047719,
+      "top_adjusted_sdgs": [
+        17,
+        7,
+        11,
+        3,
+        14
+      ]
+    }
+  ],
+  "per_sdg_rows": [
+    {
+      "k": 1,
+      "sdg": 1,
+      "raw_gap": 0.419586,
+      "adjusted_gap": 0.406788,
+      "delta_gap": -0.012798,
+      "n_papers": 15522,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 2,
+      "raw_gap": 0.345234,
+      "adjusted_gap": 0.326482,
+      "delta_gap": -0.018752,
+      "n_papers": 77820,
+      "n_policy_docs_capped": 355,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 3,
+      "raw_gap": 0.451921,
+      "adjusted_gap": 0.436674,
+      "delta_gap": -0.015247,
+      "n_papers": 552491,
+      "n_policy_docs_capped": 378,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 4,
+      "raw_gap": 0.263373,
+      "adjusted_gap": 0.240823,
+      "delta_gap": -0.02255,
+      "n_papers": 406146,
+      "n_policy_docs_capped": 346,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 5,
+      "raw_gap": 0.237906,
+      "adjusted_gap": 0.219518,
+      "delta_gap": -0.018388,
+      "n_papers": 58437,
+      "n_policy_docs_capped": 467,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 6,
+      "raw_gap": 0.433416,
+      "adjusted_gap": 0.413311,
+      "delta_gap": -0.020105,
+      "n_papers": 65633,
+      "n_policy_docs_capped": 271,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 7,
+      "raw_gap": 0.521503,
+      "adjusted_gap": 0.50342,
+      "delta_gap": -0.018083,
+      "n_papers": 200006,
+      "n_policy_docs_capped": 366,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 8,
+      "raw_gap": 0.250727,
+      "adjusted_gap": 0.233441,
+      "delta_gap": -0.017286,
+      "n_papers": 46367,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 9,
+      "raw_gap": 0.258445,
+      "adjusted_gap": 0.237706,
+      "delta_gap": -0.020739,
+      "n_papers": 363313,
+      "n_policy_docs_capped": 433,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 10,
+      "raw_gap": 0.349812,
+      "adjusted_gap": 0.33809,
+      "delta_gap": -0.011722,
+      "n_papers": 15833,
+      "n_policy_docs_capped": 172,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 11,
+      "raw_gap": 0.47858,
+      "adjusted_gap": 0.46288,
+      "delta_gap": -0.0157,
+      "n_papers": 196187,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 12,
+      "raw_gap": 0.408311,
+      "adjusted_gap": 0.387857,
+      "delta_gap": -0.020454,
+      "n_papers": 96216,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 13,
+      "raw_gap": 0.406324,
+      "adjusted_gap": 0.39344,
+      "delta_gap": -0.012884,
+      "n_papers": 50946,
+      "n_policy_docs_capped": 1334,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 14,
+      "raw_gap": 0.439746,
+      "adjusted_gap": 0.428745,
+      "delta_gap": -0.011001,
+      "n_papers": 87619,
+      "n_policy_docs_capped": 376,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 15,
+      "raw_gap": 0.334238,
+      "adjusted_gap": 0.314987,
+      "delta_gap": -0.019251,
+      "n_papers": 100355,
+      "n_policy_docs_capped": 343,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 16,
+      "raw_gap": 0.280726,
+      "adjusted_gap": 0.264228,
+      "delta_gap": -0.016498,
+      "n_papers": 190317,
+      "n_policy_docs_capped": 1095,
+      "unreliable": false
+    },
+    {
+      "k": 1,
+      "sdg": 17,
+      "raw_gap": 0.51809,
+      "adjusted_gap": 0.514455,
+      "delta_gap": -0.003635,
+      "n_papers": 20490,
+      "n_policy_docs_capped": 1788,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 1,
+      "raw_gap": 0.419586,
+      "adjusted_gap": 0.403285,
+      "delta_gap": -0.016301,
+      "n_papers": 15522,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 2,
+      "raw_gap": 0.345234,
+      "adjusted_gap": 0.311885,
+      "delta_gap": -0.033349,
+      "n_papers": 77820,
+      "n_policy_docs_capped": 355,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 3,
+      "raw_gap": 0.451921,
+      "adjusted_gap": 0.428539,
+      "delta_gap": -0.023382,
+      "n_papers": 552491,
+      "n_policy_docs_capped": 378,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 4,
+      "raw_gap": 0.263373,
+      "adjusted_gap": 0.224665,
+      "delta_gap": -0.038708,
+      "n_papers": 406146,
+      "n_policy_docs_capped": 346,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 5,
+      "raw_gap": 0.237906,
+      "adjusted_gap": 0.208747,
+      "delta_gap": -0.029159,
+      "n_papers": 58437,
+      "n_policy_docs_capped": 467,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 6,
+      "raw_gap": 0.433416,
+      "adjusted_gap": 0.397099,
+      "delta_gap": -0.036317,
+      "n_papers": 65633,
+      "n_policy_docs_capped": 271,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 7,
+      "raw_gap": 0.521503,
+      "adjusted_gap": 0.489658,
+      "delta_gap": -0.031845,
+      "n_papers": 200006,
+      "n_policy_docs_capped": 366,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 8,
+      "raw_gap": 0.250727,
+      "adjusted_gap": 0.222872,
+      "delta_gap": -0.027855,
+      "n_papers": 46367,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 9,
+      "raw_gap": 0.258445,
+      "adjusted_gap": 0.22025,
+      "delta_gap": -0.038195,
+      "n_papers": 363313,
+      "n_policy_docs_capped": 433,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 10,
+      "raw_gap": 0.349812,
+      "adjusted_gap": 0.335127,
+      "delta_gap": -0.014685,
+      "n_papers": 15833,
+      "n_policy_docs_capped": 172,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 11,
+      "raw_gap": 0.47858,
+      "adjusted_gap": 0.454995,
+      "delta_gap": -0.023585,
+      "n_papers": 196187,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 12,
+      "raw_gap": 0.408311,
+      "adjusted_gap": 0.372668,
+      "delta_gap": -0.035643,
+      "n_papers": 96216,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 13,
+      "raw_gap": 0.406324,
+      "adjusted_gap": 0.385381,
+      "delta_gap": -0.020943,
+      "n_papers": 50946,
+      "n_policy_docs_capped": 1334,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 14,
+      "raw_gap": 0.439746,
+      "adjusted_gap": 0.422782,
+      "delta_gap": -0.016964,
+      "n_papers": 87619,
+      "n_policy_docs_capped": 376,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 15,
+      "raw_gap": 0.334238,
+      "adjusted_gap": 0.301365,
+      "delta_gap": -0.032873,
+      "n_papers": 100355,
+      "n_policy_docs_capped": 343,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 16,
+      "raw_gap": 0.280726,
+      "adjusted_gap": 0.25439,
+      "delta_gap": -0.026336,
+      "n_papers": 190317,
+      "n_policy_docs_capped": 1095,
+      "unreliable": false
+    },
+    {
+      "k": 2,
+      "sdg": 17,
+      "raw_gap": 0.51809,
+      "adjusted_gap": 0.522136,
+      "delta_gap": 0.004046,
+      "n_papers": 20490,
+      "n_policy_docs_capped": 1788,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 1,
+      "raw_gap": 0.419586,
+      "adjusted_gap": 0.398701,
+      "delta_gap": -0.020885,
+      "n_papers": 15522,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 2,
+      "raw_gap": 0.345234,
+      "adjusted_gap": 0.302045,
+      "delta_gap": -0.043189,
+      "n_papers": 77820,
+      "n_policy_docs_capped": 355,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 3,
+      "raw_gap": 0.451921,
+      "adjusted_gap": 0.420419,
+      "delta_gap": -0.031502,
+      "n_papers": 552491,
+      "n_policy_docs_capped": 378,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 4,
+      "raw_gap": 0.263373,
+      "adjusted_gap": 0.212401,
+      "delta_gap": -0.050972,
+      "n_papers": 406146,
+      "n_policy_docs_capped": 346,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 5,
+      "raw_gap": 0.237906,
+      "adjusted_gap": 0.201633,
+      "delta_gap": -0.036273,
+      "n_papers": 58437,
+      "n_policy_docs_capped": 467,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 6,
+      "raw_gap": 0.433416,
+      "adjusted_gap": 0.381847,
+      "delta_gap": -0.051569,
+      "n_papers": 65633,
+      "n_policy_docs_capped": 271,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 7,
+      "raw_gap": 0.521503,
+      "adjusted_gap": 0.475517,
+      "delta_gap": -0.045986,
+      "n_papers": 200006,
+      "n_policy_docs_capped": 366,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 8,
+      "raw_gap": 0.250727,
+      "adjusted_gap": 0.212498,
+      "delta_gap": -0.038229,
+      "n_papers": 46367,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 9,
+      "raw_gap": 0.258445,
+      "adjusted_gap": 0.205376,
+      "delta_gap": -0.053069,
+      "n_papers": 363313,
+      "n_policy_docs_capped": 433,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 10,
+      "raw_gap": 0.349812,
+      "adjusted_gap": 0.329489,
+      "delta_gap": -0.020323,
+      "n_papers": 15833,
+      "n_policy_docs_capped": 172,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 11,
+      "raw_gap": 0.47858,
+      "adjusted_gap": 0.447495,
+      "delta_gap": -0.031085,
+      "n_papers": 196187,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 12,
+      "raw_gap": 0.408311,
+      "adjusted_gap": 0.360532,
+      "delta_gap": -0.047779,
+      "n_papers": 96216,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 13,
+      "raw_gap": 0.406324,
+      "adjusted_gap": 0.378009,
+      "delta_gap": -0.028315,
+      "n_papers": 50946,
+      "n_policy_docs_capped": 1334,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 14,
+      "raw_gap": 0.439746,
+      "adjusted_gap": 0.414675,
+      "delta_gap": -0.025071,
+      "n_papers": 87619,
+      "n_policy_docs_capped": 376,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 15,
+      "raw_gap": 0.334238,
+      "adjusted_gap": 0.290718,
+      "delta_gap": -0.04352,
+      "n_papers": 100355,
+      "n_policy_docs_capped": 343,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 16,
+      "raw_gap": 0.280726,
+      "adjusted_gap": 0.246311,
+      "delta_gap": -0.034415,
+      "n_papers": 190317,
+      "n_policy_docs_capped": 1095,
+      "unreliable": false
+    },
+    {
+      "k": 3,
+      "sdg": 17,
+      "raw_gap": 0.51809,
+      "adjusted_gap": 0.528878,
+      "delta_gap": 0.010788,
+      "n_papers": 20490,
+      "n_policy_docs_capped": 1788,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 1,
+      "raw_gap": 0.419586,
+      "adjusted_gap": 0.391406,
+      "delta_gap": -0.02818,
+      "n_papers": 15522,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 2,
+      "raw_gap": 0.345234,
+      "adjusted_gap": 0.288453,
+      "delta_gap": -0.056781,
+      "n_papers": 77820,
+      "n_policy_docs_capped": 355,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 3,
+      "raw_gap": 0.451921,
+      "adjusted_gap": 0.40723,
+      "delta_gap": -0.044691,
+      "n_papers": 552491,
+      "n_policy_docs_capped": 378,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 4,
+      "raw_gap": 0.263373,
+      "adjusted_gap": 0.195717,
+      "delta_gap": -0.067656,
+      "n_papers": 406146,
+      "n_policy_docs_capped": 346,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 5,
+      "raw_gap": 0.237906,
+      "adjusted_gap": 0.19155,
+      "delta_gap": -0.046356,
+      "n_papers": 58437,
+      "n_policy_docs_capped": 467,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 6,
+      "raw_gap": 0.433416,
+      "adjusted_gap": 0.359777,
+      "delta_gap": -0.073639,
+      "n_papers": 65633,
+      "n_policy_docs_capped": 271,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 7,
+      "raw_gap": 0.521503,
+      "adjusted_gap": 0.45418,
+      "delta_gap": -0.067323,
+      "n_papers": 200006,
+      "n_policy_docs_capped": 366,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 8,
+      "raw_gap": 0.250727,
+      "adjusted_gap": 0.198349,
+      "delta_gap": -0.052378,
+      "n_papers": 46367,
+      "n_policy_docs_capped": 312,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 9,
+      "raw_gap": 0.258445,
+      "adjusted_gap": 0.184525,
+      "delta_gap": -0.07392,
+      "n_papers": 363313,
+      "n_policy_docs_capped": 433,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 10,
+      "raw_gap": 0.349812,
+      "adjusted_gap": 0.31675,
+      "delta_gap": -0.033062,
+      "n_papers": 15833,
+      "n_policy_docs_capped": 172,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 11,
+      "raw_gap": 0.47858,
+      "adjusted_gap": 0.436083,
+      "delta_gap": -0.042497,
+      "n_papers": 196187,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 12,
+      "raw_gap": 0.408311,
+      "adjusted_gap": 0.342892,
+      "delta_gap": -0.065419,
+      "n_papers": 96216,
+      "n_policy_docs_capped": 305,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 13,
+      "raw_gap": 0.406324,
+      "adjusted_gap": 0.367441,
+      "delta_gap": -0.038883,
+      "n_papers": 50946,
+      "n_policy_docs_capped": 1334,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 14,
+      "raw_gap": 0.439746,
+      "adjusted_gap": 0.400305,
+      "delta_gap": -0.039441,
+      "n_papers": 87619,
+      "n_policy_docs_capped": 376,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 15,
+      "raw_gap": 0.334238,
+      "adjusted_gap": 0.273752,
+      "delta_gap": -0.060486,
+      "n_papers": 100355,
+      "n_policy_docs_capped": 343,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 16,
+      "raw_gap": 0.280726,
+      "adjusted_gap": 0.234554,
+      "delta_gap": -0.046172,
+      "n_papers": 190317,
+      "n_policy_docs_capped": 1095,
+      "unreliable": false
+    },
+    {
+      "k": 5,
+      "sdg": 17,
+      "raw_gap": 0.51809,
+      "adjusted_gap": 0.543753,
+      "delta_gap": 0.025663,
+      "n_papers": 20490,
+      "n_policy_docs_capped": 1788,
+      "unreliable": false
+    }
+  ]
+}

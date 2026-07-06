@@ -224,8 +224,8 @@ def main() -> None:
         "model_sensitivity": {
             "canonical_model": "all-MiniLM-L6-v2",
             "comparison_model": "all-mpnet-base-v2",
-            "canonical_slug": "minilm",
-            "comparison_slug": "mpnet",
+            "canonical_label": "minilm",
+            "comparison_label": "mpnet",
         },
         "coverage_profile": {
             "spearman_r": round(float(cov_spearman_r), 6) if not np.isnan(cov_spearman_r) else None,

@@ -38,7 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
-from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import iter_research_embedding_shards
 from research_score_shards import (
     load_json as load_score_manifest_json,

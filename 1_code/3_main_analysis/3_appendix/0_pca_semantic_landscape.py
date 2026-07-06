@@ -54,7 +54,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
-from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (

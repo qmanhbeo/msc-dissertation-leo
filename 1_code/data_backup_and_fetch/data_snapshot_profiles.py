@@ -21,7 +21,9 @@ BASE_WARM_REPLAY_PATHS = (
     Path("2_data/0_raw"),
     Path("2_data/1_preprocessed"),
     Path("2_data/2_embedded"),
+    Path("2_data/2b_embedded_mpnet"),
     Path("2_data/3_scored"),
+    Path("2_data/3b_scored_mpnet"),
 )
 
 FULL_PIPELINE_WARNING_LINES = (

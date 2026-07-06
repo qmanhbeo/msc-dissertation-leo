@@ -38,7 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_slug_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import embed_dir_for_model, scored_dir_for_model
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from semantic_gap_shared import (

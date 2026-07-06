@@ -33,7 +33,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_slug_utils import scored_dir_for_model
+from model_utils import scored_dir_for_model
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")

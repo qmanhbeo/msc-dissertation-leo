@@ -69,7 +69,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs
-from model_slug_utils import scored_dir_for_model
+from model_utils import scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config

@@ -36,7 +36,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from alignment_core import verify_unit_norms
-from model_slug_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import embed_dir_for_model, scored_dir_for_model
 
 
 log = logging.getLogger(__name__)

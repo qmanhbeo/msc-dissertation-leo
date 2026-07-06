@@ -19,7 +19,7 @@ from shared_utils import (
     require_output_files,
     require_pdf_inputs,
 )
-from model_slug_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 
 
 ROOT = Path(__file__).resolve().parent
@@ -624,6 +624,9 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     if not output_dir.is_absolute():
         output_dir = (ROOT / output_dir).resolve()
+
+    embed_dir_for_model(args.embed_model)
+
     fetch_profile = resolve_fetch_snapshot_profile(args)
 
     if not action_requested(args):

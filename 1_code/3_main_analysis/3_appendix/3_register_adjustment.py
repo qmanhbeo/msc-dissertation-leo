@@ -60,7 +60,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_slug_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import embed_dir_for_model, scored_dir_for_model
 from shared_utils import DissertationOutputs
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -138,6 +138,10 @@ class ResearchShard:
     score_path: Path
     score_ids_path: Path
     text_path: Path
+
+
+def _embedding_dim(shards: list[ResearchShard]) -> int:
+    return int(np.load(shards[0].emb_path, mmap_mode="r").shape[1])
 
 
 def parse_args() -> argparse.Namespace:
@@ -456,7 +460,7 @@ def choose_global_indices(total_rows: int, sample_size: int, seed: int) -> np.nd
 
 
 def collect_research_embeddings(shards: list[ResearchShard], global_indices: np.ndarray) -> np.ndarray:
-    out = np.empty((global_indices.shape[0], 384), dtype=np.float32)
+    out = np.empty((global_indices.shape[0], _embedding_dim(shards)), dtype=np.float32)
     cursor = 0
     for shard in shards:
         left = int(np.searchsorted(global_indices, shard.start, side="left"))
@@ -1816,7 +1820,7 @@ def load_or_build_within_sdg_method_cache(
 
     log.info("Cache miss: within-SDG classifiers (%s)", key)
     metrics_rows: list[dict[str, Any]] = []
-    vectors = np.full((N_SDG, 384), np.nan, dtype=np.float32)
+    vectors = np.full((N_SDG, _embedding_dim(shards)), np.nan, dtype=np.float32)
     vectors_by_sdg: dict[int, np.ndarray] = {}
     skipped_sdgs: dict[int, str] = {}
     for sdg_idx in range(N_SDG):
@@ -1911,7 +1915,7 @@ def load_or_build_within_sdg_method_cache(
         avg_direction = normalize_unit_vector(np.mean(np.vstack(available_units), axis=0), label="Average within-SDG register direction")
         cosine_global_vs_avg = None
     else:
-        avg_direction = np.full(384, np.nan, dtype=np.float32)
+        avg_direction = np.full(_embedding_dim(shards), np.nan, dtype=np.float32)
         cosine_global_vs_avg = None
     payload_out = {
         "metrics_rows": metrics_rows,

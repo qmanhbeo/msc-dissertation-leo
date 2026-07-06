@@ -57,7 +57,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 import semantic_gap_shared
 from semantic_gap_shared import cap_policy_indices_per_doc
-from model_slug_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import embed_dir_for_model, scored_dir_for_model
 
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
