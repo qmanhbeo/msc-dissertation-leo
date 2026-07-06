@@ -2,9 +2,9 @@
   "current_version": "2026-07-06",
   "profiles": {
     "curated": {
-      "version": "2026-07-06-172947",
-      "url": "https://drive.usercontent.google.com/download?id=1wgot0amNLPvXoLhjrLqAAz98COsxd1aL&export=download",
-      "sha256": "033242f131059a0c8bd95be90dd25e7c30b3a04e9ae63bd7c1e7428fdd0d6e53",
+      "version": "2026-07-06-211818",
+      "url": "https://drive.usercontent.google.com/download?id=1jJLmssi6EAEjMi4jNmryBDKsVayAgxo5&export=download",
+      "sha256": "62313671a27a69976c287285e85a469e8a00cf8120f3bfbdc8558b749c4dd886",
       "expected_repo_paths": [
         "2_data/0_raw",
         "2_data/1_preprocessed",
