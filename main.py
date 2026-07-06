@@ -174,6 +174,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_c_sample_stability,
             args.appendix_d_sensitivity,
             args.fetch_data_snapshot,
+            args.backup_data_snapshot,
             args.build_pdf,
         ]
     )
