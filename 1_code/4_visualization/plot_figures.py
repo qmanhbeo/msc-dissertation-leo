@@ -146,6 +146,27 @@ def main() -> None:
         label=f"Research (%, n = {N_RESEARCH_PAPERS})",
     )
 
+    # Raw count annotations at bar ends
+    research_counts = (df_sorted["research_pct"] / 100 * N_RESEARCH_PAPERS).astype(int)
+    policy_counts = (df_sorted["policy_pct_docweighted"] / 100 * N_POLICY_DOCS).astype(int)
+
+    def _fmt(n):
+        return f"{n/1_000:.0f}k" if n >= 1_000 else str(n)
+
+    for i in range(len(df_sorted)):
+        ax1.text(
+            df_sorted["policy_pct_docweighted"].iloc[i] + 0.3,
+            i - height / 2,
+            _fmt(policy_counts.iloc[i]),
+            va="center", ha="left", fontsize=5.5,
+        )
+        ax1.text(
+            df_sorted["research_pct"].iloc[i] + 0.3,
+            i + height / 2,
+            _fmt(research_counts.iloc[i]),
+            va="center", ha="left", fontsize=5.5,
+        )
+
     labels = [SDG_SHORT[int(row["sdg"])].replace("\n", " ") for _, row in df_sorted.iterrows()]
     ax1.set_yticks(y)
     ax1.set_yticklabels(labels, fontsize=7.5)
