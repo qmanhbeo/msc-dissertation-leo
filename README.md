@@ -12,10 +12,10 @@ This repository contains the dissertation code, manuscript source, committed out
 | **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
-| **Network** | Required for `conda env create` and `--fetch-data-snapshot`. Optional for `--cold-replay` (live OpenAlex fetch) |
+| **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). Also required for `--cold-replay` (OpenAlex API + HuggingFace model download). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
 | **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
 | **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for `--cold-replay`. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
-| **Embedding runtimes** (one-time, cold replay only) | MiniLM (`all-MiniLM-L6-v2`): ~2.5 hours on CPU. MPNet (`all-mpnet-base-v2`): ~17 hours on CPU |
+| **Embedding runtimes** (one-time, cold replay only) | MiniLM (`all-MiniLM-L6-v2`): ~2.5 hours on 4 GB VRAM GPU. MPNet (`all-mpnet-base-v2`): ~17 hours on 4 GB VRAM GPU |
 | **Git** | Required for cloning and pulling updates |
 
 All other dependencies (Python packages, LaTeX packages) are handled by Conda.
