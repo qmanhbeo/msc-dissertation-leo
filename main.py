@@ -79,7 +79,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D, E) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
@@ -87,9 +87,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-b2-centroid", action="store_true", help="Run B.2 Within-Corpus Centroid Structure.")
     p.add_argument("--appendix-b3-interpret", action="store_true", help="Run B.3 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-b4-softmax", action="store_true", help="Run B.4 Softmax Multi-label SDG.")
-    p.add_argument("--appendix-d-register", action="store_true", help="Run D Register-Adjustment Robustness.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
-    p.add_argument("--appendix-e-sensitivity", action="store_true", help="Run E Model Sensitivity (all-mpnet-base-v2 vs MiniLM comparison). Requires pre-embedded MPNet data (see README).")
+    p.add_argument("--appendix-d-sensitivity", action="store_true", help="Run D Model Sensitivity (all-mpnet-base-v2 vs MiniLM comparison). Requires pre-embedded MPNet data (see README).")
+    p.add_argument("--appendix-e-register", action="store_true", help="Run E Register-Adjustment Robustness.")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
     p.add_argument("--softmax-multilabel-sdg", action="store_true", dest="appendix_b4_softmax", help=argparse.SUPPRESS)
@@ -121,7 +121,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--register-adjustment",
         action="store_true",
-        dest="appendix_d_register",
+        dest="appendix_e_register",
         help=argparse.SUPPRESS,
     )
     p.add_argument("--skip-register-confidence-checks", action="store_true", help="Skip the additional register-confidence checks inside --register-adjustment.")
@@ -179,9 +179,9 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_b2_centroid,
             args.appendix_b3_interpret,
             args.appendix_b4_softmax,
-            args.appendix_d_register,
+            args.appendix_e_register,
             args.appendix_c_sample_stability,
-            args.appendix_e_sensitivity,
+            args.appendix_d_sensitivity,
             args.fetch_data_snapshot,
             args.build_pdf,
         ]
@@ -406,7 +406,7 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
     run_step(
         "register-adjustment robustness",
         cmd,
-        step_id="D",
+        step_id="E",
     )
 
 
@@ -442,16 +442,16 @@ def run_main_text(
 
 def run_model_sensitivity(output_dir: Path, args: argparse.Namespace) -> None:
     model = "all-mpnet-base-v2"
-    mpnet_output_dir = output_dir / "appendix" / "e_model_sensitivity"
+    mpnet_output_dir = output_dir / "appendix" / "d_model_sensitivity"
     _run_main_analysis_steps(mpnet_output_dir, model=model)
     run_step(
         "model sensitivity comparison",
         [
             sys.executable,
-            "1_code/3_main_analysis/3_appendix/e_model_sensitivity/comparison.py",
+            "1_code/3_main_analysis/3_appendix/d_model_sensitivity/comparison.py",
             "--output-dir", str(output_dir),
         ],
-        step_id="E",
+        step_id="D",
     )
 
 
@@ -461,7 +461,7 @@ def run_warm_replay(
 ) -> None:
     model = args.embed_model
     if model != DEFAULT_EMBED_MODEL:
-        analysis_output_dir = ROOT / "4_outputs" / "appendix" / "e_model_sensitivity"
+        analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity"
         _run_main_analysis_steps(analysis_output_dir, model=model)
     else:
         run_main_text(output_dir, args)
@@ -525,7 +525,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
 
-    analysis_output_dir = ROOT / "4_outputs" / "appendix" / "e_model_sensitivity" if model_is_nondefault else output_dir
+    analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" if model_is_nondefault else output_dir
     run_main_text(analysis_output_dir, args, model=model)
 
     # Skip appendix scripts for model-sensitivity runs (they read canonical MiniLM data
@@ -625,9 +625,9 @@ def main() -> None:
         or args.appendix_b2_centroid
         or args.appendix_b3_interpret
         or args.appendix_b4_softmax
-        or         args.appendix_d_register
+        or         args.appendix_d_sensitivity
         or args.appendix_c_sample_stability
-        or args.appendix_e_sensitivity
+        or args.appendix_e_register
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
@@ -650,6 +650,7 @@ def main() -> None:
         run_softmax_multilabel_sdg(output_dir)
         run_sample_stability(output_dir)
         run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+        run_model_sensitivity(output_dir, args)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a1_source:
@@ -680,16 +681,16 @@ def main() -> None:
         run_softmax_multilabel_sdg(output_dir)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.appendix_d_register:
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
+    elif args.appendix_d_sensitivity:
+        run_model_sensitivity(output_dir, args)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_c_sample_stability:
         run_sample_stability(output_dir)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.appendix_e_sensitivity:
-        run_model_sensitivity(output_dir, args)
+    elif args.appendix_e_register:
+        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.warm_replay:
