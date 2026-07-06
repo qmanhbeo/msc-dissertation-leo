@@ -124,21 +124,6 @@ def parse_args() -> argparse.Namespace:
         dest="appendix_e_register",
         help=argparse.SUPPRESS,
     )
-    p.add_argument("--skip-register-confidence-checks", action="store_true", help="Skip the additional register-confidence checks inside --register-adjustment.")
-    p.add_argument(
-        "--sdg-register-method",
-        choices=["sdg_balanced", "within_sdg", "both"],
-        default="both",
-        help=(
-            "Method subset for the SDG-aware register robustness checks inside --register-adjustment. "
-            "The SDG-balanced method is a stronger global sensitivity check; the within-SDG method is an over-subtraction stress test."
-        ),
-    )
-    p.add_argument("--sdg-register-random-seed", type=int, default=None, help="Optional seed override for the SDG-aware register robustness checks.")
-    p.add_argument("--sdg-register-samples-per-cell", type=int, default=None, help="Optional cap for samples per SDG x register cell in the SDG-aware register robustness checks.")
-    p.add_argument("--sdg-register-min-samples-per-class", type=int, default=50, help="Minimum per-class sample size required for a within-SDG classifier.")
-    p.add_argument("--sdg-register-test-size", type=float, default=0.20, help="Held-out test fraction for the SDG-aware register robustness checks.")
-    p.add_argument("--sdg-register-classifier-type", choices=["logistic_regression_liblinear", "logistic_regression_saga"], default="logistic_regression_liblinear", help="Linear classifier variant for the SDG-aware register robustness checks.")
     p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
@@ -150,7 +135,6 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
     p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --cold-replay mode.")
-    p.add_argument("--local-files-only", action="store_true", help="Pass --local-files-only to embed_paper_shards.py in --cold-replay mode.")
     p.add_argument(
         "--embed-model",
         default=DEFAULT_EMBED_MODEL,
@@ -398,26 +382,12 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
     run_step("lexical illustration of the semantic gap", cmd, step_id="B3")
 
 
-def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, include_register_confidence_checks: bool, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(actual_output_dir)]
-    if not include_register_confidence_checks:
-        cmd.append("--skip-register-confidence-checks")
-    cmd.extend(["--method", args.sdg_register_method])
-    cmd.extend(["--test-size", str(args.sdg_register_test_size)])
-    cmd.extend(["--classifier-type", args.sdg_register_classifier_type])
-    cmd.extend(["--min-samples-per-class", str(args.sdg_register_min_samples_per_class)])
-    if args.sdg_register_random_seed is not None:
-        cmd.extend(["--random-seed", str(args.sdg_register_random_seed)])
-    if args.sdg_register_samples_per_cell is not None:
-        cmd.extend(["--samples-per-cell", str(args.sdg_register_samples_per_cell)])
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
-    run_step(
-        "register-adjustment robustness",
-        cmd,
-        step_id="E",
-    )
+    run_step("register-adjustment robustness", cmd, step_id="E")
 
 
 def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
@@ -513,7 +483,6 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
                 sys.executable,
                 "1_code/2_embed/reference/0_embed_reference_corpora.py",
                 "--corpora", "policy", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
-                *(["--local-files-only"] if args.local_files_only else []),
             ] + model_args,
         ),
         ("fetch openalex", [sys.executable, "1_code/0_fetch/fetch_openalex.py"]),
@@ -530,8 +499,6 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         "--batch-size",
         str(args.batch_size),
     ]
-    if args.local_files_only:
-        embed_cmd.append("--local-files-only")
     embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
 
@@ -546,7 +513,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     run_sdg_source_comparison(output_dir, model=model)
     run_semantic_gap_interpretability(output_dir, model=model)
     run_sample_stability(output_dir, model=model)
-    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=model)
+    run_register_adjustment(output_dir, model=model)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
@@ -660,7 +627,7 @@ def main() -> None:
         run_semantic_gap_interpretability(output_dir, model=model)
         run_softmax_multilabel_sdg(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=model)
+        run_register_adjustment(output_dir, model=model)
         run_model_sensitivity(output_dir, args)
         if args.build_pdf:
             build_pdf(output_dir)
@@ -701,7 +668,7 @@ def main() -> None:
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_e_register:
-        run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=args.embed_model)
+        run_register_adjustment(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.warm_replay:
