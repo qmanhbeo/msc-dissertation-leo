@@ -299,23 +299,12 @@ Three SDGs require specific caveats. SDG 11 (Sustainable Cities, F1 = \FiSdgElev
 
 \subsection{Coverage Gap: What SDGs Each Corpus Prioritises}
 
-Table~\ref{tab:coverage} presents the document-weighted policy coverage profile alongside the research coverage profile. The two profiles are markedly different.
-
-\begin{table}[ht]
-\centering
-\caption{Coverage profiles and coverage gap by SDG. Policy proportions are document-weighted ($n = \NPolicyDocs$ source documents). Research proportions are paper-weighted ($n = \NResearchPapers$ papers). Coverage gap = $|$Research$\%$ $-$ Policy$\%$$|$.}
-\label{tab:coverage}
-\input{../4_outputs/main/tables/tab_coverage.tex}
-
-\par\vspace{0.5em}
-{\footnotesize $^{(a)}$ SDG 4 coverage in research may be inflated by ML ``learning'' terminology; see Section~\ref{sec:sdg4artefact}.\par
-$^{(b)}$ SDG 4 F1 = \FiSdgFour{} in the validation table (Table~\ref{tab:validation}) indicates confident assignment, which strengthens the artefact concern.}
-\end{table}
+Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverage profile alongside the research coverage profile. The two profiles are markedly different.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{fig1_coverage_profiles.pdf}
-\caption{Coverage profiles by SDG: proportion of each corpus assigned to each SDG via hard assignment (highest-scoring SDG). Policy proportions are document-weighted ($n = \NPolicyDocs$ source documents); research proportions are paper-weighted ($n = \NResearchPapers$ papers). SDGs sorted by policy proportion (descending). $^{(a)}$SDG~4 research share likely inflated by ML vocabulary artefact. $^{(b)}$SDG~13 and SDG~17 centroids are moderately to strongly correlated (cosine similarity = \CentroidSimThirteenSeventeen); combined share = \PolicyPctSdgThreePlusSeventeen\%.}
+\caption{Coverage profiles by SDG: proportion of each corpus assigned to each SDG via hard assignment (highest-scoring SDG). Policy proportions are document-weighted ($n = \NPolicyDocs$ source documents); research proportions are paper-weighted ($n = \NResearchPapers$ papers). SDGs sorted by policy proportion (descending). $^{(a)}$SDG~4 research share likely inflated by ML vocabulary artefact (see Section~\ref{sec:sdg4artefact}); its F1~=~\FiSdgFour{} in Table~\ref{tab:validation} indicates confident assignment, which strengthens the artefact concern. $^{(b)}$SDG~13 and SDG~17 centroids are moderately to strongly correlated (cosine similarity = \CentroidSimThirteenSeventeen); combined share = \PolicyPctSdgThreePlusSeventeen\%. Total coverage gap across all SDGs = \TotalCoverageGap{} (mean per-SDG = \MeanCoverageGap{}).}
 \label{fig:coverage_profiles}
 \end{figure}
 
