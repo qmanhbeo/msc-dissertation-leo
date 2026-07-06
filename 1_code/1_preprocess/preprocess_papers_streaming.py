@@ -230,7 +230,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input", default="2_data/0_raw/openalex/papers.jsonl")
     p.add_argument("--out-dir", default="2_data/1_preprocessed/research_corpus")
-    p.add_argument("--status-dir", default="2_data/2_embedded/research_shards/metadata")
+    p.add_argument("--status-dir", default="2_data/1_preprocessed/research_corpus/metadata")
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--manifest", default="")
     p.add_argument("--state", default="")

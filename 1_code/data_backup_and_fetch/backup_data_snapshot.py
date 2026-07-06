@@ -1,5 +1,5 @@
 """
-Create and upload a timestamped snapshot of the dissertation data/ directory.
+Create and upload a timestamped snapshot of the dissertation 2_data/ directory.
 
 Adapted from ~/stocks-ecosystem/alpha-research-lab/backup_data_snapshot.py.
 
@@ -10,7 +10,7 @@ Features:
 - writes a matching `.sha256` checksum file
 - uploads both to Google Drive via `rclone`
 - prunes old local and remote snapshot pairs, keeping the newest N
-- embeds snapshot metadata under `data/_snapshot_metadata/`
+- embeds snapshot metadata under \`2_data/_snapshot_metadata/\`
 
 Usage:
     python main.py --backup-data-snapshot curated

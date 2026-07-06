@@ -37,17 +37,17 @@ Row ordering convention (critical for ALL downstream scripts):
   i.e., row 0 → SDG 1, row 1 → SDG 2, ..., row 16 → SDG 17
 
 Inputs:
-  2_data/2_embedded/osdg.npy           (30534, 384) float32, L2-normalised
+  2_data/2_embedded/osdg.npy           (30534, dim) float32, L2-normalised
   2_data/2_embedded/metadata/osdg_ids.json          list of {id, text, sdg} — sdg in 1..16
-  2_data/2_embedded/sdg_knowledge_hub.npy  (2221, 384) float32, L2-normalised
+  2_data/2_embedded/sdg_knowledge_hub.npy  (2221, dim) float32, L2-normalised
   2_data/2_embedded/metadata/sdg_knowledge_hub_ids.json  list of {id, text, sdg} — sdg in 1..17
-  2_data/2_embedded/sdgi.npy             (5233, 384) float32, L2-normalised
+  2_data/2_embedded/sdgi.npy             (5233, dim) float32, L2-normalised
   2_data/2_embedded/metadata/sdgi_ids.json          list of {id, text, sdg} — sdg in 1..17
-  2_data/2_embedded/benchmark.npy      (616, 384)   float32, L2-normalised  (validation only)
+  2_data/2_embedded/benchmark.npy      (616, dim)   float32, L2-normalised  (validation only)
   2_data/2_embedded/metadata/benchmark_ids.json list of {id, text, sdg} — sdg in 1..17
 
 Outputs:
-  2_data/3_scored/sdg_centroids.npy      (17, 384) float32, unit-normalised
+  2_data/3_scored/sdg_centroids.npy      (17, dim) float32, unit-normalised
   2_data/3_scored/metadata/sdg_centroid_meta.json list of 17 dicts with per-SDG diagnostics
 
 Run from project root:
@@ -68,7 +68,7 @@ ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import VALID_DIMS, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, VALID_DIMS, embed_dir_for_model, scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config
@@ -109,17 +109,17 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
     Compute a unit-normalised centroid for one SDG and return diagnostic metadata.
 
     Args:
-        emb:    Full embedding matrix (all texts), shape (N, 384), L2-normalised.
+        emb:    Full embedding matrix (all texts), shape (N, dim), L2-normalised.
         idxs:   Row indices into `emb` that belong to this SDG.
         sdg:    SDG number (1–17), used only for error messages and metadata.
         source: "osdg" or "benchmark" — which corpus supplied these texts.
 
     Returns:
         (unit_centroid, meta_dict)
-        unit_centroid: (384,) float32 unit vector — the normalised direction of the mean.
+        unit_centroid: (dim,) float32 unit vector — the normalised direction of the mean.
         meta_dict: diagnostic fields including raw_centroid_norm and mean_cos_to_centroid.
     """
-    vecs = emb[idxs]   # (n, 384) — subset of L2-normalised embeddings for this SDG
+    vecs = emb[idxs]   # (n, dim) — subset of L2-normalised embeddings for this SDG
 
     # ASSUMPTION (A3 — equal weighting): every text in `idxs` contributes equally to the mean.
     # We do NOT weight by annotator agreement score, even though OSDG provides it.
@@ -127,7 +127,7 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
     # so minimum reliability is ensured. The agreement scores above that floor are noisy
     # estimates from ~9 annotators, and differential weighting would add complexity without
     # a principled basis for the weight function. The filtering step is the cleaner mitigation.
-    raw = vecs.mean(axis=0)   # (384,) — arithmetic mean; NOT a unit vector
+    raw = vecs.mean(axis=0)   # (dim,) — arithmetic mean; NOT a unit vector
 
     norm = float(np.linalg.norm(raw))
     if norm < 1e-8:
@@ -179,7 +179,7 @@ def build_centroid(emb: np.ndarray, idxs: list[int], sdg: int, source: str) -> t
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Build SDG centroids from labelled reference corpora.")
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

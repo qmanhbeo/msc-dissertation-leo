@@ -1,7 +1,7 @@
 """
 Generate Sentence-BERT embeddings for the active non-sharded corpora.
 
-Model: all-MiniLM-L6-v2 (384-dim, 5x faster than mpnet — practical choice for CPU/WSL)
+Model: all-MiniLM-L6-v2 (384-dim for MiniLM; MPNet is 768-dim — practical choice for CPU/WSL)
        Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
 
 Inputs:
@@ -12,7 +12,7 @@ Inputs:
    2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl  (5,233 texts, all 17 SDGs, policy VNR/VLR)
 
 Outputs per corpus:
-  <name>.npy       float32 matrix (n_texts, 384 for all-MiniLM-L6-v2)
+  <name>.npy       float32 matrix (n_texts, embedding_dim)
   2_data/2_embedded/metadata/<name>_ids.json  list of dicts with id, sdg (where available), text_field
 
 Idempotent by default: skips a corpus if its .npy already exists.
@@ -39,12 +39,12 @@ ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import embed_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DEFAULT_MODEL = "all-MiniLM-L6-v2"
+DEFAULT_MODEL = DEFAULT_EMBED_MODEL
 
 CORPORA = [
     {

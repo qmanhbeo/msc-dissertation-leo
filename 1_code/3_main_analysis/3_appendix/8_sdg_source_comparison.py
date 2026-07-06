@@ -36,7 +36,6 @@ import argparse
 import csv
 import json
 import logging
-import os
 import sys
 from collections import defaultdict
 from datetime import datetime
@@ -57,9 +56,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 import semantic_gap_shared
 from semantic_gap_shared import cap_policy_indices_per_doc
-from model_utils import embed_dir_for_model, scored_dir_for_model
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model
 
 OUTPUT_SUBDIR = "a1_sdg_source_comparison"
 SUMMARY_JSON = "comparison_summary.json"
@@ -73,8 +70,6 @@ CACHE_RESEARCH_SUMS = "{}_research_sums.npy"
 CACHE_POLICY_COUNTS = "{}_policy_counts.npy"
 CACHE_POLICY_SUMS = "{}_policy_sums.npy"
 CACHE_MANIFEST = "{}_manifest.json"
-
-N_SDG = 17
 SEGMENT_CAP_PRIMARY = 50
 MIN_CLUSTER_SIZE = 10
 RANDOM_SEED = 42
@@ -98,7 +93,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Per-SDG source comparison.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--overwrite", action="store_true", help="Recompute and overwrite cache.")
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -204,7 +199,7 @@ def score_research_full(centroids: np.ndarray, shards: list[dict]) -> tuple[np.n
     
     Returns:
         counts: (17,) int64 — papers assigned to each SDG
-        sums:   (17, 384) float64 — sum of assigned-paper embeddings per SDG
+        sums:   (17, dim) float64 — sum of assigned-paper embeddings per SDG
     """
     dim = centroids.shape[1]
     counts = np.zeros(N_SDG, dtype=np.int64)
@@ -237,7 +232,7 @@ def score_policy_full(centroids: np.ndarray, policy_emb: np.ndarray, policy_ids:
     
     Returns:
         counts: (17,) int64 — capped segments assigned to each SDG
-        sums:   (17, 384) float64 — sum of capped-segment embeddings per SDG
+        sums:   (17, dim) float64 — sum of capped-segment embeddings per SDG
     """
     dim = centroids.shape[1]
     valid = ~np.isnan(centroids[:, 0])
@@ -273,7 +268,7 @@ def normalise_sums(counts: np.ndarray, sums: np.ndarray) -> tuple[np.ndarray, np
     """Convert embedding sums to unit vectors.
     
     Returns:
-        centroids: (17, 384) float32 — NaN where count < MIN_CLUSTER_SIZE or near-zero norm
+        centroids: (17, dim) float32 — NaN where count < MIN_CLUSTER_SIZE or near-zero norm
         valid:     (17,) bool — which SDGs have reliable centroids
     """
     dim = sums.shape[1]
@@ -333,7 +328,7 @@ def _cache_input_mtimes(research_shards: list[dict], policy_emb_path: Path, poli
         paths.append(source_emb_path)
     for shard in research_shards:
         paths.append(Path(shard["embedding_path"]))
-    return {str(p): os.path.getmtime(p) for p in paths}
+    return {str(p): p.stat().st_mtime for p in paths}
 
 
 def _cache_valid(source_name: str, input_mtimes: dict[str, float], cache_dir: Path) -> bool:

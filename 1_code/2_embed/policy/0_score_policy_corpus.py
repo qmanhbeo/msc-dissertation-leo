@@ -36,7 +36,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from alignment_core import verify_unit_norms
-from model_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Score the active policy corpus against SDG and research centroids.")
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     p.add_argument("--policy-emb", default=None)
     p.add_argument("--policy-ids", default=None)
     p.add_argument("--policy-corpus", default="2_data/1_preprocessed/policy_all/policy_segments_all.jsonl")

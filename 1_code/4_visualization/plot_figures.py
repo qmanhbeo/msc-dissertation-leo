@@ -37,11 +37,12 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "1_code"
-if str(CODE_ROOT) not in sys.path:
-    sys.path.insert(0, str(CODE_ROOT))
+SHARED_DIR = ROOT / "1_code" / "3_main_analysis" / "0_shared"
+for path in (CODE_ROOT, SHARED_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+from model_utils import DEFAULT_OUTPUT_ROOT
 from shared_utils import ensure_canonical_outputs, require_output_files
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 
 def parse_args() -> argparse.Namespace:

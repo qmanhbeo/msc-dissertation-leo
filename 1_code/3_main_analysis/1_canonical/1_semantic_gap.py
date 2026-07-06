@@ -46,7 +46,7 @@ Minimum cluster size:
   be noisy. This is acknowledged in Assumption A-SPARSE.
 
 Inputs:
-  2_data/3_scored/research_centroids.npy       (17, 384)    float32
+  2_data/3_scored/research_centroids.npy       (17, dim)    float32
   2_data/3_scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
   2_data/3_scored/policy_scores.npy            float32 matrix with one row per policy segment
   2_data/3_scored/metadata/policy_scores_ids.json       list of {id, source_doc}
@@ -78,6 +78,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 import semantic_gap_shared
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT
 from shared_utils import ensure_canonical_outputs
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -94,11 +95,6 @@ from semantic_gap_shared import (
 )
 
 # ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-
-# ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -111,7 +107,7 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute semantic gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

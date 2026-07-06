@@ -11,10 +11,10 @@ SNAPSHOT_METADATA_DIR = Path("_snapshot_metadata")
 SNAPSHOT_METADATA_FILE = SNAPSHOT_METADATA_DIR / "snapshot_manifest.json"
 
 CURATED_EXCLUDED_PATHS = (
-    Path("0_raw/openalex"),
-    Path("3_scored/paper_sample_seed_42_141"),
-    Path("3_scored/register_adjustment_cache"),
-    Path("3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
+    Path("2_data/0_raw/openalex"),
+    Path("2_data/3_scored/paper_sample_seed_42_141"),
+    Path("2_data/3_scored/register_adjustment_cache"),
+    Path("2_data/3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
 )
 
 BASE_WARM_REPLAY_PATHS = (
@@ -86,7 +86,7 @@ def should_exclude_data_path(rel_data_path: Path, profile: SnapshotProfile) -> b
 
 
 def manual_policy_inventory(source_dir: Path) -> list[str]:
-    manual_root = source_dir / "0_raw" / "policy_manual"
+    manual_root = source_dir / "2_data" / "0_raw" / "policy_manual"
     texts_dir = manual_root / "texts"
     pdf_dir = manual_root / "pdf"
     text_stems = {path.stem for path in texts_dir.glob("*.txt")} if texts_dir.exists() else set()

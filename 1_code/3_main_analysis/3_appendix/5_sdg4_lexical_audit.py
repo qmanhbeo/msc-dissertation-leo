@@ -32,10 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-
-from model_utils import scored_dir_for_model
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, scored_dir_for_model
 RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
@@ -93,7 +90,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run SDG 4 lexical artefact audit.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

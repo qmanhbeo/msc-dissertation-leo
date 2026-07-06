@@ -2,8 +2,8 @@
   "model_sensitivity": {
     "canonical_model": "all-MiniLM-L6-v2",
     "comparison_model": "all-mpnet-base-v2",
-    "canonical_slug": "minilm",
-    "comparison_slug": "mpnet"
+    "canonical_label": "minilm",
+    "comparison_label": "mpnet"
   },
   "coverage_profile": {
     "spearman_r": 0.92402,

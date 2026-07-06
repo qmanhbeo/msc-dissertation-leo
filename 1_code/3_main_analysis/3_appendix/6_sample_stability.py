@@ -38,7 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from semantic_gap_shared import (
@@ -48,14 +48,9 @@ from semantic_gap_shared import (
     build_sub_centroid,
     cap_policy_indices_per_doc,
 )
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
 CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
-
-N_SDG = 17
 DRAW_SEEDS = tuple(range(42, 142))
 DRAWS_PER_TIER = len(DRAW_SEEDS)
 TIER_SPECS: list[tuple[str, int]] = [
@@ -127,7 +122,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the sample-stability robustness stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--cache-dir", default=None)
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

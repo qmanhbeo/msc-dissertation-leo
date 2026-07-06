@@ -1,5 +1,5 @@
 """
-Fetch and extract the frozen dissertation data snapshot into ./data/.
+Fetch and extract the frozen dissertation data snapshot into ./2_data/.
 
 This script underlies the main entrypoint snapshot fetch path:
 - `python main.py --fetch-data-snapshot curated`

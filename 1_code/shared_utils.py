@@ -12,7 +12,6 @@ class DissertationOutputs:
     data_dir: Path
 
 
-CanonicalOutputs = DissertationOutputs
 
 
 MANUSCRIPT_ROOT_FILES = [

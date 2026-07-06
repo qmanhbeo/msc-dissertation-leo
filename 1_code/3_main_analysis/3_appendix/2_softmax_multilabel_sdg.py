@@ -38,7 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import iter_research_embedding_shards
 from research_score_shards import (
     load_json as load_score_manifest_json,
@@ -53,9 +53,6 @@ from semantic_gap_shared import (
     cap_policy_indices_per_doc,
     load_json,
 )
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 DEFAULT_TEMPERATURES = [0.03, 0.05, 0.10, 0.20]
 VARIANTS = ("raw_softmax", "corpus_calibrated_softmax")
@@ -92,7 +89,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--temperatures", nargs="*", type=float, default=DEFAULT_TEMPERATURES)
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -633,7 +630,7 @@ def main() -> None:
         "sdg_indexing_confirmation": (
             "No separate SDG mapping file exists in the active pipeline. Canonical convention is row 0 -> SDG 1 ... row 16 -> SDG 17."
         ),
-        "embedding_normalization_convention": "all embeddings and SDG centroids are unit-normalized; semantic gaps remain computed in original 384D space.",
+        "embedding_normalization_convention": "all embeddings and SDG centroids are unit-normalized; semantic gaps remain computed in original embedding space.",
         "research_similarity_means": research_means.tolist(),
         "research_similarity_stds": research_stds.tolist(),
         "policy_similarity_means": policy_means.tolist(),

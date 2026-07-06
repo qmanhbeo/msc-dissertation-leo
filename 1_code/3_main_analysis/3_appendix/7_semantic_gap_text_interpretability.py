@@ -48,10 +48,7 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-from model_utils import embed_dir_for_model, scored_dir_for_model
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
 RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
 
 TARGET_SDGS = (17, 13, 9)
@@ -121,7 +118,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--sample-per-side", type=int, default=SAMPLE_PER_SIDE)
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

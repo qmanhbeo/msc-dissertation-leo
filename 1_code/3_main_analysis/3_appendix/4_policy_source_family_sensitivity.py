@@ -36,6 +36,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -47,9 +48,6 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 POLICY_PREPROCESSED_ROOT = Path("2_data/1_preprocessed/policy_all")
 
 SUMMARY_CSV = "policy_source_family_summary.csv"
@@ -98,7 +96,7 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run policy source-family sensitivity diagnostic.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

@@ -53,12 +53,11 @@ ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 # Macro-F1 thresholds for the instrument pass/warn/fail flag (SDGs 1–16, uncontaminated).
 # These are judgment calls (Assumption A-THRESH in the implementation plan):
@@ -110,7 +109,7 @@ def save_csv_matrix(matrix: np.ndarray, labels: list, path: Path) -> None:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Validate SDG centroids into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -141,7 +140,7 @@ def main() -> None:
 
     # ---- Load centroids ----
     log.info("Loading centroids: %s", CENTROIDS_PATH)
-    centroids = np.load(CENTROIDS_PATH)   # (17, 384) float32, unit-normalised
+    centroids = np.load(CENTROIDS_PATH)   # (17, dim) float32, unit-normalised
     meta = load_json(META_PATH)           # list of 17 dicts from sdg_centroid_meta.json
     log.info("  shape=%s", centroids.shape)
 
@@ -158,7 +157,7 @@ def main() -> None:
 
     # ---- Load benchmark embeddings ----
     log.info("Loading benchmark embeddings: %s", BENCH_EMB)
-    bench_emb = np.load(BENCH_EMB)   # (616, 384) float32, unit-normalised
+    bench_emb = np.load(BENCH_EMB)   # (616, dim) float32, unit-normalised
     bench_ids = load_json(BENCH_IDS)  # list of {id, text, sdg} with sdg in 1..17
     log.info("  shape=%s", bench_emb.shape)
 

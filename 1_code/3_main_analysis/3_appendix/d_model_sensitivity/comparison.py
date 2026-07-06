@@ -27,16 +27,17 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import spearmanr, pearsonr, rankdata
 
-ROOT = Path(__file__).resolve().parents[3]
-PROJECT_ROOT = ROOT.parent
+ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
+from model_utils import N_SDG
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-CANONICAL_OUTPUT = PROJECT_ROOT / "4_outputs" / "main" / "data"
+CANONICAL_OUTPUT = ROOT / "4_outputs" / "main" / "data"
 
 REQUIRED_CANONICAL_FILES = [
     "4_1_validation_results.json",
@@ -52,7 +53,6 @@ REQUIRED_COMPARISON_FILES = [
     "4_4_interaction_correlation_asymmetry.json",
 ]
 
-N_SDG = 17
 SDG_LABELS = list(range(1, N_SDG + 1))
 
 

@@ -6,8 +6,7 @@ from typing import Any, Iterator
 
 import numpy as np
 
-
-N_SDG = 17
+from model_utils import N_SDG
 
 
 def load_json(path: Path) -> Any:

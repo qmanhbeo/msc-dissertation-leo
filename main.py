@@ -475,15 +475,6 @@ def run_warm_replay(
         _run_main_analysis_steps(analysis_output_dir, model=model)
     else:
         run_main_text(output_dir, args)
-    run_pca_semantic_landscape(output_dir, model=model)
-    run_within_corpus_centroid_structure(output_dir, model=model)
-    run_softmax_multilabel_sdg(output_dir, model=model)
-    run_semantic_gap_interpretability(output_dir, model=model)
-    run_policy_source_family_sensitivity(output_dir, model=model)
-    run_sdg4_lexical_audit(output_dir, model=model)
-    run_sdg_source_comparison(output_dir, model=model)
-    run_sample_stability(output_dir, model=model)
-    run_register_adjustment(output_dir, args, include_register_confidence_checks=not args.skip_register_confidence_checks, model=model)
     print(
         "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"

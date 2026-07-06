@@ -5,6 +5,8 @@ from pathlib import Path
 DEFAULT_EMBED_MODEL = "all-MiniLM-L6-v2"
 ALLOWED_MODELS = {DEFAULT_EMBED_MODEL, "all-mpnet-base-v2"}
 VALID_DIMS = {384, 768}
+N_SDG = 17
+DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 
 def _validate_model(model: str) -> None:

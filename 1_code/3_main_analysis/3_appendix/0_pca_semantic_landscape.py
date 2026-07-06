@@ -1,7 +1,7 @@
 """
 Build a descriptive PCA semantic landscape for the research-policy embedding space.
 
-This figure is exploratory only. PCA is used to compress the shared 384-dimensional
+This figure is exploratory only. PCA is used to compress the shared embedding
 Sentence-BERT space into two dimensions for visualisation. All substantive alignment
 metrics in the dissertation remain computed in the original embedding space.
 
@@ -54,7 +54,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -66,9 +66,6 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 PCA_METADATA_JSON = "b1_pca_landscape_metadata.json"
 PCA_NUM_TEX = "num_b1_pca_landscape.tex"
 
@@ -91,7 +88,7 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Optional cap on the number of policy segments used for PCA fitting. Default: 0 (use all policy segments).",
     )
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -393,7 +390,7 @@ def main() -> None:
     ax.set_ylabel(f"PC2 ({evr[1] * 100:.1f}% variance)")
     ax.set_title(
         "PCA semantic landscape of research and policy embeddings\n"
-        "Descriptive projection only; formal distances remain in the original 384-dimensional space",
+        "Descriptive projection only; formal distances remain in the original embedding space",
         loc="left",
         fontsize=9,
     )
@@ -444,7 +441,7 @@ def main() -> None:
         "pc2_explained_variance_ratio": float(evr[1]),
         "segment_cap_for_policy_gap_overlay": int(SEGMENT_CAP_PRIMARY),
         "note": (
-            "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original 384-dimensional embedding space."
+            "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original embedding space."
         ),
     }
     metadata_path = data_dir / PCA_METADATA_JSON

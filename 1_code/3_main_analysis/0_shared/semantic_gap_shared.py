@@ -7,17 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
-
-
-SCORED_DIR = Path("2_data/3_scored")
-EMBEDDINGS_DIR = Path("2_data/2_embedded")
-
-POLICY_SCORES = SCORED_DIR / "policy_scores.npy"
-POLICY_IDS = SCORED_DIR / "metadata" / "policy_scores_ids.json"
-POLICY_EMB = EMBEDDINGS_DIR / "policy.npy"
-RESEARCH_CENTROIDS = SCORED_DIR / "research_centroids.npy"
-RESEARCH_CENTROID_META = SCORED_DIR / "metadata" / "research_centroid_meta.json"
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, scored_dir_for_model
 
 
 def get_policy_emb(model: str = DEFAULT_EMBED_MODEL) -> Path:
@@ -38,8 +28,6 @@ def get_research_centroids(model: str = DEFAULT_EMBED_MODEL) -> Path:
 
 def get_research_centroid_meta(model: str = DEFAULT_EMBED_MODEL) -> Path:
     return scored_dir_for_model(model) / "metadata" / "research_centroid_meta.json"
-
-N_SDG = 17
 
 SEGMENT_CAP_PRIMARY = 50
 SEGMENT_CAP_SENS_LO = 20

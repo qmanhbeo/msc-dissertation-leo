@@ -69,14 +69,11 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs
-from model_utils import scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-
-N_SDG = 17
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -194,7 +191,7 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute coverage gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

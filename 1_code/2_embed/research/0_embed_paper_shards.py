@@ -34,7 +34,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import embed_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--out-dir", default=None)
     p.add_argument("--status-dir", default=None)
     p.add_argument("--metadata-dir", default="")
-    p.add_argument("--model", default="all-MiniLM-L6-v2")
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     p.add_argument("--local-files-only", action="store_true")
@@ -109,12 +109,11 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
     embed_root = embed_dir_for_model(args.model)
-    embed_root_slugged = embed_root
 
     input_manifest = Path(args.input_manifest)
-    out_dir = Path(args.out_dir) if args.out_dir else embed_root_slugged / "research_shards"
+    out_dir = Path(args.out_dir) if args.out_dir else embed_root / "research_shards"
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir) if args.status_dir else embed_root_slugged / "research_shards" / "metadata"
+    status_dir = Path(args.status_dir) if args.status_dir else embed_root / "research_shards" / "metadata"
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)

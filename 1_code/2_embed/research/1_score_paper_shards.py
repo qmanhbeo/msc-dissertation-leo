@@ -35,7 +35,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ STATUS_STAGE = "openalex_embeddings_to_sdg_scores"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     p.add_argument("--embedding-manifest", default=None)
     p.add_argument("--centroids", default=None)
     p.add_argument("--out-dir", default=None)

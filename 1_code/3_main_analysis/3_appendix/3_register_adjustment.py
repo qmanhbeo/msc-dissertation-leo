@@ -60,7 +60,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
 from shared_utils import DissertationOutputs
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -73,9 +73,6 @@ from semantic_gap_shared import (
     compute_sdg_semantic_gaps,
     get_cluster_assignments,
 )
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
 
 DEFAULT_SAMPLE_PER_CLASS = 20_000
@@ -210,7 +207,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--multi-direction-ks", default="1,2,3,5")
     p.add_argument("--topic-match-research-per-sdg", type=int, default=DEFAULT_TOPIC_MATCH_RESEARCH_PER_SDG)
     p.add_argument("--topic-match-top-k", type=int, default=DEFAULT_TOPIC_MATCH_TOP_K)
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

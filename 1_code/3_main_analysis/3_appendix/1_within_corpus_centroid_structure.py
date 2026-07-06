@@ -60,7 +60,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
 from research_embedding_shards import (
     iter_research_embedding_shards,
     load_json as load_embedding_manifest_json,
@@ -79,9 +79,6 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-
-
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 RESEARCH_FIG_PDF = "fig_b2_research_sdg_pca.pdf"
 RESEARCH_FIG_PNG = "fig_b2_research_sdg_pca.png"
@@ -125,7 +122,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--research-kmeans-sample-size", type=int, default=100_000)
     p.add_argument("--policy-kmeans-sample-size", type=int, default=0, help="0 means use all policy segments.")
     p.add_argument("--research-pca-batch-size", type=int, default=16_384)
-    p.add_argument("--model", default="all-MiniLM-L6-v2", help=argparse.SUPPRESS)
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

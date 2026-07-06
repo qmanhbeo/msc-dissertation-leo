@@ -76,14 +76,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, require_output_files
-from model_utils import scored_dir_for_model, DEFAULT_EMBED_MODEL
-
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-
-N_SDG = 17
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model
 
 # ---------------------------------------------------------------------------
 # Logging
