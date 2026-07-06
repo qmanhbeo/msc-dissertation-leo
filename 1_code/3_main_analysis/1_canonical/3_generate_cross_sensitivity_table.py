@@ -1,21 +1,23 @@
-"""Generate cross-sensitivity robustness table for the main text.
+"""Generate cross-sensitivity tables for the main text.
 
-Reads three appendix .tex tables (model sensitivity, reference-source
-comparison, policy source-family sensitivity), extracts gap values
-per SDG, computes ranks (1 = largest gap), and outputs a unified
-LaTeX table to 4_outputs/tables/tab_cross_sensitivity_robustness.tex.
+Outputs two tables:
+  1. 4_outputs/tables/tab_cross_sensitivity_robustness.tex  (gap ranks)
+  2. 4_outputs/main/tables/tab_validation.tex               (F1 validation)
 """
 
 import re
 from pathlib import Path
 
 BASE = Path("../../../4_outputs/appendix")
-OUT = Path("../../../4_outputs/tables")
-OUT.mkdir(parents=True, exist_ok=True)
+OUT_TABLES = Path("../../../4_outputs/tables")
+OUT_TABLES.mkdir(parents=True, exist_ok=True)
+OUT_MAIN = Path("../../../4_outputs/main/tables")
+OUT_MAIN.mkdir(parents=True, exist_ok=True)
 
 MODEL_FILE = BASE / "d_model_sensitivity" / "tables" / "tab_model_sensitivity.tex"
 REF_FILE = BASE / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_covgap.tex"
 POLICY_FILE = BASE / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
+F1_REF_FILE = BASE / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_f1cos.tex"
 
 # ---------------------------------------------------------------------------
 # Parsers
@@ -90,6 +92,122 @@ def parse_policy_table(path):
     return data
 
 
+def parse_model_f1_table(path):
+    """Return {sdg: {'minilm': f1, 'mpnet': f1}}."""
+    data = {}
+    text = path.read_text()
+    for line in text.splitlines():
+        line = line.strip()
+        m = re.match(r"SDG\s+(\d+)", line)
+        if not m:
+            continue
+        sdg = int(m.group(1))
+        parts = [p.strip() for p in line.rstrip("\\").split("&")]
+        data[sdg] = {
+            "minilm": float(re.match(r"([\d.]+)", parts[1]).group(1)),
+            "mpnet": float(re.match(r"([\d.]+)", parts[2]).group(1)),
+        }
+    return data
+
+
+def parse_f1_ref_table(path):
+    """Return {sdg: {col: f1 or None}} for col in ('osdg', 'sdgi', 'kh', 'aurora').
+
+    Columns: SDG, Combined-f1, Combined-cos, OSDG-f1, OSDG-cos,
+             SDGi-f1, SDGi-cos, KH-f1, KH-cos, Aurora-f1, Aurora-cos
+    """
+    col_names = ["osdg", "sdgi", "kh", "aurora"]
+    data = {}
+    text = path.read_text()
+    for line in text.splitlines():
+        line = line.strip()
+        m = re.match(r"SDG\s+(\d+)", line)
+        if not m:
+            continue
+        sdg = int(m.group(1))
+        parts = [p.strip() for p in line.rstrip("\\").split("&")]
+        vals = {}
+        for i, name in enumerate(col_names):
+            raw = parts[3 + 2 * i]  # F1 at indices 3, 5, 7, 9
+            if raw == "--":
+                vals[name] = None
+            else:
+                vals[name] = float(raw)
+        data[sdg] = vals
+    return data
+
+
+def macro_f1(values_dict, key):
+    """Unweighted mean F1 over SDGs where value is not None."""
+    vals = [row[key] for row in values_dict.values() if row[key] is not None]
+    return sum(vals) / len(vals) if vals else 0.0
+
+
+def write_f1_table(model_data, f1_ref_data):
+    """Write the cross-condition F1 validation table."""
+    rows = []
+    macro_vals = {}
+
+    # Column definitions for macro computation
+    col_defs = [
+        ("can", "Can", "minilm"),
+        ("mpnet", "MPNet", "mpnet"),
+        ("osdg", "OSDG", "osdg"),
+        ("sdgi", "SDGi", "sdgi"),
+        ("kh", "KH", "kh"),
+        ("aurora", "Aur", "aurora"),
+    ]
+
+    # Compute per-SDG rows
+    for sdg in range(1, 18):
+        cells = [f"SDG {sdg}"]
+        for key, _, model_key in col_defs:
+            if key in ("can", "mpnet"):
+                val = model_data.get(sdg, {}).get(model_key)
+            else:
+                val = f1_ref_data.get(sdg, {}).get(model_key)
+            if val is not None:
+                cells.append(f"{val:.3f}")
+            else:
+                cells.append("--")
+        rows.append(cells)
+
+    # Compute macro-F1 per column
+    for key, label, model_key in col_defs:
+        if key in ("can", "mpnet"):
+            vals = [row[model_key] for row in model_data.values() if row.get(model_key) is not None]
+        else:
+            vals = [row[model_key] for row in f1_ref_data.values() if row.get(model_key) is not None]
+        macro_vals[key] = sum(vals) / len(vals) if vals else 0.0
+
+    lines = [
+        r"\begin{tabular}{l|c|c|cccc}",
+        r"\toprule",
+        r"& \multicolumn{2}{c}{Model} & \multicolumn{4}{c}{Reference source} \\",
+        r"\cmidrule(lr){2-3} \cmidrule(lr){4-7}",
+        r"SDG & Can & MPNet & OSDG & SDGi & KH & Aur \\",
+        r"\midrule",
+    ]
+
+    for cells in rows:
+        lines.append(" & ".join(cells) + r" \\")
+
+    # Macro-F1 row
+    macro_cells = ["Macro-F1 (SDGs 1--17)"]
+    for key, _, _ in col_defs:
+        macro_cells.append(f"\\textbf{{{macro_vals[key]:.3f}}}")
+    lines.append(" & ".join(macro_cells) + r" \\")
+
+    lines.extend([
+        r"\bottomrule",
+        r"\end{tabular}",
+    ])
+
+    path = OUT_MAIN / "tab_validation.tex"
+    path.write_text("\n".join(lines) + "\n")
+    print(f"Written {path}")
+
+
 # ---------------------------------------------------------------------------
 # Rank computation
 # ---------------------------------------------------------------------------
@@ -112,6 +230,8 @@ def main():
     model_data = parse_model_table(MODEL_FILE)
     ref_data = parse_ref_table(REF_FILE)
     policy_data = parse_policy_table(POLICY_FILE)
+    model_f1_data = parse_model_f1_table(MODEL_FILE)
+    f1_ref_data = parse_f1_ref_table(F1_REF_FILE)
 
     # Compute ranks per column
     can_ranks = compute_ranks(model_data, "minilm")
@@ -148,11 +268,10 @@ def main():
 
     # Write LaTeX table
     lines = [
-        r"\begin{landscape}",
         r"\begin{table}[ht]",
         r"\centering",
-        r"\small",
-        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings.}",
+        r"\footnotesize",
+        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. A ``--'' indicates that the source does not cover that SDG.}",
         r"\label{tab:cross-sensitivity-robustness}",
         r"\begin{tabular}{l|c|c|c|ccccc|c|cccc}",
         r"\toprule",
@@ -171,13 +290,14 @@ def main():
         r"\bottomrule",
         r"\end{tabular}",
         r"\end{table}",
-        r"\end{landscape}",
     ])
 
-    out_path = OUT / "tab_cross_sensitivity_robustness.tex"
+    out_path = OUT_TABLES / "tab_cross_sensitivity_robustness.tex"
     out_path.write_text("\n".join(lines) + "\n")
     print(f"Written {out_path}")
     print(f"Table rows: {len(rows)}")
+
+    write_f1_table(model_f1_data, f1_ref_data)
 
 
 if __name__ == "__main__":
