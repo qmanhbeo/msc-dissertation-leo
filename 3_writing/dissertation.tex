@@ -13,6 +13,9 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{graphicx}
+\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\usepackage{enumitem}
+\setlist{nosep}
 \graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/e_register_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
@@ -50,11 +53,10 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyfoot[L]{}
-\fancyfoot[C]{}
+\fancyhead[L]{\leftmark}
 \fancyfoot[R]{\thepage}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
 
 \onehalfspacing
 

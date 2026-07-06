@@ -58,17 +58,19 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 plt.rcParams.update({
     "font.family": "serif",
-    "font.size": 9,
-    "axes.titlesize": 10,
-    "axes.labelsize": 9,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "legend.fontsize": 8,
-    "figure.dpi": 150,
+    "font.size": 10,
+    "axes.titlesize": 12,
+    "axes.labelsize": 10,
+    "xtick.labelsize": 9,
+    "ytick.labelsize": 9,
+    "legend.fontsize": 9,
+    "figure.dpi": 300,
+    "figure.facecolor": "white",
+    "axes.facecolor": "white",
 })
 
-RESEARCH_COLOR = "#2166AC"   # blue
-POLICY_COLOR   = "#D6604D"   # red-orange
+RESEARCH_COLOR = "#0077BB"   # blue (Tol palette, colorblind-safe)
+POLICY_COLOR   = "#EE7733"   # orange (Tol palette, colorblind-safe)
 
 SDG_SHORT = {
     1:  "SDG 1\nNo Poverty",
@@ -159,18 +161,18 @@ def main() -> None:
             df_sorted["policy_pct_docweighted"].iloc[i] + 0.3,
             i - height / 2,
             _fmt(policy_counts.iloc[i]),
-            va="center", ha="left", fontsize=5.5,
+            va="center", ha="left", fontsize=7,
         )
         ax1.text(
             df_sorted["research_pct"].iloc[i] + 0.3,
             i + height / 2,
             _fmt(research_counts.iloc[i]),
-            va="center", ha="left", fontsize=5.5,
+            va="center", ha="left", fontsize=7,
         )
 
     labels = [SDG_SHORT[int(row["sdg"])].replace("\n", " ") for _, row in df_sorted.iterrows()]
     ax1.set_yticks(y)
-    ax1.set_yticklabels(labels, fontsize=7.5)
+    ax1.set_yticklabels(labels, fontsize=8.5)
     ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
     # ax1.set_title("Coverage profiles by SDG", fontsize=8.5, loc="left")
     ax1.legend(loc="upper right")
@@ -181,7 +183,7 @@ def main() -> None:
 
     fig1.tight_layout()
     fig1.savefig(figures_dir / "fig1_coverage_profiles.pdf", bbox_inches="tight")
-    fig1.savefig(figures_dir / "fig1_coverage_profiles.png", bbox_inches="tight", dpi=150)
+    fig1.savefig(figures_dir / "fig1_coverage_profiles.png", bbox_inches="tight", dpi=300)
     plt.close(fig1)
     print("Saved: fig1_coverage_profiles.pdf")
 
@@ -192,22 +194,22 @@ def main() -> None:
 
     df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
     y = np.arange(len(df_sem))
-    colors = [RESEARCH_COLOR if v > median_semantic_gap else "#92C5DE" for v in df_sem["semantic_gap"]]
+    colors = [RESEARCH_COLOR if v > median_semantic_gap else "#BBBBBB" for v in df_sem["semantic_gap"]]
 
     ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
     for i, val in enumerate(df_sem["semantic_gap"]):
-        ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=6)
+        ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
     ax2.axvline(median_semantic_gap, color="grey", linestyle="--", linewidth=1,
                 label=f"Median ({median_semantic_gap:.3f})")
     ax2.axvline(mean_semantic_gap, color="black", linestyle=":", linewidth=1,
                 label=f"Mean ({mean_semantic_gap:.3f})")
     ax2.set_yticks(y)
-    ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=7.5)
+    ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=8.5)
     ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
     # ax2.set_title("Within-SDG semantic gap by SDG\nHigher values indicate greater research-policy semantic divergence", fontsize=8.5, loc="left")
 
     high_patch = mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap")
-    low_patch = mpatches.Patch(color="#92C5DE", alpha=0.88, label="Below median gap")
+    low_patch = mpatches.Patch(color="#BBBBBB", alpha=0.88, label="Below median gap")
     ax2.legend(handles=[
         high_patch, low_patch,
         plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median ({median_semantic_gap:.3f})"),
@@ -219,7 +221,7 @@ def main() -> None:
 
     fig2.tight_layout()
     fig2.savefig(figures_dir / "fig2_semantic_gap.pdf", bbox_inches="tight")
-    fig2.savefig(figures_dir / "fig2_semantic_gap.png", bbox_inches="tight", dpi=150)
+    fig2.savefig(figures_dir / "fig2_semantic_gap.png", bbox_inches="tight", dpi=300)
     plt.close(fig2)
     print("Saved: fig2_semantic_gap.pdf")
 
@@ -244,7 +246,7 @@ def main() -> None:
                    13: (0.3, -0.004), 12: (0.3, 0.003)}
         dx, dy = offsets.get(sdg, (0.25, 0.002))
         ax3.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx, y + dy),
-                     fontsize=7.5, color="black",
+                     fontsize=8, color="black",
                      arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
 
     ax3.set_xlim(xlim)
@@ -258,10 +260,11 @@ def main() -> None:
     )
     ax3.spines["top"].set_visible(False)
     ax3.spines["right"].set_visible(False)
+    ax3.grid(True, alpha=0.3, linestyle=":", linewidth=0.5)
 
     fig3.tight_layout()
     fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.pdf", bbox_inches="tight")
-    fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.png", bbox_inches="tight", dpi=150)
+    fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.png", bbox_inches="tight", dpi=300)
     plt.close(fig3)
     print("Saved: fig3_coverage_semantic_scatter.pdf")
     print(f"\\nAll figures saved to {figures_dir}")
