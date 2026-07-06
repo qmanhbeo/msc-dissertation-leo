@@ -28,8 +28,12 @@ import numpy as np
 from scipy.stats import spearmanr, pearsonr, rankdata
 
 ROOT = Path(__file__).resolve().parents[4]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+CODE_ROOT = ROOT / "1_code"
+ANALYSIS_ROOT = Path(__file__).resolve().parents[2]
+SHARED_DIR = ANALYSIS_ROOT / "0_shared"
+for path in (CODE_ROOT, SHARED_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 
 from model_utils import N_SDG
@@ -88,7 +92,7 @@ def extract_f1_per_sdg(data: dict) -> np.ndarray:
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--output-dir", default=str(PROJECT_ROOT / "4_outputs"))
+    p.add_argument("--output-dir", default=str(ROOT / "4_outputs"))
     args_inner = p.parse_args()
 
     mpnet_root = Path(args_inner.output_dir) / "appendix" / "d_model_sensitivity"
