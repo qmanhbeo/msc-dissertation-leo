@@ -181,10 +181,10 @@ def write_f1_table(model_data, f1_ref_data):
         macro_vals[key] = sum(vals) / len(vals) if vals else 0.0
 
     lines = [
-        r"\begin{tabular}{l|c|c|cccc}",
+        r"\begin{tabular}{lcccccc}",
         r"\toprule",
         r"& \multicolumn{2}{c}{Model} & \multicolumn{4}{c}{Reference source} \\",
-        r"\cmidrule(lr){2-3} \cmidrule(lr){4-7}",
+        r"\cmidrule(r){2-3} \cmidrule(l){4-7}",
         r"SDG & Can & MPNet & OSDG & SDGi & KH & Aur \\",
         r"\midrule",
     ]
