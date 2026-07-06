@@ -74,15 +74,7 @@ University of Birmingham, School of Government}
 \tableofcontents
 \newpage
 
-%% ============================================================
-\section*{Acknowledgements}
-\addcontentsline{toc}{section}{Acknowledgements}
 
-This project emerged from a series of convergences rather than a single moment of design. I first encountered the Sustainable Development Goals early in my undergraduate studies. I later learned natural language processing during my master's. Over time, I noticed that the gap between research and policy is real, persistent, and often unspoken. Eventually, these threads converged.
-
-To me, the connection felt natural, almost obvious. But that, I have come to realise, is precisely the point of education: not simply the accumulation of knowledge, but the gradual layering of perspectives until, at some point, they overlap. And when they do, something new becomes visible, something that, in hindsight, feels like it had always been there.
-
-\newpage
 
 \begin{abstract}
 The Sustainable Development Goals (SDGs) provide the dominant international framework for sustainability governance, yet shared SDG labels do not necessarily imply shared semantic framing between research and policy-facing discourse. Existing bibliometric studies map AI research to SDGs using keyword or classification methods, but rarely compare the semantic content of research and international institutional SDG policy discourse. This study uses Sentence-BERT embeddings and a nearest-centroid SDG instrument validated against expert-labelled SDG benchmarks (macro-F1 = \MacroFOne) to construct a diagnostic map of observed semantic distance between \NResearchPapers{} AI-for-sustainability research title-abstract texts and \NPolicySegments{} segments drawn from \NPolicyDocs{} international institutional SDG policy sources. The analysis distinguishes coverage gaps, which capture which SDGs each corpus emphasises, from within-SDG semantic gaps, which capture how far research and policy texts assigned to the same SDG sit apart in embedding space. Because the corpora also differ in language style and communicative purpose (what linguists call register), these gaps are interpreted as observed textual-semantic divergence rather than as a cleaned measure of substantive disagreement.
@@ -454,22 +446,7 @@ More broadly, this dissertation argues that alignment should be understood as a 
 
 \printbibliography
 
-\clearpage
 
-\section*{Afterword: On the way of thinking}
-\addcontentsline{toc}{section}{Afterword}
-
-I came into this MSc believing, perhaps naively, that AI is going to be the game-changer for this world --- or at least for a framework that tries to direct and measure how this world should be changed (the SDGs). In fact, that very belief was why I wanted to do this degree at all. And during my masters year, I learned a lot about how AI is actually used and talked about in research --- practically, to change the world, not just as some grandiose ideology, but also in the very basic, mundane, daily tasks: irrigation, energy management. And I wondered: do policymakers and politicians talk about this too? Because I honestly believed, for some reason, that they do, and they should.
-
-Turns out that last bit was not as formal as I thought.
-
-The corpus asymmetry discussed in Section~\ref{sec:limitations} captures this empirically. I had built the research corpus expecting it to mirror a policy world that also talks about AI \emph{for} the SDGs. Instead, the policy documents turned out to be about AI or about the SDGs --- the $\text{AI} \cap \text{SDG}$ intersection that felt natural to me was not yet naturalised in institutional discourse. The mismatch I found was not just between two corpora; it was between my mental model of the world and the world itself.
-
-And maybe, just maybe, the ones to bridge that research-to-policy gap, specifically in AI-for-sustainability, are we who graduate from the MSc AI and Sustainable Development (and Government) cohorts from UoB.
-
-This, more than any method or result, is the real learning. I live my life, I observe things, I chose to do this MSc because I had an intuition, a belief, maybe even a dogma. I did the dissertation. I realized I might need to update my beliefs. On top of all the ML methods, the development theories, the AI applications --- the real learning is the way I think.
-
-I honestly could not stand the dryness of research. I want to express. I love to express, to make art, to tell stories, to share laughter. I believe that that is a strength I have to will navigate our changing world in the decades to come, to be the human who will be able to use AI wisely and, haha, sustainably.
 
 %% ============================================================
 \clearpage
@@ -848,5 +825,26 @@ In the current run, the cosine between the regression-derived global register ve
 \label{fig:regression-vs-classifier-alignment}
 \end{figure}
 }{}
+
+%% ============================================================
+\clearpage
+\section*{Afterword}
+\addcontentsline{toc}{section}{Afterword}
+
+This project emerged from a series of convergences rather than a single moment of design. I first encountered the Sustainable Development Goals early in my undergraduate studies. I later learned natural language processing during my master's. Over time, I noticed that the gap between research and policy is real, persistent, and often unspoken. Eventually, these threads converged.
+
+To me, the connection felt natural, almost obvious. But that, I have come to realise, is precisely the point of education: not simply the accumulation of knowledge, but the gradual layering of perspectives until, at some point, they overlap. And when they do, something new becomes visible, something that, in hindsight, feels like it had always been there.
+
+I came into this MSc believing, perhaps naively, that AI is going to be the game-changer for this world --- or at least for a framework that tries to direct and measure how this world should be changed (the SDGs). In fact, that very belief was why I wanted to do this degree at all. And during my masters year, I learned a lot about how AI is actually used and talked about in research --- practically, to change the world, not just as some grandiose ideology, but also in the very basic, mundane, daily tasks: irrigation, energy management. And I wondered: do policymakers and politicians talk about this too? Because I honestly believed, for some reason, that they do, and they should.
+
+Turns out that last bit was not as formal as I thought.
+
+The corpus asymmetry discussed in Section~\ref{sec:limitations} captures this empirically. I had built the research corpus expecting it to mirror a policy world that also talks about AI \emph{for} the SDGs. Instead, the policy documents turned out to be about AI or about the SDGs --- the $\text{AI} \cap \text{SDG}$ intersection that felt natural to me was not yet naturalised in institutional discourse. The mismatch I found was not just between two corpora; it was between my mental model of the world and the world itself.
+
+And maybe, just maybe, the ones to bridge that research-to-policy gap, specifically in AI-for-sustainability, are we who graduate from the MSc AI and Sustainable Development cohorts from UoB.
+
+This, more than any method or result, is the real learning. I live my life, I observe things, I chose to do this MSc because I had an intuition, a belief, maybe even a dogma. I did the dissertation. I realized I might need to update my beliefs. On top of all the ML methods, the development theories, the AI applications --- the real learning is the way I think.
+
+I honestly could not stand the dryness of research. I want to express. I love to express, to make art, to tell stories, to share laughter. I believe that that is a strength I have to will navigate our changing world in the decades to come, to be the human who will be able to use AI wisely and, haha, sustainably.
 
 \end{document}
