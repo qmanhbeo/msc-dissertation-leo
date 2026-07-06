@@ -204,12 +204,7 @@ def main() -> None:
     ax2.set_yticks(y)
     ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=7.5)
     ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
-    ax2.set_title(
-        "Within-SDG semantic gap by SDG\n"
-        "Higher values indicate greater research-policy semantic divergence",
-        fontsize=8.5,
-        loc="left",
-    )
+    # ax2.set_title("Within-SDG semantic gap by SDG\nHigher values indicate greater research-policy semantic divergence", fontsize=8.5, loc="left")
 
     high_patch = mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap")
     low_patch = mpatches.Patch(color="#92C5DE", alpha=0.88, label="Below median gap")
