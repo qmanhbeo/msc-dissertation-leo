@@ -167,6 +167,9 @@ def require_pdf_inputs(output_dir: Path) -> Path:
         path = root / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
+    path = root / "tables" / "tab_cross_sensitivity_robustness.tex"
+    if not path.exists():
+        missing.append(str(path.relative_to(root)))
     if missing:
         missing_str = ", ".join(missing)
         raise FileNotFoundError(
@@ -188,6 +191,18 @@ def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     files.extend(root / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
     files.extend(root / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
     files.extend(root / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
+    files.append(root / "tables" / "tab_cross_sensitivity_robustness.tex")
+    _sen = "appendix/d_model_sensitivity"
+    for name in MANUSCRIPT_ROOT_FILES:
+        if name != "dissertation.pdf":
+            files.append(root / _sen / "main" / "data" / name)
+    files.extend(root / _sen / name for name in MANUSCRIPT_EXTRA_FILES)
+    files.extend(root / _sen / "main" / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
+    files.extend(root / _sen / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
+    files.extend(root / _sen / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
+    files.extend(root / _sen / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
+    files.append(root / _sen / "data" / "sensitivity_comparison.json")
+    files.append(root / _sen / "tables" / "tab_model_sensitivity.tex")
     return files
 
 
