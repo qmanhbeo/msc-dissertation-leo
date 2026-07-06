@@ -239,7 +239,7 @@ def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
     posix = raw.as_posix()
-    allowed = (str(embed_dir) + "/", str(scored_dir) + "/", "2_data/1_preprocessed/")
+    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", "2_data/1_preprocessed/")
     if not any(posix.startswith(p) for p in allowed):
         raise RuntimeError(
             f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"

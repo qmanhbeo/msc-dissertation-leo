@@ -95,7 +95,7 @@ def resolve_from_manifest(manifest_path: Path, stored_path: str, embed_dir: Path
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    expected_prefix = str(embed_dir) + "/"
+    expected_prefix = embed_dir.as_posix() + "/"
     if not raw.as_posix().startswith(expected_prefix):
         raise RuntimeError(
             f"Hard pivot violation: expected data path under {expected_prefix}, got: {stored_path}"
