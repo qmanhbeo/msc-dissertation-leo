@@ -44,13 +44,20 @@ Statistics:
   Correlation results are reported with and without SDG 4 to test sensitivity.
 
 Inputs:
-  4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
-  4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
+   4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
+   4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
 
-  4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results + H26 asymmetry
-  4_outputs/main/data/4_4_interaction_scatter_data.csv               per-SDG data table for plotting (SDG, research%, policy%,
-                                  coverage_gap, semantic_gap, semantic_similarity)
-  4_outputs/main/tables/*.tex            generated LaTeX macros/tables
+   4_outputs/appendix/d_model_sensitivity/main/data/                  MPNet model coverage + semantic gap (multi-config H1)
+   4_2_coverage_document_weighted.json
+   4_3_semantic_gap_distances.json
+
+   4_outputs/appendix/a1_sdg_source_comparison/data/                  per-source research coverage + gap (multi-config H1)
+   comparison_summary.json
+
+   4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results + H26 asymmetry
+   4_outputs/main/data/4_4_interaction_scatter_data.csv               per-SDG data table for plotting (SDG, research%, policy%,
+                                   coverage_gap, semantic_gap, semantic_similarity)
+   4_outputs/main/tables/*.tex            generated LaTeX macros/tables
 
 Run from project root (after the canonical coverage and semantic outputs exist):
     python 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py
@@ -496,7 +503,63 @@ def main() -> None:
     (gen_dir / "num_interaction.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "num_interaction.tex")
 
-    # tab_interaction.tex — full tabular block
+    # ---- Multi-config H1 replications ----
+    config_rows: list[tuple[str, str, str, str, str, str]] = []  # label, r_str, p_str, rho_str, p_rho_str, n_str
+
+    # 1. MPNet model
+    mpnet_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" / "main" / "data"
+    mpnet_cov_path = mpnet_dir / "4_2_coverage_document_weighted.json"
+    mpnet_sem_path = mpnet_dir / "4_3_semantic_gap_distances.json"
+    if mpnet_cov_path.exists() and mpnet_sem_path.exists():
+        mpnet_cov = load_json(mpnet_cov_path)
+        mpnet_sem = load_json(mpnet_sem_path)
+        mpnet_res = np.array([mpnet_cov["research_profile_hard"][f"SDG{i}"] for i in range(1, 18)])
+        mpnet_per_sdg = {r["sdg"]: r["semantic_gap"] for r in mpnet_sem["per_sdg"]}
+        mpnet_gaps = np.array([mpnet_per_sdg.get(i, np.nan) for i in range(1, 18)], dtype=float)
+        mpnet_mask = np.isfinite(mpnet_res) & np.isfinite(mpnet_gaps)
+        n_mpnet = int(mpnet_mask.sum())
+        if n_mpnet >= 3:
+            r_mpnet = pearson_and_spearman(mpnet_res[mpnet_mask], mpnet_gaps[mpnet_mask], "MPNet model")
+            config_rows.append((
+                "MPNet model",
+                _fmt(r_mpnet["pearson_r"]), f"{r_mpnet['pearson_p']:.3f}",
+                _fmt(r_mpnet["spearman_rho"]), f"{r_mpnet['spearman_p']:.3f}",
+                str(n_mpnet),
+            ))
+
+    # 2. Reference sources
+    comp_path = ROOT / "4_outputs" / "appendix" / "a1_sdg_source_comparison" / "data" / "comparison_summary.json"
+    if comp_path.exists():
+        comp_data = load_json(comp_path)
+        src_results = comp_data["results"]
+        sources = [
+            ("osdg", "OSDG-only centroids"),
+            ("sdgi", "SDGi-only centroids"),
+            ("knowledgehub", "Knowledge Hub-only centroids"),
+            ("aurora", "Aurora-only centroids"),
+        ]
+        for src_key, src_label in sources:
+            counts = np.array([r[f"{src_key}_coverage"] for r in src_results], dtype=float)
+            gaps = np.array([
+                r[f"{src_key}_gap"] if r[f"{src_key}_gap"] is not None else np.nan
+                for r in src_results
+            ], dtype=float)
+            props = counts / counts.sum()
+            src_mask = np.isfinite(props) & np.isfinite(gaps)
+            n_src = int(src_mask.sum())
+            if n_src >= 3:
+                r_src = pearson_and_spearman(props[src_mask], gaps[src_mask], src_label)
+                config_rows.append((
+                    src_label,
+                    _fmt(r_src["pearson_r"]), f"{r_src['pearson_p']:.3f}",
+                    _fmt(r_src["spearman_rho"]), f"{r_src['spearman_p']:.3f}",
+                    str(n_src),
+                ))
+
+    log.info("")
+    log.info("Multi-config H1 replications: %d configs", len(config_rows))
+
+    # tab_interaction.tex — extended tabular block with all configs
     tab_lines = [
         r"\begin{tabular}{lrrrr}",
         r"\toprule",
@@ -506,9 +569,15 @@ def main() -> None:
         rf" & \HPrimarySpearmanRho & \HPrimarySpearmanP \\",
         rf"Excluding SDG 4 & \HExclSdgFourPearsonR & \HExclSdgFourPearsonP"
         rf" & \HExclSdgFourSpearmanRho & \HExclSdgFourSpearmanP \\",
+    ]
+    for label, r_str, p_str, rho_str, p_rho_str, n_str in config_rows:
+        tab_lines.append(
+            rf"{label} ($n$={n_str}) & {r_str} & {p_str} & {rho_str} & {p_rho_str} \\"
+        )
+    tab_lines.extend([
         r"\bottomrule",
         r"\end{tabular}",
-    ]
+    ])
     (gen_dir / "tab_interaction.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_interaction.tex")
 
