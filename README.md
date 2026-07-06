@@ -80,6 +80,7 @@ Not tracked in Git:
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
 | `python main.py --appendix-d-sensitivity --overwrite` | Run D Model Sensitivity (all-mpnet-base-v2 vs MiniLM). Requires pre-embedded MPNet data (see below). |
 | `python main.py --appendix-e-register --overwrite` | Run E Register-Adjustment Robustness |
+| `python main.py --embed-model all-mpnet-base-v2 --appendix-all` | Run appendix stages with an alternative embedding model (e.g. MPNet for model sensitivity). Not a canonical manuscript step — only meaningful for the model sensitivity comparison in Appendix D. |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |

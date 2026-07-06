@@ -393,7 +393,7 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
 
 
 def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
-    """Run the 8 main-text analysis steps for a given model (no input guard)."""
+    """Run the 9 main-text analysis steps for a given model (no input guard)."""
     model_args = ["--model", model] if model != DEFAULT_EMBED_MODEL else []
     run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"] + model_args, step_id="1")
     run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)] + model_args, step_id="2")
@@ -407,6 +407,13 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
         step_id="7",
     )
     run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
+    if model == DEFAULT_EMBED_MODEL:
+        run_step(
+            "generate cross-sensitivity table",
+            [sys.executable, "1_code/3_main_analysis/1_canonical/3_generate_cross_sensitivity_table.py",
+             "--output-dir", str(output_dir)],
+            step_id="9",
+        )
 
 
 def run_main_text(
