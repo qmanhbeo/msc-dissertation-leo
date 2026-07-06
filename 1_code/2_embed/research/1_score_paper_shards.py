@@ -88,16 +88,17 @@ def normalize(vec: np.ndarray) -> np.ndarray:
     return (vec / norm).astype(np.float32)
 
 
-def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
+def resolve_from_manifest(manifest_path: Path, stored_path: str, embed_dir: Path) -> Path:
     del manifest_path  # hard pivot: no location fallback based on manifest placement
     raw = Path(stored_path)
     if raw.is_absolute():
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    if not raw.as_posix().startswith("2_data/2_embedded/"):
+    expected_prefix = str(embed_dir) + "/"
+    if not raw.as_posix().startswith(expected_prefix):
         raise RuntimeError(
-            f"Hard pivot violation: expected data path under 2_data/2_embedded/, got: {stored_path}"
+            f"Hard pivot violation: expected data path under {expected_prefix}, got: {stored_path}"
         )
     resolved = Path.cwd() / raw
     if resolved.exists():
@@ -180,8 +181,8 @@ def main() -> None:
     for shard in shards:
         shard_id = int(shard["shard_id"])
         shard_name = shard["name"]
-        emb_path = resolve_from_manifest(emb_manifest_path, shard["embedding_path"])
-        ids_in = resolve_from_manifest(emb_manifest_path, shard["ids_path"])
+        emb_path = resolve_from_manifest(emb_manifest_path, shard["embedding_path"], embed_dir)
+        ids_in = resolve_from_manifest(emb_manifest_path, shard["ids_path"], embed_dir)
         score_path = out_dir / f"{shard_name}.npy"
         ids_out = metadata_dir / f"{shard_name}_ids.jsonl"
 

@@ -1,4 +1,4 @@
-tier_label,sample_size,n_draws,deterministic,macro_coverage_variance,mean_semantic_gap,std_semantic_gap,mean_h26_asymmetry_gap,std_h26_asymmetry_gap,mean_a15_calibration_bias,std_a15_calibration_bias,mean_observed_semantic_sdgs,mean_reliable_semantic_sdgs
+tier_label,sample_size,n_draws,deterministic,macro_coverage_variance,mean_semantic_gap,std_semantic_gap,mean_asymmetry_gap,std_asymmetry_gap,mean_a15_calibration_bias,std_a15_calibration_bias,mean_observed_semantic_sdgs,mean_reliable_semantic_sdgs
 1k,1000,100,False,0.006803,0.46746,0.014541,0.130621,0.006888,0.341263,0.005054,17.0,15.64
 2k,2000,100,False,0.004927,0.444652,0.010759,0.139092,0.004331,0.341231,0.003372,17.0,16.87
 5k,5000,100,False,0.003015,0.430312,0.006653,0.146184,0.00459,0.342113,0.001903,17.0,17.0

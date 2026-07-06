@@ -18,6 +18,7 @@
 \usepackage{hyperref}
 \usepackage{fancyhdr}
 \usepackage[style=apa,backend=biber]{biblatex}
+\usepackage{xcolor}
 \addbibresource{references.bib}
 
 \providecommand{\DraftCompiledAt}{manual build (run build\_pdf.sh for exact timestamp)}
@@ -210,7 +211,7 @@ Each source document was divided into segments of approximately 150--300 words u
 
 \textbf{Source heterogeneity note.} The three source collections represent structurally different document types. The curated AI/SDG documents are AI governance and sustainability strategy texts; VNR/VLR reports are national government self-assessments of SDG progress structured around the 17 goals; UNGDC speeches are annual head-of-state addresses that follow UN discourse conventions. SDG profiles in Section~\ref{sec:results} should be read with this in mind: the full-corpus policy distribution reflects international institutional SDG discourse more broadly than it reflects AI governance specifically. Where an AI-governance-specific interpretation is needed, the curated AI/SDG sub-corpus (95 documents) is the more relevant reference. Appendix~\ref{app:policy-source-family-sensitivity} reports a source-family sensitivity check explicitly.
 
-\subsection{Embedding Model and Normalisation}
+\subsection{Embedding Model and Normalisation}\label{sec:embedding-choice}
 
 An embedding model converts each text into a point in a 384-dimensional semantic space, such that texts with similar meaning are positioned near each other. Cosine similarity measures how close two points are in this space, ranging from 0 (no directional alignment) to 1 (identical orientation). All texts were encoded using \texttt{all-MiniLM-L6-v2} \parencite{all-minilm-l6-v2}, a pre-trained sentence embedding model (BERT: Bidirectional Encoder Representations from Transformers) from the sentence-transformers library \parencite{Reimers2019}, producing 384-dimensional dense vector representations. This model was selected for three reasons: it achieves competitive performance on semantic textual similarity benchmarks, it is computationally efficient on CPU hardware, and it avoids the need for domain-specific fine-tuning that would introduce additional analytical assumptions. All embeddings were L2-normalised to unit vectors prior to storage, such that cosine similarity between any two vectors equals their dot product. This normalisation is applied consistently across all corpora and is required for the centroid computation to yield cosine similarities.
 
@@ -824,33 +825,31 @@ In the current run, the cosine between the regression-derived global register ve
 % Appendix E: Model Sensitivity
 % ==============================================================================
 
-\chapter{Embedding-Model Sensitivity}
+\section{Embedding-Model Sensitivity}
 \label{app:model-sensitivity}
 
 \subsection{Rationale}
 
 The main-text analysis uses \texttt{all-MiniLM-L6-v2} (384-dimensional MiniLM), which was chosen primarily for CPU efficiency as noted in Section~\ref{sec:embedding-choice}. MiniLM is a lightweight transformer that accomplishes the task at a fraction of the computational cost of larger encoders. However, a concern common to all embedding-based content analysis is whether the central findings are artefacts of the specific encoder rather than properties of the underlying text corpora.
 
-To test this, I repeat the full analysis pipeline with \texttt{all-mpnet-base-v2} (768-dimensional MPNet), a different sentence-transformer architecture that has also been benchmarked for SDG-association tasks (\cite{gjorgjevikj2025}). MPNet uses a distinct attention mechanism from MiniLM and operates at twice the embedding dimension, making it a natural sensitivity check: if the main findings replicate under this alternative encoder, they are unlikely to be an artefact of the original model choice.
+To test this, I repeat the full analysis pipeline with \texttt{all-mpnet-base-v2} (768-dimensional MPNet), a different sentence-transformer architecture that has also been benchmarked for SDG-association tasks (\cite{Gjorgjevikj2025}). MPNet uses a distinct attention mechanism from MiniLM and operates at twice the embedding dimension, making it a natural sensitivity check: if the main findings replicate under this alternative encoder, they are unlikely to be an artefact of the original model choice.
 
 \subsection{Results}
 
-The comparison is structured around the three principal outputs of the main-text analysis: the SDG coverage profile (research-proportion per SDG), the per-SDG semantic gap values, and the per-SDG semantic similarity between research and policy sub-centroids. For each output, I compute the Spearman rank correlation and the Pearson correlation between the two models' results across the 17 SDGs.
+The comparison is structured around the three principal outputs of the main-text analysis: the per-SDG validation F1 scores, the SDG coverage gap, and the per-SDG semantic gap values. For each output, I compute the Spearman rank correlation and the Pearson correlation between the two models' results across the 17 SDGs.
 
 \begin{table}[ht]
 \centering
-\caption{Per-SDG comparison of coverage research proportions, semantic gaps, and semantic similarities between the canonical MiniLM model and the MPNet sensitivity model. The final row reports Spearman's $\rho$ across the 17 SDGs.}
+\caption{Per-SDG comparison of validation F1 (rank), coverage gap (rank), and semantic gaps (rank) between the canonical MiniLM model and the MPNet sensitivity model. The final row reports Spearman's $\rho$ across the 17 SDGs. Rank 1 = highest F1 / highest coverage proportion / largest gap per model.}
 \label{tab:model-sensitivity}
-\IfFileExists{../4_outputs/mpnet/model_sensitivity/tables/tab_model_sensitivity.tex}{
-  \input{../4_outputs/mpnet/model_sensitivity/tables/tab_model_sensitivity.tex}
+\IfFileExists{../4_outputs/appendix/e_model_sensitivity/tables/tab_model_sensitivity.tex}{
+  \input{../4_outputs/appendix/e_model_sensitivity/tables/tab_model_sensitivity.tex}
 }{%
   \textcolor{gray}{(Run the model-sensitivity pipeline to populate this table.)}
 }
 \end{table}
 
-Table~\ref{tab:model-sensitivity} reports the per-SDG values for both models. The Spearman correlations across all 17 SDGs are reported at the foot of each column pair. Across all three metrics, the cross-model correlations are high ($\rho > 0.9$), indicating that the SDG-level rankings produced by MiniLM are robust to the choice of embedding model.
-
-Coverage research proportions show the strongest agreement, followed by semantic similarity values. Semantic gap rankings, while somewhat more variable (as expected given the smaller effective sample size per SDG in the policy corpus), remain strongly correlated. No SDG exhibits a material reversal in rank between the two models for any of the three reported quantities.
+Table~\ref{tab:model-sensitivity} reports the per-SDG values for both models. The Spearman correlations across all 17 SDGs are reported at the foot of each column pair. Validation F1 scores show the strongest agreement across models, followed by coverage research proportions, while semantic gap rankings are somewhat more variable (as expected given the smaller effective sample size per SDG in the policy corpus). No SDG exhibits a material reversal in rank between the two models for any reported quantity.
 
 These results support the conclusion that the dissertation's principal findings -- the per-SDG coverage rankings, the semantic-gap hierarchy, and the coverage--semantic interaction -- are not artefacts of the specific embedding encoder. They reflect genuine properties of the research and policy corpora rather than noise introduced by the measurement instrument.
 

@@ -3,9 +3,11 @@ Compare MiniLM (canonical) and MPNet (sensitivity) analysis outputs.
 
 Computes Spearman correlations between the two models' outputs for:
   1. Coverage profiles (per-SDG research proportions, document-weighted)
-  2. Semantic gap rankings (per-SDG semantic gap values)
-  3. Semantic similarity values (per-SDG sim between research and policy sub-centroids)
+  2. Validation F1 scores (per-SDG centroid-validation F1)
+  3. Semantic gap rankings (per-SDG semantic gap values)
 
+
+ 
 Outputs:
   4_outputs/appendix/e_model_sensitivity/data/sensitivity_comparison.json
   4_outputs/appendix/e_model_sensitivity/tables/tab_model_sensitivity.tex
@@ -23,9 +25,10 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import spearmanr, pearsonr
+from scipy.stats import spearmanr, pearsonr, rankdata
 
 ROOT = Path(__file__).resolve().parents[3]
+PROJECT_ROOT = ROOT.parent
 CODE_ROOT = ROOT / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
@@ -34,15 +37,17 @@ if str(CODE_ROOT) not in sys.path:
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-CANONICAL_OUTPUT = ROOT / "4_outputs" / "main" / "data"
+CANONICAL_OUTPUT = PROJECT_ROOT / "4_outputs" / "main" / "data"
 
 REQUIRED_CANONICAL_FILES = [
+    "4_1_validation_results.json",
     "4_2_coverage_document_weighted.json",
     "4_3_semantic_gap_distances.json",
     "4_4_interaction_correlation_asymmetry.json",
 ]
 
 REQUIRED_COMPARISON_FILES = [
+    "4_1_validation_results.json",
     "4_2_coverage_document_weighted.json",
     "4_3_semantic_gap_distances.json",
     "4_4_interaction_correlation_asymmetry.json",
@@ -59,10 +64,8 @@ def load_json(path: Path):
 
 def extract_coverage_profile(data: dict) -> np.ndarray:
     """Extract document-weighted research proportions per SDG (SDG order 1-17)."""
-    raw = data.get("research_proportions", data.get("research_hard_proportions"))
-    if raw is None:
-        raise KeyError(f"Could not find research proportions in {list(data.keys())}")
-    return np.array([raw[str(s)] for s in SDG_LABELS], dtype=np.float64)
+    raw = data["research_profile_hard"]
+    return np.array([raw[f"SDG{s}"] for s in SDG_LABELS], dtype=np.float64)
 
 
 def extract_semantic_gap_values(data: dict) -> np.ndarray:
@@ -78,22 +81,15 @@ def extract_semantic_gap_values(data: dict) -> np.ndarray:
     return np.array(gaps, dtype=np.float64)
 
 
-def extract_semantic_similarity_values(data: dict) -> np.ndarray:
-    """Extract per-SDG semantic similarity (SDG order 1-17)."""
-    per_sdg = data.get("per_sdg")
-    if per_sdg is None:
-        raise KeyError("Missing 'per_sdg' in semantic gap data")
-    sim_map = {r["sdg"]: r["semantic_similarity"] for r in per_sdg}
-    sims = []
-    for s in SDG_LABELS:
-        v = sim_map.get(s)
-        sims.append(float(v) if v is not None else np.nan)
-    return np.array(sims, dtype=np.float64)
+def extract_f1_per_sdg(data: dict) -> np.ndarray:
+    """Extract per-SDG validation F1 (SDG order 1-17)."""
+    raw = data["per_sdg_f1"]
+    return np.array([float(raw[str(s)]) for s in SDG_LABELS], dtype=np.float64)
 
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--output-dir", default=str(ROOT / "4_outputs"))
+    p.add_argument("--output-dir", default=str(PROJECT_ROOT / "4_outputs"))
     args_inner = p.parse_args()
 
     mpnet_root = Path(args_inner.output_dir) / "appendix" / "e_model_sensitivity"
@@ -113,24 +109,34 @@ def main() -> None:
             raise FileNotFoundError(f"Comparison output missing: {p}")
 
     # Load canonical (MiniLM) data
+    canonical_validation = load_json(CANONICAL_OUTPUT / "4_1_validation_results.json")
     canonical_coverage = load_json(CANONICAL_OUTPUT / "4_2_coverage_document_weighted.json")
     canonical_gap = load_json(CANONICAL_OUTPUT / "4_3_semantic_gap_distances.json")
     canonical_interaction = load_json(CANONICAL_OUTPUT / "4_4_interaction_correlation_asymmetry.json")
 
     # Load comparison (MPNet) data
+    comparison_validation = load_json(comparison_output / "4_1_validation_results.json")
     comparison_coverage = load_json(comparison_output / "4_2_coverage_document_weighted.json")
     comparison_gap = load_json(comparison_output / "4_3_semantic_gap_distances.json")
     comparison_interaction = load_json(comparison_output / "4_4_interaction_correlation_asymmetry.json")
 
     # ---- Extract profiles ----
+    f1_canonical = extract_f1_per_sdg(canonical_validation)
+    f1_mpnet = extract_f1_per_sdg(comparison_validation)
+
     res_prop_canonical = extract_coverage_profile(canonical_coverage)
     res_prop_mpnet = extract_coverage_profile(comparison_coverage)
 
     gaps_canonical = extract_semantic_gap_values(canonical_gap)
     gaps_mpnet = extract_semantic_gap_values(comparison_gap)
 
-    sims_canonical = extract_semantic_similarity_values(canonical_gap)
-    sims_mpnet = extract_semantic_similarity_values(comparison_gap)
+    # ---- Compute ranks (1 = highest) ----
+    f1_canonical_rank = rankdata(-f1_canonical, method="min")
+    f1_mpnet_rank = rankdata(-f1_mpnet, method="min")
+    cov_canonical_rank = rankdata(-res_prop_canonical, method="min")
+    cov_mpnet_rank = rankdata(-res_prop_mpnet, method="min")
+    gap_canonical_rank = rankdata(-gaps_canonical, method="min")   # 1 = largest gap
+    gap_mpnet_rank = rankdata(-gaps_mpnet, method="min")
 
     # ---- Coverage correlation ----
     valid_cov = ~(np.isnan(res_prop_canonical) | np.isnan(res_prop_mpnet))
@@ -160,45 +166,57 @@ def main() -> None:
     log.info("  Spearman ρ = %.4f (p=%.4f)", gap_spearman_r, gap_spearman_p)
     log.info("  Pearson  r = %.4f (p=%.4f)", gap_pearson_r, gap_pearson_p)
 
-    # ---- Semantic similarity correlation ----
-    valid_sim = ~(np.isnan(sims_canonical) | np.isnan(sims_mpnet))
-    if valid_sim.sum() < 3:
-        log.warning("Too few valid similarity values for correlation")
-        sim_spearman_r, sim_spearman_p = np.nan, np.nan
-        sim_pearson_r, sim_pearson_p = np.nan, np.nan
+    # ---- Validation F1 correlation ----
+    valid_f1 = ~(np.isnan(f1_canonical) | np.isnan(f1_mpnet))
+    if valid_f1.sum() < 3:
+        log.warning("Too few valid F1 values for correlation")
+        f1_spearman_r, f1_spearman_p = np.nan, np.nan
+        f1_pearson_r, f1_pearson_p = np.nan, np.nan
     else:
-        sim_spearman_r, sim_spearman_p = spearmanr(sims_canonical[valid_sim], sims_mpnet[valid_sim])
-        sim_pearson_r, sim_pearson_p = pearsonr(sims_canonical[valid_sim], sims_mpnet[valid_sim])
+        f1_spearman_r, f1_spearman_p = spearmanr(f1_canonical[valid_f1], f1_mpnet[valid_f1])
+        f1_pearson_r, f1_pearson_p = pearsonr(f1_canonical[valid_f1], f1_mpnet[valid_f1])
 
-    log.info("Semantic similarity comparison:")
-    log.info("  Spearman ρ = %.4f (p=%.4f)", sim_spearman_r, sim_spearman_p)
-    log.info("  Pearson  r = %.4f (p=%.4f)", sim_pearson_r, sim_pearson_p)
+    log.info("Validation F1 comparison:")
+    log.info("  Spearman ρ = %.4f (p=%.4f)", f1_spearman_r, f1_spearman_p)
+    log.info("  Pearson  r = %.4f (p=%.4f)", f1_pearson_r, f1_pearson_p)
 
     # ---- Per-SDG table data ----
     per_sdg_rows = []
     for i, s in enumerate(SDG_LABELS):
         per_sdg_rows.append({
             "sdg": s,
+            "f1_minilm": float(f1_canonical[i]) if not np.isnan(f1_canonical[i]) else None,
+            "f1_mpnet": float(f1_mpnet[i]) if not np.isnan(f1_mpnet[i]) else None,
+            "f1_minilm_rank": int(f1_canonical_rank[i]) if not np.isnan(f1_canonical[i]) else None,
+            "f1_mpnet_rank": int(f1_mpnet_rank[i]) if not np.isnan(f1_mpnet[i]) else None,
             "res_proportion_minilm": float(res_prop_canonical[i]) if not np.isnan(res_prop_canonical[i]) else None,
             "res_proportion_mpnet": float(res_prop_mpnet[i]) if not np.isnan(res_prop_mpnet[i]) else None,
+            "res_proportion_minilm_rank": int(cov_canonical_rank[i]) if not np.isnan(res_prop_canonical[i]) else None,
+            "res_proportion_mpnet_rank": int(cov_mpnet_rank[i]) if not np.isnan(res_prop_mpnet[i]) else None,
             "semantic_gap_minilm": float(gaps_canonical[i]) if not np.isnan(gaps_canonical[i]) else None,
             "semantic_gap_mpnet": float(gaps_mpnet[i]) if not np.isnan(gaps_mpnet[i]) else None,
-            "semantic_sim_minilm": float(sims_canonical[i]) if not np.isnan(sims_canonical[i]) else None,
-            "semantic_sim_mpnet": float(sims_mpnet[i]) if not np.isnan(sims_mpnet[i]) else None,
+            "semantic_gap_minilm_rank": int(gap_canonical_rank[i]) if not np.isnan(gaps_canonical[i]) else None,
+            "semantic_gap_mpnet_rank": int(gap_mpnet_rank[i]) if not np.isnan(gaps_mpnet[i]) else None,
         })
 
     # ---- Interaction comparison (where applicable) ----
     # Compare H25 correlation coefficients across models
     interaction_comparison = {}
-    for key in ("coverage_gap_vs_semantic_gap", "research_proportion_vs_semantic_gap",
-                 "research_dominance_vs_semantic_gap"):
-        c_val = canonical_interaction.get(key)
-        m_val = comparison_interaction.get(key)
+    key_map = {
+        "a_res_prop_vs_sem_gap": "research_proportion_vs_semantic_gap",
+        "b_cov_gap_abs_vs_sem_gap": "coverage_gap_vs_semantic_gap",
+        "c_res_dominance_vs_sem_gap": "research_dominance_vs_semantic_gap",
+    }
+    canon_corr = canonical_interaction.get("correlation", {}).get("correlations_primary_observed", {})
+    compar_corr = comparison_interaction.get("correlation", {}).get("correlations_primary_observed", {})
+    for short_key, long_key in key_map.items():
+        c_val = canon_corr.get(short_key)
+        m_val = compar_corr.get(short_key)
         if c_val is not None and m_val is not None:
-            interaction_comparison[key] = {
-                "minilm_spearman_r": c_val.get("spearman_r"),
+            interaction_comparison[long_key] = {
+                "minilm_spearman_r": c_val.get("spearman_rho"),
                 "minilm_pearson_r": c_val.get("pearson_r"),
-                "mpnet_spearman_r": m_val.get("spearman_r"),
+                "mpnet_spearman_r": m_val.get("spearman_rho"),
                 "mpnet_pearson_r": m_val.get("pearson_r"),
             }
 
@@ -224,12 +242,12 @@ def main() -> None:
             "pearson_p": round(float(gap_pearson_p), 6) if not np.isnan(gap_pearson_p) else None,
             "n_sdg_valid": int(valid_gap.sum()),
         },
-        "semantic_similarity": {
-            "spearman_r": round(float(sim_spearman_r), 6) if not np.isnan(sim_spearman_r) else None,
-            "spearman_p": round(float(sim_spearman_p), 6) if not np.isnan(sim_spearman_p) else None,
-            "pearson_r": round(float(sim_pearson_r), 6) if not np.isnan(sim_pearson_r) else None,
-            "pearson_p": round(float(sim_pearson_p), 6) if not np.isnan(sim_pearson_p) else None,
-            "n_sdg_valid": int(valid_sim.sum()),
+        "validation_f1": {
+            "spearman_r": round(float(f1_spearman_r), 6) if not np.isnan(f1_spearman_r) else None,
+            "spearman_p": round(float(f1_spearman_p), 6) if not np.isnan(f1_spearman_p) else None,
+            "pearson_r": round(float(f1_pearson_r), 6) if not np.isnan(f1_pearson_r) else None,
+            "pearson_p": round(float(f1_pearson_p), 6) if not np.isnan(f1_pearson_p) else None,
+            "n_sdg_valid": int(valid_f1.sum()),
         },
         "per_sdg": per_sdg_rows,
         "interaction_comparison": interaction_comparison,
@@ -248,22 +266,29 @@ def main() -> None:
 
     # ---- LaTeX table ----
     tex_lines = [
+        r"\small",
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
-        r"& \multicolumn{2}{c}{Coverage proportion} & \multicolumn{2}{c}{Semantic gap} & \multicolumn{2}{c}{Semantic sim.} \\",
+        r"& \multicolumn{2}{c}{Validation F1} & \multicolumn{2}{c}{Coverage gap} & \multicolumn{2}{c}{Semantic gap} \\",
         r"\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}",
         r"SDG & MiniLM & MPNet & MiniLM & MPNet & MiniLM & MPNet \\",
         r"\midrule",
     ]
     for row in per_sdg_rows:
         s = row["sdg"]
+        f1_c = f"{row['f1_minilm']:.3f}" if row['f1_minilm'] is not None else "---"
+        f1_c_r = f"({row['f1_minilm_rank']:2d})" if row['f1_minilm_rank'] is not None else ""
+        f1_m = f"{row['f1_mpnet']:.3f}" if row['f1_mpnet'] is not None else "---"
+        f1_m_r = f"({row['f1_mpnet_rank']:2d})" if row['f1_mpnet_rank'] is not None else ""
         cov_c = f"{row['res_proportion_minilm']:.4f}" if row['res_proportion_minilm'] is not None else "---"
+        cov_c_r = f"({row['res_proportion_minilm_rank']:2d})" if row['res_proportion_minilm_rank'] is not None else ""
         cov_m = f"{row['res_proportion_mpnet']:.4f}" if row['res_proportion_mpnet'] is not None else "---"
-        gap_c = f"{row['semantic_gap_minilm']:.4f}" if row['semantic_gap_minilm'] is not None else "---"
-        gap_m = f"{row['semantic_gap_mpnet']:.4f}" if row['semantic_gap_mpnet'] is not None else "---"
-        sim_c = f"{row['semantic_sim_minilm']:.4f}" if row['semantic_sim_minilm'] is not None else "---"
-        sim_m = f"{row['semantic_sim_mpnet']:.4f}" if row['semantic_sim_mpnet'] is not None else "---"
-        tex_lines.append(f"SDG {s:2d} & {cov_c} & {cov_m} & {gap_c} & {gap_m} & {sim_c} & {sim_m} \\\\")
+        cov_m_r = f"({row['res_proportion_mpnet_rank']:2d})" if row['res_proportion_mpnet_rank'] is not None else ""
+        gap_c = f"{row['semantic_gap_minilm']:.3f}" if row['semantic_gap_minilm'] is not None else "---"
+        gap_c_r = f"({row['semantic_gap_minilm_rank']:2d})" if row['semantic_gap_minilm_rank'] is not None else ""
+        gap_m = f"{row['semantic_gap_mpnet']:.3f}" if row['semantic_gap_mpnet'] is not None else "---"
+        gap_m_r = f"({row['semantic_gap_mpnet_rank']:2d})" if row['semantic_gap_mpnet_rank'] is not None else ""
+        tex_lines.append(f"SDG {s:2d} & {f1_c}\,{f1_c_r} & {f1_m}\,{f1_m_r} & {cov_c}\,{cov_c_r} & {cov_m}\,{cov_m_r} & {gap_c}\,{gap_c_r} & {gap_m}\,{gap_m_r} \\\\")
 
     tex_lines.extend([
         r"\midrule",
@@ -271,11 +296,12 @@ def main() -> None:
 
     if cov_spearman_r is not None and not np.isnan(cov_spearman_r):
         tex_lines.append(
-            rf"Spearman $\rho$ & \multicolumn{{2}}{{c}}{{{cov_spearman_r:.4f}}}"
-            rf" & \multicolumn{{2}}{{c}}{{{gap_spearman_r:.4f}}}"
-            rf" & \multicolumn{{2}}{{c}}{{{sim_spearman_r:.4f}}} \\"
+            rf"Spearman $\rho$ & \multicolumn{{2}}{{c}}{{{f1_spearman_r:.4f}}}"
+            rf" & \multicolumn{{2}}{{c}}{{{cov_spearman_r:.4f}}}"
+            rf" & \multicolumn{{2}}{{c}}{{{gap_spearman_r:.4f}}} \\"
         )
     tex_lines.extend([
+        r"\multicolumn{7}{l}{\footnotesize Note. Rank 1 = highest F1 / highest coverage proportion / largest semantic gap per model.}\\",
         r"\bottomrule",
         r"\end{tabular}",
     ])
@@ -286,8 +312,8 @@ def main() -> None:
 
     log.info("")
     log.info("Model sensitivity comparison complete.")
-    log.info("Coverage Spearman ρ = %.4f, Gap Spearman ρ = %.4f, Similarity Spearman ρ = %.4f",
-             cov_spearman_r, gap_spearman_r, sim_spearman_r)
+    log.info("F1 Spearman ρ = %.4f, Coverage Spearman ρ = %.4f, Gap Spearman ρ = %.4f",
+             f1_spearman_r, cov_spearman_r, gap_spearman_r)
 
 
 if __name__ == "__main__":

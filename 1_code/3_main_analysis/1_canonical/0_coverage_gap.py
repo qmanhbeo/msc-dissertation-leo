@@ -216,7 +216,7 @@ def main() -> None:
 
     # ---- Load scores ----
     log.info("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)
-    research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
+    research = aggregate_research_scores(PAPER_SCORES_MANIFEST, scored_dir)
     log.info("  rows=%d", research["n_rows"])
 
     log.info("Loading policy scores: %s", POLICY_SCORES)

@@ -76,15 +76,12 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, require_output_files
+from model_slug_utils import scored_dir_for_model, DEFAULT_EMBED_MODEL
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-SCORED_DIR = Path("2_data/3_scored")
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
-PAPER_SCORES_MANIFEST = SCORED_DIR / "paper_scores_shards" / "metadata" / "manifest.json"
-POL_VS_RES_PATH     = SCORED_DIR / "policy_scores_vs_research.npy"
-POLICY_SCORES_PATH  = SCORED_DIR / "policy_scores.npy"
 
 N_SDG = 17
 
@@ -151,6 +148,7 @@ def correlation_or_skip(
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute correlation and asymmetry outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -159,6 +157,12 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
+    model = args.model
+    scored_dir = scored_dir_for_model(model)
+    paper_scores_manifest = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
+    pol_vs_res_path = scored_dir / "policy_scores_vs_research.npy"
+    policy_scores_path = scored_dir / "policy_scores.npy"
+
     layout = ensure_canonical_outputs(Path(args.output_dir))
     require_output_files(layout.data_dir, ["4_2_coverage_document_weighted.json", "4_3_semantic_gap_distances.json"])
 
@@ -335,9 +339,9 @@ def main() -> None:
     log.info("=" * 70)
     log.info("DIRECTIONAL ASYMMETRY DIAGNOSTIC")
     log.info("=" * 70)
-    research = aggregate_research_scores(PAPER_SCORES_MANIFEST)
-    pol_vs_research = np.load(POL_VS_RES_PATH)
-    policy_scores = np.load(POLICY_SCORES_PATH)
+    research = aggregate_research_scores(paper_scores_manifest, scored_dir)
+    pol_vs_research = np.load(pol_vs_res_path)
+    policy_scores = np.load(policy_scores_path)
 
     mean_paper_top    = float(research["mean_top_overall"])
     mean_pol_vs_res   = float(pol_vs_research.max(axis=1).mean())

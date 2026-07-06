@@ -410,19 +410,9 @@ def run_register_adjustment(output_dir: Path, args: argparse.Namespace, *, inclu
     )
 
 
-def run_main_text(
-    output_dir: Path,
-    args: argparse.Namespace,
-    *,
-    model: str = DEFAULT_EMBED_MODEL,
-) -> None:
-    missing = missing_warm_replay_requirements(include_appendix_extra=False, model=model)
-    if missing:
-        missing_str = ", ".join(rel(ROOT / p) for p in missing)
-        raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
-
+def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
+    """Run the 8 main-text analysis steps for a given model (no input guard)."""
     model_args = ["--model", model] if model != DEFAULT_EMBED_MODEL else []
-
     run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"] + model_args, step_id="1")
     run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)] + model_args, step_id="2")
     run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"] + model_args, step_id="3")
@@ -437,10 +427,23 @@ def run_main_text(
     run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
 
 
+def run_main_text(
+    output_dir: Path,
+    args: argparse.Namespace,
+    *,
+    model: str = DEFAULT_EMBED_MODEL,
+) -> None:
+    missing = missing_warm_replay_requirements(include_appendix_extra=False, model=model)
+    if missing:
+        missing_str = ", ".join(rel(ROOT / p) for p in missing)
+        raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
+    _run_main_analysis_steps(output_dir, model)
+
+
 def run_model_sensitivity(output_dir: Path, args: argparse.Namespace) -> None:
     model = "all-mpnet-base-v2"
     mpnet_output_dir = output_dir / "appendix" / "e_model_sensitivity"
-    run_main_text(mpnet_output_dir, args, model=model)
+    _run_main_analysis_steps(mpnet_output_dir, model=model)
     run_step(
         "model sensitivity comparison",
         [
@@ -459,7 +462,7 @@ def run_warm_replay(
     model = args.embed_model
     if model != DEFAULT_EMBED_MODEL:
         analysis_output_dir = ROOT / "4_outputs" / "appendix" / "e_model_sensitivity"
-        run_main_text(analysis_output_dir, args, model=model)
+        _run_main_analysis_steps(analysis_output_dir, model=model)
     else:
         run_main_text(output_dir, args)
     print(
