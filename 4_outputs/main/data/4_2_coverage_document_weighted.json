@@ -4,44 +4,44 @@
   "n_research_papers": 2543698,
   "n_policy_segments": 54082,
   "n_policy_documents": 2456,
-  "a15_note": "A15 FLAG: policy top scores exceed paper top scores by 0.342 (threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. Policy proportions may be inflated relative to research. Coverage gap results valid but directional comparison should be framed carefully.",
+  "a15_note": "A15 FLAG: policy top scores exceed paper top scores by 0.328 (threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. Policy proportions may be inflated relative to research. Coverage gap results valid but directional comparison should be framed carefully.",
   "research_profile_hard": {
-    "SDG1": 0.006905,
-    "SDG2": 0.034102,
-    "SDG3": 0.178626,
-    "SDG4": 0.138383,
-    "SDG5": 0.022897,
-    "SDG6": 0.040331,
-    "SDG7": 0.08369,
-    "SDG8": 0.014762,
-    "SDG9": 0.102461,
-    "SDG10": 0.009385,
-    "SDG11": 0.054506,
-    "SDG12": 0.037263,
-    "SDG13": 0.052316,
-    "SDG14": 0.03884,
-    "SDG15": 0.074239,
-    "SDG16": 0.084023,
-    "SDG17": 0.027271
+    "SDG1": 0.00464,
+    "SDG2": 0.032803,
+    "SDG3": 0.185017,
+    "SDG4": 0.139844,
+    "SDG5": 0.021127,
+    "SDG6": 0.035663,
+    "SDG7": 0.078132,
+    "SDG8": 0.016471,
+    "SDG9": 0.097248,
+    "SDG10": 0.00799,
+    "SDG11": 0.053708,
+    "SDG12": 0.035759,
+    "SDG13": 0.043498,
+    "SDG14": 0.038983,
+    "SDG15": 0.068973,
+    "SDG16": 0.074319,
+    "SDG17": 0.065825
   },
   "research_profile_soft": {
-    "SDG1": 0.035642,
-    "SDG2": 0.058036,
-    "SDG3": 0.061583,
-    "SDG4": 0.069724,
-    "SDG5": 0.032415,
-    "SDG6": 0.066358,
-    "SDG7": 0.065081,
-    "SDG8": 0.054045,
-    "SDG9": 0.088279,
-    "SDG10": 0.022666,
-    "SDG11": 0.068248,
-    "SDG12": 0.070552,
-    "SDG13": 0.08392,
-    "SDG14": 0.054968,
-    "SDG15": 0.075448,
-    "SDG16": 0.041402,
-    "SDG17": 0.082636
+    "SDG1": 0.048544,
+    "SDG2": 0.067667,
+    "SDG3": 0.075944,
+    "SDG4": 0.077991,
+    "SDG5": 0.036931,
+    "SDG6": 0.073989,
+    "SDG7": 0.071957,
+    "SDG8": 0.065136,
+    "SDG9": 0.096825,
+    "SDG10": 0.0376,
+    "SDG11": 0.07611,
+    "SDG12": 0.081834,
+    "SDG13": 0.091048,
+    "SDG14": 0.065404,
+    "SDG15": 0.08162,
+    "SDG16": 0.050526,
+    "SDG17": 0.098428
   },
   "policy_profile_hard_docweighted": {
     "SDG1": 0.017915,
@@ -82,86 +82,86 @@
     "SDG17": 0.487532
   },
   "coverage_gap_hard": {
-    "SDG1": 0.011011,
-    "SDG2": 0.025959,
-    "SDG3": 0.174554,
-    "SDG4": 0.136755,
-    "SDG5": 0.01516,
-    "SDG6": 0.036259,
-    "SDG7": 0.079618,
-    "SDG8": 0.00499,
-    "SDG9": 0.078031,
-    "SDG10": 0.008978,
-    "SDG11": 0.027226,
-    "SDG12": 0.032785,
-    "SDG13": 0.198091,
-    "SDG14": 0.037211,
-    "SDG15": 0.067317,
-    "SDG16": 0.061335,
-    "SDG17": 0.454406
+    "SDG1": 0.013275,
+    "SDG2": 0.02466,
+    "SDG3": 0.180945,
+    "SDG4": 0.138215,
+    "SDG5": 0.013391,
+    "SDG6": 0.031591,
+    "SDG7": 0.07406,
+    "SDG8": 0.006699,
+    "SDG9": 0.072818,
+    "SDG10": 0.007582,
+    "SDG11": 0.026428,
+    "SDG12": 0.03128,
+    "SDG13": 0.206909,
+    "SDG14": 0.037355,
+    "SDG15": 0.062051,
+    "SDG16": 0.071039,
+    "SDG17": 0.415852
   },
-  "coverage_gap_total": 1.449686,
-  "coverage_gap_mean": 0.085276,
+  "coverage_gap_total": 1.414151,
+  "coverage_gap_mean": 0.083185,
   "top5_largest_gaps": [
     [
       "SDG17",
-      0.454406
+      0.415852
     ],
     [
       "SDG13",
-      0.198091
+      0.206909
     ],
     [
       "SDG3",
-      0.174554
+      0.180945
     ],
     [
       "SDG4",
-      0.136755
+      0.138215
     ],
     [
       "SDG7",
-      0.079618
+      0.07406
     ]
   ],
   "top5_research_dominant": [
     [
       "SDG3",
-      0.174554
+      0.180945
     ],
     [
       "SDG4",
-      0.136755
+      0.138215
     ],
     [
       "SDG7",
-      0.079618
+      0.07406
     ],
     [
       "SDG9",
-      0.078031
+      0.072818
     ],
     [
       "SDG15",
-      0.067317
+      0.062051
     ]
   ],
   "top5_policy_dominant": [
     [
       "SDG17",
-      0.454406
+      0.415852
     ],
     [
       "SDG13",
-      0.198091
+      0.206909
     ],
     [
       "SDG16",
-      0.061335
+      0.071039
     ],
     [
       "SDG1",
-      0.011011
+      0.013275
     ]
   ],
   "per_document_assignments": {

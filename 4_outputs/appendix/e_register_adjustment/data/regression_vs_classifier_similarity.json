@@ -1,28 +1,28 @@
 {
   "analysis": "rodriguez_style_embedding_regression",
   "baseline_sdg": 1,
-  "global_regression_vs_classifier_cosine": 0.613216,
+  "global_regression_vs_classifier_cosine": 0.631388,
   "agreement_band": "partial_agreement",
   "classifier_vector_source": "4_outputs/appendix/e_register_adjustment/sdg_balanced_register_vector.npy",
   "regression_vector_source": "4_outputs/appendix/e_register_adjustment/regression_register_vector.npy",
   "classifier_alignment_summary": {
-    "mean_absolute_cosine": 0.37944,
-    "median_absolute_cosine": 0.386947,
-    "max_absolute_cosine": 0.426535,
-    "min_absolute_cosine": 0.252025,
-    "strongest_alignment_sdg": 11,
-    "strongest_alignment_value": 0.426535,
+    "mean_absolute_cosine": 0.372,
+    "median_absolute_cosine": 0.381777,
+    "max_absolute_cosine": 0.417252,
+    "min_absolute_cosine": 0.239742,
+    "strongest_alignment_sdg": 17,
+    "strongest_alignment_value": 0.417252,
     "weakest_alignment_sdg": 16,
-    "weakest_alignment_value": 0.252025
+    "weakest_alignment_value": 0.239742
   },
   "regression_alignment_summary": {
-    "mean_absolute_cosine": 0.513605,
-    "median_absolute_cosine": 0.494573,
-    "max_absolute_cosine": 0.7165,
-    "min_absolute_cosine": 0.349371,
+    "mean_absolute_cosine": 0.519624,
+    "median_absolute_cosine": 0.516203,
+    "max_absolute_cosine": 0.718642,
+    "min_absolute_cosine": 0.342834,
     "strongest_alignment_sdg": 1,
-    "strongest_alignment_value": 0.7165,
+    "strongest_alignment_value": 0.718642,
     "weakest_alignment_sdg": 16,
-    "weakest_alignment_value": 0.349371
+    "weakest_alignment_value": 0.342834
   }
 }

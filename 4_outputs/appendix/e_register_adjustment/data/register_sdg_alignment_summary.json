@@ -1,10 +1,10 @@
 {
-  "mean_absolute_cosine": 0.37944,
-  "median_absolute_cosine": 0.386947,
-  "max_absolute_cosine": 0.426535,
-  "min_absolute_cosine": 0.252025,
-  "strongest_alignment_sdg": 11,
-  "strongest_alignment_value": 0.426535,
+  "mean_absolute_cosine": 0.372,
+  "median_absolute_cosine": 0.381777,
+  "max_absolute_cosine": 0.417252,
+  "min_absolute_cosine": 0.239742,
+  "strongest_alignment_sdg": 17,
+  "strongest_alignment_value": 0.417252,
   "weakest_alignment_sdg": 16,
-  "weakest_alignment_value": 0.252025
+  "weakest_alignment_value": 0.239742
 }
