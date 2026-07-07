@@ -170,15 +170,17 @@ To the best of my knowledge, the literature reviewed above has not produced: (i)
 
 This study measures \emph{topical overlap} between research and policy-facing discourse using semantic proximity in embedding space. I do not claim to measure substantive alignment, causal influence, or operational alignment — shared vocabulary does not guarantee shared meaning, but its absence makes meaningful dialogue structurally impossible. Nor should the measure be interpreted as a societal-impact metric: it captures observed textual-semantic distance between two corpora, not policy uptake \parencite{bornmann2016policy} or shared causal beliefs \parencite{Haas1992}. Embedding distances describe differences in textual context and usage, not direct effects on human understanding or policy uptake.
 
-Following Biber and Conrad's distinction between register, genre, and style \parencite{biberConrad2009register}, I treat the research-policy contrast primarily as a register contrast — the two corpora are produced in different institutional settings for different audiences and purposes. Cross-corpus register differences are discussed in §\ref{sec:semantic-methods} and bounded in §\ref{sec:limitations}.
+Following Biber and Conrad's distinction between register, genre, and style \parencite{biberConrad2009register}, I treat the research-policy contrast primarily as a register contrast — the two corpora are produced in different institutional settings for different audiences and purposes. Cross-corpus register differences are discussed in Section~\ref{sec:semantic-methods} and bounded in Section~\ref{sec:limitations}.
 
 This framing positions the contribution at Level 2 of a three-level hierarchy: lexical or bibliometric correspondence (Level~1) through topical similarity in embedding space (Level~2) to substantive comparison of implied problems, actors, and interventions (Level~3), which remains beyond the scope of unsupervised text analysis. Advancing to Level~2 detects semantic divergence that keyword methods miss while avoiding claims about implementation pathways that embedding analysis cannot support.
 
+This study uses only publicly available text data and codebase. It does not involve human participants or personal data. No ethical approval was required.
+
 \subsection{Research Corpus}\label{sec:research-corpus}
 
-The research corpus consists of \NResearchPapers{} English-language research abstracts retrieved from the OpenAlex API \parencite{Priem2022}, covering publications between 2018 and 2025. Abstracts were retrieved by combining OpenAlex's native SDG work filter with four AI terms (\texttt{artificial intelligence}, \texttt{machine learning}, \texttt{deep learning}, \texttt{neural network}) — 68 queries (17 SDGs × 4 terms). Complete query parameters are documented in \path{code/0_fetch/fetch_openalex.py}. OpenAlex SDG metadata defines the candidate universe; the SDG assignments used in the analysis are produced by the independently validated centroid instrument (\S\ref{sec:centroids-validation}).
+The research corpus consists of \NResearchPapers{} English-language research abstracts retrieved from the OpenAlex API \parencite{Priem2022}, covering publications between 2018 and 2025. Abstracts were retrieved by combining OpenAlex's native SDG work filter with four AI terms (\texttt{artificial intelligence}, \texttt{machine learning}, \texttt{deep learning}, \texttt{neural network}) — 68 queries (17 SDGs × 4 terms). Complete query parameters are documented in \path{code/0_fetch/fetch_openalex.py}. OpenAlex SDG metadata defines the candidate universe; the SDG assignments used in the analysis are produced by the independently validated centroid instrument (Section~\ref{sec:centroids-validation}).
 
-An important asymmetry follows: the research corpus is a tight intersection of AI and SDG content ($\text{AI} \cap \text{SDG}$), while the policy corpus (\S\ref{sec:policy-corpus}) is a broader union covering institutional SDG discourse and AI governance. Between-SDG rankings should be interpreted as conditional on this asymmetric construction. Following \textcite{Armitage2020}, this retrieval universe is a method-dependent corpus boundary, not a neutral population of all SDG-relevant AI research. After deduplication and removal of records lacking usable abstracts, \NResearchPapers{} unique papers were retained. No balancing by SDG or citation count is applied — trimming would distort the coverage profile the study aims to measure. The 2018 start date reflects the post-AlexNet emergence of deep learning as the dominant paradigm and a reasonable research-uptake lag after the SDGs' adoption in 2015.
+An important asymmetry follows: the research corpus is a tight intersection of AI and SDG content ($\text{AI} \cap \text{SDG}$), while the policy corpus (Section~\ref{sec:policy-corpus}) is a broader union covering institutional SDG discourse and AI governance. Between-SDG rankings should be interpreted as conditional on this asymmetric construction. Following \textcite{Armitage2020}, this retrieval universe is a method-dependent corpus boundary, not a neutral population of all SDG-relevant AI research. After deduplication and removal of records lacking usable abstracts, \NResearchPapers{} unique papers were retained. No balancing by SDG or citation count is applied — trimming would distort the coverage profile the study aims to measure. The 2018 start date reflects the post-AlexNet \parencite{NIPS2012_c399862d} emergence of deep learning as the dominant paradigm and a reasonable research-uptake lag after the SDGs' adoption in 2015.
 
 \subsection{Policy Corpus}\label{sec:policy-corpus}
 
@@ -237,7 +239,7 @@ The raw centroid distance is retained as the primary measure because it directly
 
 \subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
 
-The first hypothesis (H1) is that coverage gaps and semantic gaps are correlated across SDGs. I compute Pearson $r$ and Spearman $\rho$ between research coverage proportions and semantic gap scores across all 17 SDGs, with sensitivity analyses excluding SDG~4 (see \S\ref{sec:sdg4artefact}). Given $n = 17$, the test has limited power to detect anything but a large linear effect; this is a scope condition.
+The first hypothesis (H1) is that coverage gaps and semantic gaps are correlated across SDGs. I compute Pearson $r$ and Spearman $\rho$ between research coverage proportions and semantic gap scores across all 17 SDGs, with sensitivity analyses excluding SDG~4 (see Section~\ref{sec:sdg4artefact}). Given $n = 17$, the test has limited power to detect anything but a large linear effect; this is a scope condition.
 
 A bidirectional asymmetry diagnostic was also explored, but is reported only in Appendix~\ref{app:directional-asymmetry} — the observed asymmetry is smaller than the systematic policy--research score gap and is not treated as a headline result.
 
@@ -795,26 +797,5 @@ In the current run, the cosine between the regression-derived global register ve
 \label{fig:regression-vs-classifier-alignment}
 \end{figure}
 }{}
-
-%% ============================================================
-\clearpage
-\section*{Afterword}
-\addcontentsline{toc}{section}{Afterword}
-
-This project emerged from a series of convergences rather than a single moment of design. I first encountered the Sustainable Development Goals early in my undergraduate studies. I later learned natural language processing during my master's. Over time, I noticed that the gap between research and policy is real, persistent, and often unspoken. Eventually, these threads converged.
-
-To me, the connection felt natural, almost obvious. But that, I have come to realise, is precisely the point of education: not simply the accumulation of knowledge, but the gradual layering of perspectives until, at some point, they overlap. And when they do, something new becomes visible, something that, in hindsight, feels like it had always been there.
-
-I came into this MSc believing, perhaps naively, that AI is going to be the game-changer for this world --- or at least for a framework that tries to direct and measure how this world should be changed (the SDGs). In fact, that very belief was why I wanted to do this degree at all. And during my masters year, I learned a lot about how AI is actually used and talked about in research --- practically, to change the world, not just as some grandiose ideology, but also in the very basic, mundane, daily tasks: irrigation, energy management. And I wondered: do policymakers and politicians talk about this too? Because I honestly believed, for some reason, that they do, and they should.
-
-Turns out that last bit was not as formal as I thought.
-
-The corpus asymmetry discussed in Section~\ref{sec:limitations} captures this empirically. I had built the research corpus expecting it to mirror a policy world that also talks about AI \emph{for} the SDGs. Instead, the policy documents turned out to be about AI or about the SDGs --- the $\text{AI} \cap \text{SDG}$ intersection that felt natural to me was not yet naturalised in institutional discourse. The mismatch I found was not just between two corpora; it was between my mental model of the world and the world itself.
-
-And maybe, just maybe, the ones to bridge that research-to-policy gap, specifically in AI-for-sustainability, are we who graduate from the MSc AI and Sustainable Development cohorts from UoB.
-
-This, more than any method or result, is the real learning. I live my life, I observe things, I chose to do this MSc because I had an intuition, a belief, maybe even a dogma. I did the dissertation. I realized I might need to update my beliefs. On top of all the ML methods, the development theories, the AI applications --- the real learning is the way I think.
-
-I honestly could not stand the dryness of research. I want to express. I love to express, to make art, to tell stories, to share laughter. I believe that that is a strength I have to will navigate our changing world in the decades to come, to be the human who will be able to use AI wisely and, haha, sustainably.
 
 \end{document}
