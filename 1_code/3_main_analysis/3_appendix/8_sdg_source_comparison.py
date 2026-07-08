@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import logging
 import sys
@@ -322,29 +323,39 @@ def compute_cosine_to_combined(source_centroids: np.ndarray, combined_centroids:
 # Cache for research + policy scoring
 # ---------------------------------------------------------------------------
 
-def _cache_input_mtimes(research_shards: list[dict], policy_emb_path: Path, policy_ids_path: Path, source_emb_path: Path | None) -> dict[str, float]:
-    paths = [policy_emb_path, policy_ids_path]
+def _cache_input_signatures(research_shards: list[dict], policy_emb_path: Path, policy_ids_path: Path,
+                            source_emb_path: Path | None, centroids_path: Path, score_manifest_path: Path) -> dict[str, dict[str, Any]]:
+    paths = [policy_emb_path, policy_ids_path, centroids_path, score_manifest_path]
     if source_emb_path is not None:
         paths.append(source_emb_path)
     for shard in research_shards:
         paths.append(Path(shard["embedding_path"]))
-    return {str(p): p.stat().st_mtime for p in paths}
+    return {str(p): _path_signature(p) for p in paths}
 
 
-def _cache_valid(source_name: str, input_mtimes: dict[str, float], cache_dir: Path) -> bool:
+def _path_signature(path: Path) -> dict[str, Any]:
+    stat = path.stat()
+    size = int(stat.st_size)
+    with path.open("rb") as f:
+        head = f.read(4096)
+    content_digest = hashlib.sha256(head).hexdigest()[:16]
+    return {"path": str(path), "size": size, "content_head_digest": content_digest}
+
+
+def _cache_valid(source_name: str, input_signatures: dict[str, dict[str, Any]], cache_dir: Path) -> bool:
     manifest_path = cache_dir / CACHE_MANIFEST.format(source_name)
     if not manifest_path.exists():
         return False
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        return manifest.get("type") == "full" and manifest.get("input_mtimes") == input_mtimes
+        return manifest.get("input_signatures") == input_signatures
     except (json.JSONDecodeError, KeyError, TypeError):
         return False
 
 
 def _cache_save(source_name: str, research_counts: np.ndarray, research_sums: np.ndarray,
                 policy_counts: np.ndarray, policy_sums: np.ndarray,
-                input_mtimes: dict[str, float], cache_dir: Path) -> None:
+                input_signatures: dict[str, dict[str, Any]], cache_dir: Path) -> None:
     cache_dir.mkdir(parents=True, exist_ok=True)
     np.save(cache_dir / CACHE_RESEARCH_COUNTS.format(source_name), research_counts)
     np.save(cache_dir / CACHE_RESEARCH_SUMS.format(source_name), research_sums)
@@ -352,8 +363,7 @@ def _cache_save(source_name: str, research_counts: np.ndarray, research_sums: np
     np.save(cache_dir / CACHE_POLICY_SUMS.format(source_name), policy_sums)
     manifest = {
         "source": source_name,
-        "type": "full",
-        "input_mtimes": input_mtimes,
+        "input_signatures": input_signatures,
         "computed_at": datetime.now().isoformat(),
     }
     (cache_dir / CACHE_MANIFEST.format(source_name)).write_text(
@@ -379,6 +389,8 @@ def compute_or_load_research_policy(
     policy_ids_path: Path,
     source_emb_path: Path | None,
     cache_dir: Path,
+    centroids_path: Path,
+    score_manifest_path: Path,
     *,
     overwrite: bool,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -386,9 +398,12 @@ def compute_or_load_research_policy(
     
     Uses cache unless overwrite=True or inputs have changed.
     """
-    input_mtimes = _cache_input_mtimes(research_shards, policy_emb_path, policy_ids_path, source_emb_path)
+    input_signatures = _cache_input_signatures(
+        research_shards, policy_emb_path, policy_ids_path, source_emb_path,
+        centroids_path, score_manifest_path,
+    )
 
-    if not overwrite and _cache_valid(source_name, input_mtimes, cache_dir):
+    if not overwrite and _cache_valid(source_name, input_signatures, cache_dir):
         log.info("  %s: cache hit — loading cached research + policy scores", source_name)
         return _cache_load(source_name, cache_dir)
 
@@ -397,7 +412,7 @@ def compute_or_load_research_policy(
     log.info("  %s: computing policy scores...", source_name)
     pc, ps = score_policy_full(centroids, policy_emb, policy_ids)
 
-    _cache_save(source_name, rc, rs, pc, ps, input_mtimes, cache_dir)
+    _cache_save(source_name, rc, rs, pc, ps, input_signatures, cache_dir)
     log.info("  %s: cached to %s", source_name, cache_dir)
     return rc, rs, pc, ps
 
@@ -636,6 +651,8 @@ def main() -> None:
         ("aurora", aurora_centroids, aurora_emb_path),
     ]
 
+    centroids_path = scored_dir / "sdg_centroids.npy"
+    score_manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
     source_metrics = {}
 
     for source_name, centroids, source_emb_path in sources:
@@ -660,6 +677,8 @@ def main() -> None:
             _POLICY_EMB, _POLICY_IDS,
             source_emb_path if source_name != "combined" else None,
             cache_dir,
+            centroids_path,
+            score_manifest_path,
             overwrite=args.overwrite,
         )
 

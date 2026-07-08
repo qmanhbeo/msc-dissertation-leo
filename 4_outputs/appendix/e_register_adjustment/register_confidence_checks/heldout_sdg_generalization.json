@@ -11,8 +11,8 @@
         },
         "2_data/3_scored/paper_scores_shards/metadata/manifest.json": {
           "path": "2_data/3_scored/paper_scores_shards/metadata/manifest.json",
-          "size": 12208,
-          "content_head_digest": "e75d1257dc7d4a92"
+          "size": 12207,
+          "content_head_digest": "56335da979ff0f9a"
         },
         "2_data/1_preprocessed/research_corpus/metadata/manifest.json": {
           "path": "2_data/1_preprocessed/research_corpus/metadata/manifest.json",
@@ -47,12 +47,12 @@
         "2_data/3_scored/research_centroids.npy": {
           "path": "2_data/3_scored/research_centroids.npy",
           "size": 26240,
-          "content_head_digest": "5c4caabc1c8b78d8"
+          "content_head_digest": "2e34cca5ff0a5a40"
         },
         "2_data/3_scored/metadata/research_centroid_meta.json": {
           "path": "2_data/3_scored/metadata/research_centroid_meta.json",
-          "size": 2580,
-          "content_head_digest": "833c60b8cf321cd1"
+          "size": 2584,
+          "content_head_digest": "04d59ec08680a0cb"
         }
       },
       "cache_schema_version": 1,
@@ -70,8 +70,8 @@
           },
           "2_data/3_scored/paper_scores_shards/metadata/manifest.json": {
             "path": "2_data/3_scored/paper_scores_shards/metadata/manifest.json",
-            "size": 12208,
-            "content_head_digest": "e75d1257dc7d4a92"
+            "size": 12207,
+            "content_head_digest": "56335da979ff0f9a"
           },
           "2_data/1_preprocessed/research_corpus/metadata/manifest.json": {
             "path": "2_data/1_preprocessed/research_corpus/metadata/manifest.json",
@@ -106,12 +106,12 @@
           "2_data/3_scored/research_centroids.npy": {
             "path": "2_data/3_scored/research_centroids.npy",
             "size": 26240,
-            "content_head_digest": "5c4caabc1c8b78d8"
+            "content_head_digest": "2e34cca5ff0a5a40"
           },
           "2_data/3_scored/metadata/research_centroid_meta.json": {
             "path": "2_data/3_scored/metadata/research_centroid_meta.json",
-            "size": 2580,
-            "content_head_digest": "833c60b8cf321cd1"
+            "size": 2584,
+            "content_head_digest": "04d59ec08680a0cb"
           }
         },
         "cache_schema_version": 1,
@@ -161,11 +161,11 @@
     "seed": 42
   },
   "mean_test_metrics": {
-    "test_accuracy": 0.977151,
-    "test_roc_auc": 0.997125,
-    "test_f1": 0.977071,
-    "test_precision": 0.978374,
-    "test_recall": 0.975908
+    "test_accuracy": 0.976826,
+    "test_roc_auc": 0.99705,
+    "test_f1": 0.976749,
+    "test_precision": 0.97806,
+    "test_recall": 0.975593
   },
   "fold_rows": [
     {
@@ -194,21 +194,21 @@
       "train_per_class": 42554,
       "test_per_class": 11528,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997427,
-      "val_f1": 0.980585,
-      "test_accuracy": 0.976882,
-      "test_roc_auc": 0.997184,
-      "test_f1": 0.976947,
-      "test_precision": 0.974209,
-      "test_recall": 0.979702,
+      "val_roc_auc": 0.997876,
+      "val_f1": 0.980567,
+      "test_accuracy": 0.975755,
+      "test_roc_auc": 0.996826,
+      "test_f1": 0.975846,
+      "test_precision": 0.972191,
+      "test_recall": 0.979528,
       "test_confusion_matrix": [
         [
-          11229,
-          299
+          11205,
+          323
         ],
         [
-          234,
-          11294
+          236,
+          11292
         ]
       ]
     },
@@ -238,21 +238,21 @@
       "train_per_class": 39038,
       "test_per_class": 15044,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997398,
-      "val_f1": 0.978223,
-      "test_accuracy": 0.985476,
-      "test_roc_auc": 0.998442,
-      "test_f1": 0.98556,
-      "test_precision": 0.979894,
-      "test_recall": 0.991292,
+      "val_roc_auc": 0.997636,
+      "val_f1": 0.979051,
+      "test_accuracy": 0.986274,
+      "test_roc_auc": 0.998526,
+      "test_f1": 0.986357,
+      "test_precision": 0.980366,
+      "test_recall": 0.992422,
       "test_confusion_matrix": [
         [
-          14738,
-          306
+          14745,
+          299
         ],
         [
-          131,
-          14913
+          114,
+          14930
         ]
       ]
     },
@@ -282,21 +282,21 @@
       "train_per_class": 42594,
       "test_per_class": 11488,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997866,
-      "val_f1": 0.980079,
-      "test_accuracy": 0.976367,
-      "test_roc_auc": 0.997148,
-      "test_f1": 0.97639,
-      "test_precision": 0.975415,
-      "test_recall": 0.977368,
+      "val_roc_auc": 0.998053,
+      "val_f1": 0.979834,
+      "test_accuracy": 0.97406,
+      "test_roc_auc": 0.996516,
+      "test_f1": 0.974114,
+      "test_precision": 0.972087,
+      "test_recall": 0.976149,
       "test_confusion_matrix": [
         [
-          11205,
-          283
+          11166,
+          322
         ],
         [
-          260,
-          11228
+          274,
+          11214
         ]
       ]
     },
@@ -326,21 +326,21 @@
       "train_per_class": 44414,
       "test_per_class": 9668,
       "selected_C": 10.0,
-      "val_roc_auc": 0.998331,
-      "val_f1": 0.98374,
-      "test_accuracy": 0.965918,
-      "test_roc_auc": 0.995151,
-      "test_f1": 0.965314,
-      "test_precision": 0.982746,
-      "test_recall": 0.94849,
+      "val_roc_auc": 0.998,
+      "val_f1": 0.98368,
+      "test_accuracy": 0.966849,
+      "test_roc_auc": 0.995291,
+      "test_f1": 0.966233,
+      "test_precision": 0.984541,
+      "test_recall": 0.948593,
       "test_confusion_matrix": [
         [
-          9507,
-          161
+          9524,
+          144
         ],
         [
-          498,
-          9170
+          497,
+          9171
         ]
       ]
     },
@@ -370,21 +370,21 @@
       "train_per_class": 47728,
       "test_per_class": 6354,
       "selected_C": 10.0,
-      "val_roc_auc": 0.997875,
-      "val_f1": 0.981466,
-      "test_accuracy": 0.981114,
-      "test_roc_auc": 0.997698,
-      "test_f1": 0.981144,
-      "test_precision": 0.979605,
-      "test_recall": 0.982688,
+      "val_roc_auc": 0.997944,
+      "val_f1": 0.980818,
+      "test_accuracy": 0.981193,
+      "test_roc_auc": 0.998089,
+      "test_f1": 0.981194,
+      "test_precision": 0.981117,
+      "test_recall": 0.981272,
       "test_confusion_matrix": [
         [
-          6224,
-          130
+          6234,
+          120
         ],
         [
-          110,
-          6244
+          119,
+          6235
         ]
       ]
     }

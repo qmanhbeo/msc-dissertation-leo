@@ -6,18 +6,18 @@
     "adjusted_separability_still_high": true
   },
   "heldout_sdg_generalization": {
-    "mean_test_roc_auc": 0.997125,
-    "mean_test_f1": 0.977071,
+    "mean_test_roc_auc": 0.99705,
+    "mean_test_f1": 0.976749,
     "generalization_still_high": true
   },
   "multi_direction": {
-    "k1_mean_adjusted_gap": 0.390365,
-    "max_abs_mean_gap_change_after_k1": 0.063262,
+    "k1_mean_adjusted_gap": 0.373932,
+    "max_abs_mean_gap_change_after_k1": 0.063925,
     "material_change_after_k1": true
   },
   "topic_matched": {
-    "overall_adjusted_mean_matched_gap": 0.432246,
-    "overall_raw_mean_matched_gap": 0.426766,
+    "overall_adjusted_mean_matched_gap": 0.430328,
+    "overall_raw_mean_matched_gap": 0.425169,
     "topic_matched_divergence_still_large": true
   },
   "threshold_notes": {

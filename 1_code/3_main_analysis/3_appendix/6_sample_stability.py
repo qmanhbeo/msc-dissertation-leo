@@ -21,8 +21,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import logging
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -124,6 +126,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--cache-dir", default=None)
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
+
+
+def _compute_cache_signature(scored_dir: Path, embed_dir: Path) -> str:
+    score_manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
+    emb_manifest_path = embed_dir / "research_shards" / "metadata" / "manifest.json"
+    hasher = hashlib.sha256()
+    for path in [score_manifest_path, emb_manifest_path]:
+        hasher.update(path.read_bytes())
+    return hasher.hexdigest()[:16]
 
 
 def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
@@ -307,11 +318,12 @@ def load_cached_draw(cache_root: Path, tier_label: str, draw_index: int) -> dict
     }
 
 
-def write_cache_manifest(cache_root: Path, total_rows: int) -> None:
+def write_cache_manifest(cache_root: Path, total_rows: int, cache_signature: str) -> None:
     cache_root.mkdir(parents=True, exist_ok=True)
     manifest_path = cache_root / "manifest.json"
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "cache_signature": cache_signature,
         "draw_seed_start": DRAW_SEEDS[0],
         "draw_seed_end": DRAW_SEEDS[-1],
         "draw_seeds": list(DRAW_SEEDS),
@@ -804,13 +816,26 @@ def main() -> None:
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
+    expected_sig = _compute_cache_signature(scored_dir, embed_dir)
+    manifest_path = cache_root / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        cached_sig = manifest.get("cache_signature")
+    except (FileNotFoundError, json.JSONDecodeError):
+        cached_sig = None
+    if cached_sig != expected_sig:
+        if cache_root.exists():
+            log.info("Input data changed — clearing sample-stability cache")
+            shutil.rmtree(cache_root)
+        log.info("Cache signature: %s", expected_sig)
+
     policy_state = load_policy_state(Path(args.output_dir) / "main" / "data", _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES)
     shards, total_rows = build_research_shards(embed_dir, scored_dir)
     dim = int(policy_state["policy_embeddings"].shape[1])
     log.info("Research corpus rows available for sampling: %d", total_rows)
     log.info("Sampling %d tiers x %d draws each", len(TIER_SPECS), DRAWS_PER_TIER)
 
-    write_cache_manifest(cache_root, total_rows)
+    write_cache_manifest(cache_root, total_rows, expected_sig)
     draws, pending_draws = build_draw_accumulators(cache_root, total_rows, dim)
     log.info(
         "Sample-stability draw cache: %d reused, %d to build",
