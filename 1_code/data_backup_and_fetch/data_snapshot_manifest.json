@@ -1,10 +1,10 @@
 {
-  "current_version": "2026-07-06",
+  "current_version": "2026-07-08",
   "profiles": {
     "curated": {
-      "version": "2026-07-06-211818",
-      "url": "https://drive.usercontent.google.com/download?id=1jJLmssi6EAEjMi4jNmryBDKsVayAgxo5&export=download",
-      "sha256": "62313671a27a69976c287285e85a469e8a00cf8120f3bfbdc8558b749c4dd886",
+      "version": "2026-07-08-122000",
+      "url": "https://drive.usercontent.google.com/download?id=1sIbRikuQs5zhMiSXkCw0QnsWg5VOSybm&export=download",
+      "sha256": "11b7b09dfa61deae4589432c596a4b9cba169cd0f40d957291b9272ea87b58f4",
       "expected_repo_paths": [
         "2_data/0_raw",
         "2_data/1_preprocessed",
@@ -17,9 +17,9 @@
       ]
     },
     "full": {
-      "version": "2026-07-06-180405",
-      "url": "https://drive.usercontent.google.com/download?id=1oSAomOd2IlI_4cPWxJz2t05d8-GCXx2P&export=download",
-      "sha256": "8f182b288c17543d0bbf627107ad95b88d9ad053ab96e7f358fe4d8f1c9fedee",
+      "version": "2026-07-08-124236",
+      "url": "https://drive.usercontent.google.com/download?id=1xU8NidorUKV18tISrxPPKuWCTA2Gfh-U&export=download",
+      "sha256": "d5b4f730460a5b29de6b9df3e0cd253954f6e956027ead2311479d9fc4f15d80",
       "expected_repo_paths": [
         "2_data/0_raw",
         "2_data/1_preprocessed",

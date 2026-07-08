@@ -52,20 +52,20 @@
     "topic_matched": "f4154cfeaa689781602cb373"
   },
   "artifacts": {
-    "adjusted_reseparability_metrics_json": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/adjusted_reseparability_metrics.json",
-    "adjusted_reseparability_validation_grid_csv": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/adjusted_reseparability_validation_grid.csv",
-    "heldout_sdg_generalization_json": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/heldout_sdg_generalization.json",
-    "heldout_sdg_generalization_csv": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/heldout_sdg_generalization.csv",
-    "multi_direction_gap_curve_json": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/multi_direction_gap_curve.json",
-    "multi_direction_gap_curve_csv": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/multi_direction_gap_curve.csv",
-    "multi_direction_per_sdg_csv": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/multi_direction_per_sdg.csv",
-    "topic_matched_pair_summary_json": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/topic_matched_pair_summary.json",
-    "topic_matched_pair_summary_csv": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/topic_matched_pair_summary.csv",
-    "topic_matched_pair_examples_csv": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/topic_matched_pair_examples.csv",
-    "register_confidence_summary_json": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/register_confidence_summary.json",
-    "latex_num_tex": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/tables/num_register_confidence_checks.tex",
-    "latex_tab_tex": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/tables/tab_register_confidence_checks.tex",
-    "figure_pdf": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/figures/fig_register_confidence_curve.pdf",
-    "figure_png": "/home/manh/dissertation/4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/figures/fig_register_confidence_curve.png"
+    "adjusted_reseparability_metrics_json": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/adjusted_reseparability_metrics.json",
+    "adjusted_reseparability_validation_grid_csv": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/adjusted_reseparability_validation_grid.csv",
+    "heldout_sdg_generalization_json": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/heldout_sdg_generalization.json",
+    "heldout_sdg_generalization_csv": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/heldout_sdg_generalization.csv",
+    "multi_direction_gap_curve_json": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/multi_direction_gap_curve.json",
+    "multi_direction_gap_curve_csv": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/multi_direction_gap_curve.csv",
+    "multi_direction_per_sdg_csv": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/multi_direction_per_sdg.csv",
+    "topic_matched_pair_summary_json": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/topic_matched_pair_summary.json",
+    "topic_matched_pair_summary_csv": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/topic_matched_pair_summary.csv",
+    "topic_matched_pair_examples_csv": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/topic_matched_pair_examples.csv",
+    "register_confidence_summary_json": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/register_confidence_checks/register_confidence_summary.json",
+    "latex_num_tex": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/tables/num_register_confidence_checks.tex",
+    "latex_tab_tex": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/tables/tab_register_confidence_checks.tex",
+    "figure_pdf": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/figures/fig_register_confidence_curve.pdf",
+    "figure_png": "4_outputs/appendix/d_model_sensitivity/appendix/e_register_adjustment/figures/fig_register_confidence_curve.png"
   }
 }
