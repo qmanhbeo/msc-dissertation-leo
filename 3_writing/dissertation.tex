@@ -299,12 +299,12 @@ Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n
 \caption{Per-SDG F1 scores from benchmark validation across embedding models and reference sources (n = 616).}
 \label{tab:validation}
 \input{../4_outputs/main/tables/tab_validation.tex}
-\par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17).\par
+\par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17). Bootstrap 95\% confidence intervals for the canonical column are reported in Appendix~\ref{tab:validation-ci}.\par
 \end{table}
 
 The scores show a limit of the method, not a flaw in the data. \textcite{Kashnitsky2024} find that no SDG-mapping method performs best across validation sets, and \textcite{Gjorgjevikj2025} show that off-the-shelf encoders such as mine have a known ceiling on fine-grained multi-label work. I read the benchmark as a map of where the 17 goals blur in semantic space, not as proof of precise per-SDG accuracy.
 
-Most goals separate cleanly. SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence. A few are weaker: SDG 15 (F1 = \FiSdgFifteen) falls below the mean, and SDGs 11 and 8 sit near other goals in semantic space, so I treat their scores as indicative, not exact. The centroid-similarity heatmap (Figure~\ref{fig:centroid-similarity-matrix}) and the full confusion matrix (Table~\ref{tab:confusion-matrix}) in Appendix~\ref{app:centroid-similarity} show these proximities and the per-SDG errors directly.
+Most goals separate cleanly. SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence. A few are weaker: most goals cluster between F1 = 0.67 and 0.69, including SDG 15 (F1 = \FiSdgFifteen). Bootstrap confidence intervals (Appendix~\ref{tab:validation-ci}) show this middle band cannot be distinguished from the macro-F1 mean or from each other. Only the high cluster — SDGs 4, 6, 7, 14, and 16 — and SDG 17 at the bottom are robustly separated from the rest. SDGs 11 and 8 sit near other goals in semantic space, so I treat their scores as indicative, not exact. The centroid-similarity heatmap (Figure~\ref{fig:centroid-similarity-matrix}) and the full confusion matrix (Table~\ref{tab:confusion-matrix}) in Appendix~\ref{app:centroid-similarity} show these proximities and the per-SDG errors directly.
 
 SDG 17 (Partnerships for the Goals) has the lowest F1 of the 17 goals (\FiSdgSeventeen). \textcite{LeBlanc2015} and \textcite{ICSU2017} treat SDG 17 as the cross-cutting means-of-implementation goal and exclude it from single-goal mappings, because its mandate resists a compact definition; this is why its classification is the least certain, and per-source validation (Appendix~\ref{app:sdg-source-comparison}) confirms the weak score holds across all four centroid sources. SDG 17 is also collinear with SDG 13 (Appendix~\ref{app:centroid-similarity}, Figure~\ref{fig:centroid-similarity-matrix}); I therefore report the combined 13+17 share (\PolicyPctSdgThreePlusSeventeen\%) as the stable quantity, not the separate shares of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17).
 
@@ -493,6 +493,15 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \label{tab:sdg-source-comparison-covgap}
 \input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_covgap.tex}
 \par\smallskip\footnotesize\emph{Notes:} Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence. Each row compares the same SDG's gap across the four reference sources; read down a column to see how a source shifts the gap, and across a row to see whether the gap ranking is stable.\par
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Bootstrap 95\% confidence intervals for the canonical (combined MiniLM) validation F1, per SDG and macro.}
+\label{tab:validation-ci}
+\input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_validation_ci.tex}
+\par\smallskip\footnotesize\emph{Notes:} 1,000 resamples with replacement over the 616-text benchmark; predictions are fixed by the frozen centroids, so each resample redraws (true, predicted) instance pairs. SDGs absent from a resample score 0. The middle band (F1 $\approx$ 0.67--0.69) is not separated from the macro mean or from itself.\par
 \end{table}
 
 Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.959--0.996), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
