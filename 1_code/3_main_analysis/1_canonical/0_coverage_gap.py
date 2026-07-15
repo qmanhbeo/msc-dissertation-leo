@@ -442,6 +442,7 @@ def main() -> None:
         r"\multicolumn{4}{l}{Mean per-SDG gap} & \MeanCoverageGap \\",
         r"\bottomrule",
         r"\end{tabular}",
+        r"\par\smallskip\footnotesize\emph{Notes:} $^\dagger$SDG 4 research share is treated as artefact-affected: ML papers share core vocabulary with the OSDG education corpus (see Section~\ref{sec:sdg4artefact}).",
     ])
     (gen_dir / "tab_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_coverage.tex")
