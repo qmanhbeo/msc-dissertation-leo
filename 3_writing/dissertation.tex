@@ -16,7 +16,7 @@
 \usepackage[font=small,labelfont=bf,labelsep=period]{caption}
 \usepackage{enumitem}
 \setlist{nosep}
-\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/e_register_adjustment/figures/}}
+\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/a4_centroid_similarity/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/e_register_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -299,7 +299,7 @@ Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n
 
 The scores show a limit of the method, not a flaw in the data. \textcite{Kashnitsky2024} find that no SDG-mapping method performs best across validation sets, and \textcite{Gjorgjevikj2025} show that off-the-shelf encoders such as mine have a known ceiling on fine-grained multi-label work. I read the benchmark as a map of where the 17 goals blur in semantic space, not as proof of precise per-SDG accuracy.
 
-Most goals separate cleanly. SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence, since their vocabularies are distinct. A few are weaker. SDG 15 (F1 = \FiSdgFifteen) falls below the mean. SDG 11 (F1 = \FiSdgEleven) and SDG 8 (F1 = \FiSdgEight) sit near other goals in semantic space: SDG 11's centroid neighbours SDG 9 (cosine \CentroidSimElevenNine), and SDG 8 lies near SDGs 1 and 10 (cosine \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin), so I treat their scores as indicative, not exact. The centroid-similarity heatmap (Appendix~\ref{app:centroid-diagnostics}, Figure~\ref{fig:centroid-similarity-matrix}) shows these proximities directly.
+Most goals separate cleanly. SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence, since their vocabularies are distinct. A few are weaker. SDG 15 (F1 = \FiSdgFifteen) falls below the mean. SDG 11 (F1 = \FiSdgEleven) and SDG 8 (F1 = \FiSdgEight) sit near other goals in semantic space: SDG 11's centroid neighbours SDG 9 (cosine \CentroidSimElevenNine), and SDG 8 lies near SDGs 1 and 10 (cosine \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin), so I treat their scores as indicative, not exact. The centroid-similarity heatmap (Appendix~\ref{app:centroid-similarity}, Figure~\ref{fig:centroid-similarity-matrix}) shows these proximities directly.
 
 SDG 17 (Partnerships for the Goals) has the lowest F1 of the 17 goals (\FiSdgSeventeen). \textcite{LeBlanc2015} and \textcite{ICSU2017} treat SDG 17 as the cross-cutting means-of-implementation goal and exclude it from single-goal mappings, because its mandate resists a compact definition; this is why its classification is the least certain, and per-source validation (Appendix~\ref{app:sdg-source-comparison}) confirms the weak score holds across all four centroid sources. SDG 17 is also collinear with SDG 13 (cosine \CentroidSimThirteenSeventeen): climate and partnership text overlap in the reference corpora, so the labels leak into each other. I therefore report the combined 13+17 share (\PolicyPctSdgThreePlusSeventeen\%) as the stable quantity, not the separate shares of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17).
 
@@ -490,13 +490,6 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \par\smallskip\footnotesize\emph{Notes:} Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence.\par
 \end{table}
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{fig1_centroid_similarity_heatmap.pdf}
-\caption{Pairwise cosine similarity between canonical SDG centroids (lower triangle). SDG 13 and SDG 17 sit close together (cosine \CentroidSimThirteenSeventeen), as do SDGs 1, 8, and 10; both clusters are discussed in Section~\ref{sec:validation}.}
-\label{fig:centroid-similarity-matrix}
-\end{figure}
-
 Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.959--0.996), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
 
 Second, the supplementary sources (SDGi, Knowledge Hub) introduce modest centroid shifts, with cosine to combined ranging from 0.797 (SDG 16, SDGi) to 0.945 (SDG 12, SDGi) for SDGi, and from 0.512 (SDG 1, KH) to 0.900 (SDG 13, KH) for Knowledge Hub. The largest deviations occur for SDG 1 (KH cosine \SrcOneKnowledgeHubCosine{}) and SDG 10 (KH cosine \SrcTenKnowledgeHubCosine{}), suggesting that these SDGs have heterogeneous semantic scope across policy and journalism genres. These sources have fewer texts (18--364 per SDG) and pull the centroid in different genre-specific directions.
@@ -552,6 +545,29 @@ The main analysis therefore retains the canonical nearest-centroid assignment bu
 \input{../4_outputs/appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex}
 }
 \par\smallskip\footnotesize\emph{Notes:} The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.\par
+\end{table}
+
+\subsection{Centroid Similarity}
+\label{app:centroid-similarity}
+
+This subsection collects the two diagnostic views of how the 17 SDG centroids relate to one another. The first is the pairwise cosine-similarity heatmap; the second is the full benchmark confusion matrix that underlies the per-SDG F1 scores in Table~\ref{tab:validation}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig_a4_centroid_similarity_heatmap.pdf}
+\caption{Pairwise cosine similarity between canonical SDG centroids (lower triangle). SDG 13 and SDG 17 sit close together (cosine \CentroidSimThirteenSeventeen), as do SDGs 1, 8, and 10.}
+\label{fig:centroid-similarity-matrix}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\caption{Benchmark confusion matrix (n = 616). Rows are true SDGs, columns are predicted SDGs. The diagonal is the count of correct assignments; off-diagonal cells are misassignments. This matrix underlies the per-SDG F1 scores in Table~\ref{tab:validation}.}
+\label{tab:confusion-matrix}
+\resizebox{\textwidth}{!}{%
+\input{../4_outputs/appendix/a4_centroid_similarity/tables/tab_a4_confusion_matrix.tex}
+}
+\par\smallskip\footnotesize\emph{Notes:} Each of the 616 benchmark texts is assigned to the nearest centroid; rows sum to the per-SDG true counts, columns to predicted counts.\par
 \end{table}
 
 \section{Supplementary Robustness and Sensitivity Checks}

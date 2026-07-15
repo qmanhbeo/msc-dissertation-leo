@@ -64,8 +64,6 @@ MANUSCRIPT_TABLE_FILES = [
 ]
 
 MANUSCRIPT_FIGURE_FILES = [
-    "fig1_centroid_similarity_heatmap.pdf",
-    "fig1_centroid_similarity_heatmap.png",
     "fig2_coverage_profiles.pdf",
     "fig2_coverage_profiles.png",
     "fig3_semantic_gap.pdf",
@@ -102,6 +100,8 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
 ]
 
 MANUSCRIPT_APPENDIX_FIGURE_FILES = [
+    "appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf",
+    "appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.png",
     "appendix/b1_pca_semantic_landscape/figures/fig_b1_pca_semantic_landscape.pdf",
     "appendix/b1_pca_semantic_landscape/figures/fig_b1_pca_semantic_landscape.png",
     "appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.pdf",

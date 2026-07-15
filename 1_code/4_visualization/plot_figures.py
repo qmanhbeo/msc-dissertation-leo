@@ -129,10 +129,12 @@ def plot_centroid_similarity_heatmap(layout) -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")
     fig.tight_layout()
-    fig.savefig(layout.figures_dir / "fig1_centroid_similarity_heatmap.pdf", bbox_inches="tight")
-    fig.savefig(layout.figures_dir / "fig1_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
+    out_dir = layout.root / "appendix" / "a4_centroid_similarity" / "figures"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print("Saved: fig1_centroid_similarity_heatmap.pdf")
+    print("Saved: fig_a4_centroid_similarity_heatmap.pdf")
 
 
 def main() -> None:
