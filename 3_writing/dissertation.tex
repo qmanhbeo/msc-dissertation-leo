@@ -284,7 +284,7 @@ The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality 
 
 \subsection{SDG Measurement Instrument Validation}\label{sec:validation}
 
-Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n = 616). The instrument reaches macro-F1 = \MacroFOne, above the 0.50 PASS threshold. Accuracy is \ValidationAccuracy; a 17-class random guess scores 1/17 $\approx$ \RandomBaselineSeventeenClass, so the instrument performs \ValidationVsRandomMultiple{} times better. No supervised training produced this score. It shows how far apart the 17 SDGs sit in the pre-trained semantic space, not how well a classifier was tuned.
+Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n = 616). The instrument reaches macro-F1 = \MacroFOne, above the 0.50 pass threshold. Accuracy is \ValidationAccuracy; a 17-class random guess scores 1/17 $\approx$ \RandomBaselineSeventeenClass, so the instrument performs \ValidationVsRandomMultiple{} times better. I reached this score with no supervised training. It shows how far apart the 17 SDGs sit in the pre-trained space, not how well a classifier was tuned.
 
 \begin{table}[ht]
 \centering
@@ -295,18 +295,13 @@ Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n
 \par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17).\par
 \end{table}
 
-Three SDGs need care. SDG 11 (Sustainable Cities, F1 = \FiSdgEleven) is most often confused with SDG 9 (Innovation); its centroid is the nearest neighbour (cosine \CentroidSimElevenNine). Smart-city and urban-AI vocabulary resembles innovation language, so the research corpus may under-count SDG 11 and over-count SDG 9. SDG 8 (Decent Work, F1 = \FiSdgEight) sits in a high-similarity cluster with SDGs 1 and 10 (cosine \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin{}); we report SDGs 1, 8, and 10 as one group. SDG 15 (Life on Land, F1 = \FiSdgFifteen) falls below the mean and may absorb some misclassified SDG 14 items, so read it with caution. SDG 4 has the highest F1 (\FiSdgFour); SDGs 6, 7, and 16 each exceed 0.87, so their vocabularies are distinct enough to classify reliably.
+The scores show a limit of the method, not a flaw in the data. \textcite{Kashnitsky2024} find that no SDG-mapping method performs best across validation sets, and \textcite{Gjorgjevikj2025} show that off-the-shelf encoders such as mine have a known ceiling on fine-grained multi-label work. I therefore read the benchmark as a map of where the 17 goals blur in semantic space.
 
-SDG 17 (Partnerships for the Goals) has the lowest F1 of the 17 goals (\FiSdgSeventeen). Its broad, cross-cutting mandate resists a compact semantic definition, so its classification is the least certain. Per-source validation (Appendix~\ref{app:sdg-source-comparison}) shows this holds across all centroid sources.
+Three SDGs blur most. SDG 11 (Sustainable Cities, F1 = \FiSdgEleven) is most often confused with SDG 9 (Innovation); its centroid is the nearest neighbour of SDG 9 (cosine \CentroidSimElevenNine), which I trace to shared smart-city and urban-AI words. SDG 8 (Decent Work, F1 = \FiSdgEight) lies in a high-similarity cluster with SDGs 1 and 10 (cosine \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin); I group SDGs 1, 8, and 10 together. SDG 15 (Life on Land, F1 = \FiSdgFifteen) falls below the mean and likely absorbs misclassified SDG 14 items. In contrast, SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence, since their words are distinct.
 
-\textbf{SDG 13/17 collinearity.} The SDG 13 and SDG 17 centroids have a pairwise cosine similarity of \CentroidSimThirteenSeventeen{}, close to the SDG 1/8/10 cluster range (\CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax). Climate and partnership discourse overlap in the reference corpora, so the two labels leak into each other. The separate shares of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17) carry this uncertainty; the combined 13+17 share (\PolicyPctSdgThreePlusSeventeen\%) is the stable one to report.
+SDG 17 (Partnerships for the Goals) has the lowest F1 of the 17 goals (\FiSdgSeventeen). \textcite{LeBlanc2015} and \textcite{ICSU2017} treat SDG 17 as the cross-cutting means-of-implementation goal and exclude it from single-goal mappings, because its mandate resists a compact definition. Per-source validation (Appendix~\ref{app:sdg-source-comparison}) shows this holds across all four centroid sources.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{fig1_centroid_similarity_heatmap.pdf}
-\caption{Pairwise cosine similarity between canonical SDG centroids.}
-\label{fig:centroid-similarity-matrix}
-\end{figure}
+SDG 17 is also collinear with SDG 13. The two centroids have a pairwise cosine of \CentroidSimThirteenSeventeen{}, close to the SDG 1/8/10 cluster range (\CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax). Climate and partnership text overlap in the reference corpora, so the labels leak into each other (see the centroid-similarity heatmap, Appendix~\ref{app:centroid-diagnostics}). I report the combined 13+17 share (\PolicyPctSdgThreePlusSeventeen\%) as the stable quantity, not the separate shares of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17).
 
 \subsection{Coverage Gap: What SDGs Each Corpus Prioritises}\label{sec:coverage-gap}
 
@@ -347,9 +342,11 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs.
 
 Table~\ref{tab:interaction} reports the H1 coverage–semantic correlation tests between coverage measures and semantic gap scores across the SDGs.
 
+The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. Each panel reports the canonical result across all 17 observed SDGs and a sensitivity test excluding SDG~4, then replicates the four tests under an alternative embedding model (MPNet) and four alternative reference-source centroids (OSDG, SDGi, Knowledge Hub, Aurora).
+
 \begin{table}[H]
 \centering
-\caption{H1 correlation tests (Pearson $r$, Spearman $\rho$) between four coverage predictors and the within-SDG semantic gap, across the 17 SDGs. The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. Each panel reports the canonical result (all 17 observed SDGs) and a sensitivity test excluding SDG~4, then replicates the four tests under an alternative embedding model (MPNet) and four alternative reference-source centroids (OSDG, SDGi, Knowledge Hub, Aurora).}
+\caption{H1 correlation tests between coverage predictors and the within-SDG semantic gap.}
 \label{tab:interaction}
 \input{../4_outputs/main/tables/tab_interaction.tex}
 \end{table}
@@ -490,6 +487,13 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_covgap.tex}
 \par\smallskip\footnotesize\emph{Notes:} Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence.\par
 \end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig1_centroid_similarity_heatmap.pdf}
+\caption{Pairwise cosine similarity between canonical SDG centroids (lower triangle). SDG 13 and SDG 17 sit close together (cosine \CentroidSimThirteenSeventeen), as do SDGs 1, 8, and 10; both clusters are discussed in Section~\ref{sec:validation}.}
+\label{fig:centroid-similarity-matrix}
+\end{figure}
 
 Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.959--0.996), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
 
