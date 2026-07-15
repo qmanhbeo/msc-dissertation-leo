@@ -30,7 +30,7 @@
     ],
     "missing_semantic_gap_sdgs": [],
     "correlations_primary_observed": {
-      "a_res_prop_vs_sem_gap": {
+      "research": {
         "n": 17,
         "pearson_r": 0.040064,
         "pearson_p": 0.878661,
@@ -57,7 +57,34 @@
         ],
         "skipped": false
       },
-      "b_cov_gap_abs_vs_sem_gap": {
+      "policy": {
+        "n": 17,
+        "pearson_r": 0.582495,
+        "pearson_p": 0.014142,
+        "spearman_rho": -0.019668,
+        "spearman_p": 0.940275,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      },
+      "covgap": {
         "n": 17,
         "pearson_r": 0.604262,
         "pearson_p": 0.010196,
@@ -84,7 +111,7 @@
         ],
         "skipped": false
       },
-      "c_res_dominance_vs_sem_gap": {
+      "dominance": {
         "n": 17,
         "pearson_r": -0.534209,
         "pearson_p": 0.027176,
@@ -114,7 +141,7 @@
     },
     "correlations_reliable_only": null,
     "correlations_excl_sdg4": {
-      "a_res_prop_vs_sem_gap": {
+      "research": {
         "n": 16,
         "pearson_r": 0.167087,
         "pearson_p": 0.536242,
@@ -140,12 +167,64 @@
         ],
         "skipped": false
       },
-      "b_cov_gap_abs_vs_sem_gap": {
+      "policy": {
+        "n": 16,
+        "pearson_r": 0.575249,
+        "pearson_p": 0.019734,
+        "spearman_rho": -0.076696,
+        "spearman_p": 0.777701,
+        "sdgs": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      },
+      "covgap": {
         "n": 16,
         "pearson_r": 0.661915,
         "pearson_p": 0.00522,
         "spearman_rho": 0.526471,
         "spearman_p": 0.036167,
+        "sdgs": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "skipped": false
+      },
+      "dominance": {
+        "n": 16,
+        "pearson_r": -0.503028,
+        "pearson_p": 0.047019,
+        "spearman_rho": -0.032353,
+        "spearman_p": 0.90532,
         "sdgs": [
           1,
           2,

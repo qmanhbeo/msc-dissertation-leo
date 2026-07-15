@@ -686,8 +686,17 @@ def main() -> None:
         res_centroids, res_valid = normalise_sums(rc, rs)
         pol_centroids, pol_valid = normalise_sums(pc, ps)
 
-        # Coverage
+        # Coverage (research hard-assignment counts)
         coverage_vec = rc.copy()
+
+        # Policy coverage (doc-weighted capped-segment counts) and coverage gap.
+        # coverage_gap = |research proportion - policy proportion|, matching the
+        # canonical coverage_gap_hard definition used by the interaction script.
+        res_total = float(coverage_vec.sum())
+        pol_total = float(pc.sum())
+        res_prop = (coverage_vec / res_total) if res_total > 0 else np.zeros(N_SDG, dtype=np.float64)
+        pol_prop = (pc / pol_total) if pol_total > 0 else np.zeros(N_SDG, dtype=np.float64)
+        covgap_vec = np.abs(res_prop - pol_prop)
 
         # Semantic gap
         gap_vec = compute_semantic_gaps(res_centroids, pol_centroids)
@@ -700,6 +709,8 @@ def main() -> None:
                 "f1": float(f1_vec[idx]) if not np.isnan(f1_vec[idx]) else None,
                 "cosine": float(cos_vec[idx]) if not np.isnan(cos_vec[idx]) else None,
                 "coverage": int(coverage_vec[idx]),
+                "policy_coverage": float(pol_prop[idx]) if pol_total > 0 else None,
+                "coverage_gap": float(covgap_vec[idx]),
                 "gap": float(gap_vec[idx]) if not np.isnan(gap_vec[idx]) else None,
             })
 
@@ -729,6 +740,8 @@ def main() -> None:
             row[f"{src_label}_cosine"] = m["cosine"]
             row[f"{src_label}_coverage"] = m["coverage"]
             row[f"{src_label}_gap"] = m["gap"]
+            row[f"{src_label}_policy_coverage"] = m["policy_coverage"]
+            row[f"{src_label}_coverage_gap"] = m["coverage_gap"]
 
         results.append(row)
 
@@ -750,10 +763,10 @@ def main() -> None:
     csv_fields = [
         "sdg",
         "combined_n", "combined_f1", "combined_cosine", "combined_coverage", "combined_gap",
-        "osdg_n", "osdg_f1", "osdg_cosine", "osdg_coverage", "osdg_gap",
-        "sdgi_n", "sdgi_f1", "sdgi_cosine", "sdgi_coverage", "sdgi_gap",
-        "knowledgehub_n", "knowledgehub_f1", "knowledgehub_cosine", "knowledgehub_coverage", "knowledgehub_gap",
-        "aurora_n", "aurora_f1", "aurora_cosine", "aurora_coverage", "aurora_gap",
+        "osdg_n", "osdg_f1", "osdg_cosine", "osdg_coverage", "osdg_gap", "osdg_policy_coverage", "osdg_coverage_gap",
+        "sdgi_n", "sdgi_f1", "sdgi_cosine", "sdgi_coverage", "sdgi_gap", "sdgi_policy_coverage", "sdgi_coverage_gap",
+        "knowledgehub_n", "knowledgehub_f1", "knowledgehub_cosine", "knowledgehub_coverage", "knowledgehub_gap", "knowledgehub_policy_coverage", "knowledgehub_coverage_gap",
+        "aurora_n", "aurora_f1", "aurora_cosine", "aurora_coverage", "aurora_gap", "aurora_policy_coverage", "aurora_coverage_gap",
     ]
     with (data_dir / TABLE_CSV).open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")

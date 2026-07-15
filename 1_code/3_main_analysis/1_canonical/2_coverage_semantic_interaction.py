@@ -1,26 +1,26 @@
 """
-Test H25: is there a correlation between coverage gap and semantic gap across SDGs?
+Test H25: do coverage measures predict the within-SDG semantic gap across SDGs?
 
 H25 (headline hypothesis):
   SDGs with the highest research attention will show the largest within-SDG semantic gaps —
   i.e. the SDGs where research engages most are precisely where research and policy diverge
   most strongly in framing within that SDG.
 
-  Two operationalisations are tested:
-    (a) Correlation between research_proportion (SDG coverage in research corpus) and
-        semantic_gap (within-SDG semantic divergence).
-        A POSITIVE correlation = H25 supported: more research attention → more divergence.
-        The hypothesis labels this a "negative correlation" between coverage and semantic
-        *similarity* — equivalent to a positive correlation with semantic *gap*.
+  Four coverage predictors are each correlated with semantic_gap (within-SDG semantic
+  divergence), so that the paper's claimed "coverage gap" test is actually surfaced rather
+  than only the research-proportion test:
+    (a) research coverage  — research_proportion (SDG coverage in research corpus)
+    (b) policy coverage    — policy_proportion (SDG coverage in policy corpus)
+    (c) coverage gap       — coverage_gap_abs (|research% - policy%|)
+    (d) dominance          — research_dominance (research% - policy%, signed)
 
-    (b) Correlation between coverage_gap_abs (|research% - policy%|) and semantic_gap.
-        This tests whether SDGs that are unbalanced between corpora are also more divergent.
+  A POSITIVE correlation for (a) = H25 supported: more research attention → more divergence.
+  The hypothesis labels this a "negative correlation" between coverage and semantic
+  *similarity* — equivalent to a positive correlation with semantic *gap*.
 
-    (c) Correlation between research_dominance (research% - policy%) and semantic_gap.
-        Signed version: are SDGs where research dominates more divergent than SDGs where
-        policy dominates?
-
-  All three operationalisations are reported. The primary test for H25 is (a).
+  All four predictors are reported, each with a canonical result (all observed SDGs), a
+  sensitivity test excluding SDG 4, and replications under MPNet and four reference-source
+  centroids. The primary test for H25 is (a).
 
 H26 asymmetry diagnostic:
   Computed from active score artifacts. The mean top-SDG score when papers are scored
@@ -142,6 +142,26 @@ def correlation_or_skip(
     return result
 
 
+def compute_four_tests(
+    x_research: np.ndarray,
+    x_policy: np.ndarray,
+    x_covgap: np.ndarray,
+    x_dominance: np.ndarray,
+    y: np.ndarray,
+    mask: np.ndarray,
+) -> dict:
+    """Correlate each of four coverage predictors with the semantic gap.
+
+    Returns a dict with keys: research, policy, covgap, dominance.
+    """
+    return {
+        "research": correlation_or_skip(x_research, y, mask, "research coverage vs semantic gap"),
+        "policy": correlation_or_skip(x_policy, y, mask, "policy coverage vs semantic gap"),
+        "covgap": correlation_or_skip(x_covgap, y, mask, "coverage gap vs semantic gap"),
+        "dominance": correlation_or_skip(x_dominance, y, mask, "research-policy dominance vs semantic gap"),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Args
 # ---------------------------------------------------------------------------
@@ -241,35 +261,15 @@ def main() -> None:
     log.info("=" * 70)
     log.info("")
     log.info("OBSERVED SDGs WITH FINITE SEMANTIC GAP (n=%d):", int(available_mask.sum()))
-    corr_primary = {
-        "a_res_prop_vs_sem_gap": correlation_or_skip(
-            res_hard, sem_gap, available_mask, "(a) research_proportion vs semantic_gap"
-        ),
-        "b_cov_gap_abs_vs_sem_gap": correlation_or_skip(
-            cov_gap_abs, sem_gap, available_mask, "(b) coverage_gap_abs vs semantic_gap"
-        ),
-        "c_res_dominance_vs_sem_gap": correlation_or_skip(
-            res_dominance, sem_gap, available_mask, "(c) research_dominance (res%-pol%) vs semantic_gap"
-        ),
-    }
+    tests_primary = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, available_mask)
 
-    # Reliable SDGs only (excludes SDG 10 if flagged).
+    # Reliable SDGs only (excludes any SDG flagged unreliable).
     if reliable_mask.sum() < available_mask.sum():
         log.info("")
         log.info("RELIABLE SDGs ONLY (n=%d):", reliable_mask.sum())
-        corr_reliable = {
-            "a_res_prop_vs_sem_gap": correlation_or_skip(
-                res_hard, sem_gap, reliable_mask, "(a) research_proportion vs semantic_gap [reliable only]"
-            ),
-            "b_cov_gap_abs_vs_sem_gap": correlation_or_skip(
-                cov_gap_abs, sem_gap, reliable_mask, "(b) coverage_gap_abs vs semantic_gap [reliable only]"
-            ),
-            "c_res_dominance_vs_sem_gap": correlation_or_skip(
-                res_dominance, sem_gap, reliable_mask, "(c) research_dominance vs semantic_gap [reliable only]"
-            ),
-        }
+        tests_reliable = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, reliable_mask)
     else:
-        corr_reliable = None
+        tests_reliable = None
 
     # Sensitivity: exclude SDG 4 (suspected ML terminology artefact in research SDG 4 = 22%).
     # If SDG 4's high research proportion is genuine → correlation should be robust to exclusion.
@@ -278,18 +278,11 @@ def main() -> None:
     excl4_mask[3] = False   # SDG 4 is index 3
     log.info("")
     log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact):")
-    corr_excl4 = {
-        "a_res_prop_vs_sem_gap": correlation_or_skip(
-            res_hard, sem_gap, excl4_mask, "(a) research_proportion vs semantic_gap [excl SDG4]"
-        ),
-        "b_cov_gap_abs_vs_sem_gap": correlation_or_skip(
-            cov_gap_abs, sem_gap, excl4_mask, "(b) coverage_gap_abs vs semantic_gap [excl SDG4]"
-        ),
-    }
+    tests_excl4 = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, excl4_mask)
 
     # ---- Correlation interpretation ----
-    # Primary test: correlation (a) research_proportion vs semantic_gap.
-    primary_stats = corr_primary["a_res_prop_vs_sem_gap"]
+    # Primary headline test: research coverage vs semantic gap (predictor "research").
+    primary_stats = tests_primary["research"]
     if primary_stats["skipped"]:
         raise RuntimeError("Primary H25 correlation could not be computed: fewer than 3 valid SDGs.")
     r_primary = primary_stats["pearson_r"]
@@ -298,8 +291,24 @@ def main() -> None:
 
     log.info("")
     log.info("=" * 70)
-    log.info("CORRELATION INTERPRETATION (PRIMARY TEST: research_proportion vs semantic_gap)")
+    log.info("CORRELATION INTERPRETATION (FOUR PREDICTORS vs SEMANTIC GAP)")
     log.info("=" * 70)
+    for key, label in [
+        ("research", "research coverage"),
+        ("policy", "policy coverage"),
+        ("covgap", "coverage gap (abs)"),
+        ("dominance", "research-policy dominance (signed)"),
+    ]:
+        st = tests_primary[key]
+        if st.get("skipped"):
+            log.info("  %-30s skipped (n=%s)", label, st.get("n"))
+            continue
+        log.info(
+            "  %-30s Pearson r=%.3f (p=%.3f)  Spearman rho=%.3f",
+            label, st["pearson_r"], st["pearson_p"], st["spearman_rho"],
+        )
+
+    # Directional reading for the research predictor (matches prior reporting).
     if r_primary > 0.3:
         correlation_direction = "SUPPORTED"
         correlation_story = (
@@ -318,7 +327,7 @@ def main() -> None:
             "Near-zero correlation: research attention does not predict semantic gap direction. "
             "Coverage and semantic divergence are largely independent dimensions."
         )
-    log.info("  Correlation direction: %s", correlation_direction)
+    log.info("  Research-coverage direction: %s", correlation_direction)
     log.info("  Pearson r=%.3f  p=%.3f  Spearman ρ=%.3f", r_primary, p_primary, rho_primary)
     log.info("  %s", correlation_story)
 
@@ -392,9 +401,9 @@ def main() -> None:
             ],
             "available_semantic_gap_sdgs": available_sdgs,
             "missing_semantic_gap_sdgs": missing_sdgs,
-            "correlations_primary_observed": corr_primary,
-            "correlations_reliable_only": corr_reliable,
-            "correlations_excl_sdg4": corr_excl4,
+            "correlations_primary_observed": tests_primary,
+            "correlations_reliable_only": tests_reliable,
+            "correlations_excl_sdg4": tests_excl4,
         },
         "asymmetry": {
             "hypothesis": (
@@ -463,8 +472,8 @@ def main() -> None:
     median_res_pct = float(np.median(res_hard * 100.0))
 
     # Excl-SDG4 correlation values
-    excl4 = corr_excl4["a_res_prop_vs_sem_gap"]
-    primary = corr_primary["a_res_prop_vs_sem_gap"]
+    primary = tests_primary["research"]
+    excl4 = tests_excl4["research"]
     n_primary = int(primary["n"])
     z_primary = math.atanh(r_primary)
     z_se = 1 / math.sqrt(n_primary - 3)
@@ -481,20 +490,39 @@ def main() -> None:
         s = f"{abs(v):.2f}"
         return f"-{s}" if v < 0 else s
 
+    def _macro(name, cdict, key):
+        """Emit \namePearsonR / PearsonP / SpearmanRho / SpearmanP from a correlation dict."""
+        c = cdict.get(key, {})
+        if c.get("skipped"):
+            r_s, p_s, rho_s, pr_s = "--", "--", "--", "--"
+        else:
+            r_s, p_s, rho_s, pr_s = (
+                _fmt(c["pearson_r"]), f"{c['pearson_p']:.3f}",
+                _fmt(c["spearman_rho"]), f"{c['spearman_p']:.3f}",
+            )
+        return [
+            rf"\newcommand{{\{name}PearsonR}}{{{r_s}}}",
+            rf"\newcommand{{\{name}PearsonP}}{{{p_s}}}",
+            rf"\newcommand{{\{name}SpearmanRho}}{{{rho_s}}}",
+            rf"\newcommand{{\{name}SpearmanP}}{{{pr_s}}}",
+        ]
+
     # num_interaction.tex — macro definitions
     num_lines = [
         "% Auto-generated by 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py — do not edit manually",
         rf"\newcommand{{\HPrimaryN}}{{{n_primary}}}",
-        rf"\newcommand{{\HPrimaryPearsonR}}{{{_fmt(r_primary)}}}",
-        rf"\newcommand{{\HPrimaryPearsonP}}{{{primary['pearson_p']:.3f}}}",
         rf"\newcommand{{\HPrimaryPearsonCiLower}}{{{_fmt2(r_ci_lo)}}}",
         rf"\newcommand{{\HPrimaryPearsonCiUpper}}{{{_fmt2(r_ci_hi)}}}",
-        rf"\newcommand{{\HPrimarySpearmanRho}}{{{_fmt(rho_primary)}}}",
-        rf"\newcommand{{\HPrimarySpearmanP}}{{{primary['spearman_p']:.3f}}}",
-        rf"\newcommand{{\HExclSdgFourPearsonR}}{{{_fmt(excl4['pearson_r'])}}}",
-        rf"\newcommand{{\HExclSdgFourPearsonP}}{{{excl4['pearson_p']:.3f}}}",
-        rf"\newcommand{{\HExclSdgFourSpearmanRho}}{{{_fmt(excl4['spearman_rho'])}}}",
-        rf"\newcommand{{\HExclSdgFourSpearmanP}}{{{excl4['spearman_p']:.3f}}}",
+    ]
+    num_lines += _macro("HPrimary", tests_primary, "research")
+    num_lines += _macro("HPrimaryPolicy", tests_primary, "policy")
+    num_lines += _macro("HPrimaryCovgap", tests_primary, "covgap")
+    num_lines += _macro("HPrimaryDominance", tests_primary, "dominance")
+    num_lines += _macro("HExclSdgFour", tests_excl4, "research")
+    num_lines += _macro("HExclSdgFourPolicy", tests_excl4, "policy")
+    num_lines += _macro("HExclSdgFourCovgap", tests_excl4, "covgap")
+    num_lines += _macro("HExclSdgFourDominance", tests_excl4, "dominance")
+    num_lines += [
         rf"\newcommand{{\HAsymPolicyScore}}{{{mean_pol_vs_res:.3f}}}",
         rf"\newcommand{{\HAsymResearchScore}}{{{mean_paper_top:.3f}}}",
         rf"\newcommand{{\HAsymGap}}{{{_fmt(asym_gap)}}}",
@@ -503,10 +531,14 @@ def main() -> None:
     (gen_dir / "num_interaction.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "num_interaction.tex")
 
-    # ---- Multi-config H1 replications ----
-    config_rows: list[tuple[str, str, str, str, str, str]] = []  # label, r_str, p_str, rho_str, p_rho_str, n_str
+    # ---- Multi-config H1 replications (all four predictors) ----
+    config_rows: list[tuple[str, dict]] = []  # (label, tests_dict with research/policy/covgap/dominance)
 
-    # 1. MPNet model
+    # 1. Primary observed SDGs + Excluding SDG 4 (already computed above).
+    config_rows.append(("Primary observed SDGs", tests_primary))
+    config_rows.append((r"Excluding SDG 4", tests_excl4))
+
+    # 2. MPNet model
     mpnet_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" / "main" / "data"
     mpnet_cov_path = mpnet_dir / "4_2_coverage_document_weighted.json"
     mpnet_sem_path = mpnet_dir / "4_3_semantic_gap_distances.json"
@@ -514,20 +546,17 @@ def main() -> None:
         mpnet_cov = load_json(mpnet_cov_path)
         mpnet_sem = load_json(mpnet_sem_path)
         mpnet_res = np.array([mpnet_cov["research_profile_hard"][f"SDG{i}"] for i in range(1, 18)])
+        mpnet_pol = np.array([mpnet_cov["policy_profile_hard_docweighted"][f"SDG{i}"] for i in range(1, 18)])
+        mpnet_covgap = np.array([mpnet_cov["coverage_gap_hard"][f"SDG{i}"] for i in range(1, 18)])
+        mpnet_dom = mpnet_res - mpnet_pol
         mpnet_per_sdg = {r["sdg"]: r["semantic_gap"] for r in mpnet_sem["per_sdg"]}
         mpnet_gaps = np.array([mpnet_per_sdg.get(i, np.nan) for i in range(1, 18)], dtype=float)
-        mpnet_mask = np.isfinite(mpnet_res) & np.isfinite(mpnet_gaps)
-        n_mpnet = int(mpnet_mask.sum())
-        if n_mpnet >= 3:
-            r_mpnet = pearson_and_spearman(mpnet_res[mpnet_mask], mpnet_gaps[mpnet_mask], "MPNet model")
-            config_rows.append((
-                "MPNet model",
-                _fmt(r_mpnet["pearson_r"]), f"{r_mpnet['pearson_p']:.3f}",
-                _fmt(r_mpnet["spearman_rho"]), f"{r_mpnet['spearman_p']:.3f}",
-                str(n_mpnet),
-            ))
+        mpnet_mask = np.isfinite(mpnet_res) & np.isfinite(mpnet_pol) & np.isfinite(mpnet_gaps)
+        if int(mpnet_mask.sum()) >= 3:
+            mpnet_tests = compute_four_tests(mpnet_res, mpnet_pol, mpnet_covgap, mpnet_dom, mpnet_gaps, mpnet_mask)
+            config_rows.append(("MPNet model", mpnet_tests))
 
-    # 2. Reference sources
+    # 3. Reference sources
     comp_path = ROOT / "4_outputs" / "appendix" / "a1_sdg_source_comparison" / "data" / "comparison_summary.json"
     if comp_path.exists():
         comp_data = load_json(comp_path)
@@ -539,41 +568,58 @@ def main() -> None:
             ("aurora", "Aurora-only centroids"),
         ]
         for src_key, src_label in sources:
-            counts = np.array([r[f"{src_key}_coverage"] for r in src_results], dtype=float)
-            gaps = np.array([
-                r[f"{src_key}_gap"] if r[f"{src_key}_gap"] is not None else np.nan
-                for r in src_results
-            ], dtype=float)
-            props = counts / counts.sum()
-            src_mask = np.isfinite(props) & np.isfinite(gaps)
-            n_src = int(src_mask.sum())
-            if n_src >= 3:
-                r_src = pearson_and_spearman(props[src_mask], gaps[src_mask], src_label)
-                config_rows.append((
-                    src_label,
-                    _fmt(r_src["pearson_r"]), f"{r_src['pearson_p']:.3f}",
-                    _fmt(r_src["spearman_rho"]), f"{r_src['spearman_p']:.3f}",
-                    str(n_src),
-                ))
+            total = float(sum(r[f"{src_key}_coverage"] for r in src_results)) or 1.0
+            props = np.array(
+                [r[f"{src_key}_coverage"] / total for r in src_results], dtype=float
+            )
+            polcov = np.array(
+                [r[f"{src_key}_policy_coverage"] if r[f"{src_key}_policy_coverage"] is not None else np.nan
+                 for r in src_results], dtype=float
+            )
+            covgap = np.array(
+                [r[f"{src_key}_coverage_gap"] if r[f"{src_key}_coverage_gap"] is not None else np.nan
+                 for r in src_results], dtype=float
+            )
+            dom = props - polcov
+            gaps = np.array(
+                [r[f"{src_key}_gap"] if r[f"{src_key}_gap"] is not None else np.nan
+                 for r in src_results], dtype=float
+            )
+            src_mask = np.isfinite(props) & np.isfinite(polcov) & np.isfinite(gaps)
+            if int(src_mask.sum()) >= 3:
+                src_tests = compute_four_tests(props, polcov, covgap, dom, gaps, src_mask)
+                config_rows.append((src_label, src_tests))
 
     log.info("")
-    log.info("Multi-config H1 replications: %d configs", len(config_rows))
+    log.info("Multi-config H1 replications: %d configs x 4 predictors", len(config_rows))
 
-    # tab_interaction.tex — extended tabular block with all configs
-    tab_lines = [
-        r"\begin{tabular}{lrrrr}",
-        r"\toprule",
-        r"Test & Pearson $r$ & $p$ & Spearman $\rho$ & $p$ \\",
-        r"\midrule",
-        rf"Primary observed SDGs ($n=\HPrimaryN$) & \HPrimaryPearsonR & \HPrimaryPearsonP"
-        rf" & \HPrimarySpearmanRho & \HPrimarySpearmanP \\",
-        rf"Excluding SDG 4 & \HExclSdgFourPearsonR & \HExclSdgFourPearsonP"
-        rf" & \HExclSdgFourSpearmanRho & \HExclSdgFourSpearmanP \\",
+    # tab_interaction.tex — grouped tabular: 4 predictor groups x config rows
+    groups = [
+        ("Research coverage $\\leftrightarrow$ Semantic gap", "research"),
+        ("Policy coverage $\\leftrightarrow$ Semantic gap", "policy"),
+        ("Coverage gap $\\leftrightarrow$ Semantic gap", "covgap"),
+        ("Research--policy dominance $\\leftrightarrow$ Semantic gap", "dominance"),
     ]
-    for label, r_str, p_str, rho_str, p_rho_str, n_str in config_rows:
-        tab_lines.append(
-            rf"{label} ($n$={n_str}) & {r_str} & {p_str} & {rho_str} & {p_rho_str} \\"
-        )
+    tab_lines = [
+        "% Auto-generated by 1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py — do not edit manually",
+        r"\begin{tabular}{lrrrrr}",
+        r"\toprule",
+        r"Config & Pearson $r$ & $p$ & Spearman $\rho$ & $p$ \\",
+        r"\midrule",
+    ]
+    for g_title, g_key in groups:
+        tab_lines.append(rf"\multicolumn{{5}}{{l}}{{\textbf{{{g_title}}}}} \\")
+        for label, tests in config_rows:
+            c = tests.get(g_key, {})
+            if c.get("skipped"):
+                r_s, p_s, rho_s, pr_s, n_s = "--", "--", "--", "--", str(c.get("n", ""))
+            else:
+                r_s, p_s, rho_s, pr_s = (
+                    _fmt(c["pearson_r"]), f"{c['pearson_p']:.3f}",
+                    _fmt(c["spearman_rho"]), f"{c['spearman_p']:.3f}",
+                )
+                n_s = str(c["n"])
+            tab_lines.append(rf"{label} ($n$={n_s}) & {r_s} & {p_s} & {rho_s} & {pr_s} \\")
     tab_lines.extend([
         r"\bottomrule",
         r"\end{tabular}",
