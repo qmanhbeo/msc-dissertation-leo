@@ -23,6 +23,10 @@
 \usepackage[style=apa,backend=biber]{biblatex}
 \usepackage{xcolor}
 \addbibresource{references.bib}
+\usepackage{float}
+\usepackage{placeins}
+\let\OldSection\section
+\renewcommand{\section}{\FloatBarrier\OldSection}
 
 \providecommand{\DraftCompiledAt}{manual build (run build\_pdf.sh for exact timestamp)}
 \providecommand{\DraftVersionTag}{manual-build}
@@ -280,7 +284,7 @@ The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality 
 
 \subsection{SDG Measurement Instrument Validation}\label{sec:validation}
 
-Table~\ref{tab:validation} reports per-SDG F1 scores from the benchmark evaluation (all 17 SDGs, n = 616). The instrument achieves macro-F1 = \MacroFOne, comfortably above the PASS threshold of 0.50 set a priori. Accuracy is \ValidationAccuracy. The random baseline for a 17-class classifier is 1/17 $\approx$ \RandomBaselineSeventeenClass; the instrument performs at \ValidationVsRandomMultiple{} times the random baseline. Because no supervised training contributed to this score, it measures the degree to which the 17 SDGs occupy naturally distinguishable regions in a pre-trained semantic space rather than the performance of an optimised classifier.
+Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n = 616). The instrument reaches macro-F1 = \MacroFOne, above the 0.50 PASS threshold. Accuracy is \ValidationAccuracy; a 17-class random guess scores 1/17 $\approx$ \RandomBaselineSeventeenClass, so the instrument performs \ValidationVsRandomMultiple{} times better. No supervised training produced this score. It shows how far apart the 17 SDGs sit in the pre-trained semantic space, not how well a classifier was tuned.
 
 \begin{table}[ht]
 \centering
@@ -291,9 +295,11 @@ Table~\ref{tab:validation} reports per-SDG F1 scores from the benchmark evaluati
 \par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17).\par
 \end{table}
 
-Three SDGs raise specific concerns. SDG 11 (Sustainable Cities, F1 = \FiSdgEleven) is most frequently confused with SDG 9 (Innovation), whose centroid is its nearest neighbour (cosine similarity \CentroidSimElevenNine). Smart-city and urban-AI research vocabulary closely resembles innovation language, meaning SDG 11 coverage in the research corpus may be underestimated and SDG 9 coverage overestimated. SDG 8 (Decent Work, F1 = \FiSdgEight) is embedded within a high-similarity cluster with SDGs 1 and 10 (centroid similarities \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin{} respectively); accordingly, findings for SDGs 1, 8, and 10 are reported as a single macro-cluster in the discussion. SDG 15 (Life on Land, F1 = \FiSdgFifteen) is below the mean and may partially absorb misclassified SDG 14 items; findings for SDG 15 should be treated with corresponding uncertainty. SDG 4 achieves the highest F1 (\FiSdgFour); SDGs 6, 7, and 16 each exceed 0.87, confirming that education/learning, sustainable-resource use, energy-access, and governance/institutions vocabularies are all sufficiently distinctive for reliable classification.
+Three SDGs need care. SDG 11 (Sustainable Cities, F1 = \FiSdgEleven) is most often confused with SDG 9 (Innovation); its centroid is the nearest neighbour (cosine \CentroidSimElevenNine). Smart-city and urban-AI vocabulary resembles innovation language, so the research corpus may under-count SDG 11 and over-count SDG 9. SDG 8 (Decent Work, F1 = \FiSdgEight) sits in a high-similarity cluster with SDGs 1 and 10 (cosine \CentroidSimOneEightTenMax{} and \CentroidSimOneEightTenMin{}); we report SDGs 1, 8, and 10 as one group. SDG 15 (Life on Land, F1 = \FiSdgFifteen) falls below the mean and may absorb some misclassified SDG 14 items, so read it with caution. SDG 4 has the highest F1 (\FiSdgFour); SDGs 6, 7, and 16 each exceed 0.87, so their vocabularies are distinct enough to classify reliably.
 
-\textbf{SDG 13/17 collinearity.} The SDG 13 and SDG 17 centroids have a pairwise cosine similarity of \CentroidSimThirteenSeventeen{}, comparable in magnitude to pairwise similarities within the SDG 1/8/10 cluster (\CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax). Climate discourse and partnership discourse are semantically intertwined in the combined reference corpora, producing substantial leakage between these two classifications. The individual figures of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17) are each subject to this leakage and are as uncertain as the SDG 1/8/10 cluster estimates. The combined SDG 13+17 policy share (\PolicyPctSdgThreePlusSeventeen\%) is the more interpretively stable figure. In both cases, the core finding --- that this cluster dominates the policy profile while research concentrates elsewhere --- is robust.
+SDG 17 (Partnerships for the Goals) has the lowest F1 of the 17 goals (\FiSdgSeventeen). Its broad, cross-cutting mandate resists a compact semantic definition, so its classification is the least certain. Per-source validation (Appendix~\ref{app:sdg-source-comparison}) shows this holds across all centroid sources.
+
+\textbf{SDG 13/17 collinearity.} The SDG 13 and SDG 17 centroids have a pairwise cosine similarity of \CentroidSimThirteenSeventeen{}, close to the SDG 1/8/10 cluster range (\CentroidSimOneEightTenMin--\CentroidSimOneEightTenMax). Climate and partnership discourse overlap in the reference corpora, so the two labels leak into each other. The separate shares of \PolicyPctSdgThirteen\% (SDG 13) and \PolicyPctSdgSeventeen\% (SDG 17) carry this uncertainty; the combined 13+17 share (\PolicyPctSdgThreePlusSeventeen\%) is the stable one to report.
 
 \begin{figure}[ht]
 \centering
@@ -341,7 +347,7 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs.
 
 Table~\ref{tab:interaction} reports the H1 coverage–semantic correlation tests between coverage measures and semantic gap scores across the SDGs.
 
-\begin{table}[ht]
+\begin{table}[H]
 \centering
 \caption{H1 correlation tests (Pearson $r$, Spearman $\rho$) between four coverage predictors and the within-SDG semantic gap, across the 17 SDGs. The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. Each panel reports the canonical result (all 17 observed SDGs) and a sensitivity test excluding SDG~4, then replicates the four tests under an alternative embedding model (MPNet) and four alternative reference-source centroids (OSDG, SDGi, Knowledge Hub, Aurora).}
 \label{tab:interaction}
