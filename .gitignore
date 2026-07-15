@@ -92,6 +92,16 @@ checkpoints/
 # === Marker-committed outputs ===
 !4_outputs/
 !4_outputs/**
+4_outputs/dissertation.aux
+4_outputs/dissertation.bbl
+4_outputs/dissertation.bcf
+4_outputs/dissertation.blg
+4_outputs/dissertation.fdb_latexmk
+4_outputs/dissertation.fls
+4_outputs/dissertation.log
+4_outputs/dissertation.out
+4_outputs/dissertation.run.xml
+4_outputs/dissertation.toc
 4_outputs/**/*.aux
 4_outputs/**/*.bbl
 4_outputs/**/*.bcf
