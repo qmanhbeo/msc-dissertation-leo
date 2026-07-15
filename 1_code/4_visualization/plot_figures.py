@@ -1,20 +1,23 @@
 """
 plot_figures.py — Generate dissertation figures from analysis outputs.
 
-Produces three publication-quality figures for the dissertation:
+Produces four publication-quality figures for the dissertation:
 
-    Figure 1 — Coverage profiles: research vs policy (horizontal grouped bar chart)
-    Figure 2 — Semantic gap by SDG (horizontal bar chart, sorted descending)
-    Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
+    Figure 1 — Centroid pairwise similarity heatmap (lower triangle, all-MiniLM-L6-v2)
+    Figure 2 — Coverage profiles: research vs policy (horizontal grouped bar chart)
+    Figure 3 — Semantic gap by SDG (horizontal bar chart, sorted descending)
+    Figure 4 — Coverage vs semantic gap scatter (diagnostic map)
 
 Inputs:
-     4_outputs/main/data/4_4_interaction_scatter_data.csv      — per-SDG metrics table from coverage_semantic_interaction.py
-     4_outputs/main/data/4_2_coverage_document_weighted.json  — corpus-level n counts for legend labels
+      4_outputs/main/data/4_1_centroid_similarity_matrix.csv     — 17x17 pairwise centroid cosine similarity
+      4_outputs/main/data/4_4_interaction_scatter_data.csv       — per-SDG metrics table from coverage_semantic_interaction.py
+      4_outputs/main/data/4_2_coverage_document_weighted.json   — corpus-level n counts for legend labels
 
 Outputs:
-    4_outputs/main/figures/fig1_coverage_profiles.pdf
-    4_outputs/main/figures/fig2_semantic_gap.pdf
-    4_outputs/main/figures/fig3_coverage_semantic_scatter.pdf
+     4_outputs/main/figures/fig1_centroid_similarity_heatmap.pdf
+     4_outputs/main/figures/fig2_coverage_profiles.pdf
+     4_outputs/main/figures/fig3_semantic_gap.pdf
+     4_outputs/main/figures/fig4_coverage_semantic_scatter.pdf
 
 Run:
     python 1_code/4_visualization/plot_figures.py
@@ -91,6 +94,45 @@ SDG_SHORT = {
     16: "SDG 16\nPeace & Justice",
     17: "SDG 17\nPartnerships‡",
 }
+
+
+def plot_centroid_similarity_heatmap(layout) -> None:
+    """Render an annotated 17x17 heatmap of pairwise canonical SDG-centroid cosine similarity."""
+    csv_path = layout.data_dir / "4_1_centroid_similarity_matrix.csv"
+    mat = pd.read_csv(csv_path, index_col=0).apply(pd.to_numeric, errors="coerce")
+    M = mat.to_numpy(dtype=float)
+    n = M.shape[0]
+    ticks = [int(str(c).replace("SDG", "")) for c in mat.columns]
+
+    # The matrix is symmetric; show only the lower triangle + diagonal.
+    mask = np.triu(np.ones((n, n), dtype=bool), k=1)
+    M_masked = np.ma.masked_where(mask, M)
+
+    fig, ax = plt.subplots(figsize=(7.2, 6.2))
+    vmin = float(np.nanmin(M))
+    cmap = plt.get_cmap("Blues").copy()
+    cmap.set_bad("white")
+    im = ax.imshow(M_masked, cmap=cmap, vmin=vmin, vmax=1.0, aspect="equal")
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(ticks, fontsize=8)
+    ax.set_yticklabels(ticks, fontsize=8)
+    ax.set_xlabel("SDG centroid")
+    ax.set_ylabel("SDG centroid")
+    for i in range(n):
+        for j in range(n):
+            if mask[i, j]:
+                continue
+            v = M[i, j]
+            ax.text(j, i, f"{v:.2f}", ha="center", va="center",
+                    fontsize=6.5, color="white" if v > 0.72 else "black")
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label("Cosine similarity")
+    fig.tight_layout()
+    fig.savefig(layout.figures_dir / "fig1_centroid_similarity_heatmap.pdf", bbox_inches="tight")
+    fig.savefig(layout.figures_dir / "fig1_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
+    plt.close(fig)
+    print("Saved: fig1_centroid_similarity_heatmap.pdf")
 
 
 def main() -> None:
@@ -182,10 +224,10 @@ def main() -> None:
     ax1.invert_yaxis()
 
     fig1.tight_layout()
-    fig1.savefig(figures_dir / "fig1_coverage_profiles.pdf", bbox_inches="tight")
-    fig1.savefig(figures_dir / "fig1_coverage_profiles.png", bbox_inches="tight", dpi=300)
+    fig1.savefig(figures_dir / "fig2_coverage_profiles.pdf", bbox_inches="tight")
+    fig1.savefig(figures_dir / "fig2_coverage_profiles.png", bbox_inches="tight", dpi=300)
     plt.close(fig1)
-    print("Saved: fig1_coverage_profiles.pdf")
+    print("Saved: fig2_coverage_profiles.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 2 — Semantic gap by SDG
@@ -220,10 +262,10 @@ def main() -> None:
     ax2.invert_yaxis()
 
     fig2.tight_layout()
-    fig2.savefig(figures_dir / "fig2_semantic_gap.pdf", bbox_inches="tight")
-    fig2.savefig(figures_dir / "fig2_semantic_gap.png", bbox_inches="tight", dpi=300)
+    fig2.savefig(figures_dir / "fig3_semantic_gap.pdf", bbox_inches="tight")
+    fig2.savefig(figures_dir / "fig3_semantic_gap.png", bbox_inches="tight", dpi=300)
     plt.close(fig2)
-    print("Saved: fig2_semantic_gap.pdf")
+    print("Saved: fig3_semantic_gap.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
@@ -263,10 +305,16 @@ def main() -> None:
     ax3.grid(True, alpha=0.3, linestyle=":", linewidth=0.5)
 
     fig3.tight_layout()
-    fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.pdf", bbox_inches="tight")
-    fig3.savefig(figures_dir / "fig3_coverage_semantic_scatter.png", bbox_inches="tight", dpi=300)
+    fig3.savefig(figures_dir / "fig4_coverage_semantic_scatter.pdf", bbox_inches="tight")
+    fig3.savefig(figures_dir / "fig4_coverage_semantic_scatter.png", bbox_inches="tight", dpi=300)
     plt.close(fig3)
-    print("Saved: fig3_coverage_semantic_scatter.pdf")
+    print("Saved: fig4_coverage_semantic_scatter.pdf")
+
+    # -----------------------------------------------------------------------
+    # Centroid pairwise similarity heatmap
+    # -----------------------------------------------------------------------
+    plot_centroid_similarity_heatmap(layout)
+
     print(f"\\nAll figures saved to {figures_dir}")
 
 

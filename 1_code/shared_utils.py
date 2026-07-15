@@ -54,6 +54,7 @@ MANUSCRIPT_EXTRA_FILES = [
 MANUSCRIPT_TABLE_FILES = [
     "num_validation.tex",
     "tab_validation.tex",
+    "tab_cross_sensitivity_robustness.tex",
     "num_coverage.tex",
     "tab_coverage.tex",
     "num_semantic.tex",
@@ -63,12 +64,14 @@ MANUSCRIPT_TABLE_FILES = [
 ]
 
 MANUSCRIPT_FIGURE_FILES = [
-    "fig1_coverage_profiles.pdf",
-    "fig1_coverage_profiles.png",
-    "fig2_semantic_gap.pdf",
-    "fig2_semantic_gap.png",
-    "fig3_coverage_semantic_scatter.pdf",
-    "fig3_coverage_semantic_scatter.png",
+    "fig1_centroid_similarity_heatmap.pdf",
+    "fig1_centroid_similarity_heatmap.png",
+    "fig2_coverage_profiles.pdf",
+    "fig2_coverage_profiles.png",
+    "fig3_semantic_gap.pdf",
+    "fig3_semantic_gap.png",
+    "fig4_coverage_semantic_scatter.pdf",
+    "fig4_coverage_semantic_scatter.png",
 ]
 
 MANUSCRIPT_APPENDIX_TABLE_FILES = [
@@ -167,9 +170,6 @@ def require_pdf_inputs(output_dir: Path) -> Path:
         path = root / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
-    path = root / "tables" / "tab_cross_sensitivity_robustness.tex"
-    if not path.exists():
-        missing.append(str(path.relative_to(root)))
     if missing:
         missing_str = ", ".join(missing)
         raise FileNotFoundError(
@@ -191,7 +191,6 @@ def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     files.extend(root / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
     files.extend(root / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
     files.extend(root / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
-    files.append(root / "tables" / "tab_cross_sensitivity_robustness.tex")
     _sen = "appendix/d_model_sensitivity"
     for name in MANUSCRIPT_ROOT_FILES:
         if name != "dissertation.pdf":

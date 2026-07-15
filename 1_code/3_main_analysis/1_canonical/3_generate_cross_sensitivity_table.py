@@ -1,8 +1,8 @@
 """Generate cross-sensitivity tables for the main text.
 
 Outputs two tables:
-  1. 4_outputs/tables/tab_cross_sensitivity_robustness.tex  (gap ranks)
-  2. 4_outputs/main/tables/tab_validation.tex               (F1 validation)
+  1. 4_outputs/main/tables/tab_cross_sensitivity_robustness.tex  (gap ranks)
+  2. 4_outputs/main/tables/tab_validation.tex                    (F1 validation)
 """
 
 import argparse
@@ -300,7 +300,7 @@ def main():
         r"\end{table}",
     ])
 
-    out_path = OUT_TABLES / "tab_cross_sensitivity_robustness.tex"
+    out_path = OUT_MAIN / "tab_cross_sensitivity_robustness.tex"
     out_path.write_text("\n".join(lines) + "\n")
     print(f"Written {out_path}")
     print(f"Table rows: {len(rows)}")
