@@ -36,6 +36,7 @@
 \input{../4_outputs/main/tables/num_coverage.tex}
 \input{../4_outputs/main/tables/num_semantic.tex}
 \input{../4_outputs/main/tables/num_interaction.tex}
+\input{../4_outputs/appendix/a_loo_sdgi_circularity/tables/num_loo_sdgi_circularity.tex}
 \InputIfFileExists{../4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/b1_pca_semantic_landscape/tables/num_b1_pca_landscape.tex}{}{}
@@ -274,7 +275,7 @@ A bidirectional asymmetry diagnostic was also explored, but is reported only in 
 \subsection{Key Assumptions and Mitigations}
 \label{sec:assumptions}
 
-\textbf{Corpus-level score asymmetry.} Policy segments score systematically higher than research papers against the combined centroids (mean \AffFifteenPolicyScore{} vs \AffFifteenPaperScore{}, difference \AffFifteenDiff). This may reflect genre effects from the multi-source centroid or the substantive fact that policy documents address SDG implementation more directly — the two cannot be separated. The ambiguity does not affect the primary findings: coverage uses hard assignment rather than absolute scores, and gap rankings are robust to the asymmetry.
+\textbf{Corpus-level score asymmetry.} Policy segments score systematically higher than research papers against the combined centroids (mean \AffFifteenPolicyScore{} vs \AffFifteenPaperScore{}, difference \AffFifteenDiff). This may reflect genre effects from the multi-source centroid or the substantive fact that policy documents address SDG implementation more directly — the two cannot be separated. The ambiguity does not affect the primary findings: coverage uses hard assignment rather than absolute scores, and gap rankings are robust to the asymmetry. A leave-one-source-out check tests whether this asymmetry comes from SDGi texts feeding both the centroid and the scored policy corpus. It does not: see Appendix~\ref{app:sdgi-circularity-check}.
 
 \textbf{Text-unit asymmetry.} Research papers are single abstract-length texts (mean $\sim$200 words); policy items are 150-word segments from documents of highly variable length. Document-weighting and per-document segment caps are the primary mitigations.
 
@@ -530,6 +531,17 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
 \par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap. Each row compares the same SDG's gap across the three source families and the full corpus; read across a row to see whether the gap is stable or driven by one family.\par
 \end{table}
+
+\subsection{SDGi Circularity Check}
+\label{app:sdgi-circularity-check}
+
+The SDGi Corpus supplies part of the SDG centroids (Section~\ref{sec:centroids-validation}) and also supplies \LooSdgiNSegments{} of the \NPolicySegments{} policy segments (\LooSdgiPctCorpus\%) scored against those centroids. This overlap could inflate the policy-side score and explain part of the \AffFifteenDiff{} policy--research gap (Section~\ref{sec:assumptions}).
+
+To test this, I rebuilt the centroids from OSDG, Knowledge Hub, and Aurora only, with SDGi removed. I then rescored the SDGi policy segments against this SDGi-excluded centroid. The mean top score was \LooSdgiPolicyTop{}, against a canonical policy mean of \AffFifteenPolicyScore{}. The research-paper mean top score against the same centroid was \LooSdgiPaperTop{}, against a canonical \AffFifteenPaperScore{}. The resulting gap was \LooSdgiGap{}, against the canonical \AffFifteenDiff{} --- a difference of \LooSdgiGapChange{}.
+
+Rescoring the full policy corpus against the SDGi-excluded centroid gives a mean top score of 0.556, close to the canonical \AffFifteenPolicyScore{}.
+
+The gap does not shrink when SDGi is removed from the centroid. Since SDGi is \LooSdgiPctCorpus\% of the policy corpus, a real circularity effect would likely have shown up here. It did not. This is a null result: the policy--research score asymmetry is not explained by the overlap between the SDGi centroid source and the SDGi policy segments.
 
 \subsection{SDG 4 Lexical Artefact Audit}
 \label{app:sdg4-lexical-audit}
