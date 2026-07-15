@@ -110,7 +110,50 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Validate SDG centroids into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--bootstrap", type=int, default=0,
+                   help="Number of bootstrap resamples (with replacement) for per-SDG F1 CIs. 0 disables.")
+    p.add_argument("--bootstrap-seed", type=int, default=42, help="RNG seed for the bootstrap.")
     return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap (with replacement) for per-SDG F1 / macro-F1 confidence intervals
+# ---------------------------------------------------------------------------
+def run_bootstrap(true_sdgs: np.ndarray, pred_sdgs: np.ndarray, n_boot: int, seed: int) -> dict:
+    """Bootstrap CIs over the 616 benchmark (canonical MiniLM column only).
+
+    Predictions are deterministic given the frozen centroids, so each bootstrap
+    resample draws (true, predicted) instance pairs with replacement and
+    recomputes per-SDG F1 and macro-F1. SDGs absent from a resample are scored
+    as 0 (zero_division=0), matching the point-estimate convention.
+    """
+    rng = np.random.default_rng(seed)
+    n = len(true_sdgs)
+    labels_17 = list(range(1, 18))
+    per_sdg_boot = np.zeros((n_boot, 17), dtype=np.float64)
+    macro_boot = np.zeros(n_boot, dtype=np.float64)
+    for b in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        t = true_sdgs[idx]
+        p = pred_sdgs[idx]
+        f1 = f1_score(t, p, average=None, labels=labels_17, zero_division=0)
+        per_sdg_boot[b] = f1
+        macro_boot[b] = float(f1.mean())
+    lo, hi = 2.5, 97.5
+    per_sdg_ci = {
+        str(sdg): {
+            "point": round(float(per_sdg_boot[:, sdg - 1].mean()), 4),
+            "ci_low": round(float(np.percentile(per_sdg_boot[:, sdg - 1], lo)), 4),
+            "ci_high": round(float(np.percentile(per_sdg_boot[:, sdg - 1], hi)), 4),
+        }
+        for sdg in labels_17
+    }
+    macro_ci = {
+        "point": round(float(macro_boot.mean()), 4),
+        "ci_low": round(float(np.percentile(macro_boot, lo)), 4),
+        "ci_high": round(float(np.percentile(macro_boot, hi)), 4),
+    }
+    return {"n_boot": n_boot, "seed": seed, "per_sdg_f1_ci": per_sdg_ci, "macro_f1_ci": macro_ci}
 
 
 # ---------------------------------------------------------------------------
@@ -297,6 +340,22 @@ def main() -> None:
     # (4) flag A26 (SDG 1-8-10 cluster collinearity).
     save_csv_matrix(centroid_sim, labels_17, out_centroid_sim)
     log.info("Saved: %s  (17×17 pairwise centroid cosine sim)", out_centroid_sim)
+
+    # ---- Bootstrap CIs (canonical MiniLM column only) ----
+    if args.bootstrap and args.bootstrap > 0:
+        boot = run_bootstrap(true_sdgs, pred_sdgs, args.bootstrap, args.bootstrap_seed)
+        out_boot = layout.data_dir / "4_1_validation_bootstrap_ci.json"
+        with out_boot.open("w", encoding="utf-8") as f:
+            json.dump(boot, f, indent=2)
+        log.info("")
+        log.info("BOOTSTRAP CIs (n=%d resamples, seed=%d)", args.bootstrap, args.bootstrap_seed)
+        log.info("  Macro-F1 CI : [%.3f, %.3f]  (point %.3f)",
+                 boot["macro_f1_ci"]["ci_low"], boot["macro_f1_ci"]["ci_high"], boot["macro_f1_ci"]["point"])
+        for sdg in labels_17:
+            ci = boot["per_sdg_f1_ci"][str(sdg)]
+            log.info("  SDG %2d F1 CI : [%.3f, %.3f]  (point %.3f)",
+                     sdg, ci["ci_low"], ci["ci_high"], ci["point"])
+        log.info("Saved: %s", out_boot)
 
     log.info("\nNext step: run the active scoring path (shard scoring or bridge materialisation).")
 
