@@ -491,7 +491,7 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \caption{Per-SDG source comparison: research coverage and within-SDG semantic gap for each reference source.}
 \label{tab:sdg-source-comparison-covgap}
 \input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_covgap.tex}
-\par\smallskip\footnotesize\emph{Notes:} Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence.\par
+\par\smallskip\footnotesize\emph{Notes:} Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence. Each row compares the same SDG's gap across the four reference sources; read down a column to see how a source shifts the gap, and across a row to see whether the gap ranking is stable.\par
 \end{table}
 
 Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.959--0.996), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
@@ -528,7 +528,7 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \caption{Per-SDG policy source-family sensitivity: semantic gap.}
 \label{tab:policy-source-family-gap}
 \input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
-\par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap.\par
+\par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap. Each row compares the same SDG's gap across the three source families and the full corpus; read across a row to see whether the gap is stable or driven by one family.\par
 \end{table}
 
 \subsection{SDG 4 Lexical Artefact Audit}
