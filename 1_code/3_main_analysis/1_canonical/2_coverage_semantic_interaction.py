@@ -271,6 +271,15 @@ def main() -> None:
     log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact):")
     tests_excl4 = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, excl4_mask)
 
+    # Sensitivity: exclude SDG 17 (largest within-SDG gap; flagged source-sensitive in the
+    # cross-sensitivity check). Tests whether the correlation pattern depends on the single
+    # most divergent SDG.
+    excl17_mask = available_mask.copy()
+    excl17_mask[16] = False   # SDG 17 is index 16
+    log.info("")
+    log.info("SENSITIVITY — EXCLUDING SDG 17 (largest gap, source-sensitive):")
+    tests_excl17 = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, excl17_mask)
+
     # ---- Correlation interpretation ----
     # Primary headline test: research coverage vs semantic gap (predictor "research").
     primary_stats = tests_primary["research"]
@@ -358,6 +367,7 @@ def main() -> None:
             "correlations_primary_observed": tests_primary,
             "correlations_reliable_only": tests_reliable,
             "correlations_excl_sdg4": tests_excl4,
+            "correlations_excl_sdg17": tests_excl17,
         },
         "per_sdg_table": [
             {
@@ -471,6 +481,7 @@ def main() -> None:
     # 1. Primary observed SDGs + Excluding SDG 4 (already computed above).
     config_rows.append(("Primary observed SDGs", tests_primary))
     config_rows.append((r"Excluding SDG 4", tests_excl4))
+    config_rows.append((r"Excluding SDG 17", tests_excl17))
 
     # 2. MPNet model
     mpnet_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" / "main" / "data"

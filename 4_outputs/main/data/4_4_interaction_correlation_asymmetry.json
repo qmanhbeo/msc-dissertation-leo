@@ -245,6 +245,112 @@
         ],
         "skipped": false
       }
+    },
+    "correlations_excl_sdg17": {
+      "research": {
+        "n": 16,
+        "pearson_r": 0.022228,
+        "pearson_p": 0.934879,
+        "spearman_rho": 0.126471,
+        "spearman_p": 0.640694,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "skipped": false
+      },
+      "policy": {
+        "n": 16,
+        "pearson_r": 0.214886,
+        "pearson_p": 0.424161,
+        "spearman_rho": -0.224356,
+        "spearman_p": 0.403519,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "skipped": false
+      },
+      "covgap": {
+        "n": 16,
+        "pearson_r": 0.284764,
+        "pearson_p": 0.285073,
+        "spearman_rho": 0.344118,
+        "spearman_p": 0.191856,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "skipped": false
+      },
+      "dominance": {
+        "n": 16,
+        "pearson_r": -0.15853,
+        "pearson_p": 0.5576,
+        "spearman_rho": 0.088235,
+        "spearman_p": 0.745222,
+        "sdgs": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "skipped": false
+      }
     }
   },
   "per_sdg_table": [
