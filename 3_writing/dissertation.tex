@@ -248,7 +248,7 @@ A text is assigned to the nearest SDG centroid under cosine similarity. Every as
 
 Nearest-centroid assigns each text to the SDG whose average embedding is closest. The method is simple, fast, and avoids the overfitting that small training sets bring to supervised classifiers. I chose it deliberately: the study needs a transparent tool to compare corpora, not a classifier built to label single documents. A tuned classifier could label single documents more accurately, but it would add training choices, hyperparameters, and overfitting risk I do not need. The centroid is the average point of each SDG's texts in semantic space, so the scores I report are easy to interpret.
 
-Additional diagnostic checks — the combined PCA semantic landscape (Section~\ref{sec:assumptions}), within-corpus centroid-structure diagnostics, a softmax-weighted multi-label alternative, policy source-family sensitivity, and an SDG~4 lexical audit — are reported in Appendix~\ref{app:additional-perspectives}. The canonical analysis uses hard nearest-centroid assignment as a transparent and reproducible anchoring procedure.
+Additional diagnostic checks — within-corpus centroid-structure diagnostics, a softmax-weighted multi-label alternative, policy source-family sensitivity, and an SDG~4 lexical audit — are reported in Appendix~\ref{app:additional-perspectives}. The canonical analysis uses hard nearest-centroid assignment as a transparent and reproducible anchoring procedure.
 
 \subsection{Coverage Gap Analysis}
 
