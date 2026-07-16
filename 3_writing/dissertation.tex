@@ -288,11 +288,13 @@ The first hypothesis (H1) decomposes into four named sub-hypotheses, each correl
 
 \subsection{Key Assumptions and Mitigations}\label{sec:assumptions-stub}
 
-This subsection records the design-level assumptions that shape the comparison before any measurement takes place. Two such choices are methodological decisions rather than empirical findings: how text units are handled across the two corpora, and how a known limitation of the SDG~4 reference labels is treated. The empirical scoring asymmetries themselves --- how the two corpora actually score against the centroids and where those gaps come from --- are reported as results in Section~\ref{sec:assumptions}; what follows here is only the design framing that precedes them.
+This subsection records the design-level assumptions that shape the comparison before any measurement takes place. Two such choices are methodological decisions rather than empirical findings: how text units are handled across the two corpora, and how a known limitation of the SDG~4 reference labels is treated.
 
 \textbf{Text-unit handling is a design choice, not a result.} Research papers are single abstract-length texts (mean $\sim$200 words); policy items are 150-word segments from documents of highly variable length. Document-weighting and per-document segment caps are adopted up front to keep the two corpora comparable; they are fixed procedures, not findings derived from the data.
 
-\textbf{Labelled-data limitation on SDG 4.} The OSDG education corpus overlaps in vocabulary with machine-learning papers (``learning'', ``training'', ``model''). This is a limitation of the reference labels, carried through to the results and mitigated there by artefact-flagged sensitivity analyses (Section~\ref{sec:sdg4artefact}), not resolved at the design stage.
+\textbf{Labelled-data limitation on SDG 4.}
+\label{sec:sdg4artefact}
+The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality Education), flagged as artefact-affected because ML papers share core vocabulary (``learning'', ``training'', ``model'') with the OSDG education corpus. Appendix~\ref{app:sdg4-lexical-audit} confirms that SDG~4-assigned texts contain education-specific terms more often than matched non-SDG4 samples, but co-occur with ML-learning vocabulary. The result is retained as a learning-related SDG~4 assignment rather than a clean education estimate. Sensitivity analyses excluding SDG~4 are provided for all correlation results. This is a limitation of the reference labels, carried through to the results and mitigated there by artefact-flagged sensitivity analyses, not resolved at the design stage.
 
 %% ============================================================
 \section{Results}
@@ -343,10 +345,6 @@ This subsection reports how the two corpora actually score against the measureme
 \textbf{Summary.} The policy--research score gap is real and uniform in direction (policy always closer to the centroids) but its size varies by goal and its cause is unidentified. It is a measurement artefact to hold constant, not a finding about AI-for-sustainability content: hard assignment isolates the within-corpus ranking the analysis actually uses, and the leave-one-source-out check shows it is not an SDGi circularity effect. The reference centroids' policy-adjacency is a caution about reading proximity as alignment, not a defect of the method; within-corpus structure diagnostics in Appendix~\ref{app:additional-perspectives} show the same fuzz at corpus level.
 
 \subsection{Coverage Gap: What SDGs Each Corpus Prioritises}\label{sec:coverage-gap}
-
-\textbf{SDG 4 lexical artefact.}
-\label{sec:sdg4artefact}
-The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality Education), flagged as artefact-affected because ML papers share core vocabulary (``learning'', ``training'', ``model'') with the OSDG education corpus. Appendix~\ref{app:sdg4-lexical-audit} confirms that SDG~4-assigned texts contain education-specific terms more often than matched non-SDG4 samples, but co-occur with ML-learning vocabulary. The result is retained as a learning-related SDG~4 assignment rather than a clean education estimate. Sensitivity analyses excluding SDG~4 are provided for all correlation results.
 
 Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverage profile alongside the research coverage profile. The two profiles are markedly different.
 
