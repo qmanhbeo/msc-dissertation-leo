@@ -14,10 +14,10 @@ Inputs:
       4_outputs/main/data/4_2_coverage_document_weighted.json   — corpus-level n counts for legend labels
 
 Outputs:
-     4_outputs/main/figures/fig1_centroid_similarity_heatmap.pdf
-     4_outputs/main/figures/fig2_coverage_profiles.pdf
-     4_outputs/main/figures/fig3_semantic_gap.pdf
-     4_outputs/main/figures/fig4_coverage_semantic_scatter.pdf
+     4_outputs/appendix/a5_centroid_similarity/figures/fig_a5_centroid_similarity_heatmap.pdf
+     4_outputs/main/figures/fig3_coverage_profiles.pdf
+     4_outputs/main/figures/fig4_semantic_gap.pdf
+     4_outputs/main/figures/fig5_coverage_semantic_scatter.pdf
 
 Run:
     python 1_code/4_visualization/plot_figures.py
@@ -226,10 +226,10 @@ def main() -> None:
     ax1.invert_yaxis()
 
     fig1.tight_layout()
-    fig1.savefig(figures_dir / "fig2_coverage_profiles.pdf", bbox_inches="tight")
-    fig1.savefig(figures_dir / "fig2_coverage_profiles.png", bbox_inches="tight", dpi=300)
+    fig1.savefig(figures_dir / "fig3_coverage_profiles.pdf", bbox_inches="tight")
+    fig1.savefig(figures_dir / "fig3_coverage_profiles.png", bbox_inches="tight", dpi=300)
     plt.close(fig1)
-    print("Saved: fig2_coverage_profiles.pdf")
+    print("Saved: fig3_coverage_profiles.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 2 — Semantic gap by SDG
@@ -264,10 +264,10 @@ def main() -> None:
     ax2.invert_yaxis()
 
     fig2.tight_layout()
-    fig2.savefig(figures_dir / "fig3_semantic_gap.pdf", bbox_inches="tight")
-    fig2.savefig(figures_dir / "fig3_semantic_gap.png", bbox_inches="tight", dpi=300)
+    fig2.savefig(figures_dir / "fig4_semantic_gap.pdf", bbox_inches="tight")
+    fig2.savefig(figures_dir / "fig4_semantic_gap.png", bbox_inches="tight", dpi=300)
     plt.close(fig2)
-    print("Saved: fig3_semantic_gap.pdf")
+    print("Saved: fig4_semantic_gap.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
@@ -307,10 +307,10 @@ def main() -> None:
     ax3.grid(True, alpha=0.3, linestyle=":", linewidth=0.5)
 
     fig3.tight_layout()
-    fig3.savefig(figures_dir / "fig4_coverage_semantic_scatter.pdf", bbox_inches="tight")
-    fig3.savefig(figures_dir / "fig4_coverage_semantic_scatter.png", bbox_inches="tight", dpi=300)
+    fig3.savefig(figures_dir / "fig5_coverage_semantic_scatter.pdf", bbox_inches="tight")
+    fig3.savefig(figures_dir / "fig5_coverage_semantic_scatter.png", bbox_inches="tight", dpi=300)
     plt.close(fig3)
-    print("Saved: fig4_coverage_semantic_scatter.pdf")
+    print("Saved: fig5_coverage_semantic_scatter.pdf")
 
     # -----------------------------------------------------------------------
     # Centroid pairwise similarity heatmap

@@ -6,13 +6,13 @@ centroid method produces coherent within-corpus SDG structure, without altering 
 main alignment metrics.
 
 Outputs:
-  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.pdf
-  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_research_sdg_pca.png
-  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_policy_sdg_pca.pdf
-  4_outputs/appendix/b2_within_corpus_centroid/figures/fig_b2_policy_sdg_pca.png
-  4_outputs/appendix/b2_within_corpus_centroid/data/b2_within_corpus_metrics.csv
-  4_outputs/appendix/b2_within_corpus_centroid/data/b2_within_corpus_summary.json
-  4_outputs/appendix/b2_within_corpus_centroid/tables/num_b2_within_corpus_centroid.tex
+  4_outputs/appendix/b1_within_corpus_centroid/figures/fig_b1_research_sdg_pca.pdf
+  4_outputs/appendix/b1_within_corpus_centroid/figures/fig_b1_research_sdg_pca.png
+  4_outputs/appendix/b1_within_corpus_centroid/figures/fig_b1_policy_sdg_pca.pdf
+  4_outputs/appendix/b1_within_corpus_centroid/figures/fig_b1_policy_sdg_pca.png
+  4_outputs/appendix/b1_within_corpus_centroid/data/b1_within_corpus_metrics.csv
+  4_outputs/appendix/b1_within_corpus_centroid/data/b1_within_corpus_summary.json
+  4_outputs/appendix/b1_within_corpus_centroid/tables/num_b1_within_corpus_centroid.tex
 
 Run from project root:
     python 1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py
@@ -80,13 +80,13 @@ from semantic_gap_shared import (
     load_json,
 )
 
-RESEARCH_FIG_PDF = "fig_b2_research_sdg_pca.pdf"
-RESEARCH_FIG_PNG = "fig_b2_research_sdg_pca.png"
-POLICY_FIG_PDF = "fig_b2_policy_sdg_pca.pdf"
-POLICY_FIG_PNG = "fig_b2_policy_sdg_pca.png"
-METRICS_CSV = "b2_within_corpus_metrics.csv"
-SUMMARY_JSON = "b2_within_corpus_summary.json"
-NUM_TEX = "num_b2_within_corpus_centroid.tex"
+RESEARCH_FIG_PDF = "fig_b1_research_sdg_pca.pdf"
+RESEARCH_FIG_PNG = "fig_b1_research_sdg_pca.png"
+POLICY_FIG_PDF = "fig_b1_policy_sdg_pca.pdf"
+POLICY_FIG_PNG = "fig_b1_policy_sdg_pca.png"
+METRICS_CSV = "b1_within_corpus_metrics.csv"
+SUMMARY_JSON = "b1_within_corpus_summary.json"
+NUM_TEX = "num_b1_within_corpus_centroid.tex"
 
 RESEARCH_COLOR = "#2166AC"
 POLICY_COLOR = "#D6604D"
@@ -535,7 +535,7 @@ def main() -> None:
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
     _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
     _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
-    out_root = Path(args.output_dir) / "appendix" / "b2_within_corpus_centroid"
+    out_root = Path(args.output_dir) / "appendix" / "b1_within_corpus_centroid"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     figures_dir = out_root / "figures"

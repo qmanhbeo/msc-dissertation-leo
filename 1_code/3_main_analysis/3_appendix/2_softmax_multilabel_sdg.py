@@ -58,19 +58,19 @@ DEFAULT_TEMPERATURES = [0.03, 0.05, 0.10, 0.20]
 VARIANTS = ("raw_softmax", "corpus_calibrated_softmax")
 EPS = 1e-8
 
-COVERAGE_CSV = "b4_softmax_multilabel_coverage.csv"
-SEMANTIC_CSV = "b4_softmax_multilabel_semantic_gaps.csv"
-SUMMARY_CSV = "b4_softmax_multilabel_comparison_summary.csv"
-METADATA_JSON = "b4_softmax_multilabel_metadata.json"
-NUM_TEX = "num_b4_softmax_multilabel.tex"
-SUMMARY_TEX = "tab_b4_softmax_summary.tex"
+COVERAGE_CSV = "b3_softmax_multilabel_coverage.csv"
+SEMANTIC_CSV = "b3_softmax_multilabel_semantic_gaps.csv"
+SUMMARY_CSV = "b3_softmax_multilabel_comparison_summary.csv"
+METADATA_JSON = "b3_softmax_multilabel_metadata.json"
+NUM_TEX = "num_b3_softmax_multilabel.tex"
+SUMMARY_TEX = "tab_b3_softmax_summary.tex"
 
-COVERAGE_SCATTER_PDF = "fig_b4_softmax_vs_hard_coverage_gap.pdf"
-COVERAGE_SCATTER_PNG = "fig_b4_softmax_vs_hard_coverage_gap.png"
-SEMANTIC_SCATTER_PDF = "fig_b4_softmax_vs_hard_semantic_gap.pdf"
-SEMANTIC_SCATTER_PNG = "fig_b4_softmax_vs_hard_semantic_gap.png"
-TEMP_SENS_PDF = "fig_b4_softmax_temperature_sensitivity.pdf"
-TEMP_SENS_PNG = "fig_b4_softmax_temperature_sensitivity.png"
+COVERAGE_SCATTER_PDF = "fig_b3_softmax_vs_hard_coverage_gap.pdf"
+COVERAGE_SCATTER_PNG = "fig_b3_softmax_vs_hard_coverage_gap.png"
+SEMANTIC_SCATTER_PDF = "fig_b3_softmax_vs_hard_semantic_gap.pdf"
+SEMANTIC_SCATTER_PNG = "fig_b3_softmax_vs_hard_semantic_gap.png"
+TEMP_SENS_PDF = "fig_b3_softmax_temperature_sensitivity.pdf"
+TEMP_SENS_PNG = "fig_b3_softmax_temperature_sensitivity.png"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -379,7 +379,7 @@ def main() -> None:
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
-    out_root = Path(args.output_dir) / "appendix" / "b4_softmax_multilabel_sdg"
+    out_root = Path(args.output_dir) / "appendix" / "b3_softmax_multilabel_sdg"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     figures_dir = out_root / "figures"

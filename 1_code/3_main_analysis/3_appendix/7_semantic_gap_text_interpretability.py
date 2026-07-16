@@ -58,11 +58,11 @@ EXAMPLES_PER_SIDE = 3
 MIN_WORDS = 30
 RANDOM_SEED = 42
 
-OUTPUT_SUBDIR = "b3_semantic_gap_interpretability"
+OUTPUT_SUBDIR = "b2_semantic_gap_interpretability"
 TERMS_CSV = "semantic_gap_distinctive_terms.csv"
 EXAMPLES_CSV = "semantic_gap_representative_examples.csv"
 SUMMARY_JSON = "semantic_gap_interpretability_summary.json"
-TABLE_TEX = "tab_b3_semantic_gap_interpret.tex"
+TABLE_TEX = "tab_b2_semantic_gap_interpret.tex"
 
 SDG_LABELS = {
     9: "SDG 9",

@@ -328,8 +328,7 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> 
 
 
 def run_pca_semantic_landscape(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/0_pca_semantic_landscape.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/3_main_analysis/1_canonical/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("combined research-policy PCA landscape", cmd, step_id="B1")
