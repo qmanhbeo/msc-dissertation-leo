@@ -55,6 +55,7 @@ MANUSCRIPT_TABLE_FILES = [
     "num_validation.tex",
     "tab_validation.tex",
     "tab_cross_sensitivity_robustness.tex",
+    "num_cross_sensitivity.tex",
     "num_coverage.tex",
     "tab_coverage.tex",
     "num_semantic.tex",

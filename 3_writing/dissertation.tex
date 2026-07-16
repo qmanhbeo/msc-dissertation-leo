@@ -36,6 +36,7 @@
 \input{../4_outputs/main/tables/num_coverage.tex}
 \input{../4_outputs/main/tables/num_semantic.tex}
 \input{../4_outputs/main/tables/num_interaction.tex}
+\input{../4_outputs/main/tables/num_cross_sensitivity.tex}
 \input{../4_outputs/appendix/a3_sdgi_circularity/tables/num_loo_sdgi_circularity.tex}
 \InputIfFileExists{../4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex}{}{}
@@ -275,7 +276,9 @@ The semantic gap measures within-SDG divergence: given that both corpora have te
 \text{SemanticGap}_j = 1 - (\mathbf{c}^{\text{res}}_j \cdot \mathbf{c}^{\text{pol}}_j)
 \]
 
-A gap of 0 indicates perfectly overlapping semantic directions; a gap approaching~1 indicates orthogonal framing. Robustness was confirmed by replicating with caps of 20 and 100 segments per document — rankings were stable across all three.
+A gap of 0 indicates perfectly overlapping semantic directions; a gap approaching~1 indicates orthogonal framing.
+
+The policy corpus is represented as short segments rather than whole documents, so a per-SDG policy sub-centroid is a mean over all assigned segments. Without limitation, a handful of very long documents would dominate the cluster: SDSN contributes up to 3,179 segments and the SDGi VNR/VLR reports together account for 31,941. I therefore apply a \emph{per-document segment cap}: for each source document, at most $K$ of its segments are randomly sampled (seeded, hence reproducible) before the sub-centroid is built, so that no single document can outweigh the rest. Random rather than positional sampling (e.g.\ taking the first $K$ segments) avoids biasing the centroid toward a document's opening or closing passages. The canonical cap is $K = 50$ ($\approx$7,500 words), a conservative choice well above the median of roughly 14 segments per document. The cap choice was checked by repeating the computation at 20, 100, and 200 segments per document; the SDG gap rankings are near-identical to the canonical cap-50 results (rank correlation $\rho = \CapStabilityRho$; Table~\ref{tab:cross-sensitivity-robustness}, Section~\ref{sec:cross-sensitivity}).
 
 The raw centroid distance is retained as the primary measure because it directly corresponds to the observed framing difference between the two corpora within the same SDG. Register-adjusted sensitivity checks (Appendix~\ref{app:register-robustness}) are reported as uncertainty bounds rather than replacement estimates — more aggressive procedures risk over-subtracting the substantive contrast of interest.
 
@@ -364,7 +367,7 @@ Taken together, three observations support reading the coverage profiles as a re
 
 \subsection{Semantic Gap: How Differently Research and Policy Discuss Each SDG}\label{sec:semantic-gap}
 
-Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgNine{} (SDG 9) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. The SDG 17 gap is the largest but is highly sensitive to reference-source choice (Table~\ref{tab:sdg-source-comparison-covgap}, Appendix~\ref{app:sdg-source-comparison}). For context, the largest gap (\SemanticGapSdgSeventeen) is roughly double the systematic policy--research score gap (\AffFifteenDiff, Section~\ref{sec:assumptions}), indicating that the within-SDG divergence substantially exceeds the baseline measurement asymmetry. Rankings are stable across segment caps of 20, 50, and 100, confirming robustness to the document sampling parameter.
+Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs. Semantic gaps range from \SemanticGapSdgNine{} (SDG 9) to \SemanticGapSdgSeventeen{} (SDG 17), a span of \SemanticGapRange{} cosine distance units. The SDG 17 gap is the largest but is highly sensitive to reference-source choice (Table~\ref{tab:sdg-source-comparison-covgap}, Appendix~\ref{app:sdg-source-comparison}). For context, the largest gap (\SemanticGapSdgSeventeen) is roughly double the systematic policy--research score gap (\AffFifteenDiff, Section~\ref{sec:assumptions}), indicating that the within-SDG divergence substantially exceeds the baseline measurement asymmetry. The ranking is stable across segment caps of 20, 50, 100, and 200 (rank correlation $\rho = \CapStabilityRho$; Table~\ref{tab:cross-sensitivity-robustness}), confirming robustness to the document sampling parameter.
 
 \begin{figure}[ht]
 \centering
@@ -406,7 +409,7 @@ Figure~\ref{fig:typology_scatter} illustrates this diagnostic refinement. High-c
 \subsection{Cross-Sensitivity Robustness of the Gap Rankings}
 \label{sec:cross-sensitivity}
 
-The semantic gap rankings discussed below are not equally stable across all measurement choices. Table~\ref{tab:cross-sensitivity-robustness} compares each SDG's gap rank under the canonical configuration (MiniLM encoder, combined centroids, full policy corpus) against three families of alternatives: an alternative embedding model (MPNet), five reference-source configurations (OSDG-only, SDGi-only, Knowledge Hub-only, Aurora-only), and four policy sub-corpora (curated AI/SDG, SDGi VNR/VLR, UNGDC). Each cell reports the within-SDG gap rank where 1 = largest gap.
+The semantic gap rankings discussed below are not equally stable across all measurement choices. Table~\ref{tab:cross-sensitivity-robustness} compares each SDG's gap rank under the canonical configuration (MiniLM encoder, combined centroids, full policy corpus, segment cap 50) against four families of alternatives: an alternative embedding model (MPNet), four reference-source configurations (OSDG-only, SDGi-only, Knowledge Hub-only, Aurora-only), three policy sub-corpora (curated AI/SDG, SDGi VNR/VLR, UNGDC), and a segment-cap sensitivity (20, 100, 200 segments per document, holding encoder, centroids, and corpus fixed). Each cell reports the within-SDG gap rank where 1 = largest gap.
 
 Three tiers of robustness emerge directly from the data. First, a small set of SDGs maintain their relative positions across all or nearly all configurations. SDG 17 is the top-gap SDG in the canonical analysis and remains among the top two under model substitution and all policy-family checks, though its rank varies considerably under alternative reference sources (rank~8 under SDGi-only centroids, rank~16--17 under Knowledge Hub and Aurora). SDGs~9 and~5 are consistently among the lowest-gap SDGs across all measurement configurations, typically occupying the bottom three ranks. Second, a cluster of SDGs (6, 7, 13, 14) consistently occupy the upper half of the gap ranking across all checks, though their exact ordering shifts by no more than three positions. Third, the remaining SDGs (1, 2, 3, 8, 10, 11, 12, 15, 16) are sensitive to measurement choices: their ranks shift by four or more positions under model substitution alone, with additional variation across reference and policy sources. The discussion below limits its interpretive claims to findings that survive this filtering.
 

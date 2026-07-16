@@ -27,6 +27,30 @@ POLICY_FILE = APPENDIX / "a2_source_family_sensitivity" / "tables" / "tab_a2_pol
 F1_REF_FILE = APPENDIX / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_f1cos.tex"
 
 CI_FILE = root / "main" / "data" / "4_1_validation_bootstrap_ci.json"
+CAP_FILE = root / "main" / "data" / "4_3_semantic_gap_robustness_caps.json"
+
+import numpy as np
+
+
+def load_cap_ranks():
+    """Return {cap_key: {sdg: rank}} for cap_20, cap_50 (canon), cap_100, cap_200.
+
+    cap_50 baseline is taken from the canonical (minilm) model column, which is the
+    same configuration (MiniLM + combined centroids + full corpus + segment cap 50).
+    """
+    can_ranks = compute_ranks(parse_model_table(MODEL_FILE), "minilm")
+    data = {"cap_50": can_ranks}
+    if not CAP_FILE.exists():
+        return data
+    raw = json.loads(CAP_FILE.read_text(encoding="utf-8"))
+    for cap_key in ("cap_20", "cap_100", "cap_200"):
+        if cap_key not in raw:
+            continue
+        rows = {row["sdg"]: row["semantic_gap"] for row in raw[cap_key] if row["semantic_gap"] is not None}
+        ranks = {sdg: rank + 1 for rank, (sdg, _) in enumerate(
+            sorted(rows.items(), key=lambda x: x[1], reverse=True))}
+        data[cap_key] = ranks
+    return data
 
 
 def load_ci():
@@ -275,16 +299,38 @@ def main():
     f1_ref_data = parse_f1_ref_table(F1_REF_FILE)
 
     # Compute ranks per column
-    can_ranks = compute_ranks(model_data, "minilm")
+    canon_ranks = compute_ranks(model_data, "minilm")
     mpnet_ranks = compute_ranks(model_data, "mpnet")
 
-    ref_cols = ["combined", "osdg", "sdgi", "kh", "aurora"]
-    ref_labels = ["Combined", "OSDG-only", "SDGi-only", "KH-only", "Aurora"]
+    ref_cols = ["osdg", "sdgi", "kh", "aurora"]
+    ref_labels = ["OSDG-only", "SDGi-only", "KH-only", "Aurora"]
     ref_ranks = {col: compute_ranks(ref_data, col) for col in ref_cols}
 
-    policy_cols = ["full", "ai_sdg", "sdgi_vnr", "ungdc"]
-    policy_labels = ["Full", "AI/SDG", "SDGi-VNR", "UNGDC"]
+    policy_cols = ["ai_sdg", "sdgi_vnr", "ungdc"]
+    policy_labels = ["AI/SDG", "SDGi-VNR", "UNGDC"]
     policy_ranks = {col: compute_ranks(policy_data, col) for col in policy_cols}
+
+    # Segment-cap sensitivity ranks (cap_50 = canonical baseline)
+    cap_ranks = load_cap_ranks()
+    cap_keys = ["cap_20", "cap_50", "cap_100", "cap_200"]
+    cap_labels = ["Cap-20", "Cap-50", "Cap-100", "Cap-200"]
+
+    # Rank-correlation stability across the cap family (most conservative = min pairwise)
+    cap_rank_vectors = []
+    for key in cap_keys:
+        if key not in cap_ranks:
+            continue
+        vec = [cap_ranks[key].get(sdg) for sdg in range(1, 18)]
+        if all(v is not None for v in vec):
+            cap_rank_vectors.append(vec)
+    cap_stability_rho = "--"
+    if len(cap_rank_vectors) >= 2:
+        rho_vals = []
+        for i in range(len(cap_rank_vectors)):
+            for j in range(i + 1, len(cap_rank_vectors)):
+                r = np.corrcoef(cap_rank_vectors[i], cap_rank_vectors[j])[0, 1]
+                rho_vals.append(float(r))
+        cap_stability_rho = f"{min(rho_vals):.3f}"
 
     # Build table rows (SDGs in numerical order)
     rows = []
@@ -292,17 +338,22 @@ def main():
         cells = [f"SDG {sdg}"]
 
         # Model group
-        cells.append(str(can_ranks.get(sdg, "--")))
+        cells.append(str(canon_ranks.get(sdg, "--")))
         cells.append(str(mpnet_ranks.get(sdg, "--")))
 
-        # Reference group — the first column (Combined) is the baseline
+        # Reference group
         for col in ref_cols:
             r = ref_ranks[col].get(sdg)
             cells.append(str(r) if r is not None else "--")
 
-        # Policy group — the first column (Full) is the baseline
+        # Policy group
         for col in policy_cols:
             r = policy_ranks[col].get(sdg)
+            cells.append(str(r) if r is not None else "--")
+
+        # Segment-cap group
+        for key in cap_keys:
+            r = cap_ranks.get(key, {}).get(sdg)
             cells.append(str(r) if r is not None else "--")
 
         rows.append(cells)
@@ -312,16 +363,17 @@ def main():
         r"\begin{table}[ht]",
         r"\centering",
         r"\footnotesize",
-        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. A ``--'' indicates that the source does not cover that SDG.}",
+        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus); the Segment-cap group isolates the per-document segment-cap parameter (encoder, centroids, and corpus held fixed). A ``--'' indicates that the source does not cover that SDG.}",
         r"\label{tab:cross-sensitivity-robustness}",
         r"\resizebox{\textwidth}{!}{%",
-        r"\begin{tabular}{lccccccccccc}",
+        r"\begin{tabular}{lccccccccccccc}",
         r"\toprule",
         r"& \multicolumn{2}{c}{Model}",
-        r"& \multicolumn{5}{c}{Reference source}",
-        r"& \multicolumn{4}{c}{Policy source} \\",
-        r"\cmidrule(r){2-3} \cmidrule(lr){4-8} \cmidrule(l){9-12}",
-        r"SDG & Can & MPNet & Combined & OSDG & SDGi & KH & Aur & Full & AI/SDG & SDGi-VNR & UNGDC \\",
+        r"& \multicolumn{4}{c}{Reference source}",
+        r"& \multicolumn{3}{c}{Policy source}",
+        r"& \multicolumn{4}{c}{Segment cap} \\",
+        r"\cmidrule(r){2-3} \cmidrule(lr){4-7} \cmidrule(lr){8-10} \cmidrule(l){11-14}",
+        r"SDG & Canon & MPNet & OSDG & SDGi & KH & Aur & AI/SDG & SDGi-VNR & UNGDC & Cap-20 & Cap-50 & Cap-100 & Cap-200 \\",
         r"\midrule",
     ]
 
@@ -339,6 +391,15 @@ def main():
     out_path.write_text("\n".join(lines) + "\n")
     print(f"Written {out_path}")
     print(f"Table rows: {len(rows)}")
+    print(f"Cap stability rho (min pairwise): {cap_stability_rho}")
+
+    # Emit numeric macro for segment-cap stability
+    num_path = OUT_MAIN / "num_cross_sensitivity.tex"
+    num_path.write_text(
+        f"% Auto-generated by 3_generate_cross_sensitivity_table.py — do not edit by hand.\n"
+        f"\\newcommand{{\\CapStabilityRho}}{{{cap_stability_rho}}}\n"
+    )
+    print(f"Written {num_path}")
 
     write_f1_table(model_f1_data, f1_ref_data, load_ci())
 
