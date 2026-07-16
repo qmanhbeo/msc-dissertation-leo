@@ -286,6 +286,28 @@ def main() -> None:
     a15_paper_top = float(research["mean_top_overall"])
     a15_policy_top = float(policy_scores.max(axis=1).mean())
     a15_diff = a15_policy_top - a15_paper_top
+
+    # Per-SDG policy–research "top score" gap (uniformity check for the A15 asymmetry claim).
+    # Policy: mean of each segment's max centroid similarity, averaged within the SDG it tops.
+    # Research: mean_top_per_sdg already computed by aggregate_research_scores (mean top score
+    # per SDG over papers assigned to that SDG).
+    pol_top = policy_scores.max(axis=1)
+    pol_arg = policy_scores.argmax(axis=1)
+    pol_cnt = np.bincount(pol_arg, minlength=N_SDG).astype(float)
+    pol_top_per_sdg = np.bincount(pol_arg, weights=pol_top, minlength=N_SDG).astype(float)
+    valid = pol_cnt > 0
+    pol_top_per_sdg[valid] /= pol_cnt[valid]
+    res_top_per_sdg = np.asarray(research["mean_top_per_sdg"], dtype=float)
+    per_sdg_top_gap = np.full(N_SDG, np.nan)
+    per_sdg_top_gap[valid] = pol_top_per_sdg[valid] - res_top_per_sdg[valid]
+    finite = ~np.isnan(per_sdg_top_gap)
+    gap_stats = {
+        "min": float(per_sdg_top_gap[finite].min()),
+        "max": float(per_sdg_top_gap[finite].max()),
+        "std": float(per_sdg_top_gap[finite].std()),
+        "mean": float(per_sdg_top_gap[finite].mean()),
+        "n_valid": int(finite.sum()),
+    }
     coverage_gap_out = {
         "method": "document_weighted",
         "note": (
@@ -310,6 +332,11 @@ def main() -> None:
         "coverage_gap_hard": make_sdg_dict(gap_dw),
         "coverage_gap_total": round(float(gap_dw.sum()), 6),
         "coverage_gap_mean": round(float(gap_dw.mean()), 6),
+        "per_sdg_top_score_gap": {
+            f"SDG{i+1}": (None if np.isnan(v) else round(float(v), 6))
+            for i, v in enumerate(per_sdg_top_gap)
+        },
+        "per_sdg_top_score_gap_stats": gap_stats,
         "top5_largest_gaps": sorted(
             [(sdg_labels[i], round(float(gap_dw[i]), 6)) for i in range(N_SDG)],
             key=lambda x: x[1], reverse=True
@@ -404,6 +431,10 @@ def main() -> None:
         rf"\newcommand{{\AffFifteenPaperScore}}{{{a15_paper_top:.3f}}}",
         rf"\newcommand{{\AffFifteenPolicyScore}}{{{a15_policy_top:.3f}}}",
         rf"\newcommand{{\AffFifteenDiff}}{{{a15_diff:.3f}}}",
+        rf"\newcommand{{\TopGapMin}}{{{gap_stats['min']:.3f}}}",
+        rf"\newcommand{{\TopGapMax}}{{{gap_stats['max']:.3f}}}",
+        rf"\newcommand{{\TopGapStd}}{{{gap_stats['std']:.3f}}}",
+        rf"\newcommand{{\TopGapMean}}{{{gap_stats['mean']:.3f}}}",
     ]
     for i in range(N_SDG):
         sdg = i + 1

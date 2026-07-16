@@ -388,12 +388,6 @@ def main() -> None:
 
     ax.set_xlabel(f"PC1 ({evr[0] * 100:.1f}% variance)")
     ax.set_ylabel(f"PC2 ({evr[1] * 100:.1f}% variance)")
-    ax.set_title(
-        "PCA semantic landscape of research and policy embeddings\n"
-        "Descriptive projection only; formal distances remain in the original embedding space",
-        loc="left",
-        fontsize=9,
-    )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.axhline(0.0, color="#cccccc", lw=0.6, zorder=1)
@@ -409,12 +403,7 @@ def main() -> None:
     ]
     ax.legend(handles=legend_handles, loc="best", frameon=False)
 
-    note = (
-        "PCA is fitted on a balanced research-policy sample for visual interpretability. "
-        "The projection is descriptive only; formal semantic distances are computed in the original embedding space."
-    )
-    fig.text(0.01, 0.01, note, ha="left", va="bottom", fontsize=7)
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.tight_layout(rect=(0, 0, 1, 1))
 
     pdf_path = figures_dir / "fig1_pca_semantic_landscape.pdf"
     png_path = figures_dir / "fig1_pca_semantic_landscape.png"
