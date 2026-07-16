@@ -289,7 +289,7 @@ def main() -> None:
     _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
     _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / "a2_source_family_sensitivity"
+    out_root = output_dir / "appendix" / "a3_source_family_sensitivity"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
@@ -428,14 +428,14 @@ def main() -> None:
         ],
         semantic_rows,
     )
-    write_table_covshare(tables_dir / "tab_a2_policy_source_family_covshare.tex", semantic_rows, coverage_rows)
-    write_table_gap(tables_dir / "tab_a2_policy_source_family_gap.tex", semantic_rows)
+    write_table_covshare(tables_dir / "tab_a3_policy_source_family_covshare.tex", semantic_rows, coverage_rows)
+    write_table_gap(tables_dir / "tab_a3_policy_source_family_gap.tex", semantic_rows)
 
     log.info("Saved: %s", data_dir / SUMMARY_CSV)
     log.info("Saved: %s", data_dir / COVERAGE_CSV)
     log.info("Saved: %s", data_dir / SEMANTIC_CSV)
-    log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_covshare.tex")
-    log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_gap.tex")
+    log.info("Saved: %s", tables_dir / "tab_a3_policy_source_family_covshare.tex")
+    log.info("Saved: %s", tables_dir / "tab_a3_policy_source_family_gap.tex")
 
 
 if __name__ == "__main__":

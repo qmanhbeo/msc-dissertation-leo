@@ -16,7 +16,7 @@
 \usepackage[font=small,labelfont=bf,labelsep=period]{caption}
 \usepackage{enumitem}
 \setlist{nosep}
-\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/a4_centroid_similarity/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/e_register_adjustment/figures/}}
+\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/a5_centroid_similarity/figures/}{../4_outputs/appendix/b1_pca_semantic_landscape/figures/}{../4_outputs/appendix/b2_within_corpus_centroid/figures/}{../4_outputs/appendix/e_register_adjustment/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -299,12 +299,12 @@ Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n
 \caption{Per-SDG F1 scores from benchmark validation across embedding models and reference sources (n = 616).}
 \label{tab:validation}
 \input{../4_outputs/main/tables/tab_validation.tex}
-\par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17). Bootstrap 95\% confidence intervals for the canonical column are reported in Appendix~\ref{tab:validation-ci}.\par
+\par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17). Bootstrap 95\% confidence intervals for the canonical column are reported in Table~\ref{tab:validation-ci}.\par
 \end{table}
 
 The scores show a limit of the method, not a flaw in the data. \textcite{Kashnitsky2024} find that no SDG-mapping method performs best across validation sets, and \textcite{Gjorgjevikj2025} show that off-the-shelf encoders such as mine have a known ceiling on fine-grained multi-label work. I read the benchmark as a map of where the 17 goals blur in semantic space, not as proof of precise per-SDG accuracy.
 
-Some goals separate cleanly: SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence. Most goals cluster between F1 = 0.67 and 0.69, including SDG 15 and SDGs 1, 3, 9, 12, and 13. Bootstrap confidence intervals (Appendix~\ref{tab:validation-ci}) show this middle band cannot be distinguished from the macro-F1 mean or from each other. Only the high cluster — SDGs 4, 6, 7, 14, and 16 — and SDG 17 at the bottom are robustly separated from the rest. This separation holds for the large majority of these scores across the reference sources used for centroid construction (Table~\ref{tab:validation}). The centroid-similarity heatmap (Figure~\ref{fig:centroid-similarity-matrix}) and the full confusion matrix (Table~\ref{tab:confusion-matrix}) in Appendix~\ref{app:centroid-similarity} show these proximities and the per-SDG errors directly.
+Some goals separate cleanly: SDG 4 (F1 = \FiSdgFour) and SDGs 6, 7, and 16 (each above 0.87) are assigned with confidence. Most goals cluster between F1 = 0.67 and 0.69, including SDG 15 and SDGs 1, 3, 9, 12, and 13. Bootstrap confidence intervals (Table~\ref{tab:validation-ci}) show this middle band cannot be distinguished from the macro-F1 mean or from each other. Only the high cluster — SDGs 4, 6, 7, 14, and 16 — and SDG 17 at the bottom are robustly separated from the rest. This separation holds for the large majority of these scores across the reference sources used for centroid construction (Table~\ref{tab:validation}). The centroid-similarity heatmap (Figure~\ref{fig:centroid-similarity-matrix}) and the full confusion matrix (Table~\ref{tab:confusion-matrix}) in Appendix~\ref{app:centroid-similarity} show these proximities and the per-SDG errors directly.
 
 SDG 17 (Partnerships for the Goals) has the lowest F1 of the 17 goals (\FiSdgSeventeen). \textcite{LeBlanc2015} and \textcite{ICSU2017} treat SDG 17 as the cross-cutting means-of-implementation goal and exclude it from single-goal mappings, because its mandate resists a compact definition; this is why its classification is the least certain, and per-source validation (Appendix~\ref{app:sdg-source-comparison}) confirms the weak score holds across all four centroid sources.
 
@@ -499,15 +499,6 @@ Table~\ref{tab:sdg-source-comparison-f1cos} reports per-SDG validation F1 and ce
 \par\smallskip\footnotesize\emph{Notes:} Coverage is the count of research papers assigned to each SDG via nearest-centroid matching. Gap is $1 - \cos(\text{research centroid}, \text{policy centroid})$; larger values indicate greater research--policy divergence. Each row compares the same SDG's gap across the four reference sources; read down a column to see how a source shifts the gap, and across a row to see whether the gap ranking is stable.\par
 \end{table}
 
-\begin{table}[ht]
-\centering
-\small
-\caption{Bootstrap 95\% confidence intervals for the canonical (combined MiniLM) validation F1, per SDG and macro.}
-\label{tab:validation-ci}
-\input{../4_outputs/appendix/a1_sdg_source_comparison/tables/tab_validation_ci.tex}
-\par\smallskip\footnotesize\emph{Notes:} 1,000 resamples with replacement over the 616-text benchmark; predictions are fixed by the frozen centroids, so each resample redraws (true, predicted) instance pairs. SDGs absent from a resample score 0. The middle band (F1 $\approx$ 0.67--0.69) is not separated from the macro mean or from itself.\par
-\end{table}
-
 The bootstrap applies to the validation benchmark only. That benchmark is a small, fixed sample, and the bootstrap tests whether its F1 differences reflect real separation or sampling noise. Coverage and semantic gap estimates are computed over the full research and policy corpora, not a sample from a larger population, and their stability is tested separately in Appendix~\ref{app:sample-stability} and the cross-sensitivity checks in Table~\ref{tab:cross-sensitivity-robustness} and Appendix~\ref{app:policy-source-family-sensitivity}.
 
 Several patterns emerge from Table~\ref{tab:sdg-source-comparison-f1cos}. First, OSDG-only centroids are very close to the combined direction for all 16 available SDGs (cosine 0.959--0.996), and their validation F1 scores match the combined within 0.05 in most cases. This is expected: OSDG contributes the largest text count per SDG (718--3,401 texts), so the combined centroid is OSDG-dominated for SDGs 1--16.
@@ -519,6 +510,20 @@ Third, the supplementary sources do not degrade the combined F1 for SDGs 1--16. 
 Table~\ref{tab:sdg-source-comparison-covgap} shows that the coverage and gap findings are also qualitatively robust to source choice. The SDG ranking by coverage is largely preserved across all four sources: SDGs 3, 4, 7, 9, 15, and 16 consistently appear among the largest clusters, while SDGs 1, 10, and 12 are consistently among the smallest. The Spearman rank correlation between combined and OSDG-only coverage is near-perfect ($\rho > 0.98$), and between combined and SDGi or KH it remains above 0.85. The semantic gap patterns are similarly stable: SDG 17 has the largest gap under every source except OSDG (where it is unavailable), and the top-three gap SDGs (17, 13, 10--6) are consistent across Combined, OSDG, and SDGi. The KH-only centroids produce larger gap variability, particularly for SDG 1 (\SrcOneKnowledgeHubGap{}) and SDG 10 (\SrcTenKnowledgeHubGap{}), reflecting the small text counts in those SDGs for the journalism corpus.
 
 For SDGs 1--16, the combined centroid is a balanced instrument: it is not dominated by any single source and achieves comparable or better validation F1 than any single-source alternative, while preserving the coverage and gap patterns reported in the main analysis. For SDG 17, where OSDG coverage is absent, the combined centroid is a conservative choice --- it does not overfit to any single annotation genre, but it reflects a compromise direction that is less discriminative on the benchmark than either single-source alternative.
+
+\subsection{Validation Benchmark Bootstrap Confidence Intervals}
+\label{app:validation-bootstrap-ci}
+
+The validation benchmark is a small, fixed sample, so the F1 differences reported above could in principle reflect sampling noise rather than real separation between goals. Table~\ref{tab:validation-ci} reports bootstrap 95\% confidence intervals for the canonical (combined MiniLM) F1 of every SDG and the macro mean, obtained by 1,000 resamples with replacement over the 616 benchmark texts. The intervals are wide for the middle band (F1 $\approx$ 0.67--0.69) and overlap both the macro mean and each other, which is the basis for treating those goals as statistically indistinguishable in the main text. By contrast, the high-confidence goals (SDGs 4, 6, 7, 14, 16) and SDG 17 at the bottom carry intervals that separate them from the middle band.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Bootstrap 95\% confidence intervals for the canonical (combined MiniLM) validation F1, per SDG and macro.}
+\label{tab:validation-ci}
+\input{../4_outputs/appendix/a2_bootstrap_validation_ci/tables/tab_validation_ci.tex}
+\par\smallskip\footnotesize\emph{Notes:} 1,000 resamples with replacement over the 616-text benchmark; predictions are fixed by the frozen centroids, so each resample redraws (true, predicted) instance pairs. SDGs absent from a resample score 0. The middle band (F1 $\approx$ 0.67--0.69) is not separated from the macro mean or from itself.\par
+\end{table}
 
 \subsection{Policy Source-Family Sensitivity}
 \label{app:policy-source-family-sensitivity}
@@ -534,7 +539,7 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \small
 \caption{Per-SDG policy source-family sensitivity: coverage share.}
 \label{tab:policy-source-family-covshare}
-\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex}
+\input{../4_outputs/appendix/a3_source_family_sensitivity/tables/tab_a3_policy_source_family_covshare.tex}
 \par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of policy segments assigned to each SDG and the document-weighted share (\%) of that family's documents assigned to each SDG.\par
 \end{table}
 
@@ -543,7 +548,7 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \small
 \caption{Per-SDG policy source-family sensitivity: semantic gap.}
 \label{tab:policy-source-family-gap}
-\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
+\input{../4_outputs/appendix/a3_source_family_sensitivity/tables/tab_a3_policy_source_family_gap.tex}
 \par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap. Each row compares the same SDG's gap across the three source families and the full corpus; read across a row to see whether the gap is stable or driven by one family.\par
 \end{table}
 
@@ -573,7 +578,7 @@ The main analysis therefore retains the canonical nearest-centroid assignment bu
 \caption{SDG 4 lexical artefact audit.}
 \label{tab:sdg4-lexical-audit}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex}
+\input{../4_outputs/appendix/a4_sdg4_audit/tables/tab_a4_sdg4_lexical_audit.tex}
 }
 \par\smallskip\footnotesize\emph{Notes:} The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.\par
 \end{table}
@@ -585,7 +590,7 @@ This subsection collects the two diagnostic views of how the 17 SDG centroids re
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{fig_a4_centroid_similarity_heatmap.pdf}
+\includegraphics[width=\textwidth]{fig_a5_centroid_similarity_heatmap.pdf}
 \caption{Pairwise cosine similarity between canonical SDG centroids (lower triangle). SDG 13 and SDG 17 sit close together (cosine \CentroidSimThirteenSeventeen), as do SDGs 1, 8, and 10.}
 \label{fig:centroid-similarity-matrix}
 \end{figure}
@@ -598,7 +603,7 @@ Figure~\ref{fig:centroid-similarity-matrix} shows the full 17$\times$17 similari
 \caption{Benchmark confusion matrix (n = 616). Rows are true SDGs, columns are predicted SDGs. The diagonal is the count of correct assignments; off-diagonal cells are misassignments. This matrix underlies the per-SDG F1 scores in Table~\ref{tab:validation}.}
 \label{tab:confusion-matrix}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/a4_centroid_similarity/tables/tab_a4_confusion_matrix.tex}
+\input{../4_outputs/appendix/a5_centroid_similarity/tables/tab_a5_confusion_matrix.tex}
 }
 \par\smallskip\footnotesize\emph{Notes:} Each of the 616 benchmark texts is assigned to the nearest centroid; rows sum to the per-SDG true counts, columns to predicted counts.\par
 \end{table}

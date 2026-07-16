@@ -37,7 +37,7 @@ RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/ma
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"
-TABLE_TEX = "tab_a3_sdg4_lexical_audit.tex"
+TABLE_TEX = "tab_a4_sdg4_lexical_audit.tex"
 
 ML_TERMS = [
     "machine learning",
@@ -283,7 +283,7 @@ def write_table(path: Path, rows: list[dict]) -> None:
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / "a3_sdg4_audit"
+    out_root = output_dir / "appendix" / "a4_sdg4_audit"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):

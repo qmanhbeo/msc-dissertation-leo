@@ -22,7 +22,7 @@ OUT_MAIN.mkdir(parents=True, exist_ok=True)
 
 MODEL_FILE = APPENDIX / "d_model_sensitivity" / "tables" / "tab_model_sensitivity.tex"
 REF_FILE = APPENDIX / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_covgap.tex"
-POLICY_FILE = APPENDIX / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
+POLICY_FILE = APPENDIX / "a3_source_family_sensitivity" / "tables" / "tab_a3_policy_source_family_gap.tex"
 F1_REF_FILE = APPENDIX / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_f1cos.tex"
 
 # ---------------------------------------------------------------------------
