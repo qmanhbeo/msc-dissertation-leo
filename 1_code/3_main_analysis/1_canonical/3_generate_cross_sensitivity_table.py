@@ -6,6 +6,7 @@ Outputs two tables:
 """
 
 import argparse
+import json
 import re
 from pathlib import Path
 
@@ -22,8 +23,17 @@ OUT_MAIN.mkdir(parents=True, exist_ok=True)
 
 MODEL_FILE = APPENDIX / "d_model_sensitivity" / "tables" / "tab_model_sensitivity.tex"
 REF_FILE = APPENDIX / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_covgap.tex"
-POLICY_FILE = APPENDIX / "a3_source_family_sensitivity" / "tables" / "tab_a3_policy_source_family_gap.tex"
+POLICY_FILE = APPENDIX / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
 F1_REF_FILE = APPENDIX / "a1_sdg_source_comparison" / "tables" / "tab_a1_source_comparison_f1cos.tex"
+
+CI_FILE = root / "main" / "data" / "4_1_validation_bootstrap_ci.json"
+
+
+def load_ci():
+    """Return bootstrap CI dict, or None if the JSON is absent."""
+    if not CI_FILE.exists():
+        return None
+    return json.loads(CI_FILE.read_text(encoding="utf-8"))
 
 # ---------------------------------------------------------------------------
 # Parsers
@@ -149,8 +159,12 @@ def macro_f1(values_dict, key):
     return sum(vals) / len(vals) if vals else 0.0
 
 
-def write_f1_table(model_data, f1_ref_data):
-    """Write the cross-condition F1 validation table."""
+def write_f1_table(model_data, f1_ref_data, ci_data=None):
+    """Write the cross-condition F1 validation table.
+
+    If ci_data is provided (bootstrap JSON), the canonical (Can) column cells
+    are suffixed with their 95% confidence interval as (low; high).
+    """
     rows = []
     macro_vals = {}
 
@@ -164,6 +178,9 @@ def write_f1_table(model_data, f1_ref_data):
         ("aurora", "Aur", "aurora"),
     ]
 
+    per_sdg_ci = ci_data.get("per_sdg_f1_ci") if ci_data else None
+    macro_ci = ci_data.get("macro_f1_ci") if ci_data else None
+
     # Compute per-SDG rows
     for sdg in range(1, 18):
         cells = [f"SDG {sdg}"]
@@ -173,7 +190,12 @@ def write_f1_table(model_data, f1_ref_data):
             else:
                 val = f1_ref_data.get(sdg, {}).get(model_key)
             if val is not None:
-                cells.append(f"{val:.3f}")
+                cell = f"{val:.3f}"
+                if key == "can" and per_sdg_ci is not None:
+                    ci = per_sdg_ci.get(str(sdg))
+                    if ci is not None:
+                        cell += f" ({ci['ci_low']:.3f}; {ci['ci_high']:.3f})"
+                cells.append(cell)
             else:
                 cells.append("--")
         rows.append(cells)
@@ -201,7 +223,10 @@ def write_f1_table(model_data, f1_ref_data):
     # Macro-F1 row
     macro_cells = ["Macro-F1 (SDGs 1--17)"]
     for key, _, _ in col_defs:
-        macro_cells.append(f"\\textbf{{{macro_vals[key]:.3f}}}")
+        cell = f"\\textbf{{{macro_vals[key]:.3f}}}"
+        if key == "can" and macro_ci is not None:
+            cell += f" ({macro_ci['ci_low']:.3f}; {macro_ci['ci_high']:.3f})"
+        macro_cells.append(cell)
     lines.append(" & ".join(macro_cells) + r" \\")
 
     lines.extend([
@@ -305,7 +330,7 @@ def main():
     print(f"Written {out_path}")
     print(f"Table rows: {len(rows)}")
 
-    write_f1_table(model_f1_data, f1_ref_data)
+    write_f1_table(model_f1_data, f1_ref_data, load_ci())
 
 
 if __name__ == "__main__":

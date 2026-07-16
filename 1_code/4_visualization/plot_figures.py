@@ -14,7 +14,7 @@ Inputs:
       4_outputs/main/data/4_2_coverage_document_weighted.json   — corpus-level n counts for legend labels
 
 Outputs:
-     4_outputs/appendix/a5_centroid_similarity/figures/fig_a5_centroid_similarity_heatmap.pdf
+     4_outputs/appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf
      4_outputs/main/figures/fig3_coverage_profiles.pdf
      4_outputs/main/figures/fig4_semantic_gap.pdf
      4_outputs/main/figures/fig5_coverage_semantic_scatter.pdf
@@ -129,12 +129,12 @@ def plot_centroid_similarity_heatmap(layout) -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")
     fig.tight_layout()
-    out_dir = layout.root.parent / "appendix" / "a5_centroid_similarity" / "figures"
+    out_dir = layout.root.parent / "appendix" / "a4_centroid_similarity" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_dir / "fig_a5_centroid_similarity_heatmap.pdf", bbox_inches="tight")
-    fig.savefig(out_dir / "fig_a5_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
+    fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print("Saved: fig_a5_centroid_similarity_heatmap.pdf")
+    print("Saved: fig_a4_centroid_similarity_heatmap.pdf")
 
 
 def main() -> None:
