@@ -22,12 +22,6 @@ H25 (headline hypothesis):
   sensitivity test excluding SDG 4, and replications under MPNet and four reference-source
   centroids. The primary test for H25 is (a).
 
-H26 asymmetry diagnostic:
-  Computed from active score artifacts. The mean top-SDG score when papers are scored
-  against OSDG centroids is compared to the mean top-SDG score when policy segments are scored
-  against research centroids. This is treated as an appendix-style directional diagnostic,
-  not as a headline result.
-
 Statistics:
   Pearson r (parametric, assumes linear relationship) and Spearman ρ (rank correlation,
   non-parametric) are both reported. With only 17 data points (one per SDG), both tests
@@ -54,7 +48,7 @@ Inputs:
    4_outputs/appendix/a1_sdg_source_comparison/data/                  per-source research coverage + gap (multi-config H1)
    comparison_summary.json
 
-   4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results + H26 asymmetry
+    4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results
    4_outputs/main/data/4_4_interaction_scatter_data.csv               per-SDG data table for plotting (SDG, research%, policy%,
                                    coverage_gap, semantic_gap, semantic_similarity)
    4_outputs/main/tables/*.tex            generated LaTeX macros/tables
@@ -81,7 +75,6 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, require_output_files
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model
 
@@ -166,7 +159,7 @@ def compute_four_tests(
 # Args
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Compute correlation and asymmetry outputs into the canonical output folder.")
+    p = argparse.ArgumentParser(description="Compute H25 correlation outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
@@ -180,8 +173,6 @@ def main() -> None:
     model = args.model
     scored_dir = scored_dir_for_model(model)
     paper_scores_manifest = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
-    pol_vs_res_path = scored_dir / "policy_scores_vs_research.npy"
-    policy_scores_path = scored_dir / "policy_scores.npy"
 
     layout = ensure_canonical_outputs(Path(args.output_dir))
     require_output_files(layout.data_dir, ["4_2_coverage_document_weighted.json", "4_3_semantic_gap_distances.json"])
@@ -343,43 +334,6 @@ def main() -> None:
                  sdg, rp*100, sg,
                  "high_coverage_high_gap" if sg > 0.25 else "high_coverage_low_gap")
 
-    # ---- Asymmetry diagnostic ----
-    log.info("")
-    log.info("=" * 70)
-    log.info("DIRECTIONAL ASYMMETRY DIAGNOSTIC")
-    log.info("=" * 70)
-    research = aggregate_research_scores(paper_scores_manifest, scored_dir)
-    pol_vs_research = np.load(pol_vs_res_path)
-    policy_scores = np.load(policy_scores_path)
-
-    mean_paper_top    = float(research["mean_top_overall"])
-    mean_pol_vs_res   = float(pol_vs_research.max(axis=1).mean())
-    a15_policy_top    = float(policy_scores.max(axis=1).mean())
-    a15_gap           = a15_policy_top - mean_paper_top
-
-    # Per-SDG: mean score of policy segments for their top research centroid.
-    pol_assignments = pol_vs_research.argmax(axis=1)
-    mean_pol_per_sdg = np.array([
-        float(pol_vs_research[pol_assignments == j, j].mean()) if (pol_assignments == j).sum() > 0 else 0.0
-        for j in range(N_SDG)
-    ])
-
-    log.info("  Research papers vs OSDG centroids — mean top sim: %.4f", mean_paper_top)
-    log.info("  Policy segments vs research centroids — mean top sim: %.4f", mean_pol_vs_res)
-    asym_supported = mean_pol_vs_res > mean_paper_top
-    asym_gap = mean_pol_vs_res - mean_paper_top
-    log.info("  Asymmetry gap (policy - research): %.4f  → Asymmetry direction %s",
-             asym_gap, "OBSERVED" if asym_supported else "NOT OBSERVED")
-    if asym_supported:
-        log.info(
-            "  Diagnostic reading: policy-facing texts score closer to research-derived "
-            "centroids than papers score to OSDG-derived centroids."
-        )
-    else:
-        log.info(
-            "  Diagnostic reading: the observed direction does not favour the asymmetry claim."
-        )
-
     # ---- Save outputs ----
     results = {
         "correlation": {
@@ -404,23 +358,6 @@ def main() -> None:
             "correlations_primary_observed": tests_primary,
             "correlations_reliable_only": tests_reliable,
             "correlations_excl_sdg4": tests_excl4,
-        },
-        "asymmetry": {
-            "hypothesis": (
-                "Policy-facing texts may score closer to research-derived centroids than papers score "
-                "to OSDG-derived centroids, but this is treated only as a directional diagnostic."
-            ),
-            "mean_paper_top_vs_osdg": round(mean_paper_top, 6),
-            "mean_policy_top_vs_research": round(mean_pol_vs_res, 6),
-            "asymmetry_gap": round(asym_gap, 6),
-            "supported": asym_supported,
-            "caveats": [
-                f"A15 FLAG: policy scores against OSDG centroids are inflated by {a15_gap:.3f} relative "
-                "to paper scores. The asymmetry diagnostic may partly reflect this calibration bias, "
-                "not genuine directional asymmetry.",
-                "Research centroids are built via hard assignment from OSDG centroids — a "
-                "circularity that may reduce apparent research-centroid distance.",
-            ],
         },
         "per_sdg_table": [
             {

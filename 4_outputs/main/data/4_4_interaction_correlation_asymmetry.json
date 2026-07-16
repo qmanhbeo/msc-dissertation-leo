@@ -247,17 +247,6 @@
       }
     }
   },
-  "asymmetry": {
-    "hypothesis": "Policy-facing texts may score closer to research-derived centroids than papers score to OSDG-derived centroids, but this is treated only as a directional diagnostic.",
-    "mean_paper_top_vs_osdg": 0.231568,
-    "mean_policy_top_vs_research": 0.379456,
-    "asymmetry_gap": 0.147889,
-    "supported": true,
-    "caveats": [
-      "A15 FLAG: policy scores against OSDG centroids are inflated by 0.328 relative to paper scores. The asymmetry diagnostic may partly reflect this calibration bias, not genuine directional asymmetry.",
-      "Research centroids are built via hard assignment from OSDG centroids \u2014 a circularity that may reduce apparent research-centroid distance."
-    ]
-  },
   "per_sdg_table": [
     {
       "sdg": 1,

@@ -43,6 +43,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
+from research_score_shards import aggregate_research_scores
 from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
     RANDOM_SEED as POLICY_SEGMENT_CAP_SEED,
@@ -216,7 +217,7 @@ def normalize_centroid(raw: np.ndarray) -> tuple[np.ndarray, float]:
     return (raw / norm).astype(np.float32), norm
 
 
-def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_ids_path: Path, policy_scores_path: Path) -> dict[str, Any]:
+def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_ids_path: Path, policy_scores_path: Path, *, mean_paper_top_vs_osdg: float) -> dict[str, Any]:
     require_output_files(
         canonical_data_dir,
         [CANONICAL_COVERAGE_JSON, CANONICAL_SEMANTIC_JSON, CANONICAL_INTERACTION_JSON],
@@ -273,8 +274,6 @@ def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_id
         if per_sdg_semantic[sdg]["semantic_gap"] is not None
     ]
     full_mean_semantic_gap = float(np.mean(full_semantic_gaps))
-    full_mean_paper_top_vs_osdg = float(interaction_data["asymmetry"]["mean_paper_top_vs_osdg"])
-    full_asym_gap = float(interaction_data["asymmetry"]["asymmetry_gap"])
 
     return {
         "policy_profile_hard_docweighted": policy_profile_hard,
@@ -287,8 +286,7 @@ def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_id
         "policy_cohesions": policy_cohesions,
         "policy_centroid_available": policy_centroid_available,
         "full_mean_semantic_gap": full_mean_semantic_gap,
-        "full_mean_paper_top_vs_osdg": full_mean_paper_top_vs_osdg,
-        "full_asym_gap": full_asym_gap,
+        "full_mean_paper_top_vs_osdg": mean_paper_top_vs_osdg,
     }
 
 def cache_dir_for_tier(cache_root: Path, tier_label: str) -> Path:
@@ -552,7 +550,6 @@ def summarize_tiers(
     *,
     total_rows: int,
     full_mean_semantic_gap: float,
-    full_asym_gap: float,
     full_a15_gap: float,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     summary_rows: list[dict[str, Any]] = []
@@ -820,7 +817,16 @@ def main() -> None:
             shutil.rmtree(cache_root)
         log.info("Cache signature: %s", expected_sig)
 
-    policy_state = load_policy_state(Path(args.output_dir) / "main" / "data", _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES)
+    research_manifest = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
+    research_scores = aggregate_research_scores(research_manifest, scored_dir)
+    mean_paper_top_vs_osdg = float(research_scores["mean_top_overall"])
+    policy_state = load_policy_state(
+        Path(args.output_dir) / "main" / "data",
+        _POLICY_EMB,
+        _POLICY_IDS,
+        _POLICY_SCORES,
+        mean_paper_top_vs_osdg=mean_paper_top_vs_osdg,
+    )
     shards, total_rows = build_research_shards(embed_dir, scored_dir)
     dim = int(policy_state["policy_embeddings"].shape[1])
     log.info("Research corpus rows available for sampling: %d", total_rows)
@@ -859,7 +865,6 @@ def main() -> None:
         draw_results,
         total_rows=total_rows,
         full_mean_semantic_gap=policy_state["full_mean_semantic_gap"],
-        full_asym_gap=policy_state["full_asym_gap"],
         full_a15_gap=full_a15_gap,
     )
     write_outputs(
