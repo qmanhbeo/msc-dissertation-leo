@@ -82,9 +82,6 @@ from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT
 from shared_utils import ensure_canonical_outputs
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
-    SEGMENT_CAP_SENS_HI,
-    SEGMENT_CAP_SENS_HI2,
-    SEGMENT_CAP_SENS_HI3,
     SEGMENT_CAP_SENS_NONE,
     SEGMENT_CAP_SENS_LO,
     MIN_CLUSTER_SIZE,
@@ -199,68 +196,30 @@ def main() -> None:
 
     log.info("")
     log.info("=" * 60)
-    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI)
-    log.info("=" * 60)
-    rng_hi = np.random.default_rng(RANDOM_SEED)
-    sens_hi = compute_sdg_semantic_gaps(
-        research_centroids, research_counts, research_cohesions,
-        policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_SENS_HI, rng_hi
-    )
-
-    log.info("")
-    log.info("=" * 60)
-    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI2)
-    log.info("=" * 60)
-    rng_hi2 = np.random.default_rng(RANDOM_SEED)
-    sens_hi2 = compute_sdg_semantic_gaps(
-        research_centroids, research_counts, research_cohesions,
-        policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_SENS_HI2, rng_hi2
-    )
-
-    log.info("")
-    log.info("=" * 60)
-    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI3)
-    log.info("=" * 60)
-    rng_hi3 = np.random.default_rng(RANDOM_SEED)
-    sens_hi3 = compute_sdg_semantic_gaps(
-        research_centroids, research_counts, research_cohesions,
-        policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_SENS_HI3, rng_hi3
-    )
-
-    log.info("")
-    log.info("=" * 60)
     log.info("SENSITIVITY: no segment cap (uncapped)")
     log.info("=" * 60)
     sens_none = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_SENS_NONE, rng_hi3
+        policy_ids, SEGMENT_CAP_SENS_NONE, rng_lo
     )
 
     # Check sensitivity: do rankings change substantially across caps?
-    # A finding is robust if its gap rank is stable across all caps.
+    # A finding is robust if its gap rank is stable across caps.
     log.info("")
     log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
-    log.info("  %-6s  %-12s  %-12s  %-12s  %-12s  %-12s  %-12s",
-             "SDG", "cap20", "cap50", "cap100", "cap200", "cap500", "none")
-    log.info("  " + "-" * 84)
+    log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "none")
+    log.info("  " + "-" * 48)
     for i in range(N_SDG):
         sdg = i + 1
         g20   = sens_lo[i]["semantic_gap"]
         g50   = primary_results[i]["semantic_gap"]
-        g100  = sens_hi[i]["semantic_gap"]
-        g200  = sens_hi2[i]["semantic_gap"]
-        g500  = sens_hi3[i]["semantic_gap"]
         gnone = sens_none[i]["semantic_gap"]
-        vals = [g20, g50, g100, g200, g500, gnone]
+        vals = [g20, g50, gnone]
         if any(v is None for v in vals):
-            log.info("  SDG %2d  %-12s  %-12s  %-12s  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 6))
+            log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 3))
         else:
-            log.info("  SDG %2d  %.4f       %.4f       %.4f       %.4f       %.4f       %.4f",
-                     sdg, g20, g50, g100, g200, g500, gnone)
+            log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, gnone)
 
     # ---- Build output JSON ----
     primary_out = {
@@ -283,14 +242,11 @@ def main() -> None:
         "method": "centroid_to_centroid",
         "random_seed": RANDOM_SEED,
         "note": (
-            "Sensitivity analysis: same computation as 4_3_semantic_gap_distances.json but with different "
-            "per-document segment caps (20, 100, 200, 500) and an uncapped (none) run. Use to verify finding robustness. "
+            "Sensitivity analysis: same computation as 4_3_semantic_gap_distances.json but with an alternative "
+            "per-document segment cap (20) and an uncapped (none) run. Use to verify finding robustness. "
             "Rankings should be broadly stable if findings are robust."
         ),
         f"cap_{SEGMENT_CAP_SENS_LO}": sens_lo,
-        f"cap_{SEGMENT_CAP_SENS_HI}": sens_hi,
-        f"cap_{SEGMENT_CAP_SENS_HI2}": sens_hi2,
-        f"cap_{SEGMENT_CAP_SENS_HI3}": sens_hi3,
         "cap_none": sens_none,
     }
 

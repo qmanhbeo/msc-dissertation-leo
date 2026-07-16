@@ -33,7 +33,7 @@ import numpy as np
 
 
 def load_cap_ranks():
-    """Return {cap_key: {sdg: rank}} for cap_20, cap_50 (canon), cap_100, cap_200, cap_500.
+    """Return {cap_key: {sdg: rank}} for cap_20, cap_50 (canon), cap_none.
 
     cap_50 baseline is taken from the canonical (minilm) model column, which is the
     same configuration (MiniLM + combined centroids + full corpus + segment cap 50).
@@ -43,7 +43,7 @@ def load_cap_ranks():
     if not CAP_FILE.exists():
         return data
     raw = json.loads(CAP_FILE.read_text(encoding="utf-8"))
-    for cap_key in ("cap_20", "cap_100", "cap_200", "cap_500", "cap_none"):
+    for cap_key in ("cap_20", "cap_none"):
         if cap_key not in raw:
             continue
         rows = {row["sdg"]: row["semantic_gap"] for row in raw[cap_key] if row["semantic_gap"] is not None}
@@ -312,8 +312,8 @@ def main():
 
     # Segment-cap sensitivity ranks (cap_50 = canonical baseline, not shown separately)
     cap_ranks = load_cap_ranks()
-    cap_keys = ["cap_20", "cap_200", "cap_500", "cap_none"]
-    cap_labels = ["20", "200", "500", "no"]
+    cap_keys = ["cap_20", "cap_none"]
+    cap_labels = ["20", "no"]
 
     # Rank-correlation stability across the cap family (most conservative = min pairwise)
     cap_rank_vectors = []
@@ -363,17 +363,17 @@ def main():
         r"\begin{table}[ht]",
         r"\centering",
         r"\footnotesize",
-        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus); the Segment-cap group isolates the per-document segment-cap parameter (encoder, centroids, and corpus held fixed), with cap sizes 20/200/500 segments per document and an uncapped (no) run. A ``--'' indicates that the source does not cover that SDG.}",
+        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus); the Segment-cap group isolates the per-document segment-cap parameter (encoder, centroids, and corpus held fixed), with an alternative cap of 20 segments per document and an uncapped (no) run. A ``--'' indicates that the source does not cover that SDG.}",
         r"\label{tab:cross-sensitivity-robustness}",
         r"\resizebox{\textwidth}{!}{%",
-        r"\begin{tabular}{lccccccccccccc}",
+        r"\begin{tabular}{lccccccccccc}",
         r"\toprule",
         r"& \multicolumn{2}{c}{Model}",
         r"& \multicolumn{4}{c}{Reference source}",
         r"& \multicolumn{3}{c}{Policy source}",
-        r"& \multicolumn{4}{c}{Segment cap} \\",
-        r"\cmidrule(r){2-3} \cmidrule(lr){4-7} \cmidrule(lr){8-10} \cmidrule(l){11-14}",
-        r"SDG & Canon & MPNet & OSDG & SDGi & KH & Aur & Man. & SDGi & UNGDC & 20 & 200 & 500 & no \\",
+        r"& \multicolumn{2}{c}{Segment cap} \\",
+        r"\cmidrule(r){2-3} \cmidrule(lr){4-7} \cmidrule(lr){8-10} \cmidrule(l){11-12}",
+        r"SDG & Canon & MPNet & OSDG & SDGi & KH & Aur & Man. & SDGi & UNGDC & 20 & no \\",
         r"\midrule",
     ]
 
