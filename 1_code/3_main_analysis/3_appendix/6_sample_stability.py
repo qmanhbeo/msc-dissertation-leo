@@ -590,7 +590,6 @@ def summarize_tiers(
         macro_coverage_variance = float(macro_coverage_sd_by_sdg.mean())
 
         semantic_means = np.array([row["mean_semantic_gap"] for row in tier_draws], dtype=np.float64)
-        h26_values = np.array([row["asymmetry_gap"] for row in tier_draws], dtype=np.float64)
         a15_values = np.array([row["a15_calibration_bias"] for row in tier_draws], dtype=np.float64)
 
         summary_rows.append(
@@ -602,8 +601,6 @@ def summarize_tiers(
                 "macro_coverage_variance": round(macro_coverage_variance, 6),
                 "mean_semantic_gap": round(float(semantic_means.mean()), 6),
                 "std_semantic_gap": round(float(semantic_means.std()), 6),
-                "mean_asymmetry_gap": round(float(h26_values.mean()), 6),
-                "std_asymmetry_gap": round(float(h26_values.std()), 6),
                 "mean_a15_calibration_bias": round(float(a15_values.mean()), 6),
                 "std_a15_calibration_bias": round(float(a15_values.std()), 6),
                 "mean_observed_semantic_sdgs": round(
@@ -655,8 +652,6 @@ def summarize_tiers(
             "macro_coverage_variance": None,
             "mean_semantic_gap": round(full_mean_semantic_gap, 6),
             "std_semantic_gap": None,
-            "mean_asymmetry_gap": round(full_asym_gap, 6),
-            "std_asymmetry_gap": None,
             "mean_a15_calibration_bias": round(full_a15_gap, 6),
             "std_a15_calibration_bias": None,
             "mean_observed_semantic_sdgs": None,
@@ -673,7 +668,6 @@ def summarize_tiers(
         "full_corpus": {
             "sample_size": total_rows,
             "mean_semantic_gap": round(full_mean_semantic_gap, 6),
-            "mean_asymmetry_gap": round(full_asym_gap, 6),
             "mean_a15_calibration_bias": round(full_a15_gap, 6),
         },
     }
@@ -726,8 +720,6 @@ def write_outputs(
                 "macro_coverage_variance",
                 "mean_semantic_gap",
                 "std_semantic_gap",
-                "mean_asymmetry_gap",
-                "std_asymmetry_gap",
                 "mean_a15_calibration_bias",
                 "std_a15_calibration_bias",
                 "mean_observed_semantic_sdgs",
@@ -775,9 +767,9 @@ def write_outputs(
     )
 
     tab_lines = [
-        r"\begin{tabular}{lcccc}",
+        r"\begin{tabular}{lccc}",
         r"\toprule",
-        r"Sample Size & \shortstack{Mean SD of SDG\\coverage shares} & \shortstack{Mean within-SDG\\semantic gap} & \shortstack{Policy-to-research\\asymmetry} & \shortstack{Policy-text\\calibration bias} \\",
+        r"Sample Size & \shortstack{Mean SD of SDG\\coverage shares} & \shortstack{Mean within-SDG\\semantic gap} & \shortstack{Policy-text\\calibration bias} \\",
         r"\midrule",
     ]
     for row in summary_rows:
@@ -792,7 +784,6 @@ def write_outputs(
                     label,
                     format_variance(row["macro_coverage_variance"]),
                     format_pm(row["mean_semantic_gap"], row["std_semantic_gap"]),
-                    format_pm(row["mean_asymmetry_gap"], row["std_asymmetry_gap"]),
                     format_pm(row["mean_a15_calibration_bias"], row["std_a15_calibration_bias"]),
                 ]
             )

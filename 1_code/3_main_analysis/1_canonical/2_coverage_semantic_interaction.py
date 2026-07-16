@@ -523,9 +523,6 @@ def main() -> None:
     num_lines += _macro("HExclSdgFourCovgap", tests_excl4, "covgap")
     num_lines += _macro("HExclSdgFourDominance", tests_excl4, "dominance")
     num_lines += [
-        rf"\newcommand{{\HAsymPolicyScore}}{{{mean_pol_vs_res:.3f}}}",
-        rf"\newcommand{{\HAsymResearchScore}}{{{mean_paper_top:.3f}}}",
-        rf"\newcommand{{\HAsymGap}}{{{_fmt(asym_gap)}}}",
         rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.2f}}}",
     ]
     (gen_dir / "num_interaction.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")

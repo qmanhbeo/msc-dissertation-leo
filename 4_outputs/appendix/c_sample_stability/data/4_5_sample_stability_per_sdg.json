@@ -2001,7 +2001,6 @@
   "full_corpus": {
     "sample_size": 2543698,
     "mean_semantic_gap": 0.400123,
-    "mean_asymmetry_gap": 0.147889,
     "mean_a15_calibration_bias": 0.328025
   }
 }
