@@ -158,6 +158,7 @@ def main() -> None:
 
     # Medians for the diagonal thresholds used in the diagnostic map
     median_research_pct = df["research_pct"].median()
+    median_coverage_gap = df["coverage_gap_abs"].median()
     median_semantic_gap = df_sem_valid["semantic_gap"].median()
     mean_semantic_gap = df_sem_valid["semantic_gap"].mean()
 
@@ -274,28 +275,28 @@ def main() -> None:
     # -----------------------------------------------------------------------
     fig3, ax3 = plt.subplots(figsize=(7.5, 6))
 
-    ax3.axvline(median_research_pct, color="grey", linestyle="--", linewidth=1, alpha=0.7)
+    ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
     ax3.axhline(median_semantic_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
 
-    xlim = (0, df["research_pct"].max() * 1.12)
+    xlim = (0, df["coverage_gap_abs"].max() * 1.12)
     ylim = (max(0.0, df_sem_valid["semantic_gap"].min() * 0.92), df_sem_valid["semantic_gap"].max() * 1.08)
 
     for _, row in df_sem_valid.iterrows():
         sdg = int(row["sdg"])
-        x = row["research_pct"]
+        x = row["coverage_gap_abs"]
         y = row["semantic_gap"]
         ax3.scatter(x, y, s=55, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
-        offsets = {4: (0.3, 0.003), 9: (-0.5, 0.003), 3: (0.3, -0.004),
-                   16: (0.3, 0.003), 8: (0.2, 0.003), 17: (0.3, -0.005),
-                   13: (0.3, -0.004), 12: (0.3, 0.003)}
-        dx, dy = offsets.get(sdg, (0.25, 0.002))
+        offsets = {4: (0.02, 0.003), 9: (-0.03, 0.003), 3: (0.02, -0.004),
+                   16: (0.02, 0.003), 8: (0.015, 0.003), 17: (0.02, -0.005),
+                   13: (0.02, -0.004), 12: (0.02, 0.003)}
+        dx, dy = offsets.get(sdg, (0.015, 0.002))
         ax3.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx, y + dy),
                      fontsize=8, color="black",
                      arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
 
     ax3.set_xlim(xlim)
     ax3.set_ylim(ylim)
-    ax3.set_xlabel("Research corpus SDG coverage (%)")
+    ax3.set_xlabel("Absolute research–policy coverage gap (H1a predictor)")
     ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
     ax3.set_title(
         "Coverage vs semantic gap: diagnostic map",
