@@ -31,9 +31,9 @@ Convention notes:
     4_policy_source_family_sensitivity.py (source_doc -> sdgi_vnr_vlr).
 
 Outputs:
-  4_outputs/appendix/a_loo_sdgi_circularity/data/loo_sdgi_circularity.json
-  4_outputs/appendix/a_loo_sdgi_circularity/data/loo_sdgi_circularity.csv
-  4_outputs/appendix/a_loo_sdgi_circularity/tables/num_loo_sdgi_circularity.tex
+   4_outputs/appendix/a4_sdgi_circularity/data/loo_sdgi_circularity.json
+   4_outputs/appendix/a4_sdgi_circularity/data/loo_sdgi_circularity.csv
+   4_outputs/appendix/a4_sdgi_circularity/tables/num_loo_sdgi_circularity.tex
 
 Run from project root:
     python 1_code/3_main_analysis/3_appendix/9_loo_sdgi_circularity.py
@@ -60,7 +60,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model
 
-OUTPUT_SUBDIR = "a_loo_sdgi_circularity"
+OUTPUT_SUBDIR = "a4_sdgi_circularity"
 DATA_JSON = "loo_sdgi_circularity.json"
 DATA_CSV = "loo_sdgi_circularity.csv"
 NUM_TEX = "num_loo_sdgi_circularity.tex"
