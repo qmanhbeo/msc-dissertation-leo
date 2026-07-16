@@ -33,7 +33,7 @@ import numpy as np
 
 
 def load_cap_ranks():
-    """Return {cap_key: {sdg: rank}} for cap_20, cap_50 (canon), cap_100, cap_200.
+    """Return {cap_key: {sdg: rank}} for cap_20, cap_50 (canon), cap_100, cap_200, cap_500.
 
     cap_50 baseline is taken from the canonical (minilm) model column, which is the
     same configuration (MiniLM + combined centroids + full corpus + segment cap 50).
@@ -43,7 +43,7 @@ def load_cap_ranks():
     if not CAP_FILE.exists():
         return data
     raw = json.loads(CAP_FILE.read_text(encoding="utf-8"))
-    for cap_key in ("cap_20", "cap_100", "cap_200"):
+    for cap_key in ("cap_20", "cap_100", "cap_200", "cap_500"):
         if cap_key not in raw:
             continue
         rows = {row["sdg"]: row["semantic_gap"] for row in raw[cap_key] if row["semantic_gap"] is not None}
