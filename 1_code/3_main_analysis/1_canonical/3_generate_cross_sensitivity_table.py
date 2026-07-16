@@ -159,10 +159,20 @@ def macro_f1(values_dict, key):
     return sum(vals) / len(vals) if vals else 0.0
 
 
+SDG_NAMES = {
+    1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
+    5: "Gender Equality", 6: "Clean Water", 7: "Clean Energy",
+    8: "Decent Work", 9: "Industry \\& Infra.", 10: "Reduced Inequalities",
+    11: "Sustainable Cities", 12: "Responsible Cons.", 13: "Climate Action",
+    14: "Life Below Water", 15: "Life on Land", 16: "Peace \\& Justice",
+    17: "Partnerships",
+}
+
+
 def write_f1_table(model_data, f1_ref_data, ci_data=None):
     """Write the cross-condition F1 validation table.
 
-    If ci_data is provided (bootstrap JSON), the canonical (Can) column cells
+    If ci_data is provided (bootstrap JSON), the canonical (Canon) column cells
     are suffixed with their 95% confidence interval as (low; high).
     """
     rows = []
@@ -170,12 +180,12 @@ def write_f1_table(model_data, f1_ref_data, ci_data=None):
 
     # Column definitions for macro computation
     col_defs = [
-        ("can", "Can", "minilm"),
+        ("can", r"Canon (95\% bootstrap CI)", "minilm"),
         ("mpnet", "MPNet", "mpnet"),
         ("osdg", "OSDG", "osdg"),
         ("sdgi", "SDGi", "sdgi"),
         ("kh", "KH", "kh"),
-        ("aurora", "Aur", "aurora"),
+        ("aurora", "Aurora", "aurora"),
     ]
 
     per_sdg_ci = ci_data.get("per_sdg_f1_ci") if ci_data else None
@@ -183,7 +193,7 @@ def write_f1_table(model_data, f1_ref_data, ci_data=None):
 
     # Compute per-SDG rows
     for sdg in range(1, 18):
-        cells = [f"SDG {sdg}"]
+        cells = [f"SDG {sdg} ({SDG_NAMES[sdg]})"]
         for key, _, model_key in col_defs:
             if key in ("can", "mpnet"):
                 val = model_data.get(sdg, {}).get(model_key)
@@ -213,7 +223,7 @@ def write_f1_table(model_data, f1_ref_data, ci_data=None):
         r"\toprule",
         r"& \multicolumn{2}{c}{Model} & \multicolumn{4}{c}{Reference source} \\",
         r"\cmidrule(r){2-3} \cmidrule(l){4-7}",
-        r"SDG & Can & MPNet & OSDG & SDGi & KH & Aur \\",
+        r"SDG & " + " & ".join(label for _, label, _ in col_defs) + r" \\",
         r"\midrule",
     ]
 

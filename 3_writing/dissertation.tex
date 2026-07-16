@@ -293,10 +293,10 @@ Table~\ref{tab:validation} reports per-SDG F1 from the benchmark (all 17 SDGs, n
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{Per-SDG F1 scores from benchmark validation across embedding models and reference sources (n = 616).}
+\caption{Per-SDG F1 scores from independent benchmark validation across embedding models and reference sources (n = 616).}
 \label{tab:validation}
 \input{../4_outputs/main/tables/tab_validation.tex}
-\par\smallskip\footnotesize\emph{Notes:} Can = canonical (the combined MiniLM specification); MPNet = all-mpnet-base-v2; OSDG = OSDG Community Dataset; SDGi = SDGi Corpus; KH = Knowledge Hub; Aur = Aurora. The benchmark is fully independent of centroid construction. Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17). The canonical column also shows bootstrap 95\% confidence intervals in parentheses (low; high), obtained by 1,000 resamples with replacement over the 616-text benchmark.\par
+\par\smallskip\footnotesize\emph{Notes:} Macro-F1 is the unweighted mean over available SDGs per configuration (OSDG covers 16 SDGs; all others cover 17). 95\% CI is obtained by bootstrapping 1,000 resamples with replacement over the 616-text benchmark.\par
 \end{table}
 
 The scores show a limit of the method, not a flaw in the data. \textcite{Kashnitsky2024} find that no SDG-mapping method performs best across validation sets, and \textcite{Gjorgjevikj2025} show that off-the-shelf encoders such as mine have a known ceiling on fine-grained multi-label work. I read the benchmark as a map of where the 17 goals blur in semantic space, not as proof of precise per-SDG accuracy.
