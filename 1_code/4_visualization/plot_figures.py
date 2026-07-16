@@ -299,7 +299,7 @@ def main() -> None:
     ax3.set_xlabel("Absolute research–policy coverage gap (H1a predictor)")
     ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
     ax3.set_title(
-        "Coverage vs semantic gap: diagnostic map",
+        "",
         fontsize=8.5,
         loc="left",
     )
