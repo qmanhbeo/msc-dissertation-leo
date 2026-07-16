@@ -1,7 +1,7 @@
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus); the Segment-cap group isolates the per-document segment-cap parameter (encoder, centroids, and corpus held fixed). A ``--'' indicates that the source does not cover that SDG.}
+\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings. Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus); the Segment-cap group isolates the per-document segment-cap parameter (encoder, centroids, and corpus held fixed), with cap sizes 20/100/200/500 segments per document. A ``--'' indicates that the source does not cover that SDG.}
 \label{tab:cross-sensitivity-robustness}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccccccccc}
@@ -11,25 +11,25 @@
 & \multicolumn{3}{c}{Policy source}
 & \multicolumn{4}{c}{Segment cap} \\
 \cmidrule(r){2-3} \cmidrule(lr){4-7} \cmidrule(lr){8-10} \cmidrule(l){11-14}
-SDG & Canon & MPNet & OSDG & SDGi & KH & Aur & AI/SDG & SDGi-VNR & UNGDC & Cap-20 & Cap-50 & Cap-100 & Cap-200 \\
+SDG & Canon & MPNet & OSDG & SDGi & KH & Aur & Man. & SDGi & UNGDC & 20 & 100 & 200 & 500 \\
 \midrule
-SDG 1 & 15 & 7 & 12 & 17 & 1 & 8 & 12 & 17 & 15 & 16 & 15 & 15 & 15 \\
-SDG 2 & 11 & 11 & 11 & 10 & 7 & 6 & 10 & 13 & 11 & 12 & 11 & 11 & 11 \\
-SDG 3 & 10 & 4 & 8 & 7 & 8 & 9 & 11 & 7 & 9 & 9 & 10 & 10 & 10 \\
-SDG 4 & 13 & 14 & 13 & 16 & 13 & 12 & 13 & 14 & 14 & 13 & 13 & 13 & 13 \\
-SDG 5 & 16 & 17 & 16 & 14 & 15 & 15 & 16 & 16 & 17 & 17 & 16 & 16 & 16 \\
-SDG 6 & 4 & 6 & 3 & 5 & 4 & 1 & 2 & 5 & 5 & 4 & 4 & 4 & 4 \\
-SDG 7 & 3 & 1 & 4 & 3 & 2 & 7 & 3 & 3 & 3 & 3 & 3 & 3 & 3 \\
-SDG 8 & 14 & 16 & 14 & 11 & 9 & 16 & 14 & 15 & 12 & 14 & 14 & 14 & 14 \\
-SDG 9 & 17 & 15 & 15 & 13 & 17 & 14 & 17 & 12 & 16 & 15 & 17 & 17 & 17 \\
-SDG 10 & 8 & 10 & 2 & 6 & 10 & 11 & 9 & 6 & 10 & 7 & 8 & 8 & 9 \\
-SDG 11 & 7 & 3 & 7 & 9 & 11 & 5 & 8 & 9 & 2 & 8 & 7 & 7 & 7 \\
-SDG 12 & 9 & 8 & 9 & 12 & 12 & 2 & 6 & 10 & 4 & 10 & 9 & 9 & 8 \\
-SDG 13 & 2 & 9 & 1 & 2 & 5 & 3 & 5 & 2 & 7 & 2 & 2 & 2 & 2 \\
-SDG 14 & 5 & 5 & 5 & 1 & 3 & 4 & 7 & 4 & 8 & 5 & 5 & 5 & 5 \\
-SDG 15 & 6 & 12 & 6 & 4 & 6 & 10 & 4 & 8 & 6 & 6 & 6 & 6 & 6 \\
-SDG 16 & 12 & 13 & 10 & 15 & 14 & 13 & 15 & 11 & 13 & 11 & 12 & 12 & 12 \\
-SDG 17 & 1 & 2 & -- & 8 & 16 & 17 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+SDG 1 & 15 & 7 & 12 & 17 & 1 & 8 & 12 & 17 & 15 & 16 & 15 & 15 & -- \\
+SDG 2 & 11 & 11 & 11 & 10 & 7 & 6 & 10 & 13 & 11 & 12 & 11 & 11 & -- \\
+SDG 3 & 10 & 4 & 8 & 7 & 8 & 9 & 11 & 7 & 9 & 9 & 10 & 10 & -- \\
+SDG 4 & 13 & 14 & 13 & 16 & 13 & 12 & 13 & 14 & 14 & 13 & 13 & 13 & -- \\
+SDG 5 & 16 & 17 & 16 & 14 & 15 & 15 & 16 & 16 & 17 & 17 & 16 & 16 & -- \\
+SDG 6 & 4 & 6 & 3 & 5 & 4 & 1 & 2 & 5 & 5 & 4 & 4 & 4 & -- \\
+SDG 7 & 3 & 1 & 4 & 3 & 2 & 7 & 3 & 3 & 3 & 3 & 3 & 3 & -- \\
+SDG 8 & 14 & 16 & 14 & 11 & 9 & 16 & 14 & 15 & 12 & 14 & 14 & 14 & -- \\
+SDG 9 & 17 & 15 & 15 & 13 & 17 & 14 & 17 & 12 & 16 & 15 & 17 & 17 & -- \\
+SDG 10 & 8 & 10 & 2 & 6 & 10 & 11 & 9 & 6 & 10 & 7 & 8 & 9 & -- \\
+SDG 11 & 7 & 3 & 7 & 9 & 11 & 5 & 8 & 9 & 2 & 8 & 7 & 7 & -- \\
+SDG 12 & 9 & 8 & 9 & 12 & 12 & 2 & 6 & 10 & 4 & 10 & 9 & 8 & -- \\
+SDG 13 & 2 & 9 & 1 & 2 & 5 & 3 & 5 & 2 & 7 & 2 & 2 & 2 & -- \\
+SDG 14 & 5 & 5 & 5 & 1 & 3 & 4 & 7 & 4 & 8 & 5 & 5 & 5 & -- \\
+SDG 15 & 6 & 12 & 6 & 4 & 6 & 10 & 4 & 8 & 6 & 6 & 6 & 6 & -- \\
+SDG 16 & 12 & 13 & 10 & 15 & 14 & 13 & 15 & 11 & 13 & 11 & 12 & 12 & -- \\
+SDG 17 & 1 & 2 & -- & 8 & 16 & 17 & 1 & 1 & 1 & 1 & 1 & 1 & -- \\
 \bottomrule
 \end{tabular}
 }

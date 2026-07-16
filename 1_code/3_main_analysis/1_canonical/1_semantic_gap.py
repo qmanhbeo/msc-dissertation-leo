@@ -84,6 +84,7 @@ from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     SEGMENT_CAP_SENS_HI,
     SEGMENT_CAP_SENS_HI2,
+    SEGMENT_CAP_SENS_HI3,
     SEGMENT_CAP_SENS_LO,
     MIN_CLUSTER_SIZE,
     N_SDG,
@@ -217,22 +218,37 @@ def main() -> None:
         policy_ids, SEGMENT_CAP_SENS_HI2, rng_hi2
     )
 
+    log.info("")
+    log.info("=" * 60)
+    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_HI3)
+    log.info("=" * 60)
+    rng_hi3 = np.random.default_rng(RANDOM_SEED)
+    sens_hi3 = compute_sdg_semantic_gaps(
+        research_centroids, research_counts, research_cohesions,
+        policy_emb, policy_assignments,
+        policy_ids, SEGMENT_CAP_SENS_HI3, rng_hi3
+    )
+
     # Check sensitivity: do rankings change substantially across caps?
     # A finding is robust if its gap rank is stable across all caps.
     log.info("")
     log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
-    log.info("  %-6s  %-12s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "cap100", "cap200")
-    log.info("  " + "-" * 60)
+    log.info("  %-6s  %-12s  %-12s  %-12s  %-12s  %-12s",
+             "SDG", "cap20", "cap50", "cap100", "cap200", "cap500")
+    log.info("  " + "-" * 72)
     for i in range(N_SDG):
         sdg = i + 1
         g20   = sens_lo[i]["semantic_gap"]
         g50   = primary_results[i]["semantic_gap"]
         g100  = sens_hi[i]["semantic_gap"]
         g200  = sens_hi2[i]["semantic_gap"]
-        if g20 is None or g50 is None or g100 is None or g200 is None:
-            log.info("  SDG %2d  %-12s  %-12s  %-12s  %-12s", sdg, "N/A", "N/A", "N/A", "N/A")
+        g500  = sens_hi3[i]["semantic_gap"]
+        vals = [g20, g50, g100, g200, g500]
+        if any(v is None for v in vals):
+            log.info("  SDG %2d  %-12s  %-12s  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 5))
         else:
-            log.info("  SDG %2d  %.4f       %.4f       %.4f       %.4f", sdg, g20, g50, g100, g200)
+            log.info("  SDG %2d  %.4f       %.4f       %.4f       %.4f       %.4f",
+                     sdg, g20, g50, g100, g200, g500)
 
     # ---- Build output JSON ----
     primary_out = {
@@ -262,6 +278,7 @@ def main() -> None:
         f"cap_{SEGMENT_CAP_SENS_LO}": sens_lo,
         f"cap_{SEGMENT_CAP_SENS_HI}": sens_hi,
         f"cap_{SEGMENT_CAP_SENS_HI2}": sens_hi2,
+        f"cap_{SEGMENT_CAP_SENS_HI3}": sens_hi3,
     }
 
     with out_sem_gap.open("w", encoding="utf-8") as f:
