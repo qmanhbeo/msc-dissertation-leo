@@ -258,12 +258,12 @@ The policy corpus is not a flat set of documents: its \NPolicySegments{} segment
 
 The coverage gap for SDG $j$ is defined as:
 \[
-  \text{CoverageGap}_j = \left|\text{ResearchProportion}_j - \text{PolicyProportion}^{\text{docwt}}_j\right|
+  \text{CoverageGap}_j = \left|\text{ResearchCoverage}_j - \text{PolicyCoverage}^{\text{docwt}}_j\right|
 \]
 
 The signed version of the same quantity is:
 \[
-  \text{DominanceSigned}_j = \text{ResearchProportion}_j - \text{PolicyProportion}^{\text{docwt}}_j
+  \text{SignedCoverageGap}_j = \text{ResearchCoverage}_j - \text{PolicyCoverage}^{\text{docwt}}_j
 \]
 A positive value means research dominates SDG $j$; a negative value means policy dominates. These two definitions, together with research coverage and policy coverage, are the four predictors reported in Table~\ref{tab:interaction}.
 
@@ -281,7 +281,7 @@ The raw centroid distance is retained as the primary measure because it directly
 
 \subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
 
-The first hypothesis (H1) decomposes into four named sub-hypotheses, each correlating a distinct coverage predictor with the within-SDG semantic gap across the 17 SDGs: H1a, coverage gap $\leftrightarrow$ semantic gap; H1b, policy--research dominance $\leftrightarrow$ semantic gap; H1c, research coverage $\leftrightarrow$ semantic gap; and H1d, policy coverage $\leftrightarrow$ semantic gap. H1a is the primary, motivating hypothesis: the absolute research--policy coverage gap is expected to predict semantic divergence. H1b is its directional complement, testing whether the signed balance of research and policy attention (which side dominates a goal) also predicts divergence. I compute Pearson $r$ and Spearman $\rho$ between each coverage predictor and semantic gap scores across all 17 SDGs, with sensitivity analyses excluding SDG~4 (see Section~\ref{sec:sdg4artefact}). Given $n = 17$, the tests have limited power to detect anything but a large linear effect; this is a scope condition.
+The first hypothesis (H1) decomposes into four named sub-hypotheses, each correlating a distinct coverage predictor with the within-SDG semantic gap across the 17 SDGs: H1a, coverage gap $\leftrightarrow$ semantic gap; H1b, research--policy dominance $\leftrightarrow$ semantic gap; H1c, research coverage $\leftrightarrow$ semantic gap; and H1d, policy coverage $\leftrightarrow$ semantic gap. H1a is the primary, motivating hypothesis: the absolute research--policy coverage gap is expected to predict semantic divergence. H1b is its directional complement, testing whether the signed balance of research and policy attention (which side dominates a goal) also predicts divergence. I compute Pearson $r$ and Spearman $\rho$ between each coverage predictor and semantic gap scores across all 17 SDGs, with sensitivity analyses excluding SDG~4 (see Section~\ref{sec:sdg4artefact}). Given $n = 17$, the tests have limited power to detect anything but a large linear effect; this is a scope condition.
 
 \subsection{Key Assumptions and Mitigations}\label{sec:assumptions-stub}
 
@@ -381,7 +381,7 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs.
 
 Table~\ref{tab:interaction} reports the H1a–H1d correlation tests between coverage measures and semantic gap scores across the SDGs.
 
-The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed policy--research dominance. Each panel reports the canonical result across all 17 observed SDGs and a sensitivity test excluding SDG~4, then replicates the four tests under an alternative embedding model (MPNet) and four alternative reference-source centroids (OSDG, SDGi, Knowledge Hub, Aurora).
+The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. Each panel reports the canonical result across all 17 observed SDGs and a sensitivity test excluding SDG~4, then replicates the four tests under an alternative embedding model (MPNet) and four alternative reference-source centroids (OSDG, SDGi, Knowledge Hub, Aurora).
 
 \begin{table}[H]
 \centering
@@ -390,7 +390,7 @@ The four predictors are research coverage, policy coverage, the absolute researc
 \input{../4_outputs/main/tables/tab_interaction.tex}
 \end{table}
 
-The primary hypothesis, H1a, is supported in the canonical specification: the absolute research--policy coverage gap is positively related to semantic gap ($r = \HPrimaryCovgapPearsonR$, $p = \HPrimaryCovgapPearsonP$; $n = \HPrimaryN$). H1c, the research-coverage predictor, is \textbf{not supported}: research coverage proportion and semantic gap are almost uncorrelated across SDGs ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$), and the 95\% confidence interval for $r$ spans approximately $[\HPrimaryPearsonCiLower, +\HPrimaryPearsonCiUpper]$, so the result provides low evidence for a linear relationship. Two further exploratory tests are reported: H1d, policy coverage alone, is positively related to divergence ($r = \HPrimaryPolicyPearsonR$, $p = \HPrimaryPolicyPearsonP$; $n = \HPrimaryN$); and H1b, the signed policy--research dominance, is negatively related ($r = \HPrimaryDominancePearsonR$, $p = \HPrimaryDominancePearsonP$) — SDGs where policy dominates the discourse diverge most. Both positive correlations reverse sign under alternative reference centroids: under Knowledge Hub-only centroids the policy-coverage correlation is $r = -0.617$ ($p = 0.008$) and the coverage-gap correlation is $r = -0.247$ ($p = 0.339$); under Aurora-only centroids they are $r = -0.613$ ($p = 0.009$) and $r = -0.584$ ($p = 0.014$) respectively (Table~\ref{tab:interaction}). This pattern is an exploratory result: across the four predictors and seven centroid-or-model configurations in Table~\ref{tab:interaction} the study runs 28 correlation tests without a multiplicity correction, so the nominal $p$ values of 0.010--0.014 should not be read as strong evidence on their own.
+The primary hypothesis, H1a, is supported in the canonical specification: the absolute research--policy coverage gap is positively related to semantic gap ($r = \HPrimaryCovgapPearsonR$, $p = \HPrimaryCovgapPearsonP$; $n = \HPrimaryN$). H1c, the research-coverage predictor, is \textbf{not supported}: research coverage proportion and semantic gap are almost uncorrelated across SDGs ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$), and the 95\% confidence interval for $r$ spans approximately $[\HPrimaryPearsonCiLower, +\HPrimaryPearsonCiUpper]$, so the result provides low evidence for a linear relationship. Two further exploratory tests are reported: H1d, policy coverage alone, is positively related to divergence ($r = \HPrimaryPolicyPearsonR$, $p = \HPrimaryPolicyPearsonP$; $n = \HPrimaryN$); and H1b, the signed research--policy dominance, is negatively related ($r = \HPrimaryDominancePearsonR$, $p = \HPrimaryDominancePearsonP$) — SDGs where policy dominates the discourse diverge most. Both positive correlations reverse sign under alternative reference centroids: under Knowledge Hub-only centroids the policy-coverage correlation is $r = -0.617$ ($p = 0.008$) and the coverage-gap correlation is $r = -0.247$ ($p = 0.339$); under Aurora-only centroids they are $r = -0.613$ ($p = 0.009$) and $r = -0.584$ ($p = 0.014$) respectively (Table~\ref{tab:interaction}). This pattern is an exploratory result: across the four predictors and seven centroid-or-model configurations in Table~\ref{tab:interaction} the study runs 28 correlation tests without a multiplicity correction, so the nominal $p$ values of 0.010--0.014 should not be read as strong evidence on their own.
 
 The diagnostic scatter plot (Figure~\ref{fig:typology_scatter}) provides a per-SDG complement to the aggregate correlation tests. The formal coverage-gap test confirms the visual pattern: SDGs with larger absolute research--policy coverage gaps have larger semantic gaps, and the most policy-dominant SDGs (13, 17) sit above the median on both axes. The significance of the canonical coverage-gap association, however, does not survive the MPNet embedding (Table~\ref{tab:interaction}), so it should be read as a descriptive tendency rather than a robust effect.
 
