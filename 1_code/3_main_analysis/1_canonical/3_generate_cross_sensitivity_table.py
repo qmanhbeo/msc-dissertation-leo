@@ -384,7 +384,7 @@ def main():
         r"\bottomrule",
         r"\end{tabular}",
         r"}",
-        r"\par\smallskip\footnotesize\emph{Notes:} Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus); the Segment-cap group isolates the per-document segment-cap parameter (encoder, centroids, and corpus held fixed), with an alternative cap of 20 segments per document and an uncapped (no) run. A ``--'' indicates that the source does not cover that SDG.\par",
+        r"\par\smallskip\footnotesize\emph{Notes:} Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus).\par",
         r"\end{table}",
     ])
 
