@@ -71,7 +71,7 @@ FAMILY_FILE_MAP = {
         POLICY_PREPROCESSED_ROOT / "policy_manual" / "policy_manual_segments.jsonl",
     ],
     "sdgi_vnr_vlr": [
-        POLICY_PREPROCESSED_ROOT / "sdgi_corpus" / "sdgi_segments.jsonl",
+        ROOT / "2_data" / "1_preprocessed" / "sdgi_corpus" / "sdgi_unified_all-mpnet-base-v2.jsonl",
     ],
     "ungdc_speeches": [
         POLICY_PREPROCESSED_ROOT / "ungdc_sdg" / "ungdc_sdg_segments.jsonl",

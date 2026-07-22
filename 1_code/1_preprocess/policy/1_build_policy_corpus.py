@@ -27,7 +27,7 @@ from pathlib import Path
 SOURCES = [
     Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl"),
     Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl"),
-    Path("2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_segments.jsonl"),
+    Path("2_data/1_preprocessed/sdgi_corpus/sdgi_unified_all-mpnet-base-v2.jsonl"),
     Path("2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl"),
 ]
 
@@ -87,7 +87,19 @@ def main() -> None:
         source_counts[label] = added
         print(f"  {label}: {len(raw)} raw -> {added} kept ({skipped_short} too short)")
 
-    print(f"\nTotal segments: {len(all_segments)}")
+    print(f"\nTotal segments (pre-dedup): {len(all_segments)}")
+
+    seen_texts: set[str] = set()
+    dedup_kept: list[dict] = []
+    for segment in all_segments:
+        text_key = segment.get("text", "").strip()
+        if text_key in seen_texts:
+            continue
+        seen_texts.add(text_key)
+        dedup_kept.append(segment)
+    n_dedup = len(all_segments) - len(dedup_kept)
+    all_segments = dedup_kept
+    print(f"Deduplication: removed {n_dedup} exact-duplicate segments ({100 * n_dedup / (len(all_segments) + n_dedup):.1f}%)")
 
     for index, segment in enumerate(all_segments):
         segment["segment_id_merged"] = f"merged_{index:06d}"
