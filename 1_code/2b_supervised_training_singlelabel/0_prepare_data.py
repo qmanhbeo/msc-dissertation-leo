@@ -126,6 +126,7 @@ def main() -> None:
         kept_indices = []
         dropped_short = 0
         dropped_agreement = 0
+        dropped_multi = 0
 
         for i, entry in enumerate(rows):
             text = entry.get("text", "")
@@ -139,22 +140,36 @@ def main() -> None:
                 dropped_agreement += 1
                 continue
 
+            sdg = entry.get("sdg")
+            sdgs = entry.get("sdgs")
+            is_single = (
+                (sdg is not None and 1 <= sdg <= N_SDG)
+                or (isinstance(sdgs, list) and len(sdgs) == 1 and 1 <= sdgs[0] <= N_SDG)
+            )
+            if not is_single:
+                dropped_multi += 1
+                continue
+
             kept_indices.append(i)
 
         kept_embs = embs[kept_indices]
         labels = np.zeros((len(kept_indices), N_SDG), dtype=np.float32)
         for j, i in enumerate(kept_indices):
-            sdg = rows[i].get("sdg")
+            entry = rows[i]
+            sdg = entry.get("sdg")
+            sdgs = entry.get("sdgs")
             if sdg is not None and 1 <= sdg <= N_SDG:
                 labels[j, sdg - 1] = 1.0
+            elif isinstance(sdgs, list) and len(sdgs) == 1 and 1 <= sdgs[0] <= N_SDG:
+                labels[j, sdgs[0] - 1] = 1.0
 
         all_embs.append(kept_embs)
         all_labels.append(labels)
         all_sources.extend([name] * len(kept_indices))
 
         log.info(
-            "  %s: %d texts (dropped: %d short, %d agreement)",
-            name, len(kept_indices), dropped_short, dropped_agreement,
+            "  %s: %d texts (dropped: %d short, %d agreement, %d multi-label)",
+            name, len(kept_indices), dropped_short, dropped_agreement, dropped_multi,
         )
         total_dropped_short += dropped_short
         total_dropped_agreement += dropped_agreement

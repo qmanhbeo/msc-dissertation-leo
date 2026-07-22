@@ -1,21 +1,21 @@
 """
-Preprocess SDGi Corpus: extract single-label texts for all 17 SDGs.
+Preprocess SDGi Corpus: extract multi-label texts for all 17 SDGs.
 
 Input:  2_data/0_raw/sdgi_corpus/sdgi_corpus.parquet  (5,880 rows, multi-label)
 Output: 2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl
         2_data/1_preprocessed/sdgi_corpus/sdgi_clean.csv
 
 Filtering:
-  - Keep only single-label texts (labels == [sdg] for sdg in 1..17)
+  - Keep all texts regardless of SDG count (multi-label preserved)
   - Drop texts shorter than MIN_WORDS
 
 Cleaning:
   - Normalize Unicode, strip boilerplate (URLs, emails, copyright)
   - Normalize whitespace
 
-Role in pipeline:
-  Provides a within-genre (policy VNR/VLR) SDG reference corpus for supplementing
-  the OSDG and Knowledge Hub corpora in building per-SDG centroids.
+Fields:
+  - sdgs: list[int] — all active SDG labels for this text
+  - Single-label texts are filtered at MLP training time, not here.
 
 Run from project root:
     python 1_code/1_preprocess/preprocess_sdgi_corpus.py
@@ -30,24 +30,15 @@ from pathlib import Path
 
 import numpy as np
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
 INPUT_FILE = Path("2_data/0_raw/sdgi_corpus/sdgi_corpus.parquet")
 OUTPUT_JSONL = Path("2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl")
 OUTPUT_CSV = Path("2_data/1_preprocessed/sdgi_corpus/sdgi_clean.csv")
 
 MIN_WORDS = 20
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Text cleaning (shared pattern with preprocess_osdg.py)
-# ---------------------------------------------------------------------------
 _BOILERPLATE = [
     re.compile(r"©\s*\d{4}.*", re.IGNORECASE),
     re.compile(r"all rights reserved\.?", re.IGNORECASE),
@@ -57,14 +48,12 @@ _BOILERPLATE = [
 ]
 _MULTI_SPACE = re.compile(r"\s{2,}")
 
-
 def normalize_unicode(text: str) -> str:
     text = unicodedata.normalize("NFKC", text)
     text = text.replace("\u2018", "'").replace("\u2019", "'")
     text = text.replace("\u201c", '"').replace("\u201d", '"')
     text = text.replace("\u2013", "-").replace("\u2014", "-")
     return text
-
 
 def clean_text(text: str) -> str:
     if not text:
@@ -75,10 +64,6 @@ def clean_text(text: str) -> str:
     text = _MULTI_SPACE.sub(" ", text)
     return text.strip()
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 def main() -> None:
     log.info("Loading %s", INPUT_FILE)
 
@@ -87,59 +72,53 @@ def main() -> None:
 
     log.info("Loaded %d raw rows", len(df))
 
-    # Collect single-label texts for all 17 SDGs
-    kept, dropped_text = [], 0
+    kept, dropped_text, multi_count = [], 0, 0
 
-    for sdg in range(1, 18):
-        single_mask = df["labels"].apply(
-            lambda x, sdg=sdg: isinstance(x, np.ndarray) and len(x) == 1 and x[0] == sdg
-        )
-        n_single = int(single_mask.sum())
-        if n_single == 0:
-            log.info("  Single-label SDG %2d: 0 / %d rows", sdg, len(df))
+    for idx, row in df.iterrows():
+        text = clean_text(row.get("text", ""))
+        if len(text.split()) < MIN_WORDS:
+            dropped_text += 1
             continue
 
-        prev_kept = len(kept)
-        for idx, row in df[single_mask].iterrows():
-            text = clean_text(row.get("text", ""))
-            if len(text.split()) < MIN_WORDS:
-                dropped_text += 1
-                continue
+        labels = row.get("labels")
+        if not isinstance(labels, np.ndarray) or len(labels) == 0:
+            continue
 
-            metadata = row.get("metadata", {})
-            country = metadata.get("country", "") if isinstance(metadata, dict) else ""
+        active = sorted(int(l) for l in labels)
+        if len(active) > 1:
+            multi_count += 1
 
-            kept.append({
-                "id": f"sdgi_{idx}",
-                "text": text,
-                "sdg": sdg,
-                "country": country,
-                "word_count": len(text.split()),
-            })
+        metadata = row.get("metadata", {})
+        country = metadata.get("country", "") if isinstance(metadata, dict) else ""
 
-        n_kept = len(kept) - prev_kept
-        log.info("  Single-label SDG %2d: %d kept from %d (dropped %d)", sdg, n_kept, n_single, n_single - n_kept)
+        kept.append({
+            "id": f"sdgi_{idx}",
+            "text": text,
+            "sdgs": active,
+            "country": country,
+            "word_count": len(text.split()),
+        })
 
     log.info(
-        "Total single-label: %d kept across all SDGs  |  Dropped (short text): %d",
-        len(kept), dropped_text,
+        "Total: %d kept (%d multi-label)  |  Dropped (short text): %d  |  SDG distribution: %s",
+        len(kept), multi_count, dropped_text,
+        dict(sorted({n: sum(1 for r in kept if len(r["sdgs"]) == n) for n in range(1, 18)}.items())),
     )
 
     OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_JSONL.open("w") as f:
         for row in kept:
             f.write(json.dumps(row) + "\n")
-    log.info("Saved JSONL → %s", OUTPUT_JSONL)
+    log.info("Saved JSONL -> %s", OUTPUT_JSONL)
 
-    csv_fields = ["id", "sdg", "word_count", "country", "text"]
+    csv_fields = ["id", "sdgs", "word_count", "country", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(kept)
-    log.info("Saved CSV  → %s", OUTPUT_CSV)
+    log.info("Saved CSV  -> %s", OUTPUT_CSV)
 
     print(f"\nDone. {len(kept)} rows written to {OUTPUT_JSONL}")
-
 
 if __name__ == "__main__":
     main()
