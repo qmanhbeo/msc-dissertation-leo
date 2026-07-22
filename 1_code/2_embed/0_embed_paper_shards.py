@@ -65,7 +65,7 @@ def resolve_device(name: str) -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def load_texts(path: Path) -> list[str]:
+def load_texts(path: Path, text_field: str = "combined_text") -> list[str]:
     texts: list[str] = []
     with path.open(encoding="utf-8") as f:
         for line in f:
@@ -73,7 +73,7 @@ def load_texts(path: Path) -> list[str]:
             if not line:
                 continue
             row = json.loads(line)
-            texts.append(row["combined_text"])
+            texts.append(row[text_field])
     return texts
 
 
@@ -83,6 +83,32 @@ def copy_ids(ids_in: Path, ids_out: Path) -> None:
         for line in src:
             if line.strip():
                 dst.write(line)
+    tmp.replace(ids_out)
+
+
+def _model_slug(model: str) -> str:
+    return model.replace("/", "_").lower()
+
+
+def _segmented_sibling_dir(shard_data_path: Path, model_slug_val: str) -> Path | None:
+    parent = shard_data_path.parent
+    seg_dir = parent / f"segmented_{model_slug_val}"
+    return seg_dir if seg_dir.is_dir() else None
+
+
+def _generate_ids_from_segmented(data_path: Path, ids_out: Path) -> None:
+    tmp = ids_out.with_suffix(ids_out.suffix + ".tmp")
+    with data_path.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8") as dst:
+        for line in src:
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            out = {
+                "openalex_id": row.get("openalex_id", ""),
+                "source_doc": row.get("source_doc", ""),
+                "segment_id": row.get("segment_id", ""),
+            }
+            dst.write(json.dumps(out, ensure_ascii=False) + "\n")
     tmp.replace(ids_out)
 
 
@@ -150,6 +176,14 @@ def main() -> None:
             "totals": {"rows": 0, "shards": 0},
         }
 
+    model_slug_val = _model_slug(args.model)
+    use_segmented = None
+    shard_data_path_sample = resolve_from_manifest(input_manifest, data["shards"][0]["data_path"])
+    seg_dir = _segmented_sibling_dir(shard_data_path_sample, model_slug_val)
+    if seg_dir is not None:
+        log.info("Using segmented research data from %s", seg_dir)
+        use_segmented = seg_dir
+
     completed = {int(s["shard_id"]): s for s in out_manifest.get("shards", [])}
     shards = data["shards"][: args.limit_shards] if args.limit_shards > 0 else data["shards"]
 
@@ -165,15 +199,24 @@ def main() -> None:
         shard_name = shard["name"]
         out_emb = out_dir / f"{shard_name}.npy"
         out_ids = metadata_dir / f"{shard_name}_ids.jsonl"
-        in_data = resolve_from_manifest(input_manifest, shard["data_path"])
-        in_ids = resolve_from_manifest(input_manifest, shard["ids_path"])
+
+        if use_segmented:
+            seg_path = use_segmented / f"{shard_name}.jsonl"
+            if not seg_path.exists():
+                log.error("Segmented shard missing at %s — segmentation incomplete?", seg_path)
+                raise FileNotFoundError(f"Segmented shard not found: {seg_path}")
+            in_data = seg_path
+            text_field = "text"
+        else:
+            in_data = resolve_from_manifest(input_manifest, shard["data_path"])
+            text_field = "combined_text"
 
         if shard_id in completed and out_emb.exists() and out_ids.exists():
             log.info("Skip shard %s (already embedded)", shard_name)
             continue
 
         log.info("Embedding shard %s", shard_name)
-        texts = load_texts(in_data)
+        texts = load_texts(in_data, text_field=text_field)
         emb = model.encode(
             texts,
             batch_size=args.batch_size,
@@ -186,7 +229,11 @@ def main() -> None:
         with tmp_emb.open("wb") as f:
             np.save(f, emb)
         tmp_emb.replace(out_emb)
-        copy_ids(in_ids, out_ids)
+        if use_segmented:
+            _generate_ids_from_segmented(in_data, out_ids)
+        else:
+            in_ids = resolve_from_manifest(input_manifest, shard["ids_path"])
+            copy_ids(in_ids, out_ids)
 
         out_record = {
             "shard_id": shard_id,
