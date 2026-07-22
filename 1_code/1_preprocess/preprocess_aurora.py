@@ -1,21 +1,16 @@
 """
-Preprocess Aurora corpus: extract multi-label texts with full SDG recovery.
+Preprocess Aurora corpus: clean text and filter short entries.
 
-Input:  2_data/0_raw/aurora/aurora.zip  (SDG survey ZIP)
-        2_data/1_preprocessed/aurora/aurora_texts.jsonl  (produced by fetch_aurora.py)
+Input:  2_data/0_raw/aurora/aurora_raw.jsonl  (from fetch_aurora.py, has sdgs: list[int])
+        2_data/0_raw/aurora/aurora.zip        (cross-check SDG mapping)
 
-Output: 2_data/1_preprocessed/aurora/aurora_texts.jsonl  (cleaned, multi-label SDGs restored)
-
-Multi-label recovery:
-  The Aurora survey ZIP contains per-SDG CSV files. A paper accepted for
-  multiple SDGs appears in multiple CSVs. This script collapses across CSVs
-  to recover the full multi-label mapping, restoring SDGs lost during the
-  fetch step's DOI-deduplication.
+Output: 2_data/1_preprocessed/aurora/aurora_texts.jsonl
+        2_data/1_preprocessed/aurora/aurora_manifest.json
 
 Single-label texts are filtered at MLP training time, not here.
 
 Run from project root:
-    python 1_code/0_fetch/fetch_aurora.py          # fetch from OpenAlex first
+    python 1_code/0_fetch/fetch_aurora.py
     python 1_code/1_preprocess/preprocess_aurora.py
 """
 
@@ -30,10 +25,11 @@ from collections import defaultdict
 from pathlib import Path
 
 N_SDG = 17
-
-INPUT_FILE = Path("2_data/1_preprocessed/aurora/aurora_texts.jsonl")
+INPUT_FILE = Path("2_data/0_raw/aurora/aurora_raw.jsonl")
 AURORA_ZIP = Path("2_data/0_raw/aurora/aurora.zip")
 OUTPUT_JSONL = Path("2_data/1_preprocessed/aurora/aurora_texts.jsonl")
+OUTPUT_DIR = Path("2_data/1_preprocessed/aurora")
+MANIFEST_PATH = OUTPUT_DIR / "aurora_manifest.json"
 
 MIN_WORDS = 20
 
@@ -49,12 +45,14 @@ _BOILERPLATE = [
 ]
 _MULTI_SPACE = re.compile(r"\s{2,}")
 
+
 def normalize_unicode(text: str) -> str:
     text = unicodedata.normalize("NFKC", text)
     text = text.replace("\u2018", "'").replace("\u2019", "'")
     text = text.replace("\u201c", '"').replace("\u201d", '"')
     text = text.replace("\u2013", "-").replace("\u2014", "-")
     return text
+
 
 def clean_text(text: str) -> str:
     if not text:
@@ -65,14 +63,14 @@ def clean_text(text: str) -> str:
     text = _MULTI_SPACE.sub(" ", text)
     return text.strip()
 
-def extract_doi_to_sdgs(zip_path: Path) -> dict[str, set[int]]:
-    doi_to_sdgs: dict[str, set[int]] = defaultdict(set)
+
+def build_doi_to_sdgs_from_zip(zip_path: Path) -> dict[str, list[int]]:
+    """Cross-check: build {doi: sdgs} from ZIP to catch any missing SDGs."""
     try:
         z = zipfile.ZipFile(zip_path)
     except FileNotFoundError:
-        log.warning("Aurora ZIP not found at %s — no multi-label recovery possible", zip_path)
         return {}
-
+    doi_to_sdgs: dict[str, set[int]] = defaultdict(set)
     for sdg in range(1, 18):
         fname = f"04-processed-data/SDG{sdg:02d}/sdg{sdg:02d}-SDG-survey-selected-publications-accepted.csv"
         try:
@@ -84,68 +82,57 @@ def extract_doi_to_sdgs(zip_path: Path) -> dict[str, set[int]]:
             doi = row.get("doi", "").strip().lower()
             if doi:
                 doi_to_sdgs[doi].add(sdg)
-
     z.close()
-    return dict(doi_to_sdgs)
+    return {doi: sorted(sdgs) for doi, sdgs in doi_to_sdgs.items()}
+
 
 def main() -> None:
     if not INPUT_FILE.exists():
-        log.error(
-            "Input not found: %s\n"
-            "  Run the fetch script first:\n"
-            "    python 1_code/0_fetch/fetch_aurora.py",
-            INPUT_FILE,
-        )
+        log.error("Input not found: %s\n  Run fetch_aurora.py first.", INPUT_FILE)
         return
 
-    doi_to_all_sdgs = extract_doi_to_sdgs(AURORA_ZIP)
-    n_sdg_restored = 0
-    n_restored_texts = 0
-
+    # Load raw records (already have sdgs: list[int])
     log.info("Loading %s", INPUT_FILE)
     with INPUT_FILE.open(encoding="utf-8") as f:
         raw = [json.loads(line) for line in f if line.strip()]
     log.info("Loaded %d raw rows", len(raw))
 
-    doi_to_raw: dict[str, list[dict]] = {}
-    for r in raw:
-        doi_to_raw.setdefault(r.get("doi", ""), []).append(r)
+    # Cross-check SDGs against ZIP
+    doi_to_all_sdgs = build_doi_to_sdgs_from_zip(AURORA_ZIP)
+    n_sdg_restored = 0
+    n_restored_texts = 0
 
-    kept, dropped_text = [], 0
+    kept, dropped_no_text, dropped_text = [], 0, 0
     multi_count = 0
 
-    for doi, records in doi_to_raw.items():
-        best = max(records, key=lambda x: (x.get("has_abstract", False), x.get("text", "")))
+    for r in raw:
+        doi = r.get("doi", "")
+        sdgs = r.get("sdgs", [])
+        if not isinstance(sdgs, list):
+            sdgs = [int(sdgs)] if sdgs else []
+        sdgs = [s for s in sdgs if 1 <= s <= N_SDG]
 
-        text = clean_text(best.get("text", ""))
-        if len(text.split()) < MIN_WORDS:
-            dropped_text += 1
-            continue
-
+        # Cross-check: if ZIP has more SDGs than the raw record, restore them
         if doi in doi_to_all_sdgs:
-            sdgs = sorted(s for s in doi_to_all_sdgs[doi] if 1 <= s <= N_SDG)
-            fetched_sdgs = set()
-            for r in records:
-                if "sdgs" in r:
-                    fetched_sdgs.update(int(s) for s in r["sdgs"] if 1 <= s <= N_SDG)
-                elif "sdg" in r:
-                    sdg_val = int(r["sdg"])
-                    if 1 <= sdg_val <= N_SDG:
-                        fetched_sdgs.add(sdg_val)
-            restored = set(sdgs) - fetched_sdgs
+            zip_sdgs = set(doi_to_all_sdgs[doi])
+            fetched_sdgs = set(sdgs)
+            restored = zip_sdgs - fetched_sdgs
             if restored:
+                sdgs = sorted(zip_sdgs)
                 n_sdg_restored += len(restored)
                 n_restored_texts += 1
-        else:
-            if "sdgs" in best:
-                sdgs = [s for s in best["sdgs"] if 1 <= s <= N_SDG]
-            elif "sdg" in best:
-                sdg_val = int(best["sdg"])
-                sdgs = [sdg_val] if 1 <= sdg_val <= N_SDG else []
-            else:
-                sdgs = []
 
         if not sdgs:
+            continue
+
+        text = r.get("text", "") or ""
+        if not text.strip():
+            dropped_no_text += 1
+            continue
+
+        text = clean_text(text)
+        if len(text.split()) < MIN_WORDS:
+            dropped_text += 1
             continue
 
         if len(sdgs) > 1:
@@ -154,21 +141,19 @@ def main() -> None:
         kept.append({
             "doi": doi,
             "sdgs": sdgs,
-            "title": best.get("title", ""),
-            "abstract": best.get("abstract", ""),
-            "has_abstract": best.get("has_abstract", False),
+            "title": r.get("title", ""),
+            "abstract": r.get("abstract", ""),
+            "has_abstract": r.get("has_abstract", False),
             "text": text,
             "word_count": len(text.split()),
             "source": "aurora",
         })
 
     log.info(
-        "Total: %d kept (%d multi-label)  |  Dropped (short text): %d  |  "
-        "SDGs restored from ZIP: %d labels across %d texts  |  "
-        "SDG distribution: %s",
-        len(kept), multi_count, dropped_text,
+        "Total: %d kept (%d multi-label)  |  Dropped (no text): %d  |  "
+        "Dropped (short text): %d  |  SDGs restored from ZIP: %d labels across %d texts",
+        len(kept), multi_count, dropped_no_text, dropped_text,
         n_sdg_restored, n_restored_texts,
-        dict(sorted({n: sum(1 for r in kept if len(r["sdgs"]) == n) for n in range(1, 18)}.items())),
     )
 
     OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
@@ -177,7 +162,33 @@ def main() -> None:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
     log.info("Saved -> %s", OUTPUT_JSONL)
 
+    # Build manifest
+    per_sdg_counts = defaultdict(lambda: {"total": 0, "with_abstract": 0})
+    n_total = 0
+    n_abstract = 0
+    for r in kept:
+        n_total += 1
+        if r.get("has_abstract"):
+            n_abstract += 1
+        for sdg in r["sdgs"]:
+            per_sdg_counts[sdg]["total"] += 1
+            if r.get("has_abstract"):
+                per_sdg_counts[sdg]["with_abstract"] += 1
+
+    manifest = {
+        "n_total": n_total,
+        "n_with_abstract": n_abstract,
+        "n_without_abstract": n_total - n_abstract,
+        "n_multi_label": multi_count,
+        "n_single_label": n_total - multi_count,
+        "per_sdg_counts": {str(k): dict(v) for k, v in sorted(per_sdg_counts.items())},
+    }
+    with MANIFEST_PATH.open("w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
+    log.info("Saved -> %s", MANIFEST_PATH)
+
     print(f"\nDone. {len(kept)} rows written to {OUTPUT_JSONL}")
+
 
 if __name__ == "__main__":
     main()

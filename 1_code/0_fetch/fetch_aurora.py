@@ -4,18 +4,20 @@ Fetch Aurora survey accepted papers from OpenAlex by DOI.
 The Aurora dataset (Vanderfeesten et al., 2020) provides 5,695 research-domain
 expert-validated SDG labels. This script auto-downloads the raw survey ZIP from
 Zenodo (doi:10.5281/zenodo.3813230) if not already present, then fetches titles
-and abstracts from OpenAlex, and saves as a JSONL corpus ready for embedding.
+and abstracts from OpenAlex, and saves as raw JSONL.
 
-Resumable: writes incrementally to aurora_texts.jsonl and tracks fetched DOIs
-in aurora_fetched.log for crash recovery.
+Deduplicates by DOI (one API call per unique DOI). The full multi-label SDG
+mapping (sdgs: list[int]) is recovered from the ZIP before fetching, so every
+record carries all its SDGs even though the API is called only once.
+
+Resumable: writes incrementally and tracks fetched DOIs for crash recovery.
 
 Uses the same credential rotation as fetch_openalex.py.
 
 Output:
-  2_data/0_raw/aurora/aurora.zip                              — downloaded from Zenodo
-  2_data/1_preprocessed/aurora/aurora_texts.jsonl             — {text, sdg, doi, title, has_abstract}
-  2_data/1_preprocessed/aurora/aurora_fetched.log             — one DOI per line (already fetched)
-  2_data/1_preprocessed/aurora/aurora_manifest.json           — {n_total, n_with_abstract, per_sdg_counts}
+   2_data/0_raw/aurora/aurora.zip              — downloaded from Zenodo
+   2_data/0_raw/aurora/aurora_raw.jsonl        — {doi, sdgs, title, abstract, has_abstract, text, source}
+   2_data/0_raw/aurora/aurora_fetched.log      — one DOI per line (resume tracking)
 """
 
 import csv
@@ -41,8 +43,8 @@ load_dotenv()
 
 AURORA_ZIP = Path("2_data/0_raw/aurora/aurora.zip")
 AURORA_ZENODO_RECORD = "https://zenodo.org/api/records/3813230"
-OUTPUT_DIR = Path("2_data/1_preprocessed/aurora")
-OUTPUT_JSONL = OUTPUT_DIR / "aurora_texts.jsonl"
+OUTPUT_DIR = Path("2_data/0_raw/aurora")
+OUTPUT_JSONL = OUTPUT_DIR / "aurora_raw.jsonl"
 FETCHED_LOG = OUTPUT_DIR / "aurora_fetched.log"
 
 API_BASE = "https://api.openalex.org/works/doi/{}"
@@ -56,7 +58,6 @@ def require_env(name: str) -> str:
     return value
 
 
-# Load credential sets (same pattern as fetch_openalex.py)
 def load_credentials() -> list[dict]:
     raw = [
         ("OPENALEX_MAILTO", "OPENALEX_API_KEY"),
@@ -76,7 +77,6 @@ def load_credentials() -> list[dict]:
 
 
 def download_aurora_zip() -> Path:
-    """Download the Aurora survey data ZIP from Zenodo if not already present."""
     if AURORA_ZIP.exists():
         log.info("aurora.zip already exists at %s", AURORA_ZIP)
         return AURORA_ZIP
@@ -100,7 +100,7 @@ def download_aurora_zip() -> Path:
         )
 
     AURORA_ZIP.parent.mkdir(parents=True, exist_ok=True)
-    log.info("Downloading %s → %s (31 MB) ...", zip_url, AURORA_ZIP)
+    log.info("Downloading %s -> %s (31 MB) ...", zip_url, AURORA_ZIP)
     with requests.get(zip_url, stream=True, timeout=120) as r:
         r.raise_for_status()
         total = int(r.headers.get("content-length", 0))
@@ -114,10 +114,20 @@ def download_aurora_zip() -> Path:
     return AURORA_ZIP
 
 
-def extract_dois_from_zip(zip_path: Path) -> dict[int, list[dict]]:
-    """Return {sdg: [{doi}]} from accepted-papers CSVs."""
-    z = zipfile.ZipFile(zip_path)
-    result = defaultdict(list)
+def build_doi_to_sdgs(zip_path: Path) -> dict[str, list[int]]:
+    """Build {doi: sorted[sdgs]} mapping from the Aurora ZIP's per-SDG CSVs.
+
+    The ZIP contains one CSV per SDG. A paper accepted for multiple SDGs
+    appears in multiple CSVs, so we collapse across CSVs to recover the
+    full multi-label mapping.
+    """
+    doi_to_sdgs: dict[str, set[int]] = defaultdict(set)
+    try:
+        z = zipfile.ZipFile(zip_path)
+    except FileNotFoundError:
+        log.warning("Aurora ZIP not found at %s", zip_path)
+        return {}
+
     for sdg in range(1, 18):
         fname = f"04-processed-data/SDG{sdg:02d}/sdg{sdg:02d}-SDG-survey-selected-publications-accepted.csv"
         try:
@@ -127,10 +137,11 @@ def extract_dois_from_zip(zip_path: Path) -> dict[int, list[dict]]:
         reader = csv.DictReader(io.StringIO(text))
         for row in reader:
             doi = row.get("doi", "").strip().lower()
-            if not doi:
-                continue
-            result[sdg].append({"doi": doi, "sdg": sdg})
-    return dict(result)
+            if doi:
+                doi_to_sdgs[doi].add(sdg)
+
+    z.close()
+    return {doi: sorted(sdgs) for doi, sdgs in doi_to_sdgs.items()}
 
 
 def reconstruct_abstract(inverted_index: dict | None) -> str | None:
@@ -147,44 +158,32 @@ def reconstruct_abstract(inverted_index: dict | None) -> str | None:
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Load credentials
     credential_sets = load_credentials()
     log.info("Loaded %d credential sets", len(credential_sets))
 
     # Step 0: Download Aurora ZIP from Zenodo if not present
     aurora_zip = download_aurora_zip()
 
-    # Step 1: Extract all DOIs
-    log.info("Extracting DOIs from Aurora zip...")
-    dois_by_sdg = extract_dois_from_zip(aurora_zip)
-    all_entries = []
-    for sdg in sorted(dois_by_sdg):
-        for entry in dois_by_sdg[sdg]:
-            all_entries.append(entry)
-    total = len(all_entries)
-    log.info("Total entries: %d", total)
+    # Step 1: Build {doi -> sdgs} mapping from ZIP
+    log.info("Building DOI-to-SDGs mapping from Aurora ZIP...")
+    doi_to_sdgs = build_doi_to_sdgs(aurora_zip)
+    all_dois = sorted(doi_to_sdgs.keys())
+    log.info("Total unique DOIs: %d", len(all_dois))
 
-    # Step 2: Load already-fetched (doi, sdg) pairs for resume
-    # Log format: "doi|sdg" per line (since fix), or legacy "doi" only.
-    fetched_pairs = set()
-    fetched_dois_legacy = set()
+    multi_count = sum(1 for sdgs in doi_to_sdgs.values() if len(sdgs) > 1)
+    log.info("Multi-label DOIs: %d (%.1f%%)", multi_count, multi_count / len(all_dois) * 100 if all_dois else 0)
+
+    # Step 2: Load already-fetched DOIs for resume
+    fetched_dois: set[str] = set()
     if FETCHED_LOG.exists():
         with open(FETCHED_LOG) as f:
             for line in f:
                 line = line.strip().lower()
-                if not line:
-                    continue
-                if "|" in line:
-                    doi_part, sdg_part = line.split("|", 1)
-                    fetched_pairs.add((doi_part, int(sdg_part)))
-                else:
-                    fetched_dois_legacy.add(line)
-        log.info(
-            "Resume mode: %d (doi|sdg) pairs + %d legacy DOIs loaded",
-            len(fetched_pairs), len(fetched_dois_legacy),
-        )
+                if line:
+                    fetched_dois.add(line)
+        log.info("Resume mode: %d DOIs already fetched", len(fetched_dois))
 
-    # Step 3: Fetch missing DOIs with credential rotation
+    # Step 3: Fetch missing DOIs
     out_fh = open(OUTPUT_JSONL, "a", encoding="utf-8")
     fetched_fh = open(FETCHED_LOG, "a", encoding="utf-8")
 
@@ -193,17 +192,12 @@ def main():
     cred_idx = 0
     consecutive_failures = 0
 
-    for i, entry in enumerate(all_entries):
-        doi = entry["doi"]
-        sdg = entry["sdg"]
-
-        # Skip if (doi, sdg) pair already fetched, or if the legacy log
-        # recorded this DOI before the multi-label fix (conservatively
-        # skip all SDGs for that DOI — the post-merge step handles them).
-        if doi in fetched_dois_legacy or (doi, sdg) in fetched_pairs:
+    for i, doi in enumerate(all_dois):
+        if doi in fetched_dois:
             continue
 
-        # Rotate creds every request for load balancing
+        sdgs = doi_to_sdgs.get(doi, [])
+
         cred = credential_sets[cred_idx % len(credential_sets)]
         cred_idx += 1
 
@@ -226,7 +220,7 @@ def main():
 
                     rec = {
                         "doi": doi,
-                        "sdg": entry["sdg"],
+                        "sdgs": sdgs,
                         "title": title,
                         "abstract": abstract,
                         "has_abstract": has_abstract,
@@ -239,8 +233,7 @@ def main():
                     if has_abstract:
                         n_with_abstract += 1
 
-                    fetched_pairs.add((doi, sdg))
-                    fetched_fh.write(f"{doi}|{sdg}\n")
+                    fetched_fh.write(f"{doi}\n")
                     fetched_fh.flush()
 
                     n_new += 1
@@ -249,9 +242,19 @@ def main():
                     break
 
                 elif resp.status_code == 404:
-                    # DOI not found — still mark as fetched to avoid retry
-                    fetched_pairs.add((doi, sdg))
-                    fetched_fh.write(f"{doi}|{sdg}\n")
+                    rec = {
+                        "doi": doi,
+                        "sdgs": sdgs,
+                        "title": "",
+                        "abstract": None,
+                        "has_abstract": False,
+                        "text": "",
+                        "source": "aurora",
+                    }
+                    out_fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                    out_fh.flush()
+
+                    fetched_fh.write(f"{doi}\n")
                     fetched_fh.flush()
                     success = True
                     break
@@ -277,116 +280,24 @@ def main():
             log.warning("Giving up on DOI %s after %d attempts", doi, MAX_RETRIES_PER_KEY)
 
         if n_new % 200 == 0 and n_new > 0:
-            log.info("  Fetched %d new (total seen: %d/%d, %.0f%%)",
-                     n_new, len(fetched_pairs) + len(fetched_dois_legacy), total,
-                     (len(fetched_pairs) + len(fetched_dois_legacy)) / total * 100)
+            log.info("  Fetched %d new (total: %d/%d, %.0f%%)",
+                     n_new, len(fetched_dois) + n_new, len(all_dois),
+                     (len(fetched_dois) + n_new) / len(all_dois) * 100)
 
         if consecutive_failures >= 50:
             log.error("Too many consecutive failures (%d). Stopping. Resume by re-running.",
                       consecutive_failures)
             break
 
-        # Polite delay between requests
         time.sleep(0.05 + random.uniform(0, 0.02))
 
     out_fh.close()
     fetched_fh.close()
 
-    # Step 3.5: Merge multi-label DOIs
-    #
-    # The Aurora survey CSVs assign papers to individual SDG folders (one CSV
-    # per SDG). Papers accepted into multiple SDG categories appear in multiple
-    # CSVs, giving the same DOI in 2+ entries with different SDG values.
-    #
-    # Bug in the original loop above: the `fetched_so_far` set deduplicates by
-    # DOI only, so a multi-label paper is fetched only for its first-encountered
-    # SDG. The second SDG entry is skipped entirely.
-    #
-    # Fix: post-process the output by collapsing on DOI and merging SDGs using
-    # the full mapping from the ZIP. No re-fetching required — the text is the
-    # same regardless of which SDG triggered the fetch.
-    log.info("Merging multi-label records (dedup by DOI, merge SDGs)...")
-    doi_to_all_sdgs: dict[str, set[int]] = {}
-    for sdg, entries in dois_by_sdg.items():
-        for entry in entries:
-            doi_to_all_sdgs.setdefault(entry["doi"], set()).add(sdg)
-
-    doi_to_record: dict[str, dict] = {}
-    with open(OUTPUT_JSONL) as f:
-        for line in f:
-            r = json.loads(line)
-            doi = r["doi"]
-            if doi not in doi_to_record:
-                doi_to_record[doi] = r
-            else:
-                # Keep the record with abstract if available, else keep first
-                existing = doi_to_record[doi]
-                if r.get("has_abstract") and not existing.get("has_abstract"):
-                    doi_to_record[doi] = r
-
-    merged = []
-    for doi, rec in doi_to_record.items():
-        all_sdgs = sorted(doi_to_all_sdgs.get(doi, {rec["sdg"]}))
-        rec["sdgs"] = all_sdgs
-        merged.append(rec)
-
-    log.info("  Dedup: %d → %d records (saved %d duplicates)", total, len(merged), total - len(merged))
-    multi_count = sum(1 for r in merged if len(r["sdgs"]) > 1)
-    log.info("  Multi-label records recovered: %d", multi_count)
-
-    out_path = Path(OUTPUT_JSONL)
-    with out_path.open("w", encoding="utf-8") as f:
-        for rec in merged:
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    log.info("  Rewrote: %s", out_path)
-
-    # Also rebuild fetched log with (doi|sdg) pairs for future resume
-    log.info("Rebuilding fetched log with DOI|SDG pairs...")
-    with open(FETCHED_LOG, "w", encoding="utf-8") as f:
-        for rec in merged:
-            for sdg in rec["sdgs"]:
-                f.write(f"{rec['doi']}|{sdg}\n")
-    log.info("  Rebuilt: %s", FETCHED_LOG)
-
-    # Step 4: Build manifest
-    log.info("Building manifest from saved JSONL...")
-    per_sdg_counts = defaultdict(lambda: {"total": 0, "with_abstract": 0})
-    n_total = 0
-    n_abstract = 0
-    with open(OUTPUT_JSONL) as f:
-        for line in f:
-            r = json.loads(line)
-            sdg = r["sdg"]
-            per_sdg_counts[sdg]["total"] += 1
-            n_total += 1
-            if r.get("has_abstract"):
-                per_sdg_counts[sdg]["with_abstract"] += 1
-                n_abstract += 1
-
-    missing = total - n_total
-    log.info("Total saved: %d / %d total Aurora DOIs (%d missing, %.1f%%)",
-             n_total, total, missing, missing / total * 100 if total else 0)
-    log.info("With abstracts: %d / %d (%.0f%%)", n_abstract, n_total, n_abstract / n_total * 100 if n_total else 0)
-
-    manifest = {
-        "n_total": n_total,
-        "n_missing_from_openalex": missing,
-        "n_with_abstract": n_abstract,
-        "n_without_abstract": n_total - n_abstract,
-        "per_sdg_counts": {str(k): v for k, v in sorted(per_sdg_counts.items())},
-        "source": "Aurora survey accepted papers (Vanderfeesten et al., 2020), fetched from OpenAlex",
-    }
-    manifest_path = OUTPUT_DIR / "aurora_manifest.json"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
-    log.info("Saved: %s", manifest_path)
-
-    log.info("Done. Per-SDG breakdown:")
-    log.info("  %-4s  %-8s  %-8s", "SDG", "total", "abstract")
-    log.info("  " + "-" * 24)
-    for sdg in sorted(per_sdg_counts):
-        c = per_sdg_counts[sdg]
-        log.info("  %3d  %5d    %5d", sdg, c["total"], c["with_abstract"])
+    log.info(
+        "Done. %d new DOIs fetched (%d with abstract). Total: %d DOIs.",
+        n_new, n_with_abstract, len(fetched_dois) + n_new,
+    )
 
 
 if __name__ == "__main__":

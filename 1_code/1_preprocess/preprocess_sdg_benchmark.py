@@ -105,10 +105,11 @@ def main() -> None:
             log.warning("Dropping short text (id=%s, %d words)", row.get("id"), len(text.split()))
             continue
 
+        sdg_val = int(row["sdg"])
         kept.append({
             "id": row.get("id", ""),
             "text": text,
-            "sdg": int(row["sdg"]),
+            "sdgs": [sdg_val],
             "word_count": len(text.split()),
         })
 
@@ -118,7 +119,7 @@ def main() -> None:
     )
 
     # SDG distribution
-    sdg_counts = Counter(r["sdg"] for r in kept)
+    sdg_counts = Counter(r["sdgs"][0] for r in kept)
     log.info("SDG distribution: %s", dict(sorted(sdg_counts.items())))
 
     # Word count summary
@@ -136,7 +137,7 @@ def main() -> None:
     log.info("Saved JSONL → %s", OUTPUT_JSONL)
 
     # Save CSV
-    csv_fields = ["id", "sdg", "word_count", "text"]
+    csv_fields = ["id", "sdgs", "word_count", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
