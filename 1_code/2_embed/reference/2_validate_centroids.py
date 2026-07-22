@@ -49,7 +49,7 @@ CODE_ROOT = ROOT / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 from shared_utils import ensure_canonical_outputs
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+ANALYSIS_DIR = CODE_ROOT / "3_appendix_centroid" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
