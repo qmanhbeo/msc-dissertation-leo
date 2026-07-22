@@ -1,0 +1,10 @@
+{
+  "mean_absolute_cosine": 0.366248,
+  "median_absolute_cosine": 0.374409,
+  "max_absolute_cosine": 0.417156,
+  "min_absolute_cosine": 0.236528,
+  "strongest_alignment_sdg": 17,
+  "strongest_alignment_value": 0.417156,
+  "weakest_alignment_sdg": 16,
+  "weakest_alignment_value": 0.236528
+}

@@ -1,0 +1,28 @@
+{
+  "adjusted_reseparability": {
+    "raw_test_roc_auc": 0.999173,
+    "adjusted_test_roc_auc": 0.99689,
+    "relative_roc_auc_drop": -0.002285,
+    "adjusted_separability_still_high": true
+  },
+  "heldout_sdg_generalization": {
+    "mean_test_roc_auc": 0.998508,
+    "mean_test_f1": 0.98455,
+    "generalization_still_high": true
+  },
+  "multi_direction": {
+    "k1_mean_adjusted_gap": 0.360167,
+    "max_abs_mean_gap_change_after_k1": 0.031537,
+    "material_change_after_k1": true
+  },
+  "topic_matched": {
+    "overall_adjusted_mean_matched_gap": 0.357065,
+    "overall_raw_mean_matched_gap": 0.354074,
+    "topic_matched_divergence_still_large": true
+  },
+  "threshold_notes": {
+    "high_separability_or_generalization": "ROC-AUC >= 0.90",
+    "material_multi_direction_change": "absolute mean adjusted gap shift >= 0.02 relative to k=1",
+    "large_topic_matched_divergence": "mean adjusted matched gap >= 0.20"
+  }
+}
