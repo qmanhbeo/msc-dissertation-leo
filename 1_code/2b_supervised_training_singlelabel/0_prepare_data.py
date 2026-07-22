@@ -2,10 +2,9 @@
 Prepare training and test data for the single-label SDG classifier.
 
 Loads the canon single-label embeddings from 2_data/2_embedded/, reads
-the corresponding preprocessed JSONL for full metadata (agreement, word_count),
-applies quality filters matching the multi-label pipeline convention
-(MIN_WORDS >= 20, agreement >= 0.5 for OSDG), builds 17D one-hot vectors,
-and performs a per-source stratified 85/15 split.
+the corresponding preprocessed JSONL, filters for single-label records
+(multi-label texts are dropped at this boundary per design), builds
+17D one-hot vectors, and performs a per-source stratified 85/15 split.
 
 Sources: osdg, benchmark, sdg_knowledge_hub, sdgi_corpus, aurora
 Excludes: policy (unlabeled), research_corpus (unlabeled)
@@ -46,36 +45,26 @@ CORPORA = [
         "name": "osdg",
         "embed_file": "osdg.npy",
         "jsonl_path": PREPROCESS_ROOT / "osdg" / "osdg_clean.jsonl",
-        "min_words": 20,
-        "need_agreement": True,
     },
     {
         "name": "benchmark",
         "embed_file": "benchmark.npy",
         "jsonl_path": PREPROCESS_ROOT / "sdg_benchmark" / "benchmark_clean.jsonl",
-        "min_words": 10,
-        "need_agreement": False,
     },
     {
         "name": "sdg_knowledge_hub",
         "embed_file": "sdg_knowledge_hub.npy",
         "jsonl_path": PREPROCESS_ROOT / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl",
-        "min_words": 20,
-        "need_agreement": False,
     },
     {
         "name": "sdgi",
         "embed_file": "sdgi.npy",
         "jsonl_path": PREPROCESS_ROOT / "sdgi_corpus" / "sdgi_clean.jsonl",
-        "min_words": 20,
-        "need_agreement": False,
     },
     {
         "name": "aurora",
         "embed_file": "aurora.npy",
         "jsonl_path": PREPROCESS_ROOT / "aurora" / "aurora_texts.jsonl",
-        "min_words": 20,
-        "need_agreement": False,
     },
 ]
 
@@ -101,8 +90,6 @@ def main() -> None:
     log.info("Embed root: %s  Output: %s", embed_root, output_dir)
 
     all_embs, all_labels, all_sources = [], [], []
-    total_dropped_short = 0
-    total_dropped_agreement = 0
 
     for corpus in CORPORA:
         name = corpus["name"]
@@ -124,22 +111,9 @@ def main() -> None:
             continue
 
         kept_indices = []
-        dropped_short = 0
-        dropped_agreement = 0
         dropped_multi = 0
 
         for i, entry in enumerate(rows):
-            text = entry.get("text", "")
-            word_count = len(text.split())
-
-            if word_count < corpus["min_words"]:
-                dropped_short += 1
-                continue
-
-            if corpus["need_agreement"] and entry.get("agreement", 0) < 0.5:
-                dropped_agreement += 1
-                continue
-
             sdg = entry.get("sdg")
             sdgs = entry.get("sdgs")
             is_single = (
@@ -168,11 +142,9 @@ def main() -> None:
         all_sources.extend([name] * len(kept_indices))
 
         log.info(
-            "  %s: %d texts (dropped: %d short, %d agreement, %d multi-label)",
-            name, len(kept_indices), dropped_short, dropped_agreement, dropped_multi,
+            "  %s: %d texts (dropped %d multi-label)",
+            name, len(kept_indices), dropped_multi,
         )
-        total_dropped_short += dropped_short
-        total_dropped_agreement += dropped_agreement
 
     if not all_embs:
         log.error("No corpora loaded — nothing to do.")
@@ -182,10 +154,7 @@ def main() -> None:
     labels = np.vstack(all_labels)
     sources = np.array(all_sources)
 
-    log.info(
-        "Total: %d texts, dropped: %d short + %d agreement",
-        len(embeddings), total_dropped_short, total_dropped_agreement,
-    )
+    log.info("Total: %d texts", len(embeddings))
 
     all_idx = np.arange(len(embeddings))
     train_pool_idx, test_idx = [], []
