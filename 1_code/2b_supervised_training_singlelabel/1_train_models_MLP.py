@@ -33,7 +33,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.metrics import f1_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import GroupKFold
 from torch.utils.data import DataLoader, TensorDataset
 
 DEFAULT_DATA_DIR = "2_data/2b_supervised_singlelabel"
@@ -87,16 +87,25 @@ class MultiLabelMLP(BaseEstimator, ClassifierMixin):
         layers.append(nn.Linear(self.hidden_size, N_SDG))
         return nn.Sequential(*layers)
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> "MultiLabelMLP":
+    def fit(self, X: np.ndarray, y: np.ndarray, source_docs: np.ndarray | None = None) -> "MultiLabelMLP":
         if self.input_dim is None:
             self.input_dim = X.shape[1]
         X_t = torch.from_numpy(X.astype(np.float32))
         y_t = torch.from_numpy(y.astype(np.float32))
 
-        n_val = max(1, int(len(X) * 0.1))
-        perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(self.random_state))
-        val_idx = perm[:n_val]
-        train_idx = perm[n_val:]
+        if source_docs is not None:
+            unique_docs = np.unique(source_docs)
+            n_val_docs = max(1, int(len(unique_docs) * 0.1))
+            rng = np.random.default_rng(self.random_state)
+            val_docs = set(rng.choice(unique_docs, size=n_val_docs, replace=False))
+            val_mask = np.array([d in val_docs for d in source_docs])
+            train_idx = np.where(~val_mask)[0]
+            val_idx = np.where(val_mask)[0]
+        else:
+            n_val = max(1, int(len(X) * 0.1))
+            perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(self.random_state))
+            val_idx = perm[:n_val]
+            train_idx = perm[n_val:]
 
         X_tr, X_val = X_t[train_idx], X_t[val_idx]
         y_tr, y_val = y_t[train_idx], y_t[val_idx]
@@ -182,8 +191,16 @@ def main() -> None:
     labels = np.load(data_dir / "labels.npy")
     train_idx = np.load(data_dir / "indices" / "train.npy")
 
+    source_docs_path = data_dir / "source_docs.npy"
+    if source_docs_path.exists():
+        source_docs = np.load(source_docs_path)
+    else:
+        source_docs = None
+        log.warning("source_docs.npy not found — falling back to row-level splits")
+
     X = embeddings[train_idx]
     Y = labels[train_idx]
+    sd_train = source_docs[train_idx] if source_docs is not None else None
     log.info("Train: %d texts, %d dims  [%.1fs]", len(X), X.shape[1], time.perf_counter() - t0)
 
     param_grid = {
@@ -194,7 +211,7 @@ def main() -> None:
         "dropout": [0.3],
     }
     keys, vals = list(param_grid.keys()), list(param_grid.values())
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    cv = GroupKFold(n_splits=5)
 
     all_scores = []
     best_score = -1.0
@@ -208,11 +225,13 @@ def main() -> None:
         params = dict(zip(keys, combo))
         fold_scores = []
 
-        for fold, (tr_i, val_i) in enumerate(cv.split(X)):
+        cv_split = cv.split(X, Y, groups=sd_train) if sd_train is not None else cv.split(X)
+        for fold, (tr_i, val_i) in enumerate(cv_split):
             t1 = time.perf_counter()
             log.info("  Fold %d/5  %s", fold + 1, params)
+            sd_tr_fold = sd_train[tr_i] if sd_train is not None else None
             clf = MultiLabelMLP(random_state=42, **params)
-            clf.fit(X[tr_i], Y[tr_i])
+            clf.fit(X[tr_i], Y[tr_i], source_docs=sd_tr_fold)
             preds = clf.predict(X[val_i])
             f1 = f1_score(Y[val_i], preds, average="macro", zero_division=0)
             fold_scores.append(f1)

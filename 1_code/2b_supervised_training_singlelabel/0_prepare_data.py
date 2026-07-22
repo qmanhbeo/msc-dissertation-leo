@@ -4,7 +4,8 @@ Prepare training and test data for the single-label SDG classifier.
 Loads the canon single-label embeddings from 2_data/2_embedded/, reads
 the corresponding preprocessed JSONL, filters for single-label records
 (multi-label texts are dropped at this boundary per design), builds
-17D one-hot vectors, and performs a per-source stratified 85/15 split.
+17D one-hot vectors, and performs a per-source stratified 85/15 split
+with document-level grouping (all segments of a document stay together).
 
 Sources: osdg, benchmark, sdg_knowledge_hub, sdgi_corpus, aurora
 Excludes: policy (unlabeled), research_corpus (unlabeled)
@@ -17,6 +18,7 @@ Outputs (saved to {output_root}/):
   embeddings.npy       (N, dim) float32
   labels.npy           (N, 17) float32   — one-hot
   sources.npy          (N,) str
+  source_docs.npy      (N,) str          — document-level grouping key
   indices/train.npy    int64
   indices/test.npy     int64
   split_report.txt
@@ -32,6 +34,7 @@ Run with MPNet:
 import argparse
 import json
 import logging
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -55,16 +58,22 @@ CORPORA = [
         "name": "sdg_knowledge_hub",
         "embed_file": "sdg_knowledge_hub.npy",
         "jsonl_path": PREPROCESS_ROOT / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl",
+        "segmented": True,
+        "segmented_path_template": "2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_{model}.jsonl",
     },
     {
         "name": "sdgi",
         "embed_file": "sdgi.npy",
         "jsonl_path": PREPROCESS_ROOT / "sdgi_corpus" / "sdgi_clean.jsonl",
+        "segmented": True,
+        "segmented_path_template": "2_data/1_preprocessed/sdgi_corpus/sdgi_unified_{model}.jsonl",
     },
     {
         "name": "aurora",
         "embed_file": "aurora.npy",
         "jsonl_path": PREPROCESS_ROOT / "aurora" / "aurora_texts.jsonl",
+        "segmented": True,
+        "segmented_path_template": "2_data/1_preprocessed/aurora/aurora_segmented_{model}.jsonl",
     },
 ]
 
@@ -72,10 +81,34 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 
+def _model_slug(model: str) -> str:
+    return model.replace("/", "_").lower()
+
+
+def _resolve_jsonl_path(corpus: dict, model_name: str) -> Path:
+    if corpus.get("segmented"):
+        return Path(corpus["segmented_path_template"].format(model=_model_slug(model_name)))
+    return corpus["jsonl_path"]
+
+
 def load_jsonl(path: Path) -> list[dict]:
-    """Load a JSONL file, returning a list of dicts."""
     with path.open() as f:
         return [json.loads(line) for line in f]
+
+
+def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: np.ndarray) -> tuple[list[list[int]], list[int], list[int]]:
+    doc_to_idxs: dict[str, list[int]] = defaultdict(list)
+    doc_to_label: dict[str, int] = {}
+    for i in indices:
+        doc = source_docs[i]
+        doc_to_idxs[doc].append(i)
+        if doc not in doc_to_label:
+            label = int(labels[i].argmax())
+            doc_to_label[doc] = label
+    doc_groups = list(doc_to_idxs.values())
+    doc_labels = [doc_to_label[source_docs[group[0]]] for group in doc_groups]
+    flat_idxs = [i for group in doc_groups for i in group]
+    return doc_groups, doc_labels, flat_idxs
 
 
 def main() -> None:
@@ -84,17 +117,19 @@ def main() -> None:
                         help="Embedding root dir (default: 2_data/2_embedded)")
     parser.add_argument("--output-root", default="2_data/2b_supervised_singlelabel",
                         help="Output dir (default: 2_data/2b_supervised_singlelabel)")
+    parser.add_argument("--model", default="all-MiniLM-L6-v2",
+                        help="Sentence-transformer model (default: %(default)s)")
     args = parser.parse_args()
     embed_root = Path(args.embed_root)
     output_dir = Path(args.output_root)
-    log.info("Embed root: %s  Output: %s", embed_root, output_dir)
+    log.info("Embed root: %s  Output: %s  Model: %s", embed_root, output_dir, args.model)
 
-    all_embs, all_labels, all_sources = [], [], []
+    all_embs, all_labels, all_sources, all_source_docs = [], [], [], []
 
     for corpus in CORPORA:
         name = corpus["name"]
         emb_path = embed_root / corpus["embed_file"]
-        jsonl_path = corpus["jsonl_path"]
+        jsonl_path = _resolve_jsonl_path(corpus, args.model)
 
         if not emb_path.exists() or not jsonl_path.exists():
             log.warning("Missing: %s or %s — skipping", emb_path, jsonl_path)
@@ -128,6 +163,7 @@ def main() -> None:
 
         kept_embs = embs[kept_indices]
         labels = np.zeros((len(kept_indices), N_SDG), dtype=np.float32)
+        source_docs_corpus: list[str] = []
         for j, i in enumerate(kept_indices):
             entry = rows[i]
             sdg = entry.get("sdg")
@@ -136,10 +172,12 @@ def main() -> None:
                 labels[j, sdg - 1] = 1.0
             elif isinstance(sdgs, list) and len(sdgs) == 1 and 1 <= sdgs[0] <= N_SDG:
                 labels[j, sdgs[0] - 1] = 1.0
+            source_docs_corpus.append(entry.get("source_doc", f"{name}_{i}"))
 
         all_embs.append(kept_embs)
         all_labels.append(labels)
         all_sources.extend([name] * len(kept_indices))
+        all_source_docs.extend(source_docs_corpus)
 
         log.info(
             "  %s: %d texts (dropped %d multi-label)",
@@ -153,6 +191,7 @@ def main() -> None:
     embeddings = np.vstack(all_embs)
     labels = np.vstack(all_labels)
     sources = np.array(all_sources)
+    source_docs = np.array(all_source_docs)
 
     log.info("Total: %d texts", len(embeddings))
 
@@ -162,24 +201,47 @@ def main() -> None:
     for src in np.unique(sources):
         mask = sources == src
         src_idx = all_idx[mask]
-        src_y = labels[mask]
 
         if len(src_idx) < 5:
             train_pool_idx.extend(src_idx.tolist())
             log.warning("  %s: only %d texts — kept entirely in train", src, len(src_idx))
             continue
 
-        y_int = src_y.argmax(axis=1)
+        doc_groups, doc_labels, _ = _group_by_source_doc(src_idx, source_docs, labels)
 
-        s_train, s_test = train_test_split(
-            src_idx, test_size=0.15, random_state=42, stratify=y_int,
-        )
-        train_pool_idx.extend(s_train.tolist())
-        test_idx.extend(s_test.tolist())
+        unique_doc_labels = list(set(doc_labels))
+        if len(unique_doc_labels) < 2:
+            train_pool_idx.extend([i for group in doc_groups for i in group])
+            log.warning("  %s: only %d document-level SDG labels — kept entirely in train", src, len(unique_doc_labels))
+            continue
 
+        doc_group_indices = np.arange(len(doc_groups))
+        doc_label_arr = np.array(doc_labels, dtype=np.int64)
+
+        n_test_docs = max(1, int(len(doc_groups) * 0.15))
+        try:
+            train_doc_groups, test_doc_groups = train_test_split(
+                doc_group_indices, test_size=n_test_docs / len(doc_groups),
+                random_state=42, stratify=doc_label_arr,
+            )
+        except ValueError:
+            log.warning("  %s: stratification failed — falling back to unstratified split", src)
+            train_doc_groups, test_doc_groups = train_test_split(
+                doc_group_indices, test_size=n_test_docs / len(doc_groups),
+                random_state=42,
+            )
+
+        for gi in train_doc_groups:
+            train_pool_idx.extend(doc_groups[gi])
+        for gi in test_doc_groups:
+            test_idx.extend(doc_groups[gi])
+
+        n_train = sum(len(doc_groups[gi]) for gi in train_doc_groups)
+        n_test = sum(len(doc_groups[gi]) for gi in test_doc_groups)
         log.info(
-            "  %s: %d train + %d test (%.1f%%)",
-            src, len(s_train), len(s_test), 100 * len(s_test) / len(src_idx),
+            "  %s: %d train (%d docs) + %d test (%d docs) (%.1f%%)",
+            src, n_train, len(train_doc_groups), n_test, len(test_doc_groups),
+            100 * n_test / (n_train + n_test),
         )
 
     train_pool_idx = np.array(train_pool_idx, dtype=np.int64)
@@ -191,11 +253,12 @@ def main() -> None:
     np.save(output_dir / "embeddings.npy", embeddings)
     np.save(output_dir / "labels.npy", labels)
     np.save(output_dir / "sources.npy", sources)
+    np.save(output_dir / "source_docs.npy", source_docs)
     np.save(output_dir / "indices" / "train.npy", train_pool_idx)
     np.save(output_dir / "indices" / "test.npy", test_idx)
 
     lines = ["=" * 70]
-    lines.append("SPLIT REPORT — Per-source stratified 85/15")
+    lines.append("SPLIT REPORT — Per-source stratified 85/15 (document-grouped)")
     lines.append("=" * 70)
     lines.append(f"Total: {len(embeddings)} texts, {len(np.unique(sources))} sources\n")
 
