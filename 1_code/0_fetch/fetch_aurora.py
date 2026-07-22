@@ -164,12 +164,25 @@ def main():
     total = len(all_entries)
     log.info("Total entries: %d", total)
 
-    # Step 2: Load already-fetched DOIs for resume
-    fetched_so_far = set()
+    # Step 2: Load already-fetched (doi, sdg) pairs for resume
+    # Log format: "doi|sdg" per line (since fix), or legacy "doi" only.
+    fetched_pairs = set()
+    fetched_dois_legacy = set()
     if FETCHED_LOG.exists():
         with open(FETCHED_LOG) as f:
-            fetched_so_far = {line.strip().lower() for line in f if line.strip()}
-        log.info("Resume mode: %d DOIs already fetched", len(fetched_so_far))
+            for line in f:
+                line = line.strip().lower()
+                if not line:
+                    continue
+                if "|" in line:
+                    doi_part, sdg_part = line.split("|", 1)
+                    fetched_pairs.add((doi_part, int(sdg_part)))
+                else:
+                    fetched_dois_legacy.add(line)
+        log.info(
+            "Resume mode: %d (doi|sdg) pairs + %d legacy DOIs loaded",
+            len(fetched_pairs), len(fetched_dois_legacy),
+        )
 
     # Step 3: Fetch missing DOIs with credential rotation
     out_fh = open(OUTPUT_JSONL, "a", encoding="utf-8")
@@ -182,8 +195,12 @@ def main():
 
     for i, entry in enumerate(all_entries):
         doi = entry["doi"]
+        sdg = entry["sdg"]
 
-        if doi in fetched_so_far:
+        # Skip if (doi, sdg) pair already fetched, or if the legacy log
+        # recorded this DOI before the multi-label fix (conservatively
+        # skip all SDGs for that DOI — the post-merge step handles them).
+        if doi in fetched_dois_legacy or (doi, sdg) in fetched_pairs:
             continue
 
         # Rotate creds every request for load balancing
@@ -222,8 +239,8 @@ def main():
                     if has_abstract:
                         n_with_abstract += 1
 
-                    fetched_so_far.add(doi)
-                    fetched_fh.write(doi + "\n")
+                    fetched_pairs.add((doi, sdg))
+                    fetched_fh.write(f"{doi}|{sdg}\n")
                     fetched_fh.flush()
 
                     n_new += 1
@@ -233,8 +250,8 @@ def main():
 
                 elif resp.status_code == 404:
                     # DOI not found — still mark as fetched to avoid retry
-                    fetched_so_far.add(doi)
-                    fetched_fh.write(doi + "\n")
+                    fetched_pairs.add((doi, sdg))
+                    fetched_fh.write(f"{doi}|{sdg}\n")
                     fetched_fh.flush()
                     success = True
                     break
@@ -261,7 +278,8 @@ def main():
 
         if n_new % 200 == 0 and n_new > 0:
             log.info("  Fetched %d new (total seen: %d/%d, %.0f%%)",
-                     n_new, len(fetched_so_far), total, len(fetched_so_far) / total * 100)
+                     n_new, len(fetched_pairs) + len(fetched_dois_legacy), total,
+                     (len(fetched_pairs) + len(fetched_dois_legacy)) / total * 100)
 
         if consecutive_failures >= 50:
             log.error("Too many consecutive failures (%d). Stopping. Resume by re-running.",
@@ -273,6 +291,62 @@ def main():
 
     out_fh.close()
     fetched_fh.close()
+
+    # Step 3.5: Merge multi-label DOIs
+    #
+    # The Aurora survey CSVs assign papers to individual SDG folders (one CSV
+    # per SDG). Papers accepted into multiple SDG categories appear in multiple
+    # CSVs, giving the same DOI in 2+ entries with different SDG values.
+    #
+    # Bug in the original loop above: the `fetched_so_far` set deduplicates by
+    # DOI only, so a multi-label paper is fetched only for its first-encountered
+    # SDG. The second SDG entry is skipped entirely.
+    #
+    # Fix: post-process the output by collapsing on DOI and merging SDGs using
+    # the full mapping from the ZIP. No re-fetching required — the text is the
+    # same regardless of which SDG triggered the fetch.
+    log.info("Merging multi-label records (dedup by DOI, merge SDGs)...")
+    doi_to_all_sdgs: dict[str, set[int]] = {}
+    for sdg, entries in dois_by_sdg.items():
+        for entry in entries:
+            doi_to_all_sdgs.setdefault(entry["doi"], set()).add(sdg)
+
+    doi_to_record: dict[str, dict] = {}
+    with open(OUTPUT_JSONL) as f:
+        for line in f:
+            r = json.loads(line)
+            doi = r["doi"]
+            if doi not in doi_to_record:
+                doi_to_record[doi] = r
+            else:
+                # Keep the record with abstract if available, else keep first
+                existing = doi_to_record[doi]
+                if r.get("has_abstract") and not existing.get("has_abstract"):
+                    doi_to_record[doi] = r
+
+    merged = []
+    for doi, rec in doi_to_record.items():
+        all_sdgs = sorted(doi_to_all_sdgs.get(doi, {rec["sdg"]}))
+        rec["sdgs"] = all_sdgs
+        merged.append(rec)
+
+    log.info("  Dedup: %d → %d records (saved %d duplicates)", total, len(merged), total - len(merged))
+    multi_count = sum(1 for r in merged if len(r["sdgs"]) > 1)
+    log.info("  Multi-label records recovered: %d", multi_count)
+
+    out_path = Path(OUTPUT_JSONL)
+    with out_path.open("w", encoding="utf-8") as f:
+        for rec in merged:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    log.info("  Rewrote: %s", out_path)
+
+    # Also rebuild fetched log with (doi|sdg) pairs for future resume
+    log.info("Rebuilding fetched log with DOI|SDG pairs...")
+    with open(FETCHED_LOG, "w", encoding="utf-8") as f:
+        for rec in merged:
+            for sdg in rec["sdgs"]:
+                f.write(f"{rec['doi']}|{sdg}\n")
+    log.info("  Rebuilt: %s", FETCHED_LOG)
 
     # Step 4: Build manifest
     log.info("Building manifest from saved JSONL...")

@@ -1,0 +1,35 @@
+{
+  "evaluation": {
+    "n_train": 36229,
+    "n_test": 6397,
+    "accuracy": 0.763014,
+    "macro_f1": 0.737492,
+    "split": "per-source stratified 85/15",
+    "note": "Pooled all 5 sources (OSDG, KH, SDGi, Aurora, Benchmark), per-source stratified 85/15 split, centroids from train, nearest-centroid eval on test."
+  },
+  "per_sdg_f1": {
+    "1": 0.678072,
+    "2": 0.737705,
+    "3": 0.842288,
+    "4": 0.861702,
+    "5": 0.811496,
+    "6": 0.807418,
+    "7": 0.831257,
+    "8": 0.542694,
+    "9": 0.687415,
+    "10": 0.488636,
+    "11": 0.721068,
+    "12": 0.658879,
+    "13": 0.781163,
+    "14": 0.873614,
+    "15": 0.84251,
+    "16": 0.838983,
+    "17": 0.532468
+  },
+  "instrument_flag": "PASS",
+  "random_baseline": 0.058824,
+  "thresholds": {
+    "fail_below": 0.25,
+    "pass_above": 0.5
+  }
+}
