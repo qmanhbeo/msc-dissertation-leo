@@ -4,17 +4,19 @@ Generate Sentence-BERT embeddings for the active non-sharded corpora.
 Model: all-MiniLM-L6-v2 (384-dim for MiniLM; MPNet is 768-dim — practical choice for CPU/WSL)
        Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
 
-Inputs:
-  2_data/1_preprocessed/policy_all/policy_segments_all.jsonl         (policy segments, field: text)
-  2_data/1_preprocessed/osdg/osdg_clean.jsonl              (30,534 texts, field: text)
-  2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  (616 texts, field: text)
-  2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl  (2,221 texts, field: text)
-  2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl  (5,233 texts, all 17 SDGs, policy VNR/VLR)
-  2_data/1_preprocessed/aurora/aurora_texts.jsonl  (Aurora survey 4,022+ texts, field: text)
+Inputs (model-agnostic):
+   2_data/1_preprocessed/policy_all/policy_segments_all.jsonl         (policy segments, field: text)
+   2_data/1_preprocessed/osdg/osdg_clean.jsonl              (30,534 texts, field: text)
+   2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  (616 texts, field: text)
+
+Inputs (model-specific — MPNet vs MiniLM have different tokenisation limits):
+   2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_<model>.jsonl
+   2_data/1_preprocessed/sdgi_corpus/sdgi_unified_<model>.jsonl
+   2_data/1_preprocessed/aurora/aurora_segmented_<model>.jsonl
 
 Outputs per corpus:
-  <name>.npy       float32 matrix (n_texts, embedding_dim)
-  2_data/2_embedded/metadata/<name>_ids.json  list of dicts with id, sdgs, text
+   <name>.npy       float32 matrix (n_texts, embedding_dim)
+   2_data/2_embedded/metadata/<name>_ids.json  list of dicts with id, sdgs, text
 
 Idempotent by default: skips a corpus if its .npy already exists.
 Use --overwrite to replace selected corpus artifacts.
@@ -49,6 +51,7 @@ CORPORA = [
         "text_field": "text",
         "id_field": "segment_id",
         "sdg_field": None,
+        "segmented": False,
     },
     {
         "name": "osdg",
@@ -56,6 +59,7 @@ CORPORA = [
         "text_field": "text",
         "id_field": "text_id",
         "sdg_field": "sdgs",
+        "segmented": False,
     },
     {
         "name": "benchmark",
@@ -63,6 +67,7 @@ CORPORA = [
         "text_field": "text",
         "id_field": "id",
         "sdg_field": "sdgs",
+        "segmented": False,
     },
     {
         "name": "sdg_knowledge_hub",
@@ -70,13 +75,17 @@ CORPORA = [
         "text_field": "text",
         "id_field": "id",
         "sdg_field": "sdgs",
+        "segmented": True,
+        "segmented_path_template": "2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_{model}.jsonl",
     },
     {
         "name": "sdgi",
         "input": Path("2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl"),
         "text_field": "text",
-        "id_field": "id",
+        "id_field": "segment_id",
         "sdg_field": "sdgs",
+        "segmented": True,
+        "segmented_path_template": "2_data/1_preprocessed/sdgi_corpus/sdgi_unified_{model}.jsonl",
     },
     {
         "name": "aurora",
@@ -84,8 +93,16 @@ CORPORA = [
         "text_field": "text",
         "id_field": "doi",
         "sdg_field": "sdgs",
+        "segmented": True,
+        "segmented_path_template": "2_data/1_preprocessed/aurora/aurora_segmented_{model}.jsonl",
     },
 ]
+
+ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2"}
+
+
+def _model_slug(model: str) -> str:
+    return model.replace("/", "_").lower()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -128,7 +145,13 @@ def load_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path, batch_size: int) -> None:
+def _resolve_input_path(corpus: dict, model_name: str) -> Path:
+    if corpus.get("segmented"):
+        return Path(corpus["segmented_path_template"].format(model=_model_slug(model_name)))
+    return corpus["input"]
+
+
+def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path, batch_size: int, model_name: str) -> None:
     name = corpus["name"]
     metadata_dir = output_dir / "metadata"
     emb_path = output_dir / f"{name}.npy"
@@ -138,8 +161,9 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
         log.info("Skipping %s — %s already exists", name, emb_path)
         return
 
-    log.info("Embedding corpus: %s (%s)", name, corpus["input"])
-    records = load_jsonl(corpus["input"])
+    input_path = _resolve_input_path(corpus, model_name)
+    log.info("Embedding corpus: %s (%s)", name, input_path)
+    records = load_jsonl(input_path)
     texts = [r[corpus["text_field"]] for r in records]
 
     embeddings = model.encode(
@@ -157,6 +181,8 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
         if corpus["sdg_field"]:
             sdg_val = r.get(corpus["sdg_field"])
             entry["sdgs"] = sdg_val if isinstance(sdg_val, list) else [sdg_val] if sdg_val is not None else None
+        if "source_doc" in r:
+            entry["source_doc"] = r["source_doc"]
         ids_meta.append(entry)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -180,7 +206,7 @@ def main() -> None:
     log.info("Embedding dimension: %d", model.get_sentence_embedding_dimension())
 
     for corpus in selected_corpora:
-        embed_corpus(corpus, model, overwrite=args.overwrite, output_dir=output_dir, batch_size=args.batch_size)
+        embed_corpus(corpus, model, overwrite=args.overwrite, output_dir=output_dir, batch_size=args.batch_size, model_name=args.model)
 
     print("\nEmbedding complete:")
     for corpus in selected_corpora:
