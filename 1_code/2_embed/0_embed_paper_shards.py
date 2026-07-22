@@ -99,7 +99,7 @@ def _segmented_sibling_dir(shard_data_path: Path, model_slug_val: str) -> Path |
 def _generate_ids_from_segmented(data_path: Path, ids_out: Path) -> None:
     tmp = ids_out.with_suffix(ids_out.suffix + ".tmp")
     with data_path.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8") as dst:
-        for line in src:
+        for row_in_shard, line in enumerate(src):
             if not line.strip():
                 continue
             row = json.loads(line)
@@ -107,6 +107,7 @@ def _generate_ids_from_segmented(data_path: Path, ids_out: Path) -> None:
                 "openalex_id": row.get("openalex_id", ""),
                 "source_doc": row.get("source_doc", ""),
                 "segment_id": row.get("segment_id", ""),
+                "row_in_shard": row_in_shard,
             }
             dst.write(json.dumps(out, ensure_ascii=False) + "\n")
     tmp.replace(ids_out)
