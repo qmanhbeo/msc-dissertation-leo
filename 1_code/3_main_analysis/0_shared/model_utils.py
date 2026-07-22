@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 DEFAULT_EMBED_MODEL = "all-mpnet-base-v2"
-ALLOWED_MODELS = {DEFAULT_EMBED_MODEL, "all-mpnet-base-v2"}
+ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2"}
 VALID_DIMS = {384, 768}
 N_SDG = 17
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")

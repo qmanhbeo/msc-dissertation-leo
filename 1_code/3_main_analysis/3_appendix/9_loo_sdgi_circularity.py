@@ -120,10 +120,10 @@ def build_source_family_map() -> dict[str, str]:
 
 
 def build_centroid_matrix(emb: np.ndarray, ids: list[dict]) -> np.ndarray:
-    """Per-SDG unit centroid = L2-normalised mean of unit vectors (matches 1_build_sdg_centroids.py)."""
+    """Per-SDG unit centroid = L2-normalised mean of unit vectors."""
     rows = []
     for sdg in range(1, N_SDG + 1):
-        idxs = [i for i, r in enumerate(ids) if r["sdg"] == sdg]
+        idxs = [i for i, r in enumerate(ids) if sdg in (r.get("sdgs") or [r.get("sdg")])]
         if not idxs:
             rows.append(np.full(emb.shape[1], np.nan, dtype=np.float32))
             continue
