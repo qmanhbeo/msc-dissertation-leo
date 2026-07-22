@@ -83,6 +83,7 @@ class ResearchShard:
     stop: int
     score_path: Path
     emb_path: Path
+    ids_path: Path | None = None
 
 
 @dataclass
@@ -164,6 +165,10 @@ def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[Resea
             raise RuntimeError(
                 f"Row mismatch for shard {score_shard['name']}: score={rows} embedding={emb_shard['rows']}"
             )
+
+        ids_stored = emb_shard.get("ids_path", "")
+        ids_path = resolve_manifest_path(ids_stored, embed_dir, scored_dir) if ids_stored else None
+
         shards.append(
             ResearchShard(
                 shard_id=score_id,
@@ -173,11 +178,41 @@ def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[Resea
                 stop=offset + rows,
                 score_path=resolve_manifest_path(score_shard["score_path"], embed_dir, scored_dir),
                 emb_path=resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
+                ids_path=ids_path,
             )
         )
         offset += rows
 
     return shards, offset
+
+
+def build_doc_id_map(shards: list[ResearchShard]) -> tuple[list[tuple[int, int]], int]:
+    """Build a mapping of unique document IDs to their row index ranges.
+
+    Returns (doc_id_to_rows, n_unique_docs):
+        doc_id_to_rows: list of (start, stop) tuples, each representing a contiguous
+                        span of global row indices belonging to one document.
+        n_unique_docs: number of unique documents across all shards.
+    """
+    doc_id_to_rows: dict[str, tuple[int, int]] = {}
+    for shard in shards:
+        if shard.ids_path is None or not shard.ids_path.exists():
+            log.warning("No IDs file for shard %s — falling back to row-level perms", shard.name)
+            return [], 0
+        with shard.ids_path.open(encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                doc_id = str(row.get("openalex_id") or row.get("id") or row.get("segment_id", ""))
+                global_idx = shard.start + int(row.get("row_in_shard", 0))
+                if doc_id in doc_id_to_rows:
+                    prev_start, prev_stop = doc_id_to_rows[doc_id]
+                    doc_id_to_rows[doc_id] = (prev_start, max(prev_stop, global_idx + 1))
+                else:
+                    doc_id_to_rows[doc_id] = (global_idx, global_idx + 1)
+    doc_list = list(doc_id_to_rows.values())
+    return doc_list, len(doc_list)
 
 
 def draw_seed(draw_index: int) -> int:
@@ -332,13 +367,41 @@ def write_cache_manifest(cache_root: Path, total_rows: int, cache_signature: str
     manifest_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-def build_draw_accumulators(cache_root: Path, total_rows: int, dim: int) -> tuple[list[DrawAccumulator], list[DrawAccumulator]]:
+def _sample_by_document(
+    seed: int, sample_size: int, doc_id_to_rows: list[tuple[int, int]],
+) -> np.ndarray:
+    """Sample documents (not rows) and return the sorted global row indices."""
+    rng = np.random.default_rng(seed)
+    n_unique_docs = len(doc_id_to_rows)
+    sampled_doc_idxs = np.sort(
+        rng.choice(n_unique_docs, size=min(sample_size, n_unique_docs), replace=False)
+    )
+    row_indices = []
+    for idx in sampled_doc_idxs:
+        start, stop = doc_id_to_rows[idx]
+        row_indices.extend(range(start, stop))
+    return np.array(row_indices, dtype=np.int32)
+
+
+def build_draw_accumulators(
+    cache_root: Path, total_rows: int, dim: int,
+    doc_id_to_rows: list[tuple[int, int]] | None = None,
+) -> tuple[list[DrawAccumulator], list[DrawAccumulator]]:
+    has_doc_groups = doc_id_to_rows is not None and len(doc_id_to_rows) > 0
+    if has_doc_groups:
+        n_unique_docs = len(doc_id_to_rows)
+        log.info("Document-level sampling: %d unique documents across %d rows", n_unique_docs, total_rows)
+    else:
+        log.info("Row-level sampling (fallback): %d total rows", total_rows)
+
     draws: list[DrawAccumulator] = []
     pending: list[DrawAccumulator] = []
+
     for tier_label, sample_size in TIER_SPECS:
-        if sample_size >= total_rows:
+        if sample_size >= (n_unique_docs if has_doc_groups else total_rows):
             raise RuntimeError(
-                f"Tier {tier_label} requires {sample_size:,} rows, but only {total_rows:,} exist."
+                f"Tier {tier_label} requires {sample_size:,} {'docs' if has_doc_groups else 'rows'}, "
+                f"but only {n_unique_docs if has_doc_groups else total_rows:,} exist."
             )
         for draw_index in range(1, DRAWS_PER_TIER + 1):
             seed = draw_seed(draw_index)
@@ -368,10 +431,13 @@ def build_draw_accumulators(cache_root: Path, total_rows: int, dim: int) -> tupl
             if indices_path.exists():
                 global_indices = np.load(indices_path).astype(np.int32)
             else:
-                rng = np.random.default_rng(seed)
-                global_indices = np.sort(
-                    rng.choice(total_rows, size=sample_size, replace=False).astype(np.int32)
-                )
+                if has_doc_groups:
+                    global_indices = _sample_by_document(seed, sample_size, doc_id_to_rows)
+                else:
+                    rng = np.random.default_rng(seed)
+                    global_indices = np.sort(
+                        rng.choice(total_rows, size=sample_size, replace=False).astype(np.int32)
+                    )
                 indices_path.parent.mkdir(parents=True, exist_ok=True)
                 np.save(indices_path, global_indices)
 
@@ -828,12 +894,19 @@ def main() -> None:
         mean_paper_top_vs_osdg=mean_paper_top_vs_osdg,
     )
     shards, total_rows = build_research_shards(embed_dir, scored_dir)
+    doc_id_to_rows, n_unique_docs = build_doc_id_map(shards)
     dim = int(policy_state["policy_embeddings"].shape[1])
-    log.info("Research corpus rows available for sampling: %d", total_rows)
+    if doc_id_to_rows:
+        log.info("Research corpus: %d rows from %d unique documents", total_rows, n_unique_docs)
+    else:
+        log.info("Research corpus rows available for sampling: %d", total_rows)
     log.info("Sampling %d tiers x %d draws each", len(TIER_SPECS), DRAWS_PER_TIER)
 
     write_cache_manifest(cache_root, total_rows, expected_sig)
-    draws, pending_draws = build_draw_accumulators(cache_root, total_rows, dim)
+    draws, pending_draws = build_draw_accumulators(
+        cache_root, total_rows, dim,
+        doc_id_to_rows=doc_id_to_rows if doc_id_to_rows else None,
+    )
     log.info(
         "Sample-stability draw cache: %d reused, %d to build",
         len(draws) - len(pending_draws),
