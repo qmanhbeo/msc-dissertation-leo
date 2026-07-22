@@ -149,15 +149,32 @@ def main() -> None:
         all_seg_texts = []
 
         for in_path in input_paths:
+            out_path = output_dir / in_path.name
+
+            if out_path.exists():
+                existing = sum(1 for _ in open(out_path, encoding="utf-8") if _.strip())
+                if existing > 0:
+                    try:
+                        with open(out_path, encoding="utf-8") as f_check:
+                            json.loads(f_check.readline())
+                    except (json.JSONDecodeError, StopIteration):
+                        log.warning("Corrupt output for %s — re-processing", in_path.name)
+                        existing = 0
+                if existing > 0:
+                    log.info("Skip %s — already exists (%d segments)", in_path.name, existing)
+                    total_segments += existing
+                    continue
+
             log.info("Processing: %s", in_path)
             records = _load_jsonl(in_path)
             segments = segment_records(records, model, args.text_field, args.id_field, args.prefix)
             all_seg_texts.extend(s["text"] for s in segments)
 
-            out_path = output_dir / in_path.name
-            with out_path.open("w", encoding="utf-8") as f:
+            tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
+            with tmp_path.open("w", encoding="utf-8") as f:
                 for s in segments:
                     f.write(json.dumps(s, ensure_ascii=False) + "\n")
+            tmp_path.replace(out_path)
 
             log.info("  %s -> %s (%d segments)", in_path.name, out_path.name, len(segments))
             total_segments += len(segments)
