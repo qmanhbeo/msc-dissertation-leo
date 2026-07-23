@@ -9,24 +9,22 @@ segment_index, word_count (recalculated per segment).
 
 Handles both sdg: int and sdgs: list[int] label fields transparently.
 
-Run from project root:
+Paths are resolved via model_utils helpers. From project root:
     # Single-file corpora (KH, Aurora)
-    python 1_code/1_preprocess/segment_corpus.py \
-        --input 2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl \
-        --output 2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_{model}.jsonl \
+    python 1_code/2_segment/segment_corpus.py \
+        --input <preprocessed_dir() / corpus / ..._clean.jsonl> \
+        --output <segmented_dir_for_model(model) / corpus.jsonl> \
         --text-field text --id-field id --prefix kh --model all-mpnet-base-v2
 
-    python 1_code/1_preprocess/segment_corpus.py \
-        --input 2_data/1_preprocessed/aurora/aurora_texts.jsonl \
-        --output 2_data/1_preprocessed/aurora/aurora_segmented_{model}.jsonl \
-        --text-field text --id-field doi --prefix aurora --model all-mpnet-base-v2
-
     # Sharded corpora (Research)
-    python 1_code/1_preprocess/segment_corpus.py \
-        --sharded --input-glob '2_data/1_preprocessed/research_corpus/part-*.jsonl' \
-        --output-dir 2_data/1_preprocessed/research_corpus/segmented_{model} \
+    python 1_code/2_segment/segment_corpus.py \
+        --sharded \
+        --input-glob <research_preprocessed_dir() / part-*.jsonl> \
+        --output-dir <research_segmented_dir_for_model(model)> \
         --text-field combined_text --id-field openalex_id --prefix paper \
         --model all-mpnet-base-v2
+
+See model_utils.py for all path helpers. Use --corpus for auto-derived paths.
 """
 
 from __future__ import annotations
@@ -41,9 +39,13 @@ from pathlib import Path
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
 
 from sentence_transformers import SentenceTransformer
 
+from model_utils import preprocessed_dir, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model
 from segment_utils import segment_text, verify_truncation_rate
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -121,6 +123,8 @@ def segment_records(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Segment a preprocessed corpus.")
+    parser.add_argument("--corpus", choices=["sdg_knowledge_hub", "aurora", "research"],
+                        help="Known corpus name; auto-derives input/output from model_utils (alternative to --input/--output).")
     parser.add_argument("--input", help="Single input JSONL path.")
     parser.add_argument("--output", help="Single output JSONL path (supports {model} placeholder).")
     parser.add_argument("--sharded", action="store_true", help="Sharded input mode.")
@@ -131,6 +135,32 @@ def main() -> None:
     parser.add_argument("--prefix", default="doc", help="Prefix for segment_id and source_doc.")
     parser.add_argument("--model", default="all-mpnet-base-v2")
     args = parser.parse_args()
+
+    if args.corpus == "research":
+        args.sharded = True
+        args.input_glob = str(research_preprocessed_dir() / "part-*.jsonl")
+        args.output_dir = str(research_segmented_dir_for_model(args.model))
+        args.text_field = "combined_text"
+        args.id_field = "openalex_id"
+        args.prefix = "paper"
+    elif args.corpus == "sdg_knowledge_hub":
+        if not args.input:
+            args.input = str(preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl")
+        if not args.output:
+            args.output = str(segmented_dir_for_model(args.model) / "sdg_knowledge_hub.jsonl")
+        if not args.prefix or args.prefix == "doc":
+            args.prefix = "kh"
+        if not args.id_field or args.id_field == "id":
+            args.id_field = "id"
+    elif args.corpus == "aurora":
+        if not args.input:
+            args.input = str(preprocessed_dir() / "aurora" / "aurora_texts.jsonl")
+        if not args.output:
+            args.output = str(segmented_dir_for_model(args.model) / "aurora.jsonl")
+        if not args.prefix or args.prefix == "doc":
+            args.prefix = "aurora"
+        if not args.id_field or args.id_field == "id":
+            args.id_field = "doi"
 
     model_slug = args.model.replace("/", "_").lower()
 
