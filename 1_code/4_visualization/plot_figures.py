@@ -42,7 +42,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "1_code"
-SHARED_DIR = ROOT / "1_code" / "3_main_analysis" / "0_shared"
+SHARED_DIR = ROOT / "1_code" / "7_main_analysis" / "0_shared"
 for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))

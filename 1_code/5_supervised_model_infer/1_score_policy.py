@@ -31,7 +31,7 @@ _THIS = Path(__file__).resolve()
 CODE_ROOT = _THIS.parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
@@ -40,9 +40,9 @@ from alignment_core import verify_unit_norms
 log = logging.getLogger(__name__)
 
 PROJECT = _THIS.parents[2]
-MODEL_PATH = PROJECT / "2_data/2b_supervised_singlelabel_mpnet/model/sdg_classifier_retrained.joblib"
-EMBED_DIR = PROJECT / "2_data/2b_embedded_mpnet"
-SCORED_DIR = PROJECT / "2_data/3c_scored_supervised"
+MODEL_PATH = PROJECT / "2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib"
+EMBED_DIR = PROJECT / "2_data/3_embedded/mpnet"
+SCORED_DIR = PROJECT / "2_data/5_supervised_scored/mpnet"
 POLICY_CORPUS = PROJECT / "2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"
 
 N_SDG = 17

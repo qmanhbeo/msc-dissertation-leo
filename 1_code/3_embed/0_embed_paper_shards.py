@@ -1,16 +1,16 @@
 """
-Embed cleaned OpenAlex shards into reusable embedding shards.
+Embed segmented research shards into reusable embedding shards.
 
-Input manifest:
-  2_data/1_preprocessed/research_corpus/metadata/manifest.json
+Input manifest (from segmentation stage):
+   2_data/2_segmented/{model}/research/metadata/manifest.json
 
 Outputs:
-  2_data/2_embedded/research_shards/part-00001.npy
-  2_data/2_embedded/research_shards/metadata/part-00001_ids.jsonl
-  2_data/2_embedded/research_shards/metadata/manifest.json
+   2_data/3_embedded/{model}/research_shards/part-00001.npy
+   2_data/3_embedded/{model}/research_shards/metadata/part-00001_ids.jsonl
+   2_data/3_embedded/{model}/research_shards/metadata/manifest.json
 
 Run from project root:
-    python 1_code/2_embed/0_embed_paper_shards.py
+    python 1_code/3_embed/0_embed_paper_shards.py
 """
 
 from __future__ import annotations
@@ -29,12 +29,12 @@ from sentence_transformers import SentenceTransformer
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, segmented_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input-manifest", default="2_data/1_preprocessed/research_corpus/metadata/manifest.json")
+    p.add_argument("--input-manifest", default=None)
     p.add_argument("--out-dir", default=None)
     p.add_argument("--status-dir", default=None)
     p.add_argument("--metadata-dir", default="")
@@ -65,7 +65,7 @@ def resolve_device(name: str) -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def load_texts(path: Path, text_field: str = "combined_text") -> list[str]:
+def load_texts(path: Path) -> list[str]:
     texts: list[str] = []
     with path.open(encoding="utf-8") as f:
         for line in f:
@@ -73,30 +73,11 @@ def load_texts(path: Path, text_field: str = "combined_text") -> list[str]:
             if not line:
                 continue
             row = json.loads(line)
-            texts.append(row[text_field])
+            texts.append(row["text"])
     return texts
 
 
-def copy_ids(ids_in: Path, ids_out: Path) -> None:
-    tmp = ids_out.with_suffix(ids_out.suffix + ".tmp")
-    with ids_in.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8") as dst:
-        for line in src:
-            if line.strip():
-                dst.write(line)
-    tmp.replace(ids_out)
-
-
-def _model_slug(model: str) -> str:
-    return model.replace("/", "_").lower()
-
-
-def _segmented_sibling_dir(shard_data_path: Path, model_slug_val: str) -> Path | None:
-    parent = shard_data_path.parent
-    seg_dir = parent / f"segmented_{model_slug_val}"
-    return seg_dir if seg_dir.is_dir() else None
-
-
-def _generate_ids_from_segmented(data_path: Path, ids_out: Path) -> None:
+def generate_ids(data_path: Path, ids_out: Path) -> None:
     tmp = ids_out.with_suffix(ids_out.suffix + ".tmp")
     with data_path.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8") as dst:
         for row_in_shard, line in enumerate(src):
@@ -113,31 +94,14 @@ def _generate_ids_from_segmented(data_path: Path, ids_out: Path) -> None:
     tmp.replace(ids_out)
 
 
-def resolve_from_manifest(manifest_path: Path, stored_path: str) -> Path:
-    del manifest_path  # hard pivot: no location fallback based on manifest placement
-    raw = Path(stored_path)
-    if raw.is_absolute():
-        if raw.exists():
-            return raw
-        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    prefix = raw.as_posix()
-    if not prefix.startswith("2_data/1_preprocessed/"):
-        raise RuntimeError(
-            f"Hard pivot violation: expected data path under 2_data/1_preprocessed/, got: {stored_path}"
-        )
-    resolved = Path.cwd() / raw
-    if resolved.exists():
-        return resolved
-    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
-
-
 def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
     embed_root = embed_dir_for_model(args.model)
+    seg_root = segmented_dir_for_model(args.model) / "research"
 
-    input_manifest = Path(args.input_manifest)
+    input_manifest = Path(args.input_manifest) if args.input_manifest else seg_root / "metadata" / "manifest.json"
     out_dir = Path(args.out_dir) if args.out_dir else embed_root / "research_shards"
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
     status_dir = Path(args.status_dir) if args.status_dir else embed_root / "research_shards" / "metadata"
@@ -153,10 +117,7 @@ def main() -> None:
     try:
         model = SentenceTransformer(args.model, device=device, local_files_only=args.local_files_only)
     except Exception as exc:
-        hint = (
-            "Model load failed. If the environment has no internet, ensure model cache exists and use "
-            "--local-files-only."
-        )
+        hint = "Model load failed. If the environment has no internet, ensure model cache exists and use --local-files-only."
         raise RuntimeError(f"{hint} Original error: {exc}") from exc
     emb_dim = int(model.get_sentence_embedding_dimension())
     log.info("Model=%s device=%s dim=%d", args.model, device, emb_dim)
@@ -177,14 +138,6 @@ def main() -> None:
             "totals": {"rows": 0, "shards": 0},
         }
 
-    model_slug_val = _model_slug(args.model)
-    use_segmented = None
-    shard_data_path_sample = resolve_from_manifest(input_manifest, data["shards"][0]["data_path"])
-    seg_dir = _segmented_sibling_dir(shard_data_path_sample, model_slug_val)
-    if seg_dir is not None:
-        log.info("Using segmented research data from %s", seg_dir)
-        use_segmented = seg_dir
-
     completed = {int(s["shard_id"]): s for s in out_manifest.get("shards", [])}
     shards = data["shards"][: args.limit_shards] if args.limit_shards > 0 else data["shards"]
 
@@ -200,24 +153,18 @@ def main() -> None:
         shard_name = shard["name"]
         out_emb = out_dir / f"{shard_name}.npy"
         out_ids = metadata_dir / f"{shard_name}_ids.jsonl"
+        in_data = seg_root / f"{shard_name}.jsonl"
 
-        if use_segmented:
-            seg_path = use_segmented / f"{shard_name}.jsonl"
-            if not seg_path.exists():
-                log.error("Segmented shard missing at %s — segmentation incomplete?", seg_path)
-                raise FileNotFoundError(f"Segmented shard not found: {seg_path}")
-            in_data = seg_path
-            text_field = "text"
-        else:
-            in_data = resolve_from_manifest(input_manifest, shard["data_path"])
-            text_field = "combined_text"
+        if not in_data.exists():
+            log.error("Segmented shard missing at %s — run 2_segment/ first", in_data)
+            raise FileNotFoundError(f"Segmented research shard not found: {in_data}")
 
         if shard_id in completed and out_emb.exists() and out_ids.exists():
             log.info("Skip shard %s (already embedded)", shard_name)
             continue
 
         log.info("Embedding shard %s", shard_name)
-        texts = load_texts(in_data, text_field=text_field)
+        texts = load_texts(in_data)
         emb = model.encode(
             texts,
             batch_size=args.batch_size,
@@ -230,11 +177,7 @@ def main() -> None:
         with tmp_emb.open("wb") as f:
             np.save(f, emb)
         tmp_emb.replace(out_emb)
-        if use_segmented:
-            _generate_ids_from_segmented(in_data, out_ids)
-        else:
-            in_ids = resolve_from_manifest(input_manifest, shard["ids_path"])
-            copy_ids(in_ids, out_ids)
+        generate_ids(in_data, out_ids)
 
         out_record = {
             "shard_id": shard_id,

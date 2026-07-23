@@ -30,7 +30,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "1_code"))
-sys.path.insert(0, str(ROOT / "1_code" / "3_main_analysis" / "0_shared"))
+sys.path.insert(0, str(ROOT / "1_code" / "7_main_analysis" / "0_shared"))
 
 from sentence_transformers import SentenceTransformer
 

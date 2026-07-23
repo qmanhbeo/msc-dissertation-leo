@@ -9,7 +9,7 @@ from pathlib import Path
 CODE_ROOT = Path(__file__).resolve().parent / "1_code"
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
@@ -321,14 +321,14 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> 
             "4_4_interaction_correlation_asymmetry.json",
         ],
     )
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/6_sample_stability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("sample stability", cmd, step_id="C")
 
 
 def run_pca_semantic_landscape(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    cmd = [sys.executable, "1_code/3_main_analysis/1_canonical/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/1_canonical/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("combined research-policy PCA landscape", cmd, step_id="B1")
@@ -336,7 +336,7 @@ def run_pca_semantic_landscape(output_dir: Path, model: str = DEFAULT_EMBED_MODE
 
 def run_within_corpus_centroid_structure(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("within-corpus centroid structure", cmd, step_id="B2")
@@ -344,7 +344,7 @@ def run_within_corpus_centroid_structure(output_dir: Path, model: str = DEFAULT_
 
 def run_softmax_multilabel_sdg(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("softmax multi-label SDG robustness", cmd, step_id="B4")
@@ -352,7 +352,7 @@ def run_softmax_multilabel_sdg(output_dir: Path, model: str = DEFAULT_EMBED_MODE
 
 def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/4_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("policy source-family sensitivity", cmd, step_id="A2")
@@ -360,7 +360,7 @@ def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_
 
 def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/5_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
@@ -368,7 +368,7 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
 
 def run_sdg_source_comparison(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/8_sdg_source_comparison.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/8_sdg_source_comparison.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("per-SDG source comparison", cmd, step_id="A1")
@@ -377,7 +377,7 @@ def run_sdg_source_comparison(output_dir: Path, model: str = DEFAULT_EMBED_MODEL
 def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     require_output_files(output_dir / "main" / "data", ["4_3_semantic_gap_distances.json"])
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/7_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("lexical illustration of the semantic gap", cmd, step_id="B3")
@@ -385,33 +385,39 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
 
 def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/3_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("register-adjustment robustness", cmd, step_id="E")
 
 
 def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
-    """Run the 9 main-text analysis steps for a given model (no input guard)."""
+    """Run the main-text analysis steps for a given model (no input guard).
+
+    Steps 1-3 operate on frozen embeddings and scores (warm replay only).
+    """
     model_args = ["--model", model] if model != DEFAULT_EMBED_MODEL else []
-    run_step("rebuild sdg centroids", [sys.executable, "1_code/2_embed/reference/1_build_sdg_centroids.py"] + model_args, step_id="1")
-    run_step("validate centroids", [sys.executable, "1_code/2_embed/reference/2_validate_centroids.py", "--output-dir", str(output_dir)] + model_args, step_id="2")
-    run_step("rebuild research centroids", [sys.executable, "1_code/2_embed/research/1_score_paper_shards.py"] + model_args, step_id="3")
-    run_step("score policy corpus", [sys.executable, "1_code/2_embed/policy/0_score_policy_corpus.py"] + model_args, step_id="4")
-    run_step("coverage gap", [sys.executable, "1_code/3_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="5")
-    run_step("semantic gap", [sys.executable, "1_code/3_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="6")
+    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"], step_id="1")
+    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"], step_id="2")
+    run_step(
+        "check centroid consistency",
+        [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)],
+        step_id="3",
+    )
+    run_step("coverage gap", [sys.executable, "1_code/7_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="4")
+    run_step("semantic gap", [sys.executable, "1_code/7_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="5")
     run_step(
         "coverage semantic interaction",
-        [sys.executable, "1_code/3_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
-        step_id="7",
+        [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)],
+        step_id="6",
     )
-    run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
+    run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="7")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
             "generate cross-sensitivity table",
-            [sys.executable, "1_code/3_main_analysis/1_canonical/3_generate_cross_sensitivity_table.py",
+            [sys.executable, "1_code/7_main_analysis/1_canonical/3_generate_cross_sensitivity_table.py",
              "--output-dir", str(output_dir)],
-            step_id="9",
+            step_id="8",
         )
 
 
@@ -436,7 +442,7 @@ def run_model_sensitivity(output_dir: Path, args: argparse.Namespace) -> None:
         "model sensitivity comparison",
         [
             sys.executable,
-            "1_code/3_main_analysis/3_appendix/d_model_sensitivity/comparison.py",
+            "1_code/7_main_analysis/3_appendix/d_model_sensitivity/comparison.py",
             "--output-dir", str(output_dir),
         ],
         step_id="D",
@@ -473,20 +479,20 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         ("convert policy manual", [sys.executable, "1_code/0_fetch/convert_policy_manual.py"]),
         ("fetch sdgi corpus", [sys.executable, "1_code/0_fetch/fetch_sdgi_corpus.py"]),
         ("fetch ungdc", [sys.executable, "1_code/0_fetch/fetch_ungdc.py"]),
-        ("preprocess policy", [sys.executable, "1_code/1_preprocess/policy/0_preprocess_policy.py"]),
-        ("filter ungdc", [sys.executable, "1_code/1_preprocess/policy/0_filter_ungdc_sdg.py"]),
+        ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"]),
+        ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"]),
         ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/preprocess_sdgi_unified.py", "--model", model]),
-        ("segment knowledge hub", [sys.executable, "1_code/1_preprocess/segment_corpus.py",
+        ("segment knowledge hub", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--input", "2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl",
          "--output", "2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_{model}.jsonl",
          "--text-field", "text", "--id-field", "id", "--prefix", "kh",
          "--model", model]),
-        ("segment aurora", [sys.executable, "1_code/1_preprocess/segment_corpus.py",
+        ("segment aurora", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--input", "2_data/1_preprocessed/aurora/aurora_texts.jsonl",
          "--output", "2_data/1_preprocessed/aurora/aurora_segmented_{model}.jsonl",
          "--text-field", "text", "--id-field", "doi", "--prefix", "aurora",
          "--model", model]),
-        ("build policy corpus", [sys.executable, "1_code/1_preprocess/policy/1_build_policy_corpus.py"]),
+        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"]),
         ("fetch osdg", [sys.executable, "1_code/0_fetch/fetch_osdg.py"]),
         ("fetch sdg benchmark", [sys.executable, "1_code/0_fetch/fetch_sdg_benchmark.py"]),
         ("preprocess osdg", [sys.executable, "1_code/1_preprocess/preprocess_osdg.py"]),
@@ -498,7 +504,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
             "embed reference corpora",
             [
                 sys.executable,
-                "1_code/2_embed/0_embed_reference_corpora.py",
+                "1_code/3_embed/0_embed_reference_corpora.py",
                 "--corpora", "policy", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
             ] + model_args,
         ),
@@ -510,7 +516,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
 
     embed_cmd = [
         sys.executable,
-        "1_code/2_embed/0_embed_paper_shards.py",
+        "1_code/3_embed/0_embed_paper_shards.py",
         "--device",
         args.device,
         "--batch-size",

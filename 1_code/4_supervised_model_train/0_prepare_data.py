@@ -113,10 +113,10 @@ def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: n
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare single-label training data.")
-    parser.add_argument("--embed-root", default="2_data/2_embedded",
-                        help="Embedding root dir (default: 2_data/2_embedded)")
-    parser.add_argument("--output-root", default="2_data/2b_supervised_singlelabel",
-                        help="Output dir (default: 2_data/2b_supervised_singlelabel)")
+    parser.add_argument("--embed-root", default="2_data/3_embedded/minilm",
+                        help="Embedding root dir (default: 2_data/3_embedded/minilm)")
+    parser.add_argument("--output-root", default="2_data/4_supervised_model_results/minilm",
+                        help="Output dir (default: 2_data/4_supervised_model_results/minilm)")
     parser.add_argument("--model", default="all-MiniLM-L6-v2",
                         help="Sentence-transformer model (default: %(default)s)")
     args = parser.parse_args()

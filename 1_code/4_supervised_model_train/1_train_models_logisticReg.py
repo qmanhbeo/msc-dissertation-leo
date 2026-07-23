@@ -29,7 +29,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 
-DEFAULT_DATA_DIR = "2_data/2b_supervised_singlelabel"
+DEFAULT_DATA_DIR = "2_data/4_supervised_model_results/minilm"
 MODEL_TAG = "lr"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")

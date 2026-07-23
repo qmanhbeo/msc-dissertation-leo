@@ -26,7 +26,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputClassifier
 
-DATA_DIR = Path("2_data/2b_supervised")
+DATA_DIR = Path("2_data/4_supervised_model_results/minilm")
 OUTPUT_DIR = DATA_DIR / "model"
 MODEL_TAG = "rf"
 

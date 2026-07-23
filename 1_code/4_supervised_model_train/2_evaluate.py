@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.metrics import f1_score, classification_report
 
-DATA_DIR = Path("2_data/2b_supervised_singlelabel")
+DATA_DIR = Path("2_data/4_supervised_model_results/minilm")
 MODEL_DIR = DATA_DIR / "model"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")

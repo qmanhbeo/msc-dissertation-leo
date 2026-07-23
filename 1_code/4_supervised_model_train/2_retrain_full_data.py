@@ -33,7 +33,7 @@ import torch.optim as optim
 from sklearn.metrics import f1_score, classification_report
 from torch.utils.data import DataLoader, TensorDataset
 
-DEFAULT_DATA_DIR = "2_data/2b_supervised_singlelabel_mpnet"
+DEFAULT_DATA_DIR = "2_data/4_supervised_model_results/mpnet"
 N_SDG = 17
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")

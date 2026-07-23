@@ -12,21 +12,16 @@ SNAPSHOT_METADATA_FILE = SNAPSHOT_METADATA_DIR / "snapshot_manifest.json"
 
 CURATED_EXCLUDED_PATHS = (
     Path("0_raw/openalex"),
-    Path("3_scored/paper_sample_seed_42_141"),
-    Path("3_scored/register_adjustment_cache"),
-    Path("3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
-    Path("3b_scored_mpnet/paper_sample_seed_42_141"),
-    Path("3b_scored_mpnet/register_adjustment_cache"),
-    Path("3b_scored_mpnet/paper_scores_shards/metadata/subset_index.sqlite"),
 )
 
 BASE_WARM_REPLAY_PATHS = (
     Path("2_data/0_raw"),
     Path("2_data/1_preprocessed"),
-    Path("2_data/2_embedded"),
-    Path("2_data/2b_embedded_mpnet"),
-    Path("2_data/3_scored"),
-    Path("2_data/3b_scored_mpnet"),
+    Path("2_data/2_segmented"),
+    Path("2_data/3_embedded"),
+    Path("2_data/4_supervised_model_results"),
+    Path("2_data/5_supervised_scored"),
+    Path("2_data/6_centroids"),
 )
 
 FULL_PIPELINE_WARNING_LINES = (

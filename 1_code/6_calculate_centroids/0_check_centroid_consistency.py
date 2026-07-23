@@ -36,7 +36,7 @@ import numpy as np
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
@@ -47,8 +47,8 @@ log = logging.getLogger(__name__)
 N_SDG = 17
 EMBED_DIM = 768
 
-SCORED_DIR = Path("2_data/3c_scored_supervised")
-EMBED_DIR = Path("2_data/2b_embedded_mpnet")
+SCORED_DIR = Path("2_data/5_supervised_scored/mpnet")
+EMBED_DIR = Path("2_data/3_embedded/mpnet")
 
 RESEARCH_CENTROIDS_PATH = SCORED_DIR / "research_centroids.npy"
 POLICY_CENTROIDS_OUT = SCORED_DIR / "policy_centroids.npy"

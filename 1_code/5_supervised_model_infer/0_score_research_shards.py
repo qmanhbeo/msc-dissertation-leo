@@ -31,7 +31,7 @@ import torch
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-ANALYSIS_DIR = CODE_ROOT / "3_main_analysis" / "0_shared"
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
@@ -40,12 +40,12 @@ from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_js
 log = logging.getLogger(__name__)
 STATUS_STAGE = "supervised_sdg_scores"
 
-MODEL_PATH = Path("2_data/2b_supervised_singlelabel_mpnet/model/sdg_classifier_retrained.joblib")
-EMBED_MANIFEST = Path("2_data/2b_embedded_mpnet/research_shards/metadata/manifest.json")
-SCORED_DIR = Path("2_data/3c_scored_supervised")
+MODEL_PATH = Path("2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib")
+EMBED_MANIFEST = Path("2_data/3_embedded/mpnet/research_shards/metadata/manifest.json")
+SCORED_DIR = Path("2_data/5_supervised_scored/mpnet")
 OUT_DIR = SCORED_DIR / "paper_scores_shards"
 METADATA_DIR = OUT_DIR / "metadata"
-STATUS_DIR = Path("2_data/2b_embedded_mpnet/research_shards/metadata")
+STATUS_DIR = Path("2_data/3_embedded/mpnet/research_shards/metadata")
 RESEARCH_CENTROIDS_OUT = SCORED_DIR / "research_centroids.npy"
 RESEARCH_META_OUT = SCORED_DIR / "metadata" / "research_centroid_meta.json"
 
