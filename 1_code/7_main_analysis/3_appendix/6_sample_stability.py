@@ -40,7 +40,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, preprocessed_dir, scored_dir_for_model
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from research_score_shards import aggregate_research_scores
@@ -111,7 +111,7 @@ def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
     posix = raw.as_posix()
-    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", "2_data/1_preprocessed/")
+    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", preprocessed_dir().as_posix() + "/")
     if not any(posix.startswith(p) for p in allowed):
         raise RuntimeError(
             f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
@@ -132,7 +132,7 @@ def parse_args() -> argparse.Namespace:
 
 def _compute_cache_signature(scored_dir: Path, embed_dir: Path) -> str:
     score_manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
-    emb_manifest_path = embed_dir / "research_shards" / "metadata" / "manifest.json"
+    emb_manifest_path = embed_research_dir_for_model(model) / "metadata" / "manifest.json"
     hasher = hashlib.sha256()
     for path in [score_manifest_path, emb_manifest_path]:
         hasher.update(path.read_bytes())
@@ -141,7 +141,7 @@ def _compute_cache_signature(scored_dir: Path, embed_dir: Path) -> str:
 
 def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
-    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_research_dir_for_model(model) / "metadata" / "manifest.json")
     score_shards = sorted(score_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     emb_shards = sorted(emb_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     if len(score_shards) != len(emb_shards):

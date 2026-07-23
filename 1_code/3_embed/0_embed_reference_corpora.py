@@ -1,30 +1,21 @@
 """
 Generate Sentence-BERT embeddings for the active non-sharded corpora.
 
-Model: all-MiniLM-L6-v2 (384-dim for MiniLM; MPNet is 768-dim — practical choice for CPU/WSL)
-       Change MODEL_NAME to "all-mpnet-base-v2" for 768-dim higher-quality embeddings (GPU recommended).
-
-Inputs (model-agnostic):
-   2_data/1_preprocessed/policy_all/policy_segments_all.jsonl         (policy segments, field: text)
-   2_data/1_preprocessed/osdg/osdg_clean.jsonl              (30,534 texts, field: text)
-   2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  (616 texts, field: text)
-
-Inputs (model-specific — MPNet vs MiniLM have different tokenisation limits):
-   2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_<model>.jsonl
-   2_data/1_preprocessed/sdgi_corpus/sdgi_unified_<model>.jsonl
-   2_data/1_preprocessed/aurora/aurora_segmented_<model>.jsonl
+Inputs (resolved via model_utils helpers):
+   Segmented corpora: segmented_dir_for_model(model) / {corpus}.jsonl
+   Pass-through:       preprocessed_dir() / subdir / {filename}
 
 Outputs per corpus:
    <name>.npy       float32 matrix (n_texts, embedding_dim)
-   2_data/2_embedded/metadata/<name>_ids.json  list of dicts with id, sdgs, text
+   embed_dir_for_model(model) / metadata / <name>_ids.json
 
 Idempotent by default: skips a corpus if its .npy already exists.
 Use --overwrite to replace selected corpus artifacts.
 
 Run from project root:
-    python 1_code/2_embed/0_embed_reference_corpora.py
-    python 1_code/2_embed/0_embed_reference_corpora.py --corpora aurora --overwrite
-    python 1_code/2_embed/0_embed_reference_corpora.py --corpora aurora --overwrite --model all-mpnet-base-v2
+    python 1_code/3_embed/0_embed_reference_corpora.py
+    python 1_code/3_embed/0_embed_reference_corpora.py --corpora aurora --overwrite
+    python 1_code/3_embed/0_embed_reference_corpora.py --corpora aurora --overwrite --model all-mpnet-base-v2
 """
 
 import argparse
@@ -42,67 +33,56 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, preprocessed_dir, segmented_dir_for_model
 
 CORPORA = [
     {
         "name": "policy",
-        "input": Path("2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"),
         "text_field": "text",
         "id_field": "segment_id",
         "sdg_field": None,
-        "segmented": False,
+        "segmented": True,
     },
     {
         "name": "osdg",
-        "input": Path("2_data/1_preprocessed/osdg/osdg_clean.jsonl"),
         "text_field": "text",
         "id_field": "text_id",
         "sdg_field": "sdgs",
         "segmented": False,
+        "preprocessed_subdir": "osdg",
+        "preprocessed_filename": "osdg_clean.jsonl",
     },
     {
         "name": "benchmark",
-        "input": Path("2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl"),
         "text_field": "text",
         "id_field": "id",
         "sdg_field": "sdgs",
         "segmented": False,
+        "preprocessed_subdir": "sdg_benchmark",
+        "preprocessed_filename": "benchmark_clean.jsonl",
     },
     {
         "name": "sdg_knowledge_hub",
-        "input": Path("2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl"),
         "text_field": "text",
         "id_field": "id",
         "sdg_field": "sdgs",
         "segmented": True,
-        "segmented_path_template": "2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_{model}.jsonl",
     },
     {
         "name": "sdgi",
-        "input": Path("2_data/1_preprocessed/sdgi_corpus/sdgi_clean.jsonl"),
         "text_field": "text",
         "id_field": "segment_id",
         "sdg_field": "sdgs",
         "segmented": True,
-        "segmented_path_template": "2_data/1_preprocessed/sdgi_corpus/sdgi_unified_{model}.jsonl",
     },
     {
         "name": "aurora",
-        "input": Path("2_data/1_preprocessed/aurora/aurora_texts.jsonl"),
         "text_field": "text",
         "id_field": "doi",
         "sdg_field": "sdgs",
         "segmented": True,
-        "segmented_path_template": "2_data/1_preprocessed/aurora/aurora_segmented_{model}.jsonl",
     },
 ]
-
-ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2"}
-
-
-def _model_slug(model: str) -> str:
-    return model.replace("/", "_").lower()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -147,8 +127,8 @@ def load_jsonl(path: Path) -> list[dict]:
 
 def _resolve_input_path(corpus: dict, model_name: str) -> Path:
     if corpus.get("segmented"):
-        return Path(corpus["segmented_path_template"].format(model=_model_slug(model_name)))
-    return corpus["input"]
+        return segmented_dir_for_model(model_name) / f"{corpus['name']}.jsonl"
+    return preprocessed_dir() / corpus["preprocessed_subdir"] / corpus["preprocessed_filename"]
 
 
 def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path, batch_size: int, model_name: str) -> None:

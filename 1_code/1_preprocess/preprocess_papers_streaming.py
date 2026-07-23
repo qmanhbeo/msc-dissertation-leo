@@ -3,7 +3,7 @@ Streaming OpenAlex cleaner with checkpoint + resume safety.
 
 This stage reads the raw OpenAlex JSONL line-by-line and writes clean shards.
 It is safe to interrupt and resume. Progress is persisted under:
-  - 2_data/2_embedded/research_shards/metadata/openalex_papers_to_clean_shards.json
+  - 2_data/3_embedded/{model}/research_shards/metadata/openalex_papers_to_clean_shards.json
   - 2_data/1_preprocessed/research_corpus/metadata/state.json
 
 Outputs:
@@ -33,6 +33,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
+from model_utils import raw_dir, preprocessed_dir
 
 
 log = logging.getLogger(__name__)
@@ -228,9 +229,9 @@ def write_shard(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input", default="2_data/0_raw/openalex/papers.jsonl")
-    p.add_argument("--out-dir", default="2_data/1_preprocessed/research_corpus")
-    p.add_argument("--status-dir", default="2_data/1_preprocessed/research_corpus/metadata")
+    p.add_argument("--input", default=str(raw_dir() / "openalex" / "papers.jsonl"))
+    p.add_argument("--out-dir", default=str(preprocessed_dir() / "research_corpus"))
+    p.add_argument("--status-dir", default=str(preprocessed_dir() / "research_corpus" / "metadata"))
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--manifest", default="")
     p.add_argument("--state", default="")

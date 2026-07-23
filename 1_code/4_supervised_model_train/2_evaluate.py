@@ -1,12 +1,12 @@
 """
 Evaluate a saved single-label SDG classifier on the test set.
 
-Loads the canonical model from 2_data/2b_supervised_singlelabel/model/,
+Loads the canonical model from 2_data/4_supervised_model_results/{model}/model/,
 runs on the held-out test indices, and reports macro/micro F1 with
 per-SDG and per-source breakdowns.
 
 Run from project root:
-    python 1_code/2b_supervised_training_singlelabel/2_evaluate.py
+    python 1_code/4_supervised_model_train/2_evaluate.py
 """
 
 import json
@@ -17,19 +17,33 @@ from pathlib import Path
 import numpy as np
 from sklearn.metrics import f1_score, classification_report
 
-DATA_DIR = Path("2_data/4_supervised_model_results/minilm")
-MODEL_DIR = DATA_DIR / "model"
+import sys
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import model_results_dir_for_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="Evaluate classifier on test set.")
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embedding model name")
+    args = parser.parse_args()
+    data_dir = model_results_dir_for_model(args.model)
+    model_dir = data_dir / "model"
+    
     t0 = time.perf_counter()
-    embeddings = np.load(DATA_DIR / "embeddings.npy")
-    labels = np.load(DATA_DIR / "labels.npy")
-    sources = np.load(DATA_DIR / "sources.npy")
-    test_idx = np.load(DATA_DIR / "indices" / "test.npy")
+    embeddings = np.load(data_dir / "embeddings.npy")
+    labels = np.load(data_dir / "labels.npy")
+    sources = np.load(data_dir / "sources.npy")
+    test_idx = np.load(data_dir / "indices" / "test.npy")
 
     X_test = embeddings[test_idx]
     y_test = labels[test_idx]
@@ -38,7 +52,7 @@ def main() -> None:
     log.info("Test set: %d texts  [%.1fs]", len(X_test), time.perf_counter() - t0)
 
     import joblib
-    model_path = MODEL_DIR / "sdg_classifier.joblib"
+    model_path = model_dir / "sdg_classifier.joblib"
     if not model_path.exists():
         log.error("No model found at %s", model_path)
         return
@@ -93,7 +107,7 @@ def main() -> None:
         "elapsed_seconds": elapsed,
     }
 
-    results_path = MODEL_DIR / "test_results.json"
+    results_path = model_dir / "test_results.json"
     with results_path.open("w") as f:
         json.dump(results, f, indent=2, default=str)
     log.info("Saved test results → %s", results_path)

@@ -21,14 +21,23 @@ Run from project root:
 """
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 HUGGINGFACE_ID = "UNDP/sdgi-corpus"
-OUTPUT_DIR = Path("2_data/0_raw/sdgi_corpus")
+OUTPUT_DIR = raw_dir() / "sdgi_corpus"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 
 SOURCE_CITATION = (

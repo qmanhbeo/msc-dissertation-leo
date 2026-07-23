@@ -24,8 +24,18 @@ import json
 import re
 from pathlib import Path
 
-UNGDC_TXT_DIR = Path("2_data/0_raw/ungdc/TXT")
-OUTPUT_DIR = Path("2_data/1_preprocessed/policy_all/ungdc_sdg")
+import sys
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir, preprocessed_dir
+
+UNGDC_TXT_DIR = raw_dir() / "ungdc" / "TXT"
+OUTPUT_DIR = preprocessed_dir() / "policy_all" / "ungdc_sdg"
 OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_segments.jsonl"
 
 # Sessions after SDG adoption (September 2015 = Session 70)

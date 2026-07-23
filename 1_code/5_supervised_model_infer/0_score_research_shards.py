@@ -1,19 +1,17 @@
 """
-Score paper embedding shards with the retrained single-label MPNet MLP model.
-
-Replaces centroid-based scoring with supervised sigmoid probabilities from
-the champion MLP (n_layers=4, hidden_size=384, lr=1e-3, wd=0, dropout=0.3).
+Score paper embedding shards with the retrained single-label MLP model.
 
 Inputs:
-  2_data/2_embedded/research_shards/metadata/manifest.json
-  2_data/2b_supervised_singlelabel_mpnet/model/sdg_classifier_retrained.joblib
+   2_data/3_embedded/{model}/research_shards/metadata/manifest.json
+   2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib
 
 Outputs:
-  2_data/3c_scored_supervised/paper_scores_shards/part-NNNNN.npy
-  2_data/3c_scored_supervised/paper_scores_shards/metadata/part-NNNNN_ids.jsonl
-  2_data/3c_scored_supervised/paper_scores_shards/metadata/manifest.json
-  2_data/3c_scored_supervised/research_centroids.npy
-  2_data/3c_scored_supervised/metadata/research_centroid_meta.json
+   2_data/5_supervised_scored/{model}/paper_scores_shards/part-NNNNN.npy
+   2_data/5_supervised_scored/{model}/paper_scores_shards/metadata/...
+   2_data/5_supervised_scored/{model}/research_centroids.npy
+
+Run from project root:
+    python 1_code/5_supervised_model_infer/0_score_research_shards.py --model all-mpnet-base-v2
 """
 
 from __future__ import annotations
@@ -35,21 +33,11 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
+from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, model_results_dir_for_model, scored_dir_for_model
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
 
 log = logging.getLogger(__name__)
 STATUS_STAGE = "supervised_sdg_scores"
-
-MODEL_PATH = Path("2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib")
-EMBED_MANIFEST = Path("2_data/3_embedded/mpnet/research_shards/metadata/manifest.json")
-SCORED_DIR = Path("2_data/5_supervised_scored/mpnet")
-OUT_DIR = SCORED_DIR / "paper_scores_shards"
-METADATA_DIR = OUT_DIR / "metadata"
-STATUS_DIR = Path("2_data/3_embedded/mpnet/research_shards/metadata")
-RESEARCH_CENTROIDS_OUT = SCORED_DIR / "research_centroids.npy"
-RESEARCH_META_OUT = SCORED_DIR / "metadata" / "research_centroid_meta.json"
-
-N_SDG = 17
 
 
 class _MultiLabelMLP(torch.nn.Module):
@@ -128,33 +116,47 @@ def resolve_from_manifest(manifest_path: Path, stored_path: str, embed_dir: Path
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Score paper shards with supervised MLP.")
-    parser.add_argument("--model-path", default=str(MODEL_PATH))
-    parser.add_argument("--embedding-manifest", default=str(EMBED_MANIFEST))
-    parser.add_argument("--out-dir", default=str(OUT_DIR))
-    parser.add_argument("--metadata-dir", default=str(METADATA_DIR))
-    parser.add_argument("--status-dir", default=str(STATUS_DIR))
-    parser.add_argument("--research-centroids-out", default=str(RESEARCH_CENTROIDS_OUT))
-    parser.add_argument("--research-meta-out", default=str(RESEARCH_META_OUT))
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embed model (default: %(default)s)")
+    parser.add_argument("--model-path", default=None)
+    parser.add_argument("--embedding-manifest", default=None)
+    parser.add_argument("--out-dir", default=None)
+    parser.add_argument("--metadata-dir", default=None)
+    parser.add_argument("--status-dir", default=None)
+    parser.add_argument("--research-centroids-out", default=None)
+    parser.add_argument("--research-meta-out", default=None)
     parser.add_argument("--limit-shards", type=int, default=0)
     parser.add_argument("--allow-partial-research-centroids", action="store_true")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    model_path = Path(args.model_path)
-    embed_manifest_path = Path(args.embedding_manifest)
-    out_dir = Path(args.out_dir)
-    metadata_dir = Path(args.metadata_dir)
-    status_dir = Path(args.status_dir)
-    research_centroids_out = Path(args.research_centroids_out)
-    research_meta_out = Path(args.research_meta_out)
+    scored_root = scored_dir_for_model(args.model)
+    embed_root = embed_dir_for_model(args.model)
+    model_root = model_results_dir_for_model(args.model)
+
+    model_path_default = model_root / "model" / "sdg_classifier_retrained.joblib"
+    embed_manifest_default = embed_research_dir_for_model(args.model) / "metadata" / "manifest.json"
+    out_dir_default = scored_root / "paper_scores_shards"
+    metadata_dir_default = out_dir_default / "metadata"
+    status_dir_default = embed_research_dir_for_model(args.model) / "metadata"
+    research_centroids_out_default = scored_root / "research_centroids.npy"
+    research_meta_out_default = scored_root / "metadata" / "research_centroid_meta.json"
+
+    model_path = Path(args.model_path) if args.model_path else model_path_default
+    embed_manifest_path = Path(args.embedding_manifest) if args.embedding_manifest else embed_manifest_default
+    out_dir = Path(args.out_dir) if args.out_dir else out_dir_default
+    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else metadata_dir_default
+    status_dir = Path(args.status_dir) if args.status_dir else status_dir_default
+    research_centroids_out = Path(args.research_centroids_out) if args.research_centroids_out else research_centroids_out_default
+    research_meta_out = Path(args.research_meta_out) if args.research_meta_out else research_meta_out_default
     embed_dir = embed_manifest_path.parent.parent
 
     if (
         args.limit_shards > 0
         and not args.allow_partial_research_centroids
-        and research_centroids_out == RESEARCH_CENTROIDS_OUT
-        and research_meta_out == RESEARCH_META_OUT
+        and research_centroids_out == research_centroids_out_default
+        and research_meta_out == research_meta_out_default
     ):
         raise RuntimeError(
             "Refusing to overwrite canonical research centroids from a partial shard run. "

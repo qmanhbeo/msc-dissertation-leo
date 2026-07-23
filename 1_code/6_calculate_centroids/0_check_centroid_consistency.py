@@ -9,17 +9,19 @@ For each corpus (research, policy):
 Also saves policy centroids persistently (research centroids already exist).
 
 Inputs:
-  2_data/2b_embedded_mpnet/research_shards/metadata/manifest.json
-  2_data/2b_embedded_mpnet/policy.npy
-  2_data/2b_embedded_mpnet/metadata/policy_ids.json
-  2_data/3c_scored_supervised/research_centroids.npy
-  2_data/3c_scored_supervised/paper_scores_shards/  (27 shards)
-  2_data/3c_scored_supervised/policy_scores.npy
+   2_data/3_embedded/{model}/research_shards/metadata/manifest.json
+   2_data/3_embedded/{model}/policy.npy
+   2_data/5_supervised_scored/{model}/research_centroids.npy
+   2_data/5_supervised_scored/{model}/paper_scores_shards/
+   2_data/5_supervised_scored/{model}/policy_scores.npy
 
 Outputs:
-  2_data/3c_scored_supervised/policy_centroids.npy
-  2_data/3c_scored_supervised/metadata/policy_centroid_meta.json
-  2_data/3c_scored_supervised/metadata/centroid_consistency.json
+   2_data/5_supervised_scored/{model}/policy_centroids.npy
+   2_data/5_supervised_scored/{model}/metadata/policy_centroid_meta.json
+   2_data/5_supervised_scored/{model}/metadata/centroid_consistency.json
+
+Run from project root:
+    python 1_code/6_calculate_centroids/0_check_centroid_consistency.py --model all-mpnet-base-v2
 """
 
 from __future__ import annotations
@@ -40,24 +42,10 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
+from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 from shard_pipeline_utils import ensure_dir, now_iso, read_json
 
 log = logging.getLogger(__name__)
-
-N_SDG = 17
-EMBED_DIM = 768
-
-SCORED_DIR = Path("2_data/5_supervised_scored/mpnet")
-EMBED_DIR = Path("2_data/3_embedded/mpnet")
-
-RESEARCH_CENTROIDS_PATH = SCORED_DIR / "research_centroids.npy"
-POLICY_CENTROIDS_OUT = SCORED_DIR / "policy_centroids.npy"
-POLICY_CENTROID_META_OUT = SCORED_DIR / "metadata" / "policy_centroid_meta.json"
-RESEARCH_EMBED_MANIFEST = EMBED_DIR / "research_shards" / "metadata" / "manifest.json"
-POLICY_EMB_PATH = EMBED_DIR / "policy.npy"
-POLICY_SCORES_PATH = SCORED_DIR / "policy_scores.npy"
-RESEARCH_SCORES_DIR = SCORED_DIR / "paper_scores_shards"
-CONSISTENCY_OUT = SCORED_DIR / "metadata" / "centroid_consistency.json"
 
 
 def resolve_embedding_path(manifest_path: Path, stored_path: str, embed_dir: Path) -> Path:
@@ -149,7 +137,7 @@ def build_policy_centroids(
     return centroids, np.array([not m["zero_flag"] for m in meta], dtype=bool), meta
 
 
-def check_research(manifest_path: Path, research_centroids: np.ndarray) -> dict[str, Any]:
+def check_research(manifest_path: Path, research_centroids: np.ndarray, research_scores_dir: Path) -> dict[str, Any]:
     log.info("=== Research corpus ===")
 
     emb_manifest = read_json(manifest_path)
@@ -169,7 +157,7 @@ def check_research(manifest_path: Path, research_centroids: np.ndarray) -> dict[
         shard_name = shard["name"]
 
         emb_path = resolve_embedding_path(manifest_path, shard["embedding_path"], embed_dir)
-        score_path = RESEARCH_SCORES_DIR / f"{shard_name}.npy"
+        score_path = research_scores_dir / f"{shard_name}.npy"
 
         emb = np.load(emb_path).astype(np.float32)
         scores = np.load(score_path).astype(np.float32)
@@ -242,24 +230,29 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Check centroid consistency for MLP-supervised classification."
     )
-    parser.add_argument("--research-centroids", default=str(RESEARCH_CENTROIDS_PATH))
-    parser.add_argument("--policy-emb", default=str(POLICY_EMB_PATH))
-    parser.add_argument("--policy-scores", default=str(POLICY_SCORES_PATH))
-    parser.add_argument("--research-manifest", default=str(RESEARCH_EMBED_MANIFEST))
-    parser.add_argument("--policy-centroids-out", default=str(POLICY_CENTROIDS_OUT))
-    parser.add_argument("--policy-centroid-meta-out", default=str(POLICY_CENTROID_META_OUT))
-    parser.add_argument("--consistency-out", default=str(CONSISTENCY_OUT))
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embed model (default: %(default)s)")
+    parser.add_argument("--research-centroids", default=None)
+    parser.add_argument("--policy-emb", default=None)
+    parser.add_argument("--policy-scores", default=None)
+    parser.add_argument("--research-manifest", default=None)
+    parser.add_argument("--policy-centroids-out", default=None)
+    parser.add_argument("--policy-centroid-meta-out", default=None)
+    parser.add_argument("--consistency-out", default=None)
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    research_centroids_path = Path(args.research_centroids)
-    policy_emb_path = Path(args.policy_emb)
-    policy_scores_path = Path(args.policy_scores)
-    research_manifest_path = Path(args.research_manifest)
-    policy_centroids_out = Path(args.policy_centroids_out)
-    policy_centroid_meta_out = Path(args.policy_centroid_meta_out)
-    consistency_out = Path(args.consistency_out)
+    scored_root = scored_dir_for_model(args.model)
+    embed_root = embed_dir_for_model(args.model)
+
+    research_centroids_path = Path(args.research_centroids) if args.research_centroids else scored_root / "research_centroids.npy"
+    policy_emb_path = Path(args.policy_emb) if args.policy_emb else embed_root / "policy.npy"
+    policy_scores_path = Path(args.policy_scores) if args.policy_scores else scored_root / "policy_scores.npy"
+    research_manifest_path = Path(args.research_manifest) if args.research_manifest else embed_research_dir_for_model(args.model) / "metadata" / "manifest.json"
+    policy_centroids_out = Path(args.policy_centroids_out) if args.policy_centroids_out else scored_root / "policy_centroids.npy"
+    policy_centroid_meta_out = Path(args.policy_centroid_meta_out) if args.policy_centroid_meta_out else scored_root / "metadata" / "policy_centroid_meta.json"
+    consistency_out = Path(args.consistency_out) if args.consistency_out else scored_root / "metadata" / "centroid_consistency.json"
 
     # --- Load research centroids ---
     log.info("Loading research centroids: %s", research_centroids_path)
@@ -267,7 +260,7 @@ def main() -> None:
     log.info("  Shape: %s", research_centroids.shape)
 
     # --- Research consistency check ---
-    research_result = check_research(research_manifest_path, research_centroids)
+    research_result = check_research(research_manifest_path, research_centroids, scored_root / "paper_scores_shards")
     log.info(
         "Research overall agreement: %.4f",
         research_result["overall_agreement_rate"],

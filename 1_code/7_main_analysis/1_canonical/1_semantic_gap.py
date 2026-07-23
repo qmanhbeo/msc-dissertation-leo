@@ -46,11 +46,11 @@ Minimum cluster size:
   be noisy. This is acknowledged in Assumption A-SPARSE.
 
 Inputs:
-  2_data/3_scored/research_centroids.npy       (17, dim)    float32
-  2_data/3_scored/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
-  2_data/3_scored/policy_scores.npy            float32 matrix with one row per policy segment
-  2_data/3_scored/metadata/policy_scores_ids.json       list of {id, source_doc}
-  2_data/2_embedded/policy.npy                 float32 matrix with one row per policy segment
+  2_data/5_supervised_scored/{model}/research_centroids.npy       (17, dim)    float32
+  2_data/5_supervised_scored/{model}/metadata/research_centroid_meta.json  list of 17 SDG centroid metadata rows
+  2_data/5_supervised_scored/{model}/policy_scores.npy            float32 matrix with one row per policy segment
+  2_data/5_supervised_scored/{model}/metadata/policy_scores_ids.json       list of {id, source_doc}
+  2_data/3_embedded/{model}/policy.npy                 float32 matrix with one row per policy segment
 
 Outputs:
   4_outputs/main/data/4_3_semantic_gap_distances.json                  primary: semantic gap per SDG (SEGMENT_CAP=50)
@@ -58,7 +58,7 @@ Outputs:
   4_outputs/main/tables/*.tex                   generated LaTeX macros/tables
 
 Run from project root:
-    python 1_code/3_main_analysis/1_canonical/1_semantic_gap.py
+    python 1_code/7_main_analysis/1_canonical/1_semantic_gap.py
 """
 
 import logging

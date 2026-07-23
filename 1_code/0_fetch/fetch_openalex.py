@@ -22,8 +22,18 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import sys
+
 from dotenv import load_dotenv
 import requests
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
 
 
 class AllKeysExhaustedError(Exception):
@@ -34,7 +44,7 @@ class AllKeysExhaustedError(Exception):
 load_dotenv()
 
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
-OUTPUT_DIR = Path("2_data/0_raw/openalex")
+OUTPUT_DIR = raw_dir() / "openalex"
 ARTIFACT_DIR = OUTPUT_DIR / "artifact"
 METADATA_FILE = ARTIFACT_DIR / "metadata.json"
 SEEN_IDS_FILE = ARTIFACT_DIR / "seen_ids.json"

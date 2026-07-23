@@ -54,7 +54,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -210,7 +210,7 @@ def main() -> None:
     embed_dir = embed_dir_for_model(args.model)
     scored_dir = scored_dir_for_model(args.model)
     sdg_centroids_path = scored_dir / "sdg_centroids.npy"
-    research_manifest = embed_dir / "research_shards" / "metadata" / "manifest.json"
+    research_manifest = embed_research_dir_for_model(args.model) / "metadata" / "manifest.json"
     total_research = total_research_embedding_rows(research_manifest, embed_dir)
     n_research_fit = int(policy_fit_emb.shape[0])
     if total_research < n_research_fit:

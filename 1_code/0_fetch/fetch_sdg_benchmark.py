@@ -14,13 +14,23 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
+import sys
+
 import requests
 from tqdm import tqdm
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
 
 # Configuration
 GITHUB_REPO = "SDGClassification/benchmark"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/zipball/main"
-OUTPUT_DIR = Path("2_data/0_raw/sdg_benchmark")
+OUTPUT_DIR = raw_dir() / "sdg_benchmark"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 
 

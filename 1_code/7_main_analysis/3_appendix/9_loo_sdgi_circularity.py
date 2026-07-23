@@ -58,7 +58,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 
 OUTPUT_SUBDIR = "a3_sdgi_circularity"
 DATA_JSON = "loo_sdgi_circularity.json"
@@ -208,7 +208,7 @@ def main() -> None:
 
     # ---- Research papers against LOO centroid ----
     research_shard_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
-    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_research_dir_for_model(model) / "metadata" / "manifest.json")
     score_shards = {int(r["shard_id"]): r for r in research_shard_manifest["shards"]}
     emb_shards = {int(r["shard_id"]): r for r in emb_manifest["shards"]}
     if sorted(score_shards) != sorted(emb_shards):

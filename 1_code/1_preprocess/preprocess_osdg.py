@@ -29,14 +29,23 @@ import logging
 import re
 import unicodedata
 from collections import Counter
+import sys
 from pathlib import Path
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir, preprocessed_dir
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-INPUT_FILE = Path("2_data/0_raw/osdg/osdg_dataset.csv")
-OUTPUT_JSONL = Path("2_data/1_preprocessed/osdg/osdg_clean.jsonl")
-OUTPUT_CSV = Path("2_data/1_preprocessed/osdg/osdg_clean.csv")
+INPUT_FILE = raw_dir() / "osdg" / "osdg_dataset.csv"
+OUTPUT_JSONL = preprocessed_dir() / "osdg" / "osdg_clean.jsonl"
+OUTPUT_CSV = preprocessed_dir() / "osdg" / "osdg_clean.csv"
 
 AGREEMENT_THRESHOLD = 0.5   # minimum annotator agreement to keep a row
 MIN_WORDS = 20              # drop texts shorter than this

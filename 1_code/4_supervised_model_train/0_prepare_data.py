@@ -1,18 +1,13 @@
 """
 Prepare training and test data for the single-label SDG classifier.
 
-Loads the canon single-label embeddings from 2_data/2_embedded/, reads
-the corresponding preprocessed JSONL, filters for single-label records
-(multi-label texts are dropped at this boundary per design), builds
-17D one-hot vectors, and performs a per-source stratified 85/15 split
-with document-level grouping (all segments of a document stay together).
+Loads embeddings from 3_embedded/{model}/metadata/*_ids.json and the
+corresponding segmented/preprocessed JSONL, filters for single-label
+records, builds 17D one-hot vectors, and performs a per-source
+stratified 85/15 split with document-level grouping.
 
 Sources: osdg, benchmark, sdg_knowledge_hub, sdgi_corpus, aurora
 Excludes: policy (unlabeled), research_corpus (unlabeled)
-
-Inputs:
-   {embed_root}/{source}.npy
-   2_data/1_preprocessed/{source_dir}/{file}.jsonl
 
 Outputs (saved to {output_root}/):
   embeddings.npy       (N, dim) float32
@@ -23,57 +18,58 @@ Outputs (saved to {output_root}/):
   indices/test.npy     int64
   split_report.txt
 
-Run from project root (MiniLM default):
-    python 1_code/2b_supervised_training_singlelabel/0_prepare_data.py
-Run with MPNet:
-    python 1_code/2b_supervised_training_singlelabel/0_prepare_data.py \
-        --embed-root 2_data/2b_embedded_mpnet \
-        --output-root 2_data/2b_supervised_singlelabel_mpnet
+Run from project root:
+    python 1_code/4_supervised_model_train/0_prepare_data.py --model all-mpnet-base-v2
 """
 
 import argparse
 import json
 import logging
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-N_SDG = 17
-PREPROCESS_ROOT = Path("2_data/1_preprocessed")
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+
+from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, preprocessed_dir, segmented_dir_for_model
 
 CORPORA = [
     {
         "name": "osdg",
         "embed_file": "osdg.npy",
-        "jsonl_path": PREPROCESS_ROOT / "osdg" / "osdg_clean.jsonl",
+        "segmented": False,
+        "preprocessed_subdir": "osdg",
+        "preprocessed_filename": "osdg_clean.jsonl",
     },
     {
         "name": "benchmark",
         "embed_file": "benchmark.npy",
-        "jsonl_path": PREPROCESS_ROOT / "sdg_benchmark" / "benchmark_clean.jsonl",
+        "segmented": False,
+        "preprocessed_subdir": "sdg_benchmark",
+        "preprocessed_filename": "benchmark_clean.jsonl",
     },
     {
         "name": "sdg_knowledge_hub",
         "embed_file": "sdg_knowledge_hub.npy",
-        "jsonl_path": PREPROCESS_ROOT / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl",
         "segmented": True,
-        "segmented_path_template": "2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_segmented_{model}.jsonl",
     },
     {
         "name": "sdgi",
         "embed_file": "sdgi.npy",
-        "jsonl_path": PREPROCESS_ROOT / "sdgi_corpus" / "sdgi_clean.jsonl",
         "segmented": True,
-        "segmented_path_template": "2_data/1_preprocessed/sdgi_corpus/sdgi_unified_{model}.jsonl",
     },
     {
         "name": "aurora",
         "embed_file": "aurora.npy",
-        "jsonl_path": PREPROCESS_ROOT / "aurora" / "aurora_texts.jsonl",
         "segmented": True,
-        "segmented_path_template": "2_data/1_preprocessed/aurora/aurora_segmented_{model}.jsonl",
     },
 ]
 
@@ -81,14 +77,10 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 
-def _model_slug(model: str) -> str:
-    return model.replace("/", "_").lower()
-
-
 def _resolve_jsonl_path(corpus: dict, model_name: str) -> Path:
     if corpus.get("segmented"):
-        return Path(corpus["segmented_path_template"].format(model=_model_slug(model_name)))
-    return corpus["jsonl_path"]
+        return segmented_dir_for_model(model_name) / f"{corpus['name']}.jsonl"
+    return preprocessed_dir() / corpus["preprocessed_subdir"] / corpus["preprocessed_filename"]
 
 
 def load_jsonl(path: Path) -> list[dict]:
@@ -113,15 +105,16 @@ def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: n
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare single-label training data.")
-    parser.add_argument("--embed-root", default="2_data/3_embedded/minilm",
-                        help="Embedding root dir (default: 2_data/3_embedded/minilm)")
-    parser.add_argument("--output-root", default="2_data/4_supervised_model_results/minilm",
-                        help="Output dir (default: 2_data/4_supervised_model_results/minilm)")
-    parser.add_argument("--model", default="all-MiniLM-L6-v2",
-                        help="Sentence-transformer model (default: %(default)s)")
+    default_model = "all-mpnet-base-v2"
+    parser.add_argument("--model", default=default_model,
+                        help="Embed model (default: %(default)s)")
+    parser.add_argument("--embed-root", default=None,
+                        help="Override embed root dir (derived from --model if omitted)")
+    parser.add_argument("--output-root", default=None,
+                        help="Override output root dir (derived from --model if omitted)")
     args = parser.parse_args()
-    embed_root = Path(args.embed_root)
-    output_dir = Path(args.output_root)
+    embed_root = Path(args.embed_root) if args.embed_root else embed_dir_for_model(args.model)
+    output_dir = Path(args.output_root) if args.output_root else model_results_dir_for_model(args.model)
     log.info("Embed root: %s  Output: %s  Model: %s", embed_root, output_dir, args.model)
 
     all_embs, all_labels, all_sources, all_source_docs = [], [], [], []

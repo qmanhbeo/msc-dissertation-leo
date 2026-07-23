@@ -4,13 +4,13 @@ Train a multi-label SDG classifier using XGBoost.
 Manual CV loop for per-fold progress logging.
 
 Inputs:
-  2_data/2b_supervised/embeddings.npy
-  2_data/2b_supervised/labels.npy
-  2_data/2b_supervised/indices/train.npy
+  2_data/4_supervised_model_results/{model}/embeddings.npy
+  2_data/4_supervised_model_results/{model}/labels.npy
+  2_data/4_supervised_model_results/{model}/indices/train.npy
 
 Outputs:
-  2_data/2b_supervised/model/xgb_classifier.joblib
-  2_data/2b_supervised/model/xgb_cv_results.json
+  2_data/4_supervised_model_results/{model}/model/xgb_classifier.joblib
+  2_data/4_supervised_model_results/{model}/model/xgb_cv_results.json
 """
 
 import json
@@ -25,8 +25,15 @@ from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputClassifier
 from xgboost import XGBClassifier
 
-DATA_DIR = Path("2_data/4_supervised_model_results/minilm")
-OUTPUT_DIR = DATA_DIR / "model"
+import sys
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import model_results_dir_for_model
+
 MODEL_TAG = "xgb"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -34,10 +41,18 @@ log = logging.getLogger(__name__)
 
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="Train XGB classifier.")
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embedding model name")
+    args = parser.parse_args()
+    data_dir = model_results_dir_for_model(args.model)
+    output_dir = data_dir / "model"
+    
     t0 = time.perf_counter()
-    embeddings = np.load(DATA_DIR / "embeddings.npy")
-    labels = np.load(DATA_DIR / "labels.npy")
-    train_idx = np.load(DATA_DIR / "indices" / "train.npy")
+    embeddings = np.load(data_dir / "embeddings.npy")
+    labels = np.load(data_dir / "labels.npy")
+    train_idx = np.load(data_dir / "indices" / "train.npy")
 
     X = embeddings[train_idx]
     Y = labels[train_idx]
@@ -99,11 +114,11 @@ def main() -> None:
         "all_cv_results": all_scores,
     }
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     import joblib
-    model_path = OUTPUT_DIR / f"{MODEL_TAG}_classifier.joblib"
-    results_path = OUTPUT_DIR / f"{MODEL_TAG}_cv_results.json"
+    model_path = output_dir / f"{MODEL_TAG}_classifier.joblib"
+    results_path = output_dir / f"{MODEL_TAG}_cv_results.json"
 
     joblib.dump(best_clf, model_path)
     with results_path.open("w") as f:

@@ -21,15 +21,25 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import sys
+
 import requests
 from tqdm import tqdm
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
 
 # Configuration
 ZENODO_API_URL = "https://zenodo.org/api/records/11441197"
 GITHUB_REPO_URL = "https://github.com/osdg-ai/osdg-data"
 OSDG_EXAMPLES_URL = "https://github.com/osdg-ai/osdg-data/tree/main/examples"
 # NOTE: Upstream examples are intentionally not fetched in active pipeline runs.
-OUTPUT_DIR = Path("2_data/0_raw/osdg")
+OUTPUT_DIR = raw_dir() / "osdg"
 METADATA_FILE = OUTPUT_DIR / "artifact" / "metadata.json"
 
 

@@ -2,27 +2,26 @@
 Retrain the champion MLP on the FULL training pool (train + val) 
 then evaluate on the held-out test set.
 
-This is the rigorous workflow:
-  1. CV on train pool → champion hyperparams (done in 1_train_models_MLP.py)
-  2. Retrain on 100% of train pool with champion config (this script)
-  3. Evaluate once on held-out test set → report per-SDG F1
-
 Champion config (from CV): n_layers=4, hidden_size=384, lr=1e-3, wd=0, dropout=0.3
 
 Inputs:
-  2_data/.../embeddings.npy
-  2_data/.../labels.npy
-  2_data/.../indices/train.npy
-  2_data/.../indices/test.npy
+  {data_dir}/embeddings.npy
+  {data_dir}/labels.npy
+  {data_dir}/indices/train.npy
+  {data_dir}/indices/test.npy
 
 Outputs:
-  2_data/.../model/sdg_classifier_retrained.joblib
-  2_data/.../model/sdg_retrain_results.json
+  {data_dir}/model/sdg_classifier_retrained.joblib
+  {data_dir}/model/sdg_retrain_results.json
+
+Run from project root:
+    python 1_code/4_supervised_model_train/2_retrain_full_data.py --model all-mpnet-base-v2
 """
 
 import argparse
 import json
 import logging
+import sys
 import time
 from pathlib import Path
 
@@ -33,8 +32,14 @@ import torch.optim as optim
 from sklearn.metrics import f1_score, classification_report
 from torch.utils.data import DataLoader, TensorDataset
 
-DEFAULT_DATA_DIR = "2_data/4_supervised_model_results/mpnet"
-N_SDG = 17
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+
+from model_utils import N_SDG, model_results_dir_for_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -75,8 +80,11 @@ class _NetWrapper:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Retrain champion MLP on full train pool.")
-    parser.add_argument("--data-dir", default=DEFAULT_DATA_DIR,
-                        help=f"Data dir (default: {DEFAULT_DATA_DIR})")
+    default_model = "all-mpnet-base-v2"
+    parser.add_argument("--model", default=default_model,
+                        help=f"Embed model (default: {default_model})")
+    parser.add_argument("--data-dir", default=None,
+                        help="Override data dir (derived from --model if omitted)")
     parser.add_argument("--n-layers", type=int, default=4)
     parser.add_argument("--hidden-size", type=int, default=384)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -87,7 +95,7 @@ def main() -> None:
     parser.add_argument("--patience", type=int, default=7)
     args = parser.parse_args()
 
-    data_dir = Path(args.data_dir)
+    data_dir = Path(args.data_dir) if args.data_dir else model_results_dir_for_model(args.model)
     output_dir = data_dir / "model"
 
     t0 = time.perf_counter()

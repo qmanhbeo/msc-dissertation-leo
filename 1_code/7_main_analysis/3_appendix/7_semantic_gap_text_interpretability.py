@@ -48,8 +48,8 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, scored_dir_for_model
-RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, preprocessed_dir, research_preprocessed_dir, scored_dir_for_model
+RESEARCH_TEXT_MANIFEST = research_preprocessed_dir() / "metadata" / "manifest.json"
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -136,7 +136,7 @@ def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
     posix = raw.as_posix()
-    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", "2_data/1_preprocessed/")
+    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", preprocessed_dir().as_posix() + "/")
     if not any(posix.startswith(p) for p in allowed):
         raise RuntimeError(
             f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
@@ -149,7 +149,7 @@ def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -
 
 def load_research_shards(embed_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
     text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
-    emb_manifest = load_json(embed_dir / "research_shards" / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_research_dir_for_model(model) / "metadata" / "manifest.json")
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
 
     text_shards = sorted(text_manifest["shards"], key=lambda x: int(x["shard_id"]))

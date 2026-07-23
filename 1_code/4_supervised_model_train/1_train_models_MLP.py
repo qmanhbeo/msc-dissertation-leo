@@ -8,16 +8,16 @@ true (one 1 per row), so the model learns to push one class high.
   384 → [Linear → BN → ReLU → Dropout] × n_layers → 17
 
 Inputs:
-  2_data/2b_supervised_singlelabel/embeddings.npy
-  2_data/2b_supervised_singlelabel/labels.npy
-  2_data/2b_supervised_singlelabel/indices/train.npy
+  2_data/4_supervised_model_results/{model}/embeddings.npy
+  2_data/4_supervised_model_results/{model}/labels.npy
+  2_data/4_supervised_model_results/{model}/indices/train.npy
 
 Outputs:
-  2_data/2b_supervised_singlelabel/model/mlp_classifier.joblib
-  2_data/2b_supervised_singlelabel/model/mlp_cv_results.json
+  2_data/4_supervised_model_results/{model}/model/mlp_classifier.joblib
+  2_data/4_supervised_model_results/{model}/model/mlp_cv_results.json
 
 Run from project root:
-    python 1_code/2b_supervised_training_singlelabel/1_train_models_MLP.py
+    python 1_code/4_supervised_model_train/1_train_models_MLP.py
 """
 
 import argparse
@@ -36,7 +36,15 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import GroupKFold
 from torch.utils.data import DataLoader, TensorDataset
 
-DEFAULT_DATA_DIR = "2_data/4_supervised_model_results/minilm"
+import sys
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import model_results_dir_for_model
+
 MODEL_TAG = "mlp"
 N_SDG = 17
 
@@ -180,10 +188,10 @@ class MultiLabelMLP(BaseEstimator, ClassifierMixin):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train single-label MLP.")
-    parser.add_argument("--data-dir", default=DEFAULT_DATA_DIR,
-                        help=f"Data dir (default: {DEFAULT_DATA_DIR})")
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embedding model name")
     args = parser.parse_args()
-    data_dir = Path(args.data_dir)
+    data_dir = model_results_dir_for_model(args.model)
     output_dir = data_dir / "model"
 
     t0 = time.perf_counter()

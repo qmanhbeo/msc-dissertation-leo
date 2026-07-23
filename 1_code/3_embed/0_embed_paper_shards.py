@@ -34,7 +34,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, segmented_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, segmented_dir_for_model
 
 
 log = logging.getLogger(__name__)
@@ -102,9 +102,9 @@ def main() -> None:
     seg_root = segmented_dir_for_model(args.model) / "research"
 
     input_manifest = Path(args.input_manifest) if args.input_manifest else seg_root / "metadata" / "manifest.json"
-    out_dir = Path(args.out_dir) if args.out_dir else embed_root / "research_shards"
+    out_dir = Path(args.out_dir) if args.out_dir else embed_research_dir_for_model(args.model)
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir) if args.status_dir else embed_root / "research_shards" / "metadata"
+    status_dir = Path(args.status_dir) if args.status_dir else embed_research_dir_for_model(args.model) / "metadata"
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)

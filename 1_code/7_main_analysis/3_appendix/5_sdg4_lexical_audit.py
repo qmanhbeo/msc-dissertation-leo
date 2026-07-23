@@ -32,8 +32,8 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, scored_dir_for_model
-RESEARCH_TEXT_MANIFEST = Path("2_data/1_preprocessed/research_corpus/metadata/manifest.json")
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, research_preprocessed_dir, scored_dir_for_model
+RESEARCH_TEXT_MANIFEST = research_preprocessed_dir() / "metadata" / "manifest.json"
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"

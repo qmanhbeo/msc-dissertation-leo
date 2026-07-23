@@ -46,3 +46,27 @@ def scored_dir_for_model(model: str) -> Path:
 
 def centroids_dir() -> Path:
     return DATA_ROOT / "6_centroids"
+
+
+def raw_dir() -> Path:
+    return DATA_ROOT / "0_raw"
+
+
+def research_preprocessed_dir() -> Path:
+    return preprocessed_dir() / "research_corpus"
+
+
+def research_segmented_dir_for_model(model: str) -> Path:
+    return segmented_dir_for_model(model) / "research"
+
+
+def policy_preprocessed_dir() -> Path:
+    return preprocessed_dir() / "policy_all"
+
+
+def embed_research_dir_for_model(model: str) -> Path:
+    return embed_dir_for_model(model) / "research_shards"
+
+
+def scored_research_dir_for_model(model: str) -> Path:
+    return scored_dir_for_model(model) / "paper_scores_shards"

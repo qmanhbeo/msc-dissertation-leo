@@ -28,13 +28,16 @@ if str(CODE_ROOT) not in sys.path:
 SEGMENT_DIR = CODE_ROOT / "2_segment"
 if str(SEGMENT_DIR) not in sys.path:
     sys.path.insert(0, str(SEGMENT_DIR))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
 
 from sentence_transformers import SentenceTransformer
 
 from segment_utils import segment_text
+from model_utils import raw_dir, segmented_dir_for_model
 
-INPUT_PARQUET = Path("2_data/0_raw/sdgi_corpus/sdgi_corpus.parquet")
-OUTPUT_DIR = Path("2_data/1_preprocessed/sdgi_corpus")
+INPUT_PARQUET = raw_dir() / "sdgi_corpus" / "sdgi_corpus.parquet"
 TARGET_LANGUAGE = "en"
 MIN_WORDS = 20
 
@@ -79,8 +82,7 @@ def main() -> None:
                         help="Model name for token-count-aware segmentation")
     args = parser.parse_args()
 
-    model_slug = args.model.replace("/", "_").lower()
-    output_path = OUTPUT_DIR / f"sdgi_unified_{model_slug}.jsonl"
+    output_path = segmented_dir_for_model(args.model) / "sdgi.jsonl"
 
     log.info("Loading %s", INPUT_PARQUET)
     df = pd.read_parquet(INPUT_PARQUET)

@@ -36,14 +36,22 @@ from dotenv import load_dotenv
 import requests
 from tqdm import tqdm
 
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 load_dotenv()
 
-AURORA_ZIP = Path("2_data/0_raw/aurora/aurora.zip")
+AURORA_ZIP = raw_dir() / "aurora" / "aurora.zip"
 AURORA_ZENODO_RECORD = "https://zenodo.org/api/records/3813230"
-OUTPUT_DIR = Path("2_data/0_raw/aurora")
+OUTPUT_DIR = raw_dir() / "aurora"
 OUTPUT_JSONL = OUTPUT_DIR / "aurora_raw.jsonl"
 FETCHED_LOG = OUTPUT_DIR / "aurora_fetched.log"
 

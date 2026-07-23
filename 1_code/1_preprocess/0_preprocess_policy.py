@@ -28,19 +28,29 @@ import re
 import unicodedata
 from pathlib import Path
 
+import sys
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir, preprocessed_dir
+
 
 SOURCE_CONFIGS = [
     {
         "source_name": "policy_scrape",
-        "input_dir": Path("2_data/0_raw/policy_scrape/texts"),
-        "output_jsonl": Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl"),
-        "output_csv": Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.csv"),
+        "input_dir": raw_dir() / "policy_scrape" / "texts",
+        "output_jsonl": preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_segments.jsonl",
+        "output_csv": preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_segments.csv",
     },
     {
         "source_name": "policy_manual",
-        "input_dir": Path("2_data/0_raw/policy_manual/texts"),
-        "output_jsonl": Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl"),
-        "output_csv": Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.csv"),
+        "input_dir": raw_dir() / "policy_manual" / "texts",
+        "output_jsonl": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.jsonl",
+        "output_csv": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.csv",
     },
 ]
 

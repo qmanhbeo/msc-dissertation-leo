@@ -1,39 +1,33 @@
 """
-Merge all policy segment sources into a single policy corpus.
+Merge all policy segment sources into a single model-specific policy corpus.
 
-Input sources:
-  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl
-  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl
-  2_data/1_preprocessed/policy_all/sdgi_corpus/sdgi_segments.jsonl
-  2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl
+Reads model-agnostic policy sources (scrape, manual, UNGDC) from the preprocessed
+directory and the model-specific SDGI from the segmented directory, producing one
+policy corpus per embed model.
 
-Output:
-  2_data/1_preprocessed/policy_all/policy_segments_all.jsonl
-  2_data/1_preprocessed/policy_all/policy_segments_all.csv
-
-Merge rule: concatenate source corpora in order, while keeping the existing
-minimum word-count filter.
+All paths resolved via model_utils helpers (preprocessed_dir, segmented_dir_for_model).
 
 Run from project root:
-    python 1_code/1_preprocess/policy/1_build_policy_corpus.py
+    python 1_code/1_preprocess/1_build_policy_corpus.py --model all-mpnet-base-v2
 """
 
+import argparse
 import csv
 import json
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
-SOURCES = [
-    Path("2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_segments.jsonl"),
-    Path("2_data/1_preprocessed/policy_all/policy_manual/policy_manual_segments.jsonl"),
-    Path("2_data/1_preprocessed/sdgi_corpus/sdgi_unified_all-mpnet-base-v2.jsonl"),
-    Path("2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl"),
-]
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
 
-OUTPUT_DIR = Path("2_data/1_preprocessed/policy_all")
-OUTPUT_JSONL = OUTPUT_DIR / "policy_segments_all.jsonl"
-OUTPUT_CSV = OUTPUT_DIR / "policy_segments_all.csv"
+from model_utils import preprocessed_dir, segmented_dir_for_model
+
 MIN_WORD_COUNT = 20
 
 
@@ -62,7 +56,20 @@ def csv_safe(row: dict) -> dict:
 
 
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Build model-specific policy corpus.")
+    parser.add_argument("--model", default="all-mpnet-base-v2", help="Embed model name (default: %(default)s)")
+    args = parser.parse_args()
+    SOURCES = [
+        preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_segments.jsonl",
+        preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.jsonl",
+        segmented_dir_for_model(args.model) / "sdgi.jsonl",
+        preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_segments.jsonl",
+    ]
+
+    output_dir = segmented_dir_for_model(args.model)
+    OUTPUT_JSONL = output_dir / "policy.jsonl"
+    OUTPUT_CSV = output_dir / "policy.csv"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     all_segments: list[dict] = []
     source_counts: Counter = Counter()

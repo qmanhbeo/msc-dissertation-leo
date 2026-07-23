@@ -6,16 +6,16 @@ formulation for single-label. Manual CV loop for per-fold logging.
 Grid: C = [0.01, 0.1, 1.0, 10.0, 100.0].
 
 Inputs:
-  2_data/2b_supervised_singlelabel/embeddings.npy
-  2_data/2b_supervised_singlelabel/labels.npy
-  2_data/2b_supervised_singlelabel/indices/train.npy
+  2_data/4_supervised_model_results/{model}/embeddings.npy
+  2_data/4_supervised_model_results/{model}/labels.npy
+  2_data/4_supervised_model_results/{model}/indices/train.npy
 
 Outputs:
-  2_data/2b_supervised_singlelabel/model/lr_classifier.joblib
-  2_data/2b_supervised_singlelabel/model/lr_cv_results.json
+  2_data/4_supervised_model_results/{model}/model/lr_classifier.joblib
+  2_data/4_supervised_model_results/{model}/model/lr_cv_results.json
 
 Run from project root:
-    python 1_code/2b_supervised_training_singlelabel/1_train_models_logisticReg.py
+    python 1_code/4_supervised_model_train/1_train_models_logisticReg.py
 """
 
 import json
@@ -29,7 +29,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 
-DEFAULT_DATA_DIR = "2_data/4_supervised_model_results/minilm"
+import sys
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import model_results_dir_for_model
+
 MODEL_TAG = "lr"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -39,10 +47,10 @@ log = logging.getLogger(__name__)
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Train single-label LR.")
-    parser.add_argument("--data-dir", default=DEFAULT_DATA_DIR,
-                        help=f"Data dir (default: {DEFAULT_DATA_DIR})")
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embedding model name")
     args = parser.parse_args()
-    data_dir = Path(args.data_dir)
+    data_dir = model_results_dir_for_model(args.model)
     output_dir = data_dir / "model"
 
     t0 = time.perf_counter()

@@ -36,7 +36,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, policy_preprocessed_dir
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -48,7 +48,7 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-POLICY_PREPROCESSED_ROOT = Path("2_data/1_preprocessed/policy_all")
+POLICY_PREPROCESSED_ROOT = policy_preprocessed_dir()
 
 SUMMARY_CSV = "policy_source_family_summary.csv"
 COVERAGE_CSV = "policy_source_family_coverage.csv"

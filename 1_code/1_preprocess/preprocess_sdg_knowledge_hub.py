@@ -29,9 +29,19 @@ import re
 import unicodedata
 from pathlib import Path
 
-INPUT_FILE = Path("2_data/0_raw/sdg_knowledge_hub/sdg_knowledge_hub.csv")
-OUTPUT_JSONL = Path("2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl")
-OUTPUT_CSV = Path("2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.csv")
+import sys
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir, preprocessed_dir
+
+INPUT_FILE = raw_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub.csv"
+OUTPUT_JSONL = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl"
+OUTPUT_CSV = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.csv"
 
 MIN_WORDS = 20
 

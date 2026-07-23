@@ -38,9 +38,9 @@ Coverage gap per SDG:
   (using document-weighted policy proportions as the canonical comparison)
 
 Inputs:
-  2_data/3_scored/paper_scores_shards/metadata/manifest.json
-  2_data/3_scored/policy_scores.npy          float32 matrix with one row per policy segment
-  2_data/3_scored/metadata/policy_scores_ids.json     list of {id, source_doc}
+  2_data/5_supervised_scored/{model}/paper_scores_shards/metadata/manifest.json
+  2_data/5_supervised_scored/{model}/policy_scores.npy          float32 matrix with one row per policy segment
+  2_data/5_supervised_scored/{model}/metadata/policy_scores_ids.json     list of {id, source_doc}
 
 Outputs:
   4_outputs/main/data/4_2_coverage_document_weighted.json              per-SDG coverage profiles + gap (canonical analysis)
@@ -48,7 +48,7 @@ Outputs:
   4_outputs/main/tables/*.tex              generated LaTeX macros/tables
 
 Run from project root (after score materialization for the target run context):
-    python 1_code/3_main_analysis/1_canonical/0_coverage_gap.py
+    python 1_code/7_main_analysis/1_canonical/0_coverage_gap.py
 """
 
 import json

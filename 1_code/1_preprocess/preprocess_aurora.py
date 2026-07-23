@@ -24,11 +24,21 @@ import zipfile
 from collections import defaultdict
 from pathlib import Path
 
+import sys
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir, preprocessed_dir
+
 N_SDG = 17
-INPUT_FILE = Path("2_data/0_raw/aurora/aurora_raw.jsonl")
-AURORA_ZIP = Path("2_data/0_raw/aurora/aurora.zip")
-OUTPUT_JSONL = Path("2_data/1_preprocessed/aurora/aurora_texts.jsonl")
-OUTPUT_DIR = Path("2_data/1_preprocessed/aurora")
+INPUT_FILE = raw_dir() / "aurora" / "aurora_raw.jsonl"
+AURORA_ZIP = raw_dir() / "aurora" / "aurora.zip"
+OUTPUT_JSONL = preprocessed_dir() / "aurora" / "aurora_texts.jsonl"
+OUTPUT_DIR = preprocessed_dir() / "aurora"
 MANIFEST_PATH = OUTPUT_DIR / "aurora_manifest.json"
 
 MIN_WORDS = 20

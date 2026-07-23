@@ -15,9 +15,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
 
 try:
     import pdfplumber
@@ -84,19 +93,19 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--input-dir",
         type=Path,
-        default=Path("2_data/0_raw/policy_manual/pdf"),
+        default=raw_dir() / "policy_manual" / "pdf",
         help="Directory containing manually downloaded PDFs.",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("2_data/0_raw/policy_manual/texts"),
+        default=raw_dir() / "policy_manual" / "texts",
         help="Directory to write extracted .txt files.",
     )
     parser.add_argument(
         "--report-path",
         type=Path,
-        default=Path("2_data/0_raw/policy_manual/artifact/convert_policy_manual_summary.json"),
+        default=raw_dir() / "policy_manual" / "artifact" / "convert_policy_manual_summary.json",
         help="Where to write a JSON conversion summary.",
     )
     parser.add_argument(

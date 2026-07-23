@@ -1,19 +1,20 @@
 """
-Score the active policy corpus with the retrained single-label MPNet MLP model.
-
-Replaces centroid-based scoring with supervised sigmoid probabilities.
+Score the active policy corpus with the retrained single-label MLP model.
 
 Inputs:
-  2_data/2_embedded/policy.npy
-  2_data/2_embedded/metadata/policy_ids.json
-  2_data/1_preprocessed/policy_all/policy_segments_all.jsonl
-  2_data/3c_scored_supervised/research_centroids.npy
-  2_data/2b_supervised_singlelabel_mpnet/model/sdg_classifier_retrained.joblib
+   2_data/3_embedded/{model}/policy.npy
+   2_data/3_embedded/{model}/metadata/policy_ids.json
+   2_data/2_segmented/{model}/policy.jsonl
+   2_data/5_supervised_scored/{model}/research_centroids.npy
+   2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib
 
 Outputs:
-  2_data/3c_scored_supervised/policy_scores.npy
-  2_data/3c_scored_supervised/policy_scores_vs_research.npy
-  2_data/3c_scored_supervised/metadata/policy_scores_ids.json
+   2_data/5_supervised_scored/{model}/policy_scores.npy
+   2_data/5_supervised_scored/{model}/policy_scores_vs_research.npy
+   2_data/5_supervised_scored/{model}/metadata/policy_scores_ids.json
+
+Run from project root:
+    python 1_code/5_supervised_model_infer/1_score_policy.py --model all-mpnet-base-v2
 """
 
 from __future__ import annotations
@@ -27,8 +28,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-_THIS = Path(__file__).resolve()
-CODE_ROOT = _THIS.parents[1]
+CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
@@ -36,16 +36,9 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from alignment_core import verify_unit_norms
+from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model, segmented_dir_for_model
 
 log = logging.getLogger(__name__)
-
-PROJECT = _THIS.parents[2]
-MODEL_PATH = PROJECT / "2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib"
-EMBED_DIR = PROJECT / "2_data/3_embedded/mpnet"
-SCORED_DIR = PROJECT / "2_data/5_supervised_scored/mpnet"
-POLICY_CORPUS = PROJECT / "2_data/1_preprocessed/policy_all/policy_segments_all.jsonl"
-
-N_SDG = 17
 
 
 class _MultiLabelMLP(torch.nn.Module):
@@ -108,15 +101,31 @@ def load_policy_doc_map(path: Path) -> dict[str, dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Score policy corpus with supervised MLP.")
-    parser.add_argument("--model-path", default=str(MODEL_PATH))
-    parser.add_argument("--policy-emb", default=str(EMBED_DIR / "policy.npy"))
-    parser.add_argument("--policy-ids", default=str(EMBED_DIR / "metadata" / "policy_ids.json"))
-    parser.add_argument("--policy-corpus", default=str(POLICY_CORPUS))
-    parser.add_argument("--research-centroids", default=str(SCORED_DIR / "research_centroids.npy"))
-    parser.add_argument("--policy-scores-out", default=str(SCORED_DIR / "policy_scores.npy"))
-    parser.add_argument("--policy-vs-research-out", default=str(SCORED_DIR / "policy_scores_vs_research.npy"))
-    parser.add_argument("--policy-score-ids-out", default=str(SCORED_DIR / "metadata" / "policy_scores_ids.json"))
+    parser.add_argument("--model", default="all-mpnet-base-v2",
+                        help="Embed model (default: %(default)s)")
+    parser.add_argument("--model-path", default=None)
+    parser.add_argument("--policy-emb", default=None)
+    parser.add_argument("--policy-ids", default=None)
+    parser.add_argument("--policy-corpus", default=None)
+    parser.add_argument("--research-centroids", default=None)
+    parser.add_argument("--policy-scores-out", default=None)
+    parser.add_argument("--policy-vs-research-out", default=None)
+    parser.add_argument("--policy-score-ids-out", default=None)
     args = parser.parse_args()
+
+    embed_root = embed_dir_for_model(args.model)
+    scored_root = scored_dir_for_model(args.model)
+    model_root = model_results_dir_for_model(args.model)
+    seg_root = segmented_dir_for_model(args.model)
+
+    args.model_path = args.model_path or str(model_root / "model" / "sdg_classifier_retrained.joblib")
+    args.policy_emb = args.policy_emb or str(embed_root / "policy.npy")
+    args.policy_ids = args.policy_ids or str(embed_root / "metadata" / "policy_ids.json")
+    args.policy_corpus = args.policy_corpus or str(seg_root / "policy.jsonl")
+    args.research_centroids = args.research_centroids or str(scored_root / "research_centroids.npy")
+    args.policy_scores_out = args.policy_scores_out or str(scored_root / "policy_scores.npy")
+    args.policy_vs_research_out = args.policy_vs_research_out or str(scored_root / "policy_scores_vs_research.npy")
+    args.policy_score_ids_out = args.policy_score_ids_out or str(scored_root / "metadata" / "policy_scores_ids.json")
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
