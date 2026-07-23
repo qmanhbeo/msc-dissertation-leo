@@ -1,9 +1,9 @@
 """
 Shared per-batch checkpointing helpers for non-sharded corpus embedders.
 
-Both `0_embed_reference_corpora.py` and `0_embed_policy_corpus.py` use these
-to write embeddings incrementally — each batch lands on disk immediately and
-killed runs resume from the last completed batch rather than re-encoding.
+`0_embed_reference_and_policy_corpora.py` uses these to write embeddings
+incrementally — each batch lands on disk immediately and killed runs resume
+from the last completed batch rather than re-encoding.
 
 The research-paper shard embedder (`0_embed_paper_shards.py`) uses a different
 per-shard checkpointing model and is NOT unified onto this module yet.
@@ -71,7 +71,11 @@ def concatenate_batches(
         raise RuntimeError(f"Shape mismatch after concatenation: {all_embs.shape} != ({n}, {dim})")
 
     tmp_emb = emb_path.with_suffix(".npy.tmp")
-    np.save(tmp_emb, all_embs)
+    with tmp_emb.open("wb") as f:
+        np.save(f, all_embs)
+        f.flush()
+    if not tmp_emb.exists():
+        raise RuntimeError(f"Failed to write {tmp_emb}")
     tmp_emb.replace(emb_path)
 
     shutil.rmtree(tmp_dir)

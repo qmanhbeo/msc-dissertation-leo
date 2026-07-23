@@ -284,7 +284,11 @@ def main() -> None:
     log.info("  %d / %d SDGs have non-zero policy centroids", n_available, N_SDG)
 
     ensure_dir(policy_centroids_out.parent)
-    np.save(policy_centroids_out, policy_centroids)
+    with policy_centroids_out.open("wb") as f:
+        np.save(f, policy_centroids)
+        f.flush()
+    if not policy_centroids_out.exists():
+        raise RuntimeError(f"Failed to write {policy_centroids_out}")
     log.info("Saved: %s", policy_centroids_out)
 
     ensure_dir(policy_centroid_meta_out.parent)

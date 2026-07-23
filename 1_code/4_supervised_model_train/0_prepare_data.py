@@ -243,12 +243,25 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "indices").mkdir(parents=True, exist_ok=True)
 
-    np.save(output_dir / "embeddings.npy", embeddings)
-    np.save(output_dir / "labels.npy", labels)
-    np.save(output_dir / "sources.npy", sources)
-    np.save(output_dir / "source_docs.npy", source_docs)
-    np.save(output_dir / "indices" / "train.npy", train_pool_idx)
-    np.save(output_dir / "indices" / "test.npy", test_idx)
+    for _name, _arr in [
+        ("embeddings.npy", embeddings),
+        ("labels.npy", labels),
+        ("sources.npy", sources),
+        ("source_docs.npy", source_docs),
+    ]:
+        _p = output_dir / _name
+        with _p.open("wb") as _f:
+            np.save(_f, _arr)
+            _f.flush()
+    for _name, _arr in [
+        ("train.npy", train_pool_idx),
+        ("test.npy", test_idx),
+    ]:
+        _p = output_dir / "indices" / _name
+        _p.parent.mkdir(parents=True, exist_ok=True)
+        with _p.open("wb") as _f:
+            np.save(_f, _arr)
+            _f.flush()
 
     lines = ["=" * 70]
     lines.append("SPLIT REPORT — Per-source stratified 85/15 (document-grouped)")

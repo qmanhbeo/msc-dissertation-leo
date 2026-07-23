@@ -439,7 +439,9 @@ def build_draw_accumulators(
                         rng.choice(total_rows, size=sample_size, replace=False).astype(np.int32)
                     )
                 indices_path.parent.mkdir(parents=True, exist_ok=True)
-                np.save(indices_path, global_indices)
+                with indices_path.open("wb") as _f:
+                    np.save(_f, global_indices)
+                    _f.flush()
 
             draw = DrawAccumulator(
                 tier_label=tier_label,

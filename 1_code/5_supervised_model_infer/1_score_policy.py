@@ -201,11 +201,15 @@ def main() -> None:
     policy_vs_research = (policy_emb @ research_centroids.T).astype(np.float32)
 
     policy_scores_out.parent.mkdir(parents=True, exist_ok=True)
-    np.save(policy_scores_out, policy_scores)
+    with policy_scores_out.open("wb") as f:
+        np.save(f, policy_scores)
+        f.flush()
     log.info("Saved: %s  shape=%s", policy_scores_out, policy_scores.shape)
 
     policy_vs_research_out.parent.mkdir(parents=True, exist_ok=True)
-    np.save(policy_vs_research_out, policy_vs_research)
+    with policy_vs_research_out.open("wb") as f:
+        np.save(f, policy_vs_research)
+        f.flush()
     log.info("Saved: %s  shape=%s", policy_vs_research_out, policy_vs_research.shape)
 
     write_json(policy_score_ids_out, policy_score_ids)
