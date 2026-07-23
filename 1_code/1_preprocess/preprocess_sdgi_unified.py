@@ -155,7 +155,7 @@ def main() -> None:
             })
             doc_counts[source_doc] += 1
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
         for seg in segments_out:
             f.write(json.dumps(seg) + "\n")
