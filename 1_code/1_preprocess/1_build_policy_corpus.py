@@ -1,20 +1,26 @@
 """
-Merge all policy segment sources into a single model-specific policy corpus.
+Cross-dedup policy source segments before embedding.
 
-Reads model-agnostic policy sources (scrape, manual, UNGDC) from the preprocessed
-directory and the model-specific SDGI from the segmented directory, producing one
-policy corpus per embed model.
+Reads the four policy-relevant segmented files (sdgi, policy_scrape,
+policy_manual, ungdc_sdg), identifies exact-text duplicates across
+sources, and writes deduped versions to the segmented dir.
 
-All paths resolved via model_utils helpers (preprocessed_dir, segmented_dir_for_model).
+SDGi is kept first in the dedup order so it retains all rows (it is
+shared with the training set). Only the three policy-specific sources
+are rewritten — SDGi's file on disk is unchanged.
 
-Run from project root:
-    python 1_code/1_preprocess/1_build_policy_corpus.py --model all-mpnet-base-v2
+Output (per model in 2_segmented/{model}/):
+    policy_scrape.jsonl    (deduped)
+    policy_manual.jsonl    (deduped)
+    ungdc_sdg.jsonl        (deduped)
+    policy.jsonl           (merged in 1_merge_policy_corpus.py order, for scoring)
+
+The caller then embeds each source file separately via
+0_embed_reference_and_policy_corpora.py --corpus <name>.
 """
 
 import argparse
-import csv
 import json
-import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -30,107 +36,123 @@ from model_utils import preprocessed_dir, segmented_dir_for_model
 
 MIN_WORD_COUNT = 20
 
+# Must match 1_merge_policy_corpus.py POLICY_SOURCES
+MERGED_ORDER = ["policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"]
+
 
 def load_jsonl(path: Path) -> list[dict]:
     if not path.exists():
-        print(f"  WARNING: {path} not found - skipping")
+        print(f"  WARNING: {path} not found — skipping")
         return []
-    segments = []
-    with path.open(encoding="utf-8") as handle:
-        for line in handle:
+    records = []
+    with path.open(encoding="utf-8") as f:
+        for line in f:
             line = line.strip()
             if not line:
                 continue
             try:
-                segments.append(json.loads(line))
+                records.append(json.loads(line))
             except json.JSONDecodeError:
                 pass
-    return segments
+    return records
 
 
-def csv_safe(row: dict) -> dict:
-    safe = dict(row)
-    if isinstance(safe.get("text"), str):
-        safe["text"] = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", " ", safe["text"])
-    return safe
+def write_jsonl(records: list[dict], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r) + "\n")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build model-specific policy corpus.")
-    parser.add_argument("--model", default="all-mpnet-base-v2", help="Embed model name (default: %(default)s)")
+    parser = argparse.ArgumentParser(
+        description="Cross-dedup policy sources pre-embedding."
+    )
+    parser.add_argument(
+        "--model", default="all-mpnet-base-v2",
+        help="Embed model name (default: %(default)s)",
+    )
     args = parser.parse_args()
+
+    # Source order — sdgi first so it keeps all rows
     SOURCES = [
-        preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_segments.jsonl",
-        preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.jsonl",
-        segmented_dir_for_model(args.model) / "sdgi.jsonl",
-        preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_segments.jsonl",
+        ("sdgi", segmented_dir_for_model(args.model) / "sdgi.jsonl", True),
+        ("policy_scrape", preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_segments.jsonl", False),
+        ("policy_manual", preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.jsonl", False),
+        ("ungdc_sdg", preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_segments.jsonl", False),
     ]
 
     output_dir = segmented_dir_for_model(args.model)
-    OUTPUT_JSONL = output_dir / "policy.jsonl"
-    OUTPUT_CSV = output_dir / "policy.csv"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    all_segments: list[dict] = []
-    source_counts: Counter = Counter()
+    # Load and filter short segments
+    source_segments: dict[str, list[dict]] = {}
+    source_stats: dict[str, tuple[int, int]] = {}
 
-    for source_path in SOURCES:
-        raw = load_jsonl(source_path)
-        added = 0
+    for name, path, _ in SOURCES:
+        raw = load_jsonl(path)
+        kept = []
         skipped_short = 0
-
-        for segment in raw:
-            text = segment.get("text", "").strip()
+        for s in raw:
+            text = s.get("text", "").strip()
             if not text:
                 continue
-            word_count = segment.get("word_count", len(text.split()))
-            if word_count < MIN_WORD_COUNT:
+            wc = s.get("word_count", len(text.split()))
+            if wc < MIN_WORD_COUNT:
                 skipped_short += 1
                 continue
-            all_segments.append(segment)
-            added += 1
+            kept.append(s)
+        source_segments[name] = kept
+        source_stats[name] = (len(raw), len(kept), skipped_short)
+        print(f"  {name}: {len(raw)} raw → {len(kept)} kept ({skipped_short} too short)")
 
-        label = source_path.name
-        source_counts[label] = added
-        print(f"  {label}: {len(raw)} raw -> {added} kept ({skipped_short} too short)")
-
-    print(f"\nTotal segments (pre-dedup): {len(all_segments)}")
-
+    # Cross-source exact-text dedup
+    # First source (sdgi) seeds the seen_texts set — no rows removed.
+    # Subsequent sources lose text already seen in any earlier source.
     seen_texts: set[str] = set()
-    dedup_kept: list[dict] = []
-    for segment in all_segments:
-        text_key = segment.get("text", "").strip()
-        if text_key in seen_texts:
-            continue
-        seen_texts.add(text_key)
-        dedup_kept.append(segment)
-    n_dedup = len(all_segments) - len(dedup_kept)
-    all_segments = dedup_kept
-    print(f"Deduplication: removed {n_dedup} exact-duplicate segments ({100 * n_dedup / (len(all_segments) + n_dedup):.1f}%)")
+    deduped_segments: dict[str, list[dict]] = {}
 
-    for index, segment in enumerate(all_segments):
-        segment["segment_id_merged"] = f"merged_{index:06d}"
+    for i, (name, _, _) in enumerate(SOURCES):
+        before = len(source_segments[name])
+        kept = []
+        for s in source_segments[name]:
+            text_key = s.get("text", "").strip()
+            if text_key in seen_texts and i > 0:
+                continue
+            seen_texts.add(text_key)
+            kept.append(s)
+        removed = before - len(kept)
+        deduped_segments[name] = kept
+        if removed:
+            print(f"  {name}: {removed} cross-source duplicates removed ({before} → {len(kept)})")
 
-    word_counts = sorted(segment.get("word_count", len(segment["text"].split())) for segment in all_segments)
-    if word_counts:
-        print(f"Word counts - min: {word_counts[0]}, median: {word_counts[len(word_counts)//2]}, max: {word_counts[-1]}")
+    total_before = sum(len(source_segments[n]) for n, _, _ in SOURCES)
+    total_after = sum(len(deduped_segments[n]) for n, _, _ in SOURCES)
+    total_removed = total_before - total_after
+    print(f"\nTotal: {total_before} → {total_after} ({total_removed} removed, {100*total_removed/total_before:.1f}%)")
 
-    with OUTPUT_JSONL.open("w", encoding="utf-8") as handle:
-        for segment in all_segments:
-            handle.write(json.dumps(segment) + "\n")
-    print(f"✓ JSONL -> {OUTPUT_JSONL}")
+    # Write deduped files (only the three policy-specific sources)
+    for name, _, rewrite in SOURCES:
+        if not rewrite:
+            out_path = output_dir / f"{name}.jsonl"
+            write_jsonl(deduped_segments[name], out_path)
+            print(f"  → wrote {out_path} ({len(deduped_segments[name])} rows)")
 
-    csv_fields = ["segment_id_merged", "segment_id", "source_doc", "segment_index", "word_count", "text"]
-    with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=csv_fields, extrasaction="ignore", quoting=csv.QUOTE_ALL)
-        writer.writeheader()
-        writer.writerows(csv_safe(segment) for segment in all_segments)
-    print(f"✓ CSV  -> {OUTPUT_CSV}")
+    # Write merged policy.jsonl (order matches 1_merge_policy_corpus.py)
+    merged_records = []
+    for name in MERGED_ORDER:
+        merged_records.extend(deduped_segments[name])
+    merged_path = output_dir / "policy.jsonl"
+    write_jsonl(merged_records, merged_path)
+    print(f"  → wrote merged {merged_path} ({len(merged_records)} rows)")
 
-    print("\nSource breakdown:")
-    for source, count in source_counts.items():
-        pct = count / max(len(all_segments), 1) * 100
-        print(f"  {source}: {count} segments ({pct:.1f}%)")
+    print("\nSource breakdown (post-dedup, policy-only):")
+    total_pct = sum(len(deduped_segments[n]) for n, _, _ in SOURCES if n != "sdgi")
+    for name, _, _ in SOURCES:
+        if name != "sdgi":
+            count = len(deduped_segments[name])
+            pct = 100.0 * count / max(total_pct, 1)
+            print(f"  {name}: {count} ({pct:.1f}%)")
 
 
 if __name__ == "__main__":
