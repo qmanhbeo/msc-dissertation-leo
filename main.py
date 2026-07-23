@@ -42,6 +42,10 @@ WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS = [
     segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy.jsonl",
 ]
 
+EMBED_BATCH_SIZE = "64"
+ALL_EMBED_CORPORA = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
+                     "policy_scrape", "policy_manual", "ungdc_sdg"]
+
 
 def base_warm_replay_requirements(model: str = "") -> list[Path]:
     embed_root = embed_dir_for_model(model)
@@ -533,16 +537,15 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
          "--output-dir", str(research_segmented_dir_for_model(model)),
          "--text-field", "combined_text", "--id-field", "openalex_id",
          "--prefix", "paper", "--model", model]),
-        # — EMBED (encode segmented corpora into 3_embedded/{model}/) —
-        ("embed policy corpus", [sys.executable, "1_code/3_embed/0_embed_policy_corpus.py"] + model_args),
-        (
-            "embed reference corpora",
-            [
-                sys.executable,
-                "1_code/3_embed/0_embed_reference_corpora.py",
-                "--corpora", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
-            ] + model_args,
-        ),
+        # — EMBED (encode each source separately, then merge policy) —
+    ] + [
+        (f"embed {corpus}", [
+            sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
+            "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
+        ] + model_args)
+        for corpus in ALL_EMBED_CORPORA
+    ] + [
+        ("merge policy corpus", [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args),
     ]
     for label, cmd in pre_steps:
         run_step(label, cmd)
@@ -697,11 +700,15 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(label, cmd)
 
     elif stage == "embed":
-        run_step("embed policy corpus", [sys.executable, "1_code/3_embed/0_embed_policy_corpus.py"] + model_args)
+        for corpus in ALL_EMBED_CORPORA:
+            run_step(
+                f"embed {corpus}",
+                [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
+                 "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE] + model_args,
+            )
         run_step(
-            "embed reference corpora",
-            [sys.executable, "1_code/3_embed/0_embed_reference_corpora.py",
-             "--corpora", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"] + model_args,
+            "merge policy corpus",
+            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args,
         )
         embed_cmd = [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
