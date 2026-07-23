@@ -47,6 +47,7 @@ from sentence_transformers import SentenceTransformer
 
 from model_utils import preprocessed_dir, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model
 from segment_utils import segment_text, verify_truncation_rate
+from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, sha256_file
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -177,8 +178,9 @@ def main() -> None:
 
         total_segments = 0
         all_seg_texts = []
+        manifest_entries: list[dict] = []
 
-        for in_path in input_paths:
+        for shard_idx, in_path in enumerate(input_paths, start=1):
             out_path = output_dir / in_path.name
 
             if out_path.exists():
@@ -193,6 +195,13 @@ def main() -> None:
                 if existing > 0:
                     log.info("Skip %s — already exists (%d segments)", in_path.name, existing)
                     total_segments += existing
+                    manifest_entries.append({
+                        "shard_id": shard_idx,
+                        "name": in_path.stem,
+                        "rows": existing,
+                        "bytes": out_path.stat().st_size,
+                        "sha256": sha256_file(out_path),
+                    })
                     continue
 
             log.info("Processing: %s", in_path)
@@ -208,8 +217,27 @@ def main() -> None:
 
             log.info("  %s -> %s (%d segments)", in_path.name, out_path.name, len(segments))
             total_segments += len(segments)
+            manifest_entries.append({
+                "shard_id": shard_idx,
+                "name": in_path.stem,
+                "rows": len(segments),
+                "bytes": out_path.stat().st_size,
+                "sha256": sha256_file(out_path),
+            })
 
-        log.info("Total segments: %d", total_segments)
+        metadata_dir = output_dir / "metadata"
+        ensure_dir(metadata_dir)
+        manifest = {
+            "stage": "research_segmentation",
+            "schema_version": 1,
+            "created_at_utc": now_iso(),
+            "model": args.model,
+            "shards": manifest_entries,
+            "totals": {"rows": total_segments, "shards": len(manifest_entries)},
+        }
+        atomic_write_json(metadata_dir / "manifest.json", manifest)
+        log.info("Wrote segment manifest: %s", metadata_dir / "manifest.json")
+        log.info("Total segments: %d across %d shards", total_segments, len(manifest_entries))
     else:
         if not args.input or not args.output:
             log.error("Single-file mode requires --input and --output.")
