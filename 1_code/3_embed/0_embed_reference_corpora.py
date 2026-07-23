@@ -21,7 +21,10 @@ Run from project root:
 import argparse
 import json
 import logging
+import shutil
 import sys
+from datetime import datetime
+
 import numpy as np
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
@@ -131,6 +134,46 @@ def _resolve_input_path(corpus: dict, model_name: str) -> Path:
     return preprocessed_dir() / corpus["preprocessed_subdir"] / corpus["preprocessed_filename"]
 
 
+def _write_manifest(path: Path, corpus_name: str, total_rows: int, dim: int,
+                    completed_batches: list[int], rows_completed: int, status: str) -> None:
+    manifest = {
+        "corpus": corpus_name,
+        "total_rows": total_rows,
+        "dim": dim,
+        "completed_batches": completed_batches,
+        "rows_completed": rows_completed,
+        "status": status,
+        "last_updated_utc": datetime.utcnow().isoformat(),
+    }
+    path.write_text(json.dumps(manifest, indent=2))
+
+
+def _concatenate_batches(tmp_dir: Path, emb_path: Path, n: int, dim: int,
+                         ids_meta: list[dict], ids_path: Path) -> None:
+    manifest_path = tmp_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest["status"] = "concatenating"
+    manifest_path.write_text(json.dumps(manifest))
+
+    batch_files = sorted(tmp_dir.glob("batch_*.npy"),
+                         key=lambda p: int(p.stem.split("_")[1]))
+    log.info("Concatenating %d batch files \u2192 %s", len(batch_files), emb_path)
+    all_embs = np.concatenate([np.load(f) for f in batch_files], axis=0)
+    if all_embs.shape != (n, dim):
+        raise RuntimeError(f"Shape mismatch after concatenation: {all_embs.shape} != ({n}, {dim})")
+
+    tmp_emb = emb_path.with_suffix(".npy.tmp")
+    np.save(tmp_emb, all_embs)
+    tmp_emb.replace(emb_path)
+
+    shutil.rmtree(tmp_dir)
+
+    with ids_path.open("w") as f:
+        json.dump(ids_meta, f)
+
+    log.info("Saved %s \u2192 shape %s", emb_path, all_embs.shape)
+
+
 def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path, batch_size: int, model_name: str) -> None:
     name = corpus["name"]
     metadata_dir = output_dir / "metadata"
@@ -138,22 +181,17 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
     ids_path = metadata_dir / f"{name}_ids.json"
 
     if emb_path.exists() and not overwrite:
-        log.info("Skipping %s — %s already exists", name, emb_path)
+        log.info("Skipping %s \u2014 %s already exists", name, emb_path)
         return
 
     input_path = _resolve_input_path(corpus, model_name)
     log.info("Embedding corpus: %s (%s)", name, input_path)
     records = load_jsonl(input_path)
     texts = [r[corpus["text_field"]] for r in records]
+    n = len(texts)
 
-    embeddings = model.encode(
-        texts,
-        batch_size=batch_size,
-        show_progress_bar=True,
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-    )
-    embeddings = embeddings.astype(np.float32)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    metadata_dir.mkdir(parents=True, exist_ok=True)
 
     ids_meta = []
     for r in records:
@@ -165,13 +203,69 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
             entry["source_doc"] = r["source_doc"]
         ids_meta.append(entry)
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    metadata_dir.mkdir(parents=True, exist_ok=True)
-    np.save(emb_path, embeddings)
-    with ids_path.open("w") as f:
-        json.dump(ids_meta, f)
+    dim = model.get_embedding_dimension()
+    log.info("Dim=%d  Total texts=%d  Batch size=%d", dim, n, batch_size)
 
-    log.info("Saved %s → shape %s", emb_path, embeddings.shape)
+    # --- Per-batch checkpointing ---
+    tmp_dir = output_dir / f"{name}_batches"
+    manifest_path = tmp_dir / "manifest.json"
+
+    if overwrite and tmp_dir.exists():
+        shutil.rmtree(tmp_dir)
+
+    completed_batches: set[int] = set()
+    rows_completed: int = 0
+
+    if tmp_dir.exists() and manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+        if manifest.get("status") == "concatenating":
+            log.info("Resuming %s \u2014 final concatenation step (all batches done)", name)
+            _concatenate_batches(tmp_dir, emb_path, n, dim, ids_meta, ids_path)
+            return
+        completed_batches = set(manifest.get("completed_batches", []))
+        rows_completed = manifest.get("rows_completed", 0)
+        log.info("Resuming %s from batch %d (had %d batches, %d rows done)",
+                 name, len(completed_batches), len(completed_batches), rows_completed)
+    elif tmp_dir.exists():
+        log.warning("Found %s but no manifest \u2014 starting fresh", tmp_dir)
+        shutil.rmtree(tmp_dir)
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    batch_starts = list(range(0, n, batch_size))
+    n_batches = len(batch_starts)
+
+    for batch_i, start in enumerate(batch_starts):
+        if batch_i in completed_batches:
+            continue
+
+        end = min(start + batch_size, n)
+        batch_texts = texts[start:end]
+
+        batch_emb = model.encode(
+            batch_texts,
+            batch_size=len(batch_texts),
+            show_progress_bar=False,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        ).astype(np.float32)
+
+        batch_path = tmp_dir / f"batch_{batch_i:05d}.npy"
+        tmp_batch = batch_path.with_suffix(".npy.tmp")
+        with tmp_batch.open("wb") as f:
+            np.save(f, batch_emb)
+        tmp_batch.replace(batch_path)
+
+        completed_batches.add(batch_i)
+        rows_completed += len(batch_emb)
+        _write_manifest(manifest_path, name, n, dim, sorted(completed_batches), rows_completed, "in_progress")
+
+        pct = 100.0 * rows_completed / n
+        log.info("  batch %4d/%d (%5d\u2013%5d, %5d docs)  %5.1f%%  \u2192 wrote %s",
+                 batch_i + 1, n_batches, start, end - 1, end - start, pct, batch_path)
+
+    _concatenate_batches(tmp_dir, emb_path, n, dim, ids_meta, ids_path)
 
 
 def main() -> None:
@@ -183,7 +277,7 @@ def main() -> None:
 
     log.info("Loading model: %s", args.model)
     model = SentenceTransformer(args.model, local_files_only=args.local_files_only)
-    log.info("Embedding dimension: %d", model.get_sentence_embedding_dimension())
+    log.info("Embedding dimension: %d", model.get_embedding_dimension())
 
     for corpus in selected_corpora:
         embed_corpus(corpus, model, overwrite=args.overwrite, output_dir=output_dir, batch_size=args.batch_size, model_name=args.model)
