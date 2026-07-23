@@ -1,9 +1,12 @@
 """
-Generate Sentence-BERT embeddings for the active non-sharded corpora.
+Generate Sentence-BERT embeddings for the 5 labeled reference corpora.
+
+These share the same role — they carry SDG labels and feed supervised training.
+The policy corpus is handled separately by `0_embed_policy_corpus.py`.
 
 Inputs (resolved via model_utils helpers):
-   Segmented corpora: segmented_dir_for_model(model) / {corpus}.jsonl
-   Pass-through:       preprocessed_dir() / subdir / {filename}
+   Segmented: segmented_dir_for_model(model) / {corpus}.jsonl
+   Pass-through: preprocessed_dir() / subdir / {filename}
 
 Outputs per corpus:
    <name>.npy       float32 matrix (n_texts, embedding_dim)
@@ -23,10 +26,9 @@ import json
 import logging
 import shutil
 import sys
-from datetime import datetime
+from pathlib import Path
 
 import numpy as np
-from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
@@ -36,16 +38,10 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
+from embed_utils import concatenate_batches, load_jsonl, write_batch_manifest
 from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, preprocessed_dir, segmented_dir_for_model
 
 CORPORA = [
-    {
-        "name": "policy",
-        "text_field": "text",
-        "id_field": "segment_id",
-        "sdg_field": None,
-        "segmented": True,
-    },
     {
         "name": "osdg",
         "text_field": "text",
@@ -92,86 +88,36 @@ log = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Embed the active non-sharded corpora.")
+    parser = argparse.ArgumentParser(description="Embed the 5 labeled reference corpora.")
     parser.add_argument(
         "--corpora",
         nargs="+",
         choices=[corpus["name"] for corpus in CORPORA],
-        help="Optional subset of corpora to embed. Default: all corpora.",
+        help="Optional subset. Default: all 5 corpora.",
     )
     parser.add_argument(
-        "--overwrite",
-        action="store_true",
+        "--overwrite", action="store_true",
         help="Overwrite existing embedding and metadata files for the selected corpora.",
     )
     parser.add_argument(
-        "--local-files-only",
-        action="store_true",
-        help="Load the sentence-transformer model from the local Hugging Face cache only.",
+        "--local-files-only", action="store_true",
+        help="Load the model from the local Hugging Face cache only.",
     )
     parser.add_argument(
-        "--model",
-        default=DEFAULT_EMBED_MODEL,
+        "--model", default=DEFAULT_EMBED_MODEL,
         help="Sentence-transformer model name (default: %(default)s).",
     )
     parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=128,
-        help="Batch size for embedding (default: %(default)s). Reduce to 32–64 for MPNet on 4GB GPUs.",
+        "--batch-size", type=int, default=128,
+        help="Batch size (default: %(default)s). Reduce to 32–64 for MPNet on 4GB GPUs.",
     )
     return parser.parse_args()
-
-
-def load_jsonl(path: Path) -> list[dict]:
-    with path.open(encoding="utf-8") as f:
-        return [json.loads(line) for line in f if line.strip()]
 
 
 def _resolve_input_path(corpus: dict, model_name: str) -> Path:
     if corpus.get("segmented"):
         return segmented_dir_for_model(model_name) / f"{corpus['name']}.jsonl"
     return preprocessed_dir() / corpus["preprocessed_subdir"] / corpus["preprocessed_filename"]
-
-
-def _write_manifest(path: Path, corpus_name: str, total_rows: int, dim: int,
-                    completed_batches: list[int], rows_completed: int, status: str) -> None:
-    manifest = {
-        "corpus": corpus_name,
-        "total_rows": total_rows,
-        "dim": dim,
-        "completed_batches": completed_batches,
-        "rows_completed": rows_completed,
-        "status": status,
-        "last_updated_utc": datetime.utcnow().isoformat(),
-    }
-    path.write_text(json.dumps(manifest, indent=2))
-
-
-def _concatenate_batches(tmp_dir: Path, emb_path: Path, n: int, dim: int,
-                         ids_meta: list[dict], ids_path: Path) -> None:
-    manifest_path = tmp_dir / "manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-    manifest["status"] = "concatenating"
-    manifest_path.write_text(json.dumps(manifest))
-
-    batch_files = sorted(tmp_dir.glob("batch_*.npy"),
-                         key=lambda p: int(p.stem.split("_")[1]))
-    log.info("Concatenating %d batch files \u2192 %s", len(batch_files), emb_path)
-    all_embs = np.concatenate([np.load(f) for f in batch_files], axis=0)
-    if all_embs.shape != (n, dim):
-        raise RuntimeError(f"Shape mismatch after concatenation: {all_embs.shape} != ({n}, {dim})")
-
-    tmp_emb = emb_path.with_suffix(".npy.tmp")
-    np.save(tmp_emb, all_embs)
-    tmp_emb.replace(emb_path)
-
-    shutil.rmtree(tmp_dir)
-
-    with ids_path.open("w") as f:
-        json.dump(ids_meta, f)
-
-    log.info("Saved %s \u2192 shape %s", emb_path, all_embs.shape)
 
 
 def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, output_dir: Path, batch_size: int, model_name: str) -> None:
@@ -220,7 +166,7 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
         manifest = json.loads(manifest_path.read_text())
         if manifest.get("status") == "concatenating":
             log.info("Resuming %s \u2014 final concatenation step (all batches done)", name)
-            _concatenate_batches(tmp_dir, emb_path, n, dim, ids_meta, ids_path)
+            concatenate_batches(tmp_dir, emb_path, n, dim, ids_meta=ids_meta, ids_path=ids_path)
             return
         completed_batches = set(manifest.get("completed_batches", []))
         rows_completed = manifest.get("rows_completed", 0)
@@ -259,13 +205,21 @@ def embed_corpus(corpus: dict, model: SentenceTransformer, *, overwrite: bool, o
 
         completed_batches.add(batch_i)
         rows_completed += len(batch_emb)
-        _write_manifest(manifest_path, name, n, dim, sorted(completed_batches), rows_completed, "in_progress")
+        write_batch_manifest(
+            manifest_path,
+            corpus_name=name,
+            total_rows=n,
+            dim=dim,
+            completed_batches=sorted(completed_batches),
+            rows_completed=rows_completed,
+            status="in_progress",
+        )
 
         pct = 100.0 * rows_completed / n
         log.info("  batch %4d/%d (%5d\u2013%5d, %5d docs)  %5.1f%%  \u2192 wrote %s",
                  batch_i + 1, n_batches, start, end - 1, end - start, pct, batch_path)
 
-    _concatenate_batches(tmp_dir, emb_path, n, dim, ids_meta, ids_path)
+    concatenate_batches(tmp_dir, emb_path, n, dim, ids_meta=ids_meta, ids_path=ids_path)
 
 
 def main() -> None:
@@ -287,7 +241,7 @@ def main() -> None:
         path = output_dir / f"{corpus['name']}.npy"
         if path.exists():
             shape = np.load(path).shape
-            print(f"  {corpus['name']:12s} {str(shape):15s} → {path}")
+            print(f"  {corpus['name']:12s} {str(shape):15s} \u2192 {path}")
 
 
 if __name__ == "__main__":

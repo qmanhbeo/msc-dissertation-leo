@@ -533,13 +533,14 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
          "--output-dir", str(research_segmented_dir_for_model(model)),
          "--text-field", "combined_text", "--id-field", "openalex_id",
          "--prefix", "paper", "--model", model]),
-        # — EMBED REFERENCE (encode segmented corpora into 3_embedded/{model}/) —
+        # — EMBED (encode segmented corpora into 3_embedded/{model}/) —
+        ("embed policy corpus", [sys.executable, "1_code/3_embed/0_embed_policy_corpus.py"] + model_args),
         (
             "embed reference corpora",
             [
                 sys.executable,
                 "1_code/3_embed/0_embed_reference_corpora.py",
-                "--corpora", "policy", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
+                "--corpora", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
             ] + model_args,
         ),
     ]
@@ -696,10 +697,11 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(label, cmd)
 
     elif stage == "embed":
+        run_step("embed policy corpus", [sys.executable, "1_code/3_embed/0_embed_policy_corpus.py"] + model_args)
         run_step(
             "embed reference corpora",
             [sys.executable, "1_code/3_embed/0_embed_reference_corpora.py",
-             "--corpora", "policy", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"] + model_args,
+             "--corpora", "osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"] + model_args,
         )
         embed_cmd = [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
