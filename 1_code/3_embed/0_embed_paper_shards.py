@@ -22,6 +22,7 @@ import json
 import logging
 import shutil
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -167,6 +168,7 @@ def main() -> None:
             log.info("Skip shard %s (already embedded)", shard_name)
             continue
 
+        t_start = time.time()
         log.info("Embedding shard %s", shard_name)
         texts = load_texts(in_data)
         n = len(texts)
@@ -227,6 +229,10 @@ def main() -> None:
                 status="in_progress",
             )
 
+            pct = 100.0 * rows_completed / n
+            log.info("  batch %4d/%d (%5d–%5d, %5d docs)  %5.1f%%  → wrote %s",
+                     batch_i + 1, n_batches, start, end - 1, end - start, pct, batch_path.name)
+
         # All batches done — concatenate
         write_batch_manifest(
             batch_manifest_path,
@@ -263,6 +269,10 @@ def main() -> None:
             "sha256": sha256_file(out_emb),
             "ids_sha256": sha256_file(out_ids),
         }
+
+        elapsed = time.time() - t_start
+        texts_per_s = n / elapsed if elapsed > 0 else 0.0
+        log.info("Shard %s done: %d rows in %.1fs (%.1f texts/s)", shard_name, n, elapsed, texts_per_s)
 
         out_manifest["shards"] = [s for s in out_manifest["shards"] if int(s["shard_id"]) != shard_id]
         out_manifest["shards"].append(out_record)
