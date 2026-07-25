@@ -37,7 +37,7 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import model_results_dir_for_model
+from model_utils import model_results_dir_for_model, append_grid_log
 
 MODEL_TAG = "lr"
 
@@ -129,10 +129,23 @@ def main() -> None:
         log.info("  C=%s l1_ratio=%s cw=%s  →  %.4f ± %.4f",
                  params["C"], params["l1_ratio"], params["class_weight"], mean_f1, std_f1)
 
+        # ── Per-config: durable log + incremental best-model save ──
+        output_dir.mkdir(parents=True, exist_ok=True)
+        grid_log_path = output_dir / "grid_search_log.json"
+        append_grid_log(
+            grid_log_path, MODEL_TAG, params,
+            {"mean_f1": mean_f1, "std_f1": std_f1, "per_fold": fold_scores},
+            n_train=len(X), input_dim=X.shape[1],
+        )
+
+        import joblib
         if mean_f1 > best_score:
             best_score = mean_f1
             best_params = params
             best_clf = clf
+            model_path = output_dir / f"{MODEL_TAG}_classifier.joblib"
+            joblib.dump(best_clf, model_path)
+            log.info("  New best → %s", model_path)
 
     elapsed = time.perf_counter() - t0
     best_std = next(s["std_f1"] for s in all_scores if s["params"] == best_params)
@@ -150,80 +163,10 @@ def main() -> None:
         "all_cv_results": all_scores,
     }
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    import joblib
-    model_path = output_dir / f"{MODEL_TAG}_classifier.joblib"
     results_path = output_dir / f"{MODEL_TAG}_cv_results.json"
-
-    joblib.dump(best_clf, model_path)
     with results_path.open("w") as f:
         json.dump(results, f, indent=2, default=str)
-
-    log.info("Saved model → %s", model_path)
     log.info("Saved results → %s", results_path)
-
-    # --- Durable grid search log (append-only, dedup-aware) ---
-    grid_log_path = output_dir / "grid_search_log.json"
-    if grid_log_path.exists():
-        with grid_log_path.open() as f:
-            grid_log = json.load(f)
-    else:
-        grid_log = {"log": []}
-
-    def _cfg_key(cfg: dict) -> tuple:
-        return tuple(sorted(cfg.items()))
-
-    def _entry_key(e: dict) -> tuple:
-        return (e.get("model"), _cfg_key(e["config"]))
-
-    now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    for s in all_scores:
-        cfg = s["params"]
-        key = (MODEL_TAG, _cfg_key(cfg))
-        existing = [e for e in grid_log["log"] if _entry_key(e) == key]
-        if existing:
-            for entry in existing:
-                em = entry["cv_metrics"]
-                if em["mean_f1"] == s["mean_f1"] and em["std_f1"] == s["std_f1"]:
-                    log.info("Config already logged with identical metrics — skipping: %s", cfg)
-                    break
-            else:
-                log.warning(
-                    "Config %s already logged with different metrics — appending new entry",
-                    cfg,
-                )
-                grid_log["log"].append({
-                    "model": MODEL_TAG,
-                    "config": cfg,
-                    "cv_metrics": {
-                        "mean_f1": s["mean_f1"],
-                        "std_f1": s["std_f1"],
-                        "per_fold": s["per_fold"],
-                    },
-                    "timestamp_utc": now_utc,
-                    "n_train": len(X),
-                    "input_dim": X.shape[1],
-                })
-        else:
-            grid_log["log"].append({
-                "model": MODEL_TAG,
-                "config": cfg,
-                "cv_metrics": {
-                    "mean_f1": s["mean_f1"],
-                    "std_f1": s["std_f1"],
-                    "per_fold": s["per_fold"],
-                },
-                "timestamp_utc": now_utc,
-                "n_train": len(X),
-                "input_dim": X.shape[1],
-            })
-
-    tmp = grid_log_path.with_suffix(".json.tmp")
-    with tmp.open("w") as f:
-        json.dump(grid_log, f, indent=2, default=str)
-    tmp.replace(grid_log_path)
-    log.info("Grid search log → %s  (%d entries)", grid_log_path, len(grid_log["log"]))
 
     sorted_scores = sorted(all_scores, key=lambda x: x["mean_f1"], reverse=True)
     lines = ["", "=" * 70, "  LR Results", "=" * 70]

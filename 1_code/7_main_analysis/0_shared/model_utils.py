@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 DEFAULT_EMBED_MODEL = "all-mpnet-base-v2"
@@ -70,3 +71,65 @@ def embed_research_dir_for_model(model: str) -> Path:
 
 def scored_research_dir_for_model(model: str) -> Path:
     return scored_dir_for_model(model) / "paper_scores_shards"
+
+
+# ── Grid-search log helpers ──────────────────────────────────────────────
+
+def _cfg_key(cfg: dict) -> tuple:
+    return tuple(sorted(cfg.items()))
+
+
+def _entry_key(e: dict) -> tuple:
+    return (e.get("model"), _cfg_key(e["config"]))
+
+
+def append_grid_log(
+    grid_log_path: Path,
+    model_tag: str,
+    config: dict,
+    cv_metrics: dict,
+    n_train: int,
+    input_dim: int,
+) -> None:
+    """Append one config entry to the durable grid-search log (dedup-aware).
+
+    If a matching (model_tag, config) entry already exists with identical
+    metrics it is silently skipped.  If metrics differ a warning is logged
+    and the new entry is appended anyway.
+    """
+    import datetime
+    import logging
+
+    log = logging.getLogger(__name__)
+
+    if grid_log_path.exists():
+        with grid_log_path.open() as f:
+            grid_log = json.load(f)
+    else:
+        grid_log = {"log": []}
+
+    key = (model_tag, _cfg_key(config))
+    existing = [e for e in grid_log["log"] if _entry_key(e) == key]
+
+    if existing:
+        for entry in existing:
+            em = entry["cv_metrics"]
+            if em.get("mean_f1") == cv_metrics.get("mean_f1") and em.get("std_f1") == cv_metrics.get("std_f1"):
+                log.info("Config already logged with identical metrics — skipping: %s", config)
+                return
+        log.warning("Config %s already logged with different metrics — appending", config)
+
+    entry = {
+        "model": model_tag,
+        "config": config,
+        "cv_metrics": cv_metrics,
+        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "n_train": n_train,
+        "input_dim": input_dim,
+    }
+    grid_log["log"].append(entry)
+
+    tmp = grid_log_path.with_suffix(".json.tmp")
+    with tmp.open("w") as f:
+        json.dump(grid_log, f, indent=2, default=str)
+    tmp.replace(grid_log_path)
