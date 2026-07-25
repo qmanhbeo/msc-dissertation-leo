@@ -13,14 +13,15 @@ Outputs:
 
 Segmentation strategy:
   1. Clean OCR artifacts and page-break markers
-  2. Split into paragraphs (blank-line delimited)
-  3. Merge short paragraphs into windows of TARGET_WORDS +/- tolerance
-  4. Each segment has a source label, sequential ID, and word count
+  2. Segment full document text using segment_text() (NLTK sent_tokenize +
+     SentenceTransformer tokenizer budget, max_seq_length - 10)
 
 Run from project root:
-    python 1_code/1_preprocess/policy/0_preprocess_policy.py
+    python 1_code/1_preprocess/0_preprocess_policy.py
+    python 1_code/1_preprocess/0_preprocess_policy.py --model all-MiniLM-L6-v2
 """
 
+import argparse
 import csv
 import json
 import logging
@@ -33,9 +34,16 @@ import sys
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
+SEGMENT_DIR = CODE_ROOT / "2_segment"
+if str(SEGMENT_DIR) not in sys.path:
+    sys.path.insert(0, str(SEGMENT_DIR))
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
+
+from sentence_transformers import SentenceTransformer
+
+from segment_utils import segment_text
 from model_utils import raw_dir, preprocessed_dir
 
 
@@ -53,9 +61,6 @@ SOURCE_CONFIGS = [
         "output_csv": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.csv",
     },
 ]
-
-TARGET_WORDS = 150
-MAX_WORDS = 300
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -106,64 +111,14 @@ def clean_document(raw: str) -> str:
     return text.strip()
 
 
-def split_paragraphs(text: str) -> list[str]:
-    paras = [paragraph.strip() for paragraph in re.split(r"\n\s*\n", text)]
-    return [paragraph for paragraph in paras if len(paragraph.split()) >= 5]
-
-
-def split_long_paragraph(text: str, max_words: int) -> list[str]:
-    sentences = re.split(r"(?<=[.!?])\s+", text)
-    segments: list[str] = []
-    current: list[str] = []
-    count = 0
-    for sentence in sentences:
-        word_count = len(sentence.split())
-        if count + word_count > max_words and current:
-            segments.append(" ".join(current))
-            current = [sentence]
-            count = word_count
-        else:
-            current.append(sentence)
-            count += word_count
-    if current:
-        segments.append(" ".join(current))
-    return segments
-
-
-def merge_paragraphs(paragraphs: list[str], target_words: int, max_words: int) -> list[str]:
-    expanded: list[str] = []
-    for paragraph in paragraphs:
-        if len(paragraph.split()) > max_words:
-            expanded.extend(split_long_paragraph(paragraph, max_words))
-        else:
-            expanded.append(paragraph)
-
-    segments: list[str] = []
-    current_parts: list[str] = []
-    current_count = 0
-    for paragraph in expanded:
-        word_count = len(paragraph.split())
-        if current_count + word_count > target_words and current_parts:
-            segments.append(" ".join(current_parts))
-            current_parts = [paragraph]
-            current_count = word_count
-        else:
-            current_parts.append(paragraph)
-            current_count += word_count
-    if current_parts:
-        segments.append(" ".join(current_parts))
-    return segments
-
-
-def build_segments_for_docs(docs: dict[str, Path]) -> list[dict]:
+def build_segments_for_docs(docs: dict[str, Path], model: SentenceTransformer) -> list[dict]:
     all_segments: list[dict] = []
     for doc_name, filepath in docs.items():
         log.info("Processing %s (%s)", doc_name, filepath)
         raw = filepath.read_text(encoding="utf-8", errors="replace")
         cleaned = clean_document(raw)
-        paragraphs = split_paragraphs(cleaned)
-        segments = merge_paragraphs(paragraphs, TARGET_WORDS, MAX_WORDS)
-        log.info("  %s -> %d paragraphs -> %d segments", doc_name, len(paragraphs), len(segments))
+        segments = segment_text(cleaned, model)
+        log.info("  %s -> %d segments", doc_name, len(segments))
 
         for index, text in enumerate(segments):
             all_segments.append(
@@ -208,7 +163,7 @@ def log_quality_summary(source_name: str, segments: list[dict]) -> None:
     )
 
 
-def process_source(config: dict[str, Path | str]) -> None:
+def process_source(config: dict[str, Path | str], model: SentenceTransformer) -> None:
     source_name = str(config["source_name"])
     input_dir = Path(config["input_dir"])
     output_jsonl = Path(config["output_jsonl"])
@@ -216,7 +171,7 @@ def process_source(config: dict[str, Path | str]) -> None:
 
     docs = discover_docs(input_dir)
     log.info("Source %s: %d documents", source_name, len(docs))
-    segments = build_segments_for_docs(docs)
+    segments = build_segments_for_docs(docs, model)
     log_quality_summary(source_name, segments)
     write_segments(output_jsonl, output_csv, segments)
 
@@ -227,8 +182,21 @@ def process_source(config: dict[str, Path | str]) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Preprocess policy documents using token-count-aware segmentation."
+    )
+    parser.add_argument(
+        "--model", default="all-mpnet-base-v2",
+        help="Sentence-transformer model for tokenizer (default: %(default)s).",
+    )
+    args = parser.parse_args()
+
+    log.info("Loading model: %s", args.model)
+    model = SentenceTransformer(args.model)
+    log.info("Max sequence length: %d", model.max_seq_length)
+
     for config in SOURCE_CONFIGS:
-        process_source(config)
+        process_source(config, model)
 
 
 if __name__ == "__main__":

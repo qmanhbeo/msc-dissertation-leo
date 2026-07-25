@@ -10,16 +10,24 @@ Strategy:
   1. Read all speeches from sessions 70–80 (2015–2024)
   2. Split each speech into paragraphs
   3. Keep paragraphs that contain SDG-relevant keywords
-  4. Merge adjacent kept paragraphs into ~150-word segments
+  4. Segment the concatenated SDG-relevant paragraphs using segment_text()
+     (NLTK sent_tokenize + SentenceTransformer tokenizer budget,
+     max_seq_length - 10)
   5. Output in the standard policy_segments format
 
 These are official statements by heads of state/government at the UN General
 Assembly — authentic policy discourse on international goals and commitments.
 
+Preserves paragraph-level SDG keyword filtering before segmentation.
+Only the post-filter merge/segmentation step is replaced (word-count merge
+→ token-count-aware segment_text).
+
 Run from project root:
-    python 1_code/1_preprocess/policy/0_filter_ungdc_sdg.py
+    python 1_code/1_preprocess/0_filter_ungdc_sdg.py
+    python 1_code/1_preprocess/0_filter_ungdc_sdg.py --model all-MiniLM-L6-v2
 """
 
+import argparse
 import json
 import re
 from pathlib import Path
@@ -29,9 +37,16 @@ import sys
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
+SEGMENT_DIR = CODE_ROOT / "2_segment"
+if str(SEGMENT_DIR) not in sys.path:
+    sys.path.insert(0, str(SEGMENT_DIR))
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
+
+from sentence_transformers import SentenceTransformer
+
+from segment_utils import segment_text
 from model_utils import raw_dir, preprocessed_dir
 
 UNGDC_TXT_DIR = raw_dir() / "ungdc" / "TXT"
@@ -42,12 +57,8 @@ OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_segments.jsonl"
 MIN_SESSION = 70
 MAX_SESSION = 80
 
-# Minimum paragraph length to consider (words)
+# Minimum paragraph length to consider (words) — used in split_paragraphs
 MIN_PARA_WORDS = 20
-# Target segment size (words)
-TARGET_SEGMENT_WORDS = 150
-# Hard cap (words)
-MAX_SEGMENT_WORDS = 300
 
 # ---------------------------------------------------------------------------
 # SDG relevance keywords — broad enough to catch policy discourse without
@@ -128,25 +139,6 @@ def split_paragraphs(text: str) -> list[str]:
     return result
 
 
-def merge_segments(paragraphs: list[str], target: int, max_words: int) -> list[str]:
-    """Greedily merge consecutive paragraphs into ~target-word segments."""
-    segments, current, current_wc = [], [], 0
-    for para in paragraphs:
-        wc = len(para.split())
-        if current_wc + wc > max_words and current:
-            segments.append(" ".join(current))
-            current, current_wc = [para], wc
-        else:
-            current.append(para)
-            current_wc += wc
-        if current_wc >= target:
-            segments.append(" ".join(current))
-            current, current_wc = [], 0
-    if current:
-        segments.append(" ".join(current))
-    return segments
-
-
 def parse_session_dir(session_dir: Path) -> tuple[int, int] | None:
     """Extract (session_number, year) from folder name like 'Session 70 - 2015'."""
     m = re.match(r"Session\s+(\d+)\s+-\s+(\d+)", session_dir.name)
@@ -164,6 +156,19 @@ def parse_speech_file(path: Path) -> tuple[str, int, int] | None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Filter UNGDC speeches for SDG-relevant passages and segment with token-count-aware segmentation."
+    )
+    parser.add_argument(
+        "--model", default="all-mpnet-base-v2",
+        help="Sentence-transformer model for tokenizer (default: %(default)s).",
+    )
+    args = parser.parse_args()
+
+    print("Loading model: %s" % args.model)
+    model = SentenceTransformer(args.model)
+    print("Max sequence length: %d" % model.max_seq_length)
+
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     if not UNGDC_TXT_DIR.exists():
@@ -204,25 +209,26 @@ def main() -> None:
                 continue
 
             paragraphs = split_paragraphs(text)
-            # Filter to SDG-relevant paragraphs
+            # Filter to SDG-relevant paragraphs (preserved: keyword filter before segmentation)
             relevant = [p for p in paragraphs if SDG_PATTERNS.search(p)]
             if not relevant:
                 continue
 
             kept_speech_count += 1
-            merged = merge_segments(relevant, TARGET_SEGMENT_WORDS, MAX_SEGMENT_WORDS)
+            speech_text = " ".join(relevant)
+            segmented = segment_text(speech_text, model)
 
             source_doc = f"ungdc_{iso3}_{session_num}_{year}"
-            for i, segment_text in enumerate(merged):
-                if len(segment_text.split()) < MIN_PARA_WORDS:
+            for i, seg_text in enumerate(segmented):
+                if len(seg_text.split()) < MIN_PARA_WORDS:
                     continue
                 all_segments.append(
                     {
                         "segment_id": f"ungdc_{segment_idx:06d}",
                         "source_doc": source_doc,
                         "segment_index": i,
-                        "text": segment_text,
-                        "word_count": len(segment_text.split()),
+                        "text": seg_text,
+                        "word_count": len(seg_text.split()),
                         "institution": f"{iso3} (UNGDC speech)",
                         "year": year,
                         "session": session_num,
