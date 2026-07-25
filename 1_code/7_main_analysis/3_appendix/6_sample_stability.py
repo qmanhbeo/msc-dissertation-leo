@@ -536,7 +536,7 @@ def to_sdg_dict(values: np.ndarray, *, scale: float = 1.0, round_digits: int = 6
 
 def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) -> dict[str, Any]:
     research_centroids, research_counts, research_cohesions = build_research_centroids(draw)
-    coverage_profile = draw.hard_counts.astype(np.float64) / float(draw.sample_size)
+    coverage_profile = draw.hard_counts.astype(np.float64) / float(draw.rows_seen)
 
     semantic_gap_by_sdg: dict[str, float | None] = {}
     semantic_reliable_by_sdg: dict[str, bool] = {}
@@ -568,7 +568,7 @@ def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) ->
         if not unreliable:
             semantic_values_reliable.append(gap)
 
-    mean_paper_top_vs_osdg = draw.top_sum_osdg / float(draw.sample_size)
+    mean_paper_top_vs_osdg = draw.top_sum_osdg / float(draw.rows_seen)
     policy_vs_sample_research = (
         policy_state["policy_embeddings"] @ research_centroids.T
     ).max(axis=1).mean()
