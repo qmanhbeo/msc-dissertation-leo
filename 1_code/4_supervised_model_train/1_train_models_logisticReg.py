@@ -1,9 +1,9 @@
 """
 Train a single-label SDG classifier using Logistic Regression.
 
-Model: LogisticRegression with multinomial (softmax) — proper multiclass
-formulation for single-label. Manual CV loop for per-fold logging.
-Grid: C = [0.01, 0.1, 1.0, 10.0, 100.0].
+Model: LogisticRegression (solver='saga', multinomial auto-detected).
+Grid: C ∈ {1.0, 10.0}, l1_ratio ∈ {0, 1} (0=L2, 1=L1),
+      class_weight ∈ {None, 'balanced'}  (8 configs total).
 
 Inputs:
   2_data/4_supervised_model_results/{model}/embeddings.npy
@@ -74,7 +74,13 @@ def main() -> None:
     # Convert one-hot to integer labels for native multiclass
     y_int = Y.argmax(axis=1)
 
-    param_grid = {"C": [0.01, 0.1, 1.0, 10.0, 100.0]}
+    # l1_ratio: 0 = L2 (ridge), 1 = L1 (lasso). C widened to {1.0, 10.0} because
+    # L1 may respond differently to regularization strength than L2.
+    param_grid = {
+        "C": [1.0, 10.0],
+        "l1_ratio": [0, 1],
+        "class_weight": [None, "balanced"],
+    }
     keys, vals = list(param_grid.keys()), list(param_grid.values())
     cv = GroupKFold(n_splits=5)
 
@@ -86,13 +92,16 @@ def main() -> None:
     for combo in product(*vals):
         params = dict(zip(keys, combo))
         fold_scores = []
+        fold_per_class = []
 
         cv_split = cv.split(X, groups=sd_train) if sd_train is not None else cv.split(X)
         for fold, (tr_i, val_i) in enumerate(cv_split):
             t1 = time.perf_counter()
             clf = LogisticRegression(
                 C=params["C"],
-                solver="lbfgs",
+                l1_ratio=params["l1_ratio"],
+                class_weight=params["class_weight"],
+                solver="saga",
                 max_iter=1000,
                 random_state=42,
             )
@@ -103,13 +112,22 @@ def main() -> None:
             preds[np.arange(len(preds_int)), preds_int] = 1.0
             f1 = f1_score(Y[val_i], preds, average="macro", zero_division=0)
             fold_scores.append(f1)
-            log.info("  Fold %d/5 C=%s: macro-F1=%.4f  [%.1fs]",
-                      fold + 1, params["C"], f1, time.perf_counter() - t1)
+            per_class = f1_score(Y[val_i], preds, average=None, zero_division=0).tolist()
+            fold_per_class.append(per_class)
+            log.info("  Fold %d/5 C=%s l1_ratio=%s cw=%s: macro-F1=%.4f  [%.1fs]",
+                      fold + 1, params["C"], params["l1_ratio"],
+                      params["class_weight"], f1, time.perf_counter() - t1)
 
         mean_f1 = float(np.mean(fold_scores))
         std_f1 = float(np.std(fold_scores))
-        all_scores.append({"params": params, "mean_f1": mean_f1, "std_f1": std_f1, "per_fold": fold_scores})
-        log.info("  C=%s  →  %.4f ± %.4f", params["C"], mean_f1, std_f1)
+        # mean per-class F1 across folds
+        mean_per_class = [float(np.mean([f[c] for f in fold_per_class])) for c in range(17)]
+        all_scores.append({
+            "params": params, "mean_f1": mean_f1, "std_f1": std_f1,
+            "per_fold": fold_scores, "per_class_f1": mean_per_class,
+        })
+        log.info("  C=%s l1_ratio=%s cw=%s  →  %.4f ± %.4f",
+                 params["C"], params["l1_ratio"], params["class_weight"], mean_f1, std_f1)
 
         if mean_f1 > best_score:
             best_score = mean_f1
@@ -118,8 +136,9 @@ def main() -> None:
 
     elapsed = time.perf_counter() - t0
     best_std = next(s["std_f1"] for s in all_scores if s["params"] == best_params)
-    log.info("Best: C=%s  macro-F1=%.4f ± %.4f  [%.1fs]",
-             best_params["C"], best_score, best_std, elapsed)
+    log.info("Best: C=%s l1_ratio=%s cw=%s  macro-F1=%.4f ± %.4f  [%.1fs]",
+             best_params["C"], best_params["l1_ratio"], best_params["class_weight"],
+             best_score, best_std, elapsed)
 
     results = {
         "model": MODEL_TAG,
@@ -206,7 +225,26 @@ def main() -> None:
     tmp.replace(grid_log_path)
     log.info("Grid search log → %s  (%d entries)", grid_log_path, len(grid_log["log"]))
 
-    print(f"\nLR done. {elapsed:.0f}s  Best C={best_params['C']}  macro-F1: {best_score:.4f} ± {best_std:.4f}")
+    sorted_scores = sorted(all_scores, key=lambda x: x["mean_f1"], reverse=True)
+    lines = ["", "=" * 70, "  LR Results", "=" * 70]
+    header = f"  {'C':<5} {'l1_ratio':<9} {'cw':<11} {'mean F1':<8} {'±σ':<6}"
+    sep = "  " + "-" * (len(header) - 2)
+    lines.extend([header, sep])
+    for s in sorted_scores:
+        p = s["params"]
+        cw_str = str(p["class_weight"]) if p["class_weight"] is not None else "None"
+        lines.append(
+            f"  {p['C']:<5} {p['l1_ratio']:<9} {cw_str:<11} "
+            f"{s['mean_f1']:<8.4f} {s['std_f1']:<6.4f}"
+        )
+    lines.append(sep)
+    lines.append(f"  Best: C={best_params['C']} l1_ratio={best_params['l1_ratio']} "
+                 f"cw={best_params['class_weight']}  macro-F1={best_score:.4f} ± {best_std:.4f}")
+    lines.append("=" * 70)
+    log.info("\n%s", "\n".join(lines))
+
+    print(f"\nLR done. {elapsed:.0f}s  Best: C={best_params['C']} l1_ratio={best_params['l1_ratio']} "
+          f"cw={best_params['class_weight']}  macro-F1={best_score:.4f} ± {best_std:.4f}")
 
 
 if __name__ == "__main__":
