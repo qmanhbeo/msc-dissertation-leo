@@ -1,18 +1,18 @@
 {
   "balanced_sampling_used": true,
-  "generated_at_utc": "2026-07-21T16:52:35.539691Z",
-  "n_policy_projected_background": 54082,
-  "n_policy_used_for_pca_fit": 54082,
-  "n_research_projected_background": 54082,
-  "n_research_used_for_pca_fit": 54082,
+  "generated_at_utc": "2026-07-25T15:25:25.087807Z",
+  "n_policy_projected_background": 43147,
+  "n_policy_used_for_pca_fit": 43147,
+  "n_research_projected_background": 43147,
+  "n_research_used_for_pca_fit": 43147,
   "note": "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original embedding space.",
-  "pc1_explained_variance_ratio": 0.09090467542409897,
-  "pc2_explained_variance_ratio": 0.03795567899942398,
+  "pc1_explained_variance_ratio": 0.0914744883775711,
+  "pc2_explained_variance_ratio": 0.037426237016916275,
   "policy_capped": false,
   "policy_fit_cap": 0,
   "random_seed": 42,
   "research_trimmed_to_policy_count": true,
   "segment_cap_for_policy_gap_overlay": 50,
-  "total_policy_embeddings_available": 54082,
-  "total_research_embeddings_available": 2543698
+  "total_policy_embeddings_available": 43147,
+  "total_research_embeddings_available": 3105144
 }
