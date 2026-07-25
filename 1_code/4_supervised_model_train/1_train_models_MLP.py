@@ -21,6 +21,7 @@ Run from project root:
 """
 
 import argparse
+import datetime
 import json
 import logging
 import time
@@ -212,8 +213,8 @@ def main() -> None:
     log.info("Train: %d texts, %d dims  [%.1fs]", len(X), X.shape[1], time.perf_counter() - t0)
 
     param_grid = {
-        "n_layers": [4],
-        "hidden_size": [384],
+        "n_layers": [4, 8, 16],
+        "hidden_size": [256, 384],
         "lr": [0.001],
         "weight_decay": [0],
         "dropout": [0.3],
@@ -306,6 +307,63 @@ def main() -> None:
     with canonical_results_path.open("w") as f:
         json.dump(results, f, indent=2, default=str)
     log.info("Canonical model → %s", canonical_path)
+
+    # --- Durable grid search log (append-only, checksum-aware) ---
+    grid_log_path = output_dir / "grid_search_log.json"
+    if grid_log_path.exists():
+        with grid_log_path.open() as f:
+            grid_log = json.load(f)
+    else:
+        grid_log = {"log": []}
+
+    def _cfg_key(cfg: dict) -> tuple:
+        return tuple(sorted(cfg.items()))
+
+    now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    for s in all_scores:
+        cfg = s["params"]
+        key = _cfg_key(cfg)
+        existing = [e for e in grid_log["log"] if _cfg_key(e["config"]) == key]
+        if existing:
+            for entry in existing:
+                em = entry["cv_metrics"]
+                if em["mean_f1"] == s["mean_f1"] and em["std_f1"] == s["std_f1"]:
+                    log.info("Config already logged with identical metrics — skipping: %s", cfg)
+                    break
+            else:
+                log.warning(
+                    "Config %s already logged with different metrics — appending new entry",
+                    cfg,
+                )
+                grid_log["log"].append({
+                    "config": cfg,
+                    "cv_metrics": {
+                        "mean_f1": s["mean_f1"],
+                        "std_f1": s["std_f1"],
+                        "per_fold": s["per_fold"],
+                    },
+                    "timestamp_utc": now_utc,
+                    "n_train": len(X),
+                    "input_dim": X.shape[1],
+                })
+        else:
+            grid_log["log"].append({
+                "config": cfg,
+                "cv_metrics": {
+                    "mean_f1": s["mean_f1"],
+                    "std_f1": s["std_f1"],
+                    "per_fold": s["per_fold"],
+                },
+                "timestamp_utc": now_utc,
+                "n_train": len(X),
+                "input_dim": X.shape[1],
+            })
+
+    tmp = grid_log_path.with_suffix(".json.tmp")
+    with tmp.open("w") as f:
+        json.dump(grid_log, f, indent=2, default=str)
+    tmp.replace(grid_log_path)
+    log.info("Grid search log → %s  (%d entries)", grid_log_path, len(grid_log["log"]))
 
     print(f"\nMLP done. {elapsed:.0f}s  Best: {best_params}  macro-F1: {best_score:.4f} ± {results['best_cv_macro_f1_std']:.4f}")
 
