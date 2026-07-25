@@ -186,6 +186,8 @@ I propose that research-policy alignment be understood as a three-level construc
 
 Advancing from Level 1 to Level 2 is the study's concrete methodological contribution; Level 3 names the boundary it deliberately does not cross.
 
+The complete data pipeline, with per-stage counts and corpus-specific processing decisions, is summarised in Figure~\ref{fig:pipeline-flowchart} at the end of this section (Section~\ref{sec:pipeline-summary}).
+
 \subsection{Research Corpus}\label{sec:research-corpus}
 
 This study uses only publicly available text data and codebase. It does not involve human participants or personal data. No ethical approval was required.
@@ -194,21 +196,21 @@ The research corpus consists of \NResearchPapers{} English-language research abs
 
 The choice of the four AI retrieval terms — \texttt{artificial intelligence}, \texttt{machine learning}, \texttt{deep learning}, \texttt{neural network} — was made on initial intuition rather than any systematic or validated basis, and was fixed before analysis began; it is therefore not defended or varied here. The corpus should be understood as conditional on this term selection, which may under- or over-represent subfields of AI-for-Sustainability research. The 2018 start date reflects the post-AlexNet \parencite{NIPS2012_c399862d} emergence of deep learning as the dominant paradigm and a reasonable research-uptake lag after the SDGs' adoption in 2015.
 
-An important asymmetry follows: the research corpus is a tight intersection of AI and SDG content ($\text{AI} \cap \text{SDG}$), while the policy corpus (Section~\ref{sec:policy-corpus}) is a broader union covering institutional SDG discourse and AI governance. Between-SDG rankings should be interpreted as conditional on this asymmetric construction. Following \textcite{Armitage2020}, this retrieval universe is a method-dependent corpus boundary, not a neutral population of all SDG-relevant AI research. After deduplication and removal of records lacking usable abstracts, \NResearchPapers{} unique papers were retained. No balancing by SDG or citation count is applied — trimming would distort the coverage profile the study aims to measure.
+An important asymmetry follows: the research corpus is a tight intersection of AI and SDG content ($\text{AI} \cap \text{SDG}$), while the policy corpus (Section~\ref{sec:policy-corpus}) is a broader union covering institutional SDG discourse and AI governance. Between-SDG rankings should be interpreted as conditional on this asymmetric construction. Following \textcite{Armitage2020}, this retrieval universe is a method-dependent corpus boundary, not a neutral population of all SDG-relevant AI research. After deduplication and removal of records lacking usable abstracts, \NResearchPapers{} abstract-derived text segments were retained. No balancing by SDG or citation count is applied — trimming would distort the coverage profile the study aims to measure.
 
 \subsection{Policy Corpus}\label{sec:policy-corpus}
 
 The policy corpus contains \NPolicySegments{} text segments from three collections, representing \NPolicyDocs{} unique source documents. It should be read as mixed \emph{international institutional SDG policy discourse} rather than the full universe of AI sustainability policy:
 
 \begin{enumerate}
-  \item \textbf{Curated AI and SDG policy documents} (16,319 segments, 94 documents): UN, OECD, EU, UK, and AU AI governance frameworks; IPCC assessment reports; SDSN sustainable development reports; and national AI strategies. These are AI-governance instruments by construction, forming the innovation-facing slice of the corpus.
+  \item \textbf{Curated AI and SDG policy documents} (13,143 segments, 94 documents): UN, OECD, EU, UK, and AU AI governance frameworks; IPCC assessment reports; SDSN sustainable development reports; and national AI strategies. These are AI-governance instruments by construction, forming the innovation-facing slice of the corpus.
 
   \item \textbf{SDGi Voluntary National Review and Voluntary Local Review corpus} \parencite{SDGi2024} (21,346 segments, 313 documents): National and local self-assessments submitted to the UN High-Level Political Forum. The creators describe it as the most comprehensive multilingual collection of SDG-labelled texts to date, spanning all 17 goals and centred on SDG implementation rather than any single sector.
 
-  \item \textbf{UN General Debate Corpus} \parencite{UNGDC2024} (6,472 segments, 2,048 documents): SDG-relevant passages from General Debate speeches, sessions 70--80 (2015--2024). Its creators analyse SDG coverage directly and report climate action (SDG~13), peace and governance (SDG~16), and partnerships (SDG~17) among the most prominent themes --- a climate--governance--partnership orientation the analysis below also observes.
+  \item \textbf{UN General Debate Corpus} \parencite{UNGDC2024} (6,128 segments, 2,048 documents): SDG-relevant passages from General Debate speeches, sessions 70--80 (2015--2024). Its creators analyse SDG coverage directly and report climate action (SDG~13), peace and governance (SDG~16), and partnerships (SDG~17) among the most prominent themes --- a climate--governance--partnership orientation the analysis below also observes.
 \end{enumerate}
 
-Each source document was segmented using the transformer model's own tokenizer: NLTK sentence-boundary detection (\texttt{sent\_tokenize}) is followed by greedy accumulation of sentences up to a token budget of \texttt{max\_seq\_length - 10} (margin 10, empirically verified to reduce truncation to near zero). Segments falling below 20 words (\texttt{MIN\_SEGMENT\_WORDS}) are discarded; a single sentence exceeding the token budget is kept whole because mid-sentence splitting is not permissible. These raw collection totals (16,319, 21,346, 6,472) reflect post-segmentation counts before cross-source deduplication. After deduplication by exact text match (SDGi retained first, removing 990 curated-source segments that duplicated SDGi text), \NPolicySegments{} unique segments remained. Segment identifiers encode source document identity for document-level weighting.
+Each source document was segmented using the transformer model's own tokenizer: NLTK sentence-boundary detection (\texttt{sent\_tokenize}) is followed by greedy accumulation of sentences up to a token budget of \texttt{max\_seq\_length - 10} (margin 10, empirically verified to reduce truncation to near zero). Segments falling below 20 words (\texttt{MIN\_SEGMENT\_WORDS}) are discarded; a single sentence exceeding the token budget is kept whole because mid-sentence splitting is not permissible. These raw collection totals (13,143, 21,346, 6,128) reflect post-segmentation counts before cross-source deduplication. For the UN General Debate Corpus, paragraph-level keyword filtering precedes segmentation, so only SDG-relevant speech passages enter the pipeline --- this pre-filtering is why UNGDC's raw segment count is much smaller than its source-speech count. After deduplication by exact text match (SDGi retained first, removing 70 curated-source segments that duplicated SDGi text), \NPolicySegments{} unique segments remained. Segment identifiers encode source document identity for document-level weighting.
 
 \textbf{Source heterogeneity note.} The three collections differ in genre and scope — the curated subset is AI-governance-focused, while SDGi and UNGDC reflect broader institutional SDG discourse. The full-corpus policy distribution should be read accordingly; the curated sub-corpus (94 documents) is the more relevant reference for AI-governance-specific interpretation. Appendix~\ref{app:policy-source-family-sensitivity} reports a source-family sensitivity check.
 
@@ -220,7 +222,7 @@ During pipeline development, a truncation issue was discovered and corrected: te
 
 \subsection{Supervised Reference Classifier}\label{sec:supervised-classifier}
 
-The canonical instrument is a supervised multinomial logistic regression (LR) classifier trained on pooled single-label reference data from four independent annotated corpora:
+The canonical instrument is a supervised multinomial logistic regression (LR) classifier trained on pooled single-label reference data from five independent annotated corpora:
 
 \begin{itemize}
   \item \textbf{OSDG Community Dataset} \parencite{Pukelis2022} (30,534 texts, SDGs 1--16): a crowdsourced citizen-science collection of excerpts from reports, policy documents, and abstracts, each validated by multiple volunteers.
@@ -248,7 +250,7 @@ Additional diagnostic checks — within-corpus diagnostics, policy source-family
 
 For each corpus item, the predicted SDG is the LR argmax (hard assignment, Section~\ref{sec:scoring}). The coverage profile is the proportion of items assigned to each SDG.
 
-The policy corpus is not a flat set of documents: its \NPolicySegments{} segments are grouped into \NPolicyDocs{} source documents, and those documents vary enormously in length (SDGi: 21,346 segments across 313 documents; curated AI/SDG: 15,329 across 94; UNGDC: 6,472 across 2,048). A segment-weighted profile would let a handful of long reports dominate the count, so I instead compute a \emph{document-weighted} profile in which every source document counts equally regardless of length. Concretely: (1) the segment score vectors of each document are averaged into one document-level vector; (2) that vector is hard-assigned to its top SDG; (3) the coverage profile is the share of documents --- not segments --- assigned to each SDG. The research corpus uses the same logic at the paper level, where each of the \NResearchPapers{} papers is already a single unit. Document-weighted profiles are the canonical representation; segment-weighted profiles are retained as a diagnostic comparison.
+The policy corpus is not a flat set of documents: its \NPolicySegments{} segments are grouped into \NPolicyDocs{} source documents, and those documents vary enormously in length (SDGi: 21,346 segments across 313 documents; curated AI/SDG: 13,073 across 94; UNGDC: 6,128 across 2,048). A segment-weighted profile would let a handful of long reports dominate the count, so I instead compute a \emph{document-weighted} profile in which every source document counts equally regardless of length. Concretely: (1) the segment score vectors of each document are averaged into one document-level vector; (2) that vector is hard-assigned to its top SDG; (3) the coverage profile is the share of documents --- not segments --- assigned to each SDG. The research corpus uses the same logic at the paper level, where each of the \NResearchPapers{} abstract texts is already a single unit. Document-weighted profiles are the canonical representation; segment-weighted profiles are retained as a diagnostic comparison.
 
 The coverage gap for SDG $j$ is defined as:
 \[
@@ -288,6 +290,17 @@ This subsection records the design-level assumptions that shape the comparison b
 \textbf{Labelled-data limitation on SDG 4.}
 \label{sec:sdg4artefact}
 The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality Education, see later Section~\ref{sec:coverage-gap}), flagged as artefact-affected because ML papers share core vocabulary (``learning'', ``training'', ``model'') with the OSDG education corpus. Appendix~\ref{app:sdg4-lexical-audit} confirms that SDG~4-assigned texts contain education-specific terms more often than matched non-SDG4 samples, but co-occur with ML-learning vocabulary. The result is retained as a learning-related SDG~4 assignment rather than a clean education estimate. Sensitivity analyses excluding SDG~4 are provided for all correlation results. This is a limitation of the reference labels, carried through to the results and mitigated there by artefact-flagged sensitivity analyses, not resolved at the design stage.
+
+\subsection{Methodology Summary}\label{sec:pipeline-summary}
+
+Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end data pipeline. Seven corpora are processed through successive stages of preprocessing (cleaning, language filtering, keyword filtering), token-aware segmentation (\texttt{margin=10}, \texttt{min\_words=20}), and encoding with \texttt{all-mpnet-base-v2} (768-D, L2-normalised). Five of those corpora (OSDG, SDG Benchmark, SDG Knowledge Hub, SDGi, Aurora) supply human-validated labels pooled into a single training set (62,513 texts), which is split into 52,779 training and 9,734 held-out texts by per-source stratified GroupKFold; the remaining two (research, policy) are unlabelled and scored by the trained classifier. Detailed per-corpus counts are reported in Sections~\ref{sec:research-corpus}, \ref{sec:policy-corpus}, and \ref{sec:supervised-classifier}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig6_pipeline_flowchart.pdf}
+  \caption{Methodology pipeline flowchart. All seven segmented corpora use the same token-aware segmentation procedure; OSDG and Benchmark bypass segmentation because they already consist of short single-label texts. The trained LR classifier (macro-F$_1 = 0.823$) scores both the research and the policy corpus; the scored outputs feed the coverage-gap, semantic-gap, and interaction analyses (Figures~\ref{fig:coverage_profiles}–\ref{fig:typology_scatter}, Tables~\ref{tab:interaction}–\ref{tab:cross-sensitivity-robustness}).}
+  \label{fig:pipeline-flowchart}
+\end{figure}
 
 %% ============================================================
 \section{Results}
