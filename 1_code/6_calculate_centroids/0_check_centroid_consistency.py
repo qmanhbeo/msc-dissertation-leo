@@ -96,7 +96,7 @@ def build_policy_centroids(
     scores: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, list[dict[str, Any]]]:
     assigned = scores.argmax(axis=1)
-    centroids = np.zeros((N_SDG, EMBED_DIM), dtype=np.float32)
+    centroids = np.zeros((N_SDG, embeddings.shape[1]), dtype=np.float32)
     meta: list[dict[str, Any]] = []
 
     for sdg_idx in range(N_SDG):
@@ -232,6 +232,8 @@ def main() -> None:
     )
     parser.add_argument("--model", default="all-mpnet-base-v2",
                         help="Embed model (default: %(default)s)")
+    parser.add_argument("--output-dir", default=None,
+                        help="Ignored (compatibility with main.py pipeline)")
     parser.add_argument("--research-centroids", default=None)
     parser.add_argument("--policy-emb", default=None)
     parser.add_argument("--policy-scores", default=None)
