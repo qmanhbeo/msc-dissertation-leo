@@ -213,7 +213,7 @@ def main() -> None:
     log.info("Train: %d texts, %d dims  [%.1fs]", len(X), X.shape[1], time.perf_counter() - t0)
 
     param_grid = {
-        "n_layers": [4, 8, 16],
+        "n_layers": [1, 2, 4, 8, 16],
         "hidden_size": [256, 384],
         "lr": [0.001],
         "weight_decay": [0],
@@ -319,11 +319,14 @@ def main() -> None:
     def _cfg_key(cfg: dict) -> tuple:
         return tuple(sorted(cfg.items()))
 
+    def _entry_key(e: dict) -> tuple:
+        return (e.get("model"), _cfg_key(e["config"]))
+
     now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for s in all_scores:
         cfg = s["params"]
-        key = _cfg_key(cfg)
-        existing = [e for e in grid_log["log"] if _cfg_key(e["config"]) == key]
+        key = (MODEL_TAG, _cfg_key(cfg))
+        existing = [e for e in grid_log["log"] if _entry_key(e) == key]
         if existing:
             for entry in existing:
                 em = entry["cv_metrics"]
@@ -336,6 +339,7 @@ def main() -> None:
                     cfg,
                 )
                 grid_log["log"].append({
+                    "model": MODEL_TAG,
                     "config": cfg,
                     "cv_metrics": {
                         "mean_f1": s["mean_f1"],
@@ -348,6 +352,7 @@ def main() -> None:
                 })
         else:
             grid_log["log"].append({
+                "model": MODEL_TAG,
                 "config": cfg,
                 "cv_metrics": {
                     "mean_f1": s["mean_f1"],
