@@ -49,7 +49,9 @@ from semantic_gap_shared import (
     load_json,
 )
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, preprocessed_dir, research_preprocessed_dir, scored_dir_for_model
-RESEARCH_TEXT_MANIFEST = research_preprocessed_dir() / "metadata" / "manifest.json"
+
+SEGMENTED_RESEARCH_DIR = Path(__file__).resolve().parents[3] / "2_data" / "2_segmented" / DEFAULT_EMBED_MODEL / "research"
+RESEARCH_TEXT_MANIFEST = SEGMENTED_RESEARCH_DIR / "metadata" / "manifest.json"
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -149,7 +151,7 @@ def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -
 
 def load_research_shards(embed_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
     text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
-    emb_manifest = load_json(embed_research_dir_for_model(model) / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_dir / "metadata" / "manifest.json")
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
 
     text_shards = sorted(text_manifest["shards"], key=lambda x: int(x["shard_id"]))
@@ -166,12 +168,18 @@ def load_research_shards(embed_dir: Path, scored_dir: Path) -> list[dict[str, An
             raise RuntimeError("Research manifests do not align on shard_id.")
         if int(text_shard["rows"]) != int(emb_shard["rows"]) or int(text_shard["rows"]) != int(score_shard["rows"]):
             raise RuntimeError(f"Research manifests do not align on rows for shard {shard_id}.")
+        if "data_path" in text_shard:
+            text_path = resolve_manifest_path(text_shard["data_path"], embed_dir, scored_dir)
+        else:
+            text_path = SEGMENTED_RESEARCH_DIR / f"{text_shard['name']}.jsonl"
+            if not text_path.exists():
+                raise FileNotFoundError(f"Constructed text path does not exist: {text_path}")
         shards.append(
             {
                 "shard_id": shard_id,
                 "name": text_shard["name"],
                 "rows": int(text_shard["rows"]),
-                "text_path": resolve_manifest_path(text_shard["data_path"], embed_dir, scored_dir),
+                "text_path": text_path,
                 "emb_path": resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
                 "score_ids_path": resolve_manifest_path(score_shard["ids_path"], embed_dir, scored_dir),
             }
@@ -441,6 +449,7 @@ def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
 def main() -> None:
     args = parse_args()
     embed_dir = embed_dir_for_model(args.model)
+    research_embed_dir = embed_research_dir_for_model(args.model)
     scored_dir = scored_dir_for_model(args.model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
@@ -466,7 +475,7 @@ def main() -> None:
     )
     log.info("Collecting research samples and representative audit examples")
     research_samples, research_counts, research_examples = collect_research(
-        args.sample_per_side, args.seed, research_centroids, embed_dir, scored_dir
+        args.sample_per_side, args.seed, research_centroids, research_embed_dir, scored_dir
     )
 
     term_rows: list[dict[str, Any]] = []

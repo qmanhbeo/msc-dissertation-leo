@@ -1,5 +1,5 @@
 family,family_label,docs,segments,top3_sdgs_docweighted,mean_semantic_gap,n_valid_semantic_gap_sdgs,top3_semantic_gaps,interpretation_note
-full_policy_corpus,Full corpus,2456,54082,SDG 16 / SDG 13 / SDG 17,0.378929,17,SDG 8 / SDG 11 / SDG 3,Full corpus
-curated_ai_sdg,Curated AI/SDG,95,15639,SDG 9 / SDG 17 / SDG 16,0.37243,17,SDG 1 / SDG 11 / SDG 7,AI/SDG-specific
-sdgi_vnr_vlr,SDGi VNR/VLR,313,31971,SDG 5 / SDG 11 / SDG 4,0.394985,17,SDG 8 / SDG 9 / SDG 3,VNR/VLR institutional reports
-ungdc_speeches,UNGDC speeches,2048,6472,SDG 16 / SDG 13 / SDG 17,0.525983,17,SDG 8 / SDG 11 / SDG 3,UN speech discourse
+full_policy_corpus,Full corpus,2455,43147,SDG 16 / SDG 13 / SDG 17,0.354763,17,SDG 13 / SDG 3 / SDG 11,Full corpus
+curated_ai_sdg,Curated AI/SDG,94,15329,SDG 9 / SDG 17 / SDG 3,0.34907,17,SDG 7 / SDG 12 / SDG 1,AI/SDG-specific
+sdgi_vnr_vlr,SDGi VNR/VLR,313,21346,SDG 4 / SDG 3 / SDG 11,0.374884,17,SDG 9 / SDG 3 / SDG 11,VNR/VLR institutional reports
+ungdc_speeches,UNGDC speeches,2048,6472,SDG 16 / SDG 13 / SDG 17,0.478205,16,SDG 3 / SDG 12 / SDG 8,UN speech discourse

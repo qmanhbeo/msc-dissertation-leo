@@ -1,4 +1,4 @@
 subset,subset_label,n,ml_only_n,education_only_n,both_n,neither_unclear_n,ml_only_pct,education_only_pct,both_pct,neither_unclear_pct
-sdg4_assigned,SDG 4-assigned research,413414,62012,178479,105334,67589,15.0,43.172,25.479,16.349
-non_sdg4_sample,Non-SDG4 research sample,413414,230528,17873,14157,150856,55.762,4.323,3.424,36.49
-sdg9_assigned,SDG 9-assigned research,621237,421237,15360,22539,162101,67.806,2.472,3.628,26.093
+sdg4_assigned,SDG 4-assigned research,453225,52689,199649,126761,74126,11.625,44.051,27.969,16.355
+non_sdg4_sample,Non-SDG4 research sample,453225,248487,21303,21041,162394,54.826,4.7,4.643,35.831
+sdg9_assigned,SDG 9-assigned research,566759,352897,15805,23371,174686,62.266,2.789,4.124,30.822

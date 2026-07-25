@@ -1,15 +1,15 @@
 metric,value
 script,1_code/3_main_analysis/3_appendix/9_loo_sdgi_circularity.py
 scope,SDGi-excluded (OSDG+KH+Aurora) centroid; SDGi policy segments rescored.
-n_sdgi_segments,31971
-n_policy_segments_total,54082
-n_research_papers,2543698
-loo_centroid_sources_per_sdg,{1: 3, 2: 3, 3: 3, 4: 3, 5: 3, 6: 3, 7: 3, 8: 3, 9: 3, 10: 3, 11: 3, 12: 3, 13: 3, 14: 3, 15: 3, 16: 3, 17: 2}
-policy_top_sdgi_excl_centroid,0.6311
-full_policy_top_sdgi_excl_centroid,0.612
-paper_top_sdgi_excl_centroid,0.2599
-gap_sdgi_segments,0.3713
-canonical_policy_top,0.867
-canonical_paper_top,0.773
-canonical_gap,0.094
-gap_change_vs_canonical,0.2773
+n_sdgi_segments,21346
+n_policy_segments_total,43147
+n_research_papers,3105144
+loo_centroid_sources_per_sdg,{1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2, 11: 2, 12: 2, 13: 2, 14: 2, 15: 2, 16: 2, 17: 2}
+policy_top_sdgi_excl_centroid,0.614
+full_policy_top_sdgi_excl_centroid,0.5939
+paper_top_sdgi_excl_centroid,0.2378
+gap_sdgi_segments,0.3762
+canonical_policy_top,0.761
+canonical_paper_top,0.656
+canonical_gap,0.105
+gap_change_vs_canonical,0.2712

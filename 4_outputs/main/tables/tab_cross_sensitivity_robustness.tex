@@ -4,34 +4,33 @@
 \caption{Cross-sensitivity robustness of within-SDG semantic gap rankings.}
 \label{tab:cross-sensitivity-robustness}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lccccccccccc}
+\begin{tabular}{lccccccccc}
 \toprule
-& \multicolumn{2}{c}{Model}
-& \multicolumn{4}{c}{Reference source}
-& \multicolumn{3}{c}{Policy source}
-& \multicolumn{2}{c}{Segment cap} \\
-\cmidrule(r){2-3} \cmidrule(lr){4-7} \cmidrule(lr){8-10} \cmidrule(l){11-12}
-SDG & Canon & MPNet & OSDG & SDGi & KH & Aur & Man. & SDGi & UNGDC & 20 & no \\
+SDG & \multicolumn{3}{c}{Assignment method} & \multicolumn{4}{c}{Policy source} & \multicolumn{2}{c}{Segment cap} \\
+\cmidrule(lr){2-4}
+\cmidrule(lr){5-8}
+\cmidrule(lr){9-10}
+SDG & LR & Zero-shot & MLP & Full & Curated & SDGi & UNGDC & 20 & None \\
 \midrule
-SDG 1 & 5 & 7 & 12 & 17 & 1 & 8 & 1 & 6 & 4 & 4 & 4 \\
-SDG 2 & 14 & 11 & 11 & 10 & 7 & 6 & 11 & 14 & 14 & 13 & 12 \\
-SDG 3 & 3 & 4 & 8 & 7 & 8 & 9 & 10 & 3 & 3 & 2 & 6 \\
-SDG 4 & 15 & 14 & 13 & 16 & 13 & 12 & 16 & 15 & 16 & 15 & 15 \\
-SDG 5 & 9 & 17 & 16 & 14 & 15 & 15 & 14 & 10 & 10 & 10 & 9 \\
-SDG 6 & 11 & 6 & 3 & 5 & 4 & 1 & 6 & 12 & 13 & 14 & 13 \\
-SDG 7 & 8 & 1 & 4 & 3 & 2 & 7 & 3 & 8 & 7 & 5 & 3 \\
-SDG 8 & 1 & 16 & 14 & 11 & 9 & 16 & 5 & 1 & 1 & 7 & 5 \\
-SDG 9 & 7 & 15 & 15 & 13 & 17 & 14 & 12 & 2 & 6 & 11 & 14 \\
-SDG 10 & 10 & 10 & 2 & 6 & 10 & 11 & 9 & 11 & 9 & 12 & 10 \\
-SDG 11 & 2 & 3 & 7 & 9 & 11 & 5 & 2 & 4 & 2 & 3 & 2 \\
-SDG 12 & 12 & 8 & 9 & 12 & 12 & 2 & 8 & 13 & 11 & 6 & 7 \\
-SDG 13 & 6 & 9 & 1 & 2 & 5 & 3 & 7 & 7 & 8 & 1 & 1 \\
-SDG 14 & 4 & 5 & 5 & 1 & 3 & 4 & 4 & 5 & 5 & 8 & 8 \\
-SDG 15 & 17 & 12 & 6 & 4 & 6 & 10 & 13 & 17 & 15 & 16 & 16 \\
-SDG 16 & 13 & 13 & 10 & 15 & 14 & 13 & 17 & 9 & 12 & 9 & 11 \\
-SDG 17 & 16 & 2 & -- & 8 & 16 & 17 & 15 & 16 & 17 & 17 & 17 \\
+SDG 1 & 4 & 8 & 2 & 4 & 3 & 5 & 6 & 4 & 4 \\
+SDG 2 & 12 & 10 & 9 & 12 & 11 & 13 & 12 & 13 & 12 \\
+SDG 3 & 2 & 5 & 6 & 2 & 10 & 2 & 1 & 2 & 6 \\
+SDG 4 & 15 & 14 & 15 & 15 & 15 & 14 & 15 & 15 & 15 \\
+SDG 5 & 9 & 16 & 8 & 9 & 12 & 11 & 10 & 10 & 9 \\
+SDG 6 & 14 & 6 & 13 & 14 & 9 & 15 & 14 & 14 & 13 \\
+SDG 7 & 5 & 1 & 5 & 5 & 1 & 8 & 5 & 5 & 3 \\
+SDG 8 & 6 & 15 & 10 & 6 & 6 & 6 & 4 & 7 & 5 \\
+SDG 9 & 13 & 17 & 14 & 13 & 14 & 1 & 11 & 11 & 14 \\
+SDG 10 & 11 & 13 & 12 & 11 & 7 & 12 & 13 & 12 & 10 \\
+SDG 11 & 3 & 2 & 4 & 3 & 5 & 3 & 2 & 3 & 2 \\
+SDG 12 & 7 & 9 & 1 & 7 & 2 & 7 & 3 & 6 & 7 \\
+SDG 13 & 1 & 4 & 3 & 1 & 4 & 4 & 7 & 1 & 1 \\
+SDG 14 & 8 & 3 & 7 & 8 & 8 & 9 & 9 & 8 & 8 \\
+SDG 15 & 16 & 11 & 17 & 16 & 13 & 16 & 16 & 16 & 16 \\
+SDG 16 & 10 & 12 & 11 & 10 & 16 & 10 & 8 & 9 & 11 \\
+SDG 17 & 17 & 7 & 16 & 17 & 17 & 17 & 17 & 17 & 17 \\
 \bottomrule
 \end{tabular}
 }
-\par\smallskip\footnotesize\emph{Notes:} Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. ``Canon'' is the cap-50 baseline (MiniLM + combined centroids + full policy corpus).\par
+\par\smallskip\footnotesize\emph{Notes:} Each cell reports the gap rank (1 = largest gap, 17 = smallest gap) under each measurement configuration. The LR column is the canonical assignment method (cap~50 segment cap, full policy corpus); the Zero-shot column uses nearest-centroid assignment; the MLP column uses the 4-layer/384-hidden champion retrained on the full training pool. Segment-cap and policy-source columns are LR-based unless noted.\par
 \end{table}

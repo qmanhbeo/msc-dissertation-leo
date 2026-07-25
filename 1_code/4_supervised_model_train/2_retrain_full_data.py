@@ -137,6 +137,7 @@ def main() -> None:
         X_t = torch.from_numpy(X_train.astype(np.float32))
         Y_t = torch.from_numpy(Y_train.astype(np.float32))
 
+        # Stage 1: train with 90/10 validation split to find best epoch
         n_val = max(1, int(len(X_t) * 0.1))
         perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(42))
         val_idx = perm[:n_val]
@@ -152,6 +153,7 @@ def main() -> None:
 
         best_val_f1 = -1.0
         patience_counter = 0
+        best_epoch = 0
         best_state = None
 
         for epoch in range(args.max_epochs):
@@ -176,20 +178,34 @@ def main() -> None:
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
+                best_epoch = epoch + 1
                 patience_counter = 0
                 best_state = {k: v.cpu().clone() for k, v in net.state_dict().items()}
             else:
                 patience_counter += 1
                 if patience_counter >= args.patience:
-                    log.info("Early stop at epoch %d (best val F1=%.4f)", epoch + 1, best_val_f1)
+                    log.info("Early stop at epoch %d (best val F1=%.4f at epoch %d)", epoch + 1, best_val_f1, best_epoch)
                     break
 
-        if best_state is not None:
-            net.load_state_dict(best_state)
+        # Stage 2: retrain from scratch on 100% of training data for best_epoch epochs
+        log.info("Retraining on full training pool (%d docs) for %d epochs...", len(X_t), best_epoch)
+        net = MultiLabelMLP(input_dim, args.n_layers, args.hidden_size, args.dropout).to(device)
+        optimizer2 = optim.AdamW(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        full_loader = DataLoader(
+            TensorDataset(X_t.to(device), Y_t.to(device)),
+            batch_size=args.batch_size, shuffle=True,
+        )
+        for epoch in range(best_epoch):
+            net.train()
+            for batch_X, batch_y in full_loader:
+                optimizer2.zero_grad()
+                loss = criterion(net(batch_X), batch_y)
+                loss.backward()
+                optimizer2.step()
         net.eval()
 
         train_time = time.perf_counter() - t1
-        log.info("Training done: %.1fs  best val macro-F1=%.4f", train_time, best_val_f1)
+        log.info("Training done: %.1fs  best val macro-F1=%.4f  full-retrain epochs=%d", train_time, best_val_f1, best_epoch)
 
     else:
         log.info("Config: C=10.0 penalty=l2 class_weight=None solver=lbfgs")

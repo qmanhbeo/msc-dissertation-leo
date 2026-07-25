@@ -32,8 +32,10 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, research_preprocessed_dir, scored_dir_for_model
-RESEARCH_TEXT_MANIFEST = research_preprocessed_dir() / "metadata" / "manifest.json"
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, research_preprocessed_dir, scored_dir_for_model, embed_dir_for_model
+
+SEGMENTED_RESEARCH_DIR = ROOT / "2_data" / "2_segmented" / DEFAULT_EMBED_MODEL / "research"
+RESEARCH_TEXT_MANIFEST = SEGMENTED_RESEARCH_DIR / "metadata" / "manifest.json"
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"
@@ -192,6 +194,7 @@ def _audit_single_shard(args: tuple[str, dict[str, set[int]]]) -> dict[str, Coun
 
 
 def audit_subsets(
+    text_dir: Path,
     text_manifest: dict,
     subset_refs: dict[str, dict[int, set[int]]],
 ) -> dict[str, Counter]:
@@ -200,7 +203,7 @@ def audit_subsets(
     jobs: list[tuple[str, dict[str, set[int]]]] = []
     for shard in text_manifest["shards"]:
         shard_id = int(shard["shard_id"])
-        data_path = str(ROOT / shard["data_path"])
+        data_path = str(text_dir / f"{shard['name']}.jsonl")
         targets = {
             subset: refs.get(shard_id, set())
             for subset, refs in subset_refs.items()
@@ -306,7 +309,7 @@ def main() -> None:
         "non_sdg4_sample": non_sdg4_refs,
         "sdg9_assigned": sdg9_refs,
     }
-    counters = audit_subsets(text_manifest, subset_refs)
+    counters = audit_subsets(SEGMENTED_RESEARCH_DIR, text_manifest, subset_refs)
 
     rows: list[dict] = []
     summary = {

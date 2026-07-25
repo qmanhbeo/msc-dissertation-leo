@@ -132,7 +132,7 @@ def parse_args() -> argparse.Namespace:
 
 def _compute_cache_signature(scored_dir: Path, embed_dir: Path) -> str:
     score_manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
-    emb_manifest_path = embed_research_dir_for_model(model) / "metadata" / "manifest.json"
+    emb_manifest_path = embed_dir / "metadata" / "manifest.json"
     hasher = hashlib.sha256()
     for path in [score_manifest_path, emb_manifest_path]:
         hasher.update(path.read_bytes())
@@ -141,7 +141,7 @@ def _compute_cache_signature(scored_dir: Path, embed_dir: Path) -> str:
 
 def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
-    emb_manifest = load_json(embed_research_dir_for_model(model) / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_dir / "metadata" / "manifest.json")
     score_shards = sorted(score_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     emb_shards = sorted(emb_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     if len(score_shards) != len(emb_shards):
@@ -504,10 +504,10 @@ def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator]) 
         del emb
 
     for draw in draws:
-        if draw.rows_seen != draw.sample_size:
+        if draw.global_indices.size > 0 and draw.rows_seen != len(draw.global_indices):
             raise RuntimeError(
                 f"Sample size mismatch for {draw.tier_label} draw {draw.draw_index}: "
-                f"expected {draw.sample_size}, saw {draw.rows_seen}"
+                f"expected {len(draw.global_indices)}, saw {draw.rows_seen}"
             )
 
 
@@ -862,7 +862,7 @@ def write_outputs(
 
 def main() -> None:
     args = parse_args()
-    embed_dir = embed_dir_for_model(args.model)
+    embed_dir = embed_research_dir_for_model(args.model)
     scored_dir = scored_dir_for_model(args.model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
