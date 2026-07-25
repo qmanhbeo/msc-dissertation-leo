@@ -24,7 +24,7 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import model_results_dir_for_model
+from model_utils import N_SDG, model_results_dir_for_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -61,6 +61,12 @@ def main() -> None:
     log.info("Loaded model: %s", model_path)
 
     y_pred = clf.predict(X_test)
+    # sklearn single-label classifiers return 1-D integer labels;
+    # wrap into one-hot to match the multi-label format of y_test.
+    if y_pred.ndim == 1:
+        preds_onehot = np.zeros((len(y_pred), N_SDG), dtype=np.float32)
+        preds_onehot[np.arange(len(y_pred)), y_pred] = 1.0
+        y_pred = preds_onehot
 
     macro_f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
     micro_f1 = f1_score(y_test, y_pred, average="micro", zero_division=0)
@@ -68,7 +74,7 @@ def main() -> None:
 
     # Per-SDG
     sdg_f1 = {}
-    for sdg in range(17):
+    for sdg in range(N_SDG):
         sdg_f1[f"SDG-{sdg+1}"] = f1_score(
             y_test[:, sdg], y_pred[:, sdg], zero_division=0,
         )

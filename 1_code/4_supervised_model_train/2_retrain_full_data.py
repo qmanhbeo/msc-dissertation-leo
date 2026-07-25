@@ -1,8 +1,9 @@
 """
-Retrain the champion MLP on the FULL training pool (train + val) 
-then evaluate on the held-out test set.
+Retrain the champion classifier on the FULL train pool (indices/train.npy),
+then evaluate on the held-out test set (indices/test.npy).
 
-Champion config (from CV): n_layers=4, hidden_size=384, lr=1e-3, wd=0, dropout=0.3
+Champion (final, LR): C=10.0, penalty=l2, class_weight=None, solver=lbfgs
+Champion (prior, MLP): n_layers=4, hidden_size=384, lr=1e-3, wd=0, dropout=0.3
 
 Inputs:
   {data_dir}/embeddings.npy
@@ -11,11 +12,13 @@ Inputs:
   {data_dir}/indices/test.npy
 
 Outputs:
-  {data_dir}/model/sdg_classifier_retrained.joblib
+  {data_dir}/model/sdg_classifier_retrained.joblib   (used by scoring pipeline)
+  {data_dir}/model/sdg_classifier.joblib              (used by 2_evaluate.py)
   {data_dir}/model/sdg_retrain_results.json
 
 Run from project root:
     python 1_code/4_supervised_model_train/2_retrain_full_data.py --model all-mpnet-base-v2
+    python 1_code/4_supervised_model_train/2_retrain_full_data.py --model all-mpnet-base-v2 --classifier-type lr
 """
 
 import argparse
@@ -28,9 +31,8 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from sklearn.metrics import f1_score, classification_report
-from torch.utils.data import DataLoader, TensorDataset
+from sklearn.linear_model import LogisticRegression
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
@@ -85,6 +87,9 @@ def main() -> None:
                         help=f"Embed model (default: {default_model})")
     parser.add_argument("--data-dir", default=None,
                         help="Override data dir (derived from --model if omitted)")
+    parser.add_argument("--classifier-type", default="lr", choices=["mlp", "lr"],
+                        help="Classifier family (default: lr)")
+    # MLP-specific args
     parser.add_argument("--n-layers", type=int, default=4)
     parser.add_argument("--hidden-size", type=int, default=384)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -111,79 +116,105 @@ def main() -> None:
 
     input_dim = X_train.shape[1]
     log.info("Train: %d  Test: %d  dims: %d", len(X_train), len(X_test), input_dim)
-    log.info("Config: n_layers=%d hidden=%d lr=%g wd=%g dropout=%g",
-             args.n_layers, args.hidden_size, args.lr, args.weight_decay, args.dropout)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    log.info("Device: %s", device)
-
-    net = MultiLabelMLP(input_dim, args.n_layers, args.hidden_size, args.dropout).to(device)
-    criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.AdamW(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-
-    X_t = torch.from_numpy(X_train.astype(np.float32))
-    Y_t = torch.from_numpy(Y_train.astype(np.float32))
-
-    n_val = max(1, int(len(X_t) * 0.1))
-    perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(42))
-    val_idx = perm[:n_val]
-    tr_idx = perm[n_val:]
-
-    X_tr, X_val = X_t[tr_idx], X_t[val_idx]
-    Y_tr, Y_val = Y_t[tr_idx], Y_t[val_idx]
-
-    train_ds = TensorDataset(X_tr.to(device), Y_tr.to(device))
-    val_ds = TensorDataset(X_val.to(device), Y_val.to(device))
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size * 2)
-
-    best_val_f1 = -1.0
-    patience_counter = 0
-    best_state = None
-
+    # ── Train ──────────────────────────────────────────────────────────
     t1 = time.perf_counter()
-    for epoch in range(args.max_epochs):
-        net.train()
-        for batch_X, batch_y in train_loader:
-            optimizer.zero_grad()
-            loss = criterion(net(batch_X), batch_y)
-            loss.backward()
-            optimizer.step()
 
+    if args.classifier_type == "mlp":
+        import torch.optim as optim
+        from torch.utils.data import DataLoader, TensorDataset
+
+        log.info("Config: n_layers=%d hidden=%d lr=%g wd=%g dropout=%g",
+                 args.n_layers, args.hidden_size, args.lr, args.weight_decay, args.dropout)
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        log.info("Device: %s", device)
+
+        net = MultiLabelMLP(input_dim, args.n_layers, args.hidden_size, args.dropout).to(device)
+        criterion = nn.BCEWithLogitsLoss()
+        optimizer = optim.AdamW(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+
+        X_t = torch.from_numpy(X_train.astype(np.float32))
+        Y_t = torch.from_numpy(Y_train.astype(np.float32))
+
+        n_val = max(1, int(len(X_t) * 0.1))
+        perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(42))
+        val_idx = perm[:n_val]
+        tr_idx = perm[n_val:]
+
+        X_tr, X_val = X_t[tr_idx], X_t[val_idx]
+        Y_tr, Y_val = Y_t[tr_idx], Y_t[val_idx]
+
+        train_ds = TensorDataset(X_tr.to(device), Y_tr.to(device))
+        val_ds = TensorDataset(X_val.to(device), Y_val.to(device))
+        train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
+        val_loader = DataLoader(val_ds, batch_size=args.batch_size * 2)
+
+        best_val_f1 = -1.0
+        patience_counter = 0
+        best_state = None
+
+        for epoch in range(args.max_epochs):
+            net.train()
+            for batch_X, batch_y in train_loader:
+                optimizer.zero_grad()
+                loss = criterion(net(batch_X), batch_y)
+                loss.backward()
+                optimizer.step()
+
+            net.eval()
+            all_preds, all_true = [], []
+            with torch.no_grad():
+                for batch_X, batch_y in val_loader:
+                    logits = net(batch_X)
+                    all_preds.append(torch.sigmoid(logits).cpu().numpy())
+                    all_true.append(batch_y.cpu().numpy())
+
+            val_preds = np.vstack(all_preds)
+            val_true = np.vstack(all_true)
+            val_f1 = f1_score(val_true, val_preds > 0.5, average="macro", zero_division=0)
+
+            if val_f1 > best_val_f1:
+                best_val_f1 = val_f1
+                patience_counter = 0
+                best_state = {k: v.cpu().clone() for k, v in net.state_dict().items()}
+            else:
+                patience_counter += 1
+                if patience_counter >= args.patience:
+                    log.info("Early stop at epoch %d (best val F1=%.4f)", epoch + 1, best_val_f1)
+                    break
+
+        if best_state is not None:
+            net.load_state_dict(best_state)
         net.eval()
-        all_preds, all_true = [], []
+
+        train_time = time.perf_counter() - t1
+        log.info("Training done: %.1fs  best val macro-F1=%.4f", train_time, best_val_f1)
+
+    else:
+        log.info("Config: C=10.0 penalty=l2 class_weight=None solver=lbfgs")
+
+        y_int_train = Y_train.argmax(axis=1)
+        clf = LogisticRegression(
+            C=10.0, penalty="l2", solver="lbfgs",
+            class_weight=None, max_iter=1000, random_state=42,
+        )
+        clf.fit(X_train, y_int_train)
+
+        train_time = time.perf_counter() - t1
+        log.info("Training done: %.1fs", train_time)
+
+    # ── Evaluate on test set ───────────────────────────────────────────
+    if args.classifier_type == "mlp":
+        X_test_t = torch.from_numpy(X_test.astype(np.float32)).to(device)
         with torch.no_grad():
-            for batch_X, batch_y in val_loader:
-                logits = net(batch_X)
-                all_preds.append(torch.sigmoid(logits).cpu().numpy())
-                all_true.append(batch_y.cpu().numpy())
-
-        val_preds = np.vstack(all_preds)
-        val_true = np.vstack(all_true)
-        val_f1 = f1_score(val_true, val_preds > 0.5, average="macro", zero_division=0)
-
-        if val_f1 > best_val_f1:
-            best_val_f1 = val_f1
-            patience_counter = 0
-            best_state = {k: v.cpu().clone() for k, v in net.state_dict().items()}
-        else:
-            patience_counter += 1
-            if patience_counter >= args.patience:
-                log.info("Early stop at epoch %d (best val F1=%.4f)", epoch + 1, best_val_f1)
-                break
-
-    if best_state is not None:
-        net.load_state_dict(best_state)
-
-    train_time = time.perf_counter() - t1
-    log.info("Training done: %.1fs  best val macro-F1=%.4f", train_time, best_val_f1)
-
-    net.eval()
-    X_test_t = torch.from_numpy(X_test.astype(np.float32)).to(device)
-    with torch.no_grad():
-        test_logits = net(X_test_t)
-        test_probs = torch.sigmoid(test_logits).cpu().numpy()
-    test_preds = (test_probs > 0.5).astype(np.float32)
+            test_logits = net(X_test_t)
+            test_probs = torch.sigmoid(test_logits).cpu().numpy()
+        test_preds = (test_probs > 0.5).astype(np.float32)
+    else:
+        preds_int = clf.predict(X_test)
+        test_preds = np.zeros((len(preds_int), N_SDG), dtype=np.float32)
+        test_preds[np.arange(len(preds_int)), preds_int] = 1.0
 
     test_macro_f1 = f1_score(Y_test, test_preds, average="macro", zero_division=0)
     test_micro_f1 = f1_score(Y_test, test_preds, average="micro", zero_division=0)
@@ -195,14 +226,16 @@ def main() -> None:
         f1_s = f1_score(y_true_s, y_pred_s, zero_division=0)
         per_sdg[f"SDG_{sdg+1}"] = round(float(f1_s), 4)
 
+    total_elapsed = time.perf_counter() - t0
+
     log.info("Test macro-F1=%.4f  micro-F1=%.4f", test_macro_f1, test_micro_f1)
     for sdg_label, f1_s in per_sdg.items():
         log.info("  %s: %.4f", sdg_label, f1_s)
 
-    total_elapsed = time.perf_counter() - t0
-
-    results = {
-        "config": {
+    # ── Save ───────────────────────────────────────────────────────────
+    if args.classifier_type == "mlp":
+        config = {
+            "classifier_type": "mlp",
             "n_layers": args.n_layers,
             "hidden_size": args.hidden_size,
             "lr": args.lr,
@@ -211,18 +244,34 @@ def main() -> None:
             "max_epochs": args.max_epochs,
             "batch_size": args.batch_size,
             "patience": args.patience,
-        },
+        }
+        training_info = {
+            "device": str(device),
+            "best_val_macro_f1": round(float(best_val_f1), 4),
+            "train_seconds": round(train_time, 1),
+            "total_seconds": round(total_elapsed, 1),
+        }
+    else:
+        config = {
+            "classifier_type": "lr",
+            "C": 10.0,
+            "penalty": "l2",
+            "solver": "lbfgs",
+            "class_weight": None,
+        }
+        training_info = {
+            "train_seconds": round(train_time, 1),
+            "total_seconds": round(total_elapsed, 1),
+        }
+
+    results = {
+        "config": config,
         "data": {
             "n_train": len(X_train),
             "n_test": len(X_test),
             "input_dim": input_dim,
         },
-        "training": {
-            "device": str(device),
-            "best_val_macro_f1": round(float(best_val_f1), 4),
-            "train_seconds": round(train_time, 1),
-            "total_seconds": round(total_elapsed, 1),
-        },
+        "training": training_info,
         "test_results": {
             "macro_f1": round(float(test_macro_f1), 4),
             "micro_f1": round(float(test_micro_f1), 4),
@@ -232,34 +281,46 @@ def main() -> None:
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    torch.save(net.state_dict(), output_dir / "sdg_classifier_retrained.pt")
+    import joblib
+
+    if args.classifier_type == "mlp":
+        torch.save(net.state_dict(), output_dir / "sdg_classifier_retrained.pt")
+        wrapper = _NetWrapper(net.cpu(), input_dim)
+    else:
+        # Remove stale .pt if it exists (LR doesn't use it)
+        pt_path = output_dir / "sdg_classifier_retrained.pt"
+        if pt_path.exists():
+            pt_path.unlink()
+        wrapper = clf
+
     model_path = output_dir / "sdg_classifier_retrained.joblib"
     results_path = output_dir / "sdg_retrain_results.json"
 
-    import joblib
-
-    wrapper = _NetWrapper(net.cpu(), input_dim)
     joblib.dump(wrapper, model_path)
+
+    # Also update sdg_classifier.joblib (used by 2_evaluate.py)
+    canonical_path = output_dir / "sdg_classifier.joblib"
+    joblib.dump(wrapper, canonical_path)
 
     with results_path.open("w") as f:
         json.dump(results, f, indent=2, default=str)
 
     log.info("Saved retrained model → %s", model_path)
+    log.info("Saved canonical model → %s", canonical_path)
     log.info("Saved results → %s", results_path)
 
     print(f"\n{'='*70}")
-    print(f"  RETRAIN COMPLETE — champion on full train pool (n={len(X_train)})")
+    print(f"  RETRAIN COMPLETE — {args.classifier_type.upper()} on full train pool (n={len(X_train)})")
+    if args.classifier_type == "mlp":
+        print(f"  Internal val macro-F1: {best_val_f1:.4f}")
     print(f"  Test macro-F1: {test_macro_f1:.4f}")
     print(f"  Test micro-F1: {test_micro_f1:.4f}")
-    print(f"  CV estimate:   {best_val_f1:.4f} (internal val split)")
     print(f"{'='*70}")
     print(f"\n  Per-SDG F1 on held-out test (n={len(X_test)}):")
     print(f"  {'SDG':<7} {'F1':<8}")
     for sdg_label, f1_s in per_sdg.items():
         print(f"  {sdg_label:<7} {f1_s:<8.4f}")
     print(f"  {'='*70}")
-    delta = test_macro_f1 - best_val_f1
-    print(f"  Val → Test Δ: {delta:+.4f}")
 
 
 if __name__ == "__main__":

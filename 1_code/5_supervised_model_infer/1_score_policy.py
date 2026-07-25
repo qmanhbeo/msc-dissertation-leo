@@ -25,6 +25,7 @@ import logging
 import sys
 from pathlib import Path
 
+import joblib
 import numpy as np
 import torch
 
@@ -71,6 +72,19 @@ class _ModelWrapper:
         return probs.numpy()
     def predict(self, X):
         return (self.predict_proba(X) > 0.5).astype(np.float32)
+
+
+def _load_model(model_root: Path, input_dim: int = 768):
+    """Load retrained classifier — supports sklearn LR or PyTorch MLP."""
+    model_path = model_root / "model" / "sdg_classifier_retrained.joblib"
+    pt_path = model_path.with_suffix(".pt").parent / "sdg_classifier_retrained.pt"
+    if pt_path.exists():
+        net = _MultiLabelMLP(input_dim)
+        net.load_state_dict(torch.load(pt_path, map_location="cpu", weights_only=True))
+        net.eval()
+        return _ModelWrapper(net)
+    log.info("No .pt found — loading sklearn classifier from %s", model_path)
+    return joblib.load(model_path)
 
 
 def load_json(path: Path) -> list[dict]:
@@ -138,13 +152,9 @@ def main() -> None:
     policy_vs_research_out = Path(args.policy_vs_research_out)
     policy_score_ids_out = Path(args.policy_score_ids_out)
 
-    log.info("Loading model state dict: %s", model_path)
+    log.info("Loading model: %s", model_path)
     input_dim = 768  # MPNet
-    net = _MultiLabelMLP(input_dim)
-    pt_path = model_path.with_suffix(".pt").parent / "sdg_classifier_retrained.pt"
-    net.load_state_dict(torch.load(pt_path, map_location="cpu", weights_only=True))
-    net.eval()
-    model = _ModelWrapper(net)
+    model = _load_model(model_root, input_dim)
     log.info("Model loaded (dims=%d)", input_dim)
 
     log.info("Loading policy embeddings: %s", policy_emb_path)
