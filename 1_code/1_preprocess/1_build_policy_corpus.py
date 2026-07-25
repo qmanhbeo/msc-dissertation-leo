@@ -77,9 +77,9 @@ def main() -> None:
     # Source order — sdgi first so it keeps all rows
     SOURCES = [
         ("sdgi", segmented_dir_for_model(args.model) / "sdgi.jsonl", True),
-        ("policy_scrape", preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_segments.jsonl", False),
-        ("policy_manual", preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_segments.jsonl", False),
-        ("ungdc_sdg", preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_segments.jsonl", False),
+        ("policy_scrape", segmented_dir_for_model(args.model) / "policy_scrape.jsonl", False),
+        ("policy_manual", segmented_dir_for_model(args.model) / "policy_manual.jsonl", False),
+        ("ungdc_sdg", segmented_dir_for_model(args.model) / "ungdc_sdg.jsonl", False),
     ]
 
     output_dir = segmented_dir_for_model(args.model)

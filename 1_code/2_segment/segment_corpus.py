@@ -99,7 +99,7 @@ def segment_records(
         if not sub_texts:
             continue
 
-        source_doc = f"{prefix}_{rec.get(id_field, str(idx))}"
+        source_doc = rec.get("source_doc") or f"{prefix}_{rec.get(id_field, str(idx))}"
         if source_doc not in doc_counts:
             doc_counts[source_doc] = 0
 
@@ -124,7 +124,8 @@ def segment_records(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Segment a preprocessed corpus.")
-    parser.add_argument("--corpus", choices=["sdg_knowledge_hub", "aurora", "research"],
+    parser.add_argument("--corpus", choices=["sdg_knowledge_hub", "aurora", "research",
+                                              "policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"],
                         help="Known corpus name; auto-derives input/output from model_utils (alternative to --input/--output).")
     parser.add_argument("--input", help="Single input JSONL path.")
     parser.add_argument("--output", help="Single output JSONL path (supports {model} placeholder).")
@@ -162,6 +163,42 @@ def main() -> None:
             args.prefix = "aurora"
         if not args.id_field or args.id_field == "id":
             args.id_field = "doi"
+    elif args.corpus == "policy_scrape":
+        if not args.input:
+            args.input = str(preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_clean.jsonl")
+        if not args.output:
+            args.output = str(segmented_dir_for_model(args.model) / "policy_scrape.jsonl")
+        if not args.prefix or args.prefix == "doc":
+            args.prefix = "pol_scrape"
+        if not args.id_field or args.id_field == "id":
+            args.id_field = "id"
+    elif args.corpus == "policy_manual":
+        if not args.input:
+            args.input = str(preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_clean.jsonl")
+        if not args.output:
+            args.output = str(segmented_dir_for_model(args.model) / "policy_manual.jsonl")
+        if not args.prefix or args.prefix == "doc":
+            args.prefix = "pol_manual"
+        if not args.id_field or args.id_field == "id":
+            args.id_field = "id"
+    elif args.corpus == "ungdc_sdg":
+        if not args.input:
+            args.input = str(preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_clean.jsonl")
+        if not args.output:
+            args.output = str(segmented_dir_for_model(args.model) / "ungdc_sdg.jsonl")
+        if not args.prefix or args.prefix == "doc":
+            args.prefix = "ungdc"
+        if not args.id_field or args.id_field == "id":
+            args.id_field = "id"
+    elif args.corpus == "sdgi":
+        if not args.input:
+            args.input = str(preprocessed_dir() / "sdgi" / "sdgi_clean.jsonl")
+        if not args.output:
+            args.output = str(segmented_dir_for_model(args.model) / "sdgi.jsonl")
+        if not args.prefix or args.prefix == "doc":
+            args.prefix = "sdgi"
+        if not args.id_field or args.id_field == "id":
+            args.id_field = "id"
 
     model_slug = args.model.replace("/", "_").lower()
 

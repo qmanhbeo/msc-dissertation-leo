@@ -4,30 +4,22 @@ Extract SDG-relevant policy passages from the UN General Debate Corpus (UNGDC).
 Input:  2_data/0_raw/ungdc/TXT/Session <N> - <YEAR>/<ISO>_<session>_<year>.txt
         Sessions 70–80 (2015–2024) — post-SDG-adoption speeches only
 
-Output: 2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_segments.jsonl
+Output: 2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_clean.jsonl
 
 Strategy:
   1. Read all speeches from sessions 70–80 (2015–2024)
   2. Split each speech into paragraphs
   3. Keep paragraphs that contain SDG-relevant keywords
-  4. Segment the concatenated SDG-relevant paragraphs using segment_text()
-     (NLTK sent_tokenize + SentenceTransformer tokenizer budget,
-     max_seq_length - 10)
-  5. Output in the standard policy_segments format
-
-These are official statements by heads of state/government at the UN General
-Assembly — authentic policy discourse on international goals and commitments.
+  4. Concatenate the SDG-relevant paragraphs into a single document per speech
+  5. Output documents (not segments) for downstream segmentation
 
 Preserves paragraph-level SDG keyword filtering before segmentation.
-Only the post-filter merge/segmentation step is replaced (word-count merge
-→ token-count-aware segment_text).
+Only the merge/segmentation step is now handled by segment_corpus.py.
 
 Run from project root:
     python 1_code/1_preprocess/0_filter_ungdc_sdg.py
-    python 1_code/1_preprocess/0_filter_ungdc_sdg.py --model all-MiniLM-L6-v2
 """
 
-import argparse
 import json
 import re
 from pathlib import Path
@@ -37,27 +29,21 @@ import sys
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
     sys.path.insert(0, str(CODE_ROOT))
-SEGMENT_DIR = CODE_ROOT / "2_segment"
-if str(SEGMENT_DIR) not in sys.path:
-    sys.path.insert(0, str(SEGMENT_DIR))
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from sentence_transformers import SentenceTransformer
-
-from segment_utils import segment_text
 from model_utils import raw_dir, preprocessed_dir
 
 UNGDC_TXT_DIR = raw_dir() / "ungdc" / "TXT"
 OUTPUT_DIR = preprocessed_dir() / "policy_all" / "ungdc_sdg"
-OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_segments.jsonl"
+OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_clean.jsonl"
 
 # Sessions after SDG adoption (September 2015 = Session 70)
 MIN_SESSION = 70
 MAX_SESSION = 80
 
-# Minimum paragraph length to consider (words) — used in split_paragraphs
+# Minimum paragraph length to consider (words)
 MIN_PARA_WORDS = 20
 
 # ---------------------------------------------------------------------------
@@ -123,11 +109,9 @@ def split_paragraphs(text: str) -> list[str]:
     UNGDC files use single newlines between paragraphs (no blank lines),
     so we split on both blank-line boundaries and single newlines.
     """
-    # Try double-newline split first
     if "\n\n" in text:
         raw_paras = re.split(r"\n\s*\n", text)
     else:
-        # Fall back to single newline (UNGDC format)
         raw_paras = text.split("\n")
 
     result = []
@@ -156,19 +140,6 @@ def parse_speech_file(path: Path) -> tuple[str, int, int] | None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Filter UNGDC speeches for SDG-relevant passages and segment with token-count-aware segmentation."
-    )
-    parser.add_argument(
-        "--model", default="all-mpnet-base-v2",
-        help="Sentence-transformer model for tokenizer (default: %(default)s).",
-    )
-    args = parser.parse_args()
-
-    print("Loading model: %s" % args.model)
-    model = SentenceTransformer(args.model)
-    print("Max sequence length: %d" % model.max_seq_length)
-
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     if not UNGDC_TXT_DIR.exists():
@@ -186,16 +157,17 @@ def main() -> None:
 
     print(f"Found {len(session_dirs)} sessions ({MIN_SESSION}–{MAX_SESSION})")
 
-    all_segments: list[dict] = []
-    segment_idx = 0
+    all_records: list[dict] = []
     speech_count = 0
     kept_speech_count = 0
+    para_before_count = 0
+    para_after_count = 0
 
     for session_num, year, session_dir in session_dirs:
         speech_files = sorted(session_dir.glob("*.txt"))
         print(f"  Session {session_num} ({year}): {len(speech_files)} speeches", end="", flush=True)
 
-        session_segments = 0
+        session_docs = 0
         for speech_path in speech_files:
             parsed = parse_speech_file(speech_path)
             if not parsed:
@@ -209,46 +181,40 @@ def main() -> None:
                 continue
 
             paragraphs = split_paragraphs(text)
-            # Filter to SDG-relevant paragraphs (preserved: keyword filter before segmentation)
+            para_before_count += len(paragraphs)
             relevant = [p for p in paragraphs if SDG_PATTERNS.search(p)]
             if not relevant:
                 continue
 
+            para_after_count += len(relevant)
             kept_speech_count += 1
             speech_text = " ".join(relevant)
-            segmented = segment_text(speech_text, model)
-
             source_doc = f"ungdc_{iso3}_{session_num}_{year}"
-            for i, seg_text in enumerate(segmented):
-                if len(seg_text.split()) < MIN_PARA_WORDS:
-                    continue
-                all_segments.append(
-                    {
-                        "segment_id": f"ungdc_{segment_idx:06d}",
-                        "source_doc": source_doc,
-                        "segment_index": i,
-                        "text": seg_text,
-                        "word_count": len(seg_text.split()),
-                        "institution": f"{iso3} (UNGDC speech)",
-                        "year": year,
-                        "session": session_num,
-                    }
-                )
-                segment_idx += 1
-                session_segments += 1
 
-        print(f"  → {session_segments} segments")
+            all_records.append({
+                "id": speech_path.stem,
+                "text": speech_text,
+                "source_doc": source_doc,
+                "institution": f"{iso3} (UNGDC speech)",
+                "year": year,
+                "session": session_num,
+            })
+            session_docs += 1
 
-    # Write output
+        print(f"  → {session_docs} documents")
+
     with OUTPUT_JSONL.open("w", encoding="utf-8") as f:
-        for segment in all_segments:
-            f.write(json.dumps(segment) + "\n")
+        for r in all_records:
+            f.write(json.dumps(r) + "\n")
 
     print(f"\n{'='*60}")
-    print(f"Speeches scanned:  {speech_count}")
-    print(f"Speeches with SDG content: {kept_speech_count} ({kept_speech_count/max(speech_count,1)*100:.1f}%)")
-    print(f"Total segments:      {len(all_segments)}")
-    print(f"Output:            {OUTPUT_JSONL}")
+    print(f"Speeches scanned:             {speech_count}")
+    print(f"Speeches with SDG content:    {kept_speech_count} ({kept_speech_count/max(speech_count,1)*100:.1f}%)")
+    print(f"Paragraphs before filter:     {para_before_count}")
+    print(f"Paragraphs after filter:      {para_after_count}")
+    print(f"Filter retention:             {para_after_count/max(para_before_count,1)*100:.1f}%")
+    print(f"Total documents:              {len(all_records)}")
+    print(f"Output:                       {OUTPUT_JSONL}")
     print(f"{'='*60}")
 
 

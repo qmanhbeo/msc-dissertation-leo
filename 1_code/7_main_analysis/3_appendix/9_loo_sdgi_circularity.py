@@ -53,12 +53,11 @@ ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = ROOT / "1_code"
 ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
 SHARED_DIR = ANALYSIS_ROOT / "0_shared"
-POLICY_PREPROCESSED_ROOT = ROOT / "2_data" / "1_preprocessed" / "policy_all"
 for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, segmented_dir_for_model
 
 OUTPUT_SUBDIR = "a3_sdgi_circularity"
 DATA_JSON = "loo_sdgi_circularity.json"
@@ -67,14 +66,14 @@ NUM_TEX = "num_loo_sdgi_circularity.tex"
 
 FAMILY_FILE_MAP = {
     "curated_ai_sdg": [
-        POLICY_PREPROCESSED_ROOT / "policy_scrape" / "policy_scrape_segments.jsonl",
-        POLICY_PREPROCESSED_ROOT / "policy_manual" / "policy_manual_segments.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_scrape.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_manual.jsonl",
     ],
     "sdgi_vnr_vlr": [
-        ROOT / "2_data" / "2_segmented" / DEFAULT_EMBED_MODEL / "sdgi.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "sdgi.jsonl",
     ],
     "ungdc_speeches": [
-        POLICY_PREPROCESSED_ROOT / "ungdc_sdg" / "ungdc_sdg_segments.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "ungdc_sdg.jsonl",
     ],
 }
 

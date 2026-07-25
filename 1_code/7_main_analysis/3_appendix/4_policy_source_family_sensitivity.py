@@ -36,7 +36,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, policy_preprocessed_dir
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, segmented_dir_for_model
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -48,7 +48,6 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-POLICY_PREPROCESSED_ROOT = policy_preprocessed_dir()
 
 SUMMARY_CSV = "policy_source_family_summary.csv"
 COVERAGE_CSV = "policy_source_family_coverage.csv"
@@ -57,14 +56,14 @@ SEMANTIC_CSV = "policy_source_family_semantic_gaps.csv"
 
 FAMILY_FILE_MAP = {
     "curated_ai_sdg": [
-        POLICY_PREPROCESSED_ROOT / "policy_scrape" / "policy_scrape_segments.jsonl",
-        POLICY_PREPROCESSED_ROOT / "policy_manual" / "policy_manual_segments.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_scrape.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_manual.jsonl",
     ],
     "sdgi_vnr_vlr": [
-        POLICY_PREPROCESSED_ROOT / "sdgi_corpus" / "sdgi_segments.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "sdgi.jsonl",
     ],
     "ungdc_speeches": [
-        POLICY_PREPROCESSED_ROOT / "ungdc_sdg" / "ungdc_sdg_segments.jsonl",
+        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "ungdc_sdg.jsonl",
     ],
 }
 
