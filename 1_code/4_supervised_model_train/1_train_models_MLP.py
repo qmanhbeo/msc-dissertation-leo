@@ -213,12 +213,15 @@ def main() -> None:
     log.info("Train: %d texts, %d dims  [%.1fs]", len(X), X.shape[1], time.perf_counter() - t0)
 
     param_grid = {
-        "n_layers": [1, 2, 4, 8, 16],
+        "n_layers": [2, 4],
         "hidden_size": [256, 384],
-        "lr": [0.001],
+        "lr": [1e-4, 3e-4, 1e-3, 3e-3],
         "weight_decay": [0],
         "dropout": [0.3],
     }
+    # Note: full sweep (n_layers=[1,2,4,8,16], hidden_size=[256,384], lr=[0.001])
+    # completed earlier. Current grid focuses on lr × best architectures.
+    # RF and XGB were removed as not supported by cited literature.
     keys, vals = list(param_grid.keys()), list(param_grid.values())
     cv = GroupKFold(n_splits=5)
 
