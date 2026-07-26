@@ -23,9 +23,6 @@ from model_utils import (
     DEFAULT_EMBED_MODEL,
     embed_dir_for_model,
     embed_research_dir_for_model,
-    model_results_dir_for_model,
-    preprocessed_dir,
-    raw_dir,
     research_preprocessed_dir,
     research_segmented_dir_for_model,
     scored_dir_for_model,
@@ -36,12 +33,6 @@ from model_utils import (
 ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
-WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS = [
-    research_preprocessed_dir() / "metadata" / "manifest.json",
-    research_preprocessed_dir() / "part-00001.jsonl",
-    segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy.jsonl",
-]
-
 EMBED_BATCH_SIZE = "64"
 ALL_EMBED_CORPORA = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
                      "policy_scrape", "policy_manual", "ungdc_sdg"]
@@ -49,8 +40,6 @@ ALL_EMBED_CORPORA = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
 
 def base_warm_replay_requirements(model: str = "") -> list[Path]:
     embed_root = embed_dir_for_model(model)
-    scored_root = scored_dir_for_model(model)
-    model_root = model_results_dir_for_model(model)
     return [
         embed_root / "policy.npy",
         embed_root / "metadata" / "policy_ids.json",
@@ -65,16 +54,6 @@ def base_warm_replay_requirements(model: str = "") -> list[Path]:
         embed_root / "aurora.npy",
         embed_root / "metadata" / "aurora_ids.json",
         embed_research_dir_for_model(model) / "metadata" / "manifest.json",
-        scored_root / "sdg_centroids.npy",
-        scored_root / "metadata" / "sdg_centroid_meta.json",
-        scored_root / "research_centroids.npy",
-        scored_root / "paper_scores_shards" / "metadata" / "manifest.json",
-        scored_root / "policy_scores.npy",
-        scored_root / "policy_scores_vs_research.npy",
-        model_root / "model" / "sdg_classifier_retrained.joblib",
-        raw_dir() / "policy_manual" / "artifact" / "convert_policy_manual_summary.json",
-        Path("3_writing/dissertation.tex"),
-        Path("3_writing/references.bib"),
     ]
 
 
@@ -209,39 +188,8 @@ def missing_requirements(paths: list[Path]) -> list[Path]:
     return [p for p in paths if not (ROOT / p).exists()]
 
 
-def required_warm_replay_inputs(*, include_appendix_extra: bool, model: str = DEFAULT_EMBED_MODEL) -> list[Path]:
-    required = base_warm_replay_requirements(model)
-    if include_appendix_extra:
-        required.extend(WARM_REPLAY_APPENDIX_EXTRA_REQUIREMENTS)
-    return required
-
-
-def missing_research_text_shards() -> list[Path]:
-    manifest_path = ROOT / research_preprocessed_dir() / "metadata" / "manifest.json"
-    if not manifest_path.exists():
-        return [manifest_path.relative_to(ROOT)]
-
-    try:
-        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return [manifest_path.relative_to(ROOT)]
-
-    shards = payload.get("shards")
-    if not isinstance(shards, list):
-        return [manifest_path.relative_to(ROOT)]
-
-    missing: list[Path] = []
-    for shard in shards:
-        if not isinstance(shard, dict):
-            continue
-        data_path = shard.get("data_path")
-        ids_path = shard.get("ids_path")
-        for value in (data_path, ids_path):
-            if isinstance(value, str):
-                path = ROOT / value
-                if not path.exists():
-                    missing.append(path.relative_to(ROOT))
-    return missing
+def required_warm_replay_inputs(model: str = DEFAULT_EMBED_MODEL) -> list[Path]:
+    return base_warm_replay_requirements(model)
 
 
 def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, ...]) -> list[Path]:
@@ -271,8 +219,8 @@ def missing_manifest_shard_paths(manifest_path: Path, shard_fields: tuple[str, .
     return missing
 
 
-def missing_warm_replay_requirements(*, include_appendix_extra: bool, model: str = DEFAULT_EMBED_MODEL) -> list[Path]:
-    missing = missing_requirements(required_warm_replay_inputs(include_appendix_extra=include_appendix_extra, model=model))
+def missing_warm_replay_requirements(model: str = DEFAULT_EMBED_MODEL) -> list[Path]:
+    missing = missing_requirements(required_warm_replay_inputs(model=model))
     embed_manifest = embed_research_dir_for_model(model) / "metadata" / "manifest.json"
     for path in missing_manifest_shard_paths(
         embed_manifest,
@@ -280,10 +228,6 @@ def missing_warm_replay_requirements(*, include_appendix_extra: bool, model: str
     ):
         if path not in missing:
             missing.append(path)
-    if include_appendix_extra:
-        for path in missing_research_text_shards():
-            if path not in missing:
-                missing.append(path)
     return missing
 
 
@@ -295,21 +239,12 @@ def print_status(output_dir: Path) -> None:
     print(f"Project root: {ROOT}")
     print(f"Manuscript output dir: {output_dir}")
 
-    warm_missing = missing_warm_replay_requirements(include_appendix_extra=False)
+    warm_missing = missing_warm_replay_requirements()
     print("")
     print(f"Warm replay readiness: {'yes' if not warm_missing else 'no'}")
     if warm_missing:
         for path in warm_missing:
             print(f"  missing: {rel(ROOT / path)}")
-
-    warm_appendix_missing = missing_warm_replay_requirements(include_appendix_extra=True)
-    print("")
-    print(f"Warm replay + appendix readiness: {'yes' if not warm_appendix_missing else 'no'}")
-    if warm_appendix_missing:
-        for path in warm_appendix_missing[:12]:
-            print(f"  missing: {rel(ROOT / path)}")
-        if len(warm_appendix_missing) > 12:
-            print(f"  ... and {len(warm_appendix_missing) - 12} more")
 
     status = canonical_artifact_status(output_dir)
     print("")
@@ -391,30 +326,34 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
 def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     """Run the main-text analysis steps for a given model (no input guard).
 
-    Steps 1-3 operate on frozen embeddings and scores (warm replay only).
+    Steps 0-1 train the classifier deterministically from frozen embeddings.
+    Steps 2-3 run inference with the freshly-trained classifier.
+    Steps 4+ run analysis.
     """
     model_args = ["--model", model]
-    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="1")
-    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args, step_id="2")
+    run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
+    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py"] + model_args, step_id="1")
+    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="2")
+    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args, step_id="3")
     run_step(
         "check centroid consistency",
         [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args,
-        step_id="3",
+        step_id="4",
     )
-    run_step("coverage gap", [sys.executable, "1_code/7_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="4")
-    run_step("semantic gap", [sys.executable, "1_code/7_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="5")
+    run_step("coverage gap", [sys.executable, "1_code/7_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="5")
+    run_step("semantic gap", [sys.executable, "1_code/7_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="6")
     run_step(
         "coverage semantic interaction",
         [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)] + model_args,
-        step_id="6",
+        step_id="7",
     )
-    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="7")
+    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
             "generate cross-sensitivity table",
             [sys.executable, "1_code/7_main_analysis/1_canonical/3_generate_cross_sensitivity_table.py",
              "--output-dir", str(output_dir)],
-            step_id="8",
+            step_id="9",
         )
 
 
@@ -424,7 +363,7 @@ def run_main_text(
     *,
     model: str = DEFAULT_EMBED_MODEL,
 ) -> None:
-    missing = missing_warm_replay_requirements(include_appendix_extra=False, model=model)
+    missing = missing_warm_replay_requirements(model=model)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
@@ -465,24 +404,15 @@ def run_warm_replay(
 
 
 def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
-    print("WARNING: live-source --cold-replay reruns are not expected to be identical to the frozen data snapshot.")
-    print("WARNING: OpenAlex updates over time, policy source links may drift, and the manual policy supplement is not fully automatable from stable URLs.")
+    print("NOTE: --cold-replay rebuilds from the raw snapshot (frozen data).")
+    print("      For fresh data, run: python main.py --fetch-data-snapshot --profile raw")
+    print("      Cold replay from frozen snapshots is deterministic and reproducible.")
 
     model = args.embed_model
     model_is_nondefault = model != DEFAULT_EMBED_MODEL
     model_args = ["--model", model] if model_is_nondefault else []
 
     pre_steps = [
-        # — FETCH (download raw data from live sources) —
-        ("fetch policy", [sys.executable, "1_code/0_fetch/fetch_policy.py"]),
-        ("convert policy manual", [sys.executable, "1_code/0_fetch/convert_policy_manual.py"]),
-        ("fetch sdgi corpus", [sys.executable, "1_code/0_fetch/fetch_sdgi_corpus.py"]),
-        ("fetch ungdc", [sys.executable, "1_code/0_fetch/fetch_ungdc.py"]),
-        ("fetch osdg", [sys.executable, "1_code/0_fetch/fetch_osdg.py"]),
-        ("fetch sdg benchmark", [sys.executable, "1_code/0_fetch/fetch_sdg_benchmark.py"]),
-        ("fetch sdg knowledge hub", [sys.executable, "1_code/0_fetch/fetch_sdg_knowledge_hub.py"]),
-        ("fetch aurora", [sys.executable, "1_code/0_fetch/fetch_aurora.py"]),
-        ("fetch openalex", [sys.executable, "1_code/0_fetch/fetch_openalex.py"]),
         # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
         ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"]),
         ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"]),
@@ -535,9 +465,6 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     ]
     embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
-
-    run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--model", model])
-    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py", "--model", model])
 
     analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" if model_is_nondefault else output_dir
     _run_main_analysis_steps(analysis_output_dir, model=model)
@@ -596,11 +523,11 @@ def selected_backup_profiles(profile_name: str) -> list[str]:
     return [profile_name]
 
 
-def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_appendix_extra: bool, model: str = DEFAULT_EMBED_MODEL) -> None:
+def ensure_warm_replay_inputs(args: argparse.Namespace, *, model: str = DEFAULT_EMBED_MODEL) -> None:
     if model != DEFAULT_EMBED_MODEL:
         # Model-sensitivity runs use model-specific embed files that are not in the snapshot.
         return
-    missing = missing_warm_replay_requirements(include_appendix_extra=include_appendix_extra)
+    missing = missing_warm_replay_requirements(model=model)
     if not missing:
         return
 
@@ -795,7 +722,7 @@ def main() -> None:
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.warm_replay:
-        ensure_warm_replay_inputs(args, include_appendix_extra=False)
+        ensure_warm_replay_inputs(args)
         run_warm_replay(output_dir, args)
     elif args.build_pdf:
         build_pdf(output_dir)
