@@ -20,6 +20,7 @@ Run from project root:
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
@@ -74,6 +75,13 @@ _SDG_NAMES = {
 }
 
 
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Run register-adjustment sensitivity analysis.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    return p.parse_args()
+
+
 def load_research_sample(
     model: str, n_samples: int, rng: np.random.Generator,
 ) -> np.ndarray:
@@ -116,7 +124,8 @@ def subtract_direction(emb: np.ndarray, g_dir: np.ndarray) -> np.ndarray:
 
 
 def main() -> None:
-    model = DEFAULT_EMBED_MODEL
+    args = parse_args()
+    model = args.model
     rng = np.random.default_rng(POLICY_SEGMENT_CAP_SEED)
 
     # ------------------------------------------------------------------
@@ -299,7 +308,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 8. Write LaTeX output
     # ------------------------------------------------------------------
-    out_root = DEFAULT_OUTPUT_ROOT / "appendix" / "e_register_adjustment"
+    out_root = Path(args.output_dir) / "appendix" / "e_register_adjustment"
     tables_dir = out_root / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
 
