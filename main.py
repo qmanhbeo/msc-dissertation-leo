@@ -340,20 +340,27 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
         [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args,
         step_id="4",
     )
-    run_step("coverage gap", [sys.executable, "1_code/7_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="5")
-    run_step("semantic gap", [sys.executable, "1_code/7_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="6")
+    if model == DEFAULT_EMBED_MODEL:
+        run_step(
+            "zero-shot nearest-centroid scoring",
+            [sys.executable, "1_code/7_main_analysis/3_appendix/0_zeroshot_scoring.py",
+             "--output-dir", str(output_dir)] + model_args,
+            step_id="5",
+        )
+    run_step("coverage gap", [sys.executable, "1_code/7_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="6")
+    run_step("semantic gap", [sys.executable, "1_code/7_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="7")
     run_step(
         "coverage semantic interaction",
         [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)] + model_args,
-        step_id="7",
+        step_id="8",
     )
-    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="8")
+    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="9")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
             "generate cross-sensitivity table",
             [sys.executable, "1_code/7_main_analysis/1_canonical/3_generate_cross_sensitivity_table.py",
              "--output-dir", str(output_dir)],
-            step_id="9",
+            step_id="10",
         )
 
 

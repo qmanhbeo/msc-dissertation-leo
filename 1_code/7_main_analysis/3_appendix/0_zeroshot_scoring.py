@@ -5,9 +5,9 @@ Computes per-SDG semantic gaps under zero-shot nearest-centroid assignment
 using the same post-fix reference centroids (sdg_centroids.npy) that the
 LR classifier uses as its class means.
 
-Outputs: 4_outputs/zeroshot/semantic_gap_distances.json  (per-SDG gaps)
-          4_outputs/zeroshot/research_centroids.npy      (per-SDG mean of zs-assigned papers)
-          4_outputs/zeroshot/policy_centroids.npy        (per-SDG mean of zs-assigned segments)
+Outputs: {output_dir}/zeroshot/semantic_gap_distances.json  (per-SDG gaps)
+          {output_dir}/zeroshot/research_centroids.npy      (per-SDG mean of zs-assigned papers)
+          {output_dir}/zeroshot/policy_centroids.npy        (per-SDG mean of zs-assigned segments)
 """
 
 from __future__ import annotations
@@ -69,10 +69,11 @@ def cap_indices_per_doc(policy_ids: list[dict], segment_cap: int, rng: np.random
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL)
+    p.add_argument("--output-dir", default="4_outputs")
     args = p.parse_args()
     model = args.model
 
-    out_root = Path("4_outputs") / "zeroshot"
+    out_root = Path(args.output_dir) / "zeroshot"
     out_root.mkdir(parents=True, exist_ok=True)
 
     # 1. Load reference centroids (same ones LR uses)
