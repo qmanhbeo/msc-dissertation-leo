@@ -9,7 +9,7 @@ This repository contains the dissertation code, manuscript source, committed out
 | Requirement | Details |
 |---|---|
 | **Disk space** | Embedded snapshot: ~8.7 GB archive. Raw snapshot: ~3.7 GB archive |
-| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
+| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay-without-appendix` / `--warm-replay-with-appendix` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
 | **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). Also required for `--cold-replay` (OpenAlex API + HuggingFace model download). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
@@ -34,7 +34,7 @@ conda activate dissertation
 # optional: if you have an NVIDIA GPU with CUDA 12.1:
 # pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 
-python main.py --warm-replay --overwrite
+python main.py --warm-replay-without-appendix --overwrite
 ```
 
 This rebuilds main text outputs from the frozen embedded data snapshot.
@@ -47,7 +47,7 @@ then retry.
 ```bash
 # Or if you want to fetch the raw data snapshot for cold-replay rebuilds:
 python main.py --fetch-data-snapshot raw
-python main.py --warm-replay --overwrite
+python main.py --warm-replay-without-appendix --overwrite
 ```
 
 ## What the replay produces
@@ -80,14 +80,15 @@ Not tracked in Git:
 - `requirements.txt` is a human-edited core reference (13 packages). Not needed
   for rebuild — `environment.yml` already covers the pip layer.
 - Python version: `3.11`.
-- CPU is sufficient for `--warm-replay`
+- CPU is sufficient for `--warm-replay-without-appendix`
 
 ## Additional optional commands
 
 | Command | What it does |
 |---|---|
 | `python main.py` | Read-only status check |
-| `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
+| `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
+| `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D, E) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
