@@ -38,7 +38,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, model_results_dir_for_model
 
 CORPORA = [
     {"name": "osdg", "embed_file": "osdg.npy", "ids_file": "metadata/osdg_ids.json"},
@@ -78,8 +78,7 @@ def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: n
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare single-label training data.")
-    default_model = "all-mpnet-base-v2"
-    parser.add_argument("--model", default=default_model,
+    parser.add_argument("--model", default=DEFAULT_EMBED_MODEL,
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--embed-root", default=None,
                         help="Override embed root dir (derived from --model if omitted)")
