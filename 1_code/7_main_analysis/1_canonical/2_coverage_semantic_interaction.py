@@ -41,10 +41,6 @@ Inputs:
    4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
    4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
 
-   4_outputs/appendix/d_model_sensitivity/main/data/                  MPNet model coverage + semantic gap (multi-config H1)
-   4_2_coverage_document_weighted.json
-   4_3_semantic_gap_distances.json
-
    4_outputs/appendix/a1_sdg_source_comparison/data/                  per-source research coverage + gap (multi-config H1)
    comparison_summary.json
 
@@ -483,25 +479,7 @@ def main() -> None:
     config_rows.append((r"Excluding SDG 4", tests_excl4))
     config_rows.append((r"Excluding SDG 17", tests_excl17))
 
-    # 2. MPNet model
-    mpnet_dir = DEFAULT_OUTPUT_ROOT / "appendix" / "d_model_sensitivity" / "main" / "data"
-    mpnet_cov_path = mpnet_dir / "4_2_coverage_document_weighted.json"
-    mpnet_sem_path = mpnet_dir / "4_3_semantic_gap_distances.json"
-    if mpnet_cov_path.exists() and mpnet_sem_path.exists():
-        mpnet_cov = load_json(mpnet_cov_path)
-        mpnet_sem = load_json(mpnet_sem_path)
-        mpnet_res = np.array([mpnet_cov["research_profile_hard"][f"SDG{i}"] for i in range(1, 18)])
-        mpnet_pol = np.array([mpnet_cov["policy_profile_hard_docweighted"][f"SDG{i}"] for i in range(1, 18)])
-        mpnet_covgap = np.array([mpnet_cov["coverage_gap_hard"][f"SDG{i}"] for i in range(1, 18)])
-        mpnet_dom = mpnet_res - mpnet_pol
-        mpnet_per_sdg = {r["sdg"]: r["semantic_gap"] for r in mpnet_sem["per_sdg"]}
-        mpnet_gaps = np.array([mpnet_per_sdg.get(i, np.nan) for i in range(1, 18)], dtype=float)
-        mpnet_mask = np.isfinite(mpnet_res) & np.isfinite(mpnet_pol) & np.isfinite(mpnet_gaps)
-        if int(mpnet_mask.sum()) >= 3:
-            mpnet_tests = compute_four_tests(mpnet_res, mpnet_pol, mpnet_covgap, mpnet_dom, mpnet_gaps, mpnet_mask)
-            config_rows.append(("MPNet model", mpnet_tests))
-
-    # 3. Reference sources
+    # 2. Reference sources
     comp_path = DEFAULT_OUTPUT_ROOT / "appendix" / "a1_sdg_source_comparison" / "data" / "comparison_summary.json"
     if comp_path.exists():
         comp_data = load_json(comp_path)

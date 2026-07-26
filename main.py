@@ -83,13 +83,12 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2-A3, B1, B3, C, D, E) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2-A3, B1, B3, C, E) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b1-pca", action="store_true", help="Run B.1 Combined Research-Policy PCA Landscape.")
     p.add_argument("--appendix-b3-interpret", action="store_true", help="Run B.3 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
-    p.add_argument("--appendix-d-sensitivity", action="store_true", help="Run D Model Sensitivity (all-mpnet-base-v2 vs MiniLM comparison). Requires pre-embedded MPNet data (see README).")
     p.add_argument("--appendix-e-register", action="store_true", help="Run E Register-Adjustment Robustness.")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
@@ -155,8 +154,6 @@ def rel(path: Path) -> str:
 
 
 def _appendix_output_dir(base_output_dir: Path, model: str) -> Path:
-    if model != DEFAULT_EMBED_MODEL:
-        return base_output_dir / "appendix" / "d_model_sensitivity"
     return base_output_dir
 
 
@@ -175,7 +172,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_b3_interpret,
             args.appendix_e_register,
             args.appendix_c_sample_stability,
-            args.appendix_d_sensitivity,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
             args.build_pdf,
@@ -386,22 +382,6 @@ def run_main_text(
     _run_main_analysis_steps(output_dir, model)
 
 
-def run_model_sensitivity(output_dir: Path, args: argparse.Namespace) -> None:
-    # Always compares champion (MPNet) against MiniLM; --embed-model is not consulted.
-    model = "all-mpnet-base-v2"
-    mpnet_output_dir = output_dir / "appendix" / "d_model_sensitivity"
-    _run_main_analysis_steps(mpnet_output_dir, model=model)
-    run_step(
-        "model sensitivity comparison",
-        [
-            sys.executable,
-            "1_code/7_main_analysis/3_appendix/d_model_sensitivity/comparison.py",
-            "--output-dir", str(output_dir),
-        ],
-        step_id="D",
-    )
-
-
 def run_warm_replay(
     output_dir: Path,
     args: argparse.Namespace,
@@ -409,18 +389,14 @@ def run_warm_replay(
     include_appendix: bool = False,
 ) -> None:
     model = args.embed_model
-    if model != DEFAULT_EMBED_MODEL:
-        analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity"
-        _run_main_analysis_steps(analysis_output_dir, model=model)
-    else:
-        run_main_text(output_dir, args)
-        if include_appendix:
-            run_pca_semantic_landscape(output_dir, model=model)
-            run_policy_source_family_sensitivity(output_dir, model=model)
-            run_sdg4_lexical_audit(output_dir, model=model)
-            run_semantic_gap_interpretability(output_dir, model=model)
-            run_sample_stability(output_dir, model=model)
-            run_register_adjustment(output_dir, model=model)
+    run_main_text(output_dir, args)
+    if include_appendix:
+        run_pca_semantic_landscape(output_dir, model=model)
+        run_policy_source_family_sensitivity(output_dir, model=model)
+        run_sdg4_lexical_audit(output_dir, model=model)
+        run_semantic_gap_interpretability(output_dir, model=model)
+        run_sample_stability(output_dir, model=model)
+        run_register_adjustment(output_dir, model=model)
     print(
         "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -491,8 +467,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
 
-    analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" if model_is_nondefault else output_dir
-    _run_main_analysis_steps(analysis_output_dir, model=model)
+    _run_main_analysis_steps(output_dir, model=model)
 
     run_pca_semantic_landscape(output_dir, model=model)
     run_policy_source_family_sensitivity(output_dir, model=model)
@@ -655,8 +630,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--model", model])
 
     elif stage == "analysis":
-        analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" if model_is_nondefault else output_dir
-        _run_main_analysis_steps(analysis_output_dir, model)
+        _run_main_analysis_steps(output_dir, model)
         run_pca_semantic_landscape(output_dir, model=model)
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
@@ -691,7 +665,6 @@ def main() -> None:
         or args.appendix_a3_sdg4
         or args.appendix_b1_pca
         or args.appendix_b3_interpret
-        or args.appendix_d_sensitivity
         or args.appendix_c_sample_stability
         or args.appendix_e_register
         or args.build_pdf
@@ -715,7 +688,6 @@ def main() -> None:
         run_pca_semantic_landscape(output_dir, model=model)
         run_semantic_gap_interpretability(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
-        run_model_sensitivity(output_dir, args)
         run_register_adjustment(output_dir, model=model)
         if args.build_pdf:
             build_pdf(output_dir)
@@ -733,10 +705,6 @@ def main() -> None:
             build_pdf(output_dir)
     elif args.appendix_b3_interpret:
         run_semantic_gap_interpretability(output_dir, model=args.embed_model)
-        if args.build_pdf:
-            build_pdf(output_dir)
-    elif args.appendix_d_sensitivity:
-        run_model_sensitivity(output_dir, args)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_c_sample_stability:

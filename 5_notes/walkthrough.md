@@ -292,11 +292,11 @@ You can think of it like turning every paragraph into a point in a giant meaning
 
 The paper uses:
 
-- `all-MiniLM-L6-v2`
+- `all-mpnet-base-v2`
 
 This is a **Sentence-BERT** style embedding model that produces:
 
-- **384-dimensional vectors**
+- **768-dimensional vectors**
 
 ### Why this model?
 
