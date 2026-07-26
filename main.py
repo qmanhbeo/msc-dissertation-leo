@@ -343,7 +343,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     if model == DEFAULT_EMBED_MODEL:
         run_step(
             "zero-shot nearest-centroid scoring",
-            [sys.executable, "1_code/7_main_analysis/3_appendix/0_zeroshot_scoring.py",
+            [sys.executable, "1_code/7_main_analysis/1_canonical/0_zeroshot_scoring.py",
              "--output-dir", str(output_dir)] + model_args,
             step_id="5",
         )
