@@ -1,6 +1,7 @@
 import json
 import random
 import sys
+from pathlib import Path
 import numpy as np
 from collections import defaultdict
 from transformers import AutoTokenizer
@@ -9,7 +10,7 @@ from tqdm import tqdm
 random.seed(42)
 np.random.seed(42)
 
-BASE = "/home/manh/dissertation/2_data/1_preprocessed"
+BASE = str(Path(__file__).resolve().parent / "2_data" / "1_preprocessed")
 
 CORPORA = {
     "Knowledge Hub": ("sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl", "text"),

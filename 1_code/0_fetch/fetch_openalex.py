@@ -58,14 +58,41 @@ def require_env(name: str) -> str:
     return value
 
 
-USER_EMAIL = require_env("OPENALEX_MAILTO")
-API_KEY = require_env("OPENALEX_API_KEY")
-RATE_LIMIT_USER_EMAIL = require_env("OPENALEX_RATE_LIMIT_MAILTO")
-RATE_LIMIT_API_KEY = require_env("OPENALEX_RATE_LIMIT_API_KEY")
-RATE_LIMIT_USER_EMAIL_2 = require_env("OPENALEX_RATE_LIMIT_MAILTO_2")
-RATE_LIMIT_API_KEY_2 = require_env("OPENALEX_RATE_LIMIT_API_KEY_2")
-RATE_LIMIT_USER_EMAIL_3 = require_env("OPENALEX_RATE_LIMIT_MAILTO_3")
-RATE_LIMIT_API_KEY_3 = require_env("OPENALEX_RATE_LIMIT_API_KEY_3")
+USER_EMAIL = ""
+API_KEY = ""
+RATE_LIMIT_USER_EMAIL = ""
+RATE_LIMIT_API_KEY = ""
+RATE_LIMIT_USER_EMAIL_2 = ""
+RATE_LIMIT_API_KEY_2 = ""
+RATE_LIMIT_USER_EMAIL_3 = ""
+RATE_LIMIT_API_KEY_3 = ""
+
+
+def _load_api_keys() -> None:
+    """Lazily validate and bind API keys. Called on first use, not at import."""
+    global USER_EMAIL, API_KEY
+    global RATE_LIMIT_USER_EMAIL, RATE_LIMIT_API_KEY
+    global RATE_LIMIT_USER_EMAIL_2, RATE_LIMIT_API_KEY_2
+    global RATE_LIMIT_USER_EMAIL_3, RATE_LIMIT_API_KEY_3
+    USER_EMAIL = require_env("OPENALEX_MAILTO")
+    API_KEY = require_env("OPENALEX_API_KEY")
+    RATE_LIMIT_USER_EMAIL = os.environ.get("OPENALEX_RATE_LIMIT_MAILTO", "").strip()
+    RATE_LIMIT_API_KEY = os.environ.get("OPENALEX_RATE_LIMIT_API_KEY", "").strip()
+    RATE_LIMIT_USER_EMAIL_2 = os.environ.get("OPENALEX_RATE_LIMIT_MAILTO_2", "").strip()
+    RATE_LIMIT_API_KEY_2 = os.environ.get("OPENALEX_RATE_LIMIT_API_KEY_2", "").strip()
+    RATE_LIMIT_USER_EMAIL_3 = os.environ.get("OPENALEX_RATE_LIMIT_MAILTO_3", "").strip()
+    RATE_LIMIT_API_KEY_3 = os.environ.get("OPENALEX_RATE_LIMIT_API_KEY_3", "").strip()
+
+
+_keys_loaded = False
+
+
+def ensure_api_keys() -> None:
+    """Ensure API keys are loaded. Safe to call multiple times."""
+    global _keys_loaded
+    if not _keys_loaded:
+        _load_api_keys()
+        _keys_loaded = True
 MAX_RETRIES = 10
 SDG_BASE = "https://metadata.un.org/sdg"
 SAVE_EVERY = 1000
@@ -284,6 +311,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
 
 def main() -> None:
+    ensure_api_keys()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 

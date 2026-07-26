@@ -13,8 +13,17 @@ from typing import TYPE_CHECKING
 import nltk
 from nltk.tokenize import sent_tokenize
 
-nltk.download("punkt_tab", quiet=True)
-nltk.download("punkt", quiet=True)
+_nltk_ready = False
+
+
+def _ensure_nltk_data() -> None:
+    """Download NLTK tokenizer data on first use, not at import time."""
+    global _nltk_ready
+    if not _nltk_ready:
+        nltk.download("punkt_tab", quiet=True)
+        nltk.download("punkt", quiet=True)
+        _nltk_ready = True
+
 
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
@@ -59,6 +68,7 @@ def segment_text(
     max_tokens = model.max_seq_length - margin
     tokenizer = model.tokenizer
 
+    _ensure_nltk_data()
     sentences = sent_tokenize(text)
     if not sentences:
         return []

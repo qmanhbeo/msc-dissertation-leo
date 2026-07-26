@@ -28,10 +28,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import tempfile
 from pathlib import Path
 import sys
 
-os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-dissertation")
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib-dissertation"))
 
 import matplotlib
 matplotlib.use("Agg")  # non-interactive backend for WSL

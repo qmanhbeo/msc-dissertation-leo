@@ -14,6 +14,7 @@ This repository contains the dissertation code, manuscript source, committed out
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
 | **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). Also required for `--cold-replay` (OpenAlex API + HuggingFace model download). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
 | **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
+| **rclone** | Required for `--backup-data-snapshot` only (maintainer tool). Not needed for warm/cold replay |
 | **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for `--cold-replay`. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
 | **Embedding runtimes** (one-time, cold replay only) | MiniLM (`all-MiniLM-L6-v2`): ~2.5 hours on 4 GB VRAM GPU. MPNet (`all-mpnet-base-v2`): ~17 hours on 4 GB VRAM GPU |
 | **Git** | Required for cloning and pulling updates |
@@ -137,9 +138,10 @@ The fetch stage cannot be reproduced because its sources change continuously.
 
 `--cold-replay` requires OpenAlex API credentials. Copy `.env.example` to
 `.env` and fill in your key (free at https://openalex.org/keys). Without
-these the fetch stage raises `RuntimeError`. The 4 rate-limit fallback slots
-are optional — only `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are strictly
-required.
+these the fetch stage raises `RuntimeError`. The 6 rate-limit fallback
+keys are optional — only `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are
+required. If provided, they enable parallel API key rotation during
+the full re-fetch.
 
 ### Snapshot scope
 

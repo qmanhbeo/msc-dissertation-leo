@@ -30,12 +30,13 @@ import json
 import logging
 import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 
-os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-dissertation")
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib-dissertation"))
 import matplotlib
 
 matplotlib.use("Agg")
