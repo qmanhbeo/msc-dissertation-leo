@@ -155,9 +155,9 @@ LR provides 768 signed coefficients per SDG class — each one directly attribut
 | LR CV results (per-class F1) | `2_data/4_supervised_model_results/all-mpnet-base-v2/model/lr_cv_results.json` |
 | Retrained LR model (train+val, for scoring) | `2_data/4_supervised_model_results/all-mpnet-base-v2/model/sdg_classifier_retrained.joblib` |
 | MLP CV results | `2_data/4_supervised_model_results/all-mpnet-base-v2/model/mlp_cv_results.json` |
-| LR training script | `1_code/4_supervised_model_train/1_train_models_logisticReg.py` |
+| LR training script | `1_code/4_supervised_model_train/1_train_models_LR.py` |
 | MLP training script | `1_code/4_supervised_model_train/1_train_models_MLP.py` |
-| Retrain script | `1_code/4_supervised_model_train/2_retrain_full_data.py` |
+| Retrain script | `1_code/4_supervised_model_train/1_retrain_full_data.py` |
 
 **Explicit statement:** The test set (n=9,734) has never been used for any model selection or hyperparameter decision. It was loaded exactly once for final evaluation after the champion was chosen. All grid search results above are CV-only.
 
@@ -177,7 +177,7 @@ LR provides 768 signed coefficients per SDG class — each one directly attribut
 
 ## 7. Script Modifications from Extension Session
 
-- `1_train_models_logisticReg.py`: Grid expanded to `C × l1_ratio × class_weight` (8 configs). Solver switched to `saga` for L1 compatibility. Per-class F1 computed per fold. Uses shared `append_grid_log()` from `model_utils.py`.
+- `1_train_models_LR.py`: Grid expanded to `C × l1_ratio × class_weight` (8 configs). Solver switched to `saga` for L1 compatibility. Per-class F1 computed per fold. Uses shared `append_grid_log()` from `model_utils.py`.
 - `1_train_models_MLP.py`: Refactored to call `append_grid_log()` per-config instead of batch at end. No grid changes.
 - `model_utils.py`: Added `append_grid_log()` — writes to JSON with atomic swap (`*.json.tmp` → `*.json`), deduplicates by exact match of config + cv_metrics, warns when same config reappears with different metrics.
-- `2_retrain_full_data.py`: Modified to support `--classifier-type {mlp,lr}`.
+- `1_retrain_full_data.py`: Modified to support `--classifier-type {mlp,lr}`.

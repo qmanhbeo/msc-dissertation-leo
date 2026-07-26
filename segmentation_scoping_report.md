@@ -109,10 +109,10 @@ Research papers are not in training (unlabeled). They only affect scoring + cent
 
 | Corpus | Current script | Current behavior | Change needed |
 |---|---|---|---|
-| **Knowledge Hub** | `preprocess_sdg_knowledge_hub.py` | Whole-text JSONL (field: `text`). No segmentation. | Add segmentation stage. Add `segment_id` and `source_doc` fields. Keep `sdgs: [int]` unchanged. |
+| **Knowledge Hub** | `0_preprocess_sdg_knowledge_hub.py` | Whole-text JSONL (field: `text`). No segmentation. | Add segmentation stage. Add `segment_id` and `source_doc` fields. Keep `sdgs: [int]` unchanged. |
 | **SDGi-reference** | `preprocess_sdgi_corpus.py` | Whole-text JSONL (field: `text`). `sdg` (stale) or `sdgs` (after re-run). | Same as KH. |
-| **Aurora** | `preprocess_aurora.py` | Whole-text JSONL (field: `text`). `sdgs: [int]`. | Same as KH. |
-| **Research papers** | `preprocess_papers_streaming.py` | Whole-record JSONL per shard (field: `combined_text`). No SDG labels. | Add segmentation stage. Add `segment_id` and `source_doc` fields. |
+| **Aurora** | `0_preprocess_aurora.py` | Whole-text JSONL (field: `text`). `sdgs: [int]`. | Same as KH. |
+| **Research papers** | `0_preprocess_papers_streaming.py` | Whole-record JSONL per shard (field: `combined_text`). No SDG labels. | Add segmentation stage. Add `segment_id` and `source_doc` fields. |
 
 ### Embedders (already generic, possibly no changes)
 
@@ -431,7 +431,7 @@ Even after segmentation is unified, these differences must be resolved:
 
 ### Migration path recommendation
 
-1. Write a single `preprocess_sdgi_unified.py` that replaces both `preprocess_sdgi_corpus.py` and `0_integrate_sdgi.py`
+1. Write a single `0_preprocess_sdgi_unified.py` that replaces both `0_preprocess_sdgi_corpus.py` and `0_integrate_sdgi.py`
 2. Apply: English filter, `clean_text()`, token-count-aware segmentation (320T for MPNet), full label inheritance
 3. Remove SDGi from policy corpus merge (`1_build_policy_corpus.py`)
 4. Remove SDGi from reference embedder corpora list in `0_embed_reference_corpora.py`

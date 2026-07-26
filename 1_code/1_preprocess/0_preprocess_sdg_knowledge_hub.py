@@ -18,7 +18,7 @@ Fields:
   - Single-label texts are filtered at MLP training time, not here.
 
 Run from project root:
-    python 1_code/1_preprocess/preprocess_sdg_knowledge_hub.py
+    python 1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py
 """
 
 import csv

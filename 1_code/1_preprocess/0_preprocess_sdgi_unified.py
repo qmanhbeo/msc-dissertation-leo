@@ -7,7 +7,7 @@ Segmentation is now handled by segment_corpus.py in the dedicated segment stage.
 Preserves: English filter, text cleaning, SDG label extraction, metadata fields.
 
 Run from project root:
-    python 1_code/1_preprocess/preprocess_sdgi_unified.py
+    python 1_code/1_preprocess/0_preprocess_sdgi_unified.py
 """
 
 import json

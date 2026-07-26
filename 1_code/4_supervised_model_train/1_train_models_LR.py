@@ -15,7 +15,7 @@ Outputs:
   2_data/4_supervised_model_results/{model}/model/lr_cv_results.json
 
 Run from project root:
-    python 1_code/4_supervised_model_train/1_train_models_logisticReg.py
+    python 1_code/4_supervised_model_train/1_train_models_LR.py
 """
 
 import datetime

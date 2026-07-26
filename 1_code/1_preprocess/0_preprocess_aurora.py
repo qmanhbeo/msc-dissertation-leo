@@ -11,7 +11,7 @@ Single-label texts are filtered at MLP training time, not here.
 
 Run from project root:
     python 1_code/0_fetch/fetch_aurora.py
-    python 1_code/1_preprocess/preprocess_aurora.py
+    python 1_code/1_preprocess/0_preprocess_aurora.py
 """
 
 import csv

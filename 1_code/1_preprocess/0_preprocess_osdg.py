@@ -20,7 +20,7 @@ Role in pipeline:
   3. Provide a classification training signal if supervised labeling is needed
 
 Run from project root:
-    python 1_code/1_preprocess/preprocess_osdg.py
+    python 1_code/1_preprocess/0_preprocess_osdg.py
 """
 
 import csv

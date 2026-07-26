@@ -16,7 +16,7 @@ Role in pipeline:
   3. Provide a held-out evaluation set if needed
 
 Run from project root:
-    python 1_code/1_preprocess/preprocess_sdg_benchmark.py
+    python 1_code/1_preprocess/0_preprocess_sdg_benchmark.py
 """
 
 import csv

@@ -347,7 +347,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     """
     model_args = ["--model", model]
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
-    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py"] + model_args, step_id="1")
+    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args, step_id="3")
     run_step(
@@ -428,12 +428,12 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
         ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"]),
         ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"]),
-        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/preprocess_osdg.py"]),
-        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/preprocess_sdg_benchmark.py"]),
-        ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/preprocess_sdg_knowledge_hub.py"]),
-        ("preprocess aurora", [sys.executable, "1_code/1_preprocess/preprocess_aurora.py"]),
-        ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/preprocess_sdgi_unified.py"]),
-        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/preprocess_papers_streaming.py"]),
+        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"]),
+        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"]),
+        ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"]),
+        ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"]),
+        ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"]),
+        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"]),
         # — SEGMENT (token-count-aware segmentation into 2_segmented/{model}/) —
         ("segment knowledge hub", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--corpus", "sdg_knowledge_hub", "--model", model]),
@@ -577,12 +577,12 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         steps = [
             ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"]),
             ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"]),
-            ("preprocess osdg", [sys.executable, "1_code/1_preprocess/preprocess_osdg.py"]),
-            ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/preprocess_sdg_benchmark.py"]),
-            ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/preprocess_sdg_knowledge_hub.py"]),
-            ("preprocess aurora", [sys.executable, "1_code/1_preprocess/preprocess_aurora.py"]),
-            ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/preprocess_sdgi_unified.py"]),
-            ("preprocess research shards", [sys.executable, "1_code/1_preprocess/preprocess_papers_streaming.py"]),
+            ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"]),
+            ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"]),
+            ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"]),
+            ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"]),
+            ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"]),
+            ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"]),
         ]
         for label, cmd in steps:
             run_step(label, cmd)
@@ -632,7 +632,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--model", model])
-        run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py", "--model", model])
+        run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--model", model])
 
     elif stage == "infer":
         run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--model", model])
