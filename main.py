@@ -66,11 +66,19 @@ def parse_args() -> argparse.Namespace:
         )
     )
     p.add_argument(
-        "--warm-replay",
+        "--warm-replay-without-appendix",
         action="store_true",
         help=(
             "Rebuild main text analysis from frozen embeddings. "
             "Appendix outputs remain committed in the repo and are not regenerated. "
+            "Auto-fetches the embedded snapshot if 2_data/ is missing."
+        ),
+    )
+    p.add_argument(
+        "--warm-replay-with-appendix",
+        action="store_true",
+        help=(
+            "Rebuild main text + all appendix analyses from frozen embeddings. "
             "Auto-fetches the embedded snapshot if 2_data/ is missing."
         ),
     )
@@ -157,7 +165,8 @@ def action_requested(args: argparse.Namespace) -> bool:
         return True
     return any(
         [
-            args.warm_replay,
+            args.warm_replay_without_appendix,
+            args.warm_replay_with_appendix,
             args.cold_replay,
             args.appendix_all,
             args.appendix_a2_family,
@@ -396,6 +405,8 @@ def run_model_sensitivity(output_dir: Path, args: argparse.Namespace) -> None:
 def run_warm_replay(
     output_dir: Path,
     args: argparse.Namespace,
+    *,
+    include_appendix: bool = False,
 ) -> None:
     model = args.embed_model
     if model != DEFAULT_EMBED_MODEL:
@@ -403,6 +414,13 @@ def run_warm_replay(
         _run_main_analysis_steps(analysis_output_dir, model=model)
     else:
         run_main_text(output_dir, args)
+        if include_appendix:
+            run_pca_semantic_landscape(output_dir, model=model)
+            run_policy_source_family_sensitivity(output_dir, model=model)
+            run_sdg4_lexical_audit(output_dir, model=model)
+            run_semantic_gap_interpretability(output_dir, model=model)
+            run_sample_stability(output_dir, model=model)
+            run_register_adjustment(output_dir, model=model)
     print(
         "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -665,7 +683,8 @@ def main() -> None:
         return
 
     if (
-        args.warm_replay
+        args.warm_replay_without_appendix
+        or args.warm_replay_with_appendix
         or args.cold_replay
         or args.appendix_all
         or args.appendix_a2_family
@@ -728,9 +747,12 @@ def main() -> None:
         run_register_adjustment(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.warm_replay:
+    elif args.warm_replay_without_appendix:
         ensure_warm_replay_inputs(args)
-        run_warm_replay(output_dir, args)
+        run_warm_replay(output_dir, args, include_appendix=False)
+    elif args.warm_replay_with_appendix:
+        ensure_warm_replay_inputs(args)
+        run_warm_replay(output_dir, args, include_appendix=True)
     elif args.build_pdf:
         build_pdf(output_dir)
 
