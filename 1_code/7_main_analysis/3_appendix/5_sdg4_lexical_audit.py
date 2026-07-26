@@ -32,10 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, research_preprocessed_dir, scored_dir_for_model, embed_dir_for_model
-
-SEGMENTED_RESEARCH_DIR = ROOT / "2_data" / "2_segmented" / DEFAULT_EMBED_MODEL / "research"
-RESEARCH_TEXT_MANIFEST = SEGMENTED_RESEARCH_DIR / "metadata" / "manifest.json"
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_research_dir_for_model, scored_dir_for_model
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"
@@ -194,7 +191,7 @@ def _audit_single_shard(args: tuple[str, dict[str, set[int]]]) -> dict[str, Coun
 
 
 def audit_subsets(
-    text_dir: Path,
+    research_dir: Path,
     text_manifest: dict,
     subset_refs: dict[str, dict[int, set[int]]],
 ) -> dict[str, Counter]:
@@ -203,7 +200,7 @@ def audit_subsets(
     jobs: list[tuple[str, dict[str, set[int]]]] = []
     for shard in text_manifest["shards"]:
         shard_id = int(shard["shard_id"])
-        data_path = str(text_dir / f"{shard['name']}.jsonl")
+        data_path = str(research_dir / "metadata" / f"{shard['name']}_ids.jsonl")
         targets = {
             subset: refs.get(shard_id, set())
             for subset, refs in subset_refs.items()
@@ -293,8 +290,9 @@ def main() -> None:
         d.mkdir(parents=True, exist_ok=True)
 
     scored_dir = scored_dir_for_model(args.model)
+    research_dir = embed_research_dir_for_model(args.model)
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
-    text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
+    text_manifest = load_json(research_dir / "metadata" / "manifest.json")
     log.info("Loaded research score manifest with %s shards", len(score_manifest["shards"]))
     log.info("Loaded research text manifest with %s shards", len(text_manifest["shards"]))
 
@@ -309,7 +307,7 @@ def main() -> None:
         "non_sdg4_sample": non_sdg4_refs,
         "sdg9_assigned": sdg9_refs,
     }
-    counters = audit_subsets(SEGMENTED_RESEARCH_DIR, text_manifest, subset_refs)
+    counters = audit_subsets(research_dir, text_manifest, subset_refs)
 
     rows: list[dict] = []
     summary = {

@@ -48,10 +48,7 @@ from semantic_gap_shared import (
     get_cluster_assignments,
     load_json,
 )
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, preprocessed_dir, research_preprocessed_dir, scored_dir_for_model
-
-SEGMENTED_RESEARCH_DIR = Path(__file__).resolve().parents[3] / "2_data" / "2_segmented" / DEFAULT_EMBED_MODEL / "research"
-RESEARCH_TEXT_MANIFEST = SEGMENTED_RESEARCH_DIR / "metadata" / "manifest.json"
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -131,14 +128,14 @@ def iter_jsonl(path: Path):
                 yield json.loads(line)
 
 
-def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -> Path:
+def resolve_manifest_path(stored_path: str, research_dir: Path, scored_dir: Path) -> Path:
     raw = Path(stored_path)
     if raw.is_absolute():
         if raw.exists():
             return raw
         raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
     posix = raw.as_posix()
-    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", preprocessed_dir().as_posix() + "/")
+    allowed = (research_dir.as_posix() + "/", scored_dir.as_posix() + "/")
     if not any(posix.startswith(p) for p in allowed):
         raise RuntimeError(
             f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
@@ -149,39 +146,32 @@ def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -
     raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
-def load_research_shards(embed_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
-    text_manifest = load_json(RESEARCH_TEXT_MANIFEST)
-    emb_manifest = load_json(embed_dir / "metadata" / "manifest.json")
+def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
+    research_manifest = load_json(research_dir / "metadata" / "manifest.json")
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
 
-    text_shards = sorted(text_manifest["shards"], key=lambda x: int(x["shard_id"]))
-    emb_shards = sorted(emb_manifest["shards"], key=lambda x: int(x["shard_id"]))
+    research_shards = sorted(research_manifest["shards"], key=lambda x: int(x["shard_id"]))
     score_shards = sorted(score_manifest["shards"], key=lambda x: int(x["shard_id"]))
 
-    if not (len(text_shards) == len(emb_shards) == len(score_shards)):
-        raise RuntimeError("Research text, embedding, and score manifests are not aligned.")
+    if len(research_shards) != len(score_shards):
+        raise RuntimeError("Research and score manifests have different shard counts.")
 
     shards: list[dict[str, Any]] = []
-    for text_shard, emb_shard, score_shard in zip(text_shards, emb_shards, score_shards):
-        shard_id = int(text_shard["shard_id"])
-        if shard_id != int(emb_shard["shard_id"]) or shard_id != int(score_shard["shard_id"]):
-            raise RuntimeError("Research manifests do not align on shard_id.")
-        if int(text_shard["rows"]) != int(emb_shard["rows"]) or int(text_shard["rows"]) != int(score_shard["rows"]):
-            raise RuntimeError(f"Research manifests do not align on rows for shard {shard_id}.")
-        if "data_path" in text_shard:
-            text_path = resolve_manifest_path(text_shard["data_path"], embed_dir, scored_dir)
-        else:
-            text_path = SEGMENTED_RESEARCH_DIR / f"{text_shard['name']}.jsonl"
-            if not text_path.exists():
-                raise FileNotFoundError(f"Constructed text path does not exist: {text_path}")
+    for research_shard, score_shard in zip(research_shards, score_shards):
+        shard_id = int(research_shard["shard_id"])
+        if shard_id != int(score_shard["shard_id"]):
+            raise RuntimeError("Research and score manifests do not align on shard_id.")
+        if int(research_shard["rows"]) != int(score_shard["rows"]):
+            raise RuntimeError(f"Research and score manifests do not align on rows for shard {shard_id}.")
+        text_path = resolve_manifest_path(research_shard["ids_path"], research_dir, scored_dir)
         shards.append(
             {
                 "shard_id": shard_id,
-                "name": text_shard["name"],
-                "rows": int(text_shard["rows"]),
+                "name": research_shard["name"],
+                "rows": int(research_shard["rows"]),
                 "text_path": text_path,
-                "emb_path": resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
-                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], embed_dir, scored_dir),
+                "emb_path": resolve_manifest_path(research_shard["embedding_path"], research_dir, scored_dir),
+                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], research_dir, scored_dir),
             }
         )
     return shards
