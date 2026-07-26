@@ -20,7 +20,7 @@ Outputs:
      4_outputs/main/figures/fig5_coverage_semantic_scatter.pdf
 
 Run:
-    python 1_code/4_visualization/plot_figures.py
+    python 1_code/8_visualization/plot_figures.py
 """
 
 from __future__ import annotations

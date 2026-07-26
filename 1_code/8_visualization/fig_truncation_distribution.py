@@ -11,7 +11,7 @@ Output:
   4_outputs/appendix/fig_truncation_distribution.png
 
 Run from project root:
-    python 1_code/4_visualization/fig_truncation_distribution.py
+    python 1_code/8_visualization/fig_truncation_distribution.py
 """
 
 from __future__ import annotations

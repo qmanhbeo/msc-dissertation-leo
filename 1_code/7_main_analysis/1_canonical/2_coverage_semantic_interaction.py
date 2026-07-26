@@ -410,7 +410,7 @@ def main() -> None:
     log.info("Saved: %s", out_scatter)
 
     log.info("")
-    log.info("Next step: python 1_code/4_visualization/plot_figures.py")
+    log.info("Next step: python 1_code/8_visualization/plot_figures.py")
 
     # ---- Write LaTeX generated outputs ----
     gen_dir = tables_dir

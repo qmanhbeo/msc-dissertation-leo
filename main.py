@@ -96,25 +96,19 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A1-A3, B1-B4, C, D, E) standalone (requires existing main-text outputs).")
-    p.add_argument("--appendix-a1-source", action="store_true", help="Run A.1 Per-SDG Source Comparison.")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2-A3, B1, B3, C, D, E) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b1-pca", action="store_true", help="Run B.1 Combined Research-Policy PCA Landscape.")
-    p.add_argument("--appendix-b2-centroid", action="store_true", help="Run B.2 Within-Corpus Centroid Structure.")
     p.add_argument("--appendix-b3-interpret", action="store_true", help="Run B.3 Lexical Illustration of the Semantic Gap.")
-    p.add_argument("--appendix-b4-softmax", action="store_true", help="Run B.4 Softmax Multi-label SDG.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-d-sensitivity", action="store_true", help="Run D Model Sensitivity (all-mpnet-base-v2 vs MiniLM comparison). Requires pre-embedded MPNet data (see README).")
     p.add_argument("--appendix-e-register", action="store_true", help="Run E Register-Adjustment Robustness.")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
-    p.add_argument("--softmax-multilabel-sdg", action="store_true", dest="appendix_b4_softmax", help=argparse.SUPPRESS)
     p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
     p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
-    p.add_argument("--sdg-source-comparison", action="store_true", dest="appendix_a1_source", help=argparse.SUPPRESS)
     p.add_argument("--semantic-gap-interpretability", action="store_true", dest="appendix_b3_interpret", help=argparse.SUPPRESS)
-    p.add_argument("--within-corpus-centroid-structure", action="store_true", dest="appendix_b2_centroid", help=argparse.SUPPRESS)
     p.add_argument(
         "--fetch-data-snapshot",
         nargs="?",
@@ -187,13 +181,10 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.warm_replay,
             args.cold_replay,
             args.appendix_all,
-            args.appendix_a1_source,
             args.appendix_a2_family,
             args.appendix_a3_sdg4,
             args.appendix_b1_pca,
-            args.appendix_b2_centroid,
             args.appendix_b3_interpret,
-            args.appendix_b4_softmax,
             args.appendix_e_register,
             args.appendix_c_sample_stability,
             args.appendix_d_sensitivity,
@@ -358,20 +349,7 @@ def run_pca_semantic_landscape(output_dir: Path, model: str = DEFAULT_EMBED_MODE
     run_step("combined research-policy PCA landscape", cmd, step_id="B1")
 
 
-def run_within_corpus_centroid_structure(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/1_within_corpus_centroid_structure.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--model", model]
-    run_step("within-corpus centroid structure", cmd, step_id="B2")
 
-
-def run_softmax_multilabel_sdg(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/2_softmax_multilabel_sdg.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--model", model]
-    run_step("softmax multi-label SDG robustness", cmd, step_id="B4")
 
 
 def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
@@ -390,12 +368,7 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
     run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
 
 
-def run_sdg_source_comparison(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/8_sdg_source_comparison.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--model", model]
-    run_step("per-SDG source comparison", cmd, step_id="A1")
+
 
 
 def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
@@ -409,7 +382,7 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
 
 def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/3_register_adjustment.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/e_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--model", model]
     run_step("register-adjustment robustness", cmd, step_id="E")
@@ -435,7 +408,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
         [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)] + model_args,
         step_id="6",
     )
-    run_step("plot figures", [sys.executable, "1_code/4_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="7")
+    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="7")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
             "generate cross-sensitivity table",
@@ -570,11 +543,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     _run_main_analysis_steps(analysis_output_dir, model=model)
 
     run_pca_semantic_landscape(output_dir, model=model)
-    run_within_corpus_centroid_structure(output_dir, model=model)
-    run_softmax_multilabel_sdg(output_dir, model=model)
     run_policy_source_family_sensitivity(output_dir, model=model)
     run_sdg4_lexical_audit(output_dir, model=model)
-    run_sdg_source_comparison(output_dir, model=model)
     run_semantic_gap_interpretability(output_dir, model=model)
     run_sample_stability(output_dir, model=model)
     run_register_adjustment(output_dir, model=model)
@@ -736,11 +706,8 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         analysis_output_dir = ROOT / "4_outputs" / "appendix" / "d_model_sensitivity" if model_is_nondefault else output_dir
         _run_main_analysis_steps(analysis_output_dir, model)
         run_pca_semantic_landscape(output_dir, model=model)
-        run_within_corpus_centroid_structure(output_dir, model=model)
-        run_softmax_multilabel_sdg(output_dir, model=model)
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
-        run_sdg_source_comparison(output_dir, model=model)
         run_semantic_gap_interpretability(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
         run_register_adjustment(output_dir, model=model)
@@ -767,13 +734,10 @@ def main() -> None:
         args.warm_replay
         or args.cold_replay
         or args.appendix_all
-        or args.appendix_a1_source
         or args.appendix_a2_family
         or args.appendix_a3_sdg4
         or args.appendix_b1_pca
-        or args.appendix_b2_centroid
         or args.appendix_b3_interpret
-        or args.appendix_b4_softmax
         or args.appendix_d_sensitivity
         or args.appendix_c_sample_stability
         or args.appendix_e_register
@@ -793,20 +757,13 @@ def main() -> None:
         run_cold_replay(output_dir, args)
     elif args.appendix_all:
         model = args.embed_model
-        run_sdg_source_comparison(output_dir, model=model)
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
         run_pca_semantic_landscape(output_dir, model=model)
-        run_within_corpus_centroid_structure(output_dir, model=model)
         run_semantic_gap_interpretability(output_dir, model=model)
-        run_softmax_multilabel_sdg(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
         run_model_sensitivity(output_dir, args)
         run_register_adjustment(output_dir, model=model)
-        if args.build_pdf:
-            build_pdf(output_dir)
-    elif args.appendix_a1_source:
-        run_sdg_source_comparison(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_a2_family:
@@ -821,16 +778,8 @@ def main() -> None:
         run_pca_semantic_landscape(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
-    elif args.appendix_b2_centroid:
-        run_within_corpus_centroid_structure(output_dir, model=args.embed_model)
-        if args.build_pdf:
-            build_pdf(output_dir)
     elif args.appendix_b3_interpret:
         run_semantic_gap_interpretability(output_dir, model=args.embed_model)
-        if args.build_pdf:
-            build_pdf(output_dir)
-    elif args.appendix_b4_softmax:
-        run_softmax_multilabel_sdg(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_d_sensitivity:

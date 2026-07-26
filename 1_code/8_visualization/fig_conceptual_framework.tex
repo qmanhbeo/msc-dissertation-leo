@@ -13,7 +13,7 @@
   dimbox/.style={base, fill=sharedbg!6, draw=sharedbg, text width=4.8cm, minimum height=1.2cm},
   levelbox/.style={base, fill=white, draw=gray!60, text width=4.8cm, minimum height=0.8cm, font=\footnotesize},
   arrow/.style={-{Stealth[length=2mm]}, draw=gray!70, line width=0.5pt},
-  label/.style={font=\footnotesize\itshape, align=center, text=gray!60},
+  label/.style={font=\footnotesize\bfseries, align=center, text=black},
 }
 
 \begin{document}
@@ -52,8 +52,7 @@
   (ladder_label) {This study is positioned at L2};
 
 %% connecting ladder to title
-\draw[arrow, draw=research!50] ([yshift=0.2cm]l1.north) -| ([xshift=-0.5cm]top.west)
-  -- (top.west);
+\draw[arrow, draw=research!50] (l1.north) |- (top.west);
 
 %% ====================  ARROWS  ====================
 
@@ -64,7 +63,7 @@
 
 \node[base, fill=white, draw=gray!40, text width=10cm,
       minimum height=0.7cm, font=\footnotesize,
-      below=0.5cm of $(cov.south)!0.5!(sem.south)$]
+      below=1.0cm of $(cov.south)!0.5!(sem.south)$]
   (note) {Semantic proximity is a register-sensitive proxy for framing, not evidence of substantive alignment or policy influence};
 
 \end{tikzpicture}
