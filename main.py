@@ -482,6 +482,12 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     run_sample_stability(output_dir, model=model)
     run_register_adjustment(output_dir, model=model)
 
+    print(
+        "Cold replay complete. To build the dissertation PDF, run:\n"
+        "  python main.py --build-pdf --overwrite\n"
+        "Note: --build-pdf requires bash (WSL/Linux) and is not supported on bare Windows."
+    )
+
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
     cmd = [sys.executable, "1_code/data_backup_and_fetch/fetch_data_snapshot.py", "--profile", profile_name]
