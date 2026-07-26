@@ -57,25 +57,12 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, segmented_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 
 OUTPUT_SUBDIR = "a3_sdgi_circularity"
 DATA_JSON = "loo_sdgi_circularity.json"
 DATA_CSV = "loo_sdgi_circularity.csv"
 NUM_TEX = "num_loo_sdgi_circularity.tex"
-
-FAMILY_FILE_MAP = {
-    "curated_ai_sdg": [
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_scrape.jsonl",
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_manual.jsonl",
-    ],
-    "sdgi_vnr_vlr": [
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "sdgi.jsonl",
-    ],
-    "ungdc_speeches": [
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "ungdc_sdg.jsonl",
-    ],
-}
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -94,27 +81,24 @@ def load_json(path: Path):
         return json.load(f)
 
 
-def iter_jsonl(path: Path):
-    with path.open(encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                yield json.loads(line)
-
-
-def build_source_family_map() -> dict[str, str]:
+def build_source_family_map(model: str = DEFAULT_EMBED_MODEL) -> dict[str, str]:
+    ids_path = embed_dir_for_model(model) / "metadata" / "policy_ids.json"
+    with ids_path.open(encoding="utf-8") as f:
+        policy_ids = json.load(f)
     source_family: dict[str, str] = {}
-    for family, paths in FAMILY_FILE_MAP.items():
-        for path in paths:
-            for row in iter_jsonl(path):
-                source_doc = str(row["source_doc"])
-                existing = source_family.get(source_doc)
-                if existing is not None and existing != family:
-                    raise RuntimeError(
-                        f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
-                    )
-                source_family[source_doc] = family
+    for row in policy_ids:
+        source_doc = str(row["source_doc"])
+        family = row.get("source_family")
+        if family is None:
+            continue
+        existing = source_family.get(source_doc)
+        if existing is not None and existing != family:
+            raise RuntimeError(
+                f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
+            )
+        source_family[source_doc] = family
     if not source_family:
-        raise RuntimeError("No source-family assignments were built from policy preprocessed files.")
+        raise RuntimeError("No source-family assignments found in policy_ids.json.")
     return source_family
 
 
@@ -188,7 +172,7 @@ def main() -> None:
     # ---- Load policy embeddings + isolate SDGi segments ----
     policy_emb = np.load(embed_dir / "policy.npy").astype(np.float32)
     policy_ids = load_json(scored_dir / "metadata" / "policy_scores_ids.json")
-    family_map = build_source_family_map()
+    family_map = build_source_family_map(args.model)
 
     sdgi_idxs = [
         i for i, r in enumerate(policy_ids)

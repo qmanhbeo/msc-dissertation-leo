@@ -36,7 +36,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, segmented_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -53,19 +53,6 @@ SUMMARY_CSV = "policy_source_family_summary.csv"
 COVERAGE_CSV = "policy_source_family_coverage.csv"
 SEMANTIC_CSV = "policy_source_family_semantic_gaps.csv"
 
-
-FAMILY_FILE_MAP = {
-    "curated_ai_sdg": [
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_scrape.jsonl",
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "policy_manual.jsonl",
-    ],
-    "sdgi_vnr_vlr": [
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "sdgi.jsonl",
-    ],
-    "ungdc_speeches": [
-        segmented_dir_for_model(DEFAULT_EMBED_MODEL) / "ungdc_sdg.jsonl",
-    ],
-}
 
 FAMILY_ORDER = [
     "full_policy_corpus",
@@ -99,26 +86,24 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def iter_jsonl(path: Path):
-    with path.open(encoding="utf-8") as f:
-        for line in f:
-            yield json.loads(line)
-
-
-def build_source_family_map() -> dict[str, str]:
+def build_source_family_map(model: str = DEFAULT_EMBED_MODEL) -> dict[str, str]:
+    ids_path = embed_dir_for_model(model) / "metadata" / "policy_ids.json"
+    with ids_path.open(encoding="utf-8") as f:
+        policy_ids = json.load(f)
     source_family: dict[str, str] = {}
-    for family, paths in FAMILY_FILE_MAP.items():
-        for path in paths:
-            for row in iter_jsonl(path):
-                source_doc = str(row["source_doc"])
-                existing = source_family.get(source_doc)
-                if existing is not None and existing != family:
-                    raise RuntimeError(
-                        f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
-                    )
-                source_family[source_doc] = family
+    for row in policy_ids:
+        source_doc = str(row["source_doc"])
+        family = row.get("source_family")
+        if family is None:
+            continue
+        existing = source_family.get(source_doc)
+        if existing is not None and existing != family:
+            raise RuntimeError(
+                f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
+            )
+        source_family[source_doc] = family
     if not source_family:
-        raise RuntimeError("No source-family assignments were built from policy preprocessed files.")
+        raise RuntimeError("No source-family assignments found in policy_ids.json.")
     return source_family
 
 
@@ -294,7 +279,7 @@ def main() -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    source_family_map = build_source_family_map()
+    source_family_map = build_source_family_map(args.model)
 
     policy_scores = np.load(_POLICY_SCORES)
     policy_emb = np.load(_POLICY_EMB)
