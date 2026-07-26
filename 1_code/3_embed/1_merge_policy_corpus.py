@@ -30,6 +30,13 @@ from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, segmented_dir_
 
 POLICY_SOURCES = ["policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"]
 
+SOURCE_FAMILY_MAP = {
+    "policy_scrape": "curated_ai_sdg",
+    "policy_manual": "curated_ai_sdg",
+    "ungdc_sdg": "ungdc_speeches",
+    "sdgi": "sdgi_vnr_vlr",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -82,10 +89,14 @@ def main() -> None:
                 f"{source}: {len(arr)} embeddings != {len(meta)} metadata rows"
             )
 
+        family = SOURCE_FAMILY_MAP[source]
+        for entry in meta:
+            entry["source_family"] = family
+
         embs.append(arr)
         ids_meta.extend(meta)
         total_rows += len(arr)
-        print(f"  {source}: {arr.shape}")
+        print(f"  {source}: {arr.shape} ({family})")
 
     merged = np.concatenate(embs, axis=0)
     dim = merged.shape[1]

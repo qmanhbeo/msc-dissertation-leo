@@ -158,8 +158,10 @@ def embed_corpus(
                 if isinstance(sdg_val, list)
                 else [sdg_val] if sdg_val is not None else None
             )
-        if "source_doc" in r:
-            entry["source_doc"] = r["source_doc"]
+        source_doc = r.get("source_doc")
+        if source_doc is None:
+            source_doc = r.get(config["id_field"], "")
+        entry["source_doc"] = source_doc
         ids_meta.append(entry)
 
     dim = model.get_embedding_dimension()

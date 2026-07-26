@@ -94,6 +94,7 @@ def generate_ids(data_path: Path, ids_out: Path) -> None:
                 "source_doc": row.get("source_doc", ""),
                 "segment_id": row.get("segment_id", ""),
                 "row_in_shard": row_in_shard,
+                "combined_text": row.get("combined_text", ""),
             }
             dst.write(json.dumps(out, ensure_ascii=False) + "\n")
     tmp.replace(ids_out)

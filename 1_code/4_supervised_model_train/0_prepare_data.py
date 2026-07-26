@@ -1,10 +1,9 @@
 """
 Prepare training and test data for the single-label SDG classifier.
 
-Loads embeddings from 3_embedded/{model}/metadata/*_ids.json and the
-corresponding segmented/preprocessed JSONL, filters for single-label
-records, builds 17D one-hot vectors, and performs a per-source
-stratified 85/15 split with document-level grouping.
+Loads embeddings and metadata from 3_embedded/{model}/metadata/*_ids.json,
+filters for single-label records, builds 17D one-hot vectors, and performs
+a per-source stratified 85/15 split with document-level grouping.
 
 Sources: osdg, benchmark, sdg_knowledge_hub, sdgi_corpus, aurora
 Excludes: policy (unlabeled), research_corpus (unlabeled)
@@ -39,53 +38,27 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, preprocessed_dir, segmented_dir_for_model
+from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model
 
 CORPORA = [
-    {
-        "name": "osdg",
-        "embed_file": "osdg.npy",
-        "segmented": False,
-        "preprocessed_subdir": "osdg",
-        "preprocessed_filename": "osdg_clean.jsonl",
-    },
-    {
-        "name": "benchmark",
-        "embed_file": "benchmark.npy",
-        "segmented": False,
-        "preprocessed_subdir": "sdg_benchmark",
-        "preprocessed_filename": "benchmark_clean.jsonl",
-    },
-    {
-        "name": "sdg_knowledge_hub",
-        "embed_file": "sdg_knowledge_hub.npy",
-        "segmented": True,
-    },
-    {
-        "name": "sdgi",
-        "embed_file": "sdgi.npy",
-        "segmented": True,
-    },
-    {
-        "name": "aurora",
-        "embed_file": "aurora.npy",
-        "segmented": True,
-    },
+    {"name": "osdg", "embed_file": "osdg.npy", "ids_file": "metadata/osdg_ids.json"},
+    {"name": "benchmark", "embed_file": "benchmark.npy", "ids_file": "metadata/benchmark_ids.json"},
+    {"name": "sdg_knowledge_hub", "embed_file": "sdg_knowledge_hub.npy", "ids_file": "metadata/sdg_knowledge_hub_ids.json"},
+    {"name": "sdgi", "embed_file": "sdgi.npy", "ids_file": "metadata/sdgi_ids.json"},
+    {"name": "aurora", "embed_file": "aurora.npy", "ids_file": "metadata/aurora_ids.json"},
 ]
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 
-def _resolve_jsonl_path(corpus: dict, model_name: str) -> Path:
-    if corpus.get("segmented"):
-        return segmented_dir_for_model(model_name) / f"{corpus['name']}.jsonl"
-    return preprocessed_dir() / corpus["preprocessed_subdir"] / corpus["preprocessed_filename"]
+def _resolve_ids_path(corpus: dict, embed_root: Path) -> Path:
+    return embed_root / corpus["ids_file"]
 
 
-def load_jsonl(path: Path) -> list[dict]:
+def load_ids(path: Path) -> list[dict]:
     with path.open() as f:
-        return [json.loads(line) for line in f]
+        return json.load(f)
 
 
 def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: np.ndarray) -> tuple[list[list[int]], list[int], list[int]]:
@@ -122,18 +95,18 @@ def main() -> None:
     for corpus in CORPORA:
         name = corpus["name"]
         emb_path = embed_root / corpus["embed_file"]
-        jsonl_path = _resolve_jsonl_path(corpus, args.model)
+        ids_path = _resolve_ids_path(corpus, embed_root)
 
-        if not emb_path.exists() or not jsonl_path.exists():
-            log.warning("Missing: %s or %s — skipping", emb_path, jsonl_path)
+        if not emb_path.exists() or not ids_path.exists():
+            log.warning("Missing: %s or %s — skipping", emb_path, ids_path)
             continue
 
         embs = np.load(emb_path).astype(np.float32)
-        rows = load_jsonl(jsonl_path)
+        rows = load_ids(ids_path)
 
         if len(embs) != len(rows):
             log.error(
-                "Mismatch: %s embeddings (%d) vs JSONL (%d) — skipping",
+                "Mismatch: %s embeddings (%d) vs IDs (%d) — skipping",
                 name, len(embs), len(rows),
             )
             continue
