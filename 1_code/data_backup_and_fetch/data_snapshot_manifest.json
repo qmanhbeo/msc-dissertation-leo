@@ -1,33 +1,28 @@
 {
-  "current_version": "2026-07-08",
+  "current_version": "2026-07-26",
   "profiles": {
-    "curated": {
-      "version": "2026-07-08-122000",
-      "url": "https://drive.usercontent.google.com/download?id=1sIbRikuQs5zhMiSXkCw0QnsWg5VOSybm&export=download",
-      "sha256": "11b7b09dfa61deae4589432c596a4b9cba169cd0f40d957291b9272ea87b58f4",
+    "raw": {
+      "version": "2026-07-26-095133",
+      "url": "https://drive.usercontent.google.com/download?id=1RFwuKoEUzNkk-cSDi4y9owKEJdsijsNV&export=download",
+      "sha256": "694277e7612b0396001adc246e4f888be9a109cc677e3e0658869b46fdae1225",
       "expected_repo_paths": [
-        "2_data/0_raw",
-        "2_data/1_preprocessed",
-        "2_data/2_embedded",
-        "2_data/3_scored"
+        "2_data/0_raw"
       ],
       "notes": [
-        "Default marker-facing replay snapshot.",
-        "Excludes raw OpenAlex fetch artifacts and large rebuildable caches."
+        "Raw fetched data only (0_raw/). For cold-replay rebuilds.",
+        "Excludes 1_preprocessed, 2_segmented, and all downstream stages."
       ]
     },
-    "full": {
-      "version": "2026-07-08-124236",
-      "url": "https://drive.usercontent.google.com/download?id=1xU8NidorUKV18tISrxPPKuWCTA2Gfh-U&export=download",
-      "sha256": "d5b4f730460a5b29de6b9df3e0cd253954f6e956027ead2311479d9fc4f15d80",
+    "embedded": {
+      "version": "2026-07-26-095133",
+      "url": "https://drive.usercontent.google.com/download?id=1r9TmFMD9SfuG0psfstGPlX3S3B3CjT2r&export=download",
+      "sha256": "f93aaf30089d37febe2119a3ec8fa337e087679ce8cea7ddc07a416557a6f3d4",
       "expected_repo_paths": [
-        "2_data/0_raw",
-        "2_data/1_preprocessed",
-        "2_data/2_embedded",
-        "2_data/3_scored"
+        "2_data/3_embedded"
       ],
       "notes": [
-        "Literal data/ snapshot including raw OpenAlex and rebuildable caches."
+        "Embedded checkpoint only (3_embedded/). For warm-replay analysis.",
+        "Excludes 0_raw, 1_preprocessed, 2_segmented, and all downstream stages."
       ]
     }
   }

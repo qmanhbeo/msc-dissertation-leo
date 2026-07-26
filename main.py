@@ -92,7 +92,7 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Rebuild main text analysis from frozen embeddings. "
             "Appendix outputs remain committed in the repo and are not regenerated. "
-            "Auto-fetches the curated snapshot if 2_data/ is missing."
+            "Auto-fetches the embedded snapshot if 2_data/ is missing."
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
@@ -112,21 +112,21 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--fetch-data-snapshot",
         nargs="?",
-        const="curated",
-        choices=["curated", "full"],
+        const="embedded",
+        choices=["raw", "embedded"],
         help=(
             "Fetch and extract a frozen dissertation data snapshot into ./2_data/. "
-            "Defaults to curated; full is optional and audit-oriented."
+            "Defaults to embedded; raw is for cold-replay rebuilds."
         ),
     )
     p.add_argument(
         "--backup-data-snapshot",
         nargs="?",
-        const="curated",
-        choices=["curated", "full", "both"],
+        const="embedded",
+        choices=["raw", "embedded", "both"],
         help=(
             "Create a dissertation data snapshot archive via the backup utility. "
-            "Defaults to curated; 'both' runs curated then full."
+            "Defaults to embedded; 'both' runs raw then embedded."
         ),
     )
     p.add_argument(
@@ -140,8 +140,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
     p.add_argument(
         "--snapshot-profile",
-        choices=["curated", "full"],
-        default="curated",
+        choices=["raw", "embedded"],
+        default="embedded",
         help=argparse.SUPPRESS,
     )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
@@ -582,7 +582,7 @@ def resolve_fetch_snapshot_profile(args: argparse.Namespace) -> str | None:
     explicit_profile = explicit_fetch_snapshot_profile(sys.argv)
     if explicit_profile is None:
         return legacy_profile
-    if explicit_profile != legacy_profile and legacy_profile != "curated":
+    if explicit_profile != legacy_profile and legacy_profile != "embedded":
         raise RuntimeError(
             "Conflicting fetch snapshot profiles. Use either `--fetch-data-snapshot <profile>` "
             "or the legacy `--snapshot-profile <profile>`, but not different values for both."
@@ -592,7 +592,7 @@ def resolve_fetch_snapshot_profile(args: argparse.Namespace) -> str | None:
 
 def selected_backup_profiles(profile_name: str) -> list[str]:
     if profile_name == "both":
-        return ["curated", "full"]
+        return ["raw", "embedded"]
     return [profile_name]
 
 
@@ -608,7 +608,7 @@ def ensure_warm_replay_inputs(args: argparse.Namespace, *, include_appendix_extr
     print(f"[info] warm replay inputs missing: {missing_str}")
     if len(missing) > 12:
         print(f"[info] ... and {len(missing) - 12} more")
-    run_fetch_data_snapshot(args, profile_name="curated", overwrite_data=(ROOT / "2_data").exists())
+    run_fetch_data_snapshot(args, profile_name="embedded", overwrite_data=(ROOT / "2_data").exists())
 
 
 def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) -> None:

@@ -4,7 +4,6 @@ Score the active policy corpus with the retrained single-label MLP model.
 Inputs:
    2_data/3_embedded/{model}/policy.npy
    2_data/3_embedded/{model}/metadata/policy_ids.json
-   2_data/2_segmented/{model}/policy.jsonl
    2_data/5_supervised_scored/{model}/research_centroids.npy
    2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib
 
@@ -37,7 +36,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from alignment_core import verify_unit_norms
-from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model, segmented_dir_for_model
+from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
 
 log = logging.getLogger(__name__)
 
@@ -99,18 +98,16 @@ def write_json(path: Path, data: list[dict]) -> None:
     tmp.replace(path)
 
 
-def load_policy_doc_map(path: Path) -> dict[str, dict]:
-    mapping: dict[str, dict] = {}
-    with path.open(encoding="utf-8") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            row = json.loads(line)
-            mapping[row["segment_id"]] = {
-                "source_doc": row["source_doc"],
-                "text": row["text"],
-            }
-    return mapping
+def load_policy_doc_map(ids_path: Path) -> dict[str, dict]:
+    with ids_path.open() as f:
+        ids_meta = json.load(f)
+    return {
+        row["id"]: {
+            "source_doc": row["source_doc"],
+            "text": row["text"],
+        }
+        for row in ids_meta
+    }
 
 
 def main() -> None:
@@ -120,7 +117,6 @@ def main() -> None:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--policy-emb", default=None)
     parser.add_argument("--policy-ids", default=None)
-    parser.add_argument("--policy-corpus", default=None)
     parser.add_argument("--research-centroids", default=None)
     parser.add_argument("--policy-scores-out", default=None)
     parser.add_argument("--policy-vs-research-out", default=None)
@@ -130,12 +126,10 @@ def main() -> None:
     embed_root = embed_dir_for_model(args.model)
     scored_root = scored_dir_for_model(args.model)
     model_root = model_results_dir_for_model(args.model)
-    seg_root = segmented_dir_for_model(args.model)
 
     args.model_path = args.model_path or str(model_root / "model" / "sdg_classifier_retrained.joblib")
     args.policy_emb = args.policy_emb or str(embed_root / "policy.npy")
     args.policy_ids = args.policy_ids or str(embed_root / "metadata" / "policy_ids.json")
-    args.policy_corpus = args.policy_corpus or str(seg_root / "policy.jsonl")
     args.research_centroids = args.research_centroids or str(scored_root / "research_centroids.npy")
     args.policy_scores_out = args.policy_scores_out or str(scored_root / "policy_scores.npy")
     args.policy_vs_research_out = args.policy_vs_research_out or str(scored_root / "policy_scores_vs_research.npy")
@@ -146,7 +140,6 @@ def main() -> None:
     model_path = Path(args.model_path)
     policy_emb_path = Path(args.policy_emb)
     policy_ids_path = Path(args.policy_ids)
-    policy_corpus_path = Path(args.policy_corpus)
     research_centroids_path = Path(args.research_centroids)
     policy_scores_out = Path(args.policy_scores_out)
     policy_vs_research_out = Path(args.policy_vs_research_out)
@@ -172,10 +165,10 @@ def main() -> None:
         raise RuntimeError(f"Expected 17 research centroids, got {research_centroids.shape}")
     verify_unit_norms(research_centroids, "research centroids", n_sample=17)
 
-    log.info("Indexing policy corpus metadata: %s", policy_corpus_path)
-    policy_doc_map = load_policy_doc_map(policy_corpus_path)
+    log.info("Indexing policy corpus metadata: %s", policy_ids_path)
+    policy_doc_map = load_policy_doc_map(policy_ids_path)
     if len(policy_doc_map) == 0:
-        raise RuntimeError(f"No policy corpus rows found in {policy_corpus_path}")
+        raise RuntimeError(f"No policy corpus rows found in {policy_ids_path}")
 
     policy_score_ids = []
     missing_ids: list[str] = []

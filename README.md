@@ -8,7 +8,7 @@ This repository contains the dissertation code, manuscript source, committed out
 
 | Requirement | Details |
 |---|---|
-| **Disk space** | Curated snapshot: ~14 GB archive + 24.6 GB extracted ≈ 39 GB total. Full snapshot: ~22 GB archive + 43.5 GB extracted ≈ 66 GB total |
+| **Disk space** | Embedded snapshot: ~8.7 GB archive. Raw snapshot: ~3.7 GB archive |
 | **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
@@ -37,16 +37,16 @@ conda activate dissertation
 python main.py --warm-replay --overwrite
 ```
 
-This rebuilds main text outputs from the frozen curated data snapshot.
+This rebuilds main text outputs from the frozen embedded data snapshot.
 Appendix outputs are already committed in the repo and do not need
 regeneration. `--overwrite` is included because canonical outputs already exist
 in the repo; without it `main.py` fails closed to prevent accidental replacement.
-If the snapshot download fails, run `python main.py --fetch-data-snapshot curated`
+If the snapshot download fails, run `python main.py --fetch-data-snapshot embedded`
 then retry.
 
 ```bash
-# Or if you want to fetch the full data snapshot with all the raw, embedded, preprocessed, and scored data, do:
-python main.py --fetch-data-snapshot full
+# Or if you want to fetch the raw data snapshot for cold-replay rebuilds:
+python main.py --fetch-data-snapshot raw
 python main.py --warm-replay --overwrite
 ```
 
@@ -71,7 +71,7 @@ Tracked in Git:
 Not tracked in Git:
 - `2_data/`
 
-`2_data/` is hydrated from the frozen curated snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
+`2_data/` is hydrated from the frozen embedded snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
 
 ### Environment notes
 
@@ -102,15 +102,15 @@ Not tracked in Git:
 | `python main.py --appendix-e-register --overwrite` | Run E Register-Adjustment Robustness |
 | `python main.py --embed-model all-mpnet-base-v2 --appendix-all` | Run appendix stages with an alternative embedding model (e.g. MPNet for model sensitivity). Not a canonical manuscript step — only meaningful for the model sensitivity comparison in Appendix D. |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
-| `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
-| `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
-| `python main.py --backup-data-snapshot {curated\|full\|both}` | Create and upload a snapshot archive (maintainer-only — requires rclone on WSL) |
+| `python main.py --fetch-data-snapshot embedded` | Hydrate embedded snapshot into `2_data/` |
+| `python main.py --fetch-data-snapshot raw` | Hydrate raw snapshot for cold-replay rebuilds |
+| `python main.py --backup-data-snapshot {raw\|embedded\|both}` | Create and upload a snapshot archive (maintainer-only — requires rclone on WSL) |
 
 ## Reproducibility boundaries
 
 ### Warm replay (canonical target)
 
-Deterministic from the frozen curated snapshot. No network needed after
+Deterministic from the frozen embedded snapshot. No network needed after
 hydration. Byte-identical across runs and platforms.
 
 ### Full cold-replay pipeline
@@ -173,13 +173,12 @@ required.
 
 ### Snapshot scope
 
-- **Curated snapshot**: excludes raw OpenAlex JSONL and rebuildable caches.
-  Warm replay from curated is the canonical reproducibility target.
-  Cold replay from curated will re-fetch OpenAlex live — outputs will differ
-  from the submitted state.
-- **Full snapshot**: preserves everything including raw API artifacts.
-  Available for bit-exact reconstruction if the original OpenAlex state is
-  needed.
+- **Embedded snapshot**: contains only `3_embedded/`. For warm-replay analysis.
+  Warm replay from embedded is the canonical reproducibility target.
+  No network needed after hydration. Byte-identical across runs and platforms.
+- **Raw snapshot**: contains only `0_raw/`. For cold-replay rebuilds.
+  Cold replay from raw will re-run preprocessing, segmentation, embedding, and
+  training — outputs will differ from the submitted state due to OpenAlex live changes.
 
 ## Repository layout
 

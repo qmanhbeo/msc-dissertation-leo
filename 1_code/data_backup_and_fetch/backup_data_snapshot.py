@@ -5,15 +5,15 @@ Adapted from ~/stocks-ecosystem/alpha-research-lab/backup_data_snapshot.py.
 
 Features:
 - creates either:
-  - `dissertation-data-snapshot-YYYY-MM-DD-HHMMSS.tar.zst` for the full profile
-  - `dissertation-data-snapshot-curated-YYYY-MM-DD-HHMMSS.tar.zst` for the curated profile
+  - `dissertation-data-snapshot-raw-YYYY-MM-DD-HHMMSS.tar.zst` for the raw profile
+  - `dissertation-data-snapshot-embedded-YYYY-MM-DD-HHMMSS.tar.zst` for the embedded profile
 - writes a matching `.sha256` checksum file
 - uploads both to Google Drive via `rclone`
 - prunes old local and remote snapshot pairs, keeping the newest N
 - embeds snapshot metadata under \`2_data/_snapshot_metadata/\`
 
 Usage:
-    python main.py --backup-data-snapshot curated
+    python main.py --backup-data-snapshot embedded
     python main.py --backup-data-snapshot both
 
     # direct utility usage:
@@ -22,8 +22,8 @@ Usage:
     # dry run — build archive locally, skip upload:
     python 1_code/data_backup_and_fetch/backup_data_snapshot.py --no-upload
 
-    # marker-facing replay snapshot without OpenAlex and rebuildable caches:
-    python 1_code/data_backup_and_fetch/backup_data_snapshot.py --profile curated --no-upload
+    # raw snapshot only:
+    python 1_code/data_backup_and_fetch/backup_data_snapshot.py --profile raw --no-upload
 
     # override remote:
     python 1_code/data_backup_and_fetch/backup_data_snapshot.py --remote-root gdrive:some/other/path
@@ -366,9 +366,9 @@ def main() -> None:
     )
     ap.add_argument(
         "--profile",
-        choices=["full", "curated"],
-        default="full",
-        help="Snapshot profile. 'full' preserves the literal data/ tree. 'curated' excludes large rebuildable caches.",
+        choices=["raw", "embedded", "both"],
+        default="raw",
+        help="Snapshot profile. 'raw' for cold-replay data. 'embedded' for warm-replay checkpoint onward. 'both' runs raw then embedded.",
     )
     ap.add_argument(
         "--keep",
@@ -409,30 +409,32 @@ def main() -> None:
     snapshot_day = date.fromisoformat(args.date) if args.date else datetime.now().date()
     snapshot_at = datetime.combine(snapshot_day, datetime.now().time().replace(microsecond=0))
 
-    snapshot = _create_snapshot(
-        source_dir=args.source_dir.resolve(),
-        output_dir=args.output_dir.resolve(),
-        profile_name=args.profile,
-        snapshot_at=snapshot_at,
-        zstd_level=args.zstd_level,
-    )
+    profiles = ["raw", "embedded"] if args.profile == "both" else [args.profile]
+    for profile_name in profiles:
+        snapshot = _create_snapshot(
+            source_dir=args.source_dir.resolve(),
+            output_dir=args.output_dir.resolve(),
+            profile_name=profile_name,
+            snapshot_at=snapshot_at,
+            zstd_level=args.zstd_level,
+        )
 
-    if not args.no_upload:
-        _upload_snapshot(args.remote_root, snapshot)
-        removed_remote = _prune_remote_snapshots(args.remote_root, args.profile, args.keep)
-        if removed_remote:
-            _log(f"pruned remote snapshot files: {removed_remote}")
+        if not args.no_upload:
+            _upload_snapshot(args.remote_root, snapshot)
+            removed_remote = _prune_remote_snapshots(args.remote_root, profile_name, args.keep)
+            if removed_remote:
+                _log(f"pruned remote snapshot files: {removed_remote}")
 
-    removed_local = _prune_local_snapshots(args.output_dir.resolve(), args.profile, args.keep)
-    if removed_local:
-        _log(f"pruned local snapshot files: {[str(p) for p in removed_local]}")
+        removed_local = _prune_local_snapshots(args.output_dir.resolve(), profile_name, args.keep)
+        if removed_local:
+            _log(f"pruned local snapshot files: {[str(p) for p in removed_local]}")
 
-    _log(
-        f"done  archive={snapshot.archive_path.name}  "
-        f"checksum={snapshot.checksum_path.name}  "
-        f"profile={args.profile}  "
-        f"keep={args.keep}  upload={'yes' if not args.no_upload else 'no'}"
-    )
+        _log(
+            f"done  archive={snapshot.archive_path.name}  "
+            f"checksum={snapshot.checksum_path.name}  "
+            f"profile={profile_name}  "
+            f"keep={args.keep}  upload={'yes' if not args.no_upload else 'no'}"
+        )
 
 
 if __name__ == "__main__":
