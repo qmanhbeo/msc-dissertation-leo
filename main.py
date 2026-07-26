@@ -83,16 +83,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, A3b, B1, B2, C, F) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, A3b, B2, C, F) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-a3b-circularity", action="store_true", help="Run A.3b SDGi Circularity Note.")
-    p.add_argument("--appendix-b1-pca", action="store_true", help="Run B.1 Combined Research-Policy PCA Landscape.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.2 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
     # Deprecated aliases (hidden, kept for backward compatibility)
-    p.add_argument("--pca-semantic-landscape", action="store_true", dest="appendix_b1_pca", help=argparse.SUPPRESS)
     p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
     p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
     p.add_argument("--semantic-gap-interpretability", action="store_true", dest="appendix_b2_interpret", help=argparse.SUPPRESS)
@@ -170,7 +168,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_a2_family,
             args.appendix_a3_sdg4,
             args.appendix_a3b_circularity,
-            args.appendix_b1_pca,
             args.appendix_b2_interpret,
             args.appendix_f_register,
             args.appendix_c_sample_stability,
@@ -284,14 +281,6 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> 
     run_step("sample stability", cmd, step_id="C")
 
 
-def run_pca_semantic_landscape(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    cmd = [sys.executable, "1_code/7_main_analysis/1_canonical/0_pca_semantic_landscape.py", "--output-dir", str(output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--model", model]
-    run_step("combined research-policy PCA landscape", cmd, step_id="B1")
-
-
-
 
 
 def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
@@ -377,6 +366,13 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
              "--output-dir", str(output_dir)],
             step_id="10",
         )
+    if model == DEFAULT_EMBED_MODEL:
+        run_step(
+            "PCA semantic landscape",
+            [sys.executable, "1_code/7_main_analysis/1_canonical/0_pca_semantic_landscape.py",
+             "--output-dir", str(output_dir)],
+            step_id="11",
+        )
 
 
 def run_main_text(
@@ -401,7 +397,6 @@ def run_warm_replay(
     model = args.embed_model
     run_main_text(output_dir, args)
     if include_appendix:
-        run_pca_semantic_landscape(output_dir, model=model)
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
         run_loo_sdgi_circularity(output_dir, model=model)
@@ -480,7 +475,6 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
 
     _run_main_analysis_steps(output_dir, model=model)
 
-    run_pca_semantic_landscape(output_dir, model=model)
     run_policy_source_family_sensitivity(output_dir, model=model)
     run_sdg4_lexical_audit(output_dir, model=model)
     run_loo_sdgi_circularity(output_dir, model=model)
@@ -643,7 +637,6 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "analysis":
         _run_main_analysis_steps(output_dir, model)
-        run_pca_semantic_landscape(output_dir, model=model)
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
         run_loo_sdgi_circularity(output_dir, model=model)
@@ -677,7 +670,6 @@ def main() -> None:
         or args.appendix_a2_family
         or args.appendix_a3_sdg4
         or args.appendix_a3b_circularity
-        or args.appendix_b1_pca
         or args.appendix_b2_interpret
         or args.appendix_c_sample_stability
         or args.appendix_f_register
@@ -700,7 +692,6 @@ def main() -> None:
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
         run_loo_sdgi_circularity(output_dir, model=model)
-        run_pca_semantic_landscape(output_dir, model=model)
         run_semantic_gap_interpretability(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
         run_register_adjustment(output_dir, model=model)
@@ -716,10 +707,6 @@ def main() -> None:
             build_pdf(output_dir)
     elif args.appendix_a3b_circularity:
         run_loo_sdgi_circularity(output_dir, model=args.embed_model)
-        if args.build_pdf:
-            build_pdf(output_dir)
-    elif args.appendix_b1_pca:
-        run_pca_semantic_landscape(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir)
     elif args.appendix_b2_interpret:

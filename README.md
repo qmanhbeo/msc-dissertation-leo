@@ -90,17 +90,14 @@ Not tracked in Git:
 | `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
 | `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D, E) standalone (no PDF) |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
-| `python main.py --appendix-b1-pca --overwrite` | Run B.1 Combined Research-Policy PCA Landscape |
-| `python main.py --appendix-b2-centroid --overwrite` | Run B.2 Within-Corpus Centroid Structure |
 | `python main.py --appendix-b2-interpret --overwrite` | Run B.2 Lexical Illustration of the Semantic Gap |
-| `python main.py --appendix-b4-softmax --overwrite` | Run B.4 Softmax Multi-label SDG |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
 | `python main.py --appendix-f-register --overwrite` | Run F Register-Adjustment Robustness |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B1, B2, C, F) standalone (requires existing main-text outputs). |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F) standalone (requires existing main-text outputs). |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot embedded` | Hydrate embedded snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot raw` | Hydrate raw snapshot for cold-replay rebuilds |
