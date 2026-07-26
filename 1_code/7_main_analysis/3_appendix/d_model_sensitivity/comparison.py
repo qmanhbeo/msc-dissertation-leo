@@ -13,7 +13,7 @@ Outputs:
   4_outputs/appendix/d_model_sensitivity/tables/tab_model_sensitivity.tex
 
 Run from project root:
-    python 1_code/3_main_analysis/3_appendix/d_model_sensitivity/comparison.py
+    python 1_code/7_main_analysis/3_appendix/d_model_sensitivity/comparison.py
 """
 
 from __future__ import annotations

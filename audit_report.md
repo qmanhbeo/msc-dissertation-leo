@@ -323,7 +323,7 @@ Line 219: "After deduplication by exact text match, \NPolicySegments{} unique se
 
 ### Implementation
 
-**Files:** `1_code/3_main_analysis/0_shared/semantic_gap_shared.py` (lines 75–98), `1_code/3_main_analysis/1_canonical/1_semantic_gap.py`
+**Files:** `1_code/7_main_analysis/0_shared/semantic_gap_shared.py` (lines 75–98), `1_code/7_main_analysis/1_canonical/1_semantic_gap.py`
 
 Parameters in `semantic_gap_shared.py`:
 ```python

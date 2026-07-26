@@ -957,13 +957,17 @@ If you want to connect the explanation above to the codebase, the project is lai
 - `main.py`: the top-level entrypoint
 - `1_code/0_fetch/`: data collection scripts
 - `1_code/1_preprocess/`: cleaning, filtering, merging, and segmenting
-- `1_code/2_embed/`: embeddings, SDG centroids, scoring, and validation
-- `1_code/3_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
-- `1_code/4_visualization/`: final plots
+- `1_code/2_segment/`: corpus segmentation
+- `1_code/3_embed/`: embeddings, SDG centroids, scoring, and validation
+- `1_code/4_supervised_model_train/`: classifier training
+- `1_code/5_supervised_model_infer/`: classifier inference
+- `1_code/6_calculate_centroids/`: compute research centroids
+- `1_code/7_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
+- `1_code/8_visualization/`: final plots
 - `3_writing/dissertation.tex`: the paper itself
 - `4_outputs/`: the canonical results, tables, figures, and final PDF
 
-So if you read the repository from `1_code/0_fetch/` to `1_code/3_main_analysis/`, you are basically walking through the same story this document just explained.
+So if you read the repository from `1_code/0_fetch/` to `1_code/7_main_analysis/`, you are basically walking through the same story this document just explained.
 
 ---
 
