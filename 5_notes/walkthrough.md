@@ -938,7 +938,7 @@ It asks:
 - **Fetch**: collect AI research papers from OpenAlex and policy texts from several institutional sources.
 - **Clean**: remove duplicates, remove unusable text, and standardize the corpora.
 - **Segment**: split long policy documents into smaller meaningful pieces.
-- **Embed**: turn every text into a 384-dimensional meaning vector using `all-MiniLM-L6-v2`.
+- **Embed**: turn every text into a 768-dimensional meaning vector using `all-mpnet-base-v2`.
 - **Build SDG anchors**: create 17 SDG reference centroids from labeled datasets.
 - **Validate the anchors**: test whether the SDG centroids behave sensibly on benchmark data.
 - **Score research**: compare each research paper to all 17 SDG centroids.
