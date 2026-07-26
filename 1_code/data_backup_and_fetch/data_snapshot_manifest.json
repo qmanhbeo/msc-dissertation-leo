@@ -14,9 +14,9 @@
       ]
     },
     "embedded": {
-      "version": "2026-07-26-095133",
-      "url": "https://drive.usercontent.google.com/download?id=1r9TmFMD9SfuG0psfstGPlX3S3B3CjT2r&export=download",
-      "sha256": "f93aaf30089d37febe2119a3ec8fa337e087679ce8cea7ddc07a416557a6f3d4",
+      "version": "2026-07-26-111026",
+      "url": "https://drive.usercontent.google.com/download?id=1Agtnvo-CUu3L7i_-lbCyRvPYdPpwqoG1&export=download",
+      "sha256": "1edf8aae1f1b5c1d0c1df623a8ae9ac0d8e356e6599ac30164e7604aeed64a84",
       "expected_repo_paths": [
         "2_data/3_embedded"
       ],

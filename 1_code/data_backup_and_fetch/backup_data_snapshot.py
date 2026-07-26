@@ -278,14 +278,16 @@ def _check_rclone_remote(remote_root: str) -> None:
         )
 
 
-def _run_rclone(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_rclone(*args: str, verbose: bool = False) -> subprocess.CompletedProcess[str]:
+    if verbose:
+        return subprocess.run(["rclone", *args], check=True)
     return subprocess.run(["rclone", *args], check=True, capture_output=True, text=True)
 
 
 def _upload_snapshot(remote_root: str, snapshot: SnapshotPaths) -> None:
     _log(f"uploading to {remote_root}")
     _run_rclone("mkdir", remote_root)
-    _run_rclone("copyto", str(snapshot.archive_path), _remote_join(remote_root, snapshot.archive_path.name))
+    _run_rclone("copyto", "--progress", str(snapshot.archive_path), _remote_join(remote_root, snapshot.archive_path.name), verbose=True)
     _run_rclone("copyto", str(snapshot.checksum_path), _remote_join(remote_root, snapshot.checksum_path.name))
 
 
