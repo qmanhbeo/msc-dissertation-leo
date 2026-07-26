@@ -38,9 +38,9 @@
 \input{../4_outputs/main/tables/num_interaction.tex}
 \input{../4_outputs/main/tables/num_cross_sensitivity.tex}
 \input{../4_outputs/main/tables/num_pca_landscape.tex}
-% \input{../4_outputs/appendix/a3_sdgi_circularity/tables/num_loo_sdgi_circularity.tex} — removed (circularity concern superseded by train/CV/test split, see Appendix~\ref{app:sdgi-circularity-check})
+% \input{../4_outputs/appendix/a3b_sdgi_circularity/tables/num_loo_sdgi_circularity.tex} — removed (circularity concern superseded by train/CV/test split, see Appendix~\ref{app:sdgi-circularity-check})
 \InputIfFileExists{../4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/e_register_adjustment/tables/num_register_adjustment.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -709,7 +709,7 @@ This single-direction subtraction is a limited diagnostic. It attenuates one bro
 \small
 \caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the paper. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
 \label{tab:register-adjusted-semantic-gap}
-\input{../4_outputs/appendix/e_register_adjustment/tables/tab_register_adjusted_semgap.tex}
+\input{../4_outputs/appendix/f_register_adjustment/tables/tab_register_adjusted_semgap.tex}
 \end{table}
 \clearpage
 \section{Declaration of AI Use}

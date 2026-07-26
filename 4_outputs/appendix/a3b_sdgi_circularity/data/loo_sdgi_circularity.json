@@ -1,8 +1,8 @@
 {
-  "script": "1_code/3_main_analysis/3_appendix/9_loo_sdgi_circularity.py",
+  "script": "1_code/7_main_analysis/3_appendix/a3b_loo_sdgi_circularity.py",
   "scope": "SDGi-excluded (OSDG+KH+Aurora) centroid; SDGi policy segments rescored.",
   "n_sdgi_segments": 21346,
-  "n_policy_segments_total": 43147,
+  "n_policy_segments_total": 40547,
   "n_research_papers": 3105144,
   "loo_centroid_sources_per_sdg": {
     "1": 2,
@@ -24,11 +24,11 @@
     "17": 2
   },
   "policy_top_sdgi_excl_centroid": 0.614,
-  "full_policy_top_sdgi_excl_centroid": 0.5939,
+  "full_policy_top_sdgi_excl_centroid": 0.6002,
   "paper_top_sdgi_excl_centroid": 0.2378,
   "gap_sdgi_segments": 0.3762,
-  "canonical_policy_top": 0.761,
+  "canonical_policy_top": 0.789,
   "canonical_paper_top": 0.656,
-  "canonical_gap": 0.105,
-  "gap_change_vs_canonical": 0.2712
+  "canonical_gap": 0.134,
+  "gap_change_vs_canonical": 0.2422
 }

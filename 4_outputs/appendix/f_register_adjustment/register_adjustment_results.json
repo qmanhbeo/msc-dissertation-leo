@@ -6,125 +6,125 @@
     {
       "sdg": 1,
       "name": "No Poverty",
-      "raw_gap": 0.435412,
-      "adj_gap": 0.434512,
-      "delta": -0.0009
+      "raw_gap": 0.439161,
+      "adj_gap": 0.439152,
+      "delta": -9e-06
     },
     {
       "sdg": 2,
       "name": "Zero Hunger",
-      "raw_gap": 0.284926,
-      "adj_gap": 0.256837,
-      "delta": -0.028089
+      "raw_gap": 0.285614,
+      "adj_gap": 0.257812,
+      "delta": -0.027802
     },
     {
       "sdg": 3,
       "name": "Good Health and Well-Being",
-      "raw_gap": 0.464446,
-      "adj_gap": 0.45086,
-      "delta": -0.013586
+      "raw_gap": 0.471653,
+      "adj_gap": 0.458875,
+      "delta": -0.012778
     },
     {
       "sdg": 4,
       "name": "Quality Education",
-      "raw_gap": 0.262241,
-      "adj_gap": 0.223176,
-      "delta": -0.039065
+      "raw_gap": 0.256578,
+      "adj_gap": 0.216439,
+      "delta": -0.040139
     },
     {
       "sdg": 5,
       "name": "Gender Equality",
-      "raw_gap": 0.333008,
-      "adj_gap": 0.324951,
-      "delta": -0.008057
+      "raw_gap": 0.301208,
+      "adj_gap": 0.287821,
+      "delta": -0.013387
     },
     {
       "sdg": 6,
       "name": "Clean Water and Sanitation",
-      "raw_gap": 0.28166,
-      "adj_gap": 0.250775,
-      "delta": -0.030885
+      "raw_gap": 0.281862,
+      "adj_gap": 0.251284,
+      "delta": -0.030578
     },
     {
       "sdg": 7,
       "name": "Affordable and Clean Energy",
-      "raw_gap": 0.43414,
-      "adj_gap": 0.406414,
-      "delta": -0.027726
+      "raw_gap": 0.430281,
+      "adj_gap": 0.401166,
+      "delta": -0.029115
     },
     {
       "sdg": 8,
       "name": "Decent Work and Economic Growth",
-      "raw_gap": 0.427018,
-      "adj_gap": 0.413448,
-      "delta": -0.01357
+      "raw_gap": 0.385509,
+      "adj_gap": 0.364968,
+      "delta": -0.020541
     },
     {
       "sdg": 9,
       "name": "Industry, Innovation and Infrastructure",
-      "raw_gap": 0.289086,
-      "adj_gap": 0.253495,
-      "delta": -0.035591
+      "raw_gap": 0.300077,
+      "adj_gap": 0.268065,
+      "delta": -0.032012
     },
     {
       "sdg": 10,
       "name": "Reduced Inequalities",
-      "raw_gap": 0.309134,
-      "adj_gap": 0.296856,
-      "delta": -0.012278
+      "raw_gap": 0.280263,
+      "adj_gap": 0.266323,
+      "delta": -0.01394
     },
     {
       "sdg": 11,
       "name": "Sustainable Cities and Communities",
-      "raw_gap": 0.460372,
-      "adj_gap": 0.446966,
-      "delta": -0.013406
+      "raw_gap": 0.462351,
+      "adj_gap": 0.450035,
+      "delta": -0.012316
     },
     {
       "sdg": 12,
       "name": "Responsible Consumption and Production",
-      "raw_gap": 0.424928,
-      "adj_gap": 0.398629,
-      "delta": -0.026299
+      "raw_gap": 0.427343,
+      "adj_gap": 0.40133,
+      "delta": -0.026013
     },
     {
       "sdg": 13,
       "name": "Climate Action",
-      "raw_gap": 0.477659,
-      "adj_gap": 0.45585,
-      "delta": -0.021809
+      "raw_gap": 0.477251,
+      "adj_gap": 0.455926,
+      "delta": -0.021325
     },
     {
       "sdg": 14,
       "name": "Life Below Water",
-      "raw_gap": 0.391982,
-      "adj_gap": 0.372137,
-      "delta": -0.019845
+      "raw_gap": 0.39372,
+      "adj_gap": 0.374676,
+      "delta": -0.019044
     },
     {
       "sdg": 15,
       "name": "Life on Land",
-      "raw_gap": 0.229455,
-      "adj_gap": 0.192132,
-      "delta": -0.037323
+      "raw_gap": 0.225153,
+      "adj_gap": 0.186765,
+      "delta": -0.038388
     },
     {
       "sdg": 16,
       "name": "Peace, Justice and Strong Institutions",
-      "raw_gap": 0.333485,
-      "adj_gap": 0.307397,
-      "delta": -0.026088
+      "raw_gap": 0.347323,
+      "adj_gap": 0.323544,
+      "delta": -0.023779
     },
     {
       "sdg": 17,
       "name": "Partnerships for the Goals",
-      "raw_gap": 0.218848,
-      "adj_gap": 0.213168,
-      "delta": -0.00568
+      "raw_gap": 0.188987,
+      "adj_gap": 0.176198,
+      "delta": -0.012789
     }
   ],
-  "mean_raw_gap": 0.3563,
-  "mean_adj_gap": 0.3352,
-  "mean_delta": -0.0212,
+  "mean_raw_gap": 0.3503,
+  "mean_adj_gap": 0.3283,
+  "mean_delta": -0.022,
   "note": "Raw gaps loaded from canonical 4_3_semantic_gap_distances.json; adjusted gaps use segment cap 50."
 }
