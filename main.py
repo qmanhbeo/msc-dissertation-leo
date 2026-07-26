@@ -181,11 +181,11 @@ def action_requested(args: argparse.Namespace) -> bool:
 def run_step(label: str, cmd: list[str], step_id: str | None = None) -> None:
     header = f"[{step_id}] {label}" if step_id else f"[{label}]"
     sep = "=" * 70
-    print(f"\n{sep}")
-    print(f"  {header}")
-    print(sep)
+    print(f"\n{sep}", file=sys.stderr)
+    print(f"  {header}", file=sys.stderr)
+    print(sep, file=sys.stderr)
     subprocess.run(cmd, cwd=ROOT, check=True)
-    print()
+    print(file=sys.stderr)
 
 
 def missing_requirements(paths: list[Path]) -> list[Path]:
