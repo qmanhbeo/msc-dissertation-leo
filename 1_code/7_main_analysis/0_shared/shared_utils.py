@@ -28,23 +28,15 @@ MANUSCRIPT_ROOT_FILES = [
 ]
 
 MANUSCRIPT_EXTRA_FILES = [
-    "appendix/a1_sdg_source_comparison/data/comparison_summary.json",
-    "appendix/a1_sdg_source_comparison/data/comparison_table.csv",
     "appendix/a2_source_family_sensitivity/data/policy_source_family_summary.csv",
     "appendix/a2_source_family_sensitivity/data/policy_source_family_coverage.csv",
     "appendix/a2_source_family_sensitivity/data/policy_source_family_semantic_gaps.csv",
     "appendix/a3_sdg4_audit/data/sdg4_lexical_audit.csv",
     "appendix/a3_sdg4_audit/data/sdg4_lexical_audit_summary.json",
     "main/data/pca_landscape_metadata.json",
-    "appendix/b1_within_corpus_centroid/data/b1_within_corpus_metrics.csv",
-    "appendix/b1_within_corpus_centroid/data/b1_within_corpus_summary.json",
     "appendix/b2_semantic_gap_interpretability/data/semantic_gap_distinctive_terms.csv",
     "appendix/b2_semantic_gap_interpretability/data/semantic_gap_interpretability_summary.json",
     "appendix/b2_semantic_gap_interpretability/data/semantic_gap_representative_examples.csv",
-    "appendix/b3_softmax_multilabel_sdg/data/b3_softmax_multilabel_coverage.csv",
-    "appendix/b3_softmax_multilabel_sdg/data/b3_softmax_multilabel_semantic_gaps.csv",
-    "appendix/b3_softmax_multilabel_sdg/data/b3_softmax_multilabel_comparison_summary.csv",
-    "appendix/b3_softmax_multilabel_sdg/data/b3_softmax_multilabel_metadata.json",
     "appendix/c_sample_stability/data/4_5_sample_stability_summary.json",
     "appendix/c_sample_stability/data/4_5_sample_stability_draws.jsonl",
     "appendix/c_sample_stability/data/4_5_sample_stability_per_sdg.json",
@@ -76,17 +68,11 @@ MANUSCRIPT_FIGURE_FILES = [
 ]
 
 MANUSCRIPT_APPENDIX_TABLE_FILES = [
-    "appendix/a1_sdg_source_comparison/tables/num_a1_source_comparison.tex",
-    "appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_f1cos.tex",
-    "appendix/a1_sdg_source_comparison/tables/tab_a1_source_comparison_covgap.tex",
     "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex",
     "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex",
     "appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex",
     "main/tables/num_pca_landscape.tex",
-    "appendix/b1_within_corpus_centroid/tables/num_b1_within_corpus_centroid.tex",
     "appendix/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret.tex",
-    "appendix/b3_softmax_multilabel_sdg/tables/num_b3_softmax_multilabel.tex",
-    "appendix/b3_softmax_multilabel_sdg/tables/tab_b3_softmax_summary.tex",
     "appendix/e_register_adjustment/tables/num_register_adjustment.tex",
     "appendix/e_register_adjustment/tables/num_register_confidence_checks.tex",
     "appendix/e_register_adjustment/tables/num_register_interpretability.tex",
@@ -105,10 +91,6 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
 MANUSCRIPT_APPENDIX_FIGURE_FILES = [
     "appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf",
     "appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.png",
-    "appendix/b1_within_corpus_centroid/figures/fig_b1_research_sdg_pca.pdf",
-    "appendix/b1_within_corpus_centroid/figures/fig_b1_research_sdg_pca.png",
-    "appendix/b1_within_corpus_centroid/figures/fig_b1_policy_sdg_pca.pdf",
-    "appendix/b1_within_corpus_centroid/figures/fig_b1_policy_sdg_pca.png",
     "appendix/e_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf",
     "appendix/e_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.png",
     "appendix/e_register_adjustment/figures/fig_register_confidence_curve.pdf",
@@ -192,17 +174,6 @@ def canonical_artifact_paths(output_dir: Path) -> list[Path]:
     files.extend(root / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
     files.extend(root / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
     files.extend(root / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
-    _sen = "appendix/d_model_sensitivity"
-    for name in MANUSCRIPT_ROOT_FILES:
-        if name != "dissertation.pdf":
-            files.append(root / _sen / "main" / "data" / name)
-    files.extend(root / _sen / name for name in MANUSCRIPT_EXTRA_FILES)
-    files.extend(root / _sen / "main" / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
-    files.extend(root / _sen / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
-    files.extend(root / _sen / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
-    files.extend(root / _sen / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
-    files.append(root / _sen / "data" / "sensitivity_comparison.json")
-    files.append(root / _sen / "tables" / "tab_model_sensitivity.tex")
     return files
 
 
