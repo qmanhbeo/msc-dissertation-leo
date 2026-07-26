@@ -14,7 +14,7 @@ This repository contains the dissertation code, manuscript source, committed out
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
 | **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). Also required for `--cold-replay` (OpenAlex API + HuggingFace model download). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
 | **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
-| **rclone** | Required for `--backup-data-snapshot` only (maintainer tool). Not needed for warm/cold replay |
+| **rclone** | Required for `--backup-data-snapshot` only (maintainer tool). Override remote via `--remote-root` or `DISSERTATION_SNAPSHOT_REMOTE_ROOT`. Not needed for warm/cold replay |
 | **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for `--cold-replay`. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
 | **Embedding runtimes** (one-time, cold replay only) | MiniLM (`all-MiniLM-L6-v2`): ~2.5 hours on 4 GB VRAM GPU. MPNet (`all-mpnet-base-v2`): ~17 hours on 4 GB VRAM GPU |
 | **Git** | Required for cloning and pulling updates |

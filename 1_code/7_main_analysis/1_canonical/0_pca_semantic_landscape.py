@@ -279,6 +279,7 @@ def main() -> None:
     plt.rcParams.update(
         {
             "font.family": "serif",
+            "font.serif": ["DejaVu Serif", "Times New Roman", "serif"],
             "font.size": 9,
             "axes.titlesize": 10,
             "axes.labelsize": 9,

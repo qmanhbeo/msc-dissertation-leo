@@ -62,6 +62,7 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 plt.rcParams.update({
     "font.family": "serif",
+    "font.serif": ["DejaVu Serif", "Times New Roman", "serif"],
     "font.size": 10,
     "axes.titlesize": 12,
     "axes.labelsize": 10,
