@@ -41,6 +41,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, preprocessed_dir, scored_dir_for_model
+from research_embedding_shards import load_consolidated_embeddings, load_consolidated_scores
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from research_score_shards import aggregate_research_scores
@@ -448,11 +449,17 @@ def write_draw_caches(cache_root: Path, draws: list[DrawAccumulator]) -> None:
         )
 
 
-def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator]) -> None:
+def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator], model: str) -> None:
+    # Load the consolidated research embedding/score arrays ONCE and slice per
+    # shard (shard.start:shard.stop aligns with consolidation order). This is
+    # byte-identical to iterating the 27 shard files but avoids re-materialising
+    # them on every run.
+    full_emb = load_consolidated_embeddings(model)
+    full_score = load_consolidated_scores(model)
     for shard in shards:
         log.info("Processing research shard %s (%d rows)", shard.name, shard.rows)
-        score = np.load(shard.score_path).astype(np.float32)
-        emb = np.load(shard.emb_path).astype(np.float32)
+        score = np.asarray(full_score[shard.start:shard.stop]).astype(np.float32)
+        emb = np.asarray(full_emb[shard.start:shard.stop]).astype(np.float32)
         if score.shape[0] != emb.shape[0]:
             raise RuntimeError(
                 f"Score/embedding row mismatch for shard {shard.name}: "
@@ -891,7 +898,7 @@ def main() -> None:
         len(pending_draws),
     )
     if pending_draws:
-        accumulate_draws(shards, pending_draws)
+        accumulate_draws(shards, pending_draws, args.embed_model)
         write_draw_caches(cache_root, pending_draws)
 
     LOG_INTERVAL = 100
