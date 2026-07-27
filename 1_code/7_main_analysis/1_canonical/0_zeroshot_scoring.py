@@ -28,14 +28,11 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, scored_dir_for_model
 from shard_pipeline_utils import load_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-SEGMENT_CAP = 50
-RANDOM_SEED = 42
 
 
 def centroid_from_sumcount(sums: np.ndarray, counts: np.ndarray) -> np.ndarray:
@@ -44,7 +41,7 @@ def centroid_from_sumcount(sums: np.ndarray, counts: np.ndarray) -> np.ndarray:
         if counts[i] > 0:
             raw = sums[i] / counts[i]
             norm = float(np.linalg.norm(raw))
-            if norm > 1e-8:
+            if norm > ZERO_NORM_EPS:
                 out[i] = (raw / norm).astype(np.float32)
     return out
 
@@ -64,19 +61,25 @@ def cap_indices_per_doc(policy_ids: list[dict], segment_cap: int, rng: np.random
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
+    p.add_argument("--segment-cap", type=int, default=50,
+                  help="Max segments sampled per source_doc per SDG (default: %(default)s)")
+    p.add_argument("--min-centroid-norm", type=float, default=MIN_CENTROID_NORM,
+                  help="Centroids with L2 norm below this are treated as degenerate and "
+                       "excluded from semantic-gap (default: %(default)s)")
     p.add_argument("--output-dir", default="4_outputs")
     args = p.parse_args()
-    model = args.model
+    model = args.embed_model
 
-    out_root = Path(args.output_dir) / "zeroshot"
+    out_root = Path(args.output_dir) / "zeroshot" / model
     out_root.mkdir(parents=True, exist_ok=True)
 
     # 1. Load reference centroids (same ones LR uses)
     centroids_path = scored_dir_for_model(model) / "sdg_centroids.npy"
     log.info("Loading reference centroids: %s", centroids_path)
     centroids = np.load(centroids_path).astype(np.float32)
-    assert centroids.shape == (N_SDG, 768)
+    assert centroids.shape[0] == N_SDG
+    embed_dim = centroids.shape[1]
     norms = np.linalg.norm(centroids, axis=1)
     assert np.allclose(norms, 1.0, atol=1e-5), f"Centroids not unit: {norms}"
 
@@ -88,7 +91,7 @@ def main() -> None:
     shards = manifest["shards"]
     log.info("Scoring %d research shards (zero-shot)...", len(shards))
 
-    res_sums = np.zeros((N_SDG, 768), dtype=np.float64)
+    res_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
     res_counts = np.zeros(N_SDG, dtype=np.int64)
 
     for shard in shards:
@@ -122,10 +125,10 @@ def main() -> None:
 
     # Apply segment cap
     rng = np.random.Generator(np.random.PCG64(RANDOM_SEED))
-    capped_idxs = cap_indices_per_doc(policy_ids, SEGMENT_CAP, rng)
+    capped_idxs = cap_indices_per_doc(policy_ids, args.segment_cap, rng)
     log.info("Policy: %d total segments, %d capped", len(policy_ids), len(capped_idxs))
 
-    pol_sums = np.zeros((N_SDG, 768), dtype=np.float64)
+    pol_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
     pol_counts = np.zeros(N_SDG, dtype=np.int64)
     for i in capped_idxs:
         sdg_idx = policy_assignments[i]
@@ -143,7 +146,7 @@ def main() -> None:
         p = policy_centroids[sdg_idx]
         rn = float(np.linalg.norm(r))
         pn = float(np.linalg.norm(p))
-        if rn < 0.5 or pn < 0.5:
+        if rn < args.min_centroid_norm or pn < args.min_centroid_norm:
             sim = None
             gap = None
         else:
@@ -162,7 +165,7 @@ def main() -> None:
 
     out_data = {
         "method": "zeroshot_nearest_centroid",
-        "segment_cap": SEGMENT_CAP,
+        "segment_cap": args.segment_cap,
         "embedding_model": model,
         "per_sdg": per_sdg,
     }

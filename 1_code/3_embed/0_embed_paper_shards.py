@@ -52,9 +52,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--out-dir", default=None)
     p.add_argument("--status-dir", default=None)
     p.add_argument("--metadata-dir", default="")
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL)
-    p.add_argument("--batch-size", type=int, default=256)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
+    p.add_argument("--batch-size", type=int, default=256,
+                   help="Internal batch size passed to model.encode (GPU occupancy).")
+    p.add_argument("--chunk-size", type=int, default=8192,
+                   help="Texts per model.encode call. Amortizes per-call overhead and sets checkpoint granularity.")
+    p.add_argument("--precision", choices=["fp32", "fp16"], default="fp32",
+                   help="Compute precision for model.encode (fp16 ≈ 2x faster on Ampere GPUs).")
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
+    p.add_argument("--normalize-embeddings", action="store_true", default=True,
+                   help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     p.add_argument("--local-files-only", action="store_true")
     p.add_argument("--limit-shards", type=int, default=0)
     p.add_argument("--overwrite", action="store_true",
@@ -106,13 +113,13 @@ def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    embed_root = embed_dir_for_model(args.model)
-    seg_root = segmented_dir_for_model(args.model) / "research"
+    embed_root = embed_dir_for_model(args.embed_model)
+    seg_root = segmented_dir_for_model(args.embed_model) / "research"
 
     input_manifest = Path(args.input_manifest) if args.input_manifest else seg_root / "metadata" / "manifest.json"
-    out_dir = Path(args.out_dir) if args.out_dir else embed_research_dir_for_model(args.model)
+    out_dir = Path(args.out_dir) if args.out_dir else embed_research_dir_for_model(args.embed_model)
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir) if args.status_dir else embed_research_dir_for_model(args.model) / "metadata"
+    status_dir = Path(args.status_dir) if args.status_dir else embed_research_dir_for_model(args.embed_model) / "metadata"
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)
@@ -123,12 +130,16 @@ def main() -> None:
 
     device = resolve_device(args.device)
     try:
-        model = SentenceTransformer(args.model, device=device, local_files_only=args.local_files_only)
+        model = SentenceTransformer(args.embed_model, device=device, local_files_only=args.local_files_only)
     except Exception as exc:
         hint = "Model load failed. If the environment has no internet, ensure model cache exists and use --local-files-only."
         raise RuntimeError(f"{hint} Original error: {exc}") from exc
+    if args.precision == "fp16":
+        if device == "cpu":
+            raise RuntimeError("fp16 precision requires a CUDA device.")
+        model = model.half()
     emb_dim = int(model.get_sentence_embedding_dimension())
-    log.info("Model=%s device=%s dim=%d", args.model, device, emb_dim)
+    log.info("Model=%s device=%s dim=%d", args.embed_model, device, emb_dim)
 
     out_manifest_path = metadata_dir / "manifest.json"
     out_manifest = read_json(out_manifest_path, default=None)
@@ -137,10 +148,10 @@ def main() -> None:
             "stage": STATUS_STAGE,
             "schema_version": 1,
             "created_at_utc": now_iso(),
-            "model": args.model,
+            "model": args.embed_model,
             "device": device,
             "embedding_dim": emb_dim,
-            "normalize_embeddings": True,
+            "normalize_embeddings": args.normalize_embeddings,
             "input_manifest": str(input_manifest),
             "shards": [],
             "totals": {"rows": 0, "shards": 0},
@@ -159,7 +170,7 @@ def main() -> None:
         status_dir,
         STATUS_STAGE,
         "running",
-        {"model": args.model, "device": device, "input_manifest": str(input_manifest)},
+        {"model": args.embed_model, "device": device, "input_manifest": str(input_manifest)},
     )
 
     for shard in shards:
@@ -194,7 +205,7 @@ def main() -> None:
             if m.get("status") == "in_progress":
                 completed_batches = set(m.get("completed_batches", []))
                 rows_completed = m.get("rows_completed", 0)
-                log.info("Resuming shard %s from batch %d (%d/%d rows done)",
+                log.info("Resuming shard %s from chunk %d (%d/%d rows done)",
                          shard_name, len(completed_batches), rows_completed, n)
         elif batches_dir.exists():
             shutil.rmtree(batches_dir)
@@ -202,32 +213,32 @@ def main() -> None:
         if not batches_dir.exists():
             batches_dir.mkdir(parents=True, exist_ok=True)
 
-        batch_starts = list(range(0, n, args.batch_size))
-        n_batches = len(batch_starts)
+        chunk_starts = list(range(0, n, args.chunk_size))
+        n_chunks = len(chunk_starts)
 
-        for batch_i, start in enumerate(batch_starts):
-            if batch_i in completed_batches:
+        for chunk_i, start in enumerate(chunk_starts):
+            if chunk_i in completed_batches:
                 continue
 
-            end = min(start + args.batch_size, n)
-            batch_texts = texts[start:end]
+            end = min(start + args.chunk_size, n)
+            chunk_texts = texts[start:end]
 
-            batch_emb = model.encode(
-                batch_texts,
-                batch_size=len(batch_texts),
+            chunk_emb = model.encode(
+                chunk_texts,
+                batch_size=args.batch_size,
                 show_progress_bar=False,
                 convert_to_numpy=True,
-                normalize_embeddings=True,
+                normalize_embeddings=args.normalize_embeddings,
             ).astype(np.float32)
 
-            batch_path = batches_dir / f"batch_{batch_i:05d}.npy"
-            tmp_batch = batch_path.with_suffix(".npy.tmp")
-            with tmp_batch.open("wb") as f:
-                np.save(f, batch_emb)
-            tmp_batch.replace(batch_path)
+            chunk_path = batches_dir / f"chunk_{chunk_i:05d}.npy"
+            tmp_chunk = chunk_path.with_suffix(".npy.tmp")
+            with tmp_chunk.open("wb") as f:
+                np.save(f, chunk_emb)
+            tmp_chunk.replace(chunk_path)
 
-            completed_batches.add(batch_i)
-            rows_completed += len(batch_emb)
+            completed_batches.add(chunk_i)
+            rows_completed += len(chunk_emb)
             write_batch_manifest(
                 batch_manifest_path,
                 corpus_name=shard_name,
@@ -239,8 +250,8 @@ def main() -> None:
             )
 
             pct = 100.0 * rows_completed / n
-            log.info("  batch %4d/%d (%5d–%5d, %5d docs)  %5.1f%%  → wrote %s",
-                     batch_i + 1, n_batches, start, end - 1, end - start, pct, batch_path.name)
+            log.info("  chunk %4d/%d (%5d–%5d, %5d docs)  %5.1f%%  → wrote %s",
+                     chunk_i + 1, n_chunks, start, end - 1, end - start, pct, chunk_path.name)
 
         # All batches done — concatenate
         write_batch_manifest(
@@ -252,8 +263,8 @@ def main() -> None:
             rows_completed=rows_completed,
             status="concatenating",
         )
-        batch_files = sorted(batches_dir.glob("batch_*.npy"),
-                             key=lambda p: int(p.stem.split("_")[1]))
+        batch_files = sorted(batches_dir.glob("chunk_*.npy"),
+                              key=lambda p: int(p.stem.split("_")[1]))
         all_embs = np.concatenate([np.load(f) for f in batch_files], axis=0)
         if all_embs.shape != (n, dim):
             raise RuntimeError(f"Shape mismatch after concatenation: {all_embs.shape} != ({n}, {dim})")

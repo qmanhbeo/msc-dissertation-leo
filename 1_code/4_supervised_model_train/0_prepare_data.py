@@ -38,7 +38,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, model_results_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, embed_dir_for_model, model_results_dir_for_model
 
 CORPORA = [
     {"name": "osdg", "embed_file": "osdg.npy", "ids_file": "metadata/osdg_ids.json"},
@@ -78,16 +78,20 @@ def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: n
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare single-label training data.")
-    parser.add_argument("--model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--embed-root", default=None,
                         help="Override embed root dir (derived from --model if omitted)")
     parser.add_argument("--output-root", default=None,
-                        help="Override output root dir (derived from --model if omitted)")
+                        help="Override output root dir (derived from --embed-model if omitted)")
+    parser.add_argument("--train-frac", type=float, default=0.85,
+                        help="Fraction of document-groups assigned to the train pool; the rest go to test (default: %(default)s)")
+    parser.add_argument("--split-seed", type=int, default=RANDOM_SEED,
+                        help="Random seed for the stratified document-group train/test split (default: %(default)s)")
     args = parser.parse_args()
-    embed_root = Path(args.embed_root) if args.embed_root else embed_dir_for_model(args.model)
-    output_dir = Path(args.output_root) if args.output_root else model_results_dir_for_model(args.model)
-    log.info("Embed root: %s  Output: %s  Model: %s", embed_root, output_dir, args.model)
+    embed_root = Path(args.embed_root) if args.embed_root else embed_dir_for_model(args.embed_model)
+    output_dir = Path(args.output_root) if args.output_root else model_results_dir_for_model(args.embed_model)
+    log.info("Embed root: %s  Output: %s  Model: %s", embed_root, output_dir, args.embed_model)
 
     all_embs, all_labels, all_sources, all_source_docs = [], [], [], []
 
@@ -183,17 +187,17 @@ def main() -> None:
         doc_group_indices = np.arange(len(doc_groups))
         doc_label_arr = np.array(doc_labels, dtype=np.int64)
 
-        n_test_docs = max(1, int(len(doc_groups) * 0.15))
+        n_test_docs = max(1, int(len(doc_groups) * (1.0 - args.train_frac)))
         try:
             train_doc_groups, test_doc_groups = train_test_split(
                 doc_group_indices, test_size=n_test_docs / len(doc_groups),
-                random_state=42, stratify=doc_label_arr,
+                random_state=args.split_seed, stratify=doc_label_arr,
             )
         except ValueError:
             log.warning("  %s: stratification failed — falling back to unstratified split", src)
             train_doc_groups, test_doc_groups = train_test_split(
                 doc_group_indices, test_size=n_test_docs / len(doc_groups),
-                random_state=42,
+                random_state=args.split_seed,
             )
 
         for gi in train_doc_groups:
@@ -236,9 +240,10 @@ def main() -> None:
             _f.flush()
 
     lines = ["=" * 70]
-    lines.append("SPLIT REPORT — Per-source stratified 85/15 (document-grouped)")
+    lines.append("SPLIT REPORT — Per-source stratified document-grouped split")
     lines.append("=" * 70)
-    lines.append(f"Total: {len(embeddings)} texts, {len(np.unique(sources))} sources\n")
+    lines.append(f"Total: {len(embeddings)} texts, {len(np.unique(sources))} sources")
+    lines.append(f"train_frac={args.train_frac}  test_frac={1.0 - args.train_frac:.2f}  split_seed={args.split_seed}\n")
 
     for name_split, name_idx in [("Train", train_pool_idx), ("Test", test_idx)]:
         lines.append(f"--- {name_split} ({len(name_idx)} texts) ---")

@@ -108,13 +108,19 @@ def parse_args() -> argparse.Namespace:
         help="Load model from local Hugging Face cache only.",
     )
     parser.add_argument(
-        "--model", default=DEFAULT_EMBED_MODEL,
+        "--embed-model", default=DEFAULT_EMBED_MODEL,
         help="Sentence-transformer model (default: %(default)s).",
     )
     parser.add_argument(
         "--batch-size", type=int, default=128,
         help="Batch size (default: %(default)s). Reduce to 64 for MPNet on 4GB GPUs.",
     )
+    parser.add_argument(
+        "--precision", choices=["fp32", "fp16"], default="fp32",
+        help="Compute precision for model.encode (fp16 ≈ 2x faster on Ampere GPUs).",
+    )
+    p.add_argument("--normalize-embeddings", action="store_true", default=True,
+                   help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     return parser.parse_args()
 
 
@@ -126,6 +132,7 @@ def embed_corpus(
     overwrite: bool,
     output_dir: Path,
     batch_size: int,
+    precision: str,
     model_name: str,
 ) -> None:
     metadata_dir = output_dir / "metadata"
@@ -209,7 +216,7 @@ def embed_corpus(
             batch_size=len(batch_texts),
             show_progress_bar=False,
             convert_to_numpy=True,
-            normalize_embeddings=True,
+            normalize_embeddings=args.normalize_embeddings,
         ).astype(np.float32)
 
         batch_path = tmp_dir / f"batch_{batch_i:05d}.npy"
@@ -239,11 +246,13 @@ def embed_corpus(
 
 def main() -> None:
     args = parse_args()
-    output_dir = embed_dir_for_model(args.model)
+    output_dir = embed_dir_for_model(args.embed_model)
     config = CORPUS_CONFIG[args.corpus]
 
-    log.info("Loading model: %s", args.model)
-    model = SentenceTransformer(args.model, local_files_only=args.local_files_only)
+    log.info("Loading model: %s", args.embed_model)
+    model = SentenceTransformer(args.embed_model, local_files_only=args.local_files_only)
+    if args.precision == "fp16":
+        model = model.half()
     log.info("Embedding dimension: %d", model.get_embedding_dimension())
 
     embed_corpus(
@@ -251,7 +260,8 @@ def main() -> None:
         overwrite=args.overwrite,
         output_dir=output_dir,
         batch_size=args.batch_size,
-        model_name=args.model,
+        precision=args.precision,
+        model_name=args.embed_model,
     )
 
     path = output_dir / f"{args.corpus}.npy"

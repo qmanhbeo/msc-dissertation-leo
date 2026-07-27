@@ -39,9 +39,9 @@ from scipy.stats import gaussian_kde
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "1_code" / "7_main_analysis" / "0_shared"))
-from model_utils import preprocessed_dir
+from model_utils import preprocessed_dir, RANDOM_SEED
 
-RNG = np.random.default_rng(42)
+RNG = np.random.default_rng(RANDOM_SEED)
 MPNET_MODEL = "sentence-transformers/all-mpnet-base-v2"
 MINILM_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 MPNET_LIMIT = 384
@@ -69,6 +69,8 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Token distribution analysis across corpora.")
+    p.add_argument("--max-sample-per-source", type=int, default=MAX_SAMPLE_PER_SOURCE,
+                   help="Max texts sampled per source corpus for the token-length analysis (default: %(default)s)")
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
     return p.parse_args()
 
@@ -103,18 +105,18 @@ def load_research_shards(n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE)
     return records
 
 
-def load_all_texts() -> dict[str, list[str]]:
+def load_all_texts(max_sample_per_source: int = MAX_SAMPLE_PER_SOURCE) -> dict[str, list[str]]:
     texts_by_label: dict[str, list[str]] = {}
     for src in SOURCE_DEFS:
         label = src["label"]
         if src.get("is_research"):
-            texts = load_research_shards(n_shards=5, target=MAX_SAMPLE_PER_SOURCE)
+            texts = load_research_shards(n_shards=5, target=max_sample_per_source)
         else:
             path = preprocessed_dir() / src["path"]
             if not path.exists():
                 log.warning("Path not found: %s", path)
                 continue
-            texts = load_jsonl(path, src["field"], max_records=MAX_SAMPLE_PER_SOURCE)
+            texts = load_jsonl(path, src["field"], max_records=max_sample_per_source)
         if texts:
             texts_by_label[label] = texts
             log.info("  %s: %d texts", label, len(texts))
@@ -138,7 +140,6 @@ def tokenize_all(texts_by_label: dict[str, list[str]],
             "words": np.array(words, dtype=np.int32),
             "mpnet": np.array(mpnet_lens, dtype=np.int32),
             "minilm": np.array(minilm_lens, dtype=np.int32),
-            "texts": texts,
         }
     return results
 
@@ -239,10 +240,10 @@ def plot_kde(group_arrays: dict[str, np.ndarray], output_dir: Path) -> None:
                     histtype="step", linewidth=1.5, label=group_labels[gname])
 
     for limit, style, label in [
-        (384, (0, (3, 3)), "MPNet max length (384)"),
-        (256, (0, (1.5, 2)), "MiniLM max length (256)"),
+        (MPNET_LIMIT, (0, (3, 3)), f"MPNet max length ({MPNET_LIMIT})"),
+        (MINILM_LIMIT, (0, (1.5, 2)), f"MiniLM max length ({MINILM_LIMIT})"),
     ]:
-        ax.axvline(limit, color="red" if limit == 384 else "grey",
+        ax.axvline(limit, color="red" if limit == MPNET_LIMIT else "grey",
                    linestyle=style, linewidth=1.5, alpha=0.7, label=label)
 
     ax.set_xlabel("Token length (MPNet tokenizer)")
@@ -273,8 +274,15 @@ def main() -> None:
     tokenizer_mpnet = AutoTokenizer.from_pretrained(MPNET_MODEL)
     tokenizer_minilm = AutoTokenizer.from_pretrained(MINILM_MODEL)
 
+    # Derive the authoritative truncation limits from each model's max_seq_length
+    # (NOT the tokenizer's model_max_length, which is 512 for both and wrong).
+    from sentence_transformers import SentenceTransformer
+    global MPNET_LIMIT, MINILM_LIMIT
+    MPNET_LIMIT = int(SentenceTransformer(MPNET_MODEL).max_seq_length)
+    MINILM_LIMIT = int(SentenceTransformer(MINILM_MODEL).max_seq_length)
+
     print("Loading and tokenizing texts...", file=sys.stderr)
-    texts_by_label = load_all_texts()
+    texts_by_label = load_all_texts(args.max_sample_per_source)
     tokenized = tokenize_all(texts_by_label, (tokenizer_mpnet, tokenizer_minilm))
 
     print("\n\n" + "=" * 100)
@@ -316,7 +324,7 @@ def main() -> None:
     print("\n--- 4. Truncation Thresholds (word-count that keeps 99% under model limit) ---\n")
     for label, d in tokenized.items():
         thresholds = {}
-        for target, name in [(384, "MPNet-384"), (256, "MiniLM-256")]:
+        for target, name in [(MPNET_LIMIT, "MPNet"), (MINILM_LIMIT, "MiniLM")]:
             wc = find_truncation_thresholds(d["words"], d["mpnet"], target)
             thresholds[name] = wc
         parts = "  ".join(

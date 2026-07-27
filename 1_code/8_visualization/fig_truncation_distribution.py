@@ -33,7 +33,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "1_code"))
 sys.path.insert(0, str(ROOT / "1_code" / "7_main_analysis" / "0_shared"))
 
-from model_utils import preprocessed_dir
+from model_utils import preprocessed_dir, RANDOM_SEED
 from sentence_transformers import SentenceTransformer
 
 CORPORA = [
@@ -113,7 +113,9 @@ def tokenize_lengths(texts: list[str], model: SentenceTransformer) -> np.ndarray
 
 def plot_model_panel(ax, model_name: str, max_len: int, model_label: str, corpus_data: list[dict]) -> None:
     st = SentenceTransformer(model_name)
-    log.info("Tokenising %s ...", model_label)
+    # Use the model's authoritative max_seq_length (NOT the tokenizer's 512).
+    max_len = int(st.max_seq_length)
+    log.info("Tokenising %s (max_seq_length=%d) ...", model_label, max_len)
 
     for cp in corpus_data:
         color = cp["color"]
@@ -124,7 +126,7 @@ def plot_model_panel(ax, model_name: str, max_len: int, model_label: str, corpus
         if pre_path and Path(pre_path).exists():
             texts = load_texts(Path(pre_path), cp.get("pre_field", "text"))
             if len(texts) > 50000:
-                rng = np.random.default_rng(42)
+                rng = np.random.default_rng(RANDOM_SEED)
                 idx = rng.choice(len(texts), 50000, replace=False)
                 texts = [texts[i] for i in idx]
             if texts:
@@ -142,7 +144,7 @@ def plot_model_panel(ax, model_name: str, max_len: int, model_label: str, corpus
         if post_path and Path(post_path).exists():
             texts = load_texts(Path(post_path), "text")
             if len(texts) > 50000:
-                rng = np.random.default_rng(42)
+                rng = np.random.default_rng(RANDOM_SEED)
                 idx = rng.choice(len(texts), 50000, replace=False)
                 texts = [texts[i] for i in idx]
             if texts:
