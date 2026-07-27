@@ -672,7 +672,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--model", model])
 
     elif stage == "infer":
-        run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--model", model])
+        run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--model", model] + _overwrite_flag(args.overwrite))
         run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--model", model])
 
     elif stage == "centroids":
