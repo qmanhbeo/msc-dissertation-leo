@@ -16,7 +16,7 @@
 \usepackage[font=small,labelfont=bf,labelsep=period]{caption}
 \usepackage{enumitem}
 \setlist{nosep}
-\graphicspath{{../4_outputs/main/figures/}{../4_outputs/appendix/a4_centroid_similarity/figures/}}
+\graphicspath{{../4_outputs/main/all-mpnet-base-v2/figures/}{../4_outputs/appendix/all-mpnet-base-v2/a4_centroid_similarity/figures/}}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
@@ -32,15 +32,15 @@
 \providecommand{\DraftVersionTag}{manual-build}
 \InputIfFileExists{build_meta.tex}{}{}
 % Generated analysis outputs — produced by active canon scripts under outputs/tables/
-\input{../4_outputs/main/tables/num_validation.tex}
-\input{../4_outputs/main/tables/num_coverage.tex}
-\input{../4_outputs/main/tables/num_semantic.tex}
-\input{../4_outputs/main/tables/num_interaction.tex}
-\input{../4_outputs/main/tables/num_cross_sensitivity.tex}
-\input{../4_outputs/main/tables/num_pca_landscape.tex}
-% \input{../4_outputs/appendix/a3b_sdgi_circularity/tables/num_loo_sdgi_circularity.tex} — removed (circularity concern superseded by train/CV/test split, see Appendix~\ref{app:sdgi-circularity-check})
-\InputIfFileExists{../4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_validation.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_coverage.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_semantic.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_interaction.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_cross_sensitivity.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_pca_landscape.tex}
+% \input{../4_outputs/appendix/all-mpnet-base-v2/a3b_sdgi_circularity/tables/num_loo_sdgi_circularity.tex} — removed (circularity concern superseded by train/CV/test split, see Appendix~\ref{app:sdgi-circularity-check})
+\InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/num_sample_stability.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -328,7 +328,7 @@ The LR classifier was evaluated on the held-out test set (n=9,734, document-grou
 \footnotesize
 \caption{LR test-set F1 scores (n=9,734).}
 \label{tab:validation}
-\input{../4_outputs/main/tables/tab_validation.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/tab_validation.tex}
 \par\smallskip\footnotesize\emph{Notes:} LR test F1 on the held-out pooled test set (all reference sources). The table shows the canonical 17-way classifier used throughout the main analysis.\par
 \end{table}
 
@@ -383,7 +383,7 @@ The four predictors are research coverage, policy coverage, the absolute researc
 \small
 \caption{H1a–H1d correlation tests between coverage predictors and the within-SDG semantic gap.}
 \label{tab:interaction}
-\input{../4_outputs/main/tables/tab_interaction.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/tab_interaction.tex}
 \end{table}
 
 The evidence does not support H1a: across the 17 SDGs, coverage divergence and semantic divergence show no detectable association ($r = \HPrimaryCovgapPearsonR$, $p = \HPrimaryCovgapPearsonP$; $n = \HPrimaryN$). Given the small number of SDG-level observations, this should be interpreted as evidence against a strong monotonic relationship rather than evidence of exact independence. H1c likewise shows no detectable association: research coverage and semantic gap are uncorrelated ($r = \HPrimaryPearsonR$, $p = \HPrimaryPearsonP$). Two exploratory tests — H1d, policy coverage ($r = \HPrimaryPolicyPearsonR$, $p = \HPrimaryPolicyPearsonP$), and H1b, signed dominance ($r = \HPrimaryDominancePearsonR$, $p = \HPrimaryDominancePearsonP$) — are also near-zero. All correlations remain small and non-significant under both exclusions; however, H1a and H1b flip sign when SDG~17 is dropped (Table~\ref{tab:interaction}), consistent with SDG~17's broader sensitivity to measurement configuration (\S\ref{sec:cross-sensitivity}).
@@ -404,7 +404,7 @@ The semantic gap rankings discussed below are not equally stable across all meas
 
 Three tiers emerge. First, SDG 17 is the most method-sensitive SDG: it sits at rank~17 (smallest gap) under LR and rank~16 under MLP but rises to rank~7 under zero-shot assignment. SDG 13 and SDG 11 are the most robustly high-gap goals, staying in the top four under all three assignment methods (LR ranks~1,~3; zero-shot ranks~4,~2; MLP ranks~3,~4). SDG 3 also stays high across methods (LR~2, zero-shot~5, MLP~6). Second, several SDGs shift dramatically by assignment method alone: SDG 12 jumps from rank~7 under LR to rank~1 under MLP; SDG 5 moves from rank~9 under LR to rank~16 under zero-shot; SDG 8 moves from rank~6 to rank~15. Third, across policy-source and cap configurations, SDG 11 stays in the top five under every sub-corpus and cap; SDGs 13 and 3 also stay consistently high (ranges 1--7 and 1--10 respectively). SDG 4 is the most stable low-gap goal, staying in ranks 14--15 across all nine configurations. The discussion limits its claims to findings that survive this filtering.
 
-\input{../4_outputs/main/tables/tab_cross_sensitivity_robustness.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/tab_cross_sensitivity_robustness.tex}
 
 %% ============================================================
 \section{Discussion}
@@ -511,7 +511,7 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \small
 \caption{Per-SDG policy source-family sensitivity: coverage share.}
 \label{tab:policy-source-family-covshare}
-\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex}
+\input{../4_outputs/appendix/all-mpnet-base-v2/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex}
 \par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of policy segments assigned to each SDG and the document-weighted share (\%) of that family's documents assigned to each SDG.\par
 \end{table}
 
@@ -520,7 +520,7 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \small
 \caption{Per-SDG policy source-family sensitivity: semantic gap.}
 \label{tab:policy-source-family-gap}
-\input{../4_outputs/appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
+\input{../4_outputs/appendix/all-mpnet-base-v2/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
 \par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap. Each row compares the same SDG's gap across the three source families and the full corpus; read across a row to see whether the gap is stable or driven by one family.\par
 \end{table}
 
@@ -544,7 +544,7 @@ The main analysis therefore retains the canonical LR argmax assignment but conti
 \caption{SDG 4 lexical artefact audit.}
 \label{tab:sdg4-lexical-audit}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex}
+\input{../4_outputs/appendix/all-mpnet-base-v2/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex}
 }
 \par\smallskip\footnotesize\emph{Notes:} The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.\par
 \end{table}
@@ -581,7 +581,7 @@ The contrast helps make the embedding distances more legible. In SDGs 17 and 13,
 \caption{Lexical interpretability check for selected semantic-gap cases.}
 \label{tab:semantic-gap-text-interpretability}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret.tex}
+\input{../4_outputs/appendix/all-mpnet-base-v2/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret.tex}
 }
 \par\smallskip\footnotesize\emph{Notes:} Terms are generated from deterministic samples of research and policy texts assigned to each SDG. The table is descriptive only and is not used to relabel records or replace the embedding-based semantic-gap estimates.\par
 \end{table}
@@ -613,7 +613,7 @@ To test whether the headline findings depend heavily on research-corpus size, I 
 \caption{Sample-stability ladder for the research corpus.}
 \label{tab:sample-stability}
 \resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/c_sample_stability/tables/tab_sample_stability.tex}
+\input{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/tab_sample_stability.tex}
 }
 \par\smallskip\footnotesize\emph{Notes:} Mean SD of SDG coverage shares is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.\par
 \end{table}
@@ -709,7 +709,7 @@ This single-direction subtraction is a limited diagnostic. It attenuates one bro
 \small
 \caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the paper. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
 \label{tab:register-adjusted-semantic-gap}
-\input{../4_outputs/appendix/f_register_adjustment/tables/tab_register_adjusted_semgap.tex}
+\input{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/tab_register_adjusted_semgap.tex}
 \end{table}
 \clearpage
 \section{Declaration of AI Use}
