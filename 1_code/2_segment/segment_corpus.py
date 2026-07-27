@@ -136,6 +136,8 @@ def main() -> None:
     parser.add_argument("--id-field", default="id")
     parser.add_argument("--prefix", default="doc", help="Prefix for segment_id and source_doc.")
     parser.add_argument("--model", default="all-mpnet-base-v2")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Re-segment existing shards even if already complete")
     args = parser.parse_args()
 
     if args.corpus == "research":
@@ -220,7 +222,7 @@ def main() -> None:
         for shard_idx, in_path in enumerate(input_paths, start=1):
             out_path = output_dir / in_path.name
 
-            if out_path.exists():
+            if out_path.exists() and not args.overwrite:
                 existing = sum(1 for _ in open(out_path, encoding="utf-8") if _.strip())
                 if existing > 0:
                     try:
@@ -286,6 +288,7 @@ def main() -> None:
         records = _load_jsonl(input_path)
         segments = segment_records(records, model, args.text_field, args.id_field, args.prefix)
 
+        # --overwrite has no effect in single-file mode; always overwrites
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as f:
             for s in segments:
