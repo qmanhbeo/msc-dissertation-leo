@@ -10,8 +10,24 @@ import numpy as np
 from model_utils import embed_research_dir_for_model, scored_dir_for_model
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
+# Module-level cache so the consolidated arrays are loaded ONCE per process and
+# shared across every analysis that runs in the orchestrator. The memmap object
+# is tiny; the underlying file is paged by the OS, so holding it keeps the data
+# resident for all downstream analyses without re-reading from disk.
+_EMB_CACHE: dict[str, np.ndarray] = {}
+_SCORE_CACHE: dict[str, np.ndarray] = {}
+
 
 def load_consolidated_embeddings(model: str, mmap: bool = True) -> np.ndarray:
+    cached = _EMB_CACHE.get(model)
+    if cached is not None:
+        return cached
+    arr = _load_consolidated_embeddings(model, mmap=mmap)
+    _EMB_CACHE[model] = arr
+    return arr
+
+
+def _load_consolidated_embeddings(model: str, mmap: bool = True) -> np.ndarray:
     """Load the single consolidated research-embedding array for `model`.
 
     Returns a memmap (default) or a fully materialised array. The array is in
@@ -32,6 +48,15 @@ def load_consolidated_embeddings(model: str, mmap: bool = True) -> np.ndarray:
 
 
 def load_consolidated_scores(model: str, mmap: bool = True) -> np.ndarray:
+    cached = _SCORE_CACHE.get(model)
+    if cached is not None:
+        return cached
+    arr = _load_consolidated_scores(model, mmap=mmap)
+    _SCORE_CACHE[model] = arr
+    return arr
+
+
+def _load_consolidated_scores(model: str, mmap: bool = True) -> np.ndarray:
     """Load the single consolidated research-score array for `model`.
 
     Returns a memmap (default) or a fully materialised float32 array, in sorted
