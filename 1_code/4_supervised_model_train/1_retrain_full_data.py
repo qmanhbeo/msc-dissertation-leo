@@ -30,6 +30,8 @@ import time
 from pathlib import Path
 
 import numpy as np
+import os
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 import torch
 import torch.nn as nn
 from sklearn.metrics import confusion_matrix, f1_score
@@ -130,6 +132,10 @@ def main() -> None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log.info("Device: %s", device)
 
+        torch.manual_seed(42)
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+
         net = MultiLabelMLP(input_dim, args.n_layers, args.hidden_size, args.dropout).to(device)
         criterion = nn.BCEWithLogitsLoss()
         optimizer = optim.AdamW(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -148,7 +154,8 @@ def main() -> None:
 
         train_ds = TensorDataset(X_tr.to(device), Y_tr.to(device))
         val_ds = TensorDataset(X_val.to(device), Y_val.to(device))
-        train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
+        _seed_loader = torch.Generator().manual_seed(42)
+        train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, generator=_seed_loader)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size * 2)
 
         best_val_f1 = -1.0
@@ -194,6 +201,7 @@ def main() -> None:
         full_loader = DataLoader(
             TensorDataset(X_t.to(device), Y_t.to(device)),
             batch_size=args.batch_size, shuffle=True,
+            generator=torch.Generator().manual_seed(42),
         )
         for epoch in range(best_epoch):
             net.train()

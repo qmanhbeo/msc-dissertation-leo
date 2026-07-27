@@ -29,6 +29,8 @@ from itertools import product
 from pathlib import Path
 
 import numpy as np
+import os
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -122,6 +124,10 @@ class MultiLabelMLP(BaseEstimator, ClassifierMixin):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log.info("      device: %s | internal: %d train, %d val", device, len(X_tr), len(X_val))
 
+        torch.manual_seed(self.random_state)
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+
         self.net_ = self._build_network().to(device)
         self.criterion_ = nn.BCEWithLogitsLoss()
         self.optimizer_ = optim.AdamW(
@@ -130,7 +136,8 @@ class MultiLabelMLP(BaseEstimator, ClassifierMixin):
 
         train_ds = TensorDataset(X_tr.to(device), y_tr.to(device))
         val_ds = TensorDataset(X_val.to(device), y_val.to(device))
-        train_loader = DataLoader(train_ds, batch_size=self.batch_size, shuffle=True)
+        train_loader = DataLoader(train_ds, batch_size=self.batch_size, shuffle=True,
+                                  generator=torch.Generator().manual_seed(self.random_state))
         val_loader = DataLoader(val_ds, batch_size=self.batch_size * 2)
 
         best_val_f1 = -1.0
