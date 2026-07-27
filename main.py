@@ -335,6 +335,15 @@ def run_build_sdg_reference_centroids(model: str = DEFAULT_EMBED_MODEL) -> None:
     )
 
 
+def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    run_step(
+        "build centroid similarity matrix",
+        [sys.executable, "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py",
+         "--output-dir", str(output_dir), "--model", model],
+        step_id="9a",
+    )
+
+
 def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     """Run the main-text analysis steps for a given model (no input guard).
 
@@ -367,6 +376,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
         [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)] + model_args,
         step_id="8",
     )
+    run_build_centroid_similarity_matrix(output_dir, model)
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="9")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
