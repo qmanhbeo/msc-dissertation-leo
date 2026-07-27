@@ -116,12 +116,22 @@ def parse_args() -> argparse.Namespace:
         help="Batch size (default: %(default)s). Reduce to 64 for MPNet on 4GB GPUs.",
     )
     parser.add_argument(
-        "--precision", choices=["fp32", "fp16"], default="fp32",
-        help="Compute precision for model.encode (fp16 ≈ 2x faster on Ampere GPUs).",
+        "--precision", choices=["fp32", "fp16"], default=None,
+        help="Compute + storage precision for embeddings (fp16 ≈ 2x faster on Ampere GPUs). "
+             "Default: fp16 for all-MiniLM-L6-v2, fp32 otherwise.",
     )
     p.add_argument("--normalize-embeddings", action="store_true", default=True,
                    help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     return parser.parse_args()
+
+
+def default_precision(model: str) -> str:
+    """MPNet stays fp32; MiniLM (smaller, 384-dim) is stored fp16 by default.
+
+    MiniLM is only a cheap encoder-sensitivity/robustness check, and fp16
+    halves its embedding footprint.
+    """
+    return "fp16" if model == "all-MiniLM-L6-v2" else "fp32"
 
 
 def embed_corpus(
@@ -217,7 +227,7 @@ def embed_corpus(
             show_progress_bar=False,
             convert_to_numpy=True,
             normalize_embeddings=args.normalize_embeddings,
-        ).astype(np.float32)
+        ).astype(np.float16 if precision == "fp16" else np.float32)
 
         batch_path = tmp_dir / f"batch_{batch_i:05d}.npy"
         tmp_batch = batch_path.with_suffix(".npy.tmp")
@@ -246,12 +256,13 @@ def embed_corpus(
 
 def main() -> None:
     args = parse_args()
+    precision = args.precision or default_precision(args.embed_model)
     output_dir = embed_dir_for_model(args.embed_model)
     config = CORPUS_CONFIG[args.corpus]
 
     log.info("Loading model: %s", args.embed_model)
     model = SentenceTransformer(args.embed_model, local_files_only=args.local_files_only)
-    if args.precision == "fp16":
+    if precision == "fp16":
         model = model.half()
     log.info("Embedding dimension: %d", model.get_embedding_dimension())
 
@@ -260,7 +271,7 @@ def main() -> None:
         overwrite=args.overwrite,
         output_dir=output_dir,
         batch_size=args.batch_size,
-        precision=args.precision,
+        precision=precision,
         model_name=args.embed_model,
     )
 
