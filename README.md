@@ -54,8 +54,8 @@ python main.py --warm-replay-without-appendix --overwrite
 ## What the replay produces
 
 Warm replay rebuilds:
-- canonical machine-readable outputs under `4_outputs/main/data/`
-- manuscript tables and figures under `4_outputs/main/tables/` and `4_outputs/main/figures/`
+- canonical machine-readable outputs under `4_outputs/main/{model}/data/`
+- manuscript tables and figures under `4_outputs/main/{model}/tables/` and `4_outputs/main/{model}/figures/`
 
 To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler.
 
@@ -161,7 +161,7 @@ the directory's role in the workflow:
 - `1_code/` — all pipeline and analysis code
 - `2_data/` — frozen data snapshot (hydrated from archive, gitignored)
 - `3_writing/` — manuscript source (`dissertation.tex`, `references.bib`, build script)
-- `4_outputs/` — committed outputs (`dissertation.pdf`, `main/` figures and tables, `appendix/` analyses)
+- `4_outputs/` — committed outputs (`dissertation.pdf`, `main/{model}/` figures and tables, `appendix/{model}/` analyses)
 - `5_notes/` — working notes, assumptions, and workflow logs
 
 Entrypoint and environment files at root:
