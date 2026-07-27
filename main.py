@@ -327,24 +327,29 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
     run_step("register-adjustment robustness", cmd, step_id="E")
 
 
-def run_build_sdg_reference_centroids(model: str = DEFAULT_EMBED_MODEL) -> None:
+def _overwrite_flag(overwrite: bool) -> list[str]:
+    return ["--overwrite"] if overwrite else []
+
+
+def run_build_sdg_reference_centroids(model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     run_step(
         "build SDG reference centroids",
-        [sys.executable, "1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py", "--model", model],
+        [sys.executable, "1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py",
+         "--model", model] + _overwrite_flag(overwrite),
         step_id="0a",
     )
 
 
-def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     run_step(
         "build centroid similarity matrix",
         [sys.executable, "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py",
-         "--output-dir", str(output_dir), "--model", model],
+         "--output-dir", str(output_dir), "--model", model] + _overwrite_flag(overwrite),
         step_id="9a",
     )
 
 
-def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
+def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = False) -> None:
     """Run the main-text analysis steps for a given model (no input guard).
 
     Steps 0-1 train the classifier deterministically from frozen embeddings.
@@ -352,7 +357,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     Steps 4+ run analysis.
     """
     model_args = ["--model", model]
-    run_build_sdg_reference_centroids(model)
+    run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="2")
@@ -367,7 +372,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
         run_step(
             "score MLP",
             [sys.executable, "1_code/5_supervised_model_infer/2_score_mlp.py",
-             "--model", model],
+             "--model", model] + _overwrite_flag(overwrite),
             step_id="3c",
         )
     run_step(
@@ -389,7 +394,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
         [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)] + model_args,
         step_id="8",
     )
-    run_build_centroid_similarity_matrix(output_dir, model)
+    run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir)], step_id="9")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
@@ -417,7 +422,7 @@ def run_main_text(
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
-    _run_main_analysis_steps(output_dir, model)
+    _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite)
 
 
 def run_warm_replay(
@@ -505,7 +510,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
 
-    _run_main_analysis_steps(output_dir, model=model)
+    _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite)
 
     run_policy_source_family_sensitivity(output_dir, model=model)
     run_sdg4_lexical_audit(output_dir, model=model)
@@ -674,7 +679,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--model", model])
 
     elif stage == "analysis":
-        _run_main_analysis_steps(output_dir, model)
+        _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite)
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
         run_loo_sdgi_circularity(output_dir, model=model)
