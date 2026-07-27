@@ -255,8 +255,7 @@ def write_table(path: Path, rows: list[dict]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir)
     out_root = output_dir / "appendix" / args.embed_model / "a3_sdg4_audit"
     data_dir = out_root / "data"
@@ -337,6 +336,10 @@ def main() -> None:
     log.info("Saved: %s", data_dir / AUDIT_CSV)
     log.info("Saved: %s", data_dir / AUDIT_JSON)
     log.info("Saved: %s", tables_dir / TABLE_TEX)
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
