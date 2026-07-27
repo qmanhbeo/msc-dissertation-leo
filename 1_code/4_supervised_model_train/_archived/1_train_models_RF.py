@@ -45,10 +45,10 @@ log = logging.getLogger(__name__)
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Train RF classifier.")
-    parser.add_argument("--model", default="all-mpnet-base-v2",
+    parser.add_argument("--embed-model", default="all-mpnet-base-v2",
                         help="Embedding model name")
     args = parser.parse_args()
-    data_dir = model_results_dir_for_model(args.model)
+    data_dir = model_results_dir_for_model(args.embed_model)
     output_dir = data_dir / "model"
     
     t0 = time.perf_counter()

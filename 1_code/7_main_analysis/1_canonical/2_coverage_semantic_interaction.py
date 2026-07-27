@@ -153,7 +153,7 @@ def compute_four_tests(
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute H25 correlation outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -162,11 +162,11 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
-    model = args.model
+    model = args.embed_model
     scored_dir = scored_dir_for_model(model)
     paper_scores_manifest = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
 
-    layout = ensure_canonical_outputs(Path(args.output_dir))
+    layout = ensure_canonical_outputs(Path(args.output_dir), model=model)
     require_output_files(layout.data_dir, ["4_2_coverage_document_weighted.json", "4_3_semantic_gap_distances.json"])
 
     coverage_gap_path = layout.data_dir / "4_2_coverage_document_weighted.json"
@@ -181,9 +181,9 @@ def main() -> None:
     cov_data = load_json(coverage_gap_path)
 
     # Extract per-SDG arrays (1-indexed labels, so SDG{i} = SDG i, row index i-1)
-    res_hard    = np.array([cov_data["research_profile_hard"][f"SDG{i}"] for i in range(1, 18)])
-    pol_dw_hard = np.array([cov_data["policy_profile_hard_docweighted"][f"SDG{i}"] for i in range(1, 18)])
-    cov_gap_abs = np.array([cov_data["coverage_gap_hard"][f"SDG{i}"] for i in range(1, 18)])
+    res_hard    = np.array([cov_data["research_profile_hard"][f"SDG{i}"] for i in range(1, N_SDG + 1)])
+    pol_dw_hard = np.array([cov_data["policy_profile_hard_docweighted"][f"SDG{i}"] for i in range(1, N_SDG + 1)])
+    cov_gap_abs = np.array([cov_data["coverage_gap_hard"][f"SDG{i}"] for i in range(1, N_SDG + 1)])
 
     # Signed research dominance: positive = research > policy, negative = policy > research.
     res_dominance = res_hard - pol_dw_hard
@@ -196,18 +196,18 @@ def main() -> None:
     sem_gap = np.array(
         [
             np.nan if per_sdg[i]["semantic_gap"] is None else float(per_sdg[i]["semantic_gap"])
-            for i in range(1, 18)
+            for i in range(1, N_SDG + 1)
         ],
         dtype=float,
     )
     sem_sim = np.array(
         [
             np.nan if per_sdg[i]["semantic_similarity"] is None else float(per_sdg[i]["semantic_similarity"])
-            for i in range(1, 18)
+            for i in range(1, N_SDG + 1)
         ],
         dtype=float,
     )
-    unreliable = np.array([bool(per_sdg[i]["unreliable"]) for i in range(1, 18)], dtype=bool)
+    unreliable = np.array([bool(per_sdg[i]["unreliable"]) for i in range(1, N_SDG + 1)], dtype=bool)
 
     # Only SDGs with finite semantic values are eligible for correlation or plotting.
     available_mask = np.isfinite(sem_gap) & np.isfinite(sem_sim)

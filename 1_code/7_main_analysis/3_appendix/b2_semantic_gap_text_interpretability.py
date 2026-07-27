@@ -121,7 +121,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--sample-per-side", type=int, default=SAMPLE_PER_SIDE)
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -397,21 +397,21 @@ def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
 
 def main() -> None:
     args = parse_args()
-    embed_dir = embed_dir_for_model(args.model)
-    research_embed_dir = embed_research_dir_for_model(args.model)
-    scored_dir = scored_dir_for_model(args.model)
-    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
-    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
-    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
-    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
+    embed_dir = embed_dir_for_model(args.embed_model)
+    research_embed_dir = embed_research_dir_for_model(args.embed_model)
+    scored_dir = scored_dir_for_model(args.embed_model)
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / OUTPUT_SUBDIR
+    out_root = output_dir / "appendix" / args.embed_model / OUTPUT_SUBDIR
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    gaps = semantic_gap_map(Path(args.output_dir) / "main" / "data")
+    gaps = semantic_gap_map(Path(args.output_dir) / "main" / args.embed_model / "data")
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(_POLICY_EMB, mmap_mode="r")

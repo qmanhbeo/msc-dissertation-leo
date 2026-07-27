@@ -37,7 +37,7 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import model_results_dir_for_model, append_grid_log
+from model_utils import model_results_dir_for_model, append_grid_log, DEFAULT_EMBED_MODEL, N_SDG
 
 MODEL_TAG = "lr"
 
@@ -48,10 +48,10 @@ log = logging.getLogger(__name__)
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Train single-label LR.")
-    parser.add_argument("--model", default="all-mpnet-base-v2",
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help="Embedding model name")
     args = parser.parse_args()
-    data_dir = model_results_dir_for_model(args.model)
+    data_dir = model_results_dir_for_model(args.embed_model)
     output_dir = data_dir / "model"
 
     t0 = time.perf_counter()
@@ -121,7 +121,7 @@ def main() -> None:
         mean_f1 = float(np.mean(fold_scores))
         std_f1 = float(np.std(fold_scores))
         # mean per-class F1 across folds
-        mean_per_class = [float(np.mean([f[c] for f in fold_per_class])) for c in range(17)]
+        mean_per_class = [float(np.mean([f[c] for f in fold_per_class])) for c in range(N_SDG)]
         all_scores.append({
             "params": params, "mean_f1": mean_f1, "std_f1": std_f1,
             "per_fold": fold_scores, "per_class_f1": mean_per_class,

@@ -61,13 +61,13 @@ log = logging.getLogger(__name__)
 
 SAMPLE_SIZE_PER_CLASS = 40_000
 
-CANONICAL_SEMANTIC_JSON = ROOT / "4_outputs" / "main" / "data" / "4_3_semantic_gap_distances.json"
+# No module-level canonical path — computed in main() from --output-dir and --model.
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run register-adjustment sensitivity analysis.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -114,14 +114,15 @@ def subtract_direction(emb: np.ndarray, g_dir: np.ndarray) -> np.ndarray:
 
 def main() -> None:
     args = parse_args()
-    model = args.model
+    model = args.embed_model
     rng = np.random.default_rng(POLICY_SEGMENT_CAP_SEED)
 
     # ------------------------------------------------------------------
     # 1. Load canonical raw gaps
     # ------------------------------------------------------------------
-    log.info("Loading canonical raw gaps from %s", CANONICAL_SEMANTIC_JSON)
-    canonical = load_json(CANONICAL_SEMANTIC_JSON)
+    canonical_semantic_path = Path(args.output_dir) / "main" / model / "data" / "4_3_semantic_gap_distances.json"
+    log.info("Loading canonical raw gaps from %s", canonical_semantic_path)
+    canonical = load_json(canonical_semantic_path)
     canonical_raw = {}
     for entry in canonical["per_sdg"]:
         sdg = entry["sdg"]
@@ -297,7 +298,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 8. Write LaTeX output
     # ------------------------------------------------------------------
-    out_root = Path(args.output_dir) / "appendix" / "f_register_adjustment"
+    out_root = Path(args.output_dir) / "appendix" / model / "f_register_adjustment"
     tables_dir = out_root / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
 

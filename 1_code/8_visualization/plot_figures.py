@@ -47,13 +47,14 @@ SHARED_DIR = ROOT / "1_code" / "7_main_analysis" / "0_shared"
 for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
-from model_utils import DEFAULT_OUTPUT_ROOT
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT
 from shared_utils import ensure_canonical_outputs, require_output_files
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate figures from the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -131,7 +132,7 @@ def plot_centroid_similarity_heatmap(layout) -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")
     fig.tight_layout()
-    out_dir = layout.root.parent / "appendix" / "a4_centroid_similarity" / "figures"
+    out_dir = layout.root.parent / "appendix" / args.embed_model / "a4_centroid_similarity" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
@@ -141,7 +142,7 @@ def plot_centroid_similarity_heatmap(layout) -> None:
 
 def main() -> None:
     args = parse_args()
-    layout = ensure_canonical_outputs(Path(args.output_dir))
+    layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
     require_output_files(layout.data_dir, ["4_4_interaction_scatter_data.csv", "4_2_coverage_document_weighted.json"])
     figures_dir = layout.figures_dir
 

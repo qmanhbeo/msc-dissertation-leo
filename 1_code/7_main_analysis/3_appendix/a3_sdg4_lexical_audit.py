@@ -32,7 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model
 from semantic_gap_shared import latex_escape, write_csv
 from shard_pipeline_utils import iter_jsonl, load_json
 
@@ -90,8 +90,8 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run SDG 4 lexical artefact audit.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--seed", type=int, default=RANDOM_SEED)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -258,14 +258,14 @@ def write_table(path: Path, rows: list[dict]) -> None:
 def main() -> None:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / "a3_sdg4_audit"
+    out_root = output_dir / "appendix" / args.embed_model / "a3_sdg4_audit"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    scored_dir = scored_dir_for_model(args.model)
-    research_dir = embed_research_dir_for_model(args.model)
+    scored_dir = scored_dir_for_model(args.embed_model)
+    research_dir = embed_research_dir_for_model(args.embed_model)
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
     text_manifest = load_json(research_dir / "metadata" / "manifest.json")
     log.info("Loaded research score manifest with %s shards", len(score_manifest["shards"]))

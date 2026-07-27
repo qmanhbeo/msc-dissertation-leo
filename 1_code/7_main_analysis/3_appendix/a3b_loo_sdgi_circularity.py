@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Leave-one-source-out (SDGi) circularity check.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--overwrite", action="store_true", help="Recompute from source.")
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -98,11 +98,11 @@ def build_centroid_matrix(emb: np.ndarray, ids: list[dict]) -> np.ndarray:
 
 def main() -> None:
     args = parse_args()
-    model = args.model
+    model = args.embed_model
     embed_dir = embed_dir_for_model(model)
     scored_dir = scored_dir_for_model(model)
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / OUTPUT_SUBDIR
+    out_root = output_dir / "appendix" / model / OUTPUT_SUBDIR
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
@@ -148,7 +148,7 @@ def main() -> None:
     # ---- Load policy embeddings + isolate SDGi segments ----
     policy_emb = np.load(embed_dir / "policy.npy").astype(np.float32)
     policy_ids = load_json(scored_dir / "metadata" / "policy_scores_ids.json")
-    family_map = build_source_family_map(args.model)
+    family_map = build_source_family_map(args.embed_model)
 
     sdgi_idxs = [
         i for i, r in enumerate(policy_ids)
@@ -187,9 +187,9 @@ def main() -> None:
     gap = policy_top_sdgi_excl - paper_top_sdgi_excl
 
     # ---- Canonical baseline (from num_coverage.tex) ----
-    canonical = load_json(DEFAULT_OUTPUT_ROOT / "main" / "tables" / "num_coverage.tex") if False else None
+    canonical = load_json(DEFAULT_OUTPUT_ROOT / "main" / model / "tables" / "num_coverage.tex") if False else None
     # Read the three canonical macros directly.
-    num_cov = (DEFAULT_OUTPUT_ROOT / "main" / "tables" / "num_coverage.tex").read_text(encoding="utf-8")
+    num_cov = (DEFAULT_OUTPUT_ROOT / "main" / model / "tables" / "num_coverage.tex").read_text(encoding="utf-8")
     def _read_macro(name: str) -> float:
         for line in num_cov.splitlines():
             if name in line:

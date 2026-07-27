@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
         help="Overwrite existing policy.npy and policy_ids.json.",
     )
     parser.add_argument(
-        "--model", default=DEFAULT_EMBED_MODEL,
+        "--embed-model", default=DEFAULT_EMBED_MODEL,
         help="Embed model (default: %(default)s).",
     )
     return parser.parse_args()
@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    embed_dir = embed_dir_for_model(args.model)
+    embed_dir = embed_dir_for_model(args.embed_model)
     emb_path = embed_dir / "policy.npy"
     meta_dir = embed_dir / "metadata"
     ids_path = meta_dir / "policy_ids.json"
@@ -114,7 +114,7 @@ def main() -> None:
         json.dump(ids_meta, f)
 
     # Alignment check: verify policy.jsonl IDs == policy_ids.json IDs (position by position)
-    seg_root = segmented_dir_for_model(args.model)
+    seg_root = segmented_dir_for_model(args.embed_model)
     policy_jsonl_path = seg_root / "policy.jsonl"
     if not policy_jsonl_path.exists():
         print(f"  WARNING: {policy_jsonl_path} not found — skipping alignment check")

@@ -90,7 +90,9 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Optional cap on the number of policy segments used for PCA fitting. Default: 0 (use all policy segments).",
     )
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--n-components", type=int, default=2,
+                  help="Number of PCA components for the semantic landscape projection (default: %(default)s)")
     return p.parse_args()
 
 
@@ -176,12 +178,12 @@ def write_num_tex(path: Path, payload: dict) -> None:
 
 def main() -> None:
     args = parse_args()
-    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
-    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
-    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
-    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
-    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
-    out_root = Path(args.output_dir) / "main"
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
+    out_root = Path(args.output_dir) / "main" / args.embed_model
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     figures_dir = out_root / "figures"
@@ -206,10 +208,10 @@ def main() -> None:
     policy_fit_indices = fit_policy_sample_indices(n_policy_total, args.policy_fit_cap, rng)
     policy_fit_emb = policy_emb[policy_fit_indices]
 
-    embed_dir = embed_dir_for_model(args.model)
-    scored_dir = scored_dir_for_model(args.model)
+    embed_dir = embed_dir_for_model(args.embed_model)
+    scored_dir = scored_dir_for_model(args.embed_model)
     sdg_centroids_path = scored_dir / "sdg_centroids.npy"
-    research_manifest = embed_research_dir_for_model(args.model) / "metadata" / "manifest.json"
+    research_manifest = embed_research_dir_for_model(args.embed_model) / "metadata" / "manifest.json"
     total_research = total_research_embedding_rows(research_manifest, embed_dir)
     n_research_fit = int(policy_fit_emb.shape[0])
     if total_research < n_research_fit:
@@ -235,7 +237,7 @@ def main() -> None:
         raise RuntimeError(f"PCA fit matrix row mismatch: expected {expected_rows}, got {fit_matrix.shape[0]}")
     log.info("PCA fit matrix shape: %s", fit_matrix.shape)
 
-    pca = PCA(n_components=2, random_state=args.seed)
+    pca = PCA(n_components=args.n_components, random_state=args.seed)
     pca.fit(fit_matrix)
     evr = pca.explained_variance_ratio_.astype(float)
     log.info("PCA explained variance ratio: PC1=%.4f, PC2=%.4f", evr[0], evr[1])

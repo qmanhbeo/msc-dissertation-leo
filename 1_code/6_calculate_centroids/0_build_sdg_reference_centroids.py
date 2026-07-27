@@ -31,7 +31,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, model_results_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, ZERO_NORM_EPS, model_results_dir_for_model, scored_dir_for_model
 
 COHESION_WARN_THRESHOLD = 0.50
 
@@ -43,7 +43,7 @@ SOURCE_NAMES = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"]
 def build_centroid(emb: np.ndarray, n: int, sdg: int) -> tuple[np.ndarray, dict]:
     raw = emb.mean(axis=0)
     norm = float(np.linalg.norm(raw))
-    if norm < 1e-8:
+    if norm < ZERO_NORM_EPS:
         raise ValueError(f"SDG {sdg}: near-zero centroid norm")
     unit = (raw / norm).astype(np.float32)
     mean_cos = float((emb @ unit).mean()) if n > 0 else 0.0
@@ -63,7 +63,7 @@ def main() -> None:
         description="Build SDG reference centroids from pooled labelled corpus."
     )
     parser.add_argument(
-        "--model", default=DEFAULT_EMBED_MODEL,
+        "--embed-model", default=DEFAULT_EMBED_MODEL,
         help=f"Embed model (default: {DEFAULT_EMBED_MODEL})",
     )
     parser.add_argument(
@@ -75,8 +75,8 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    results_root = model_results_dir_for_model(args.model)
-    scored_root = scored_dir_for_model(args.model)
+    results_root = model_results_dir_for_model(args.embed_model)
+    scored_root = scored_dir_for_model(args.embed_model)
 
     if args.variant == "train_only":
         centroids_out = scored_root / "sdg_centroids.npy"
@@ -190,7 +190,7 @@ def main() -> None:
 
     global_meta = {
         "variant": args.variant,
-        "embedding_model": args.model,
+        "embedding_model": args.embed_model,
         "sources_pooled": list(SOURCE_NAMES),
         "total_texts": int(total_n),
         "split_source": "indices/train.npy" if args.variant == "train_only" else "none (all texts)",

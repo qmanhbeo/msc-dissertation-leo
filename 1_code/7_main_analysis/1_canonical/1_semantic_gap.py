@@ -78,7 +78,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 import semantic_gap_shared
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG
 from shared_utils import ensure_canonical_outputs
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -108,7 +108,9 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute semantic gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--segment-cap", type=int, default=args.segment_cap,
+                  help="Max segments sampled per source_doc per SDG for the primary analysis (default: %(default)s)")
     return p.parse_args()
 
 
@@ -118,13 +120,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
-    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
-    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
-    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
-    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
 
-    layout = ensure_canonical_outputs(Path(args.output_dir))
+    layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
     out_sem_gap = layout.data_dir / "4_3_semantic_gap_distances.json"
     out_sem_sens = layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
     tables_dir = layout.tables_dir
@@ -165,19 +167,19 @@ def main() -> None:
     # ---- Primary analysis (SEGMENT_CAP = 50) ----
     log.info("")
     log.info("=" * 60)
-    log.info("PRIMARY SEMANTIC GAP (segment cap = %d)", SEGMENT_CAP_PRIMARY)
+    log.info("PRIMARY SEMANTIC GAP (segment cap = %d)", args.segment_cap)
     log.info("=" * 60)
     rng_primary = np.random.default_rng(RANDOM_SEED)
     primary_results = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_PRIMARY, rng_primary
+        policy_ids, args.segment_cap, rng_primary
     )
 
     # Summary: sort by semantic gap (largest first).
     reliable = [r for r in primary_results if not r["unreliable"] and r["semantic_gap"] is not None]
     log.info("")
-    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", SEGMENT_CAP_PRIMARY)
+    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", args.segment_cap)
     for r in sorted(reliable, key=lambda x: x["semantic_gap"], reverse=True):
         log.info("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
                  r["sdg"], r["semantic_gap"], r["semantic_similarity"],
@@ -225,7 +227,7 @@ def main() -> None:
     # ---- Build output JSON ----
     primary_out = {
         "method": "centroid_to_centroid",
-        "segment_cap": SEGMENT_CAP_PRIMARY,
+        "segment_cap": args.segment_cap,
         "min_cluster_size": MIN_CLUSTER_SIZE,
         "random_seed": RANDOM_SEED,
         "note": (
@@ -267,7 +269,7 @@ def main() -> None:
 
     # Extract per-SDG values from primary_results (SDG order 1–17)
     per_sdg_map = {r["sdg"]: r for r in primary_results}
-    gaps = [per_sdg_map[s]["semantic_gap"] for s in range(1, 18)]
+    gaps = [per_sdg_map[s]["semantic_gap"] for s in range(1, N_SDG + 1)]
     valid_gaps = [g for g in gaps if g is not None]
     mean_gap = float(np.mean(valid_gaps))
     sorted_gaps = sorted(valid_gaps)

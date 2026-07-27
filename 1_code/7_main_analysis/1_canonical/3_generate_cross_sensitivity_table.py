@@ -26,7 +26,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_OUTPUT_ROOT, N_SDG
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, model_results_dir_for_model, scored_dir_for_model
 
 SDG_NAMES = {
     1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
@@ -39,16 +39,18 @@ SDG_NAMES = {
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
 args = parser.parse_args()
+model = args.embed_model
 
 root = Path(args.output_dir)
-OUT_MAIN = root / "main" / "tables"
+OUT_MAIN = root / "main" / model / "tables"
 OUT_MAIN.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # 1. Load LR test F1 from retrain results
 # ---------------------------------------------------------------------------
-RETRAIN_JSON = ROOT / "2_data/4_supervised_model_results/all-mpnet-base-v2/model/sdg_retrain_results.json"
+RETRAIN_JSON = model_results_dir_for_model(model) / "model" / "sdg_retrain_results.json"
 with open(RETRAIN_JSON) as f:
     retrain = json.load(f)
 lr_per_sdg = {}
@@ -60,7 +62,7 @@ lr_macro = retrain["test_results"]["macro_f1"]
 # ---------------------------------------------------------------------------
 # 2. Load LR semantic gaps (canonical assignment method)
 # ---------------------------------------------------------------------------
-LR_GAP_PATH = root / "main" / "data" / "4_3_semantic_gap_distances.json"
+LR_GAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_distances.json"
 def load_lr_gaps():
     if not LR_GAP_PATH.exists():
         return None
@@ -71,7 +73,7 @@ def load_lr_gaps():
 # ---------------------------------------------------------------------------
 # 3. Load zero-shot semantic gaps
 # ---------------------------------------------------------------------------
-ZS_GAP_PATH = root / "zeroshot" / "semantic_gap_distances.json"
+ZS_GAP_PATH = root / "zeroshot" / model / "semantic_gap_distances.json"
 def load_zs_gaps():
     if not ZS_GAP_PATH.exists():
         return None
@@ -82,7 +84,7 @@ def load_zs_gaps():
 # ---------------------------------------------------------------------------
 # 4. Load segment-cap robustness gaps
 # ---------------------------------------------------------------------------
-CAP_PATH = root / "main" / "data" / "4_3_semantic_gap_robustness_caps.json"
+CAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_robustness_caps.json"
 def load_cap_gaps():
     if not CAP_PATH.exists():
         return None, None
@@ -95,7 +97,7 @@ def load_cap_gaps():
 # ---------------------------------------------------------------------------
 # 5. Load policy source-family gaps from appendix table
 # ---------------------------------------------------------------------------
-POLICY_GAP_TEX = root / "appendix" / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
+POLICY_GAP_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
 def parse_policy_source_gaps():
     """Return {family_label: {sdg: gap}} parsing the appendix tex table."""
     if not POLICY_GAP_TEX.exists():
@@ -167,7 +169,7 @@ def write_num_validation():
                 14: "Fourteen", 15: "Fifteen", 16: "Sixteen", 17: "Seventeen"}[sdg]
         lines.append(rf"\newcommand{{\FiSdg{name}}}{{{f1:.3f}}}")
     # MLP validation macro (used in cross-sensitivity / Appendix D)
-    MLP_RETRAIN_PATH = ROOT / "2_data/4_supervised_model_results/all-mpnet-base-v2/model/mlp_retrain_results.json"
+    MLP_RETRAIN_PATH = model_results_dir_for_model(model) / "model" / "mlp_retrain_results.json"
     if MLP_RETRAIN_PATH.exists():
         with open(MLP_RETRAIN_PATH) as f:
             mlp_data = json.load(f)
@@ -211,7 +213,7 @@ def write_cross_sensitivity():
     col_groups = []
 
     # Load MLP gaps
-    MLP_SUMMARY = ROOT / "2_data/5_supervised_scored/all-mpnet-base-v2/mlp_scores/mlp_summary.json"
+    MLP_SUMMARY = scored_dir_for_model(model) / "mlp_scores" / "mlp_summary.json"
     def load_mlp_gaps():
         if not MLP_SUMMARY.exists():
             return None

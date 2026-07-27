@@ -32,7 +32,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import preprocessed_dir, segmented_dir_for_model
+from model_utils import preprocessed_dir, segmented_dir_for_model, DEFAULT_EMBED_MODEL
 
 MIN_WORD_COUNT = 20
 
@@ -69,20 +69,20 @@ def main() -> None:
         description="Cross-dedup policy sources pre-embedding."
     )
     parser.add_argument(
-        "--model", default="all-mpnet-base-v2",
+        "--embed-model", default=DEFAULT_EMBED_MODEL,
         help="Embed model name (default: %(default)s)",
     )
     args = parser.parse_args()
 
     # Source order — sdgi first so it keeps all rows
     SOURCES = [
-        ("sdgi", segmented_dir_for_model(args.model) / "sdgi.jsonl", True),
-        ("policy_scrape", segmented_dir_for_model(args.model) / "policy_scrape.jsonl", False),
-        ("policy_manual", segmented_dir_for_model(args.model) / "policy_manual.jsonl", False),
-        ("ungdc_sdg", segmented_dir_for_model(args.model) / "ungdc_sdg.jsonl", False),
+        ("sdgi", segmented_dir_for_model(args.embed_model) / "sdgi.jsonl", True),
+        ("policy_scrape", segmented_dir_for_model(args.embed_model) / "policy_scrape.jsonl", False),
+        ("policy_manual", segmented_dir_for_model(args.embed_model) / "policy_manual.jsonl", False),
+        ("ungdc_sdg", segmented_dir_for_model(args.embed_model) / "ungdc_sdg.jsonl", False),
     ]
 
-    output_dir = segmented_dir_for_model(args.model)
+    output_dir = segmented_dir_for_model(args.embed_model)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Load and filter short segments

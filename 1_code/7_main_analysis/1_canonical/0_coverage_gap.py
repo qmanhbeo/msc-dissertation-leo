@@ -188,7 +188,7 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute coverage gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -197,12 +197,12 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def main() -> None:
     args = parse_args()
-    model = args.model
+    model = args.embed_model
     scored_dir = scored_dir_for_model(model)
     PAPER_SCORES_MANIFEST = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
     POLICY_SCORES   = scored_dir / "policy_scores.npy"
     POLICY_IDS      = scored_dir / "metadata" / "policy_scores_ids.json"
-    layout = ensure_canonical_outputs(Path(args.output_dir))
+    layout = ensure_canonical_outputs(Path(args.output_dir), model=model)
     out_cov_gap = layout.data_dir / "4_2_coverage_document_weighted.json"
     out_cov_gap_raw = layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
     tables_dir = layout.tables_dir

@@ -105,7 +105,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the sample-stability robustness stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--cache-dir", default=None)
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -838,12 +838,12 @@ def write_outputs(
 
 def main() -> None:
     args = parse_args()
-    embed_dir = embed_research_dir_for_model(args.model)
-    scored_dir = scored_dir_for_model(args.model)
-    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
-    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
-    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
-    layout = ensure_dissertation_outputs(Path(args.output_dir), subdir="appendix/c_sample_stability")
+    embed_dir = embed_research_dir_for_model(args.embed_model)
+    scored_dir = scored_dir_for_model(args.embed_model)
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+    layout = ensure_dissertation_outputs(Path(args.output_dir), subdir="appendix/c_sample_stability", model=args.embed_model)
     cache_root = Path(args.cache_dir) if args.cache_dir is not None else scored_dir / f"paper_sample_seed_{DRAW_SEEDS[0]}_{DRAW_SEEDS[-1]}"
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
@@ -865,7 +865,7 @@ def main() -> None:
     research_scores = aggregate_research_scores(research_manifest, scored_dir)
     mean_paper_top_vs_osdg = float(research_scores["mean_top_overall"])
     policy_state = load_policy_state(
-        Path(args.output_dir) / "main" / "data",
+        Path(args.output_dir) / "main" / args.embed_model / "data",
         _POLICY_EMB,
         _POLICY_IDS,
         _POLICY_SCORES,

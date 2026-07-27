@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Add combined_text to embedded research shard IDs.")
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help="Embed model (default: %(default)s)")
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help="Embed model (default: %(default)s)")
     p.add_argument("--dry-run", action="store_true", help="Show what would change without writing.")
     return p.parse_args()
 
@@ -74,8 +74,8 @@ def migrate_shard(seg_path: Path, ids_path: Path, dry_run: bool) -> int:
 
 def main() -> None:
     args = parse_args()
-    seg_root = segmented_dir_for_model(args.model) / "research"
-    ids_root = embed_research_dir_for_model(args.model) / "metadata"
+    seg_root = segmented_dir_for_model(args.embed_model) / "research"
+    ids_root = embed_research_dir_for_model(args.embed_model) / "metadata"
 
     seg_manifest_path = seg_root / "metadata" / "manifest.json"
     if not seg_manifest_path.exists():
@@ -85,7 +85,7 @@ def main() -> None:
     seg_manifest = json.loads(seg_manifest_path.read_text(encoding="utf-8"))
     shards = sorted(seg_manifest["shards"], key=lambda x: int(x["shard_id"]))
 
-    log.info("Model: %s", args.model)
+    log.info("Model: %s", args.embed_model)
     log.info("Segmented dir: %s", seg_root)
     log.info("Embedded IDs dir: %s", ids_root)
     log.info("Shards to process: %d", len(shards))

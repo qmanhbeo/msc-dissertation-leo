@@ -42,7 +42,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, DEFAULT_EMBED_MODEL, ZERO_NORM_EPS
 from shard_pipeline_utils import ensure_dir, now_iso, read_json
 
 log = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ def build_policy_centroids(
 
         raw = embeddings[mask].mean(axis=0).astype(np.float32)
         norm = float(np.linalg.norm(raw))
-        if norm < 1e-8:
+        if norm < ZERO_NORM_EPS:
             centroids[sdg_idx] = 0.0
             meta.append({
                 "sdg": sdg,
@@ -230,7 +230,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Check centroid consistency for MLP-supervised classification."
     )
-    parser.add_argument("--model", default="all-mpnet-base-v2",
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--output-dir", default=None,
                         help="Ignored (compatibility with main.py pipeline)")
@@ -247,13 +247,13 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    scored_root = scored_dir_for_model(args.model)
-    embed_root = embed_dir_for_model(args.model)
+    scored_root = scored_dir_for_model(args.embed_model)
+    embed_root = embed_dir_for_model(args.embed_model)
 
     research_centroids_path = Path(args.research_centroids) if args.research_centroids else scored_root / "research_centroids.npy"
     policy_emb_path = Path(args.policy_emb) if args.policy_emb else embed_root / "policy.npy"
     policy_scores_path = Path(args.policy_scores) if args.policy_scores else scored_root / "policy_scores.npy"
-    research_manifest_path = Path(args.research_manifest) if args.research_manifest else embed_research_dir_for_model(args.model) / "metadata" / "manifest.json"
+    research_manifest_path = Path(args.research_manifest) if args.research_manifest else embed_research_dir_for_model(args.embed_model) / "metadata" / "manifest.json"
     policy_centroids_out = Path(args.policy_centroids_out) if args.policy_centroids_out else scored_root / "policy_centroids.npy"
     policy_centroid_meta_out = Path(args.policy_centroid_meta_out) if args.policy_centroid_meta_out else scored_root / "metadata" / "policy_centroid_meta.json"
     consistency_out = Path(args.consistency_out) if args.consistency_out else scored_root / "metadata" / "centroid_consistency.json"

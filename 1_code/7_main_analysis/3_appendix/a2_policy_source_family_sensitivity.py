@@ -84,7 +84,7 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run policy source-family sensitivity diagnostic.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -232,19 +232,19 @@ def write_table_gap(path: Path, semantic_rows: list[dict]) -> None:
 
 def main() -> None:
     args = parse_args()
-    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.model)
-    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.model)
-    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.model)
-    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.model)
-    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.model)
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / "a2_source_family_sensitivity"
+    out_root = output_dir / "appendix" / args.embed_model / "a2_source_family_sensitivity"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    source_family_map = build_source_family_map(args.model)
+    source_family_map = build_source_family_map(args.embed_model)
 
     policy_scores = np.load(_POLICY_SCORES)
     policy_emb = np.load(_POLICY_EMB)

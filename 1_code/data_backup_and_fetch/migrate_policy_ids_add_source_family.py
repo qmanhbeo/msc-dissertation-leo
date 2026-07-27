@@ -40,15 +40,15 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Add source_family to embedded policy metadata.")
-    p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help="Embed model (default: %(default)s)")
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help="Embed model (default: %(default)s)")
     p.add_argument("--dry-run", action="store_true", help="Show what would change without writing.")
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    seg_root = segmented_dir_for_model(args.model)
-    ids_path = embed_dir_for_model(args.model) / "metadata" / "policy_ids.json"
+    seg_root = segmented_dir_for_model(args.embed_model)
+    ids_path = embed_dir_for_model(args.embed_model) / "metadata" / "policy_ids.json"
 
     if not ids_path.exists():
         log.error("Missing: %s", ids_path)

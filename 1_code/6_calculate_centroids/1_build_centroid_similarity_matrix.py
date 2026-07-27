@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build centroid similarity matrix CSV.")
-    parser.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT), help="Manuscript output directory")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing CSV")
     args = parser.parse_args()
@@ -41,14 +41,14 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     if not output_dir.is_absolute():
         output_dir = (Path.cwd() / output_dir).resolve()
-    out_path = output_dir / "main" / "data" / "4_1_centroid_similarity_matrix.csv"
+    out_path = output_dir / "main" / args.embed_model / "data" / "4_1_centroid_similarity_matrix.csv"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     if out_path.exists() and not args.overwrite:
         log.info("Centroid similarity matrix already exists: %s (use --overwrite to rebuild)", out_path)
         return
 
-    scored_root = scored_dir_for_model(args.model)
+    scored_root = scored_dir_for_model(args.embed_model)
     centroids_path = scored_root / "sdg_centroids.npy"
     if not centroids_path.exists():
         raise FileNotFoundError(f"Reference centroids not found: {centroids_path}")
