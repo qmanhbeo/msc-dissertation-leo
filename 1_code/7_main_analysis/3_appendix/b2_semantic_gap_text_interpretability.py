@@ -46,8 +46,12 @@ for path in (CODE_ROOT, SHARED_DIR):
 import semantic_gap_shared
 from semantic_gap_shared import (
     get_cluster_assignments,
+    latex_escape,
+    latex_int,
     load_json,
+    write_csv,
 )
+from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 
 TARGET_SDGS = (17, 13, 9)
@@ -121,31 +125,6 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def iter_jsonl(path: Path):
-    with path.open(encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                yield json.loads(line)
-
-
-def resolve_manifest_path(stored_path: str, research_dir: Path, scored_dir: Path) -> Path:
-    raw = Path(stored_path)
-    if raw.is_absolute():
-        if raw.exists():
-            return raw
-        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    posix = raw.as_posix()
-    allowed = (research_dir.as_posix() + "/", scored_dir.as_posix() + "/")
-    if not any(posix.startswith(p) for p in allowed):
-        raise RuntimeError(
-            f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
-        )
-    resolved = Path.cwd() / raw
-    if resolved.exists():
-        return resolved
-    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
-
-
 def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
     research_manifest = load_json(research_dir / "metadata" / "manifest.json")
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
@@ -163,15 +142,15 @@ def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str,
             raise RuntimeError("Research and score manifests do not align on shard_id.")
         if int(research_shard["rows"]) != int(score_shard["rows"]):
             raise RuntimeError(f"Research and score manifests do not align on rows for shard {shard_id}.")
-        text_path = resolve_manifest_path(research_shard["ids_path"], research_dir, scored_dir)
+        text_path = resolve_manifest_path(research_shard["ids_path"], allowed_dirs=(research_dir, scored_dir))
         shards.append(
             {
                 "shard_id": shard_id,
                 "name": research_shard["name"],
                 "rows": int(research_shard["rows"]),
                 "text_path": text_path,
-                "emb_path": resolve_manifest_path(research_shard["embedding_path"], research_dir, scored_dir),
-                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], research_dir, scored_dir),
+                "emb_path": resolve_manifest_path(research_shard["embedding_path"], allowed_dirs=(research_dir, scored_dir)),
+                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], allowed_dirs=(research_dir, scored_dir)),
             }
         )
     return shards
@@ -389,26 +368,6 @@ def top_terms_for_sdg(research_texts: list[str], policy_texts: list[str]) -> tup
         return selected
 
     return select(research_mean - policy_mean), select(policy_mean - research_mean)
-
-
-def latex_escape(text: str) -> str:
-    return (
-        text.replace("\\", r"\textbackslash{}")
-        .replace("&", r"\&")
-        .replace("%", r"\%")
-        .replace("$", r"\$")
-        .replace("#", r"\#")
-        .replace("_", r"\_")
-        .replace("{", r"\{")
-        .replace("}", r"\}")
-    )
-
-
-def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def write_table(path: Path, rows: list[dict[str, Any]]) -> None:

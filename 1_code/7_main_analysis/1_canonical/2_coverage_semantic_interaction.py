@@ -73,6 +73,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from shared_utils import ensure_canonical_outputs, require_output_files
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model
+from shard_pipeline_utils import load_json
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -84,11 +85,6 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
 def pearson_and_spearman(x: np.ndarray, y: np.ndarray, label: str) -> dict:
     """Compute Pearson r and Spearman ρ between x and y, return as dict."""
     assert len(x) == len(y), f"Length mismatch: {len(x)} vs {len(y)}"

@@ -43,10 +43,10 @@ from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
     N_SDG,
     RANDOM_SEED,
+    build_source_family_map,
     build_sub_centroid,
     cap_policy_indices_per_doc,
-    get_cluster_assignments,
-    load_json,
+    write_csv,
 )
 
 SUMMARY_CSV = "policy_source_family_summary.csv"
@@ -84,27 +84,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
-
-
-def build_source_family_map(model: str = DEFAULT_EMBED_MODEL) -> dict[str, str]:
-    ids_path = embed_dir_for_model(model) / "metadata" / "policy_ids.json"
-    with ids_path.open(encoding="utf-8") as f:
-        policy_ids = json.load(f)
-    source_family: dict[str, str] = {}
-    for row in policy_ids:
-        source_doc = str(row["source_doc"])
-        family = row.get("source_family")
-        if family is None:
-            continue
-        existing = source_family.get(source_doc)
-        if existing is not None and existing != family:
-            raise RuntimeError(
-                f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
-            )
-        source_family[source_doc] = family
-    if not source_family:
-        raise RuntimeError("No source-family assignments found in policy_ids.json.")
-    return source_family
 
 
 def document_weighted_policy_profile_subset(
@@ -197,22 +176,6 @@ def compute_family_semantic_rows(
 def top3_sdgs(profile: np.ndarray) -> str:
     order = np.argsort(profile)[::-1][:3]
     return " / ".join(f"SDG {i + 1}" for i in order)
-
-
-def latex_escape(text: str) -> str:
-    return (
-        text.replace("\\", r"\textbackslash{}")
-        .replace("&", r"\&")
-        .replace("%", r"\%")
-        .replace("_", r"\_")
-    )
-
-
-def write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def write_table_covshare(path: Path, semantic_rows: list[dict], coverage_rows: list[dict]) -> None:

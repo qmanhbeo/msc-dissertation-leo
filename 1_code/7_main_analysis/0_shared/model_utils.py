@@ -11,6 +11,26 @@ DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 DATA_ROOT = Path("2_data")
 
+SDG_NAMES: dict[int, str] = {
+    1: "No Poverty", 2: "Zero Hunger", 3: "Good Health and Well-Being",
+    4: "Quality Education", 5: "Gender Equality",
+    6: "Clean Water and Sanitation", 7: "Affordable and Clean Energy",
+    8: "Decent Work and Economic Growth",
+    9: "Industry, Innovation and Infrastructure",
+    10: "Reduced Inequalities", 11: "Sustainable Cities and Communities",
+    12: "Responsible Consumption and Production", 13: "Climate Action",
+    14: "Life Below Water", 15: "Life on Land",
+    16: "Peace, Justice and Strong Institutions",
+    17: "Partnerships for the Goals",
+}
+
+SDG_NUM_WORDS: dict[int, str] = {
+    1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five",
+    6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten",
+    11: "Eleven", 12: "Twelve", 13: "Thirteen", 14: "Fourteen",
+    15: "Fifteen", 16: "Sixteen", 17: "Seventeen",
+}
+
 
 def _validate_model(model: str) -> None:
     if model not in ALLOWED_MODELS:

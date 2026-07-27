@@ -37,6 +37,7 @@ if str(ANALYSIS_DIR) not in sys.path:
 
 from alignment_core import verify_unit_norms
 from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
+from shard_pipeline_utils import load_json
 
 log = logging.getLogger(__name__)
 
@@ -84,11 +85,6 @@ def _load_model(model_root: Path, input_dim: int = 768):
         return _ModelWrapper(net)
     log.info("No .pt found — loading sklearn classifier from %s", model_path)
     return joblib.load(model_path)
-
-
-def load_json(path: Path) -> list[dict]:
-    with path.open() as f:
-        return json.load(f)
 
 
 def write_json(path: Path, data: list[dict]) -> None:

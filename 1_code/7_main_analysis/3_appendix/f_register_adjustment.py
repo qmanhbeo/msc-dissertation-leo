@@ -41,6 +41,7 @@ from model_utils import (
     DEFAULT_EMBED_MODEL,
     DEFAULT_OUTPUT_ROOT,
     N_SDG,
+    SDG_NAMES,
     embed_dir_for_model,
     scored_dir_for_model,
 )
@@ -61,18 +62,6 @@ log = logging.getLogger(__name__)
 SAMPLE_SIZE_PER_CLASS = 40_000
 
 CANONICAL_SEMANTIC_JSON = ROOT / "4_outputs" / "main" / "data" / "4_3_semantic_gap_distances.json"
-
-_SDG_NAMES = {
-    1: "No Poverty", 2: "Zero Hunger", 3: "Good Health and Well-Being",
-    4: "Quality Education", 5: "Gender Equality",
-    6: "Clean Water and Sanitation", 7: "Affordable and Clean Energy",
-    8: "Decent Work and Economic Growth", 9: "Industry, Innovation and Infrastructure",
-    10: "Reduced Inequalities", 11: "Sustainable Cities and Communities",
-    12: "Responsible Consumption and Production", 13: "Climate Action",
-    14: "Life Below Water", 15: "Life on Land",
-    16: "Peace, Justice and Strong Institutions",
-    17: "Partnerships for the Goals",
-}
 
 
 def parse_args() -> argparse.Namespace:
@@ -281,7 +270,7 @@ def main() -> None:
 
         results.append({
             "sdg": sdg,
-            "name": _SDG_NAMES[sdg],
+            "name": SDG_NAMES[sdg],
             "raw_gap": canonical_val,
             "adj_gap": round(adj_gap, 6) if adj_gap is not None else None,
             "delta": round(delta, 6) if delta is not None else None,

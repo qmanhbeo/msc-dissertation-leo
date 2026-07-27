@@ -35,7 +35,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, model_results_dir_for_model, scored_dir_for_model
-from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
+from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, resolve_manifest_path, sha256_file, update_stage_status
 
 log = logging.getLogger(__name__)
 STATUS_STAGE = "supervised_sdg_scores"
@@ -108,24 +108,6 @@ def write_ids(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
     tmp.replace(path)
-
-
-def resolve_from_manifest(manifest_path: Path, stored_path: str, embed_dir: Path) -> Path:
-    del manifest_path
-    raw = Path(stored_path)
-    if raw.is_absolute():
-        if raw.exists():
-            return raw
-        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    expected_prefix = embed_dir.as_posix() + "/"
-    if not raw.as_posix().startswith(expected_prefix):
-        raise RuntimeError(
-            f"Hard pivot violation: expected data path under {expected_prefix}, got: {stored_path}"
-        )
-    resolved = Path.cwd() / raw
-    if resolved.exists():
-        return resolved
-    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def main() -> None:
@@ -223,8 +205,8 @@ def main() -> None:
     for shard in shards:
         shard_id = int(shard["shard_id"])
         shard_name = shard["name"]
-        emb_path = resolve_from_manifest(embed_manifest_path, shard["embedding_path"], embed_dir)
-        ids_in = resolve_from_manifest(embed_manifest_path, shard["ids_path"], embed_dir)
+        emb_path = resolve_manifest_path(shard["embedding_path"], allowed_dirs=(embed_dir,))
+        ids_in = resolve_manifest_path(shard["ids_path"], allowed_dirs=(embed_dir,))
         score_path = out_dir / f"{shard_name}.npy"
         ids_out = metadata_dir / f"{shard_name}_ids.jsonl"
 

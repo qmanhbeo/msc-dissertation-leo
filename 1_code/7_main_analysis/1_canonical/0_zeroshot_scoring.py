@@ -29,17 +29,13 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, scored_dir_for_model
+from shard_pipeline_utils import load_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 SEGMENT_CAP = 50
 RANDOM_SEED = 42
-
-
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
 
 
 def centroid_from_sumcount(sums: np.ndarray, counts: np.ndarray) -> np.ndarray:

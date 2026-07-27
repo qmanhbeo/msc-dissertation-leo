@@ -7,29 +7,8 @@ from typing import Any, Iterator
 import numpy as np
 
 from model_utils import N_SDG
+from shard_pipeline_utils import load_json, resolve_manifest_path
 
-
-def load_json(path: Path) -> Any:
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def resolve_from_manifest(manifest_path: Path, stored_path: str, scored_dir: Path) -> Path:
-    """Resolve a model-aware hard-pivot path recorded in a scored manifest."""
-    raw = Path(stored_path)
-    if raw.is_absolute():
-        if raw.exists():
-            return raw
-        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    expected_prefix = scored_dir.as_posix() + "/"
-    if not raw.as_posix().startswith(expected_prefix):
-        raise RuntimeError(
-            f"Hard pivot violation: expected data path under {expected_prefix}, got: {stored_path}"
-        )
-    resolved = Path.cwd() / raw
-    if resolved.exists():
-        return resolved
-    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def iter_research_score_shards(manifest_path: Path, scored_dir: Path) -> Iterator[tuple[int, np.ndarray]]:
@@ -37,7 +16,7 @@ def iter_research_score_shards(manifest_path: Path, scored_dir: Path) -> Iterato
     shards = sorted(manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
     for shard in shards:
         shard_id = int(shard["shard_id"])
-        score_path = resolve_from_manifest(manifest_path, shard["score_path"], scored_dir)
+        score_path = resolve_manifest_path(shard["score_path"], allowed_dirs=(scored_dir,))
         yield shard_id, np.load(score_path).astype(np.float32)
 
 

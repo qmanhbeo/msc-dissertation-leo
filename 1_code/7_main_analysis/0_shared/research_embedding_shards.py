@@ -7,6 +7,8 @@ from typing import Any, Iterator
 
 import numpy as np
 
+from shard_pipeline_utils import load_json, resolve_manifest_path
+
 
 @dataclass(frozen=True)
 class ResearchEmbeddingShard:
@@ -18,29 +20,6 @@ class ResearchEmbeddingShard:
     embedding_path: Path
     ids_path: Path
 
-
-def load_json(path: Path) -> Any:
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def resolve_from_manifest(manifest_path: Path, stored_path: str, embed_dir: Path) -> Path:
-    """Resolve a model-aware hard-pivot path recorded in a research-embedding manifest."""
-    del manifest_path  # hard pivot: no location fallback based on manifest placement
-    raw = Path(stored_path)
-    if raw.is_absolute():
-        if raw.exists():
-            return raw
-        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    expected_prefix = embed_dir.as_posix() + "/"
-    if not raw.as_posix().startswith(expected_prefix):
-        raise RuntimeError(
-            f"Hard pivot violation: expected data path under {expected_prefix}, got: {stored_path}"
-        )
-    resolved = Path.cwd() / raw
-    if resolved.exists():
-        return resolved
-    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def iter_research_embedding_shards(manifest_path: Path, embed_dir: Path) -> Iterator[ResearchEmbeddingShard]:
@@ -57,8 +36,8 @@ def iter_research_embedding_shards(manifest_path: Path, embed_dir: Path) -> Iter
             start=start,
             stop=stop,
             rows=rows,
-            embedding_path=resolve_from_manifest(manifest_path, shard["embedding_path"], embed_dir),
-            ids_path=resolve_from_manifest(manifest_path, shard["ids_path"], embed_dir),
+            embedding_path=resolve_manifest_path(shard["embedding_path"], allowed_dirs=(embed_dir,)),
+            ids_path=resolve_manifest_path(shard["ids_path"], allowed_dirs=(embed_dir,)),
         )
         offset = stop
 

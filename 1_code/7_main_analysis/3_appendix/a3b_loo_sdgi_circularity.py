@@ -58,6 +58,8 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from semantic_gap_shared import build_source_family_map
+from shard_pipeline_utils import load_json
 
 OUTPUT_SUBDIR = "a3b_sdgi_circularity"
 DATA_JSON = "loo_sdgi_circularity.json"
@@ -74,32 +76,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--overwrite", action="store_true", help="Recompute from source.")
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
-
-
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def build_source_family_map(model: str = DEFAULT_EMBED_MODEL) -> dict[str, str]:
-    ids_path = embed_dir_for_model(model) / "metadata" / "policy_ids.json"
-    with ids_path.open(encoding="utf-8") as f:
-        policy_ids = json.load(f)
-    source_family: dict[str, str] = {}
-    for row in policy_ids:
-        source_doc = str(row["source_doc"])
-        family = row.get("source_family")
-        if family is None:
-            continue
-        existing = source_family.get(source_doc)
-        if existing is not None and existing != family:
-            raise RuntimeError(
-                f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
-            )
-        source_family[source_doc] = family
-    if not source_family:
-        raise RuntimeError("No source-family assignments found in policy_ids.json.")
-    return source_family
 
 
 def build_centroid_matrix(emb: np.ndarray, ids: list[dict]) -> np.ndarray:

@@ -50,7 +50,9 @@ from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     build_sub_centroid,
     cap_policy_indices_per_doc,
+    latex_int,
 )
+from shard_pipeline_utils import load_json, resolve_manifest_path
 CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
 CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
@@ -99,29 +101,6 @@ class DrawAccumulator:
     rows_seen: int = 0
 
 
-def load_json(path: Path) -> Any:
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def resolve_manifest_path(stored_path: str, embed_dir: Path, scored_dir: Path) -> Path:
-    raw = Path(stored_path)
-    if raw.is_absolute():
-        if raw.exists():
-            return raw
-        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
-    posix = raw.as_posix()
-    allowed = (embed_dir.as_posix() + "/", scored_dir.as_posix() + "/", preprocessed_dir().as_posix() + "/")
-    if not any(posix.startswith(p) for p in allowed):
-        raise RuntimeError(
-            f"Hard pivot violation: expected path under {allowed}, got: {stored_path}"
-        )
-    resolved = Path.cwd() / raw
-    if resolved.exists():
-        return resolved
-    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
-
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the sample-stability robustness stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
@@ -167,7 +146,7 @@ def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[Resea
             )
 
         ids_stored = emb_shard.get("ids_path", "")
-        ids_path = resolve_manifest_path(ids_stored, embed_dir, scored_dir) if ids_stored else None
+        ids_path = resolve_manifest_path(ids_stored, allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())) if ids_stored else None
 
         shards.append(
             ResearchShard(
@@ -176,8 +155,8 @@ def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[Resea
                 rows=rows,
                 start=offset,
                 stop=offset + rows,
-                score_path=resolve_manifest_path(score_shard["score_path"], embed_dir, scored_dir),
-                emb_path=resolve_manifest_path(emb_shard["embedding_path"], embed_dir, scored_dir),
+                score_path=resolve_manifest_path(score_shard["score_path"], allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())),
+                emb_path=resolve_manifest_path(emb_shard["embedding_path"], allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())),
                 ids_path=ids_path,
             )
         )
@@ -239,10 +218,6 @@ def format_variance(value: float | None, *, precision: int = 3) -> str:
     if value is None:
         return "--"
     return f"${value:.{precision}f}$"
-
-
-def latex_num(value: int) -> str:
-    return f"{value:,}".replace(",", "{,}")
 
 
 def normalize_centroid(raw: np.ndarray) -> tuple[np.ndarray, float]:
@@ -800,7 +775,7 @@ def write_outputs(
         rf"\newcommand{{\SampleStabilityDraws}}{{{DRAWS_PER_TIER}}}",
         rf"\newcommand{{\SampleStabilitySampledTierCount}}{{{len(TIER_SPECS)}}}",
         rf"\newcommand{{\SampleStabilityTierCount}}{{{len(TIER_SPECS) + 1}}}",
-        rf"\newcommand{{\SampleStabilityFullCorpusN}}{{{latex_num(total_rows)}}}",
+        rf"\newcommand{{\SampleStabilityFullCorpusN}}{{{latex_int(total_rows)}}}",
     ]
     for row in summary_rows:
         if row["tier_label"] == "full corpus":

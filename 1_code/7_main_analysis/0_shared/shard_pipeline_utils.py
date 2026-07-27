@@ -6,6 +6,8 @@ This module centralises:
   - stage status updates (abort/resume visibility)
   - simple checksums
   - lightweight manifest helpers
+  - JSON / JSONL I/O
+  - hard-pivot manifest path resolution
 """
 
 from __future__ import annotations
@@ -46,6 +48,48 @@ def read_json(path: Path, default: Any = None) -> Any:
         return default
     with path.open(encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_json(path: Path) -> Any:
+    """Load JSON file. Raises FileNotFoundError if missing."""
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+def iter_jsonl(path: Path):
+    """Yield dicts from a JSONL file, skipping blank lines."""
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                yield json.loads(line)
+
+
+def resolve_manifest_path(
+    stored_path: str,
+    *,
+    allowed_dirs: tuple[Path, ...],
+) -> Path:
+    """Resolve a hard-pivot path from a manifest.
+
+    If stored_path is absolute, verify it exists and return it.
+    If relative, verify it starts with one of the allowed directories,
+    prepend CWD, and verify existence.
+    """
+    raw = Path(stored_path)
+    if raw.is_absolute():
+        if raw.exists():
+            return raw
+        raise FileNotFoundError(f"Absolute path from manifest does not exist: {raw}")
+    posix = raw.as_posix()
+    allowed_prefixes = tuple(d.as_posix() + "/" for d in allowed_dirs)
+    if not any(posix.startswith(p) for p in allowed_prefixes):
+        raise RuntimeError(
+            f"Hard pivot violation: expected path under {allowed_prefixes}, got: {stored_path}"
+        )
+    resolved = Path.cwd() / raw
+    if resolved.exists():
+        return resolved
+    raise FileNotFoundError(f"Manifest path does not exist: {stored_path} (resolved: {resolved})")
 
 
 def now_unix() -> float:

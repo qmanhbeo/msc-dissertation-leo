@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json
+import csv
 import logging
 from collections import defaultdict
 from pathlib import Path
@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, scored_dir_for_model
+from shard_pipeline_utils import load_json
 
 
 def get_policy_emb(model: str = DEFAULT_EMBED_MODEL) -> Path:
@@ -37,11 +38,6 @@ MIN_CLUSTER_SIZE = 10
 RANDOM_SEED = 42
 
 log = logging.getLogger(__name__)
-
-
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
 
 
 def get_cluster_assignments(scores: np.ndarray) -> np.ndarray:
@@ -209,3 +205,51 @@ def compute_sdg_semantic_gaps(
         )
 
     return results
+
+
+def latex_escape(text: str) -> str:
+    """Escape LaTeX special characters in text."""
+    return (
+        text.replace("\\", r"\textbackslash{}")
+        .replace("&", r"\&")
+        .replace("%", r"\%")
+        .replace("$", r"\$")
+        .replace("#", r"\#")
+        .replace("_", r"\_")
+        .replace("{", r"\{")
+        .replace("}", r"\}")
+    )
+
+
+def latex_int(value: int) -> str:
+    """Format integer with LaTeX-safe thousands separator ({,})."""
+    return f"{value:,}".replace(",", "{,}")
+
+
+def write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
+    """Write rows to a CSV file with given fieldnames."""
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def build_source_family_map(model: str = DEFAULT_EMBED_MODEL) -> dict[str, str]:
+    """Build mapping from source_doc to source_family from policy_ids.json."""
+    ids_path = embed_dir_for_model(model) / "metadata" / "policy_ids.json"
+    policy_ids = load_json(ids_path)
+    source_family: dict[str, str] = {}
+    for row in policy_ids:
+        source_doc = str(row["source_doc"])
+        family = row.get("source_family")
+        if family is None:
+            continue
+        existing = source_family.get(source_doc)
+        if existing is not None and existing != family:
+            raise RuntimeError(
+                f"source_doc '{source_doc}' appears in multiple families: {existing} vs {family}"
+            )
+        source_family[source_doc] = family
+    if not source_family:
+        raise RuntimeError("No source-family assignments found in policy_ids.json.")
+    return source_family

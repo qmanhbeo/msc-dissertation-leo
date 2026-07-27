@@ -33,6 +33,8 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_research_dir_for_model, scored_dir_for_model
+from semantic_gap_shared import latex_escape, write_csv
+from shard_pipeline_utils import iter_jsonl, load_json
 
 AUDIT_CSV = "sdg4_lexical_audit.csv"
 AUDIT_JSON = "sdg4_lexical_audit_summary.json"
@@ -91,17 +93,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     return p.parse_args()
-
-
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def iter_jsonl(path: Path):
-    with path.open(encoding="utf-8") as f:
-        for line in f:
-            yield json.loads(line)
 
 
 def compile_patterns(terms: list[str]) -> list[re.Pattern[str]]:
@@ -241,22 +232,6 @@ def pct(n: int, d: int) -> float:
     if d == 0:
         return 0.0
     return 100.0 * float(n) / float(d)
-
-
-def latex_escape(text: str) -> str:
-    return (
-        text.replace("\\", r"\textbackslash{}")
-        .replace("&", r"\&")
-        .replace("%", r"\%")
-        .replace("_", r"\_")
-    )
-
-
-def write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def write_table(path: Path, rows: list[dict]) -> None:
