@@ -117,6 +117,8 @@ def main() -> None:
     parser.add_argument("--policy-scores-out", default=None)
     parser.add_argument("--policy-vs-research-out", default=None)
     parser.add_argument("--policy-score-ids-out", default=None)
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Recompute policy scores even if outputs exist")
     args = parser.parse_args()
 
     embed_root = embed_dir_for_model(args.model)
@@ -140,6 +142,10 @@ def main() -> None:
     policy_scores_out = Path(args.policy_scores_out)
     policy_vs_research_out = Path(args.policy_vs_research_out)
     policy_score_ids_out = Path(args.policy_score_ids_out)
+
+    if not args.overwrite and policy_scores_out.exists() and policy_vs_research_out.exists() and policy_score_ids_out.exists():
+        log.info("Skip — policy scores already exist at %s", policy_scores_out)
+        return
 
     log.info("Loading model: %s", model_path)
     input_dim = 768  # MPNet
