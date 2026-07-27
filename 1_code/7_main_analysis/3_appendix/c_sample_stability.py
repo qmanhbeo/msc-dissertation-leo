@@ -486,7 +486,7 @@ def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator]) 
             )
 
 
-def build_research_centroids(draw: DrawAccumulator) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def finalize_research_centroids(draw: DrawAccumulator) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     dim = draw.vector_sums.shape[1]
     centroids = np.zeros((N_SDG, dim), dtype=np.float32)
     counts = draw.hard_counts.astype(np.int64, copy=True)
@@ -510,7 +510,7 @@ def to_sdg_dict(values: np.ndarray, *, scale: float = 1.0, round_digits: int = 6
 
 
 def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) -> dict[str, Any]:
-    research_centroids, research_counts, research_cohesions = build_research_centroids(draw)
+    research_centroids, research_counts, research_cohesions = finalize_research_centroids(draw)
     coverage_profile = draw.hard_counts.astype(np.float64) / float(draw.rows_seen)
 
     semantic_gap_by_sdg: dict[str, float | None] = {}
