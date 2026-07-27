@@ -12,6 +12,23 @@ class DissertationOutputs:
     data_dir: Path
 
 
+def _insert_model_in_rel(rel_path: str, model: str | None) -> str:
+    """Insert *model* after the top-level namespace prefix (main|appendix).
+
+    Examples:
+        "main/data/file.json" + "all-mpnet-base-v2"  → "main/all-mpnet-base-v2/data/file.json"
+        "appendix/c/data/f.json" + "all-mpnet-base-v2" → "appendix/all-mpnet-base-v2/c/data/f.json"
+    """
+    if model is None:
+        return rel_path
+    for prefix in ("main/", "appendix/"):
+        if rel_path.startswith(prefix):
+            ns = prefix.rstrip("/")
+            rest = rel_path[len(prefix):]
+            return f"{ns}/{model}/{rest}"
+    return rel_path
+
+
 
 
 MANUSCRIPT_ROOT_FILES = [
@@ -90,25 +107,25 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
 MANUSCRIPT_APPENDIX_FIGURE_FILES = [
     "appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf",
     "appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.png",
-    "appendix/f_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.pdf",
-    "appendix/f_register_adjustment/figures/fig_register_adjusted_semantic_gap_comparison.png",
-    "appendix/f_register_adjustment/figures/fig_register_confidence_curve.pdf",
-    "appendix/f_register_adjustment/figures/fig_register_confidence_curve.png",
-    "appendix/f_register_adjustment/figures/fig_register_projection_distribution.pdf",
-    "appendix/f_register_adjustment/figures/fig_register_projection_distribution.png",
-    "appendix/f_register_adjustment/figures/fig_register_sdg_alignment.pdf",
-    "appendix/f_register_adjustment/figures/fig_register_sdg_alignment.png",
-    "appendix/f_register_adjustment/figures/fig_regression_vs_classifier_alignment.pdf",
-    "appendix/f_register_adjustment/figures/fig_regression_vs_classifier_alignment.png",
-    "appendix/f_register_adjustment/figures/fig_sdg_register_robustness_comparison.pdf",
-    "appendix/f_register_adjustment/figures/fig_sdg_register_robustness_comparison.png",
 ]
 
 
-def ensure_dissertation_outputs(output_dir: Path, subdir: str = "main") -> DissertationOutputs:
-    """Create and return the nested dissertation output layout."""
+def ensure_dissertation_outputs(output_dir: Path, subdir: str = "main", model: str | None = None) -> DissertationOutputs:
+    """Create and return the nested dissertation output layout.
+
+    When *model* is provided the output root becomes::
+
+        output_dir / subdir / {model} / data|tables|figures
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
-    root = output_dir / subdir
+    if model is not None:
+        parts = subdir.split("/", 1)
+        if len(parts) == 2 and parts[0] in ("main", "appendix"):
+            root = output_dir / parts[0] / model / parts[1]
+        else:
+            root = output_dir / subdir / model
+    else:
+        root = output_dir / subdir
     data_dir = root / "data"
     tables_dir = root / "tables"
     figures_dir = root / "figures"
@@ -117,8 +134,8 @@ def ensure_dissertation_outputs(output_dir: Path, subdir: str = "main") -> Disse
     return DissertationOutputs(root=root, tables_dir=tables_dir, figures_dir=figures_dir, data_dir=data_dir)
 
 
-def ensure_canonical_outputs(output_dir: Path) -> DissertationOutputs:
-    return ensure_dissertation_outputs(output_dir)
+def ensure_canonical_outputs(output_dir: Path, model: str | None = None) -> DissertationOutputs:
+    return ensure_dissertation_outputs(output_dir, subdir="main", model=model)
 
 
 def require_output_files(output_dir: Path, required_files: list[str]) -> Path:
@@ -129,27 +146,27 @@ def require_output_files(output_dir: Path, required_files: list[str]) -> Path:
     return output_dir
 
 
-def require_pdf_inputs(output_dir: Path) -> Path:
+def require_pdf_inputs(output_dir: Path, model: str | None = None) -> Path:
     root = Path(output_dir)
     missing = []
     for name in MANUSCRIPT_TABLE_FILES:
-        path = root / "main" / "tables" / name
+        path = root / "main" / (model or "") / "tables" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_FIGURE_FILES:
-        path = root / "main" / "figures" / name
+        path = root / "main" / (model or "") / "figures" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_EXTRA_FILES:
-        path = root / name
+        path = root / _insert_model_in_rel(name, model)
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_APPENDIX_TABLE_FILES:
-        path = root / name
+        path = root / _insert_model_in_rel(name, model)
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_APPENDIX_FIGURE_FILES:
-        path = root / name
+        path = root / _insert_model_in_rel(name, model)
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     if missing:
@@ -160,27 +177,32 @@ def require_pdf_inputs(output_dir: Path) -> Path:
     return root
 
 
-def canonical_artifact_paths(output_dir: Path) -> list[Path]:
+def canonical_artifact_paths(output_dir: Path, model: str | None = None) -> list[Path]:
     root = Path(output_dir)
     files = []
     for name in MANUSCRIPT_ROOT_FILES:
         if name == "dissertation.pdf":
             files.append(root / name)
         else:
-            files.append(root / "main" / "data" / name)
-    files.extend(root / name for name in MANUSCRIPT_EXTRA_FILES)
-    files.extend(root / "main" / "tables" / name for name in MANUSCRIPT_TABLE_FILES)
-    files.extend(root / "main" / "figures" / name for name in MANUSCRIPT_FIGURE_FILES)
-    files.extend(root / name for name in MANUSCRIPT_APPENDIX_TABLE_FILES)
-    files.extend(root / name for name in MANUSCRIPT_APPENDIX_FIGURE_FILES)
+            files.append(root / "main" / (model or "") / "data" / name)
+    for name in MANUSCRIPT_EXTRA_FILES:
+        files.append(root / _insert_model_in_rel(name, model))
+    for name in MANUSCRIPT_TABLE_FILES:
+        files.append(root / "main" / (model or "") / "tables" / name)
+    for name in MANUSCRIPT_FIGURE_FILES:
+        files.append(root / "main" / (model or "") / "figures" / name)
+    for name in MANUSCRIPT_APPENDIX_TABLE_FILES:
+        files.append(root / _insert_model_in_rel(name, model))
+    for name in MANUSCRIPT_APPENDIX_FIGURE_FILES:
+        files.append(root / _insert_model_in_rel(name, model))
     return files
 
 
-def canonical_artifact_status(output_dir: Path) -> dict[str, list[str]]:
+def canonical_artifact_status(output_dir: Path, model: str | None = None) -> dict[str, list[str]]:
     root = Path(output_dir)
     present: list[str] = []
     missing: list[str] = []
-    for path in canonical_artifact_paths(root):
+    for path in canonical_artifact_paths(root, model=model):
         rel = str(path.relative_to(root))
         if path.exists():
             present.append(rel)
