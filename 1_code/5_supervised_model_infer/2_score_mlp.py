@@ -21,7 +21,7 @@ sys.path.insert(0, str(CODE_ROOT))
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, ZERO_NORM_EPS, NORM_EPS, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
 
 log = logging.getLogger(__name__)
 
@@ -59,12 +59,12 @@ class _NetWrapper:
             probs = torch.sigmoid(self.net(X_t))
         return probs.cpu().numpy()
     def predict(self, X):
-        return (self.predict_proba(X) > 0.5).astype(np.float32)
+        return self.predict_proba(X).argmax(axis=1).astype(np.float32)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Score research + policy corpora with MLP.")
-    parser.add_argument("--model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
     parser.add_argument("--overwrite", action="store_true",
                         help="Overwrite existing MLP score outputs")
@@ -72,7 +72,7 @@ def main():
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    model_name = args.model
+    model_name = args.embed_model
     model_root = model_results_dir_for_model(model_name)
     embed_root = embed_dir_for_model(model_name)
     scored_root = scored_dir_for_model(model_name)
@@ -93,7 +93,11 @@ def main():
     mlp_path = model_root / "model" / "mlp_retrained.joblib"
     log.info("Loading MLP from %s", mlp_path)
     model = joblib.load(mlp_path)
-    log.info("MLP loaded (type=%s)", type(model).__name__)
+    first_layer = model.net[0]
+    assert first_layer.in_features == d, (
+        f"MLP first layer in_features {first_layer.in_features} != embedding dim {d}"
+    )
+    log.info("MLP loaded (type=%s, input_dim=%d)", type(model).__name__, d)
 
     # ── Score research shards ─────────────────────────────────────────
     manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
@@ -101,9 +105,10 @@ def main():
         manifest = json.load(f)
 
     log.info("Scoring %d research shards with MLP...", len(manifest["shards"]))
-    d = manifest["shards"][0].get("dims", 768)
-    sums = np.zeros((17, d), dtype=np.float64)
-    counts = np.zeros(17, dtype=np.int64)
+    emb_dim = int(manifest.get("embedding_dim") or manifest["shards"][0]["dim"])
+    d = emb_dim
+    sums = np.zeros((N_SDG, d), dtype=np.float64)
+    counts = np.zeros(N_SDG, dtype=np.int64)
 
     project_root = Path.cwd()
     for shard in manifest["shards"]:
@@ -115,7 +120,7 @@ def main():
         scores = model.predict_proba(emb).astype(np.float32)
         assigned = scores.argmax(axis=1).astype(np.int64)
 
-        for sdg_idx in range(17):
+        for sdg_idx in range(N_SDG):
             mask = assigned == sdg_idx
             if not np.any(mask):
                 continue
@@ -123,14 +128,14 @@ def main():
             sums[sdg_idx] += emb[mask].sum(axis=0)
 
     # Research centroids
-    research_centroids = np.zeros((17, d), dtype=np.float32)
-    for sdg_idx in range(17):
+    research_centroids = np.zeros((N_SDG, d), dtype=np.float32)
+    for sdg_idx in range(N_SDG):
         n = int(counts[sdg_idx])
         if n == 0:
             continue
         raw = (sums[sdg_idx] / n).astype(np.float32)
         norm = float(np.linalg.norm(raw))
-        if norm > 1e-8:
+        if norm > ZERO_NORM_EPS:
             research_centroids[sdg_idx] = (raw / norm).astype(np.float32)
 
     with centroids_out.open("wb") as f:
@@ -139,7 +144,7 @@ def main():
 
     # Research coverage profile
     total = int(counts.sum())
-    coverage = {int(sdg + 1): int(counts[sdg]) for sdg in range(17)}
+    coverage = {int(sdg + 1): int(counts[sdg]) for sdg in range(N_SDG)}
 
     # ── Score policy corpus ────────────────────────────────────────────
     log.info("Scoring policy corpus with MLP...")
@@ -157,21 +162,21 @@ def main():
 
     # Policy coverage profile
     policy_assigned = policy_scores.argmax(axis=1)
-    policy_counts = np.bincount(policy_assigned, minlength=17)
-    policy_coverage = {int(sdg + 1): int(policy_counts[sdg]) for sdg in range(17)}
+    policy_counts = np.bincount(policy_assigned, minlength=N_SDG)
+    policy_coverage = {int(sdg + 1): int(policy_counts[sdg]) for sdg in range(N_SDG)}
 
     # ── Semantic gaps ──────────────────────────────────────────────────
     gap = np.zeros(17, dtype=np.float32)
-    for sdg_idx in range(17):
+    for sdg_idx in range(N_SDG):
         mask = policy_assigned == sdg_idx
         if mask.sum() == 0:
             gap[sdg_idx] = np.nan
             continue
         pol_mean = policy_emb[mask].mean(axis=0)
-        pol_norm = pol_mean / (np.linalg.norm(pol_mean) + 1e-12)
+        pol_norm = pol_mean / (np.linalg.norm(pol_mean) + NORM_EPS)
         gap[sdg_idx] = 1.0 - float(research_centroids[sdg_idx] @ pol_norm)
 
-    gap_dict = {int(idx + 1): float(gap[idx]) for idx in range(17)}
+    gap_dict = {int(idx + 1): float(gap[idx]) for idx in range(N_SDG)}
     log.info("Semantic gaps computed. Range: %.4f-%.4f",
              min(gap_dict.values()), max(gap_dict.values()))
 
@@ -195,7 +200,7 @@ def main():
     print(f"  Semantic gaps saved to: {summary_path}")
     print(f"{'='*60}")
     print(f"\n  Per-SDG semantic gaps:")
-    for sdg_idx in range(1, 18):
+    for sdg_idx in range(1, N_SDG + 1):
         print(f"  SDG {sdg_idx:2d}: {gap_dict[sdg_idx]:.4f}")
     print(f"{'='*60}")
 

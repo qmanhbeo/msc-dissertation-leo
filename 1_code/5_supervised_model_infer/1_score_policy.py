@@ -1,19 +1,20 @@
 """
-Score the active policy corpus with the retrained single-label MLP model.
+Score the active policy corpus with the retrained supervised classifier (LR or MLP).
 
 Inputs:
-   2_data/3_embedded/{model}/policy.npy
-   2_data/3_embedded/{model}/metadata/policy_ids.json
-   2_data/5_supervised_scored/{model}/research_centroids.npy
-   2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib
+    2_data/3_embedded/{model}/policy.npy
+    2_data/3_embedded/{model}/metadata/policy_ids.json
+    2_data/5_supervised_scored/{model}/research_centroids.npy
+    2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib  (--classifier-type lr)
+    2_data/4_supervised_model_results/{model}/model/mlp_retrained.joblib             (--classifier-type mlp)
 
 Outputs:
-   2_data/5_supervised_scored/{model}/policy_scores.npy
-   2_data/5_supervised_scored/{model}/policy_scores_vs_research.npy
-   2_data/5_supervised_scored/{model}/metadata/policy_scores_ids.json
+    2_data/5_supervised_scored/{model}/policy_scores.npy
+    2_data/5_supervised_scored/{model}/policy_scores_vs_research.npy
+    2_data/5_supervised_scored/{model}/metadata/policy_scores_ids.json
 
 Run from project root:
-    python 1_code/5_supervised_model_infer/1_score_policy.py --model all-mpnet-base-v2
+    python 1_code/5_supervised_model_infer/1_score_policy.py --embed-model all-mpnet-base-v2 [--classifier-type lr|mlp]
 """
 
 from __future__ import annotations
@@ -36,14 +37,14 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from alignment_core import verify_unit_norms
-from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
+from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model, DEFAULT_EMBED_MODEL
 from shard_pipeline_utils import load_json
 
 log = logging.getLogger(__name__)
 
 
-class _MultiLabelMLP(torch.nn.Module):
-    """Must match the architecture used during training."""
+class MultiLabelMLP(torch.nn.Module):
+    """Must match the architecture used during training (1_retrain_full_data.py)."""
     def __init__(self, input_dim: int, n_layers: int = 4, hidden_size: int = 384,
                  dropout: float = 0.3):
         super().__init__()
@@ -61,30 +62,42 @@ class _MultiLabelMLP(torch.nn.Module):
         return self.net(x)
 
 
-class _ModelWrapper:
-    def __init__(self, net):
+class _NetWrapper:
+    def __init__(self, net, input_dim):
         self.net = net
+        self.input_dim = input_dim
     def predict_proba(self, X):
         self.net.eval()
         with torch.no_grad():
             logits = self.net(torch.from_numpy(X.astype(np.float32)))
             probs = torch.sigmoid(logits)
-        return probs.numpy()
+        return probs.cpu().numpy()
     def predict(self, X):
-        return (self.predict_proba(X) > 0.5).astype(np.float32)
+        return self.predict_proba(X).argmax(axis=1).astype(np.float32)
 
 
-def _load_model(model_root: Path, input_dim: int = 768):
-    """Load retrained classifier — supports sklearn LR or PyTorch MLP."""
+def _load_model(model_root: Path, classifier_type: str, input_dim: int):
+    """Load the retrained supervised classifier (sklearn LR or PyTorch MLP).
+
+    Raises a clear error if the loaded model's input dimension does not match
+    the embedding dimension of the policy embeddings — this is the failure
+    mode that previously crashed MiniLM (384-dim) scoring with a shape error.
+    """
+    if classifier_type == "mlp":
+        model_path = model_root / "model" / "mlp_retrained.joblib"
+        model = joblib.load(model_path)
+        first_layer = model.net[0]
+        assert first_layer.in_features == input_dim, (
+            f"MLP first layer in_features {first_layer.in_features} "
+            f"!= embedding dim {input_dim}"
+        )
+        return model
     model_path = model_root / "model" / "sdg_classifier_retrained.joblib"
-    pt_path = model_path.with_suffix(".pt").parent / "sdg_classifier_retrained.pt"
-    if pt_path.exists():
-        net = _MultiLabelMLP(input_dim)
-        net.load_state_dict(torch.load(pt_path, map_location="cpu", weights_only=True))
-        net.eval()
-        return _ModelWrapper(net)
-    log.info("No .pt found — loading sklearn classifier from %s", model_path)
-    return joblib.load(model_path)
+    clf = joblib.load(model_path)
+    assert clf.coef_.shape[1] == input_dim, (
+        f"Classifier n_features {clf.coef_.shape[1]} != embedding dim {input_dim}"
+    )
+    return clf
 
 
 def write_json(path: Path, data: list[dict]) -> None:
@@ -107,9 +120,11 @@ def load_policy_doc_map(ids_path: Path) -> dict[str, dict]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Score policy corpus with supervised MLP.")
-    parser.add_argument("--model", default="all-mpnet-base-v2",
+    parser = argparse.ArgumentParser(description="Score policy corpus with the supervised classifier (LR or MLP).")
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help="Embed model (default: %(default)s)")
+    parser.add_argument("--classifier-type", default="lr", choices=["lr", "mlp"],
+                        help="Classifier family to score with (default: %(default)s)")
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--policy-emb", default=None)
     parser.add_argument("--policy-ids", default=None)
@@ -121,9 +136,9 @@ def main() -> None:
                         help="Recompute policy scores even if outputs exist")
     args = parser.parse_args()
 
-    embed_root = embed_dir_for_model(args.model)
-    scored_root = scored_dir_for_model(args.model)
-    model_root = model_results_dir_for_model(args.model)
+    embed_root = embed_dir_for_model(args.embed_model)
+    scored_root = scored_dir_for_model(args.embed_model)
+    model_root = model_results_dir_for_model(args.embed_model)
 
     args.model_path = args.model_path or str(model_root / "model" / "sdg_classifier_retrained.joblib")
     args.policy_emb = args.policy_emb or str(embed_root / "policy.npy")
@@ -147,13 +162,13 @@ def main() -> None:
         log.info("Skip — policy scores already exist at %s", policy_scores_out)
         return
 
-    log.info("Loading model: %s", model_path)
-    input_dim = 768  # MPNet
-    model = _load_model(model_root, input_dim)
-    log.info("Model loaded (dims=%d)", input_dim)
-
     log.info("Loading policy embeddings: %s", policy_emb_path)
     policy_emb = np.load(policy_emb_path).astype(np.float32)
+    input_dim = policy_emb.shape[1]
+
+    log.info("Loading model: %s (classifier_type=%s, input_dim=%d)", model_path, args.classifier_type, input_dim)
+    model = _load_model(model_root, args.classifier_type, input_dim)
+    log.info("Model loaded (dims=%d)", input_dim)
     policy_ids = load_json(policy_ids_path)
     if policy_emb.shape[0] != len(policy_ids):
         raise RuntimeError(
@@ -163,9 +178,9 @@ def main() -> None:
 
     log.info("Loading research centroids: %s", research_centroids_path)
     research_centroids = np.load(research_centroids_path).astype(np.float32)
-    if research_centroids.shape[0] != 17:
-        raise RuntimeError(f"Expected 17 research centroids, got {research_centroids.shape}")
-    verify_unit_norms(research_centroids, "research centroids", n_sample=17)
+    if research_centroids.shape[0] != N_SDG:
+        raise RuntimeError(f"Expected {N_SDG} research centroids, got {research_centroids.shape}")
+    verify_unit_norms(research_centroids, "research centroids", n_sample=N_SDG)
 
     log.info("Indexing policy corpus metadata: %s", policy_ids_path)
     policy_doc_map = load_policy_doc_map(policy_ids_path)

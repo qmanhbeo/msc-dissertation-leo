@@ -1,17 +1,18 @@
 """
-Score paper embedding shards with the retrained single-label MLP model.
+Score paper embedding shards with the retrained supervised classifier (LR or MLP).
 
 Inputs:
-   2_data/3_embedded/{model}/research_shards/metadata/manifest.json
-   2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib
+    2_data/3_embedded/{model}/research_shards/metadata/manifest.json
+    2_data/4_supervised_model_results/{model}/model/sdg_classifier_retrained.joblib  (--classifier-type lr)
+    2_data/4_supervised_model_results/{model}/model/mlp_retrained.joblib             (--classifier-type mlp)
 
 Outputs:
-   2_data/5_supervised_scored/{model}/paper_scores_shards/part-NNNNN.npy
-   2_data/5_supervised_scored/{model}/paper_scores_shards/metadata/...
-   2_data/5_supervised_scored/{model}/research_centroids.npy
+    2_data/5_supervised_scored/{model}/paper_scores_shards/part-NNNNN.npy
+    2_data/5_supervised_scored/{model}/paper_scores_shards/metadata/...
+    2_data/5_supervised_scored/{model}/research_centroids.npy
 
 Run from project root:
-    python 1_code/5_supervised_model_infer/0_score_research_shards.py --model all-mpnet-base-v2
+    python 1_code/5_supervised_model_infer/0_score_research_shards.py --embed-model all-mpnet-base-v2 [--classifier-type lr|mlp]
 """
 
 from __future__ import annotations
@@ -34,15 +35,15 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, model_results_dir_for_model, scored_dir_for_model
+from model_utils import N_SDG, ZERO_NORM_EPS, embed_dir_for_model, embed_research_dir_for_model, model_results_dir_for_model, scored_dir_for_model, DEFAULT_EMBED_MODEL
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, resolve_manifest_path, sha256_file, update_stage_status
 
 log = logging.getLogger(__name__)
 STATUS_STAGE = "supervised_sdg_scores"
 
 
-class _MultiLabelMLP(torch.nn.Module):
-    """Must match the architecture used during training."""
+class MultiLabelMLP(torch.nn.Module):
+    """Must match the architecture used during training (1_retrain_full_data.py)."""
     def __init__(self, input_dim: int, n_layers: int = 4, hidden_size: int = 384,
                  dropout: float = 0.3):
         super().__init__()
@@ -60,35 +61,48 @@ class _MultiLabelMLP(torch.nn.Module):
         return self.net(x)
 
 
-class _ModelWrapper:
-    def __init__(self, net):
+class _NetWrapper:
+    def __init__(self, net, input_dim):
         self.net = net
+        self.input_dim = input_dim
     def predict_proba(self, X):
         self.net.eval()
         with torch.no_grad():
             logits = self.net(torch.from_numpy(X.astype(np.float32)))
             probs = torch.sigmoid(logits)
-        return probs.numpy()
+        return probs.cpu().numpy()
     def predict(self, X):
-        return (self.predict_proba(X) > 0.5).astype(np.float32)
+        return self.predict_proba(X).argmax(axis=1).astype(np.float32)
 
 
-def _load_model(model_root: Path, input_dim: int = 768):
-    """Load retrained classifier — supports sklearn LR or PyTorch MLP."""
+def _load_model(model_root: Path, classifier_type: str, input_dim: int):
+    """Load the retrained supervised classifier (sklearn LR or PyTorch MLP).
+
+    Raises a clear error if the loaded model's input dimension does not match
+    the embedding dimension recorded in the embedding manifest — this is the
+    failure mode that previously crashed MiniLM (384-dim) scoring with a
+    shape error.
+    """
+    if classifier_type == "mlp":
+        model_path = model_root / "model" / "mlp_retrained.joblib"
+        model = joblib.load(model_path)
+        first_layer = model.net[0]
+        assert first_layer.in_features == input_dim, (
+            f"MLP first layer in_features {first_layer.in_features} "
+            f"!= embedding dim {input_dim}"
+        )
+        return model
     model_path = model_root / "model" / "sdg_classifier_retrained.joblib"
-    pt_path = model_path.with_suffix(".pt").parent / "sdg_classifier_retrained.pt"
-    if pt_path.exists():
-        net = _MultiLabelMLP(input_dim)
-        net.load_state_dict(torch.load(pt_path, map_location="cpu", weights_only=True))
-        net.eval()
-        return _ModelWrapper(net)
-    log.info("No .pt found — loading sklearn classifier from %s", model_path)
-    return joblib.load(model_path)
+    clf = joblib.load(model_path)
+    assert clf.coef_.shape[1] == input_dim, (
+        f"Classifier n_features {clf.coef_.shape[1]} != embedding dim {input_dim}"
+    )
+    return clf
 
 
 def normalize(vec: np.ndarray) -> np.ndarray:
     norm = float(np.linalg.norm(vec))
-    if norm < 1e-8:
+    if norm < ZERO_NORM_EPS:
         return np.zeros_like(vec, dtype=np.float32)
     return (vec / norm).astype(np.float32)
 
@@ -111,9 +125,11 @@ def write_ids(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Score paper shards with supervised MLP.")
-    parser.add_argument("--model", default="all-mpnet-base-v2",
+    parser = argparse.ArgumentParser(description="Score paper shards with the supervised classifier (LR or MLP).")
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help="Embed model (default: %(default)s)")
+    parser.add_argument("--classifier-type", default="lr", choices=["lr", "mlp"],
+                        help="Classifier family to score with (default: %(default)s)")
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--embedding-manifest", default=None)
     parser.add_argument("--out-dir", default=None)
@@ -129,15 +145,15 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    scored_root = scored_dir_for_model(args.model)
-    embed_root = embed_dir_for_model(args.model)
-    model_root = model_results_dir_for_model(args.model)
+    scored_root = scored_dir_for_model(args.embed_model)
+    embed_root = embed_dir_for_model(args.embed_model)
+    model_root = model_results_dir_for_model(args.embed_model)
 
     model_path_default = model_root / "model" / "sdg_classifier_retrained.joblib"
-    embed_manifest_default = embed_research_dir_for_model(args.model) / "metadata" / "manifest.json"
+    embed_manifest_default = embed_research_dir_for_model(args.embed_model) / "metadata" / "manifest.json"
     out_dir_default = scored_root / "paper_scores_shards"
     metadata_dir_default = out_dir_default / "metadata"
-    status_dir_default = embed_research_dir_for_model(args.model) / "metadata"
+    status_dir_default = embed_research_dir_for_model(args.embed_model) / "metadata"
     research_centroids_out_default = scored_root / "research_centroids.npy"
     research_meta_out_default = scored_root / "metadata" / "research_centroid_meta.json"
 
@@ -165,12 +181,11 @@ def main() -> None:
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)
 
-    log.info("Loading model: %s", model_path)
-    input_dim = 768  # MPNet embedding dimension (known a priori)
-    model = _load_model(model_root, input_dim)
-    log.info("Model loaded (dims=%d)", input_dim)
-
     emb_manifest = read_json(embed_manifest_path)
+    input_dim = emb_manifest.get("embedding_dim", 768)
+    log.info("Loading model: %s (classifier_type=%s, input_dim=%d)", model_path, args.classifier_type, input_dim)
+    model = _load_model(model_root, args.classifier_type, input_dim)
+    log.info("Model loaded (dims=%d)", input_dim)
     if not emb_manifest or "shards" not in emb_manifest:
         raise RuntimeError(f"Invalid embedding manifest: {embed_manifest_path}")
 
@@ -206,9 +221,11 @@ def main() -> None:
         },
     )
 
-    d = int(emb_manifest["shards"][0].get("dims", 768))
-    sums = np.zeros((17, d), dtype=np.float64)
-    counts = np.zeros(17, dtype=np.int64)
+    emb_dim = int(emb_manifest.get("embedding_dim") or emb_manifest["shards"][0]["dim"])
+    d = emb_dim
+    assert d == input_dim, f"Manifest dim {d} != model input_dim {input_dim}"
+    sums = np.zeros((N_SDG, d), dtype=np.float64)
+    counts = np.zeros(N_SDG, dtype=np.int64)
 
     for shard in shards:
         shard_id = int(shard["shard_id"])
@@ -266,7 +283,7 @@ def main() -> None:
             out_manifest["totals"]["shards"] = int(len(out_manifest["shards"]))
             atomic_write_json(out_manifest_path, out_manifest)
 
-        for sdg_idx in range(17):
+        for sdg_idx in range(N_SDG):
             mask = assigned == sdg_idx
             if not np.any(mask):
                 continue
@@ -280,9 +297,9 @@ def main() -> None:
             {"last_completed_shard": shard_id, "rows_done": int(counts.sum())},
         )
 
-    research_centroids = np.zeros((17, d), dtype=np.float32)
+    research_centroids = np.zeros((N_SDG, d), dtype=np.float32)
     meta: list[dict[str, Any]] = []
-    for sdg_idx in range(17):
+    for sdg_idx in range(N_SDG):
         n = int(counts[sdg_idx])
         sdg = sdg_idx + 1
         if n == 0:
@@ -306,7 +323,7 @@ def main() -> None:
                 "n_papers_assigned": n,
                 "raw_centroid_norm": round(norm, 6),
                 "mean_cos_to_centroid": round(norm, 6),
-                "zero_flag": bool(norm < 1e-8),
+                "zero_flag": bool(norm < ZERO_NORM_EPS),
             }
         )
 
