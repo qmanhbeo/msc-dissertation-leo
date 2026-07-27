@@ -230,8 +230,7 @@ def write_table_gap(path: Path, semantic_rows: list[dict]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
@@ -385,6 +384,10 @@ def main() -> None:
     log.info("Saved: %s", data_dir / SEMANTIC_CSV)
     log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_covshare.tex")
     log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_gap.tex")
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
