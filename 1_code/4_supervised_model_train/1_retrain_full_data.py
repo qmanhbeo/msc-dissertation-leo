@@ -44,10 +44,16 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, model_results_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
+
+# Champion LR hyperparameters (see module docstring for provenance).
+LR_C = 10.0
+LR_PENALTY = "l2"
+LR_SOLVER = "lbfgs"
+LR_MAX_ITER = 1000
 
 
 class MultiLabelMLP(nn.Module):
@@ -80,12 +86,12 @@ class _NetWrapper:
             probs = torch.sigmoid(self.net(X_t))
         return probs.cpu().numpy()
     def predict(self, X):
-        return (self.predict_proba(X) > 0.5).astype(np.float32)
+        return self.predict_proba(X).argmax(axis=1).astype(np.float32)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Retrain champion MLP on full train pool.")
-    parser.add_argument("--model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
                         help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
     parser.add_argument("--data-dir", default=None,
                         help="Override data dir (derived from --model if omitted)")
@@ -100,9 +106,22 @@ def main() -> None:
     parser.add_argument("--max-epochs", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--patience", type=int, default=7)
+    # LR classifier hyperparameters (explicit — previously hardcoded champions)
+    parser.add_argument("--val-fraction", type=float, default=0.1,
+                        help="Fraction of the train pool held out for MLP early-stop validation (default: %(default)s)")
+    parser.add_argument("--C", type=float, default=LR_C,
+                        help="LogisticRegression inverse regularisation strength (default: %(default)s)")
+    parser.add_argument("--penalty", default=LR_PENALTY, choices=["l2", "l1", "none"],
+                        help="LogisticRegression penalty (default: %(default)s)")
+    parser.add_argument("--solver", default=LR_SOLVER, choices=["lbfgs", "liblinear"],
+                        help="LogisticRegression solver (default: %(default)s)")
+    parser.add_argument("--class-weight", default=None, choices=[None, "balanced"],
+                        help="LogisticRegression class_weight (default: %(default)s)")
+    parser.add_argument("--max-iter", type=int, default=LR_MAX_ITER,
+                        help="LogisticRegression max iterations (default: %(default)s)")
     args = parser.parse_args()
 
-    data_dir = Path(args.data_dir) if args.data_dir else model_results_dir_for_model(args.model)
+    data_dir = Path(args.data_dir) if args.data_dir else model_results_dir_for_model(args.embed_model)
     output_dir = data_dir / "model"
 
     t0 = time.perf_counter()
@@ -132,7 +151,7 @@ def main() -> None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log.info("Device: %s", device)
 
-        torch.manual_seed(42)
+        torch.manual_seed(RANDOM_SEED)
         torch.backends.cudnn.deterministic = True
         torch.use_deterministic_algorithms(True)
 
@@ -144,8 +163,8 @@ def main() -> None:
         Y_t = torch.from_numpy(Y_train.astype(np.float32))
 
         # Stage 1: train with 90/10 validation split to find best epoch
-        n_val = max(1, int(len(X_t) * 0.1))
-        perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(42))
+        n_val = max(1, int(len(X_t) * args.val_fraction))
+        perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(RANDOM_SEED))
         val_idx = perm[:n_val]
         tr_idx = perm[n_val:]
 
@@ -154,7 +173,7 @@ def main() -> None:
 
         train_ds = TensorDataset(X_tr.to(device), Y_tr.to(device))
         val_ds = TensorDataset(X_val.to(device), Y_val.to(device))
-        _seed_loader = torch.Generator().manual_seed(42)
+        _seed_loader = torch.Generator().manual_seed(RANDOM_SEED)
         train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, generator=_seed_loader)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size * 2)
 
@@ -181,7 +200,10 @@ def main() -> None:
 
             val_preds = np.vstack(all_preds)
             val_true = np.vstack(all_true)
-            val_f1 = f1_score(val_true, val_preds > 0.5, average="macro", zero_division=0)
+            val_pred_int = val_preds.argmax(axis=1)
+            val_pred_bin = np.zeros_like(val_preds)
+            val_pred_bin[np.arange(len(val_pred_int)), val_pred_int] = 1.0
+            val_f1 = f1_score(val_true, val_pred_bin, average="macro", zero_division=0)
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
@@ -201,7 +223,7 @@ def main() -> None:
         full_loader = DataLoader(
             TensorDataset(X_t.to(device), Y_t.to(device)),
             batch_size=args.batch_size, shuffle=True,
-            generator=torch.Generator().manual_seed(42),
+            generator=torch.Generator().manual_seed(RANDOM_SEED),
         )
         for epoch in range(best_epoch):
             net.train()
@@ -220,8 +242,8 @@ def main() -> None:
 
         y_int_train = Y_train.argmax(axis=1)
         clf = LogisticRegression(
-            C=10.0, penalty="l2", solver="lbfgs",
-            class_weight=None, max_iter=1000, random_state=42,
+            C=args.C, penalty=args.penalty, solver=args.solver,
+            class_weight=args.class_weight, max_iter=args.max_iter, random_state=RANDOM_SEED,
         )
         clf.fit(X_train, y_int_train)
 
@@ -271,7 +293,7 @@ def main() -> None:
         for i in range(N_SDG):
             cm_rows.append(f"SDG {i+1}," + ",".join(str(int(cm[i, j])) for j in range(N_SDG)))
 
-        cm_dir = DEFAULT_OUTPUT_ROOT / "main" / "data"
+        cm_dir = DEFAULT_OUTPUT_ROOT / "main" / args.embed_model / "data"
         cm_dir.mkdir(parents=True, exist_ok=True)
         cm_path = cm_dir / "4_1_confusion_matrix.csv"
         cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")
@@ -310,6 +332,8 @@ def main() -> None:
             "train_seconds": round(train_time, 1),
             "total_seconds": round(total_elapsed, 1),
         }
+
+    (output_dir / "model_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
 
     results = {
         "config": config,
