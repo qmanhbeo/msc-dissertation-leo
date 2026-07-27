@@ -265,8 +265,8 @@ def print_status(output_dir: Path) -> None:
     print(f"  missing: {len(status['missing'])}")
 
 
-def build_pdf(output_dir: Path) -> None:
-    require_pdf_inputs(output_dir)
+def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    require_pdf_inputs(output_dir, model)
     run_step(
         "build pdf",
         ["bash", str(ROOT / "3_writing" / "build_pdf.sh"), str(output_dir / "dissertation.pdf")],
@@ -717,31 +717,31 @@ def main() -> None:
         run_sample_stability(output_dir, model=model)
         run_register_adjustment(output_dir, model=model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a2_family:
         run_policy_source_family_sensitivity(output_dir, model=args.embed_model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a3_sdg4:
         run_sdg4_lexical_audit(output_dir, model=args.embed_model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a3b_circularity:
         run_loo_sdgi_circularity(output_dir, model=args.embed_model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_b2_interpret:
         run_semantic_gap_interpretability(output_dir, model=args.embed_model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_c_sample_stability:
         run_sample_stability(output_dir, model=args.embed_model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_f_register:
         run_register_adjustment(output_dir, model=args.embed_model)
         if args.build_pdf:
-            build_pdf(output_dir)
+            build_pdf(output_dir, model=args.embed_model)
     elif args.warm_replay_without_appendix:
         ensure_warm_replay_inputs(args)
         run_warm_replay(output_dir, args, include_appendix=False)
@@ -749,7 +749,7 @@ def main() -> None:
         ensure_warm_replay_inputs(args)
         run_warm_replay(output_dir, args, include_appendix=True)
     elif args.build_pdf:
-        build_pdf(output_dir)
+        build_pdf(output_dir, model=args.embed_model)
 
 
 if __name__ == "__main__":

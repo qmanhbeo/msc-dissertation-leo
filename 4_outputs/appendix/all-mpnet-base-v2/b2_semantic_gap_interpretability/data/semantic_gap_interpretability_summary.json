@@ -14,23 +14,23 @@
     {
       "sdg": 17,
       "sdg_label": "SDG 17",
-      "semantic_gap": 0.188987,
+      "semantic_gap": 0.218848,
       "research_assigned_usable_n": 12874,
-      "policy_assigned_usable_n": 5659,
+      "policy_assigned_usable_n": 4637,
       "research_sample_n": 6000,
-      "policy_sample_n": 5659,
-      "research_terms": "analysis, learning, dan, yang, model, method, team, students",
-      "policy_terms": "countries, oecd, nations, united, national, agenda, https, world",
+      "policy_sample_n": 4637,
+      "research_terms": "learning, analysis, dan, model, yang, method, used, team",
+      "policy_terms": "countries, nations, oecd, united, national, agenda, climate, country",
       "interpretive_reading": "High-gap case: the research-side sample is technical and biomedical/ML-heavy, while policy language is international, institutional, and agenda-oriented."
     },
     {
       "sdg": 13,
       "sdg_label": "SDG 13",
-      "semantic_gap": 0.477251,
+      "semantic_gap": 0.477659,
       "research_assigned_usable_n": 128832,
-      "policy_assigned_usable_n": 3479,
+      "policy_assigned_usable_n": 3351,
       "research_sample_n": 6000,
-      "policy_sample_n": 3479,
+      "policy_sample_n": 3351,
       "research_terms": "model, learning, prediction, amp, method, machine, neural, analysis",
       "policy_terms": "climate, change, emissions, countries, national, action, nations, global",
       "interpretive_reading": "High-gap case: both sides concern climate, but policy language is more institutional and commitment-oriented while research language is more technical and measurement-oriented."
@@ -38,13 +38,13 @@
     {
       "sdg": 9,
       "sdg_label": "SDG 9",
-      "semantic_gap": 0.300077,
+      "semantic_gap": 0.289086,
       "research_assigned_usable_n": 562492,
-      "policy_assigned_usable_n": 2962,
+      "policy_assigned_usable_n": 3877,
       "research_sample_n": 6000,
-      "policy_sample_n": 2962,
+      "policy_sample_n": 3877,
       "research_terms": "learning, model, neural, method, machine, analysis, proposed, algorithm",
-      "policy_terms": "infrastructure, national, innovation, government, population, public, sector, transport",
+      "policy_terms": "infrastructure, national, government, innovation, population, public, countries, sector",
       "interpretive_reading": "Lower-gap comparison: differences remain visible, but the contrast is closer to a technology/infrastructure register split than to the broader institutional gap seen in SDGs 13 and 17."
     }
   ]

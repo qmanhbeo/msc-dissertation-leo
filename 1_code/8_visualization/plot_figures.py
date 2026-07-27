@@ -132,7 +132,7 @@ def plot_centroid_similarity_heatmap(layout, model: str) -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")
     fig.tight_layout()
-    out_dir = layout.root.parent / "appendix" / model / "a4_centroid_similarity" / "figures"
+    out_dir = layout.root.parent.parent / "appendix" / model / "a4_centroid_similarity" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
