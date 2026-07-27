@@ -57,6 +57,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     p.add_argument("--local-files-only", action="store_true")
     p.add_argument("--limit-shards", type=int, default=0)
+    p.add_argument("--overwrite", action="store_true",
+                   help="Re-embed existing shards even if already complete")
     return p.parse_args()
 
 
@@ -145,6 +147,12 @@ def main() -> None:
         }
 
     completed = {int(s["shard_id"]): s for s in out_manifest.get("shards", [])}
+    if args.overwrite:
+        completed = {}
+        out_manifest["shards"] = []
+        out_manifest["totals"]["rows"] = 0
+        out_manifest["totals"]["shards"] = 0
+        out_manifest["created_at_utc"] = now_iso()
     shards = data["shards"][: args.limit_shards] if args.limit_shards > 0 else data["shards"]
 
     update_stage_status(
@@ -165,7 +173,7 @@ def main() -> None:
             log.error("Segmented shard missing at %s — run 2_segment/ first", in_data)
             raise FileNotFoundError(f"Segmented research shard not found: {in_data}")
 
-        if shard_id in completed and out_emb.exists() and out_ids.exists():
+        if not args.overwrite and shard_id in completed and out_emb.exists() and out_ids.exists():
             log.info("Skip shard %s (already embedded)", shard_name)
             continue
 
