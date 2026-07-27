@@ -361,7 +361,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args + _overwrite_flag(overwrite), step_id="2")
-    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args, step_id="3")
+    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args + _overwrite_flag(overwrite), step_id="3")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
             "retrain MLP",
@@ -377,7 +377,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         )
     run_step(
         "check centroid consistency",
-        [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args,
+        [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args + _overwrite_flag(overwrite),
         step_id="4",
     )
     if model == DEFAULT_EMBED_MODEL:
@@ -673,10 +673,10 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "infer":
         run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--model", model] + _overwrite_flag(args.overwrite))
-        run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--model", model])
+        run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--model", model] + _overwrite_flag(args.overwrite))
 
     elif stage == "centroids":
-        run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--model", model])
+        run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--model", model] + _overwrite_flag(args.overwrite))
 
     elif stage == "analysis":
         _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite)
