@@ -53,6 +53,7 @@ from semantic_gap_shared import (
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from research_embedding_shards import load_consolidated_embeddings
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -135,6 +136,14 @@ def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str,
     if len(research_shards) != len(score_shards):
         raise RuntimeError("Research and score manifests have different shard counts.")
 
+    # global row offsets (shard_id order) so callers can slice the consolidated
+    # embedding memmap instead of re-opening each shard file.
+    offsets = {}
+    off = 0
+    for r in research_shards:
+        offsets[int(r["shard_id"])] = off
+        off += int(r["rows"])
+
     shards: list[dict[str, Any]] = []
     for research_shard, score_shard in zip(research_shards, score_shards):
         shard_id = int(research_shard["shard_id"])
@@ -149,7 +158,7 @@ def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str,
                 "name": research_shard["name"],
                 "rows": int(research_shard["rows"]),
                 "text_path": text_path,
-                "emb_path": resolve_manifest_path(research_shard["embedding_path"], allowed_dirs=(research_dir, scored_dir)),
+                "emb_offset": offsets[shard_id],
                 "score_ids_path": resolve_manifest_path(score_shard["ids_path"], allowed_dirs=(research_dir, scored_dir)),
             }
         )
@@ -203,6 +212,7 @@ def collect_research(
     sample_cap: int,
     seed: int,
     research_centroids: np.ndarray,
+    model: str,
     embed_dir: Path,
     scored_dir: Path,
 ) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
@@ -213,8 +223,9 @@ def collect_research(
     seq = 0
 
     shards = load_research_shards(embed_dir, scored_dir)
+    full_emb = load_consolidated_embeddings(model)
     for shard_idx, shard in enumerate(shards, start=1):
-        emb = np.load(shard["emb_path"], mmap_mode="r")
+        emb = np.asarray(full_emb[shard["emb_offset"]:shard["emb_offset"] + shard["rows"]])
         score_rows = list(iter_jsonl(shard["score_ids_path"]))
         if emb.shape[0] != len(score_rows):
             raise RuntimeError(f"Embedding/score row mismatch for {shard['name']}")
@@ -424,7 +435,7 @@ def main() -> None:
     )
     log.info("Collecting research samples and representative audit examples")
     research_samples, research_counts, research_examples = collect_research(
-        args.sample_per_side, args.seed, research_centroids, research_embed_dir, scored_dir
+        args.sample_per_side, args.seed, research_centroids, args.embed_model, research_embed_dir, scored_dir
     )
 
     term_rows: list[dict[str, Any]] = []
