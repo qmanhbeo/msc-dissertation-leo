@@ -193,6 +193,7 @@ def main() -> None:
         out_manifest["shards"] = []
         out_manifest["totals"]["rows"] = 0
         out_manifest["totals"]["shards"] = 0
+        out_manifest["created_at_utc"] = now_iso()
     shards = emb_manifest["shards"][: args.limit_shards] if args.limit_shards > 0 else emb_manifest["shards"]
 
     update_stage_status(
