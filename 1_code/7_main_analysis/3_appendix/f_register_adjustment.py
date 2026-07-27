@@ -125,8 +125,7 @@ def subtract_direction(emb: np.ndarray, g_dir: np.ndarray) -> np.ndarray:
     return (residual / norms).astype(np.float32)
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     model = args.embed_model
     rng = np.random.default_rng(POLICY_SEGMENT_CAP_SEED)
 
@@ -375,6 +374,10 @@ def main() -> None:
             "note": "Raw gaps loaded from canonical 4_3_semantic_gap_distances.json; adjusted gaps use segment cap 50.",
         }, f, indent=2)
     log.info("Saved: %s", out_root / "register_adjustment_results.json")
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
