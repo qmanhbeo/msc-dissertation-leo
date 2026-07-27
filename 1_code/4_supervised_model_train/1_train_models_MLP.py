@@ -155,7 +155,10 @@ class MultiLabelMLP(BaseEstimator, ClassifierMixin):
 
             val_preds = np.vstack(all_preds)
             val_true = np.vstack(all_true)
-            val_f1 = f1_score(val_true, val_preds > 0.5, average="macro", zero_division=0)
+            val_pred_int = val_preds.argmax(axis=1)
+            val_pred_onehot = np.zeros_like(val_preds)
+            val_pred_onehot[np.arange(len(val_pred_int)), val_pred_int] = 1.0
+            val_f1 = f1_score(val_true, val_pred_onehot, average="macro", zero_division=0)
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
@@ -173,7 +176,11 @@ class MultiLabelMLP(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        return (self.predict_proba(X) > 0.5).astype(np.float32)
+        probs = self.predict_proba(X)
+        pred_int = probs.argmax(axis=1)
+        out = np.zeros_like(probs)
+        out[np.arange(len(pred_int)), pred_int] = 1.0
+        return out.astype(np.float32)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         device = next(self.net_.parameters()).device

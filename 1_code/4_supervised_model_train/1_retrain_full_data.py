@@ -226,7 +226,9 @@ def main() -> None:
         with torch.no_grad():
             test_logits = net(X_test_t)
             test_probs = torch.sigmoid(test_logits).cpu().numpy()
-        test_preds = (test_probs > 0.5).astype(np.float32)
+        test_pred_int = test_probs.argmax(axis=1)
+        test_preds = np.zeros_like(test_probs)
+        test_preds[np.arange(len(test_pred_int)), test_pred_int] = 1.0
     else:
         preds_int = clf.predict(X_test)
         test_preds = np.zeros((len(preds_int), N_SDG), dtype=np.float32)
