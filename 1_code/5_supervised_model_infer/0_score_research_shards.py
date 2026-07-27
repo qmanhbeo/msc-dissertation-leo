@@ -123,6 +123,8 @@ def main() -> None:
     parser.add_argument("--research-meta-out", default=None)
     parser.add_argument("--limit-shards", type=int, default=0)
     parser.add_argument("--allow-partial-research-centroids", action="store_true")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Rescore existing shards even if already complete")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -186,6 +188,11 @@ def main() -> None:
         }
 
     completed = {int(s["shard_id"]): s for s in out_manifest.get("shards", [])}
+    if args.overwrite:
+        completed = {}
+        out_manifest["shards"] = []
+        out_manifest["totals"]["rows"] = 0
+        out_manifest["totals"]["shards"] = 0
     shards = emb_manifest["shards"][: args.limit_shards] if args.limit_shards > 0 else emb_manifest["shards"]
 
     update_stage_status(
@@ -215,7 +222,7 @@ def main() -> None:
         if emb.shape[0] != len(ids_rows):
             raise RuntimeError(f"Row mismatch in shard {shard_name}: emb={emb.shape[0]} ids={len(ids_rows)}")
 
-        if shard_id in completed and score_path.exists() and ids_out.exists():
+        if not args.overwrite and shard_id in completed and score_path.exists() and ids_out.exists():
             log.info("Skip scoring shard %s (already complete)", shard_name)
             scored_ids = load_ids(ids_out)
             assigned = np.array([int(r["assigned_sdg"]) - 1 for r in scored_ids], dtype=np.int64)

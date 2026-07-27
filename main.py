@@ -360,7 +360,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
-    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="2")
+    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args + _overwrite_flag(overwrite), step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args, step_id="3")
     if model == DEFAULT_EMBED_MODEL:
         run_step(
