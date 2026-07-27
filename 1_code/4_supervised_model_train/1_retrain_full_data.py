@@ -14,7 +14,8 @@ Inputs:
 Outputs:
   {data_dir}/model/sdg_classifier_retrained.joblib   (used by scoring pipeline)
   {data_dir}/model/sdg_classifier.joblib              (used by 2_evaluate.py)
-  {data_dir}/model/sdg_retrain_results.json
+  {data_dir}/model/sdg_retrain_results.json           (per-SDG F1, macro-F1)
+  4_outputs/main/data/4_1_confusion_matrix.csv        (LR only: ROWS=pred, COLS=true)
 
 Run from project root:
     python 1_code/4_supervised_model_train/1_retrain_full_data.py --model all-mpnet-base-v2
@@ -31,7 +32,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-from sklearn.metrics import f1_score, classification_report
+from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.linear_model import LogisticRegression
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
@@ -41,7 +42,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, model_results_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, model_results_dir_for_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -246,6 +247,27 @@ def main() -> None:
     log.info("Test macro-F1=%.4f  micro-F1=%.4f", test_macro_f1, test_micro_f1)
     for sdg_label, f1_s in per_sdg.items():
         log.info("  %s: %.4f", sdg_label, f1_s)
+
+    # ── Confusion matrix CSV (LR only) ─────────────────────────────────
+    # Rows = predicted SDG (classifier argmax), Columns = true SDG (human label)
+    # This is sklearn's default confusion_matrix convention.
+    if args.classifier_type == "lr":
+        y_true_int = Y_test.argmax(axis=1)              # (n_test,) ground-truth SDG 0-16
+        y_pred_int = test_preds.argmax(axis=1)          # (n_test,) single-label prediction
+        cm = confusion_matrix(y_true_int, y_pred_int, labels=range(N_SDG))
+
+        cm_header = "," + ",".join(f"SDG {i+1}" for i in range(N_SDG))
+        cm_rows = [cm_header]
+        for i in range(N_SDG):
+            cm_rows.append(f"SDG {i+1}," + ",".join(str(int(cm[i, j])) for j in range(N_SDG)))
+
+        cm_dir = DEFAULT_OUTPUT_ROOT / "main" / "data"
+        cm_dir.mkdir(parents=True, exist_ok=True)
+        cm_path = cm_dir / "4_1_confusion_matrix.csv"
+        cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")
+        log.info("Saved confusion matrix CSV (ROWS=pred, COLS=true): %s", cm_path)
+    else:
+        log.info("Skipping confusion matrix CSV (non-canonical classifier %s)", args.classifier_type)
 
     # ── Save ───────────────────────────────────────────────────────────
     if args.classifier_type == "mlp":

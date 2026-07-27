@@ -42,7 +42,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
 from shard_pipeline_utils import ensure_dir, now_iso, read_json
 
 log = logging.getLogger(__name__)
@@ -233,7 +233,7 @@ def main() -> None:
     parser.add_argument("--model", default="all-mpnet-base-v2",
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--output-dir", default=None,
-                        help="Manuscript output directory for CSV export (default: 4_outputs)")
+                        help="Ignored (compatibility with main.py pipeline)")
     parser.add_argument("--research-centroids", default=None)
     parser.add_argument("--policy-emb", default=None)
     parser.add_argument("--policy-scores", default=None)
@@ -318,23 +318,6 @@ def main() -> None:
     with consistency_out.open("w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
     log.info("Saved: %s", consistency_out)
-
-    # ── Export research confusion matrix as CSV ─────────────────────────
-    output_root = Path(args.output_dir) if args.output_dir else DEFAULT_OUTPUT_ROOT
-    cm_path = output_root / "main" / "data" / "4_1_confusion_matrix.csv"
-    cm_path.parent.mkdir(parents=True, exist_ok=True)
-
-    cm = np.array(research_result["confusion_matrix"], dtype=np.int64)
-    assert cm.shape == (N_SDG, N_SDG), f"Unexpected confusion matrix shape: {cm.shape}"
-
-    sdg_labels = [f"SDG {i+1}" for i in range(N_SDG)]
-    header = "," + ",".join(sdg_labels)
-    rows = [header]
-    for i in range(N_SDG):
-        row = sdg_labels[i] + "," + ",".join(str(cm[i, j]) for j in range(N_SDG))
-        rows.append(row)
-    cm_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
-    log.info("Saved confusion matrix CSV: %s", cm_path)
 
     log.info("=== Summary ===")
     log.info("Research overall agreement: %.4f", research_result["overall_agreement_rate"])
