@@ -15,7 +15,6 @@ class DissertationOutputs:
 
 
 MANUSCRIPT_ROOT_FILES = [
-    "4_1_validation_results.json",
     "4_1_confusion_matrix.csv",
     "4_1_centroid_similarity_matrix.csv",
     "4_2_coverage_document_weighted.json",
