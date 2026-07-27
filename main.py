@@ -327,6 +327,14 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
     run_step("register-adjustment robustness", cmd, step_id="E")
 
 
+def run_build_sdg_reference_centroids(model: str = DEFAULT_EMBED_MODEL) -> None:
+    run_step(
+        "build SDG reference centroids",
+        [sys.executable, "1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py", "--model", model],
+        step_id="0a",
+    )
+
+
 def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     """Run the main-text analysis steps for a given model (no input guard).
 
@@ -335,6 +343,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     Steps 4+ run analysis.
     """
     model_args = ["--model", model]
+    run_build_sdg_reference_centroids(model)
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="2")
