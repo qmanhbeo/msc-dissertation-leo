@@ -60,7 +60,7 @@ def cap_indices_per_doc(policy_ids: list[dict], segment_cap: int, rng: np.random
     return sorted(selected)
 
 
-def main() -> None:
+def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
     p.add_argument("--segment-cap", type=int, default=50,
@@ -69,7 +69,10 @@ def main() -> None:
                   help="Centroids with L2 norm below this are treated as degenerate and "
                        "excluded from semantic-gap (default: %(default)s)")
     p.add_argument("--output-dir", default="4_outputs")
-    args = p.parse_args()
+    return p.parse_args()
+
+
+def run(args: argparse.Namespace) -> None:
     model = args.embed_model
 
     out_root = Path(args.output_dir) / "zeroshot" / model
@@ -184,6 +187,10 @@ def main() -> None:
         json.dump(out_data, f, indent=2)
     log.info("Saved: %s", gap_path)
     log.info("Zero-shot scoring complete.")
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
