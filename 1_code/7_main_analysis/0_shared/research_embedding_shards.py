@@ -7,7 +7,44 @@ from typing import Any, Iterator
 
 import numpy as np
 
+from model_utils import embed_research_dir_for_model, scored_dir_for_model
 from shard_pipeline_utils import load_json, resolve_manifest_path
+
+
+def load_consolidated_embeddings(model: str, mmap: bool = True) -> np.ndarray:
+    """Load the single consolidated research-embedding array for `model`.
+
+    Returns a memmap (default) or a fully materialised array. The array is in
+    sorted shard_id order, row-aligned with `load_consolidated_scores`. Raises
+    a clear error if the consolidation has not been built yet.
+
+    Precision is preserved: MPNet returns float32, MiniLM float16. Callers that
+    need float32 must upcast slices locally — never materialise the whole array.
+    """
+    path = embed_research_dir_for_model(model) / "research_embeddings.npy"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Consolidated embeddings missing for {model}: {path}. "
+            f"Run: python 1_code/7_main_analysis/0_shared/consolidate_research_artifacts.py "
+            f"--embed-model {model}"
+        )
+    return np.load(path, mmap_mode="r" if mmap else None)
+
+
+def load_consolidated_scores(model: str, mmap: bool = True) -> np.ndarray:
+    """Load the single consolidated research-score array for `model`.
+
+    Returns a memmap (default) or a fully materialised float32 array, in sorted
+    shard_id order, row-aligned with `load_consolidated_embeddings`.
+    """
+    path = scored_dir_for_model(model) / "research_scores.npy"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Consolidated scores missing for {model}: {path}. "
+            f"Run: python 1_code/7_main_analysis/0_shared/consolidate_research_artifacts.py "
+            f"--embed-model {model} --kind scores"
+        )
+    return np.load(path, mmap_mode="r" if mmap else None)
 
 
 @dataclass(frozen=True)
