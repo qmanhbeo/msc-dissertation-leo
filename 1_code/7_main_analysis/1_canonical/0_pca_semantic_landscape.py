@@ -176,8 +176,7 @@ def write_num_tex(path: Path, payload: dict) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
@@ -440,6 +439,10 @@ def main() -> None:
     write_num_tex(tables_dir / PCA_NUM_TEX, metadata)
     log.info("Saved: %s", metadata_path)
     log.info("Saved: %s", tables_dir / PCA_NUM_TEX)
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
