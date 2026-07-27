@@ -45,6 +45,7 @@ from model_utils import (
     embed_dir_for_model,
     scored_dir_for_model,
 )
+from research_embedding_shards import load_consolidated_embeddings
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -74,30 +75,42 @@ def parse_args() -> argparse.Namespace:
 def load_research_sample(
     model: str, n_samples: int, rng: np.random.Generator,
 ) -> np.ndarray:
-    """Load a random sample of research embeddings from shards."""
-    shard_dir = embed_dir_for_model(model) / "research_shards"
-    shard_files = sorted(shard_dir.glob("part-*.npy"))
-    if not shard_files:
-        raise FileNotFoundError(f"No research shard files in {shard_dir}")
+    """Load a random sample of research embeddings from the consolidated array.
 
-    n_per_shard = max(1, n_samples // len(shard_files))
+    Slices the single consolidated embedding memmap per shard (shard_id order)
+    and samples with the same seeded RNG sequence as the old per-file loop, so
+    results are unchanged.
+    """
+    full_emb = load_consolidated_embeddings(model)
+    manifest = load_json(embed_dir_for_model(model) / "research_shards" / "metadata" / "manifest.json")
+    shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
+    if not shards:
+        raise FileNotFoundError(f"No research shards in manifest for {model}")
+
+    n_per_shard = max(1, n_samples // len(shards))
+    offsets = {}
+    off = 0
+    for s in shards:
+        offsets[int(s["shard_id"])] = off
+        off += int(s["rows"])
+
     samples: list[np.ndarray] = []
     total = 0
 
-    for shard_path in shard_files:
+    for shard in shards:
         needed = n_samples - total
         if needed <= 0:
             break
-        n_take = min(n_per_shard, needed)
-        emb = np.load(shard_path, mmap_mode="r")
-        n_rows = emb.shape[0]
+        n_rows = int(shard["rows"])
         if n_rows == 0:
             continue
+        n_take = min(n_per_shard, needed)
         n_take = min(n_take, n_rows)
         idx = rng.choice(n_rows, size=n_take, replace=False)
-        samples.append(emb[idx].copy())
+        global_idx = offsets[int(shard["shard_id"])] + idx
+        samples.append(np.asarray(full_emb[global_idx]).copy())
         total += n_take
-        log.info("  Sampled %d from %s (total %d)", n_take, shard_path.name, total)
+        log.info("  Sampled %d from shard %s (total %d)", n_take, shard.get("name", shard["shard_id"]), total)
 
     if total == 0:
         raise RuntimeError("Could not load any research embeddings")
