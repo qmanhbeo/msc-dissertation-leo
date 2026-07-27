@@ -52,6 +52,11 @@ def _load_module(rel_path: str):
     path = ANALYSIS_ROOT / rel_path
     spec = importlib.util.spec_from_file_location(Path(rel_path).stem, path)
     mod = importlib.util.module_from_spec(spec)
+    # Register under the script's module name so that scripts using
+    # multiprocessing.Pool (e.g. a3_sdg4_lexical_audit) can pickle their
+    # module-level worker functions: forked children re-import the module by
+    # this name, which must resolve.
+    sys.modules[Path(rel_path).stem] = mod
     spec.loader.exec_module(mod)
     _MODULE_CACHE[rel_path] = mod
     return mod
