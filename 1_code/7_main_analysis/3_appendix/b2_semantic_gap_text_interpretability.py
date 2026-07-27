@@ -406,8 +406,7 @@ def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
     return {int(row["sdg"]): float(row["semantic_gap"]) for row in payload["per_sdg"]}
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     embed_dir = embed_dir_for_model(args.embed_model)
     research_embed_dir = embed_research_dir_for_model(args.embed_model)
     scored_dir = scored_dir_for_model(args.embed_model)
@@ -504,6 +503,10 @@ def main() -> None:
     log.info("Saved: %s", data_dir / EXAMPLES_CSV)
     log.info("Saved: %s", data_dir / SUMMARY_JSON)
     log.info("Saved: %s", tables_dir / TABLE_TEX)
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
