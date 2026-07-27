@@ -7,6 +7,14 @@ DEFAULT_EMBED_MODEL = "all-mpnet-base-v2"
 ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2"}
 VALID_DIMS = {384, 768}
 N_SDG = 17
+RANDOM_SEED = 42
+# Numerical-stability / "degenerate centroid" thresholds used across scoring &
+# centroid code. Centralised so the assumption is explicit and auditable.
+ZERO_NORM_EPS = 1e-8
+NORM_EPS = 1e-12
+# Below this L2 norm a (policy/research) centroid is treated as degenerate and
+# excluded from semantic-gap computation.
+MIN_CENTROID_NORM = 0.5
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 DATA_ROOT = Path("2_data")
