@@ -5,6 +5,7 @@ Produces separate MLP output files to avoid overwriting LR scores.
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
@@ -20,7 +21,7 @@ sys.path.insert(0, str(CODE_ROOT))
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
 
 log = logging.getLogger(__name__)
 
@@ -62,15 +63,31 @@ class _NetWrapper:
 
 
 def main():
-    model_name = "all-mpnet-base-v2"
+    parser = argparse.ArgumentParser(description="Score research + policy corpora with MLP.")
+    parser.add_argument("--model", default=DEFAULT_EMBED_MODEL,
+                        help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Overwrite existing MLP score outputs")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    model_name = args.model
     model_root = model_results_dir_for_model(model_name)
     embed_root = embed_dir_for_model(model_name)
     scored_root = scored_dir_for_model(model_name)
 
     out_dir = scored_root / "mlp_scores"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    summary_path = out_dir / "mlp_summary.json"
+    centroids_out = out_dir / "mlp_research_centroids.npy"
+    policy_scores_out = out_dir / "mlp_policy_scores.npy"
+    pvr_out = out_dir / "mlp_policy_vs_research.npy"
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+    if summary_path.exists() and not args.overwrite:
+        log.info("MLP scores already exist (use --overwrite to rebuild)")
+        return
+
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     # ── Load MLP model ────────────────────────────────────────────────
     mlp_path = model_root / "model" / "mlp_retrained.joblib"
@@ -79,7 +96,6 @@ def main():
     log.info("MLP loaded (type=%s)", type(model).__name__)
 
     # ── Score research shards ─────────────────────────────────────────
-    research_shards_dir = scored_root / "paper_scores_shards"
     manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
     with open(manifest_path) as f:
         manifest = json.load(f)
@@ -93,9 +109,6 @@ def main():
     for shard in manifest["shards"]:
         emb_rel = Path(shard["embedding_path"])
         emb_path = project_root / emb_rel if not emb_rel.is_absolute() else emb_rel
-
-        ids_rel = Path(shard["ids_path"])
-        ids_path = project_root / ids_rel if not ids_rel.is_absolute() else ids_rel
 
         emb = np.load(emb_path).astype(np.float32)
         log.info("  Scoring shard %s  shape=%s", shard["name"], emb.shape)
@@ -120,39 +133,32 @@ def main():
         if norm > 1e-8:
             research_centroids[sdg_idx] = (raw / norm).astype(np.float32)
 
-    centroids_out = out_dir / "mlp_research_centroids.npy"
     with centroids_out.open("wb") as f:
         np.save(f, research_centroids)
-    log.info("Research centroids → %s", centroids_out)
+    log.info("Research centroids -> %s", centroids_out)
 
     # Research coverage profile
     total = int(counts.sum())
     coverage = {int(sdg + 1): int(counts[sdg]) for sdg in range(17)}
-    log.info("Research coverage: %d papers assigned, top SDG=%d",
-             total, max(coverage, key=coverage.get))
 
     # ── Score policy corpus ────────────────────────────────────────────
     log.info("Scoring policy corpus with MLP...")
     policy_emb = np.load(embed_root / "policy.npy").astype(np.float32)
     policy_scores = model.predict_proba(policy_emb).astype(np.float32)
 
-    policy_scores_out = out_dir / "mlp_policy_scores.npy"
     with policy_scores_out.open("wb") as f:
         np.save(f, policy_scores)
-    log.info("Policy scores → %s  shape=%s", policy_scores_out, policy_scores.shape)
+    log.info("Policy scores -> %s  shape=%s", policy_scores_out, policy_scores.shape)
 
     policy_vs_research = (policy_emb @ research_centroids.T).astype(np.float32)
-    pvr_out = out_dir / "mlp_policy_vs_research.npy"
     with pvr_out.open("wb") as f:
         np.save(f, policy_vs_research)
-    log.info("Policy vs research centroids → %s", pvr_out)
+    log.info("Policy vs research centroids -> %s", pvr_out)
 
     # Policy coverage profile
     policy_assigned = policy_scores.argmax(axis=1)
     policy_counts = np.bincount(policy_assigned, minlength=17)
     policy_coverage = {int(sdg + 1): int(policy_counts[sdg]) for sdg in range(17)}
-    log.info("Policy coverage: %d segments, top SDG=%d",
-             int(policy_counts.sum()), max(policy_coverage, key=policy_coverage.get))
 
     # ── Semantic gaps ──────────────────────────────────────────────────
     gap = np.zeros(17, dtype=np.float32)
@@ -166,7 +172,7 @@ def main():
         gap[sdg_idx] = 1.0 - float(research_centroids[sdg_idx] @ pol_norm)
 
     gap_dict = {int(idx + 1): float(gap[idx]) for idx in range(17)}
-    log.info("Semantic gaps computed. Range: %.4f–%.4f",
+    log.info("Semantic gaps computed. Range: %.4f-%.4f",
              min(gap_dict.values()), max(gap_dict.values()))
 
     # ── Save summary JSON ──────────────────────────────────────────────
@@ -178,10 +184,9 @@ def main():
         "policy_total": int(policy_counts.sum()),
         "semantic_gaps": gap_dict,
     }
-    summary_path = out_dir / "mlp_summary.json"
     with summary_path.open("w") as f:
         json.dump(summary, f, indent=2)
-    log.info("Summary → %s", summary_path)
+    log.info("Summary -> %s", summary_path)
 
     print(f"\n{'='*60}")
     print(f"  MLP scoring complete")

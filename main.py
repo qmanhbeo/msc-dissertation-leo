@@ -357,6 +357,19 @@ def _run_main_analysis_steps(output_dir: Path, model: str) -> None:
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args, step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args, step_id="3")
+    if model == DEFAULT_EMBED_MODEL:
+        run_step(
+            "retrain MLP",
+            [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py",
+             "--model", model, "--classifier-type", "mlp"],
+            step_id="3b",
+        )
+        run_step(
+            "score MLP",
+            [sys.executable, "1_code/5_supervised_model_infer/2_score_mlp.py",
+             "--model", model],
+            step_id="3c",
+        )
     run_step(
         "check centroid consistency",
         [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args,

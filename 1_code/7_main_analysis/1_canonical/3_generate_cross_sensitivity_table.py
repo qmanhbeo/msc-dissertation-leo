@@ -73,6 +73,8 @@ def load_lr_gaps():
 # ---------------------------------------------------------------------------
 ZS_GAP_PATH = root / "zeroshot" / "semantic_gap_distances.json"
 def load_zs_gaps():
+    if not ZS_GAP_PATH.exists():
+        return None
     with open(ZS_GAP_PATH) as f:
         data = json.load(f)
     return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}

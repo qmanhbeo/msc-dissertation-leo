@@ -299,29 +299,26 @@ def main() -> None:
     import joblib
 
     if args.classifier_type == "mlp":
-        torch.save(net.state_dict(), output_dir / "sdg_classifier_retrained.pt")
         wrapper = _NetWrapper(net.cpu(), input_dim)
+        model_path = output_dir / "mlp_retrained.joblib"
+        results_path = output_dir / "mlp_retrain_results.json"
     else:
-        # Remove stale .pt if it exists (LR doesn't use it)
-        pt_path = output_dir / "sdg_classifier_retrained.pt"
-        if pt_path.exists():
-            pt_path.unlink()
         wrapper = clf
-
-    model_path = output_dir / "sdg_classifier_retrained.joblib"
-    results_path = output_dir / "sdg_retrain_results.json"
+        model_path = output_dir / "sdg_classifier_retrained.joblib"
+        results_path = output_dir / "sdg_retrain_results.json"
 
     joblib.dump(wrapper, model_path)
 
-    # Also update sdg_classifier.joblib (used by 2_evaluate.py)
-    canonical_path = output_dir / "sdg_classifier.joblib"
-    joblib.dump(wrapper, canonical_path)
+    if args.classifier_type != "mlp":
+        # Also update sdg_classifier.joblib (used by 2_evaluate.py)
+        canonical_path = output_dir / "sdg_classifier.joblib"
+        joblib.dump(wrapper, canonical_path)
+        log.info("Saved canonical model → %s", canonical_path)
 
     with results_path.open("w") as f:
         json.dump(results, f, indent=2, default=str)
 
     log.info("Saved retrained model → %s", model_path)
-    log.info("Saved canonical model → %s", canonical_path)
     log.info("Saved results → %s", results_path)
 
     print(f"\n{'='*70}")
