@@ -389,11 +389,12 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         step_id="4",
     )
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
-    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model], step_id="9")
     # Main-text (and optionally appendix) analyses, driven in-process by the
     # orchestrator. The consolidated research array is loaded ONCE and shared
     # across scripts, instead of each re-opening the 27 shards in a subprocess.
+    # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model], step_id="9")
 
 
 def run_main_text(
