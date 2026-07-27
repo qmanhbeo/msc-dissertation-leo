@@ -97,8 +97,7 @@ def build_centroid_matrix(emb: np.ndarray, ids: list[dict]) -> np.ndarray:
     return np.stack(rows, axis=0)
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     model = args.embed_model
     embed_dir = embed_dir_for_model(model)
     scored_dir = scored_dir_for_model(model)
@@ -250,6 +249,10 @@ def main() -> None:
     log.info("  Canonical gap (0.560-0.232)    : %.3f", canon_diff)
     log.info("  Gap change vs canonical        : %+.3f", gap - canon_diff)
     log.info("Saved: %s", data_dir / DATA_JSON)
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
