@@ -114,7 +114,9 @@ def main() -> None:
 
     osdg_by_sdg: dict[int, list[int]] = {}
     for i, r in enumerate(osdg_records):
-        sdg_label = r.get("sdg")
+        sdg_label = r.get("sdgs")
+        if sdg_label is None:
+            sdg_label = r.get("sdg")
         if sdg_label is None:
             continue
         if isinstance(sdg_label, list):

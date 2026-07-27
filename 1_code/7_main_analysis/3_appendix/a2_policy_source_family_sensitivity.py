@@ -37,6 +37,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model
+from shard_pipeline_utils import load_json
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -46,6 +47,7 @@ from semantic_gap_shared import (
     build_source_family_map,
     build_sub_centroid,
     cap_policy_indices_per_doc,
+    get_cluster_assignments,
     write_csv,
 )
 

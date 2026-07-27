@@ -5,122 +5,122 @@
   "per_sdg": [
     {
       "sdg": 1,
-      "n_papers": 16868,
-      "n_policy_capped": 831,
-      "semantic_similarity": 0.6196708280941045,
-      "semantic_gap": 0.38032917190589555
+      "n_papers": 25576,
+      "n_policy_capped": 797,
+      "semantic_similarity": 0.6004500745531947,
+      "semantic_gap": 0.39954992544680534
     },
     {
       "sdg": 2,
-      "n_papers": 105209,
-      "n_policy_capped": 820,
-      "semantic_similarity": 0.667883654432142,
-      "semantic_gap": 0.33211634556785796
+      "n_papers": 97744,
+      "n_policy_capped": 769,
+      "semantic_similarity": 0.6657342848100529,
+      "semantic_gap": 0.3342657151899471
     },
     {
       "sdg": 3,
-      "n_papers": 722327,
-      "n_policy_capped": 1444,
-      "semantic_similarity": 0.5752395509498635,
-      "semantic_gap": 0.42476044905013655
+      "n_papers": 687065,
+      "n_policy_capped": 1438,
+      "semantic_similarity": 0.5782966316345528,
+      "semantic_gap": 0.4217033683654472
     },
     {
       "sdg": 4,
-      "n_papers": 481801,
-      "n_policy_capped": 1175,
-      "semantic_similarity": 0.7257767183331829,
-      "semantic_gap": 0.2742232816668171
+      "n_papers": 462911,
+      "n_policy_capped": 1162,
+      "semantic_similarity": 0.7301617049620813,
+      "semantic_gap": 0.2698382950379187
     },
     {
       "sdg": 5,
-      "n_papers": 68817,
-      "n_policy_capped": 1210,
-      "semantic_similarity": 0.7508690593226343,
-      "semantic_gap": 0.24913094067736574
+      "n_papers": 79024,
+      "n_policy_capped": 1438,
+      "semantic_similarity": 0.7598945649262835,
+      "semantic_gap": 0.2401054350737165
     },
     {
       "sdg": 6,
-      "n_papers": 84426,
-      "n_policy_capped": 711,
-      "semantic_similarity": 0.5832325366399904,
-      "semantic_gap": 0.4167674633600096
+      "n_papers": 88469,
+      "n_policy_capped": 722,
+      "semantic_similarity": 0.5832542764270997,
+      "semantic_gap": 0.4167457235729003
     },
     {
       "sdg": 7,
-      "n_papers": 231839,
-      "n_policy_capped": 822,
-      "semantic_similarity": 0.48570928708059125,
-      "semantic_gap": 0.5142907129194088
+      "n_papers": 239700,
+      "n_policy_capped": 839,
+      "semantic_similarity": 0.4807590810140151,
+      "semantic_gap": 0.5192409189859849
     },
     {
       "sdg": 8,
-      "n_papers": 68014,
-      "n_policy_capped": 1009,
-      "semantic_similarity": 0.7461108596623679,
-      "semantic_gap": 0.2538891403376321
+      "n_papers": 49222,
+      "n_policy_capped": 826,
+      "semantic_similarity": 0.7407776139370108,
+      "semantic_gap": 0.2592223860629892
     },
     {
       "sdg": 9,
-      "n_papers": 401791,
-      "n_policy_capped": 2046,
-      "semantic_similarity": 0.7784832896566665,
-      "semantic_gap": 0.22151671034333353
+      "n_papers": 421884,
+      "n_policy_capped": 2265,
+      "semantic_similarity": 0.7908026170276836,
+      "semantic_gap": 0.20919738297231638
     },
     {
       "sdg": 10,
-      "n_papers": 24523,
-      "n_policy_capped": 377,
-      "semantic_similarity": 0.7160026486955252,
-      "semantic_gap": 0.2839973513044748
+      "n_papers": 18748,
+      "n_policy_capped": 117,
+      "semantic_similarity": 0.5760259801920145,
+      "semantic_gap": 0.42397401980798555
     },
     {
       "sdg": 11,
-      "n_papers": 218366,
-      "n_policy_capped": 1349,
-      "semantic_similarity": 0.5470235557468308,
-      "semantic_gap": 0.4529764442531692
+      "n_papers": 217470,
+      "n_policy_capped": 1527,
+      "semantic_similarity": 0.5491773886542415,
+      "semantic_gap": 0.4508226113457585
     },
     {
       "sdg": 12,
-      "n_papers": 92944,
-      "n_policy_capped": 778,
-      "semantic_similarity": 0.6470033791522023,
-      "semantic_gap": 0.3529966208477977
+      "n_papers": 125401,
+      "n_policy_capped": 805,
+      "semantic_similarity": 0.5967628703585874,
+      "semantic_gap": 0.40323712964141256
     },
     {
       "sdg": 13,
-      "n_papers": 66821,
-      "n_policy_capped": 2344,
-      "semantic_similarity": 0.5608765915863329,
-      "semantic_gap": 0.43912340841366715
+      "n_papers": 60162,
+      "n_policy_capped": 2479,
+      "semantic_similarity": 0.6015072697796515,
+      "semantic_gap": 0.3984927302203485
     },
     {
       "sdg": 14,
-      "n_papers": 115235,
-      "n_policy_capped": 741,
-      "semantic_similarity": 0.5396876903106536,
-      "semantic_gap": 0.46031230968934644
+      "n_papers": 117147,
+      "n_policy_capped": 613,
+      "semantic_similarity": 0.521613548030869,
+      "semantic_gap": 0.478386451969131
     },
     {
       "sdg": 15,
-      "n_papers": 133205,
-      "n_policy_capped": 731,
-      "semantic_similarity": 0.6848924346565151,
-      "semantic_gap": 0.31510756534348494
+      "n_papers": 138638,
+      "n_policy_capped": 771,
+      "semantic_similarity": 0.68740576254121,
+      "semantic_gap": 0.31259423745879
     },
     {
       "sdg": 16,
-      "n_papers": 253766,
-      "n_policy_capped": 2716,
-      "semantic_similarity": 0.6654083713224939,
-      "semantic_gap": 0.33459162867750614
+      "n_papers": 256258,
+      "n_policy_capped": 2560,
+      "semantic_similarity": 0.6148073474425992,
+      "semantic_gap": 0.38519265255740076
     },
     {
       "sdg": 17,
-      "n_papers": 19192,
-      "n_policy_capped": 3521,
-      "semantic_similarity": 0.5850033378460258,
-      "semantic_gap": 0.41499666215397424
+      "n_papers": 19725,
+      "n_policy_capped": 3497,
+      "semantic_similarity": 0.6355715875998782,
+      "semantic_gap": 0.3644284124001218
     }
   ]
 }
