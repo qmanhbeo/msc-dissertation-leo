@@ -37,32 +37,15 @@ SDG_NAMES = {
     17: "Partnerships",
 }
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
-args = parser.parse_args()
-model = args.embed_model
-
-root = Path(args.output_dir)
-OUT_MAIN = root / "main" / model / "tables"
-OUT_MAIN.mkdir(parents=True, exist_ok=True)
-
-# ---------------------------------------------------------------------------
-# 1. Load LR test F1 from retrain results
-# ---------------------------------------------------------------------------
-RETRAIN_JSON = model_results_dir_for_model(model) / "model" / "sdg_retrain_results.json"
-with open(RETRAIN_JSON) as f:
-    retrain = json.load(f)
-lr_per_sdg = {}
-for k, v in retrain["test_results"]["per_sdg_f1"].items():
-    sdg_num = int(k.split("_")[1])
-    lr_per_sdg[sdg_num] = v
-lr_macro = retrain["test_results"]["macro_f1"]
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    return parser.parse_args()
 
 # ---------------------------------------------------------------------------
 # 2. Load LR semantic gaps (canonical assignment method)
 # ---------------------------------------------------------------------------
-LR_GAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_distances.json"
 def load_lr_gaps():
     if not LR_GAP_PATH.exists():
         return None
@@ -73,7 +56,6 @@ def load_lr_gaps():
 # ---------------------------------------------------------------------------
 # 3. Load zero-shot semantic gaps
 # ---------------------------------------------------------------------------
-ZS_GAP_PATH = root / "zeroshot" / model / "semantic_gap_distances.json"
 def load_zs_gaps():
     if not ZS_GAP_PATH.exists():
         return None
@@ -84,7 +66,6 @@ def load_zs_gaps():
 # ---------------------------------------------------------------------------
 # 4. Load segment-cap robustness gaps
 # ---------------------------------------------------------------------------
-CAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_robustness_caps.json"
 def load_cap_gaps():
     if not CAP_PATH.exists():
         return None, None
@@ -97,7 +78,6 @@ def load_cap_gaps():
 # ---------------------------------------------------------------------------
 # 5. Load policy source-family gaps from appendix table
 # ---------------------------------------------------------------------------
-POLICY_GAP_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
 def parse_policy_source_gaps():
     """Return {family_label: {sdg: gap}} parsing the appendix tex table."""
     if not POLICY_GAP_TEX.exists():
@@ -348,9 +328,41 @@ def write_num_cross_sensitivity():
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-if __name__ == "__main__":
+def run(args: argparse.Namespace) -> None:
+    global model, root, OUT_MAIN, RETRAIN_JSON, retrain, lr_per_sdg, lr_macro
+    global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_GAP_TEX
+
+    model = args.embed_model
+
+    root = Path(args.output_dir)
+    OUT_MAIN = root / "main" / model / "tables"
+    OUT_MAIN.mkdir(parents=True, exist_ok=True)
+
+    # 1. Load LR test F1 from retrain results
+    RETRAIN_JSON = model_results_dir_for_model(model) / "model" / "sdg_retrain_results.json"
+    with open(RETRAIN_JSON) as f:
+        retrain = json.load(f)
+    lr_per_sdg = {}
+    for k, v in retrain["test_results"]["per_sdg_f1"].items():
+        sdg_num = int(k.split("_")[1])
+        lr_per_sdg[sdg_num] = v
+    lr_macro = retrain["test_results"]["macro_f1"]
+
+    LR_GAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_distances.json"
+    ZS_GAP_PATH = root / "zeroshot" / model / "semantic_gap_distances.json"
+    CAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_robustness_caps.json"
+    POLICY_GAP_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
+
     write_num_validation()
     write_validation_table()
     write_cross_sensitivity()
     write_num_cross_sensitivity()
     print("Cross-sensitivity table generation complete.")
+
+
+def main() -> None:
+    run(parse_args())
+
+
+if __name__ == "__main__":
+    main()
