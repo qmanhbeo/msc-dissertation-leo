@@ -843,8 +843,7 @@ def write_outputs(
     )
 
 
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     embed_dir = embed_research_dir_for_model(args.embed_model)
     scored_dir = scored_dir_for_model(args.embed_model)
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
@@ -934,6 +933,10 @@ def main() -> None:
         total_rows=total_rows,
     )
     log.info("Saved sample-stability outputs into %s", layout.data_dir)
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
