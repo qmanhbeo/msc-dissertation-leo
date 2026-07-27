@@ -241,6 +241,8 @@ def main() -> None:
     parser.add_argument("--policy-centroids-out", default=None)
     parser.add_argument("--policy-centroid-meta-out", default=None)
     parser.add_argument("--consistency-out", default=None)
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Recompute centroid consistency even if outputs exist")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -255,6 +257,10 @@ def main() -> None:
     policy_centroids_out = Path(args.policy_centroids_out) if args.policy_centroids_out else scored_root / "policy_centroids.npy"
     policy_centroid_meta_out = Path(args.policy_centroid_meta_out) if args.policy_centroid_meta_out else scored_root / "metadata" / "policy_centroid_meta.json"
     consistency_out = Path(args.consistency_out) if args.consistency_out else scored_root / "metadata" / "centroid_consistency.json"
+
+    if not args.overwrite and policy_centroids_out.exists() and policy_centroid_meta_out.exists() and consistency_out.exists():
+        log.info("Skip — centroid consistency outputs already exist at %s", consistency_out)
+        return
 
     # --- Load research centroids ---
     log.info("Loading research centroids: %s", research_centroids_path)
