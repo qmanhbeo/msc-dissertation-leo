@@ -28,6 +28,8 @@ from model_utils import (
     scored_dir_for_model,
     segmented_dir_for_model,
 )
+from analysis_orchestrator import run_analysis
+from consolidate_research_artifacts import consolidate_embeddings, consolidate_scores
 
 
 ROOT = Path(__file__).resolve().parent
@@ -355,7 +357,7 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
     )
 
 
-def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = False) -> None:
+def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = False, include_appendix: bool = False) -> None:
     """Run the main-text analysis steps for a given model (no input guard).
 
     Steps 0-1 train the classifier deterministically from frozen embeddings.
@@ -386,36 +388,12 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args + _overwrite_flag(overwrite),
         step_id="4",
     )
-    if model == DEFAULT_EMBED_MODEL:
-        run_step(
-            "zero-shot nearest-centroid scoring",
-            [sys.executable, "1_code/7_main_analysis/1_canonical/0_zeroshot_scoring.py",
-             "--output-dir", str(output_dir)] + model_args,
-            step_id="5",
-        )
-    run_step("coverage gap", [sys.executable, "1_code/7_main_analysis/1_canonical/0_coverage_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="6")
-    run_step("semantic gap", [sys.executable, "1_code/7_main_analysis/1_canonical/1_semantic_gap.py", "--output-dir", str(output_dir)] + model_args, step_id="7")
-    run_step(
-        "coverage semantic interaction",
-        [sys.executable, "1_code/7_main_analysis/1_canonical/2_coverage_semantic_interaction.py", "--output-dir", str(output_dir)] + model_args,
-        step_id="8",
-    )
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model], step_id="9")
-    if model == DEFAULT_EMBED_MODEL:
-        run_step(
-            "generate cross-sensitivity table",
-            [sys.executable, "1_code/7_main_analysis/1_canonical/3_generate_cross_sensitivity_table.py",
-             "--output-dir", str(output_dir)],
-            step_id="10",
-        )
-    if model == DEFAULT_EMBED_MODEL:
-        run_step(
-            "PCA semantic landscape",
-            [sys.executable, "1_code/7_main_analysis/1_canonical/0_pca_semantic_landscape.py",
-             "--output-dir", str(output_dir)],
-            step_id="11",
-        )
+    # Main-text (and optionally appendix) analyses, driven in-process by the
+    # orchestrator. The consolidated research array is loaded ONCE and shared
+    # across scripts, instead of each re-opening the 27 shards in a subprocess.
+    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
 
 
 def run_main_text(
@@ -423,12 +401,13 @@ def run_main_text(
     args: argparse.Namespace,
     *,
     model: str = DEFAULT_EMBED_MODEL,
+    include_appendix: bool = False,
 ) -> None:
     missing = missing_warm_replay_requirements(model=model)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
-    _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite)
+    _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite, include_appendix=include_appendix)
 
 
 def run_warm_replay(
@@ -438,14 +417,7 @@ def run_warm_replay(
     include_appendix: bool = False,
 ) -> None:
     model = args.embed_model
-    run_main_text(output_dir, args)
-    if include_appendix:
-        run_policy_source_family_sensitivity(output_dir, model=model)
-        run_sdg4_lexical_audit(output_dir, model=model)
-        run_loo_sdgi_circularity(output_dir, model=model)
-        run_semantic_gap_interpretability(output_dir, model=model)
-        run_sample_stability(output_dir, model=model)
-        run_register_adjustment(output_dir, model=model)
+    run_main_text(output_dir, args, include_appendix=include_appendix)
     print(
         "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -516,14 +488,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     embed_cmd.extend(model_args)
     run_step("embed paper shards", embed_cmd)
 
-    _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite)
-
-    run_policy_source_family_sensitivity(output_dir, model=model)
-    run_sdg4_lexical_audit(output_dir, model=model)
-    run_loo_sdgi_circularity(output_dir, model=model)
-    run_semantic_gap_interpretability(output_dir, model=model)
-    run_sample_stability(output_dir, model=model)
-    run_register_adjustment(output_dir, model=model)
+    _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
 
     print(
         "Cold replay complete. To build the dissertation PDF, run:\n"
@@ -679,6 +644,9 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         ]
         embed_cmd.extend(model_args)
         run_step("embed paper shards", embed_cmd)
+        # Refresh the consolidated research-embedding cache so downstream
+        # analyses never read a stale array after a re-embed.
+        consolidate_embeddings(model, overwrite=args.overwrite)
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
@@ -687,18 +655,14 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
     elif stage == "infer":
         run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
         run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        # Refresh the consolidated research-score cache after re-scoring.
+        consolidate_scores(model, overwrite=args.overwrite)
 
     elif stage == "centroids":
         run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
 
     elif stage == "analysis":
-        _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite)
-        run_policy_source_family_sensitivity(output_dir, model=model)
-        run_sdg4_lexical_audit(output_dir, model=model)
-        run_loo_sdgi_circularity(output_dir, model=model)
-        run_semantic_gap_interpretability(output_dir, model=model)
-        run_sample_stability(output_dir, model=model)
-        run_register_adjustment(output_dir, model=model)
+        _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite, include_appendix=True)
 
     else:
         raise ValueError(f"Unknown stage: {stage}")
