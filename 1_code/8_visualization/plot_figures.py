@@ -99,7 +99,7 @@ SDG_SHORT = {
 }
 
 
-def plot_centroid_similarity_heatmap(layout) -> None:
+def plot_centroid_similarity_heatmap(layout, model: str) -> None:
     """Render an annotated 17x17 heatmap of pairwise canonical SDG-centroid cosine similarity."""
     csv_path = layout.data_dir / "4_1_centroid_similarity_matrix.csv"
     mat = pd.read_csv(csv_path, index_col=0).apply(pd.to_numeric, errors="coerce")
@@ -132,7 +132,7 @@ def plot_centroid_similarity_heatmap(layout) -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")
     fig.tight_layout()
-    out_dir = layout.root.parent / "appendix" / args.embed_model / "a4_centroid_similarity" / "figures"
+    out_dir = layout.root.parent / "appendix" / model / "a4_centroid_similarity" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
@@ -319,7 +319,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     # Centroid pairwise similarity heatmap
     # -----------------------------------------------------------------------
-    plot_centroid_similarity_heatmap(layout)
+    plot_centroid_similarity_heatmap(layout, args.embed_model)
 
     print(f"\\nAll figures saved to {figures_dir}")
 
