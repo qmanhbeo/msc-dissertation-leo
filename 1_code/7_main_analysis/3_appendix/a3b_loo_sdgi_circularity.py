@@ -58,6 +58,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from research_embedding_shards import load_consolidated_embeddings
 from semantic_gap_shared import build_source_family_map
 from shard_pipeline_utils import load_json
 
@@ -173,11 +174,18 @@ def main() -> None:
     if sorted(score_shards) != sorted(emb_shards):
         raise RuntimeError("Research shard IDs misaligned.")
 
+    full_emb = load_consolidated_embeddings(model)
+    offsets = {}
+    off = 0
+    for sid, s in emb_shards.items():
+        offsets[sid] = off
+        off += int(s["rows"])
+
     top_sum = 0.0
     row_count = 0
     for shard_id in sorted(score_shards):
-        emb_path = ROOT / emb_shards[shard_id]["embedding_path"]
-        emb = np.load(emb_path).astype(np.float32)
+        start = offsets[shard_id]
+        emb = np.asarray(full_emb[start:start + int(emb_shards[shard_id]["rows"])]).astype(np.float32)
         scores = emb @ loo_centroids_clean.T
         top_vals = scores.max(axis=1)
         top_sum += float(top_vals.sum())
