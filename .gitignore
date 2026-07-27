@@ -92,6 +92,7 @@ checkpoints/
 # === Marker-committed outputs ===
 !4_outputs/
 !4_outputs/**
+4_outputs/**/*_backup.csv
 4_outputs/dissertation.aux
 4_outputs/dissertation.bbl
 4_outputs/dissertation.bcf
