@@ -86,7 +86,10 @@ def _load_model(model_root: Path, classifier_type: str, input_dim: int):
     if classifier_type == "mlp":
         model_path = model_root / "model" / "mlp_retrained.joblib"
         model = joblib.load(model_path)
-        first_layer = model.net[0]
+        _net = model
+        while hasattr(_net, "net") and not isinstance(getattr(_net, "net", None), torch.nn.Sequential):
+            _net = _net.net
+        first_layer = _net.net[0]
         assert first_layer.in_features == input_dim, (
             f"MLP first layer in_features {first_layer.in_features} "
             f"!= embedding dim {input_dim}"

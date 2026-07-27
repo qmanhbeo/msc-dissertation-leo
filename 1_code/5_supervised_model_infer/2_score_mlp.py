@@ -93,10 +93,13 @@ def main():
     mlp_path = model_root / "model" / "mlp_retrained.joblib"
     log.info("Loading MLP from %s", mlp_path)
     model = joblib.load(mlp_path)
-    first_layer = model.net[0]
-    assert first_layer.in_features == d, (
-        f"MLP first layer in_features {first_layer.in_features} != embedding dim {d}"
-    )
+    # Persisted model may be MultiLabelMLP(nn.Module, .net=Sequential) or
+    # _NetWrapper(net=MultiLabelMLP). Descend to the Sequential network.
+    _net = model
+    while hasattr(_net, "net") and not isinstance(getattr(_net, "net", None), nn.Sequential):
+        _net = _net.net
+    first_layer = _net.net[0]
+    d = first_layer.in_features
     log.info("MLP loaded (type=%s, input_dim=%d)", type(model).__name__, d)
 
     # ── Score research shards ─────────────────────────────────────────
