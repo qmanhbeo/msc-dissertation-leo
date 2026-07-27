@@ -195,8 +195,7 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def main() -> None:
-    args = parse_args()
+def run(args: argparse.Namespace) -> None:
     model = args.embed_model
     scored_dir = scored_dir_for_model(model)
     PAPER_SCORES_MANIFEST = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
@@ -453,6 +452,10 @@ def main() -> None:
     ])
     (gen_dir / "tab_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_coverage.tex")
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
