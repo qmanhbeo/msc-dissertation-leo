@@ -41,7 +41,7 @@ Inputs:
    4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
    4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
 
-   4_outputs/appendix/a1_sdg_source_comparison/data/                  per-source research coverage + gap (multi-config H1)
+   4_outputs/main/{model}/a1_sdg_source_comparison/data/             per-source research coverage + gap (multi-config H1)
    comparison_summary.json
 
     4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results
@@ -475,7 +475,7 @@ def run(args: argparse.Namespace) -> None:
     config_rows.append((r"Excluding SDG 17", tests_excl17))
 
     # 2. Reference sources
-    comp_path = DEFAULT_OUTPUT_ROOT / "appendix" / "a1_sdg_source_comparison" / "data" / "comparison_summary.json"
+    comp_path = layout.root / "a1_sdg_source_comparison" / "data" / "comparison_summary.json"
     if comp_path.exists():
         comp_data = load_json(comp_path)
         src_results = comp_data["results"]

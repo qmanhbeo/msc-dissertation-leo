@@ -349,7 +349,7 @@ def run(args: argparse.Namespace) -> None:
     lr_macro = retrain["test_results"]["macro_f1"]
 
     LR_GAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_distances.json"
-    ZS_GAP_PATH = root / "zeroshot" / model / "semantic_gap_distances.json"
+    ZS_GAP_PATH = root / "main" / model / "zeroshot" / "semantic_gap_distances.json"
     CAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_robustness_caps.json"
     POLICY_GAP_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
 

@@ -5,9 +5,9 @@ Computes per-SDG semantic gaps under zero-shot nearest-centroid assignment
 using the same post-fix reference centroids (sdg_centroids.npy) that the
 LR classifier uses as its class means.
 
-Outputs: {output_dir}/zeroshot/semantic_gap_distances.json  (per-SDG gaps)
-          {output_dir}/zeroshot/research_centroids.npy      (per-SDG mean of zs-assigned papers)
-          {output_dir}/zeroshot/policy_centroids.npy        (per-SDG mean of zs-assigned segments)
+Outputs: {output_dir}/main/{model}/zeroshot/semantic_gap_distances.json  (per-SDG gaps)
+          {output_dir}/main/{model}/zeroshot/research_centroids.npy      (per-SDG mean of zs-assigned papers)
+          {output_dir}/main/{model}/zeroshot/policy_centroids.npy        (per-SDG mean of zs-assigned segments)
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ def parse_args() -> argparse.Namespace:
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
 
-    out_root = Path(args.output_dir) / "zeroshot" / model
+    out_root = Path(args.output_dir) / "main" / model / "zeroshot"
     out_root.mkdir(parents=True, exist_ok=True)
 
     # 1. Load reference centroids (same ones LR uses)
