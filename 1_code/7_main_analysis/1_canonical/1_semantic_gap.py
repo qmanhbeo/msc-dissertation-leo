@@ -109,17 +109,15 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute semantic gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
-    p.add_argument("--segment-cap", type=int, default=args.segment_cap,
-                  help="Max segments sampled per source_doc per SDG for the primary analysis (default: %(default)s)")
+    p.add_argument("--segment-cap", type=int, default=SEGMENT_CAP_PRIMARY,
+                   help="Max segments sampled per source_doc per SDG for the primary analysis (default: %(default)s)")
     return p.parse_args()
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def main() -> None:
-    args = parse_args()
-
+def run(args: argparse.Namespace) -> None:
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
@@ -330,6 +328,10 @@ def main() -> None:
     ])
     (gen_dir / "tab_semantic_gap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_semantic_gap.tex")
+
+
+def main() -> None:
+    run(parse_args())
 
 
 if __name__ == "__main__":
