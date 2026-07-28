@@ -41,8 +41,7 @@ Inputs:
    4_outputs/main/data/4_2_coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
    4_outputs/main/data/4_3_semantic_gap_distances.json                per-SDG semantic gap (segment_cap=50)
 
-   4_outputs/main/{model}/a1_sdg_source_comparison/data/             per-source research coverage + gap (multi-config H1)
-   comparison_summary.json
+
 
     4_outputs/main/data/4_4_interaction_correlation_asymmetry.json     H25 correlation results
    4_outputs/main/data/4_4_interaction_scatter_data.csv               per-SDG data table for plotting (SDG, research%, policy%,
@@ -473,40 +472,6 @@ def run(args: argparse.Namespace) -> None:
     config_rows.append(("Primary observed SDGs", tests_primary))
     config_rows.append((r"Excluding SDG 4", tests_excl4))
     config_rows.append((r"Excluding SDG 17", tests_excl17))
-
-    # 2. Reference sources
-    comp_path = layout.root / "a1_sdg_source_comparison" / "data" / "comparison_summary.json"
-    if comp_path.exists():
-        comp_data = load_json(comp_path)
-        src_results = comp_data["results"]
-        sources = [
-            ("osdg", "OSDG-only centroids"),
-            ("sdgi", "SDGi-only centroids"),
-            ("knowledgehub", "Knowledge Hub-only centroids"),
-            ("aurora", "Aurora-only centroids"),
-        ]
-        for src_key, src_label in sources:
-            total = float(sum(r[f"{src_key}_coverage"] for r in src_results)) or 1.0
-            props = np.array(
-                [r[f"{src_key}_coverage"] / total for r in src_results], dtype=float
-            )
-            polcov = np.array(
-                [r[f"{src_key}_policy_coverage"] if r[f"{src_key}_policy_coverage"] is not None else np.nan
-                 for r in src_results], dtype=float
-            )
-            covgap = np.array(
-                [r[f"{src_key}_coverage_gap"] if r[f"{src_key}_coverage_gap"] is not None else np.nan
-                 for r in src_results], dtype=float
-            )
-            dom = props - polcov
-            gaps = np.array(
-                [r[f"{src_key}_gap"] if r[f"{src_key}_gap"] is not None else np.nan
-                 for r in src_results], dtype=float
-            )
-            src_mask = np.isfinite(props) & np.isfinite(polcov) & np.isfinite(gaps)
-            if int(src_mask.sum()) >= 3:
-                src_tests = compute_four_tests(props, polcov, covgap, dom, gaps, src_mask)
-                config_rows.append((src_label, src_tests))
 
     log.info("")
     log.info("Multi-config H1 replications: %d configs x 4 predictors", len(config_rows))
