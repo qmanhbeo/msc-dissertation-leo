@@ -5,38 +5,38 @@
 \caption{Cross-sensitivity robustness of within-SDG semantic gap rankings across embedding architectures and assignment methods.}
 \label{tab:cross-sensitivity-robustness}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lcccccccccccc}
+\begin{tabular}{lccccccccccc}
 \toprule
-SDG & \multicolumn{6}{c}{Encoder (embedding architecture)} & \multicolumn{4}{c}{Policy source} & \multicolumn{2}{c}{Segment cap} \\
+\multirow{3}{*}{SDG} & \multicolumn{6}{c}{Encoder (embedding architecture)} & \multicolumn{3}{c}{Policy source} & \multicolumn{2}{c}{Segment cap} \\
 \cmidrule(lr){2-4}
 \cmidrule(lr){5-7}
-\cmidrule(lr){8-11}
-\cmidrule(lr){12-13}
-SDG & \multicolumn{3}{c}{mpnet (768d)} & \multicolumn{3}{c}{MiniLM (384d)} & Full & Curated & SDGi & UNGDC & 20 & None \\
-\cmidrule(lr){2-13}
-SDG & LR & MLP & ZS & LR & MLP & ZS & Full & Curated & SDGi & UNGDC & 20 & None \\
+\cmidrule(lr){8-10}
+\cmidrule(lr){11-12}
+ & \multicolumn{3}{c}{mpnet (768d)} & \multicolumn{3}{c}{MiniLM (384d)} & Curated & SDGi & UNGDC & 20 & None \\
+\cmidrule(lr){2-12}
+ & LR & MLP & ZS & LR & MLP & ZS \\
 \midrule
-SDG 1 & \textit{4} & \textit{1} & \textit{8} & \textit{8} & \textit{3} & \textit{16} & \textit{4} & \textit{3} & \textit{5} & \textit{7} & \textit{4} & \textit{4} \\
-SDG 2 & \textbf{13} & \textbf{14} & \textbf{11} & \textbf{14} & \textbf{15} & \textbf{12} & \textbf{13} & \textbf{11} & \textbf{13} & \textbf{11} & \textbf{13} & \textbf{12} \\
-SDG 3 & \textbf{2} & \textbf{5} & \textbf{5} & \textbf{2} & \textbf{2} & \textbf{8} & \textbf{2} & \textbf{9} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{6} \\
-SDG 4 & \textbf{15} & \textbf{17} & \textbf{14} & \textbf{16} & \textbf{17} & \textbf{13} & \textbf{15} & \textbf{16} & \textbf{14} & \textbf{16} & \textbf{15} & \textbf{15} \\
-SDG 5 & \textit{10} & \textit{15} & \textit{16} & \textit{4} & \textit{12} & \textit{14} & \textit{9} & \textit{12} & \textit{11} & \textit{10} & \textit{10} & \textit{9} \\
-SDG 6 & \textbf{14} & \textbf{11} & \textbf{7} & \textbf{15} & \textbf{13} & \textbf{6} & \textbf{14} & \textbf{10} & \textbf{15} & \textbf{14} & \textbf{14} & \textbf{14} \\
-SDG 7 & \textbf{5} & \textbf{4} & \textbf{1} & \textbf{6} & \textbf{8} & \textbf{4} & \textbf{5} & \textbf{1} & \textbf{8} & \textbf{2} & \textbf{5} & \textbf{3} \\
-SDG 8 & \textbf{6} & \textbf{7} & \textbf{15} & \textbf{5} & \textbf{4} & \textbf{15} & \textbf{6} & \textbf{6} & \textbf{6} & \textbf{3} & \textbf{7} & \textbf{5} \\
-SDG 9 & 12 & 9 & 17 & 10 & 9 & 17 & 12 & 14 & 1 & 12 & 11 & 13 \\
-SDG 10 & \textit{11} & \textit{10} & \textit{13} & \textit{3} & \textit{1} & \textit{7} & \textit{11} & \textit{8} & \textit{12} & \textit{13} & \textit{12} & \textit{11} \\
-SDG 11 & \textit{3} & \textit{2} & \textit{2} & \textit{7} & \textit{6} & \textit{9} & \textit{3} & \textit{4} & \textit{3} & \textit{4} & \textit{3} & \textit{2} \\
-SDG 12 & \textit{7} & \textit{3} & \textit{9} & \textit{11} & \textit{7} & \textit{11} & \textit{7} & \textit{2} & \textit{7} & \textit{6} & \textit{6} & \textit{7} \\
-SDG 13 & \textbf{1} & \textbf{8} & \textbf{4} & \textbf{1} & \textbf{5} & \textbf{2} & \textbf{1} & \textbf{5} & \textbf{4} & \textbf{5} & \textbf{2} & \textbf{1} \\
-SDG 14 & \textit{8} & \textit{6} & \textit{3} & \textit{12} & \textit{14} & \textit{3} & \textit{8} & \textit{7} & \textit{9} & \textit{8} & \textit{8} & \textit{8} \\
-SDG 15 & \textit{16} & \textit{16} & \textit{12} & \textit{9} & \textit{16} & \textit{5} & \textit{16} & \textit{13} & \textit{16} & \textit{15} & \textit{16} & \textit{16} \\
-SDG 16 & \textit{9} & \textit{12} & \textit{10} & \textit{13} & \textit{11} & \textit{10} & \textit{10} & \textit{15} & \textit{10} & \textit{9} & \textit{9} & \textit{10} \\
-SDG 17 & \textbf{17} & \textbf{13} & \textbf{6} & \textbf{17} & \textbf{10} & \textbf{1} & \textbf{17} & \textbf{17} & \textbf{17} & \textbf{17} & \textbf{17} & \textbf{17} \\
+SDG 1 & \textit{4} & \textit{1} & \textit{8} & \textit{8} & \textit{3} & \textit{16} & \textit{3} & \textit{5} & \textit{7} & \textit{4} & \textit{4} \\
+SDG 2 & \textbf{13} & \textbf{14} & \textbf{11} & \textbf{14} & \textbf{15} & \textbf{12} & \textbf{11} & \textbf{13} & \textbf{11} & \textbf{13} & \textbf{12} \\
+SDG 3 & \textbf{2} & \textbf{5} & \textbf{5} & \textbf{2} & \textbf{2} & \textbf{8} & \textbf{9} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{6} \\
+SDG 4 & \textbf{15} & \textbf{17} & \textbf{14} & \textbf{16} & \textbf{17} & \textbf{13} & \textbf{16} & \textbf{14} & \textbf{16} & \textbf{15} & \textbf{15} \\
+SDG 5 & \textit{10} & \textit{15} & \textit{16} & \textit{4} & \textit{12} & \textit{14} & \textit{12} & \textit{11} & \textit{10} & \textit{10} & \textit{9} \\
+SDG 6 & \textbf{14} & \textbf{11} & \textbf{7} & \textbf{15} & \textbf{13} & \textbf{6} & \textbf{10} & \textbf{15} & \textbf{14} & \textbf{14} & \textbf{14} \\
+SDG 7 & \textbf{5} & \textbf{4} & \textbf{1} & \textbf{6} & \textbf{8} & \textbf{4} & \textbf{1} & \textbf{8} & \textbf{2} & \textbf{5} & \textbf{3} \\
+SDG 8 & \textbf{6} & \textbf{7} & \textbf{15} & \textbf{5} & \textbf{4} & \textbf{15} & \textbf{6} & \textbf{6} & \textbf{3} & \textbf{7} & \textbf{5} \\
+SDG 9 & 12 & 9 & 17 & 10 & 9 & 17 & 14 & 1 & 12 & 11 & 13 \\
+SDG 10 & \textit{11} & \textit{10} & \textit{13} & \textit{3} & \textit{1} & \textit{7} & \textit{8} & \textit{12} & \textit{13} & \textit{12} & \textit{11} \\
+SDG 11 & \textit{3} & \textit{2} & \textit{2} & \textit{7} & \textit{6} & \textit{9} & \textit{4} & \textit{3} & \textit{4} & \textit{3} & \textit{2} \\
+SDG 12 & \textit{7} & \textit{3} & \textit{9} & \textit{11} & \textit{7} & \textit{11} & \textit{2} & \textit{7} & \textit{6} & \textit{6} & \textit{7} \\
+SDG 13 & \textbf{1} & \textbf{8} & \textbf{4} & \textbf{1} & \textbf{5} & \textbf{2} & \textbf{5} & \textbf{4} & \textbf{5} & \textbf{2} & \textbf{1} \\
+SDG 14 & \textit{8} & \textit{6} & \textit{3} & \textit{12} & \textit{14} & \textit{3} & \textit{7} & \textit{9} & \textit{8} & \textit{8} & \textit{8} \\
+SDG 15 & \textit{16} & \textit{16} & \textit{12} & \textit{9} & \textit{16} & \textit{5} & \textit{13} & \textit{16} & \textit{15} & \textit{16} & \textit{16} \\
+SDG 16 & \textit{9} & \textit{12} & \textit{10} & \textit{13} & \textit{11} & \textit{10} & \textit{15} & \textit{10} & \textit{9} & \textit{9} & \textit{10} \\
+SDG 17 & \textbf{17} & \textbf{13} & \textbf{6} & \textbf{17} & \textbf{10} & \textbf{1} & \textbf{17} & \textbf{17} & \textbf{17} & \textbf{17} & \textbf{17} \\
 \midrule
-Rank Corr ($\rho$) & 1.00 & 0.80 & 0.49 & 0.71 & 0.69 & -0.03 & 1.00 & 0.76 & 0.82 & 0.93 & 0.99 & 0.97 \\
+Rank Corr ($\rho$) & 1.00 & 0.80 & 0.49 & 0.71 & 0.69 & -0.03 & 0.76 & 0.82 & 0.93 & 0.99 & 0.97 \\
 \bottomrule
 \end{tabular}
 }
-\par\smallskip\footnotesize\emph{Notes:} Each cell reports the within-SDG semantic gap rank ($1 = \text{largest gap}$, $17 = \text{smallest gap}$) under that encoder and assignment method. The base encoder is \texttt{all-mpnet-base-v2} (768-d); the alternative encoder is \texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; policy segments are capped at 50 per source document per SDG (Assumption A-CHUNKCAT). Zero-shot = nearest-centroid assignment on the SDG reference centroids. MLP = 4-layer/384-hidden network retrained on the full training pool. Policy-source and segment-cap columns are LR-based. \textbf{Bold} = encoding-invariant top gap (rank difference $\le$1 between the two encoders); \textit{italic} = encoder-sensitive (rank difference $\ge$4). Rank Corr ($\rho$) is the Spearman correlation of each column's SDG gap ranks against the canonical MPNet-LR column.\par
+\par\smallskip\footnotesize\emph{Notes:} Each cell reports the within-SDG semantic gap rank ($1 = \text{largest gap}$, $17 = \text{smallest gap}$) under that encoder and assignment method. The base encoder is \texttt{all-mpnet-base-v2} (768-d); the alternative encoder is \texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; policy segments are capped at 50 per source document per SDG (Assumption A-CHUNKCAT). Zero-shot = nearest-centroid assignment on the SDG reference centroids. MLP = 4-layer/384-hidden network retrained on the full training pool. Policy-source and segment-cap columns are LR-based. \textbf{Bold} = encoding-invariant (rank difference $\le$1 between MPNet and MiniLM for the same assignment method); \textit{italic} = encoder-sensitive (rank difference $\ge$4). Rank Corr ($\rho$) is the Spearman correlation of each column's SDG gap ranks against the canonical MPNet-LR column.\par
 \end{table}
