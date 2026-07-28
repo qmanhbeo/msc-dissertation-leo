@@ -283,7 +283,7 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> 
             "4_4_interaction_correlation_asymmetry.json",
         ],
     )
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/c_sample_stability.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c_sample_stability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("sample stability", cmd, step_id="C")
@@ -293,7 +293,7 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> 
 
 def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/a2_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("policy source-family sensitivity", cmd, step_id="A2")
@@ -301,7 +301,7 @@ def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_
 
 def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/a3_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
@@ -309,7 +309,7 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
 
 def run_loo_sdgi_circularity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/a3b_loo_sdgi_circularity.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a3b_loo_sdgi_circularity.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("LOO SDGi circularity check", cmd, step_id="A3b")
@@ -321,7 +321,7 @@ def run_loo_sdgi_circularity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL)
 def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     require_output_files(output_dir / "main" / "data", ["4_3_semantic_gap_distances.json"])
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("lexical illustration of the semantic gap", cmd, step_id="B3")
@@ -329,7 +329,7 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
 
 def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/3_appendix/f_register_adjustment.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/f_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("register-adjustment robustness", cmd, step_id="E")

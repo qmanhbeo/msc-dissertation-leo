@@ -41,12 +41,12 @@ MAIN_STEPS = [
     ("1_main_text/0_pca_semantic_landscape.py", True),
 ]
 APPENDIX_STEPS = [
-    ("3_appendix/a2_policy_source_family_sensitivity.py", False),
-    ("3_appendix/a3_sdg4_lexical_audit.py", False),
-    ("3_appendix/a3b_loo_sdgi_circularity.py", False),
-    ("3_appendix/b2_semantic_gap_text_interpretability.py", False),
-    ("3_appendix/c_sample_stability.py", False),
-    ("3_appendix/f_register_adjustment.py", False),
+    ("2_appendix/a2_policy_source_family_sensitivity.py", False),
+    ("2_appendix/a3_sdg4_lexical_audit.py", False),
+    ("2_appendix/a3b_loo_sdgi_circularity.py", False),
+    ("2_appendix/b2_semantic_gap_text_interpretability.py", False),
+    ("2_appendix/c_sample_stability.py", False),
+    ("2_appendix/f_register_adjustment.py", False),
 ]
 
 _MODULE_CACHE: dict[str, object] = {}
