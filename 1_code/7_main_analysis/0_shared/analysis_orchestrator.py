@@ -43,7 +43,6 @@ MAIN_STEPS = [
 APPENDIX_STEPS = [
     ("2_appendix/a2_policy_source_family_sensitivity.py", False),
     ("2_appendix/a3_sdg4_lexical_audit.py", False),
-    ("2_appendix/a3b_loo_sdgi_circularity.py", False),
     ("2_appendix/b2_semantic_gap_text_interpretability.py", False),
     ("2_appendix/c_sample_stability.py", False),
     ("2_appendix/f_register_adjustment.py", False),

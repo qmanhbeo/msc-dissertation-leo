@@ -88,7 +88,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, A3b, B2, C, F) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
-    p.add_argument("--appendix-a3b-circularity", action="store_true", help="Run A.3b SDGi Circularity Note.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.2 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
@@ -175,7 +174,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_all,
             args.appendix_a2_family,
             args.appendix_a3_sdg4,
-            args.appendix_a3b_circularity,
             args.appendix_b2_interpret,
             args.appendix_f_register,
             args.appendix_c_sample_stability,
@@ -306,13 +304,6 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
         cmd += ["--embed-model", model]
     run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
 
-
-def run_loo_sdgi_circularity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a3b_loo_sdgi_circularity.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    run_step("LOO SDGi circularity check", cmd, step_id="A3b")
 
 
 
@@ -705,7 +696,6 @@ def main() -> None:
         or args.appendix_all
         or args.appendix_a2_family
         or args.appendix_a3_sdg4
-        or args.appendix_a3b_circularity
         or args.appendix_b2_interpret
         or args.appendix_c_sample_stability
         or args.appendix_f_register
@@ -727,7 +717,6 @@ def main() -> None:
         model = args.embed_model
         run_policy_source_family_sensitivity(output_dir, model=model)
         run_sdg4_lexical_audit(output_dir, model=model)
-        run_loo_sdgi_circularity(output_dir, model=model)
         run_semantic_gap_interpretability(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
         run_register_adjustment(output_dir, model=model)
@@ -739,10 +728,6 @@ def main() -> None:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a3_sdg4:
         run_sdg4_lexical_audit(output_dir, model=args.embed_model)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_a3b_circularity:
-        run_loo_sdgi_circularity(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_b2_interpret:
