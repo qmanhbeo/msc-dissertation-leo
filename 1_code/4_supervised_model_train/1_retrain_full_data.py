@@ -123,6 +123,7 @@ def main() -> None:
 
     data_dir = Path(args.data_dir) if args.data_dir else model_results_dir_for_model(args.embed_model)
     output_dir = data_dir / "model"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     t0 = time.perf_counter()
     embeddings = np.load(data_dir / "embeddings.npy")
