@@ -166,7 +166,6 @@ def embed_corpus(
     for r in records:
         entry = {
             "id": r.get(config["id_field"], ""),
-            "text": r[config["text_field"]],
         }
         if config["sdg_field"]:
             sdg_val = r.get(config["sdg_field"])

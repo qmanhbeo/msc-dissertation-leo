@@ -52,7 +52,7 @@ from semantic_gap_shared import (
     write_csv,
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, research_segmented_dir_for_model, preprocessed_dir
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, segmented_dir_for_model, research_segmented_dir_for_model, preprocessed_dir
 
 
 TARGET_SDGS = (17, 13, 9)
@@ -271,7 +271,8 @@ def collect_policy(
     policy_ids_path: Path,
     policy_text_path: Path,
 ) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
-    policy_text_rows = load_json(policy_text_path)
+    with open(policy_text_path, encoding="utf-8") as _f:
+        policy_text_rows = [json.loads(line) for line in _f if line.strip()]
     policy_score_rows = load_json(policy_ids_path)
     if len(policy_text_rows) != policy_scores.shape[0] or len(policy_score_rows) != policy_scores.shape[0]:
         raise RuntimeError("Policy text, score metadata, and score matrix row counts do not align.")
@@ -316,7 +317,7 @@ def collect_policy(
                 {
                     "side": "policy",
                     "sdg": sdg,
-                    "item_id": str(policy_text_rows[idx].get("id") or policy_score_rows[idx].get("id") or ""),
+                    "item_id": str(policy_score_rows[idx].get("id") or ""),
                     "source": str(policy_score_rows[idx].get("source_doc") or ""),
                     "centroid_similarity": round(float(sims[int(local_idx)]), 6),
                     "preview": snippet(str(policy_text_rows[idx].get("text") or "")),
@@ -421,7 +422,7 @@ def run(args: argparse.Namespace) -> None:
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(_POLICY_EMB, mmap_mode="r")
 
-    policy_text_path = embed_dir / "metadata" / "policy_ids.json"
+    policy_text_path = segmented_dir_for_model(args.embed_model) / "policy.jsonl"
 
     log.info("Collecting policy samples and representative audit examples")
     policy_samples, policy_counts, policy_examples = collect_policy(

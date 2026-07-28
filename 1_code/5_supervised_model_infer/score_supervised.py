@@ -192,7 +192,6 @@ def load_policy_doc_map(ids_path: Path) -> dict[str, dict]:
     return {
         row["id"]: {
             "source_doc": row["source_doc"],
-            "text": row["text"],
         }
         for row in ids_meta
     }
@@ -464,28 +463,18 @@ def run_policy_lr(args) -> None:
 
     policy_score_ids = []
     missing_ids: list[str] = []
-    text_mismatches: list[str] = []
     for row in policy_ids:
         segment_id = row["id"]
         joined = policy_doc_map.get(segment_id)
         if joined is None:
             missing_ids.append(segment_id)
             continue
-        if row.get("text") and row["text"] != joined["text"]:
-            text_mismatches.append(segment_id)
         policy_score_ids.append({"id": segment_id, "source_doc": joined["source_doc"]})
 
     if missing_ids:
         sample = ", ".join(missing_ids[:5])
         raise RuntimeError(
             f"{len(missing_ids)} policy embedding IDs were not found in the active policy corpus. "
-            f"Examples: {sample}"
-        )
-
-    if text_mismatches:
-        sample = ", ".join(text_mismatches[:5])
-        raise RuntimeError(
-            f"{len(text_mismatches)} policy ID/text pairs do not match the active policy corpus. "
             f"Examples: {sample}"
         )
 

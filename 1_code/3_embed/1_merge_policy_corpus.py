@@ -92,6 +92,7 @@ def main() -> None:
         family = SOURCE_FAMILY_MAP[source]
         for entry in meta:
             entry["source_family"] = family
+            entry.pop("text", None)
 
         embs.append(arr)
         ids_meta.extend(meta)

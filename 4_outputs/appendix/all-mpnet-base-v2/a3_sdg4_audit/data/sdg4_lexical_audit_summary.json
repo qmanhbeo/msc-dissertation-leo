@@ -1,5 +1,5 @@
 {
-  "generated_from": "1_code/7_main_analysis/3_appendix/a3_sdg4_lexical_audit.py",
+  "generated_from": "1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py",
   "random_seed": 42,
   "ml_terms": [
     "machine learning",
@@ -41,40 +41,40 @@
       "subset": "sdg4_assigned",
       "subset_label": "SDG 4-assigned research",
       "n": 453225,
-      "ml_only_n": 52689,
-      "education_only_n": 199649,
-      "both_n": 126761,
-      "neither_unclear_n": 74126,
-      "ml_only_pct": 11.625,
-      "education_only_pct": 44.051,
-      "both_pct": 27.969,
-      "neither_unclear_pct": 16.355
+      "ml_only_n": 47460,
+      "education_only_n": 205279,
+      "both_n": 108245,
+      "neither_unclear_n": 92241,
+      "ml_only_pct": 10.472,
+      "education_only_pct": 45.293,
+      "both_pct": 23.883,
+      "neither_unclear_pct": 20.352
     },
     "non_sdg4_sample": {
       "subset": "non_sdg4_sample",
       "subset_label": "Non-SDG4 research sample",
       "n": 453225,
-      "ml_only_n": 248487,
-      "education_only_n": 21303,
-      "both_n": 21041,
-      "neither_unclear_n": 162394,
-      "ml_only_pct": 54.826,
-      "education_only_pct": 4.7,
-      "both_pct": 4.643,
-      "neither_unclear_pct": 35.831
+      "ml_only_n": 228083,
+      "education_only_n": 18457,
+      "both_n": 12401,
+      "neither_unclear_n": 194284,
+      "ml_only_pct": 50.324,
+      "education_only_pct": 4.072,
+      "both_pct": 2.736,
+      "neither_unclear_pct": 42.867
     },
     "sdg9_assigned": {
       "subset": "sdg9_assigned",
       "subset_label": "SDG 9-assigned research",
       "n": 566759,
-      "ml_only_n": 352897,
-      "education_only_n": 15805,
-      "both_n": 23371,
-      "neither_unclear_n": 174686,
-      "ml_only_pct": 62.266,
-      "education_only_pct": 2.789,
-      "both_pct": 4.124,
-      "neither_unclear_pct": 30.822
+      "ml_only_n": 333245,
+      "education_only_n": 15166,
+      "both_n": 16707,
+      "neither_unclear_n": 201641,
+      "ml_only_pct": 58.798,
+      "education_only_pct": 2.676,
+      "both_pct": 2.948,
+      "neither_unclear_pct": 35.578
     }
   },
   "note": "This audit does not relabel research records. It only tests whether the SDG 4 lexical artefact concern is empirically plausible."
