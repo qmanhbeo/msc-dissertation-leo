@@ -25,12 +25,19 @@ ANALYSIS_ROOT = Path(__file__).resolve().parents[1]  # 7_main_analysis
 
 # (relative script path, only_when_default_model)
 # Mirrors the ordering/conditions previously in main.py _run_main_analysis_steps.
+# Every step here writes under main/{model}/ (model-namespaced) EXCEPT the PCA
+# semantic-landscape script, which emits fixed main/figures/ + main/tables/
+# paths that are MPNet-centric and must not be overwritten by a second encoder.
+# So PCA stays default-only; the encoder-sensitivity steps (zeroshot,
+# cross-sensitivity) run for every encoder so each gets its own namespaced
+# artifact (a second encoder's tree is a robustness artifact read by the
+# combined cross-sensitivity table).
 MAIN_STEPS = [
-    ("1_canonical/0_zeroshot_scoring.py", True),
+    ("1_canonical/0_zeroshot_scoring.py", False),
     ("1_canonical/0_coverage_gap.py", False),
     ("1_canonical/1_semantic_gap.py", False),
     ("1_canonical/2_coverage_semantic_interaction.py", False),
-    ("1_canonical/3_generate_cross_sensitivity_table.py", True),
+    ("1_canonical/3_generate_cross_sensitivity_table.py", False),
     ("1_canonical/0_pca_semantic_landscape.py", True),
 ]
 APPENDIX_STEPS = [

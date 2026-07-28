@@ -395,7 +395,11 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     # across scripts, instead of each re-opening the 27 shards in a subprocess.
     # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
-    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model], step_id="9")
+    # Figures are MPNet-centric (fixed main/figures/ paths), so only plot for
+    # the default encoder; a second encoder's tree is a robustness artifact and
+    # must not overwrite the canonical figures.
+    if model == DEFAULT_EMBED_MODEL:
+        run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model], step_id="9")
 
 
 def run_main_text(
