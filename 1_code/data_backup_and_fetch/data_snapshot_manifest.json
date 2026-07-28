@@ -23,7 +23,8 @@
       ],
       "notes": [
         "Embedded checkpoint (3_embedded/) plus the canonical segmented research text (2_segmented/), used for warm-replay analysis text extraction.",
-        "Excludes 0_raw, 1_preprocessed, and all downstream stages."
+        "Excludes 0_raw, 1_preprocessed, and all downstream stages.",
+        "Both embedded models (all-mpnet-base-v2, all-minilm-l6-v2): ids files in 3_embedded/{model}/metadata and research_shards/metadata are ID/label-only; embedded text is canonical in 2_segmented/ (research + 7 reference sets) and 1_preprocessed/ (benchmark, osdg), so 3_embedded/ holds no duplicated text."
       ]
     }
   }
