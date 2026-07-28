@@ -92,7 +92,7 @@ STATUS_STAGE = "supervised_sdg_scores"
 # Shared model-unpickling machinery (must match training architecture)
 # ---------------------------------------------------------------------------
 class MultiLabelMLP(torch.nn.Module):
-    """Must match the architecture used during training (1_retrain_full_data.py)."""
+    """Must match the architecture used during training (3_retrain_full_data.py)."""
 
     def __init__(self, input_dim: int, n_layers: int = 4, hidden_size: int = 384,
                  dropout: float = 0.3):

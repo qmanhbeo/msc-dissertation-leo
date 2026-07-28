@@ -18,8 +18,8 @@ Outputs:
   4_outputs/main/data/4_1_confusion_matrix.csv        (LR only: ROWS=pred, COLS=true)
 
 Run from project root:
-    python 1_code/4_supervised_model_train/1_retrain_full_data.py --model all-mpnet-base-v2
-    python 1_code/4_supervised_model_train/1_retrain_full_data.py --model all-mpnet-base-v2 --classifier-type lr
+    python 1_code/4_supervised_model_train/3_retrain_full_data.py --model all-mpnet-base-v2
+    python 1_code/4_supervised_model_train/3_retrain_full_data.py --model all-mpnet-base-v2 --classifier-type lr
 """
 
 import argparse

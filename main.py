@@ -358,14 +358,14 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     model_args = ["--embed-model", model]
     run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
-    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
+    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "research"] + _overwrite_flag(overwrite), step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(overwrite), step_id="3")
     # MLP is scored for every encoder (not just the default), so the
     # cross-sensitivity table can carry an MLP sub-column per encoder.
     run_step(
         "retrain MLP",
-        [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py",
+        [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py",
          "--embed-model", model, "--classifier-type", "mlp"],
         step_id="3b",
     )
@@ -647,8 +647,8 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
-        run_step("retrain full data (LR)", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--embed-model", model])
-        run_step("retrain full data (MLP)", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--embed-model", model, "--classifier-type", "mlp"])
+        run_step("retrain full data (LR)", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py", "--embed-model", model])
+        run_step("retrain full data (MLP)", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py", "--embed-model", model, "--classifier-type", "mlp"])
 
     elif stage == "infer":
         # Score both supervised assignment methods (LR + MLP) for the encoder,
@@ -657,7 +657,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("score research shards (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "research"] + _overwrite_flag(args.overwrite))
         run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(args.overwrite))
         run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "mlp"] + _overwrite_flag(args.overwrite))
-        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/5_supervised_model_infer/3_score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)])
+        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/5_supervised_model_infer/score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)])
         # Refresh the consolidated research-score cache after re-scoring.
         consolidate_scores(model, overwrite=args.overwrite)
 
