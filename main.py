@@ -382,7 +382,8 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
     # Main-text (and optionally appendix) analyses, driven in-process by the
     # orchestrator. Each analysis reads the 27 research embedding/score shards
-    # directly (shard-native, mmap); no consolidated array is built or cached.    # Must run BEFORE plot figures, which consumes the analysis outputs.
+    # directly (shard-native, mmap); no consolidated array is built or cached.
+    # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     # Figures are MPNet-centric (fixed main/figures/ paths), so only plot for
     # the default encoder; a second encoder's tree is a robustness artifact and

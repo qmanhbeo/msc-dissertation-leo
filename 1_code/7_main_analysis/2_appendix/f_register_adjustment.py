@@ -77,10 +77,9 @@ def parse_args() -> argparse.Namespace:
 def load_research_sample(
     model: str, n_samples: int, rng: np.random.Generator,
 ) -> np.ndarray:
-    """Load a random sample of research embeddings from the consolidated array.
+    """Load a random sample of research embeddings by reading each shard directly (shard-native).
 
-    Slices the single consolidated embedding memmap per shard (shard_id order)
-    and samples with the same seeded RNG sequence as the old per-file loop, so
+    Samples with the same seeded RNG sequence as the old per-file loop, so
     results are unchanged.
     """
     manifest = load_json(embed_dir_for_model(model) / "research_shards" / "metadata" / "manifest.json")

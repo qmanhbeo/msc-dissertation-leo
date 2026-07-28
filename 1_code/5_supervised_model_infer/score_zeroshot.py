@@ -89,9 +89,8 @@ def run(args: argparse.Namespace) -> None:
     embed_root = embed_dir_for_model(model)
 
     # 2. Score research papers — accumulate per-SDG sums and counts.
-    # Load the consolidated embedding array ONCE (memmap, shard_id order) and
-    # slice per shard. This is byte-identical to iterating the 27 shard files
-    # but avoids re-opening + materialising them on every run.
+    # Score research papers — load each shard's embedding directly (shard-native,
+    # mmap). This is byte-identical to the former consolidated-array slice.
     manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
     manifest = load_json(manifest_path)
     shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
