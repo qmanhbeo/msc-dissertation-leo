@@ -52,8 +52,8 @@ from semantic_gap_shared import (
     write_csv,
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
-from research_embedding_shards import load_consolidated_embeddings
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, research_segmented_dir_for_model, preprocessed_dir
+
 
 TARGET_SDGS = (17, 13, 9)
 SAMPLE_PER_SIDE = 6000
@@ -126,7 +126,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str, Any]]:
+def load_research_shards(research_dir: Path, scored_dir: Path, model: str) -> list[dict[str, Any]]:
     research_manifest = load_json(research_dir / "metadata" / "manifest.json")
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
 
@@ -136,14 +136,6 @@ def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str,
     if len(research_shards) != len(score_shards):
         raise RuntimeError("Research and score manifests have different shard counts.")
 
-    # global row offsets (shard_id order) so callers can slice the consolidated
-    # embedding memmap instead of re-opening each shard file.
-    offsets = {}
-    off = 0
-    for r in research_shards:
-        offsets[int(r["shard_id"])] = off
-        off += int(r["rows"])
-
     shards: list[dict[str, Any]] = []
     for research_shard, score_shard in zip(research_shards, score_shards):
         shard_id = int(research_shard["shard_id"])
@@ -151,14 +143,18 @@ def load_research_shards(research_dir: Path, scored_dir: Path) -> list[dict[str,
             raise RuntimeError("Research and score manifests do not align on shard_id.")
         if int(research_shard["rows"]) != int(score_shard["rows"]):
             raise RuntimeError(f"Research and score manifests do not align on rows for shard {shard_id}.")
-        text_path = resolve_manifest_path(research_shard["ids_path"], allowed_dirs=(research_dir, scored_dir))
+        text_path = research_segmented_dir_for_model(model) / f"{research_shard['name']}.jsonl"
+        emb_path = resolve_manifest_path(
+            research_shard["embedding_path"],
+            allowed_dirs=(research_dir, scored_dir, preprocessed_dir()),
+        )
         shards.append(
             {
                 "shard_id": shard_id,
                 "name": research_shard["name"],
                 "rows": int(research_shard["rows"]),
                 "text_path": text_path,
-                "emb_offset": offsets[shard_id],
+                "emb_path": emb_path,
                 "score_ids_path": resolve_manifest_path(score_shard["ids_path"], allowed_dirs=(research_dir, scored_dir)),
             }
         )
@@ -222,10 +218,9 @@ def collect_research(
     example_heaps: dict[int, list[tuple[float, int, dict[str, Any]]]] = {sdg: [] for sdg in TARGET_SDGS}
     seq = 0
 
-    shards = load_research_shards(embed_dir, scored_dir)
-    full_emb = load_consolidated_embeddings(model)
+    shards = load_research_shards(embed_dir, scored_dir, model)
     for shard_idx, shard in enumerate(shards, start=1):
-        emb = np.asarray(full_emb[shard["emb_offset"]:shard["emb_offset"] + shard["rows"]])
+        emb = np.load(shard["emb_path"], mmap_mode="r")
         score_rows = list(iter_jsonl(shard["score_ids_path"]))
         if emb.shape[0] != len(score_rows):
             raise RuntimeError(f"Embedding/score row mismatch for {shard['name']}")
@@ -237,7 +232,7 @@ def collect_research(
                 if sdg not in TARGET_SDGS:
                     continue
                 payload = json.loads(line)
-                text = str(payload.get("combined_text") or "")
+                text = str(payload.get("text") or "")
                 if not usable_text(text):
                     continue
                 counts[sdg] += 1

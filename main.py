@@ -29,7 +29,6 @@ from model_utils import (
     segmented_dir_for_model,
 )
 from analysis_orchestrator import run_analysis
-from consolidate_research_artifacts import consolidate_embeddings, consolidate_scores
 
 
 ROOT = Path(__file__).resolve().parent
@@ -382,9 +381,8 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     )
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
     # Main-text (and optionally appendix) analyses, driven in-process by the
-    # orchestrator. The consolidated research array is loaded ONCE and shared
-    # across scripts, instead of each re-opening the 27 shards in a subprocess.
-    # Must run BEFORE plot figures, which consumes the analysis outputs.
+    # orchestrator. Each analysis reads the 27 research embedding/score shards
+    # directly (shard-native, mmap); no consolidated array is built or cached.    # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     # Figures are MPNet-centric (fixed main/figures/ paths), so only plot for
     # the default encoder; a second encoder's tree is a robustness artifact and
@@ -641,9 +639,6 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         ]
         embed_cmd.extend(model_args)
         run_step("embed paper shards", embed_cmd)
-        # Refresh the consolidated research-embedding cache so downstream
-        # analyses never read a stale array after a re-embed.
-        consolidate_embeddings(model, overwrite=args.overwrite)
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
@@ -658,8 +653,6 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(args.overwrite))
         run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "mlp"] + _overwrite_flag(args.overwrite))
         run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/5_supervised_model_infer/score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)])
-        # Refresh the consolidated research-score cache after re-scoring.
-        consolidate_scores(model, overwrite=args.overwrite)
 
     elif stage == "centroids":
         # Build the SDG reference centroids (sdg_centroids.npy) consumed by the

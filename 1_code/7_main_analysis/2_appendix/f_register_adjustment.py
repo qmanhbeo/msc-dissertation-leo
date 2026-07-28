@@ -43,9 +43,11 @@ from model_utils import (
     N_SDG,
     SDG_NAMES,
     embed_dir_for_model,
+    embed_research_dir_for_model,
     scored_dir_for_model,
+    preprocessed_dir,
 )
-from research_embedding_shards import load_consolidated_embeddings
+from shard_pipeline_utils import resolve_manifest_path
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -81,19 +83,12 @@ def load_research_sample(
     and samples with the same seeded RNG sequence as the old per-file loop, so
     results are unchanged.
     """
-    full_emb = load_consolidated_embeddings(model)
     manifest = load_json(embed_dir_for_model(model) / "research_shards" / "metadata" / "manifest.json")
     shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
     if not shards:
         raise FileNotFoundError(f"No research shards in manifest for {model}")
 
     n_per_shard = max(1, n_samples // len(shards))
-    offsets = {}
-    off = 0
-    for s in shards:
-        offsets[int(s["shard_id"])] = off
-        off += int(s["rows"])
-
     samples: list[np.ndarray] = []
     total = 0
 
@@ -107,8 +102,14 @@ def load_research_sample(
         n_take = min(n_per_shard, needed)
         n_take = min(n_take, n_rows)
         idx = rng.choice(n_rows, size=n_take, replace=False)
-        global_idx = offsets[int(shard["shard_id"])] + idx
-        samples.append(np.asarray(full_emb[global_idx]).copy())
+        emb = np.load(
+            resolve_manifest_path(
+                shard["embedding_path"],
+                allowed_dirs=(embed_research_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
+            ),
+            mmap_mode="r",
+        )
+        samples.append(np.asarray(emb[idx]).copy())
         total += n_take
         log.info("  Sampled %d from shard %s (total %d)", n_take, shard.get("name", shard["shard_id"]), total)
 

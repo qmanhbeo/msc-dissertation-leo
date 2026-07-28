@@ -1,15 +1,12 @@
 """
 Analysis orchestrator: run every main-text and appendix analysis for a model
-IN A SINGLE PROCESS, loading the consolidated research array ONCE.
+IN A SINGLE PROCESS.
 
-Previously each analysis was a separate `subprocess`, so the 27-shard research
-data was re-opened/re-materialised by every script. Now `run_analysis` drives
-each script's `main()` in-process. Because `load_consolidated_embeddings`/
-`load_consolidated_scores` are memoized (see research_embedding_shards), the
-consolidated array is loaded once and shared by all scripts.
-
-It also refreshes the consolidated cache first, so a re-embed / re-score is
-never silently stale (this closes the stale-cache gap for the new artifact).
+Each analysis was previously a separate `subprocess`, re-opening the 27-shard
+research data. `run_analysis` now drives each script's `main()` in-process, and
+every script reads the research embedding/score shards directly (shard-native,
+mmap) — so no consolidated array is built or cached, and a re-embed / re-score
+is reflected immediately on the next run.
 """
 
 from __future__ import annotations
@@ -18,7 +15,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-from consolidate_research_artifacts import consolidate_embeddings, consolidate_scores
 from model_utils import DEFAULT_EMBED_MODEL
 
 ANALYSIS_ROOT = Path(__file__).resolve().parents[1]  # 7_main_analysis
@@ -84,13 +80,11 @@ def run_analysis(
 ) -> None:
     """Run all analysis scripts for `model` in-process.
 
-    Refreshes the consolidated research cache first (skip/regenerate per the
-    sha256 sidecar), then runs main-text analyses and, optionally, appendix
-    analyses — each via its `main()` with no subprocess boundary.
+    Each script reads the 27 research embedding/score shards directly (shard-
+    native, mmap), so no consolidated array is built or cached. Runs main-text
+    analyses and, optionally, appendix analyses — each via its `main()` with no
+    subprocess boundary.
     """
-    consolidate_embeddings(model, overwrite=overwrite)
-    consolidate_scores(model, overwrite=overwrite)
-
     main_steps = [s for s in MAIN_STEPS if (not s[1] or model == DEFAULT_EMBED_MODEL)]
     for rel_path, _ in main_steps:
         _run_step(rel_path, model, output_dir)

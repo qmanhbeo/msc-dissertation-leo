@@ -14,15 +14,16 @@
       ]
     },
     "embedded": {
-      "version": "2026-07-26-111026",
+      "version": "2026-07-28-000000",
       "url": "https://drive.usercontent.google.com/download?id=1Agtnvo-CUu3L7i_-lbCyRvPYdPpwqoG1&export=download",
       "sha256": "1edf8aae1f1b5c1d0c1df623a8ae9ac0d8e356e6599ac30164e7604aeed64a84",
       "expected_repo_paths": [
-        "2_data/3_embedded"
+        "2_data/3_embedded",
+        "2_data/2_segmented"
       ],
       "notes": [
-        "Embedded checkpoint only (3_embedded/). For warm-replay analysis.",
-        "Excludes 0_raw, 1_preprocessed, 2_segmented, and all downstream stages."
+        "Embedded checkpoint (3_embedded/) plus the canonical segmented research text (2_segmented/), used for warm-replay analysis text extraction.",
+        "Excludes 0_raw, 1_preprocessed, and all downstream stages."
       ]
     }
   }

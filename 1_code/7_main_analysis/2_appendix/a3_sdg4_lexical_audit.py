@@ -32,7 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, research_segmented_dir_for_model
 from semantic_gap_shared import latex_escape, write_csv
 from shard_pipeline_utils import iter_jsonl, load_json
 
@@ -174,7 +174,7 @@ def _audit_single_shard(args: tuple[str, dict[str, set[int]]]) -> dict[str, Coun
             if not matching:
                 continue
             payload = json.loads(line)
-            text = str(payload.get("combined_text") or "")
+            text = str(payload.get("text") or "")
             category = classify_text(text)
             for subset in matching:
                 counters[subset][category] += 1
@@ -185,13 +185,14 @@ def audit_subsets(
     research_dir: Path,
     text_manifest: dict,
     subset_refs: dict[str, dict[int, set[int]]],
+    model: str,
 ) -> dict[str, Counter]:
     n_shards = len(text_manifest["shards"])
 
     jobs: list[tuple[str, dict[str, set[int]]]] = []
     for shard in text_manifest["shards"]:
         shard_id = int(shard["shard_id"])
-        data_path = str(research_dir / "metadata" / f"{shard['name']}_ids.jsonl")
+        data_path = str(research_segmented_dir_for_model(model) / f"{shard['name']}.jsonl")
         targets = {
             subset: refs.get(shard_id, set())
             for subset, refs in subset_refs.items()
@@ -281,7 +282,7 @@ def run(args: argparse.Namespace) -> None:
         "non_sdg4_sample": non_sdg4_refs,
         "sdg9_assigned": sdg9_refs,
     }
-    counters = audit_subsets(research_dir, text_manifest, subset_refs)
+    counters = audit_subsets(research_dir, text_manifest, subset_refs, args.embed_model)
 
     rows: list[dict] = []
     summary = {

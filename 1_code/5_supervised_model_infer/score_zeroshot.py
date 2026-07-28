@@ -28,9 +28,8 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, scored_dir_for_model
-from research_embedding_shards import load_consolidated_embeddings
-from shard_pipeline_utils import load_json
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, preprocessed_dir
+from shard_pipeline_utils import load_json, resolve_manifest_path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -93,23 +92,23 @@ def run(args: argparse.Namespace) -> None:
     # Load the consolidated embedding array ONCE (memmap, shard_id order) and
     # slice per shard. This is byte-identical to iterating the 27 shard files
     # but avoids re-opening + materialising them on every run.
-    full_emb = load_consolidated_embeddings(model)
     manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
     manifest = load_json(manifest_path)
     shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
-    offsets = {}
-    off = 0
-    for s in shards:
-        offsets[int(s["shard_id"])] = off
-        off += int(s["rows"])
     log.info("Scoring %d research shards (zero-shot)...", len(shards))
 
     res_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
     res_counts = np.zeros(N_SDG, dtype=np.int64)
 
     for shard in shards:
-        start = offsets[int(shard["shard_id"])]
-        embeddings = np.asarray(full_emb[start:start + int(shard["rows"])]).astype(np.float32)
+        emb = np.load(
+            resolve_manifest_path(
+                shard["embedding_path"],
+                allowed_dirs=(embed_research_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
+            ),
+            mmap_mode="r",
+        )
+        embeddings = np.asarray(emb).astype(np.float32)
         scores = embeddings @ centroids.T
         assignments = scores.argmax(axis=1)
         for sdg_idx in range(N_SDG):

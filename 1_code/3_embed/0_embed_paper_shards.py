@@ -84,7 +84,7 @@ def default_precision(model: str) -> str:
     """MPNet stays fp32; MiniLM (smaller, 384-dim) is stored fp16 by default.
 
     The MiniLM encoder is used only as a cheap encoder-sensitivity/robustness
-    check, and fp16 halves its consolidated research array (~3.3GB vs ~6.6GB).
+    check, and fp16 halves its research embedding shards (~3.3GB vs ~6.6GB).
     """
     return "fp16" if model == "all-MiniLM-L6-v2" else "fp32"
 
@@ -113,7 +113,6 @@ def generate_ids(data_path: Path, ids_out: Path) -> None:
                 "source_doc": row.get("source_doc", ""),
                 "segment_id": row.get("segment_id", ""),
                 "row_in_shard": row_in_shard,
-                "combined_text": row.get("combined_text", ""),
             }
             dst.write(json.dumps(out, ensure_ascii=False) + "\n")
     tmp.replace(ids_out)
