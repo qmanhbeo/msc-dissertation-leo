@@ -8,6 +8,12 @@ For each corpus (research, policy):
 
 Also saves policy centroids persistently (research centroids already exist).
 
+NOTE: this is a runtime SANITY GATE, not a producer. Its three written
+outputs (policy_centroids.npy, policy_centroid_meta.json,
+centroid_consistency.json) are diagnostic-only and are NOT read by any
+downstream script — its value is failing loudly if research/policy
+centroids or scores are inconsistent, not the artifacts it writes.
+
 Inputs:
    2_data/3_embedded/{model}/research_shards/metadata/manifest.json
    2_data/3_embedded/{model}/policy.npy
