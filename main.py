@@ -85,7 +85,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, A3b, B2, C, F) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, F) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.2 Lexical Illustration of the Semantic Gap.")
