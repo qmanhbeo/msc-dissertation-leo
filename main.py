@@ -370,19 +370,20 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py"] + model_args, step_id="1")
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py"] + model_args + _overwrite_flag(overwrite), step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py"] + model_args + _overwrite_flag(overwrite), step_id="3")
-    if model == DEFAULT_EMBED_MODEL:
-        run_step(
-            "retrain MLP",
-            [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py",
-             "--embed-model", model, "--classifier-type", "mlp"],
-            step_id="3b",
-        )
-        run_step(
-            "score MLP",
-            [sys.executable, "1_code/5_supervised_model_infer/2_score_mlp.py",
-             "--embed-model", model] + _overwrite_flag(overwrite),
-            step_id="3c",
-        )
+    # MLP is scored for every encoder (not just the default), so the
+    # cross-sensitivity table can carry an MLP sub-column per encoder.
+    run_step(
+        "retrain MLP",
+        [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py",
+         "--embed-model", model, "--classifier-type", "mlp"],
+        step_id="3b",
+    )
+    run_step(
+        "score MLP",
+        [sys.executable, "1_code/5_supervised_model_infer/2_score_mlp.py",
+         "--embed-model", model] + _overwrite_flag(overwrite),
+        step_id="3c",
+    )
     run_step(
         "check centroid consistency",
         [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args + _overwrite_flag(overwrite),
@@ -651,16 +652,26 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
-        run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--embed-model", model])
+        run_step("retrain full data (LR)", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--embed-model", model])
+        run_step("retrain full data (MLP)", [sys.executable, "1_code/4_supervised_model_train/1_retrain_full_data.py", "--embed-model", model, "--classifier-type", "mlp"])
 
     elif stage == "infer":
-        run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
-        run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        # Score both supervised assignment methods (LR + MLP) for the encoder,
+        # plus zero-shot nearest-centroid assignment. The zero-shot step depends
+        # on sdg_centroids.npy, so `centroids` must run before `infer`.
+        run_step("score research shards (LR)", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/2_score_mlp.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/7_main_analysis/1_canonical/0_zeroshot_scoring.py", "--embed-model", model, "--output-dir", str(output_dir)])
         # Refresh the consolidated research-score cache after re-scoring.
         consolidate_scores(model, overwrite=args.overwrite)
 
     elif stage == "centroids":
+        # Build the SDG reference centroids (sdg_centroids.npy) consumed by the
+        # zero-shot + semantic-gap analyses, then the a4 similarity matrix.
+        run_step("build SDG reference centroids", [sys.executable, "1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
         run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        run_step("build centroid similarity matrix", [sys.executable, "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(args.overwrite))
 
     elif stage == "analysis":
         _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite, include_appendix=True)
