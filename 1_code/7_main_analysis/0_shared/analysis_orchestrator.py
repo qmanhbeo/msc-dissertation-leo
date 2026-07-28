@@ -33,12 +33,12 @@ ANALYSIS_ROOT = Path(__file__).resolve().parents[1]  # 7_main_analysis
 # artifact (a second encoder's tree is a robustness artifact read by the
 # combined cross-sensitivity table).
 MAIN_STEPS = [
-    ("1_canonical/0_zeroshot_scoring.py", False),
-    ("1_canonical/0_coverage_gap.py", False),
-    ("1_canonical/1_semantic_gap.py", False),
-    ("1_canonical/2_coverage_semantic_interaction.py", False),
-    ("1_canonical/3_generate_cross_sensitivity_table.py", False),
-    ("1_canonical/0_pca_semantic_landscape.py", True),
+    ("1_main_text/0_zeroshot_scoring.py", False),
+    ("1_main_text/0_coverage_gap.py", False),
+    ("1_main_text/1_semantic_gap.py", False),
+    ("1_main_text/2_coverage_semantic_interaction.py", False),
+    ("1_main_text/3_generate_cross_sensitivity_table.py", False),
+    ("1_main_text/0_pca_semantic_landscape.py", True),
 ]
 APPENDIX_STEPS = [
     ("3_appendix/a2_policy_source_family_sensitivity.py", False),

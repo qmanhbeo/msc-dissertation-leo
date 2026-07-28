@@ -666,7 +666,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("score research shards (LR)", [sys.executable, "1_code/5_supervised_model_infer/0_score_research_shards.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
         run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/1_score_policy.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
         run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/2_score_mlp.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
-        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/7_main_analysis/1_canonical/0_zeroshot_scoring.py", "--embed-model", model, "--output-dir", str(output_dir)])
+        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/7_main_analysis/1_main_text/0_zeroshot_scoring.py", "--embed-model", model, "--output-dir", str(output_dir)])
         # Refresh the consolidated research-score cache after re-scoring.
         consolidate_scores(model, overwrite=args.overwrite)
 
