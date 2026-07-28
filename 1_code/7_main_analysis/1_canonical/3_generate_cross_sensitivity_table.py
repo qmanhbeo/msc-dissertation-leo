@@ -257,8 +257,12 @@ def write_cross_sensitivity():
         col_groups.append(("Encoder (embedding architecture)", enc_subgroups))
 
     # --- Policy source family (LR-based, primary model) -----------------
+    # "Full" (full policy corpus) is intentionally omitted: it is
+    # identical to the canonical MPNet-LR column (rho = 1.00 in the
+    # Rank-Corr row), so keeping it would only duplicate that
+    # baseline and widen an already-wide table.
     pcols = []
-    family_labels = {"full": "Full", "curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC"}
+    family_labels = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC"}
     for key, label in family_labels.items():
         if key in policy_families:
             pcols.append((label, compute_ranks(policy_families[key]), f"Policy source: {label}"))
@@ -306,7 +310,13 @@ def write_cross_sensitivity():
     has_nested = any(is_nested(g) for g in col_groups)
 
     # --- Level-1 / Level-2 / (Level-3) headers ----------------------
-    rowA = ["SDG"]
+    # SDG spans all three header rows via \multirow; rows B/C leave the
+    # first cell blank so it is not repeated. Flat (non-nested)
+    # groups print their column labels ONCE (in row B); row C
+    # prints only the method labels for the nested encoder group
+    # and leaves flat groups blank (no duplicated policy/segment
+    # labels across two stacked rows).
+    rowA = [r"\multirow{3}{*}{SDG}"]
     midrules = []
     col_idx = 2
     for glabel, body in col_groups:
@@ -324,7 +334,7 @@ def write_cross_sensitivity():
             midrules.append((col_idx, col_idx + total - 1))
         col_idx += total
 
-    rowB = ["SDG"]
+    rowB = [""]
     for glabel, body in col_groups:
         if is_nested((glabel, body)):
             for sublabel, cols in body:
@@ -334,15 +344,13 @@ def write_cross_sensitivity():
                 rowB.append(label)
 
     if has_nested:
-        rowC = ["SDG"]
+        rowC = [""]
         for glabel, body in col_groups:
             if is_nested((glabel, body)):
                 for _, cols in body:
                     for label, _, _ in cols:
                         rowC.append(label)
-            else:
-                for label, _, _ in body:
-                    rowC.append(label)
+            # flat groups: labels already shown in row B -> leave blank
     else:
         rowC = None
 
@@ -450,7 +458,7 @@ def write_cross_sensitivity():
         r"Zero-shot = nearest-centroid assignment on the SDG reference centroids. "
         r"MLP = 4-layer/384-hidden network retrained on the full training pool. "
         r"Policy-source and segment-cap columns are LR-based. "
-        r"\textbf{Bold} = encoding-invariant top gap (rank difference $\le$1 between the two encoders); "
+        r"\textbf{Bold} = encoding-invariant (rank difference $\le$1 between MPNet and MiniLM for the same assignment method); "
         r"\textit{italic} = encoder-sensitive (rank difference $\ge$4). "
         r"Rank Corr ($\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
         r"canonical MPNet-LR column.\par"
