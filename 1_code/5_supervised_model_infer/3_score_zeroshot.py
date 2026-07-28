@@ -20,9 +20,9 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = ROOT / "1_code"
-ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
+ANALYSIS_ROOT = CODE_ROOT / "7_main_analysis"
 SHARED_DIR = ANALYSIS_ROOT / "0_shared"
 for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
