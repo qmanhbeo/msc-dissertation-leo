@@ -7,6 +7,14 @@ per-SDG and per-source breakdowns.
 
 Run from project root:
     python 1_code/4_supervised_model_train/2_evaluate.py
+
+PROVENANCE GUARD (do not archive/delete on "orphan" grounds):
+    Not called by main.py or any orchestrator -- intentionally kept. This is the
+    diagnostic counterpart to the grid-search train scripts (1_train_models_LR.py /
+    1_train_models_MLP.py), whose CV numbers are hand-transcribed into
+    dissertation.tex Appendix D. No live code path consumes its output; retained for
+    reproducibility of the Appendix D figures. Do not remove without first confirming
+    Appendix D is otherwise sourced.
 """
 
 import json

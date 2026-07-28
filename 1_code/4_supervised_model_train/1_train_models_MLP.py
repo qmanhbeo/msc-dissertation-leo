@@ -18,6 +18,14 @@ Outputs:
 
 Run from project root:
     python 1_code/4_supervised_model_train/1_train_models_MLP.py
+
+PROVENANCE GUARD (do not archive/delete on "orphan" grounds):
+    Not called by main.py or any orchestrator -- intentionally kept.
+    Its output values (MLP CV macro-F1 = 0.8243 +/- 0.0058; champion arch
+    4 layers / 384 hidden / lr=1e-3) are hand-transcribed into dissertation.tex
+    Appendix D (lines 642/669). Do not remove this script without first re-verifying
+    that those Appendix D lines are updated or otherwise sourced; the numbers are
+    load-bearing by transcription, not by any live code path.
 """
 
 import argparse

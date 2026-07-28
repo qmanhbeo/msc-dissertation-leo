@@ -16,6 +16,13 @@ Outputs:
 
 Run from project root:
     python 1_code/4_supervised_model_train/1_train_models_LR.py
+
+PROVENANCE GUARD (do not archive/delete on "orphan" grounds):
+    Not called by main.py or any orchestrator -- intentionally kept.
+    Its output values (LR best config C=10.0, macro-F1 = 0.8107 +/- 0.0066 CV)
+    are hand-transcribed into dissertation.tex Appendix D (line 642). Do not remove
+    this script without first re-verifying that Appendix D line is updated or otherwise
+    sourced; the numbers are load-bearing by transcription, not by any live code path.
 """
 
 import datetime
