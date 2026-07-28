@@ -809,6 +809,10 @@ def write_outputs(
         num_lines.append(
             rf"\newcommand{{\SampleStdSemanticGap{word}}}{{{row['std_semantic_gap']:.3f}}}"
         )
+        if row["tier_label"] == "50k":
+            num_lines.append(
+                rf"\newcommand{{\SamplePolicyBiasFiftyK}}{{{row['mean_a15_calibration_bias']:.3f}}}"
+            )
     (tables_dir / "num_sample_stability.tex").write_text(
         "\n".join(num_lines) + "\n", encoding="utf-8"
     )

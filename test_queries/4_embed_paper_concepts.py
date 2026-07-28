@@ -125,14 +125,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
     embed_root = embed_dir_for_model(args.embed_model)
-    # Default to the canonical "research" segment dir; when an explicit
-    # --input-manifest is given (e.g. a concept variant) derive the segment
-    # dir from that manifest's parent so we read the correct segmented shards.
-    seg_root = (
-        Path(args.input_manifest).resolve().parent.parent
-        if args.input_manifest
-        else segmented_dir_for_model(args.embed_model) / "research"
-    )
+    seg_root = segmented_dir_for_model(args.embed_model) / "research"
 
     input_manifest = Path(args.input_manifest) if args.input_manifest else seg_root / "metadata" / "manifest.json"
     out_dir = Path(args.out_dir) if args.out_dir else embed_research_dir_for_model(args.embed_model)

@@ -44,17 +44,7 @@ class AllKeysExhaustedError(Exception):
 load_dotenv()
 
 OPENALEX_BASE_URL = "https://api.openalex.org/works"
-
-# Retrieval-aware output roots. Default to the canonical "keyword" corpus
-# (2_data/0_raw/openalex). The "concept" variant writes to a parallel
-# 2_data/0_raw/openalex_concept tree so it never touches the canonical data.
-def _resolve_output_dir(retrieval: str) -> Path:
-    if retrieval == "concept":
-        return raw_dir() / "openalex_concept"
-    return raw_dir() / "openalex"
-
-
-OUTPUT_DIR = _resolve_output_dir("keyword")
+OUTPUT_DIR = raw_dir() / "openalex"
 ARTIFACT_DIR = OUTPUT_DIR / "artifact"
 METADATA_FILE = ARTIFACT_DIR / "metadata.json"
 SEEN_IDS_FILE = ARTIFACT_DIR / "seen_ids.json"
@@ -116,55 +106,18 @@ AI_TERMS = [
     "neural network",
 ]
 
-# Concept-retrieval variant: OECD.AI-style AI+ML field-of-study method.
-# OpenAlex `concepts` are the successor to MAG fields of study. We retrieve
-# papers tagged with the "artificial intelligence" OR "machine learning"
-# concept (NOT deep learning / neural network, which OECD.AI treats only as
-# subfields), with no SDG filter -- the LR assigns SDGs at scoring time.
-# MAX_PAPERS_PER_CONCEPT bounds the fetch to ~25k per concept (~50k total,
-# deduped) so the run is feasible; OpenAlex returns results in a fixed order,
-# so this is a deterministic-but-order-dependent sample (documented in output).
-CONCEPT_IDS = {
-    "artificial intelligence": "C154945302",
-    "machine learning": "C119857082",
-}
-MAX_PAPERS_PER_CONCEPT = 25000
-
-
-def build_queries(retrieval: str) -> list[dict]:
-    """Build the list of fetch queries for the chosen retrieval strategy.
-
-    keyword : the canonical 4 AI terms x 17 SDGs (unchanged behaviour).
-    concept: two concept-ID queries (AI, ML), no SDG filter, no free-text search.
-    """
-    if retrieval == "concept":
-        queries: list[dict] = []
-        for name, cid in CONCEPT_IDS.items():
-            queries.append({
-                "mode": "concept",
-                "term": name,
-                "sdg": None,
-                "filter_parts": [f"concepts.id:{cid}", "publication_year:>2017", "has_abstract:true"],
-                "key": f"concept_{cid}",
-                "description": f"Concept {name} ({cid})",
-            })
-        return queries
-
-    # keyword (default)
-    queries = []
-    for sdg_num in range(1, 18):
-        sdg_filter = f"sustainable_development_goals.id:{SDG_BASE}/{sdg_num}"
-        filter_parts = [sdg_filter, "publication_year:>2017", "has_abstract:true"]
-        for term in AI_TERMS:
-            queries.append({
-                "mode": "keyword",
-                "term": term,
-                "sdg": sdg_num,
-                "filter_parts": filter_parts,
-                "key": f"sdg{sdg_num}_{term}",
-                "description": f"SDG {sdg_num} + \"{term}\"",
-            })
-    return queries
+QUERIES = []
+for sdg_num in range(1, 18):
+    sdg_filter = f"sustainable_development_goals.id:{SDG_BASE}/{sdg_num}"
+    filter_parts = [sdg_filter, "publication_year:>2017", "has_abstract:true"]
+    for term in AI_TERMS:
+        QUERIES.append({
+            "term": term,
+            "sdg": sdg_num,
+            "filter_parts": filter_parts,
+            "key": f"sdg{sdg_num}_{term}",
+            "description": f"SDG {sdg_num} + \"{term}\"",
+        })
 
 
 def reconstruct_abstract(abstract_inverted_index: dict) -> str:
@@ -231,14 +184,8 @@ def papers_file(sdg: int) -> Path:
     return OUTPUT_DIR / f"papers_sdg{sdg:02d}.jsonl"
 
 
-def papers_file_for_query(q: dict) -> Path:
-    """Per-query raw output path (works for both keyword and concept modes)."""
-    if q.get("mode") == "concept":
-        return OUTPUT_DIR / f"papers_{q['key']}.jsonl"
-    return OUTPUT_DIR / f"papers_sdg{q['sdg']:02d}.jsonl"
-
-
-def load_existing_count(path: Path) -> int:
+def load_existing_count(sdg: int) -> int:
+    path = papers_file(sdg)
     if not path.exists():
         return 0
     with path.open() as f:
@@ -249,11 +196,9 @@ def load_existing_count(path: Path) -> int:
 
 def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
     key = q["key"]
+    sdg = q["sdg"]
     desc = q["description"]
-    out_path = papers_file_for_query(q)
-    cap = MAX_PAPERS_PER_CONCEPT if q.get("mode") == "concept" else None
-    existing = load_existing_count(out_path)
-    remaining = (cap - existing) if cap is not None else None
+    out_path = papers_file(sdg)
 
     # Already done?
     qprog = progress.get(key, {})
@@ -276,15 +221,12 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
     def build_params(current_cursor: str) -> dict:
         email, api_key = credential_sets[credential_index]
         params = {
+            "search": q["term"],
             "per-page": str(PER_PAGE),
             "mailto": email,
             "filter": ",".join(q["filter_parts"]),
             "cursor": current_cursor,
         }
-        # Keyword retrieval uses free-text search; concept retrieval relies
-        # solely on the concepts.id filter (no free-text search term).
-        if q.get("mode") != "concept":
-            params["search"] = q["term"]
         if api_key:
             params["api_key"] = api_key
         return params
@@ -351,13 +293,6 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
         progress[key] = {"page": page, "cursor": next_cursor or cursor, "done": done}
         save_progress(progress)
 
-        # Concept-mode cap: stop once enough new papers are collected for this concept.
-        if remaining is not None and local_new >= remaining:
-            progress[key] = {"page": page, "cursor": next_cursor or cursor, "done": True}
-            save_progress(progress)
-            print(f"    [{desc}] reached cap ({cap}); stopping.", flush=True)
-            break
-
         print(f"    [{desc}] p{page}: {len(results)} fetched, {local_new} new", flush=True)
 
         if done:
@@ -376,48 +311,18 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
 
 def main() -> None:
-    import argparse
-    global OUTPUT_DIR, ARTIFACT_DIR, METADATA_FILE, SEEN_IDS_FILE, PROGRESS_FILE, MAX_PAPERS_PER_CONCEPT
-    ap = argparse.ArgumentParser(description="Fetch OpenAlex papers (keyword or concept retrieval).")
-    ap.add_argument("--retrieval", choices=["keyword", "concept"], default="keyword",
-                    help="Retrieval strategy: 'keyword' (canonical 4-term x 17-SDG) or "
-                         "'concept' (AI+ML field-of-study via concepts.id, no SDG filter).")
-    ap.add_argument("--max-papers-per-concept", type=int, default=MAX_PAPERS_PER_CONCEPT,
-                    help="Cap on papers fetched per concept in 'concept' mode (default: %(default)s).")
-    ap.add_argument("--overwrite", action="store_true",
-                    help="Ignore existing progress/seen-ids and re-fetch from scratch "
-                         "(clears this retrieval's artifact dir only).")
-    args = ap.parse_args()
-
-    OUTPUT_DIR = _resolve_output_dir(args.retrieval)
-    ARTIFACT_DIR = OUTPUT_DIR / "artifact"
-    METADATA_FILE = ARTIFACT_DIR / "metadata.json"
-    SEEN_IDS_FILE = ARTIFACT_DIR / "seen_ids.json"
-    PROGRESS_FILE = ARTIFACT_DIR / "progress.json"
-    MAX_PAPERS_PER_CONCEPT = args.max_papers_per_concept
-
     ensure_api_keys()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
-    if args.overwrite:
-        for p in (PROGRESS_FILE, SEEN_IDS_FILE):
-            if p.exists():
-                p.unlink()
-        progress: dict = {}
-        seen_ids: set[str] = set()
-    else:
-        seen_ids = load_seen_ids()
-        progress = load_progress()
-
-    QUERIES = build_queries(args.retrieval)
+    seen_ids = load_seen_ids()
+    progress = load_progress()
 
     done_count = sum(1 for v in progress.values() if v.get("done"))
-    total_on_disk = sum(load_existing_count(papers_file_for_query(q)) for q in QUERIES)
+    total_on_disk = sum(load_existing_count(sdg) for sdg in range(1, 18))
 
     print(f"\n{'='*60}", flush=True)
     print("OpenAlex Fetcher -- AI/ML for SDGs", flush=True)
-    print(f"  retrieval: {args.retrieval}", flush=True)
     print(f"{'='*60}", flush=True)
     print(f"Queries: {len(QUERIES)} ({done_count} done, {len(QUERIES) - done_count} remaining)", flush=True)
     print(f"Seen IDs: {len(seen_ids):,} | Papers on disk: {total_on_disk:,}", flush=True)
@@ -446,14 +351,14 @@ def main() -> None:
     save_seen_ids(seen_ids)
     save_progress(progress)
 
-    # Combine per-query files into a single papers.jsonl
+    # Combine into single file
     combined_path = OUTPUT_DIR / "papers.jsonl"
     if combined_path.exists():
         combined_path.unlink()
     combined_count = 0
     with combined_path.open("w") as out:
-        for q in QUERIES:
-            pfile = papers_file_for_query(q)
+        for sdg in range(1, 18):
+            pfile = papers_file(sdg)
             if pfile.exists():
                 with pfile.open() as inp:
                     for line in inp:
@@ -462,31 +367,19 @@ def main() -> None:
                             combined_count += 1
 
     elapsed = datetime.now() - start_time
-    total_size = sum(f.stat().st_size for f in OUTPUT_DIR.glob("papers_*.jsonl"))
-
-    if args.retrieval == "concept":
-        per_source = {q["key"]: load_existing_count(papers_file_for_query(q)) for q in QUERIES}
-        source_label = "papers_per_concept"
-    else:
-        per_source = {str(q["sdg"]): load_existing_count(papers_file_for_query(q)) for q in QUERIES}
-        source_label = "papers_per_sdg"
+    total_size = sum(f.stat().st_size for f in OUTPUT_DIR.glob("papers_sdg*.jsonl"))
 
     metadata = {
         "source": "OpenAlex API",
         "url": OPENALEX_BASE_URL,
-        "retrieval": args.retrieval,
         "fetched_at": datetime.now().isoformat(),
         "elapsed_seconds": round(elapsed.total_seconds(), 1),
         "total_unique_papers": combined_count,
         "total_size_mb": round(total_size / (1024 * 1024), 2),
         "year_range": [2018, 2025],
         "requires_abstract": True,
-        "sdg_filter": (
-            "native OpenAlex sustainable_development_goals.id classification"
-            if args.retrieval == "keyword"
-            else "none (concept retrieval: concepts.id AI/ML, LR assigns SDGs at scoring)"
-        ),
-        source_label: per_source,
+        "sdg_filter": "native OpenAlex sustainable_development_goals.id classification",
+        "papers_per_sdg": {str(sdg): load_existing_count(sdg) for sdg in range(1, 18)},
         "query_results": [r for r in all_results if r["pages"] > 0],
     }
 

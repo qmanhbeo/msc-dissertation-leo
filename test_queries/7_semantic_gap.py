@@ -111,14 +111,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
     p.add_argument("--segment-cap", type=int, default=SEGMENT_CAP_PRIMARY,
                    help="Max segments sampled per source_doc per SDG for the primary analysis (default: %(default)s)")
-    p.add_argument("--research-centroids", default=None,
-                   help="Override research centroids .npy (default: canonical per-model path). Used for the concept-retrieval variant.")
-    p.add_argument("--research-centroid-meta", default=None,
-                   help="Override research centroid metadata .json (default: canonical per-model path).")
-    p.add_argument("--out-data-dir", default=None,
-                   help="Override output data directory (default: canonical layout data_dir). Concept variant writes here.")
-    p.add_argument("--out-tables-dir", default=None,
-                   help="Override output tables directory (default: canonical layout tables_dir). Concept variant writes here.")
     return p.parse_args()
 
 
@@ -129,17 +121,13 @@ def run(args: argparse.Namespace) -> None:
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
-    _RESEARCH_CENTROIDS = Path(args.research_centroids) if args.research_centroids else semantic_gap_shared.get_research_centroids(args.embed_model)
-    _RESEARCH_CENTROID_META = Path(args.research_centroid_meta) if args.research_centroid_meta else semantic_gap_shared.get_research_centroid_meta(args.embed_model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
+    _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
 
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
-    if args.out_data_dir:
-        Path(args.out_data_dir).mkdir(parents=True, exist_ok=True)
-    if args.out_tables_dir:
-        Path(args.out_tables_dir).mkdir(parents=True, exist_ok=True)
-    out_sem_gap = Path(args.out_data_dir).joinpath("4_3_semantic_gap_distances.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_distances.json"
-    out_sem_sens = Path(args.out_data_dir).joinpath("4_3_semantic_gap_robustness_caps.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
-    tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
+    out_sem_gap = layout.data_dir / "4_3_semantic_gap_distances.json"
+    out_sem_sens = layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
+    tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load research centroids/meta ----

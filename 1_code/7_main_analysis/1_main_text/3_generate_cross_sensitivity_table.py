@@ -152,6 +152,142 @@ def parse_policy_source_gaps():
     return families
 
 # ---------------------------------------------------------------------------
+# Concept-retrieval variant: coverage/semantic gap loaders + Kendall tau
+# ---------------------------------------------------------------------------
+SEMANTIC_CAPTION = "Cross-sensitivity robustness of within-SDG semantic gap rankings across embedding architectures and assignment methods."
+SEMANTIC_NOTES = (
+    "Each cell reports the within-SDG semantic gap rank "
+    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$) under that encoder and assignment method. "
+    "The base encoder is \\texttt{all-mpnet-base-v2} (768-d); the alternative encoder is "
+    "\\texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; "
+    "policy segments are capped at 50 per source document per SDG (Assumption A-CHUNKCAT). "
+    "Zero-shot = nearest-centroid assignment on the SDG reference centroids. "
+    "MLP = 4-layer/384-hidden network retrained on the full training pool. "
+    "Policy-source and segment-cap columns are LR-based. "
+    "\\textbf{Bold} = encoding-invariant (rank difference $\\le$1 between MPNet and MiniLM for the same assignment method); "
+    "\\textit{italic} = encoder-sensitive (rank difference $\\ge$4). "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
+    "canonical MPNet-LR column."
+)
+COVERAGE_CAPTION = "Cross-sensitivity robustness of within-SDG coverage-gap rankings across embedding architectures and assignment methods."
+COVERAGE_NOTES = (
+    "Each cell reports the within-SDG coverage-gap rank "
+    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$) under that encoder and policy-source configuration. "
+    "The base encoder is \\texttt{all-mpnet-base-v2} (768-d); the alternative encoder is "
+    "\\texttt{all-MiniLM-L6-v2} (384-d). Coverage gap = $|\\text{research proportion} - \\text{policy proportion}|$ "
+    "per SDG, using document-weighted policy proportions (Assumption A19). "
+    "Policy-source columns compare the canonical keyword-retrieved research profile against each policy-source family. "
+    "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
+    "The Segment-cap axis is omitted: coverage gap is segment-cap-independent. "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG coverage-gap ranks against the "
+    "canonical MPNet-LR column."
+)
+
+
+def load_lr_covgaps(m):
+    p = root / "main" / m / "data" / "4_2_coverage_document_weighted.json"
+    if not p.exists():
+        return None
+    with open(p) as f:
+        data = json.load(f)
+    cg = data.get("coverage_gap_hard")
+    if not cg:
+        return None
+    return {int(k[3:]): v for k, v in cg.items()}
+
+
+def load_concept_lr_gaps(m):
+    p = root / "main" / m / "concept" / "data" / "4_3_semantic_gap_distances.json"
+    if not p.exists():
+        return None
+    with open(p) as f:
+        data = json.load(f)
+    return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row.get("semantic_gap") is not None}
+
+
+def load_concept_covgaps(m):
+    p = root / "main" / m / "concept" / "data" / "4_2_coverage_document_weighted.json"
+    if not p.exists():
+        return None
+    with open(p) as f:
+        data = json.load(f)
+    cg = data.get("coverage_gap_hard")
+    if not cg:
+        return None
+    return {int(k[3:]): v for k, v in cg.items()}
+
+
+def load_canonical_research_profile():
+    p = root / "main" / model / "data" / "4_2_coverage_document_weighted.json"
+    with open(p) as f:
+        data = json.load(f)
+    return {int(k[3:]): v for k, v in data["research_profile_hard"].items()}
+
+
+def parse_policy_source_covgaps(research_profile=None):
+    if not POLICY_GAP_COVSHARE_TEX.exists():
+        return {}
+    if research_profile is None:
+        research_profile = load_canonical_research_profile()
+    research = research_profile
+    text = POLICY_GAP_COVSHARE_TEX.read_text(encoding="utf-8")
+    fam_share = {"full": {}, "curated": {}, "sdgi": {}, "ungdc": {}}
+    in_header = True
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("%") or line.startswith(r"\toprule") or line.startswith(r"\midrule") or line.startswith(r"\bottomrule") or line.startswith(r"\end") or line.startswith(r"\cmidrule"):
+            continue
+        if in_header and "SDG" in line and "&" in line:
+            in_header = False
+            continue
+        if in_header:
+            continue
+        m = re.match(r"SDG\s+(\d+)", line)
+        if not m:
+            continue
+        sdg = int(m.group(1))
+        parts = [p.strip() for p in line.rstrip("\\").split("&")]
+        for label, gi in (("full", 2), ("curated", 4), ("sdgi", 6), ("ungdc", 8)):
+            if gi < len(parts):
+                try:
+                    fam_share[label][sdg] = float(parts[gi]) / 100.0
+                except ValueError:
+                    pass
+    out = {}
+    for label in ("curated", "sdgi", "ungdc"):
+        out[label] = {sdg: abs(research[sdg] - fam_share[label][sdg]) for sdg in fam_share[label]}
+    return out
+
+
+def _kendall(x, y):
+    """Scipy-free Kendall tau (concordant - discordant) / sqrt((n0-nx)(n0-ny))."""
+    n = len(x)
+    if n < 2:
+        return float("nan")
+    concordant = discordant = 0
+    ties_x = ties_y = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            dx = x[i] - x[j]
+            dy = y[i] - y[j]
+            if dx == 0 and dy == 0:
+                ties_x += 1
+                ties_y += 1
+            elif dx == 0:
+                ties_x += 1
+            elif dy == 0:
+                ties_y += 1
+            elif (dx > 0) == (dy > 0):
+                concordant += 1
+            else:
+                discordant += 1
+    denom = ((n * (n - 1) / 2 - ties_x) * (n * (n - 1) / 2 - ties_y)) ** 0.5
+    if denom == 0:
+        return float("nan")
+    return (concordant - discordant) / denom
+
+
+# ---------------------------------------------------------------------------
 # Rank computation (1 = largest gap)
 # ---------------------------------------------------------------------------
 def compute_ranks(gap_dict):
@@ -215,10 +351,6 @@ def write_validation_table():
 # Write tab_cross_sensitivity_robustness.tex
 # ---------------------------------------------------------------------------
 def write_cross_sensitivity():
-    # --- Encoder-sensitivity axis (the headline robustness check) ------
-    # Fixed encoder pair: canonical base model + the alternative encoder.
-    # The table is always canonical-primary, so the manuscript's MPNet
-    # column stays the reference and MiniLM is the sensitivity partner.
     ENCODER_CANONICAL = "all-mpnet-base-v2"
     ENCODER_PARTNER = "all-MiniLM-L6-v2"
     ENCODER_DIM = {"all-mpnet-base-v2": "768d", "all-MiniLM-L6-v2": "384d"}
@@ -256,11 +388,6 @@ def write_cross_sensitivity():
     if enc_subgroups:
         col_groups.append(("Encoder (embedding architecture)", enc_subgroups))
 
-    # --- Policy source family (LR-based, primary model) -----------------
-    # "Full" (full policy corpus) is intentionally omitted: it is
-    # identical to the canonical MPNet-LR column (rho = 1.00 in the
-    # Rank-Corr row), so keeping it would only duplicate that
-    # baseline and widen an already-wide table.
     pcols = []
     family_labels = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC"}
     for key, label in family_labels.items():
@@ -269,7 +396,6 @@ def write_cross_sensitivity():
     if pcols:
         col_groups.append(("Policy source", pcols))
 
-    # --- Segment cap (LR-based, primary model) ------------------------
     cap_cols = []
     if cap_20:
         cap_cols.append(("20", compute_ranks(cap_20), "Segment cap 20"))
@@ -278,10 +404,31 @@ def write_cross_sensitivity():
     if cap_cols:
         col_groups.append(("Segment cap", cap_cols))
 
+    concept = load_concept_lr_gaps(model)
+    if concept:
+        col_groups.append(("Retrieval", [("Concept", compute_ranks(concept),
+                          "Concept-based retrieval (AI/ML field-of-study, OECD.AI method)")]))
+
     if not col_groups:
         print("WARNING: no data available for cross-sensitivity table, skipping")
         return
 
+    rho_by_col = assemble_table(col_groups, OUT_MAIN / "tab_cross_sensitivity_robustness.tex",
+                                SEMANTIC_CAPTION, SEMANTIC_NOTES, "tab:cross-sensitivity-robustness")
+
+    concept_rho_val = rho_by_col.get("Retrieval::Concept", float("nan"))
+    concept_sem_rho = f"{concept_rho_val:.2f}" if not np.isnan(concept_rho_val) else "--"
+    (OUT_MAIN / "num_concept_semantic.tex").write_text(
+        "\n".join([
+            "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+            rf"\newcommand{{\ConceptSemanticGapRho}}{{{concept_sem_rho}}}",
+        ]) + "\n",
+        encoding="utf-8",
+    )
+    print(f"Written num_concept_semantic.tex  concept_sem_rho={concept_sem_rho}")
+
+
+def assemble_table(col_groups, out_path, caption, notes, label):
     # --- group helpers (support nested encoder subgroups) --------------
     def is_nested(g):
         _, body = g
@@ -304,18 +451,20 @@ def write_cross_sensitivity():
         return list(body)
 
     all_cols = []
-    for g in col_groups:
-        all_cols.extend(flat_cols(g))
+    all_col_keys = []
+    for glabel, body in col_groups:
+        if is_nested((glabel, body)):
+            for sublabel, cols in body:
+                for col_label, ranks, note in cols:
+                    all_cols.append((col_label, ranks, note))
+                    all_col_keys.append(f"{glabel}::{sublabel}::{col_label}")
+        else:
+            for col_label, ranks, note in body:
+                all_cols.append((col_label, ranks, note))
+                all_col_keys.append(f"{glabel}::{col_label}")
     n_cols = sum(group_total(g) for g in col_groups)
     has_nested = any(is_nested(g) for g in col_groups)
 
-    # --- Level-1 / Level-2 / (Level-3) headers ----------------------
-    # SDG spans all three header rows via \multirow; rows B/C leave the
-    # first cell blank so it is not repeated. Flat (non-nested)
-    # groups print their column labels ONCE (in row B); row C
-    # prints only the method labels for the nested encoder group
-    # and leaves flat groups blank (no duplicated policy/segment
-    # labels across two stacked rows).
     rowA = [r"\multirow{3}{*}{SDG}"]
     midrules = []
     col_idx = 2
@@ -340,17 +489,16 @@ def write_cross_sensitivity():
             for sublabel, cols in body:
                 rowB.append(r"\multicolumn{" + str(len(cols)) + r"}{c}{" + sublabel + "}")
         else:
-            for label, _, _ in body:
-                rowB.append(label)
+            for col_label, _, _ in body:
+                rowB.append(col_label)
 
     if has_nested:
         rowC = [""]
         for glabel, body in col_groups:
             if is_nested((glabel, body)):
                 for _, cols in body:
-                    for label, _, _ in cols:
-                        rowC.append(label)
-            # flat groups: labels already shown in row B -> leave blank
+                    for col_label, _, _ in cols:
+                        rowC.append(col_label)
     else:
         rowC = None
 
@@ -359,8 +507,8 @@ def write_cross_sensitivity():
         r"\begin{table}[ht]",
         r"\centering",
         r"\footnotesize",
-        r"\caption{Cross-sensitivity robustness of within-SDG semantic gap rankings across embedding architectures and assignment methods.}",
-        r"\label{tab:cross-sensitivity-robustness}",
+        rf"\caption{{{caption}}}",
+        rf"\label{{{label}}}",
         r"\resizebox{\textwidth}{!}{%",
         rf"\begin{{tabular}}{{l{'c' * n_cols}}}",
         r"\toprule",
@@ -374,11 +522,6 @@ def write_cross_sensitivity():
         tex.append(" & ".join(rowC) + r" \\")
     tex.append(r"\midrule")
 
-    # --- SDG-level highlight (encoder-sensitivity axis) -----------------
-    # Bold  = encoding-invariant top gap (|Δrank| <= STABLE_RANK_DELTA
-    #         between MPNet-LR and MiniLM-LR).
-    # Italic = encoder-sensitive (|Δrank| >= SENSITIVE_RANK_DELTA).
-    # Thresholds are NAMED + documented; derived mechanically, not by eye.
     STABLE_RANK_DELTA = 1
     SENSITIVE_RANK_DELTA = 4
     mpnet_lr = minilm_lr = None
@@ -405,7 +548,6 @@ def write_cross_sensitivity():
             return "i"
         return ""
 
-    # --- Data rows -----------------------------------------------------
     all_sdgs = set()
     for _, ranks, _ in all_cols:
         all_sdgs.update(ranks.keys())
@@ -424,21 +566,19 @@ def write_cross_sensitivity():
                 cells.append(str(v))
         tex.append(" & ".join(cells) + r" \\")
 
-    # --- Rank-Corr (ρ) summary row ------------------------------------
-    # Spearman of each column's SDG gap ranks vs the canonical MPNet-LR
-    # column. This IS the MPNet<->MiniLM sanity check, surfaced in the
-    # table itself so a reviewer can audit the encoder-sensitivity claim.
     baseline = mpnet_lr
     rho_cells = [r"Rank Corr ($\rho$)"]
+    rho_by_col = {}
     if baseline:
         common = [s for s in all_sdgs if s in baseline]
         bv = [baseline[s] for s in common]
-        for _, ranks, _ in all_cols:
+        for (col_label, ranks, _), key in zip(all_cols, all_col_keys):
             cv = [ranks[s] for s in common if s in ranks]
             if len(cv) >= 2 and len(cv) == len(bv):
                 rho = _spearman(bv, cv)
             else:
                 rho = float("nan")
+            rho_by_col[key] = rho
             rho_cells.append(f"{rho:.2f}" if not np.isnan(rho) else "--")
     else:
         for _ in all_cols:
@@ -449,25 +589,135 @@ def write_cross_sensitivity():
     tex.append(r"\bottomrule")
     tex.append(r"\end{tabular}")
     tex.append(r"}")
-    tex.append(
-        r"\par\smallskip\footnotesize\emph{Notes:} Each cell reports the within-SDG semantic gap rank "
-        r"($1 = \text{largest gap}$, $17 = \text{smallest gap}$) under that encoder and assignment method. "
-        r"The base encoder is \texttt{all-mpnet-base-v2} (768-d); the alternative encoder is "
-        r"\texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; "
-        r"policy segments are capped at 50 per source document per SDG (Assumption A-CHUNKCAT). "
-        r"Zero-shot = nearest-centroid assignment on the SDG reference centroids. "
-        r"MLP = 4-layer/384-hidden network retrained on the full training pool. "
-        r"Policy-source and segment-cap columns are LR-based. "
-        r"\textbf{Bold} = encoding-invariant (rank difference $\le$1 between MPNet and MiniLM for the same assignment method); "
-        r"\textit{italic} = encoder-sensitive (rank difference $\ge$4). "
-        r"Rank Corr ($\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
-        r"canonical MPNet-LR column.\par"
-    )
+    tex.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes + r"\par")
     tex.append(r"\end{table}")
 
-    path = OUT_MAIN / "tab_cross_sensitivity_robustness.tex"
-    path.write_text("\n".join(tex) + "\n")
-    print(f"Written {path}  columns={n_cols}")
+    out_path.write_text("\n".join(tex) + "\n")
+    print(f"Written {out_path}  columns={n_cols}")
+    return rho_by_col
+
+
+def write_coverage_table():
+    ENCODER_CANONICAL = "all-mpnet-base-v2"
+    ENCODER_PARTNER = "all-MiniLM-L6-v2"
+    ENCODER_DIM = {"all-mpnet-base-v2": "768d", "all-MiniLM-L6-v2": "384d"}
+
+    # Load the canonical coverage JSON once and reuse for both the MPNet-LR
+    # column (coverage_gap_hard) and the policy-source profile (research_profile_hard).
+    canon_cov_path = root / "main" / model / "data" / "4_2_coverage_document_weighted.json"
+    with open(canon_cov_path) as f:
+        _canon = json.load(f)
+    mpnet_lr = {int(k[3:]): v for k, v in _canon["coverage_gap_hard"].items()} if _canon.get("coverage_gap_hard") else None
+    research_profile = {int(k[3:]): v for k, v in _canon["research_profile_hard"].items()}
+
+    # Coverage gap is segment-cap-independent: no Segment-cap group.
+    policy_families = parse_policy_source_covgaps(research_profile=research_profile)
+
+    def _enc_sub(m, sublabel, preloaded=None):
+        lr = preloaded if preloaded is not None else load_lr_covgaps(m)
+        cols = []
+        if lr:
+            cols.append(("LR", compute_ranks(lr),
+                         "LR (canonical supervised) — coverage gap vs full policy corpus"))
+        return sublabel, cols
+
+    enc_subgroups = []
+    c = _enc_sub(ENCODER_CANONICAL,
+                 f"{ENCODER_CANONICAL.split('-')[1]} ({ENCODER_DIM[ENCODER_CANONICAL]})",
+                 preloaded=mpnet_lr)
+    if c[1]:
+        enc_subgroups.append(c)
+    p = _enc_sub(ENCODER_PARTNER,
+                 f"{ENCODER_PARTNER.split('-')[1]} ({ENCODER_DIM[ENCODER_PARTNER]})")
+    if p[1]:
+        enc_subgroups.append(p)
+
+    col_groups = []
+    if enc_subgroups:
+        col_groups.append(("Encoder (embedding architecture)", enc_subgroups))
+
+    pcols = []
+    family_labels = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC"}
+    for key, label in family_labels.items():
+        if key in policy_families:
+            pcols.append((label, compute_ranks(policy_families[key]), f"Policy source: {label}"))
+    if pcols:
+        col_groups.append(("Policy source", pcols))
+
+    concept = load_concept_covgaps(model)
+    if concept:
+        col_groups.append(("Retrieval", [("Concept", compute_ranks(concept),
+                          "Concept-based retrieval (AI/ML field-of-study, OECD.Ai method)")]))
+
+    if not col_groups:
+        print("WARNING: no data available for coverage cross-sensitivity table, skipping")
+        return
+
+    rho_by_col = assemble_table(col_groups, OUT_MAIN / "tab_cross_sensitivity_coverage.tex",
+                                COVERAGE_CAPTION, COVERAGE_NOTES, "tab:cross-sensitivity-coverage")
+
+    concept_rho_val = rho_by_col.get("Retrieval::Concept", float("nan"))
+    concept_rho = f"{concept_rho_val:.2f}" if not np.isnan(concept_rho_val) else "--"
+    minilm_key = (f"Encoder (embedding architecture)::"
+                  f"{ENCODER_PARTNER.split('-')[1]} ({ENCODER_DIM[ENCODER_PARTNER]})::LR")
+    minilm_rho_val = rho_by_col.get(minilm_key, float("nan"))
+    minilm_rho = f"{minilm_rho_val:.2f}" if not np.isnan(minilm_rho_val) else "--"
+    lines = [
+        f"% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+        rf"\newcommand{{\ConceptCoverageGapRho}}{{{concept_rho}}}",
+        rf"\newcommand{{\MiniLMCoverageRho}}{{{minilm_rho}}}",
+    ]
+    (OUT_MAIN / "num_cross_sensitivity_coverage.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"Written num_cross_sensitivity_coverage.tex  concept_rho={concept_rho} minilm_rho={minilm_rho}")
+
+
+def write_concept_coverage():
+    canon_p = root / "main" / model / "data" / "4_2_coverage_document_weighted.json"
+    concept_p = root / "main" / model / "concept" / "data" / "4_2_coverage_document_weighted.json"
+    if not (canon_p.exists() and concept_p.exists()):
+        print("WARNING: concept coverage json missing, skipping concept coverage table")
+        return
+    with open(canon_p) as f:
+        canon = json.load(f)
+    with open(concept_p) as f:
+        concept = json.load(f)
+    cr = {int(k[3:]): v for k, v in canon["research_profile_hard"].items()}
+    cc = {int(k[3:]): v for k, v in concept["research_profile_hard"].items()}
+
+    sdgs = list(range(1, N_SDG + 1))
+    bv = [cr[s] for s in sdgs]
+    cv = [cc[s] for s in sdgs]
+    rho = _spearman(bv, cv)
+    tau = _kendall(bv, cv)
+    max_abs_delta = max(abs(cr[s] - cc[s]) for s in sdgs)
+
+    tab_lines = [
+        "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+        r"\begin{tabular}{lrrr}",
+        r"\toprule",
+        r"SDG & Keyword \% & Concept \% & $\Delta$ \\",
+        r"\midrule",
+    ]
+    for s in sdgs:
+        delta = cc[s] - cr[s]
+        tab_lines.append(f"SDG {s:2d} & {cr[s]*100:.1f} & {cc[s]*100:.1f} & {delta*100:+.1f} \\\\")
+    tab_lines.extend([
+        r"\midrule",
+        rf"\multicolumn{{4}}{{l}}{{Spearman $\rho$ = {rho:.3f}; Kendall $\tau$ = {tau:.3f}}} \\",
+        r"\bottomrule",
+        r"\end{tabular}",
+    ])
+    (OUT_MAIN / "tab_concept_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+    print(f"Written tab_concept_coverage.tex  rho={rho:.3f} tau={tau:.3f}")
+
+    num_lines = [
+        "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+        rf"\newcommand{{\ConceptCoverageSpearman}}{{{rho:.3f}}}",
+        rf"\newcommand{{\ConceptCoverageKendall}}{{{tau:.3f}}}",
+        rf"\newcommand{{\ConceptCoverageMaxAbsDelta}}{{{max_abs_delta*100:.1f}}}",
+    ]
+    (OUT_MAIN / "num_concept_coverage.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
+    print(f"Written num_concept_coverage.tex")
 
 # ---------------------------------------------------------------------------
 # Write num_cross_sensitivity.tex
@@ -494,7 +744,7 @@ def write_num_cross_sensitivity():
 # ---------------------------------------------------------------------------
 def run(args: argparse.Namespace) -> None:
     global model, root, OUT_MAIN, RETRAIN_JSON, retrain, lr_per_sdg, lr_macro
-    global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_GAP_TEX
+    global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_GAP_TEX, POLICY_GAP_COVSHARE_TEX
 
     model = args.embed_model
 
@@ -516,10 +766,13 @@ def run(args: argparse.Namespace) -> None:
     ZS_GAP_PATH = root / "main" / model / "zeroshot" / "semantic_gap_distances.json"
     CAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_robustness_caps.json"
     POLICY_GAP_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
+    POLICY_GAP_COVSHARE_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_covshare.tex"
 
     write_num_validation()
     write_validation_table()
     write_cross_sensitivity()
+    write_coverage_table()
+    write_concept_coverage()
     write_num_cross_sensitivity()
     print("Cross-sensitivity table generation complete.")
 

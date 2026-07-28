@@ -60,15 +60,20 @@ def _signature_matches(sidecar: dict[str, Any], manifest: dict[str, Any]) -> boo
     return _shard_signature(sidecar) == _shard_signature(manifest)
 
 
-def consolidate_embeddings(model: str, overwrite: bool = False) -> Path:
-    """Concatenate the 27 embedding shards into one native-dtype array.
+def consolidate_embeddings(model: str, overwrite: bool = False,
+                           embeddings_shards_dir: str | None = None,
+                           out_embeddings: str | None = None) -> Path:
+    """Concatenate the embedding shards into one native-dtype array.
 
     Returns the consolidated file path. Preserves the source dtype (fp32/fp16).
+    `embeddings_shards_dir` / `out_embeddings` override the defaults so a
+    concept variant can consolidate its own shard tree.
     """
     emb_research_dir = embed_research_dir_for_model(model)
-    manifest_path = emb_research_dir / "metadata" / "manifest.json"
-    out = emb_research_dir / "research_embeddings.npy"
-    sidecar = emb_research_dir / "research_embeddings_consolidated.json"
+    shards_dir = Path(embeddings_shards_dir) if embeddings_shards_dir else emb_research_dir
+    out = Path(out_embeddings) if out_embeddings else emb_research_dir / "research_embeddings.npy"
+    manifest_path = shards_dir / "metadata" / "manifest.json"
+    sidecar = out.with_name(out.stem + "_consolidated.json")
 
     manifest = load_json(manifest_path)
     shards = sorted(manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
@@ -116,12 +121,19 @@ def consolidate_embeddings(model: str, overwrite: bool = False) -> Path:
     return out
 
 
-def consolidate_scores(model: str, overwrite: bool = False) -> Path:
-    """Concatenate the 27 supervised score shards into one float32 array."""
+def consolidate_scores(model: str, overwrite: bool = False,
+                       scores_shards_dir: str | None = None,
+                       out_scores: str | None = None) -> Path:
+    """Concatenate the supervised score shards into one float32 array.
+
+    `scores_shards_dir` / `out_scores` override the defaults so a concept
+    variant can consolidate its own shard tree.
+    """
     scored_dir = scored_dir_for_model(model)
-    manifest_path = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
-    out = scored_dir / "research_scores.npy"
-    sidecar = scored_dir / "research_scores_consolidated.json"
+    shards_dir = Path(scores_shards_dir) if scores_shards_dir else scored_dir / "paper_scores_shards"
+    out = Path(out_scores) if out_scores else scored_dir / "research_scores.npy"
+    manifest_path = shards_dir / "metadata" / "manifest.json"
+    sidecar = out.with_name(out.stem + "_consolidated.json")
 
     manifest = load_json(manifest_path)
     shards = sorted(manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
@@ -176,13 +188,25 @@ def main() -> None:
                         help="Force regeneration even if up to date.")
     parser.add_argument("--kind", choices=["both", "embeddings", "scores"], default="both",
                         help="Which artifact to consolidate (default: both).")
+    parser.add_argument("--scores-shards-dir", default=None,
+                        help="Override the paper_scores_shards dir (concept variant).")
+    parser.add_argument("--out-scores", default=None,
+                        help="Override the consolidated research_scores.npy path (concept variant).")
+    parser.add_argument("--embeddings-shards-dir", default=None,
+                        help="Override the research_shards dir (concept variant).")
+    parser.add_argument("--out-embeddings", default=None,
+                        help="Override the consolidated research_embeddings.npy path (concept variant).")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
     if args.kind in ("both", "embeddings"):
-        consolidate_embeddings(args.embed_model, overwrite=args.overwrite)
+        consolidate_embeddings(args.embed_model, overwrite=args.overwrite,
+                               embeddings_shards_dir=args.embeddings_shards_dir,
+                               out_embeddings=args.out_embeddings)
     if args.kind in ("both", "scores"):
-        consolidate_scores(args.embed_model, overwrite=args.overwrite)
+        consolidate_scores(args.embed_model, overwrite=args.overwrite,
+                          scores_shards_dir=args.scores_shards_dir,
+                          out_scores=args.out_scores)
 
 
 if __name__ == "__main__":

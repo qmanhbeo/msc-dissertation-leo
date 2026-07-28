@@ -189,12 +189,6 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute coverage gap outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
-    p.add_argument("--paper-scores-manifest", default=None,
-                   help="Override paper score shards manifest (default: canonical paper_scores_shards/metadata/manifest.json). Used for the concept-retrieval variant.")
-    p.add_argument("--out-data-dir", default=None,
-                   help="Override output data directory (default: canonical layout data_dir). Concept variant writes here.")
-    p.add_argument("--out-tables-dir", default=None,
-                   help="Override output tables directory (default: canonical layout tables_dir). Concept variant writes here.")
     return p.parse_args()
 
 
@@ -204,17 +198,13 @@ def parse_args() -> argparse.Namespace:
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
     scored_dir = scored_dir_for_model(model)
-    PAPER_SCORES_MANIFEST = Path(args.paper_scores_manifest) if args.paper_scores_manifest else scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
+    PAPER_SCORES_MANIFEST = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
     POLICY_SCORES   = scored_dir / "policy_scores.npy"
     POLICY_IDS      = scored_dir / "metadata" / "policy_scores_ids.json"
     layout = ensure_canonical_outputs(Path(args.output_dir), model=model)
-    if args.out_data_dir:
-        Path(args.out_data_dir).mkdir(parents=True, exist_ok=True)
-    if args.out_tables_dir:
-        Path(args.out_tables_dir).mkdir(parents=True, exist_ok=True)
-    out_cov_gap = Path(args.out_data_dir).joinpath("4_2_coverage_document_weighted.json") if args.out_data_dir else layout.data_dir / "4_2_coverage_document_weighted.json"
-    out_cov_gap_raw = Path(args.out_data_dir).joinpath("4_2_coverage_diagnostic_unweighted.json") if args.out_data_dir else layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
-    tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
+    out_cov_gap = layout.data_dir / "4_2_coverage_document_weighted.json"
+    out_cov_gap_raw = layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
+    tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
     # ---- Load scores ----

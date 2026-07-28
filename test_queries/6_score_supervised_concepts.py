@@ -217,12 +217,8 @@ def run_research_lr(args) -> None:
     model_path = Path(args.model_path) if args.model_path else model_path_default
     embed_manifest_path = Path(args.embedding_manifest) if args.embedding_manifest else embed_manifest_default
     out_dir = Path(args.out_dir) if args.out_dir else out_dir_default
-    # When --out-dir is overridden (e.g. a concept variant), the score
-    # manifest/status must live under that out-dir, NOT the canonical
-    # paper_scores_shards/metadata — otherwise the canonical manifest gets
-    # silently overwritten. Default metadata/status to sit next to out_dir.
-    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir) if args.status_dir else out_dir / "status"
+    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else metadata_dir_default
+    status_dir = Path(args.status_dir) if args.status_dir else status_dir_default
     research_centroids_out = Path(args.research_centroids_out) if args.research_centroids_out else research_centroids_out_default
     research_meta_out = Path(args.research_meta_out) if args.research_meta_out else research_meta_out_default
     embed_dir = embed_manifest_path.parent.parent
