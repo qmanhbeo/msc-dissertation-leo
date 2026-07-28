@@ -315,7 +315,7 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
-    run_step("lexical illustration of the semantic gap", cmd, step_id="B3")
+    run_step("lexical illustration of the semantic gap", cmd, step_id="B2")
 
 
 def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
@@ -323,7 +323,7 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/f_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
-    run_step("register-adjustment robustness", cmd, step_id="E")
+    run_step("register-adjustment robustness", cmd, step_id="F")
 
 
 def _overwrite_flag(overwrite: bool) -> list[str]:
