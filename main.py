@@ -91,6 +91,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
     p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
+    p.add_argument("--appendix-d1-model-selection", action="store_true", help="Export D.1 model-selection CV macros.")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
     p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
@@ -176,6 +177,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_a3_sdg4,
             args.appendix_b2_interpret,
             args.appendix_f_register,
+            args.appendix_d1_model_selection,
             args.appendix_h1_cross_method,
             args.appendix_c_sample_stability,
             args.fetch_data_snapshot,
@@ -326,6 +328,15 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
         cmd += ["--embed-model", model]
     run_step("register-adjustment robustness", cmd, step_id="F")
 
+
+def run_model_selection_nums(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    """Export grid-search CV macro-F1 values to num_model_selection.tex."""
+    import importlib.util
+    script_path = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "d1_export_model_selection_nums.py"
+    spec = importlib.util.spec_from_file_location("d1_export_model_selection_nums", script_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.run(model, output_dir)
 
 def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
@@ -703,6 +714,7 @@ def main() -> None:
         or args.appendix_b2_interpret
         or args.appendix_c_sample_stability
         or args.appendix_f_register
+        or args.appendix_d1_model_selection
         or args.appendix_h1_cross_method
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
@@ -725,6 +737,7 @@ def main() -> None:
         run_semantic_gap_interpretability(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
         run_register_adjustment(output_dir, model=model)
+        run_model_selection_nums(output_dir, model=model)
         run_h1_cross_method_gap_values(output_dir, model=model)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
@@ -746,6 +759,10 @@ def main() -> None:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_f_register:
         run_register_adjustment(output_dir, model=args.embed_model)
+        if args.build_pdf:
+            build_pdf(output_dir, model=args.embed_model)
+    elif args.appendix_d1_model_selection:
+        run_model_selection_nums(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_h1_cross_method:

@@ -41,6 +41,7 @@
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_concept_coverage.tex}
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_concept_semantic.tex}
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_pca_landscape.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_model_selection.tex}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
 
@@ -248,7 +249,7 @@ The validation task evaluates whether the classifier assigns held-out test examp
 
 A text is assigned to the SDG with the highest predicted probability from the trained LR classifier (argmax over 17 classes). Every assignment is traceable to 768 signed logistic-regression coefficients per SDG class — a transparent decision boundary with no hidden layers, no dropout, and no random seed sensitivity. Macro-F1, the unweighted mean of per-SDG scores, is the primary validation metric; the scores are reported in Section~\ref{sec:validation} alongside SDG-specific concerns that inform the results below.
 
-LR argmax assigns each text to the SDG whose decision boundary it falls on the positive side of. The method is simple, fast, and avoids the hidden-layer opacity of non-linear classifiers. I chose it deliberately: the study needs a transparent tool to compare corpora, not a classifier built to label single documents. LR additionally provides calibrated per-class probability outputs, which can serve as a soft-assignment comparison against the hard argmax assignment (Appendix~\ref{app:softmax-alternative}); the canonical analysis uses hard argmax for direct interpretability.
+LR argmax assigns each text to the SDG whose decision boundary it falls on the positive side of. The method is simple, fast, and avoids the hidden-layer opacity of non-linear classifiers. I chose it deliberately: the study needs a transparent tool to compare corpora, not a classifier built to label single documents. LR additionally provides calibrated per-class probability outputs, which can serve as a soft-assignment comparison against the hard argmax assignment; the canonical analysis uses hard argmax for direct interpretability.
 
 Additional diagnostic checks — within-corpus diagnostics, policy source-family sensitivity, and an SDG~4 lexical audit — are reported in Appendix~\ref{app:additional-perspectives}. The canonical analysis uses hard LR argmax assignment as a transparent and reproducible anchoring procedure.
 
@@ -564,18 +565,11 @@ The contrast helps make the embedding distances more legible. In SDGs 17 and 13,
 
 
 
-\subsection{Soft Assignment via LR Probability Outputs}
-\label{app:softmax-alternative}
 
-The canonical analysis forces each text into exactly one SDG by LR argmax (hard assignment). This is transparent and directly interpretable, but it also imposes a one-SDG-per-text assumption on discourse that is naturally multi-label. A research abstract or policy segment may simultaneously concern climate, energy, infrastructure, inequality, health, and governance. The LR classifier natively provides per-class probability outputs (via the softmax of decision-function scores), offering a natural soft-assignment comparison against the hard argmax assignment.
-
-For each text, the LR's 17 per-class probabilities sum to one; a text's SDG signature is a probability vector rather than a one-hot label. The soft coverage profile is the mean probability per SDG across all texts in a corpus. The soft semantic gap is computed by replacing the cluster mean of hard-assigned texts with a probability-weighted centroid: each text contributes to all 17 centroids in proportion to its assignment probability.
-
-The results show that the hard and soft profiles are highly correlated: coverage-gap Spearman $\rho > 0.95$ and semantic-gap Spearman $\rho > 0.90$ between hard and soft assignments. The top-three most divergent SDGs are identical under both assignment methods. Rank-order changes are confined to the middle band (SDGs ranked 4--14), where probability-weighted membership slightly shifts the centroids of goals with broad thematic overlap. These findings confirm that the hard argmax assignment does not materially distort the coverage or gap structure — the main results are not artefacts of winner-takes-all labelling.
 
 \subsection{Implications for Interpreting the Main Estimates}
 
-These diagnostics are methodological stress tests that clarify the limits of the LR classifier approach, rather than failed repairs. The PCA diagnostics show that real-world SDG discourse is fuzzy rather than cleanly clustered, especially in the research corpus. The SDG 4 audit shows that the concern is real, but more nuanced than a pure machine-learning false positive. The policy source-family split shows that the full-corpus policy profile is a broader institutional SDG discourse rather than a universal AI policy profile. The canonical hard-threshold classifier assignment (argmax) is retained because it is transparent, reproducible, and directly interpretable. The soft-assignment comparison confirms that winner-takes-all labelling does not drive the headline findings.
+These diagnostics are methodological stress tests that clarify the limits of the LR classifier approach, rather than failed repairs. The PCA diagnostics show that real-world SDG discourse is fuzzy rather than cleanly clustered, especially in the research corpus. The SDG 4 audit shows that the concern is real, but more nuanced than a pure machine-learning false positive. The policy source-family split shows that the full-corpus policy profile is a broader institutional SDG discourse rather than a universal AI policy profile. The canonical hard-threshold classifier assignment (argmax) is retained because it is transparent, reproducible, and directly interpretable.
 
 These analyses also show that the LR classifier should be interpreted as a transparent semantic anchoring procedure rather than a definitive operational SDG system. Attempts to address multi-label overlap and corpus-register bias improve some aspects of the design but introduce new modelling choices. In this paper, the hard-threshold classifier assignment is therefore retained as the canonical specification, while the alternatives are reported as robustness and boundary-condition checks.
 
@@ -615,11 +609,11 @@ Three model families were evaluated under 5-fold GroupKFold cross-validation (do
 
 \subsection{LR Grid Search}
 
-The LR grid searched C $\in \{100, 10, 1, 0.1, 0.01\}$ with L2 penalty. The best configuration was C=10.0, penalty=l2, class\_weight=None, solver=lbfgs (macro-F1 = 0.8107 $\pm$ 0.0066 CV). An extended grid adding L1 penalty (l1\_ratio=1) and balanced class\_weight found no improvement: L1 was 6$\times$ slower and scored 0.8066, while balanced class\_weight scored 0.8070. The embedding space is dense — L1 sparsity offers no benefit — and the dual correction of weighted loss plus macro-averaged scoring degrades majority-class performance without compensating minority classes. C=10.0 and C=1.0 are essentially tied (difference $\sim$0.001), but C=10.0 was selected for conservatism.
+The LR grid searched C $\in \{100, 10, 1, 0.1, 0.01\}$ with L2 penalty. The best configuration was C=10.0, penalty=l2, class\_weight=None, solver=lbfgs (macro-F1 = \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{} CV). An extended grid adding L1 penalty (l1\_ratio=1) and balanced class\_weight found no improvement: L1 was 6$\times$ slower and scored 0.8066, while balanced class\_weight scored 0.8070. The embedding space is dense — L1 sparsity offers no benefit — and the dual correction of weighted loss plus macro-averaged scoring degrades majority-class performance without compensating minority classes. C=10.0 and C=1.0 are essentially tied (difference $\sim$0.001), but C=10.0 was selected for conservatism.
 
 \subsection{MLP Grid Search}
 
-The MLP swept n\_layers $\in \{1, 2, 4, 8, 16\}$ $\times$ hidden\_size $\in \{256, 384\}$ (20 configurations), followed by a learning-rate sweep (lr $\in \{1\mathrm{e}{-4}, 3\mathrm{e}{-4}, 1\mathrm{e}{-3}, 3\mathrm{e}{-3}\}$) on the best architectures. The best MLP (4 layers, 384 hidden, lr=1e-3) achieved macro-F1 = 0.8243 $\pm$ 0.0058. Learning rate had negligible impact — all combinations within $\sim$0.003 of the best.
+The MLP swept n\_layers $\in \{1, 2, 4, 8, 16\}$ $\times$ hidden\_size $\in \{256, 384\}$ (20 configurations), followed by a learning-rate sweep (lr $\in \{1\mathrm{e}{-4}, 3\mathrm{e}{-4}, 1\mathrm{e}{-3}, 3\mathrm{e}{-3}\}$) on the best architectures. The best MLP (4 layers, 384 hidden, lr=3e-4) achieved macro-F1 = \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{}. Learning rate had negligible impact — all combinations within $\sim$0.003 of the best.
 
 \subsection{Unified Ranking and Final Selection}
 
@@ -628,11 +622,11 @@ The MLP swept n\_layers $\in \{1, 2, 4, 8, 16\}$ $\times$ hidden\_size $\in \{25
 \toprule
 Rank & Config & CV macro-F1 \\
 \midrule
-1 & MLP 4L/384h & 0.8243 $\pm$ 0.0058 \\
+1 & MLP 4L/384h & \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{} \\
 2 & MLP 4L/256h & 0.8242 $\pm$ 0.0067 \\
 3--15 & MLP (2L--4L variants) & 0.821--0.824 \\
 16--26 & MLP (8L--16L variants) & 0.817--0.819 \\
-27 & LR C=10, L2 & 0.8107 $\pm$ 0.0066 \\
+27 & LR C=10, L2 & \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{} \\
 28 & LR C=1, L2 & 0.8093 $\pm$ 0.0065 \\
 \bottomrule
 \end{tabular}
@@ -642,7 +636,7 @@ Rank & Config & CV macro-F1 \\
 
 \subsection{Held-Out Test Evaluation of the MLP Robustness Check}
 
-The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a separate evaluation from the CV grid-search results above. After the CV sweep, the champion MLP architecture (4 layers, 384 hidden, lr=1e-3) was retrained on the full training pool (n=52,779) and evaluated once against the held-out test set (n=9,734), the same sanctioned single-use test evaluation applied to the LR champion. The resulting test macro-F1 of \MlpMacroFOne{} is not directly comparable to the CV mean of 0.8243~$\pm$~0.0058 from the grid search: the CV number is an average across five document-grouped folds on the training pool alone, while the test number is a single evaluation on a disjoint held-out sample after retraining on the full pool. Both numbers confirm that the LR---MLP gap is modest and that architecture choice is not the binding constraint on classification quality.
+The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a separate evaluation from the CV grid-search results above. After the CV sweep, the champion MLP architecture (4 layers, 384 hidden, lr=3e-4) was retrained on the full training pool (n=52,779) and evaluated once against the held-out test set (n=9,734), the same sanctioned single-use test evaluation applied to the LR champion. The resulting test macro-F1 of \MlpMacroFOne{} is not directly comparable to the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} from the grid search: the CV number is an average across five document-grouped folds on the training pool alone, while the test number is a single evaluation on a disjoint held-out sample after retraining on the full pool. Both numbers confirm that the LR---MLP gap is modest and that architecture choice is not the binding constraint on classification quality.
 
 % ==============================================================================
 % Appendix E: Model Sensitivity

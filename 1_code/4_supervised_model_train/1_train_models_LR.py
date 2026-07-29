@@ -17,12 +17,12 @@ Outputs:
 Run from project root:
     python 1_code/4_supervised_model_train/1_train_models_LR.py
 
-PROVENANCE GUARD (do not archive/delete on "orphan" grounds):
+PROVENANCE GUARD:
     Not called by main.py or any orchestrator -- intentionally kept.
-    Its output values (LR best config C=10.0, macro-F1 = 0.8107 +/- 0.0066 CV)
-    are hand-transcribed into dissertation.tex Appendix D (line 642). Do not remove
-    this script without first re-verifying that Appendix D line is updated or otherwise
-    sourced; the numbers are load-bearing by transcription, not by any live code path.
+    Its output (lr_cv_results.json) is consumed by
+    d1_export_model_selection_nums.py -> num_model_selection.tex for
+    Appendix D prose macros. Do not remove without verifying the
+    export script still has its input available.
 """
 
 import datetime
