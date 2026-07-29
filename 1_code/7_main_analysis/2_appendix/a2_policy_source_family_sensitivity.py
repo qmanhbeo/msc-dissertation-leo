@@ -189,7 +189,7 @@ def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: l
         r"\toprule",
         r"SDG & \multicolumn{2}{c}{Full Corpus} & \multicolumn{2}{c}{Curated AI/SDG} & \multicolumn{2}{c}{SDGi VNR/VLR} & \multicolumn{2}{c}{UNGDC} \\",
         r"\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}",
-        r"& cov.\,(n) & sem.\,(n) & cov.\,(n) & sem.\,(n) & cov.\,(n) & sem.\,(n) & cov.\,(n) & sem.\,(n) \\",
+        r"& pol.\% (n) & sem.\,(n) & pol.\% (n) & sem.\,(n) & pol.\% (n) & sem.\,(n) & pol.\% (n) & sem.\,(n) \\",
         r"\midrule",
     ]
     for sdg in range(1, N_SDG + 1):

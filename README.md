@@ -145,9 +145,15 @@ the full re-fetch.
 
 ### Snapshot scope
 
-- **Embedded snapshot**: contains only `3_embedded/`. For warm-replay analysis.
+- **Embedded snapshot**: contains `3_embedded/` (frozen embeddings) plus
+  `3a_warm_replay_texts/` (gzipped copies of exactly the segment text the
+  appendix analyses A3/B2 read: research shards + `policy.jsonl` for the
+  default model). For warm-replay analysis.
   Warm replay from embedded is the canonical reproducibility target.
   No network needed after hydration. Byte-identical across runs and platforms.
+  Canonical plain-text segment files (`2_segmented/`) are a producer-side
+  artifact regenerated during cold replay; analysis code prefers them when
+  present and falls back to `3a_warm_replay_texts/` otherwise.
 - **Raw snapshot**: contains only `0_raw/`. For cold-replay rebuilds.
   Cold replay from raw will re-run preprocessing, segmentation, embedding, and
   training — outputs will differ from the submitted state due to OpenAlex live changes.

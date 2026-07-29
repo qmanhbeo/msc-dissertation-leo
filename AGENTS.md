@@ -68,6 +68,11 @@ non-obvious facts that are easy to miss.
 - `2_data/` is **gitignored** and hydrated from a frozen snapshot, not committed.
   Hydrate with `python main.py --fetch-data-snapshot embedded` (or `raw` for
   cold replay). Warm replay needs the embedded snapshot present first.
+- The embedded snapshot ships `3_embedded/` + `3a_warm_replay_texts/` (gzipped
+  A3/B2 appendix text for the default model, built only by
+  `build_warm_replay_texts.py` during backup). Appendix readers resolve
+  canonical `2_segmented/` first, then fall back to `3a_warm_replay_texts/`
+  (`model_utils.resolve_research_text_path` / `resolve_policy_text_path`).
 - `4_outputs/` is committed for inspection but regenerable. Outputs are
   namespaced by embedding model under `4_outputs/main/{model}/...`.
 - `--build-pdf --overwrite` requires **bash (WSL/Linux)** — not supported on bare
