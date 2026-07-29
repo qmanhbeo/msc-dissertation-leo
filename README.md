@@ -95,7 +95,7 @@ Not tracked in Git:
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
-| `python main.py --appendix-b2-interpret --overwrite` | Run B.2 Lexical Illustration of the Semantic Gap |
+| `python main.py --appendix-b2-interpret --overwrite` | Run B.1 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
 | `python main.py --appendix-f-register --overwrite` | Run F Register-Adjustment Robustness |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F) standalone (requires existing main-text outputs). |

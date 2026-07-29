@@ -87,7 +87,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, F) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
-    p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.2 Lexical Illustration of the Semantic Gap.")
+    p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
     p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
