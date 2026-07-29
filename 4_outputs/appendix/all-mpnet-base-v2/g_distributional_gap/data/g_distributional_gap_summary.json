@@ -35,6 +35,7 @@
     }
   },
   "config_hash": "f9a21dacc1ab3081",
+  "max_seed_replicate_gap_delta": 0.013402,
   "methods": {
     "sliced_wasserstein": {
       "gap_by_sdg": {
