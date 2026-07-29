@@ -99,6 +99,7 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/c_sample_stability/tables/tab_sample_stability.tex",
     "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_gap_values.tex",
     "main/tables/num_model_selection.tex",
+    "main/tables/num_reference_split.tex",
 ]
 
 MANUSCRIPT_APPENDIX_FIGURE_FILES = [

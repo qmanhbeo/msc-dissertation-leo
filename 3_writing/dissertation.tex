@@ -42,6 +42,7 @@
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_concept_semantic.tex}
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_pca_landscape.tex}
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_model_selection.tex}
+\input{../4_outputs/main/all-mpnet-base-v2/tables/num_reference_split.tex}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
 
@@ -241,7 +242,7 @@ The canonical instrument is a supervised multinomial logistic regression (LR) cl
 
 All five corpora supply human- or expert-validated labels rather than machine-generated ones, and they differ in provenance. OSDG and SDGi are policy-adjacent: OSDG volunteers confirm a suggested label across multiple annotators, and SDGi compiles government Voluntary National and Local Reviews submitted to the UN. The SDG Knowledge Hub is journalism and reporting; Aurora is academic, expert-validated text. The mix broadens the label base, but OSDG alone contributes about 49\% of all labelled texts and draws on UN-adjacent documents, so the reference data remain weighted toward policy vocabulary. No high-quality graded relevance sets exist for SDG classification, making this combined, multi-source collection the best available resource \parencite{Kashnitsky2024}.
 
-The pooled reference data (n=62,513 after preprocessing) were split into training and held-out test sets (n=52,779 train, n=9,734 test) by stratified document-grouped splitting: all texts from the same source document are kept in the same fold, enforcing strict separation between training and evaluation. The champion LR (C=10.0, L2 penalty, class\_weight=None, solver=lbfgs) was selected by 5-fold GroupKFold cross-validation on the training pool; the full grid-search protocol, hyperparameter rationale, exclusion of alternative model families (RF, XGB), and the comparison with the MLP robustness check are reported in Appendix~\ref{app:model-selection}. The main text states plainly that LR is the canonical method; the MLP is a robustness check, not an alternative champion.
+The pooled reference data (n=\NReferencePool{} after preprocessing) were split into training and held-out test sets (n=\NTrainPool{} train, n=\NTestPool{} test) by stratified document-grouped splitting: all texts from the same source document are kept in the same fold, enforcing strict separation between training and evaluation. The champion LR (C=10.0, L2 penalty, class\_weight=None, solver=lbfgs) was selected by 5-fold GroupKFold cross-validation on the training pool; the full grid-search protocol, hyperparameter rationale, exclusion of alternative model families (RF, XGB), and the comparison with the MLP robustness check are reported in Appendix~\ref{app:model-selection}. The main text states plainly that LR is the canonical method; the MLP is a robustness check, not an alternative champion.
 
 The validation task evaluates whether the classifier assigns held-out test examples to the correct SDG; it does not evaluate a rejection option for non-SDG texts. This is acceptable because the research corpus is first restricted to an OpenAlex AI-and-SDG universe — the classifier then answers a relative question: among the 17 SDGs, which is this text closest to?
 
@@ -313,7 +314,7 @@ The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality 
 
 \subsection{Methodology Summary}\label{sec:pipeline-summary}
 
-Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology in three parallel data tracks. Each track begins with source-specific retrieval, then passes through preprocessing (cleaning, English filtering, 20-word minimum) and token-aware segmentation (\texttt{segment\_text}, margin=10, min 20 words). In Track~1 (Reference/Training), three of the five corpora (KH, SDGi-labels, Aurora) undergo segmentation while OSDG and Benchmark bypass this step as they already consist of short single-label texts, yielding a pooled 62,513 texts. These are split via per-source stratified GroupKFold (52,779 train, 9,734 test) and used to train the LR classifier ($C=10$, L2, macro-$F_1$ = \MacroFOne{}). Track~2 (Research) segments all \NResearchPapers{} abstract-derived passages. Track~3 (Policy) segments each of the four policy sources (scrape, manual, UNGDC, SDGi) individually and then merges them with cross-source deduplication (SDGi-first), yielding \NPolicySegments{} unique policy segments. All three tracks are embedded with \texttt{all-mpnet-base-v2} (768-D, L2-normalised). The trained classifier scores both the Research and Policy embeddings via argmax over 17 SDG classes. Detailed per-corpus counts are reported in Sections~\ref{sec:research-corpus}, \ref{sec:policy-corpus}, and \ref{sec:supervised-classifier}.
+Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology in three parallel data tracks. Each track begins with source-specific retrieval, then passes through preprocessing (cleaning, English filtering, 20-word minimum) and token-aware segmentation (\texttt{segment\_text}, margin=10, min 20 words). In Track~1 (Reference/Training), three of the five corpora (KH, SDGi-labels, Aurora) undergo segmentation while OSDG and Benchmark bypass this step as they already consist of short single-label texts, yielding a pooled \NReferencePool{} texts. These are split via per-source stratified GroupKFold (\NTrainPool{} train, \NTestPool{} test) and used to train the LR classifier ($C=10$, L2, macro-$F_1$ = \MacroFOne{}). Track~2 (Research) segments all \NResearchPapers{} abstract-derived passages. Track~3 (Policy) segments each of the four policy sources (scrape, manual, UNGDC, SDGi) individually and then merges them with cross-source deduplication (SDGi-first), yielding \NPolicySegments{} unique policy segments. All three tracks are embedded with \texttt{all-mpnet-base-v2} (768-D, L2-normalised). The trained classifier scores both the Research and Policy embeddings via argmax over 17 SDG classes. Detailed per-corpus counts are reported in Sections~\ref{sec:research-corpus}, \ref{sec:policy-corpus}, and \ref{sec:supervised-classifier}.
 
 \begin{figure}[htbp]
   \centering
@@ -330,12 +331,12 @@ This section reports what the instrument measured: the validation scores, the co
 
 \subsection{Supervised Reference Classifier Validation}\label{sec:validation}
 
-The LR classifier was evaluated on the held-out test set (n=9,734, document-grouped to prevent source leakage). It reaches macro-F1 = \MacroFOne{} and micro-F1 = \ValidationAccuracy, far above the 1/17 random baseline (a 17-class random guess scores $1/17 \approx \RandomBaselineSeventeenClass$). Per-class F1 values from the test set are reported in Table~\ref{tab:validation}.
+The LR classifier was evaluated on the held-out test set (n=\NTestPool{}, document-grouped to prevent source leakage). It reaches macro-F1 = \MacroFOne{} and micro-F1 = \ValidationAccuracy, far above the 1/17 random baseline (a 17-class random guess scores $1/17 \approx \RandomBaselineSeventeenClass$). Per-class F1 values from the test set are reported in Table~\ref{tab:validation}.
 
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{LR test-set F1 scores (n=9,734).}
+\caption{LR test-set F1 scores (n=\NTestPool{}).}
 \label{tab:validation}
 \input{../4_outputs/main/all-mpnet-base-v2/tables/tab_validation.tex}
 \par\smallskip\footnotesize\emph{Notes:} LR test F1 on the held-out pooled test set (all reference sources). The table shows the canonical 17-way classifier used throughout the main analysis.\par
@@ -588,7 +589,7 @@ To test whether the headline findings depend heavily on research-corpus size, I 
 \par\smallskip\footnotesize\emph{Notes:} Mean SD of SDG coverage shares is the unweighted mean of the per-SDG standard deviations in research coverage share across the \SampleStabilityDraws{} random draws at each sampled tier. The remaining columns report the mean and draw-to-draw standard deviation of the headline downstream metrics. The full-corpus row is deterministic and therefore has no variance term.\par
 \end{table}
 
-\noindent\textit{Plain-language guide.\footnote{The three metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy--research score gap --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$\SampleMeanSemanticGapTwoHundredK{}) and policy-text calibration bias ($\sim$0.105) already stabilise to within 0.001 of their full-corpus values. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
+\noindent\textit{Plain-language guide.\footnote{The three metrics are: (1) mean SD of SDG coverage shares --- how much the topic balance moves across repeated samples; (2) mean semantic gap --- how different research and policy language are within the same SDG; (3) policy--research score gap --- how much the scoring instrument favours policy text over research text regardless of content.}} The stability ladder shows that the clearest practical plateau appears by roughly 200{,}000 papers, where the mean semantic gap ($\sim$\SampleMeanSemanticGapTwoHundredK{}) and policy-text calibration bias ($\sim$\SamplePolicyBiasTwoHundredK{}) already stabilise to within 0.001 of their full-corpus values. From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-paper result is retained as the primary estimate because it uses all available data while delivering the tightest values, but the substantive conclusions are not artefacts of sample size choice. The larger corpus also enables per-SDG subgroup detail and tighter rank-order precision that the plateau minimum does not guarantee.
 
 % ==============================================================================
 % Appendix D: Model Selection
@@ -599,7 +600,7 @@ To test whether the headline findings depend heavily on research-corpus size, I 
 
 \subsection{Models Tested}
 
-Three model families were evaluated under 5-fold GroupKFold cross-validation (document-level grouping, not random splits) on the pooled training data (n=52,779). The test set (n=9,734) was never touched during any grid search.
+Three model families were evaluated under 5-fold GroupKFold cross-validation (document-level grouping, not random splits) on the pooled training data (n=\NTrainPool{}). The test set (n=\NTestPool{}) was never touched during any grid search.
 
 \begin{itemize}
   \item \textbf{Logistic Regression (LR)}: Interpretable per-dimension coefficients per SDG; fast; standard multiclass baseline.
@@ -636,7 +637,7 @@ Rank & Config & CV macro-F1 \\
 
 \subsection{Held-Out Test Evaluation of the MLP Robustness Check}
 
-The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a separate evaluation from the CV grid-search results above. After the CV sweep, the champion MLP architecture (4 layers, 384 hidden, lr=3e-4) was retrained on the full training pool (n=52,779) and evaluated once against the held-out test set (n=9,734), the same sanctioned single-use test evaluation applied to the LR champion. The resulting test macro-F1 of \MlpMacroFOne{} is not directly comparable to the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} from the grid search: the CV number is an average across five document-grouped folds on the training pool alone, while the test number is a single evaluation on a disjoint held-out sample after retraining on the full pool. Both numbers confirm that the LR---MLP gap is modest and that architecture choice is not the binding constraint on classification quality.
+The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a separate evaluation from the CV grid-search results above. After the CV sweep, the champion MLP architecture (4 layers, 384 hidden, lr=3e-4) was retrained on the full training pool (n=\NTrainPool{}) and evaluated once against the held-out test set (n=\NTestPool{}), the same sanctioned single-use test evaluation applied to the LR champion. The resulting test macro-F1 of \MlpMacroFOne{} is not directly comparable to the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} from the grid search: the CV number is an average across five document-grouped folds on the training pool alone, while the test number is a single evaluation on a disjoint held-out sample after retraining on the full pool. Both numbers confirm that the LR---MLP gap is modest and that architecture choice is not the binding constraint on classification quality.
 
 % ==============================================================================
 % Appendix E: Model Sensitivity

@@ -752,6 +752,10 @@ def write_outputs(
             num_lines.append(
                 rf"\newcommand{{\SamplePolicyBiasFiftyK}}{{{row['mean_a15_calibration_bias']:.3f}}}"
             )
+        elif row["tier_label"] == "200k":
+            num_lines.append(
+                rf"\newcommand{{\SamplePolicyBiasTwoHundredK}}{{{row['mean_a15_calibration_bias']:.3f}}}"
+            )
     (tables_dir / "num_sample_stability.tex").write_text(
         "\n".join(num_lines) + "\n", encoding="utf-8"
     )
