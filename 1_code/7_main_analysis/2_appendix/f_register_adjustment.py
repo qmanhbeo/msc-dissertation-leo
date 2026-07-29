@@ -248,6 +248,51 @@ def subtract_multiple_directions(emb: np.ndarray, G: np.ndarray) -> np.ndarray:
     return result
 
 
+def compute_gaps_for_directions(
+    G_list: list[np.ndarray],
+    policy_emb: np.ndarray,
+    policy_assignments: list[int],
+    policy_ids: list,
+    research_centroids: np.ndarray,
+    research_cohesions: np.ndarray,
+    rng: np.random.Generator,
+) -> dict[int, float]:
+    """Compute per-SDG semantic gaps after removing directions in G_list."""
+    G = np.vstack(G_list) if G_list else np.zeros((0, policy_emb.shape[1]), dtype=np.float32)
+    policy_adj = subtract_multiple_directions(policy_emb, G)
+
+    adj_pol_centroids = np.zeros((N_SDG, policy_emb.shape[1]), dtype=np.float32)
+    for sdg_idx in range(N_SDG):
+        policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
+        if not policy_idxs:
+            continue
+        idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
+        centroid, _ = build_sub_centroid(policy_adj, idxs_capped)
+        if centroid is not None:
+            adj_pol_centroids[sdg_idx] = centroid
+
+    adj_res_centroids = np.zeros((N_SDG, research_centroids.shape[1]), dtype=np.float32)
+    for sdg_idx in range(N_SDG):
+        raw_mean = research_centroids[sdg_idx] * research_cohesions[sdg_idx]
+        adj_raw = raw_mean.copy()
+        for g_k in G_list:
+            adj_raw = adj_raw - np.dot(adj_raw, g_k) * g_k
+        norm_val = float(np.linalg.norm(adj_raw))
+        if norm_val > 1e-8:
+            adj_res_centroids[sdg_idx] = (adj_raw / norm_val).astype(np.float32)
+        else:
+            adj_res_centroids[sdg_idx] = research_centroids[sdg_idx]
+
+    gaps: dict[int, float] = {}
+    for sdg_idx in range(N_SDG):
+        sdg = sdg_idx + 1
+        r_adj = adj_res_centroids[sdg_idx]
+        p_adj = adj_pol_centroids[sdg_idx]
+        if float(np.linalg.norm(r_adj)) > 1e-8 and float(np.linalg.norm(p_adj)) > 1e-8:
+            gaps[sdg] = 1.0 - float(np.dot(r_adj, p_adj))
+    return gaps
+
+
 def iterative_register_check(
     model: str,
     sdg_index: dict[int, list[tuple[int, int]]],
@@ -311,35 +356,6 @@ def iterative_register_check(
             log.info("  Test accuracy %.4f ≤ threshold %.4f — stopping.", test_acc, ITERATIVE_ACC_THRESHOLD)
             break
 
-    # Recompute gaps using final G
-    G_final = np.vstack(G_list) if G_list else np.zeros((0, policy_emb.shape[1]), dtype=np.float32)
-    policy_adj = subtract_multiple_directions(policy_emb, G_final)
-
-    adj_pol_centroids = np.zeros((N_SDG, policy_emb.shape[1]), dtype=np.float32)
-    adj_pol_cohesions = np.zeros(N_SDG, dtype=np.float32)
-    for sdg_idx in range(N_SDG):
-        sdg = sdg_idx + 1
-        policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
-        if not policy_idxs:
-            continue
-        idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
-        centroid, cohesion = build_sub_centroid(policy_adj, idxs_capped)
-        if centroid is not None:
-            adj_pol_centroids[sdg_idx] = centroid
-            adj_pol_cohesions[sdg_idx] = cohesion
-
-    adj_res_centroids = np.zeros((N_SDG, research_centroids.shape[1]), dtype=np.float32)
-    for sdg_idx in range(N_SDG):
-        raw_mean = research_centroids[sdg_idx] * research_cohesions[sdg_idx]
-        adj_raw = raw_mean.copy()
-        for g_k in G_list:
-            adj_raw = adj_raw - np.dot(adj_raw, g_k) * g_k
-        norm_val = float(np.linalg.norm(adj_raw))
-        if norm_val > 1e-8:
-            adj_res_centroids[sdg_idx] = (adj_raw / norm_val).astype(np.float32)
-        else:
-            adj_res_centroids[sdg_idx] = research_centroids[sdg_idx]
-
     # Load canonical raw gaps
     canonical_semantic_path = (
         output_main_dir_for_model(model, root=Path(args.output_dir))
@@ -348,68 +364,45 @@ def iterative_register_check(
     canonical = load_json(canonical_semantic_path)
     canonical_raw = {e["sdg"]: e["semantic_gap"] for e in canonical["per_sdg"]}
 
-    iter_gaps: dict[int, float] = {}
-    for sdg_idx in range(N_SDG):
-        sdg = sdg_idx + 1
-        r_adj = adj_res_centroids[sdg_idx]
-        p_adj = adj_pol_centroids[sdg_idx]
-        if float(np.linalg.norm(r_adj)) > 1e-8 and float(np.linalg.norm(p_adj)) > 1e-8:
-            iter_gaps[sdg] = 1.0 - float(np.dot(r_adj, p_adj))
-
-    # Load E1 gaps for Spearman comparison
-    e1_path = (
-        Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
-        / "register_adjustment_results.json"
+    # Compute iter-1 gaps
+    iter1_gaps = compute_gaps_for_directions(
+        G_list[0:1], policy_emb, policy_assignments, policy_ids,
+        research_centroids, research_cohesions, rng,
     )
-    e1_results = load_json(e1_path)["per_sdg"]
-    e1_gaps = {r["sdg"]: r["adj_gap"] for r in e1_results if r["adj_gap"] is not None}
 
-    # Compute iteration-1 gaps (single direction only)
-    iter1_gaps: dict[int, float] = {}
-    if len(G_list) > 0:
-        policy_adj_iter1 = subtract_multiple_directions(policy_emb, np.vstack(G_list[0:1]))
-        adj_pol_c1 = np.zeros((N_SDG, policy_emb.shape[1]), dtype=np.float32)
-        for sdg_idx in range(N_SDG):
-            policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
-            if not policy_idxs:
-                continue
-            idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
-            centroid, _ = build_sub_centroid(policy_adj_iter1, idxs_capped)
-            if centroid is not None:
-                adj_pol_c1[sdg_idx] = centroid
-        adj_res_c1 = np.zeros((N_SDG, research_centroids.shape[1]), dtype=np.float32)
-        for sdg_idx in range(N_SDG):
-            raw_mean = research_centroids[sdg_idx] * research_cohesions[sdg_idx]
-            adj_raw = raw_mean - np.dot(raw_mean, G_list[0]) * G_list[0]
-            nv = float(np.linalg.norm(adj_raw))
-            if nv > 1e-8:
-                adj_res_c1[sdg_idx] = (adj_raw / nv).astype(np.float32)
-            else:
-                adj_res_c1[sdg_idx] = research_centroids[sdg_idx]
-        for sdg_idx in range(N_SDG):
-            sdg = sdg_idx + 1
-            if float(np.linalg.norm(adj_res_c1[sdg_idx])) > 1e-8 and float(np.linalg.norm(adj_pol_c1[sdg_idx])) > 1e-8:
-                iter1_gaps[sdg] = 1.0 - float(np.dot(adj_res_c1[sdg_idx], adj_pol_c1[sdg_idx]))
+    # Compute per-iteration gaps and ρ for displayed iterations
+    show_ks = {1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50, len(iteration_results)}
+    for r in iteration_results:
+        k = r["k"]
+        if k == 1:
+            r["mean_gap"] = round(float(np.mean(list(iter1_gaps.values()))), 4) if iter1_gaps else 0.0
+            r["rho_vs_iter1"] = 1.0
+        elif k in show_ks:
+            k_gaps = compute_gaps_for_directions(
+                G_list[:k], policy_emb, policy_assignments, policy_ids,
+                research_centroids, research_cohesions, rng,
+            )
+            r["mean_gap"] = round(float(np.mean(list(k_gaps.values()))), 4) if k_gaps else 0.0
+            sdgs_common = sorted(set(iter1_gaps.keys()) & set(k_gaps.keys()))
+            rho_k = 0.0
+            if len(sdgs_common) >= 3:
+                rho_k, _ = spearmanr(
+                    [iter1_gaps[s] for s in sdgs_common],
+                    [k_gaps[s] for s in sdgs_common],
+                )
+            r["rho_vs_iter1"] = round(rho_k, 4)
+        else:
+            r["mean_gap"] = None
+            r["rho_vs_iter1"] = None
 
-    # Spearman rank correlation: iteration-1 vs final
-    sdgs_common = sorted(set(iter1_gaps.keys()) & set(iter_gaps.keys()))
-    rho_iter1_final = 0.0
-    if len(sdgs_common) >= 3:
-        rho_iter1_final, _ = spearmanr(
-            [iter1_gaps[s] for s in sdgs_common],
-            [iter_gaps[s] for s in sdgs_common],
-        )
+    rho_iter1_final = iteration_results[-1].get("rho_vs_iter1", 0.0)
 
     # Write outputs
     out_root = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
     tables_dir = out_root / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
 
-    # LaTeX table (truncated: show iter 1, every 10th, and the last)
-    mean_gaps = [np.mean(list(iter_gaps.values()))] if iter_gaps else [0.0]
-    last_k = iteration_results[-1]["k"]
-    show_ks = {1, last_k}
-    show_ks.update(range(10, last_k, 10))
+    # LaTeX table
     tab_lines = [
         "% Auto-generated by f_register_adjustment.py iterative check — do not edit",
         r"\begin{tabular}{lrrr}",
@@ -420,12 +413,8 @@ def iterative_register_check(
     for r in iteration_results:
         if r["k"] not in show_ks:
             continue
-        if r["k"] == 1:
-            mg = f"{mean_gaps[0]:.3f}"
-            sp = "1.000"
-        else:
-            mg = "—"
-            sp = f"{rho_iter1_final:.3f}"
+        mg = f"{r['mean_gap']:.3f}" if r.get("mean_gap") is not None else "—"
+        sp = f"{r['rho_vs_iter1']:.3f}" if r.get("rho_vs_iter1") is not None else "—"
         tab_lines.append(f"{r['k']} & {r['test_acc']:.3f} & {mg} & {sp} \\\\")
     tab_lines.extend([r"\bottomrule", r"\end{tabular}"])
     (tables_dir / "tab_iterative_register_check.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
@@ -445,10 +434,9 @@ def iterative_register_check(
     out_root.mkdir(parents=True, exist_ok=True)
     with (out_root / "iterative_check_results.json").open("w") as f:
         json.dump({
-            "iterations": iteration_results,
+            "iterations": [r for r in iteration_results if r.get("mean_gap") is not None],
             "final_k": len(iteration_results),
             "spearman_rho_iter1_final": round(rho_iter1_final, 4),
-            "per_sdg_final_gaps": {str(k): round(v, 4) for k, v in iter_gaps.items()},
             "note": "85/15 stratified train/test split on 1000-per-SDG samples; G-projected data at each iteration.",
         }, f, indent=2)
 
@@ -459,7 +447,10 @@ def iterative_register_check(
     (tables_dir / "iteration_results.csv").write_text("\n".join(csv_lines) + "\n", encoding="utf-8")
 
     log.info("Iterative register check complete: %d iterations, Spearman ρ=%.4f", len(iteration_results), rho_iter1_final)
-    return {"iterations": iteration_results, "spearman_rho": rho_iter1_final}
+    return {"iterations": iteration_results, "spearman_rho": rho_iter1_final, "final_gaps": compute_gaps_for_directions(
+        G_list, policy_emb, policy_assignments, policy_ids,
+        research_centroids, research_cohesions, rng,
+    )}
 
 
 def run(args: argparse.Namespace) -> None:
@@ -677,27 +668,6 @@ def run(args: argparse.Namespace) -> None:
     (tables_dir / "num_register_adjustment.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", tables_dir / "num_register_adjustment.tex")
 
-    tab_lines = [
-        "% Auto-generated by 1_code/7_main_analysis/2_appendix/f_register_adjustment.py — do not edit manually",
-        r"\begin{tabular}{llrrr}",
-        r"\toprule",
-        r"SDG & Description & Raw gap & Adjusted gap & $\Delta$ \\",
-        r"\midrule",
-    ]
-    for r in sorted(results, key=lambda x: x["raw_gap"] or 0, reverse=True):
-        raw_str = f"{r['raw_gap']:.4f}" if r["raw_gap"] is not None else "N/A"
-        adj_str = f"{r['adj_gap']:.4f}" if r["adj_gap"] is not None else "N/A"
-        delta_str = f"{r['delta']:.4f}" if r["delta"] is not None else "N/A"
-        tab_lines.append(rf"SDG {r['sdg']:2d} & {r['name']} & {raw_str} & {adj_str} & {delta_str} \\")
-    tab_lines.extend([
-        r"\midrule",
-        rf"\multicolumn{{2}}{{l}}{{Mean}} & {mean_raw:.4f} & {mean_adj:.4f} & {mean_delta:.4f} \\",
-        r"\bottomrule",
-        r"\end{tabular}",
-    ])
-    (tables_dir / "tab_register_adjusted_semgap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", tables_dir / "tab_register_adjusted_semgap.tex")
-
     out_root.mkdir(parents=True, exist_ok=True)
     with (out_root / "register_adjustment_results.json").open("w") as f:
         json.dump({
@@ -717,7 +687,7 @@ def run(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     log.info("\n=== Iterative stratified register check ===")
     sdg_index = build_research_sdg_index(model)
-    iterative_register_check(
+    iterative_result = iterative_register_check(
         model=model,
         sdg_index=sdg_index,
         policy_emb=policy_emb,
@@ -728,6 +698,42 @@ def run(args: argparse.Namespace) -> None:
         rng=rng,
         args=args,
     )
+
+    # ------------------------------------------------------------------
+    # 10. Write E1 table (now with iterative columns)
+    # ------------------------------------------------------------------
+    iter_gaps_for_table = iterative_result["final_gaps"]
+
+    tab_lines = [
+        "% Auto-generated by 1_code/7_main_analysis/2_appendix/f_register_adjustment.py — do not edit manually",
+        r"\begin{tabular}{llrrrrr}",
+        r"\toprule",
+        r" & & & \multicolumn{2}{c}{Naive} & \multicolumn{2}{c}{Iterative} \\",
+        r"\cmidrule(lr){4-5} \cmidrule(lr){6-7}",
+        r" & Description & Raw gap & Adj. gap & $\Delta$ & Adj. gap & $\Delta$ \\",
+        r"\midrule",
+    ]
+    for r in sorted(results, key=lambda x: x["raw_gap"] or 0, reverse=True):
+        raw_str = f"{r['raw_gap']:.4f}" if r["raw_gap"] is not None else "N/A"
+        adj_str = f"{r['adj_gap']:.4f}" if r["adj_gap"] is not None else "N/A"
+        delta_str = f"{r['delta']:.4f}" if r["delta"] is not None else "N/A"
+        iter_adj = iter_gaps_for_table.get(r["sdg"])
+        iter_adj_str = f"{iter_adj:.4f}" if iter_adj is not None else "N/A"
+        iter_delta = (iter_adj - r["raw_gap"]) if iter_adj is not None and r["raw_gap"] is not None else None
+        iter_delta_str = f"{iter_delta:.4f}" if iter_delta is not None else "N/A"
+        tab_lines.append(
+            rf"{r['sdg']:2d} & {r['name']} & {raw_str} & {adj_str} & {delta_str} & {iter_adj_str} & {iter_delta_str} \\"
+        )
+    mean_iter_adj = float(np.mean(list(iter_gaps_for_table.values()))) if iter_gaps_for_table else 0.0
+    mean_iter_delta = mean_iter_adj - mean_raw
+    tab_lines.extend([
+        r"\midrule",
+        rf"\multicolumn{{2}}{{l}}{{Mean}} & {mean_raw:.4f} & {mean_adj:.4f} & {mean_delta:.4f} & {mean_iter_adj:.4f} & {mean_iter_delta:.4f} \\",
+        r"\bottomrule",
+        r"\end{tabular}",
+    ])
+    (tables_dir / "tab_register_adjusted_semgap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+    log.info("Saved: %s", tables_dir / "tab_register_adjusted_semgap.tex")
 
 
 def main() -> None:

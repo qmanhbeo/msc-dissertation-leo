@@ -706,7 +706,7 @@ This single-direction subtraction is a limited diagnostic. It attenuates one bro
 \begin{table}[ht]
 \centering
 \small
-\caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the paper. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
+\caption{Register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate. Naive = after subtracting one global research--policy direction. Iterative = after removing orthogonal directions until classification accuracy reaches chance.}
 \label{tab:register-adjusted-semantic-gap}
 \input{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/tab_register_adjusted_semgap.tex}
 \end{table}
