@@ -254,7 +254,7 @@ Additional diagnostic checks — within-corpus diagnostics, policy source-family
 
 \subsection{Classifier Calibration Across Discourse Types}\label{sec:assumptions}
 
-Because the classifier is trained on pooled reference data that are themselves policy-adjacent (Section~\ref{sec:supervised-classifier}), the scoring instrument behaves differently on the two corpora. Policy segments receive systematically higher LR predicted probabilities than research abstracts (mean \AffFifteenPolicyScore{} vs \AffFifteenPaperScore{}, a \AffFifteenDiff{} gap). The gap has two causes the data cannot separate: a genre artefact (the reference data skew toward policy vocabulary) or a substantive difference (policy texts address SDG implementation more directly). Either way the asymmetry does not threaten the findings: hard argmax assignment uses only within-corpus ranking, not absolute probability levels, so the directional gap does not reorder goals. A structural check confirms that the gap is not an SDGi circularity effect: the training set and the scored policy corpus are disjoint by construction (Appendix~\ref{app:sdgi-circularity-check}).
+Because the classifier is trained on pooled reference data that are themselves policy-adjacent (Section~\ref{sec:supervised-classifier}), the scoring instrument behaves differently on the two corpora. Policy segments receive systematically higher LR predicted probabilities than research abstracts (mean \AffFifteenPolicyScore{} vs \AffFifteenPaperScore{}, a \AffFifteenDiff{} gap). The gap has two causes the data cannot separate: a genre artefact (the reference data skew toward policy vocabulary) or a substantive difference (policy texts address SDG implementation more directly). Either way the asymmetry does not threaten the findings: hard argmax assignment uses only within-corpus ranking, not absolute probability levels, so the directional gap does not reorder goals. The asymmetry is not an SDGi circularity effect: the training set and the scored policy corpus are disjoint by construction.
 
 The combined PCA landscape (Figure~\ref{fig:pca-semantic-landscape}) visualises this asymmetry: the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
 
@@ -504,11 +504,6 @@ Alignment should therefore be understood as a multi-level empirical construct --
 \section{Diagnostics for Reference Classifier}
 \label{app:centroid-diagnostics}
 
-
-\subsection{SDGi Circularity Note}
-\label{app:sdgi-circularity-check}
-
-An earlier version of this study used SDGi texts both to construct the measurement instrument and as part of the scored policy corpus. Under the current supervised approach, the SDGi reference texts are training data behind a hard train/CV/held-out-test split, fully disjoint from the research and policy corpora being scored. The circularity concern does not apply — SDGi training texts never enter the scoring of SDGi policy segments — so the concern is moot rather than mitigated. The policy--research score asymmetry reported in Section~\ref{sec:assumptions} is therefore not an artefact of SDGi leakage.
 
 \subsection{SDG 4 Lexical Artefact Audit}
 \label{app:sdg4-lexical-audit}
