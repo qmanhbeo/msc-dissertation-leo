@@ -1,18 +1,18 @@
 sdg,sdg_label,semantic_gap,research_assigned_usable_n,policy_assigned_usable_n,research_sample_n,policy_sample_n,research_terms,policy_terms,interpretive_reading
-1,SDG 1,0.435412,14668,1574,6000,1574,"learning, model, method, deep, language","poverty, social, people, national, population",
-2,SDG 2,0.284926,76324,1696,6000,1696,"model, learning, crop, machine, accuracy","population, food, children, prevalence, access",
-3,SDG 3,0.464446,747238,2747,6000,2747,"model, learning, patients, analysis, neural","health, services, care, national, mortality",
-4,SDG 4,0.262241,441098,1993,6000,1993,"language, teaching, analysis, english, model","education, school, children, secondary, primary",
-5,SDG 5,0.333008,69712,1994,6000,1994,"learning, models, language, analysis, performance","women, equality, gender, violence, national",
-6,SDG 6,0.28166,32582,1157,6000,1157,"model, learning, analysis, method, parameters","sanitation, access, drinking water, national, supply",
-7,SDG 7,0.43414,120536,1671,6000,1671,"model, learning, method, neural, proposed","energy, access, electricity, clean, renewable",
-8,SDG 8,0.427018,72293,1956,6000,1956,"model, learning, method, detection, deep","growth, employment, labour, gdp, economic",
-9,SDG 9,0.289086,552255,3877,6000,3877,"learning, model, neural, method, machine","infrastructure, national, government, innovation, population","Lower-gap comparison: differences remain visible, but the contrast is closer to a technology/infrastructure register split than to the broader institutional gap seen in SDGs 13 and 17."
-10,SDG 10,0.309134,40781,1261,6000,1261,"que, experiences, language, findings, los","income, countries, inequality, worst, people",
-11,SDG 11,0.460372,146651,1592,6000,1592,"learning, model, detection, deep, method","housing, transport, city, public, cities",
-12,SDG 12,0.424928,63195,1057,6000,1057,"model, learning, method, neural, network","waste, consumption, production, national, food",
-13,SDG 13,0.477659,125474,3351,6000,3351,"model, learning, prediction, method, machine","climate, change, emissions, countries, national","High-gap case: both sides concern climate, but policy language is more institutional and commitment-oriented while research language is more technical and measurement-oriented."
-14,SDG 14,0.391982,60103,1447,6000,1447,"model, learning, underwater, detection, method","marine, biodiversity, fish caught, resources, fisheries",
-15,SDG 15,0.229455,76329,1604,6000,1604,"model, soil, analysis, learning, method","biodiversity, worst, national, protected, land",
-16,SDG 16,0.333485,333589,4893,6000,4893,"learning, analysis, model, method, language","nations, peace, international, united, rights",
-17,SDG 17,0.218848,12580,4637,6000,4637,"learning, analysis, model, dan, yang","countries, nations, oecd, united, national","High-gap case: the research-side sample is technical and biomedical/ML-heavy, while policy language is international, institutional, and agenda-oriented."
+1,SDG 1,0.435412,2688,1574,2688,1574,"alleviation, analysis, used, china, findings","social, cent, national, people, protection",
+2,SDG 2,0.284926,45473,1696,6000,1696,"crop, detection, prediction, diseases, analysis","population, food, children, prevalence, worst",
+3,SDG 3,0.464446,112724,2747,6000,2747,"prediction, patients, cancer, analysis, detection","health, services, care, national, births",
+4,SDG 4,0.262241,11200,1993,6000,1993,"brain, cognitive, analysis, sleep, neurons","education, school, secondary, primary, national",
+5,SDG 5,0.333008,2003,1994,2003,1994,"analysis, findings, stress, used, poor","women, gender, violence, equality, national",
+6,SDG 6,0.28166,2229,1157,2229,1157,"irrigation, soil, agricultural, crop, salinity","sanitation, access, drinking, supply, national",
+7,SDG 7,0.43414,1639,1671,1639,1671,"agricultural, prediction, analysis, agriculture, poverty","energy, electricity, access, renewable, clean",
+8,SDG 8,0.427018,4219,1956,4219,1956,"plant, detection, leaf, image, disease","employment, growth, labour, gdp, economic",
+9,SDG 9,0.289086,26296,3877,6000,3877,"agricultural, agriculture, analysis, iot, food","infrastructure, innovation, national, government, public","Lower-gap comparison: differences remain visible, but the contrast is closer to a technology/infrastructure register split than to the broader institutional gap seen in SDGs 13 and 17."
+10,SDG 10,0.309134,2187,1261,2187,1261,"neurons, analysis, patients, findings, wealth","worst, countries, best, people, rights",
+11,SDG 11,0.460372,3909,1592,3909,1592,"detection, image, prediction, based, accident","housing, urban, city, transport, cities",
+12,SDG 12,0.424928,4509,1057,4509,1057,"food, analysis, prediction, agricultural, based","waste, consumption, national, recycling, production",
+13,SDG 13,0.477659,7666,3351,6000,3351,"soil, crop, agricultural, prediction, yield","climate, change, emissions, national, countries","High-gap case: both sides concern climate, but policy language is more institutional and commitment-oriented while research language is more technical and measurement-oriented."
+14,SDG 14,0.391982,2217,1447,2217,1447,"detection, images, imaging, analysis, cancer","marine, biodiversity, fish caught, ocean, sea",
+15,SDG 15,0.229455,8588,1604,6000,1604,"soil, crop, agricultural, analysis, plant","biodiversity, forest, worst, national, protected",
+16,SDG 16,0.333485,10492,4893,6000,4893,"analysis, food, patients, cancer, images","nations, international, peace, rights, united",
+17,SDG 17,0.218848,620,4637,620,4637,"analysis, sentiment, agricultural, tweets, used","countries, international, nations, oecd, united","High-gap case: the research-side sample is technical and biomedical/ML-heavy, while policy language is international, institutional, and agenda-oriented."

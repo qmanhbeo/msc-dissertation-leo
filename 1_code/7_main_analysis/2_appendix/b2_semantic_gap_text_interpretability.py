@@ -90,7 +90,15 @@ INTERPRETIVE_READINGS = {
     ),
 }
 
-CUSTOM_STOP_WORDS = set(ENGLISH_STOP_WORDS) | {
+ML_STOPWORDS = {
+    "model", "models", "learning", "neural", "deep", "machine",
+    "algorithm", "algorithms", "method", "methods", "proposed",
+    "network", "networks", "accuracy", "performance", "training",
+    "classification", "feature", "features", "layer", "layers",
+    "dataset", "datasets",
+}
+
+CUSTOM_STOP_WORDS = set(ENGLISH_STOP_WORDS) | ML_STOPWORDS | {
     "abstract",
     "article",
     "chapter",
@@ -218,7 +226,7 @@ def collect_research(
     seq = 0
 
     shards = load_research_shards(embed_dir, scored_dir, model)
-    for shard_idx, shard in enumerate(shards, start=1):
+    for shard_idx, shard in enumerate(shards[:2], start=1):
         emb = np.load(shard["emb_path"], mmap_mode="r")
         score_rows = list(iter_jsonl(shard["score_ids_path"]))
         if emb.shape[0] != len(score_rows):
