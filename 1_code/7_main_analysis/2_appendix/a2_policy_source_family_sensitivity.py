@@ -199,7 +199,7 @@ def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: l
             sr = sem_lookup.get((family, sdg))
             cr = cov_lookup.get((family, sdg))
             share = f"{float(cr['document_weighted_share']) * 100:.1f}" if cr is not None else "--"
-            raw_n = f"{int(sr['n_policy_segments']):,}" if sr is not None else "--"
+            raw_n = f"{int(cr['document_count_assigned']):,}" if cr is not None else "--"
             gap = f"{float(sr['semantic_gap']):.2f}" if sr is not None and sr["semantic_gap"] is not None else "--"
             capped_n = f"{int(sr['n_policy_segments_capped']):,}" if sr is not None else "--"
             cells.append(f"{share} ({raw_n})")

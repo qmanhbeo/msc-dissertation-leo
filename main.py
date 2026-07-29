@@ -309,7 +309,7 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
 
 
 def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    require_output_files(output_dir / "main" / "data", ["4_3_semantic_gap_distances.json"])
+    require_output_files(output_dir / "main" / model / "data", ["4_3_semantic_gap_distances.json"])
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
