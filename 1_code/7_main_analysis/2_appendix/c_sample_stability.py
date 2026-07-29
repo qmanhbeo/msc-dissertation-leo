@@ -40,10 +40,11 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, preprocessed_dir, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_research_dir_for_model, scored_dir_for_model
 
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
+from research_embedding_shards import ResearchShard, build_research_shards
 from research_score_shards import aggregate_research_scores
 from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
@@ -53,7 +54,7 @@ from semantic_gap_shared import (
     cap_policy_indices_per_doc,
     latex_int,
 )
-from shard_pipeline_utils import load_json, resolve_manifest_path
+from shard_pipeline_utils import load_json
 CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
 CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
@@ -75,18 +76,6 @@ TIER_SPECS: list[tuple[str, int]] = [
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ResearchShard:
-    shard_id: int
-    name: str
-    rows: int
-    start: int
-    stop: int
-    score_path: Path
-    emb_path: Path
-    ids_path: Path | None = None
 
 
 @dataclass
@@ -117,53 +106,6 @@ def _compute_cache_signature(scored_dir: Path, embed_dir: Path) -> str:
     for path in [score_manifest_path, emb_manifest_path]:
         hasher.update(path.read_bytes())
     return hasher.hexdigest()[:16]
-
-
-def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
-    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
-    emb_manifest = load_json(embed_dir / "metadata" / "manifest.json")
-    score_shards = sorted(score_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
-    emb_shards = sorted(emb_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
-    if len(score_shards) != len(emb_shards):
-        raise RuntimeError(
-            f"Shard count mismatch: score={len(score_shards)} embedding={len(emb_shards)}"
-        )
-
-    shards: list[ResearchShard] = []
-    offset = 0
-    for score_shard, emb_shard in zip(score_shards, emb_shards):
-        score_id = int(score_shard["shard_id"])
-        emb_id = int(emb_shard["shard_id"])
-        if score_id != emb_id or score_shard["name"] != emb_shard["name"]:
-            raise RuntimeError(
-                "Research score/embedding manifests are not aligned on shard_id/name: "
-                f"score=({score_id}, {score_shard['name']}) "
-                f"embedding=({emb_id}, {emb_shard['name']})"
-            )
-        rows = int(score_shard["rows"])
-        if rows != int(emb_shard["rows"]):
-            raise RuntimeError(
-                f"Row mismatch for shard {score_shard['name']}: score={rows} embedding={emb_shard['rows']}"
-            )
-
-        ids_stored = emb_shard.get("ids_path", "")
-        ids_path = resolve_manifest_path(ids_stored, allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())) if ids_stored else None
-
-        shards.append(
-            ResearchShard(
-                shard_id=score_id,
-                name=score_shard["name"],
-                rows=rows,
-                start=offset,
-                stop=offset + rows,
-                score_path=resolve_manifest_path(score_shard["score_path"], allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())),
-                emb_path=resolve_manifest_path(emb_shard["embedding_path"], allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())),
-                ids_path=ids_path,
-            )
-        )
-        offset += rows
-
-    return shards, offset
 
 
 def build_doc_id_map(shards: list[ResearchShard]) -> tuple[list[tuple[int, int]], int]:

@@ -7,9 +7,73 @@ from typing import Any, Iterator
 
 import numpy as np
 
+from model_utils import preprocessed_dir
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
 
+@dataclass(frozen=True)
+class ResearchShard:
+    """A research shard with aligned score + embedding artifacts.
+
+    Moved verbatim from 2_appendix/c_sample_stability.py so that every
+    consumer of the score/embedding shard alignment shares one implementation.
+    """
+
+    shard_id: int
+    name: str
+    rows: int
+    start: int
+    stop: int
+    score_path: Path
+    emb_path: Path
+    ids_path: Path | None = None
+
+
+def build_research_shards(embed_dir: Path, scored_dir: Path) -> tuple[list[ResearchShard], int]:
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
+    emb_manifest = load_json(embed_dir / "metadata" / "manifest.json")
+    score_shards = sorted(score_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
+    emb_shards = sorted(emb_manifest.get("shards", []), key=lambda x: int(x["shard_id"]))
+    if len(score_shards) != len(emb_shards):
+        raise RuntimeError(
+            f"Shard count mismatch: score={len(score_shards)} embedding={len(emb_shards)}"
+        )
+
+    shards: list[ResearchShard] = []
+    offset = 0
+    for score_shard, emb_shard in zip(score_shards, emb_shards):
+        score_id = int(score_shard["shard_id"])
+        emb_id = int(emb_shard["shard_id"])
+        if score_id != emb_id or score_shard["name"] != emb_shard["name"]:
+            raise RuntimeError(
+                "Research score/embedding manifests are not aligned on shard_id/name: "
+                f"score=({score_id}, {score_shard['name']}) "
+                f"embedding=({emb_id}, {emb_shard['name']})"
+            )
+        rows = int(score_shard["rows"])
+        if rows != int(emb_shard["rows"]):
+            raise RuntimeError(
+                f"Row mismatch for shard {score_shard['name']}: score={rows} embedding={emb_shard['rows']}"
+            )
+
+        ids_stored = emb_shard.get("ids_path", "")
+        ids_path = resolve_manifest_path(ids_stored, allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())) if ids_stored else None
+
+        shards.append(
+            ResearchShard(
+                shard_id=score_id,
+                name=score_shard["name"],
+                rows=rows,
+                start=offset,
+                stop=offset + rows,
+                score_path=resolve_manifest_path(score_shard["score_path"], allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())),
+                emb_path=resolve_manifest_path(emb_shard["embedding_path"], allowed_dirs=(embed_dir, scored_dir, preprocessed_dir())),
+                ids_path=ids_path,
+            )
+        )
+        offset += rows
+
+    return shards, offset
 
 
 @dataclass(frozen=True)
