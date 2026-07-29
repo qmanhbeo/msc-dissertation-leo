@@ -599,6 +599,19 @@ The contrast helps make the embedding distances more legible. In SDGs 17 and 13,
 \par\smallskip\footnotesize\emph{Notes:} Terms are generated from deterministic samples of research and policy texts assigned to each SDG. The table is descriptive only and is not used to relabel records or replace the embedding-based semantic-gap estimates.\par
 \end{table}
 
+Table~\ref{tab:semantic-gap-text-interpretability-full} extends this analysis to all 17 SDGs, confirming that the research--policy term divergence is systematic rather than driven by the three selected cases.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Distinctive TF-IDF terms for all 17 SDGs.}
+\label{tab:semantic-gap-text-interpretability-full}
+\resizebox{\textwidth}{!}{%
+\input{../4_outputs/appendix/all-mpnet-base-v2/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret_all.tex}
+}
+\par\smallskip\footnotesize\emph{Notes:} Terms are TF-IDF-weighted unigrams and bigrams from deterministic samples of research and policy texts assigned to each SDG. Same methodology as Table~\ref{tab:semantic-gap-text-interpretability} with five terms per side.\par
+\end{table}
+
 
 
 
