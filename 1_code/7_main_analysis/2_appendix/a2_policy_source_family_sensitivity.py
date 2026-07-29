@@ -180,6 +180,16 @@ def top3_sdgs(profile: np.ndarray) -> str:
     return " / ".join(f"SDG {i + 1}" for i in order)
 
 
+def _spearman(xs: list[float], ys: list[float]) -> float:
+    n = len(xs)
+    if n < 3:
+        return 1.0
+    rx = np.argsort(np.argsort(xs))
+    ry = np.argsort(np.argsort(ys))
+    d2 = ((rx - ry) ** 2).sum()
+    return 1 - (6 * d2) / (n * (n * n - 1))
+
+
 def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: list[dict]) -> None:
     sem_lookup: dict[tuple[str, int], dict] = {(r["family"], r["sdg"]): r for r in semantic_rows}
     cov_lookup: dict[tuple[str, int], dict] = {(r["family"], r["sdg"]): r for r in coverage_rows}
@@ -205,6 +215,23 @@ def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: l
             cells.append(f"{share} ({raw_n})")
             cells.append(f"{gap} ({capped_n})")
         lines.append(f"{sdg_label} & " + " & ".join(cells) + r" \\")
+
+    # Spearman ρ row: each sub-family vs Full Corpus
+    families_order = ["full_policy_corpus", "curated_ai_sdg", "sdgi_vnr_vlr", "ungdc_speeches"]
+    full_share = [float(cov_lookup[("full_policy_corpus", s)]['document_weighted_share']) for s in range(1, N_SDG + 1)]
+    full_gap = [float(sem_lookup[("full_policy_corpus", s)]['semantic_gap']) for s in range(1, N_SDG + 1)]
+    rho_cells = [r"$\rho$"]
+    for fam in families_order:
+        if fam == "full_policy_corpus":
+            rho_cells.extend(["1.00", "1.00"])
+        else:
+            fv_share = [float(cov_lookup[(fam, s)]['document_weighted_share']) for s in range(1, N_SDG + 1)]
+            fv_gap = [float(sem_lookup[(fam, s)]['semantic_gap']) for s in range(1, N_SDG + 1)]
+            rho_cells.append(f"{_spearman(full_share, fv_share):.2f}")
+            rho_cells.append(f"{_spearman(full_gap, fv_gap):.2f}")
+
+    lines.append(r"\midrule")
+    lines.append(" & ".join(rho_cells) + r" \\")
     lines.extend([r"\bottomrule", r"\end{tabular}"])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
