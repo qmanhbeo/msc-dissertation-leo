@@ -52,7 +52,7 @@ from semantic_gap_shared import (
     write_csv,
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, model_slug, output_main_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
 
 
 TARGET_SDGS = (17, 13, 9)
@@ -411,13 +411,13 @@ def run(args: argparse.Namespace) -> None:
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
     _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / args.embed_model / OUTPUT_SUBDIR
+    out_root = output_dir / "appendix" / model_slug(args.embed_model) / OUTPUT_SUBDIR
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    gaps = semantic_gap_map(Path(args.output_dir) / "main" / args.embed_model / "data")
+    gaps = semantic_gap_map(output_main_dir_for_model(args.embed_model, root=Path(args.output_dir)) / "data")
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(_POLICY_EMB, mmap_mode="r")

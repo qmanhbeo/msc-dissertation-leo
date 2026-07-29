@@ -28,7 +28,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
 
-    out_root = Path(args.output_dir) / "main" / model / "zeroshot"
+    out_root = output_main_dir_for_model(model, root=Path(args.output_dir)) / "zeroshot"
     out_root.mkdir(parents=True, exist_ok=True)
 
     # 1. Load reference centroids (same ones LR uses)

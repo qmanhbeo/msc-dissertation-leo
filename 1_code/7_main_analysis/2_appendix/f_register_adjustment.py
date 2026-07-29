@@ -44,6 +44,8 @@ from model_utils import (
     SDG_NAMES,
     embed_dir_for_model,
     embed_research_dir_for_model,
+    model_slug,
+    output_main_dir_for_model,
     scored_dir_for_model,
     preprocessed_dir,
     resolve_model_alias,
@@ -133,7 +135,7 @@ def run(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     # 1. Load canonical raw gaps
     # ------------------------------------------------------------------
-    canonical_semantic_path = Path(args.output_dir) / "main" / model / "data" / "4_3_semantic_gap_distances.json"
+    canonical_semantic_path = output_main_dir_for_model(model, root=Path(args.output_dir)) / "data" / "4_3_semantic_gap_distances.json"
     log.info("Loading canonical raw gaps from %s", canonical_semantic_path)
     canonical = load_json(canonical_semantic_path)
     canonical_raw = {}
@@ -311,7 +313,7 @@ def run(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     # 8. Write LaTeX output
     # ------------------------------------------------------------------
-    out_root = Path(args.output_dir) / "appendix" / model / "f_register_adjustment"
+    out_root = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
     tables_dir = out_root / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
 

@@ -55,7 +55,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -182,7 +182,7 @@ def run(args: argparse.Namespace) -> None:
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
     _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
     _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
-    out_root = Path(args.output_dir) / "main" / args.embed_model
+    out_root = output_main_dir_for_model(args.embed_model, root=Path(args.output_dir))
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     figures_dir = out_root / "figures"

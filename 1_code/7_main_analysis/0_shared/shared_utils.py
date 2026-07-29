@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from model_utils import model_slug, output_main_dir_for_model
+
 
 @dataclass(frozen=True)
 class DissertationOutputs:
@@ -21,6 +23,7 @@ def _insert_model_in_rel(rel_path: str, model: str | None) -> str:
     """
     if model is None:
         return rel_path
+    model = model_slug(model)
     for prefix in ("main/", "appendix/"):
         if rel_path.startswith(prefix):
             ns = prefix.rstrip("/")
@@ -125,9 +128,9 @@ def ensure_dissertation_outputs(output_dir: Path, subdir: str = "main", model: s
     if model is not None:
         parts = subdir.split("/", 1)
         if len(parts) == 2 and parts[0] in ("main", "appendix"):
-            root = output_dir / parts[0] / model / parts[1]
+            root = output_dir / parts[0] / model_slug(model) / parts[1]
         else:
-            root = output_dir / subdir / model
+            root = output_dir / subdir / model_slug(model)
     else:
         root = output_dir / subdir
     data_dir = root / "data"
@@ -154,11 +157,11 @@ def require_pdf_inputs(output_dir: Path, model: str | None = None) -> Path:
     root = Path(output_dir)
     missing = []
     for name in MANUSCRIPT_TABLE_FILES:
-        path = root / "main" / (model or "") / "tables" / name
+        path = output_main_dir_for_model(model, root=root) / "tables" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_FIGURE_FILES:
-        path = root / "main" / (model or "") / "figures" / name
+        path = output_main_dir_for_model(model, root=root) / "figures" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_EXTRA_FILES:
@@ -188,13 +191,13 @@ def canonical_artifact_paths(output_dir: Path, model: str | None = None) -> list
         if name == "dissertation.pdf":
             files.append(root / name)
         else:
-            files.append(root / "main" / (model or "") / "data" / name)
+            files.append(output_main_dir_for_model(model, root=root) / "data" / name)
     for name in MANUSCRIPT_EXTRA_FILES:
         files.append(root / _insert_model_in_rel(name, model))
     for name in MANUSCRIPT_TABLE_FILES:
-        files.append(root / "main" / (model or "") / "tables" / name)
+        files.append(output_main_dir_for_model(model, root=root) / "tables" / name)
     for name in MANUSCRIPT_FIGURE_FILES:
-        files.append(root / "main" / (model or "") / "figures" / name)
+        files.append(output_main_dir_for_model(model, root=root) / "figures" / name)
     for name in MANUSCRIPT_APPENDIX_TABLE_FILES:
         files.append(root / _insert_model_in_rel(name, model))
     for name in MANUSCRIPT_APPENDIX_FIGURE_FILES:

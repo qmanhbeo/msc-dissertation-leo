@@ -60,6 +60,22 @@ def _validate_model(model: str) -> None:
 def model_slug(model: str) -> str:
     return model.replace("/", "_").lower()
 
+
+def output_main_dir_for_model(model: str | None, root: Path = DEFAULT_OUTPUT_ROOT) -> Path:
+    """Canonical ``4_outputs/main/{slug}/`` directory for a model.
+
+    All 4_outputs model-scoped paths must be derived through this helper so
+    that the on-disk layout is consistent with the 2_data slug (e.g.
+    ``allenai_scibert_scivocab_uncased``, not the nested slash form
+    ``allenai/scibert_scivocab_uncased``). ``model_slug`` is the identity for
+    models without a ``/`` (all-mpnet-base-v2, all-MiniLM-L6-v2), so this is
+    backward-compatible for them.
+    """
+    if model is None:
+        return root / "main"
+    return root / "main" / model_slug(model)
+
+
 def resolve_model_alias(name: str) -> str:
     """Map a short alias (mpnet/minilm/scibert) to its canonical model id.
 

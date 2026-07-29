@@ -24,7 +24,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     if not output_dir.is_absolute():
         output_dir = (Path.cwd() / output_dir).resolve()
-    out_path = output_dir / "main" / args.embed_model / "data" / "4_1_centroid_similarity_matrix.csv"
+    out_path = output_main_dir_for_model(args.embed_model, root=output_dir) / "data" / "4_1_centroid_similarity_matrix.csv"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     if out_path.exists() and not args.overwrite:

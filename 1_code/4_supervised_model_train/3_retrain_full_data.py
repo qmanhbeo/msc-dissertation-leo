@@ -44,7 +44,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model, output_main_dir_for_model, resolve_model_alias
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -294,7 +294,7 @@ def main() -> None:
         for i in range(N_SDG):
             cm_rows.append(f"SDG {i+1}," + ",".join(str(int(cm[i, j])) for j in range(N_SDG)))
 
-        cm_dir = DEFAULT_OUTPUT_ROOT / "main" / args.embed_model / "data"
+        cm_dir = output_main_dir_for_model(args.embed_model) / "data"
         cm_dir.mkdir(parents=True, exist_ok=True)
         cm_path = cm_dir / "4_1_confusion_matrix.csv"
         cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")

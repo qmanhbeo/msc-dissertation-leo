@@ -40,7 +40,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_research_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
 
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
@@ -818,7 +818,7 @@ def run(args: argparse.Namespace) -> None:
     research_scores = aggregate_research_scores(research_manifest, scored_dir)
     mean_paper_top_vs_osdg = float(research_scores["mean_top_overall"])
     policy_state = load_policy_state(
-        Path(args.output_dir) / "main" / args.embed_model / "data",
+        output_main_dir_for_model(args.embed_model, root=Path(args.output_dir)) / "data",
         _POLICY_EMB,
         _POLICY_IDS,
         _POLICY_SCORES,

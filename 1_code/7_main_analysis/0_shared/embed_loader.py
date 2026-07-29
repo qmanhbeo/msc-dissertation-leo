@@ -60,7 +60,11 @@ def _build_raw_bert(model_name: str, device: str) -> SentenceTransformer:
         dim_fn(),
         pooling_mode="mean",
     )
-    return SentenceTransformer(modules=[word_embedding_model, pooling], device=device)
+    # Match sentence-transformers checkpoints (all-mpnet-base-v2, all-MiniLM-*)
+    # which emit L2-normalised embeddings, so every encoder is compared on a
+    # fair, unit-norm footing.
+    normalize = models.Normalize()
+    return SentenceTransformer(modules=[word_embedding_model, pooling, normalize], device=device)
 
 
 def load_embedder(

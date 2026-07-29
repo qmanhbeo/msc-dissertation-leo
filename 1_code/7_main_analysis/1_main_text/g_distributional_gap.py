@@ -91,6 +91,7 @@ from model_utils import (
     DEFAULT_OUTPUT_ROOT,
     N_SDG,
     embed_research_dir_for_model,
+    output_main_dir_for_model,
     scored_dir_for_model,
     resolve_model_alias,
 )
@@ -219,7 +220,7 @@ def compute_config_hash(cfg: dict[str, Any], scored_dir: Path, embed_dir: Path) 
 def load_canonical(model: str) -> dict[int, dict[str, Any]]:
     """Read the canonical semantic-gap table (a fixed committed reference in
     4_outputs, independent of this run's --output-dir) used by GATES 1-4."""
-    data_dir = DEFAULT_OUTPUT_ROOT / "main" / model / "data"
+    data_dir = output_main_dir_for_model(model) / "data"
     require_output_files(data_dir, [CANONICAL_SEMANTIC_JSON])
     payload = load_json(data_dir / CANONICAL_SEMANTIC_JSON)
     return {int(row["sdg"]): row for row in payload["per_sdg"]}

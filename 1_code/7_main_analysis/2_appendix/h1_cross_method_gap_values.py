@@ -23,14 +23,14 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
 
 # ---------------------------------------------------------------------------
 # Coverage gap loaders
 # ---------------------------------------------------------------------------
 
 def _lr_covgaps(root, m):
-    p = root / "main" / m / "data" / "4_2_coverage_document_weighted.json"
+    p = output_main_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -81,7 +81,7 @@ def _mlp_covgaps(m):
 
 
 def _zs_covgaps(root, m):
-    gap_path = root / "main" / m / "zeroshot" / "semantic_gap_distances.json"
+    gap_path = output_main_dir_for_model(m, root=root) / "zeroshot" / "semantic_gap_distances.json"
     if not gap_path.exists():
         return None
     with open(gap_path) as f:
@@ -128,7 +128,7 @@ def _zs_covgaps(root, m):
 # ---------------------------------------------------------------------------
 
 def _lr_gaps(root, m):
-    p = root / "main" / m / "data" / "4_3_semantic_gap_distances.json"
+    p = output_main_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -146,7 +146,7 @@ def _mlp_gaps(m):
 
 
 def _zs_gaps(root, m):
-    p = root / "main" / m / "zeroshot" / "semantic_gap_distances.json"
+    p = output_main_dir_for_model(m, root=root) / "zeroshot" / "semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -155,7 +155,7 @@ def _zs_gaps(root, m):
 
 
 def _concept_covgaps(root, m):
-    p = root / "main" / m / "concept" / "data" / "4_2_coverage_document_weighted.json"
+    p = output_main_dir_for_model(m, root=root) / "concept" / "data" / "4_2_coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -167,7 +167,7 @@ def _concept_covgaps(root, m):
 
 
 def _concept_gaps(root, m):
-    p = root / "main" / m / "concept" / "data" / "4_3_semantic_gap_distances.json"
+    p = output_main_dir_for_model(m, root=root) / "concept" / "data" / "4_3_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
