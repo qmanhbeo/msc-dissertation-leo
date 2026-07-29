@@ -340,7 +340,7 @@ def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
         ["4_3_semantic_gap_distances.json"],
     )
     actual_output_dir = _appendix_output_dir(output_dir, model)
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/g_distributional_gap.py", "--output-dir", str(actual_output_dir)]
+    cmd = [sys.executable, "1_code/7_main_analysis/1_main_text/g_distributional_gap.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     run_step("distributional semantic-gap metrics", cmd, step_id="G")
