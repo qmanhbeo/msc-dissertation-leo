@@ -21,7 +21,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, model_results_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, model_results_dir_for_model, resolve_model_alias
 from shared_utils import ensure_canonical_outputs
 
 
@@ -66,7 +66,7 @@ def run(model: str, output_dir: Path) -> None:
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser.parse_args(argv)
 

@@ -40,7 +40,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_research_dir_for_model, scored_dir_for_model, resolve_model_alias
 
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
@@ -95,7 +95,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the sample-stability robustness stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--cache-dir", default=None)
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

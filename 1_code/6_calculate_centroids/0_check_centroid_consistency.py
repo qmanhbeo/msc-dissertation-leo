@@ -48,7 +48,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, DEFAULT_EMBED_MODEL, ZERO_NORM_EPS
+from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, DEFAULT_EMBED_MODEL, ZERO_NORM_EPS, resolve_model_alias
 from shard_pipeline_utils import ensure_dir, now_iso, read_json
 
 log = logging.getLogger(__name__)
@@ -236,7 +236,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Check centroid consistency for MLP-supervised classification."
     )
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--output-dir", default=None,
                         help="Ignored (compatibility with main.py pipeline)")

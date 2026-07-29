@@ -33,7 +33,7 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import model_results_dir_for_model
+from model_utils import model_results_dir_for_model, resolve_model_alias
 
 MODEL_TAG = "xgb"
 
@@ -44,7 +44,7 @@ log = logging.getLogger(__name__)
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Train XGB classifier.")
-    parser.add_argument("--embed-model", default="all-mpnet-base-v2",
+    parser.add_argument("--embed-model", default="all-mpnet-base-v2", type=resolve_model_alias,
                         help="Embedding model name")
     args = parser.parse_args()
     data_dir = model_results_dir_for_model(args.embed_model)

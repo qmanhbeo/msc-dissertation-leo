@@ -71,7 +71,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from shared_utils import ensure_canonical_outputs, require_output_files
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
 
 # ---------------------------------------------------------------------------
@@ -152,7 +152,7 @@ def compute_four_tests(
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute H25 correlation outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

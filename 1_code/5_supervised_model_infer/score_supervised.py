@@ -72,6 +72,7 @@ from model_utils import (
     model_results_dir_for_model,
     scored_dir_for_model,
     DEFAULT_EMBED_MODEL,
+    resolve_model_alias,
 )
 from shard_pipeline_utils import (
     atomic_write_json,
@@ -651,7 +652,7 @@ def run_mlp(args) -> None:
 # ---------------------------------------------------------------------------
 def main() -> None:
     parser = argparse.ArgumentParser(description="Score research/policy corpora with the supervised classifier (LR or MLP).")
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--classifier", default="lr", choices=["lr", "mlp"],
                         help="Classifier family to score with (default: %(default)s)")

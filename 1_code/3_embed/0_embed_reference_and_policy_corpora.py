@@ -32,7 +32,8 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from embed_utils import concatenate_batches, load_jsonl, write_batch_manifest
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, preprocessed_dir, segmented_dir_for_model
+from embed_loader import load_embedder
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, preprocessed_dir, segmented_dir_for_model, resolve_model_alias
 
 CORPUS_CONFIG = {
     "osdg": {
@@ -108,8 +109,18 @@ def parse_args() -> argparse.Namespace:
         help="Load model from local Hugging Face cache only.",
     )
     parser.add_argument(
-        "--embed-model", default=DEFAULT_EMBED_MODEL,
+        "--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
         help="Sentence-transformer model (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--device", choices=["auto", "cuda", "cpu"], default="auto",
+        help="Device for embedding (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--seg-model", default=None,
+        help="Read segmented texts from this model's dir (default: this model). "
+             "Use 'all-mpnet-base-v2' so a domain encoder (e.g. SciBERT) embeds "
+             "the identical canonical inputs as the baseline encoder.",
     )
     parser.add_argument(
         "--batch-size", type=int, default=128,
@@ -120,8 +131,8 @@ def parse_args() -> argparse.Namespace:
         help="Compute + storage precision for embeddings (fp16 ≈ 2x faster on Ampere GPUs). "
              "Default: fp16 for all-MiniLM-L6-v2, fp32 otherwise.",
     )
-    p.add_argument("--normalize-embeddings", action="store_true", default=True,
-                   help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
+    parser.add_argument("--normalize-embeddings", action="store_true", default=True,
+                        help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     return parser.parse_args()
 
 
@@ -144,16 +155,21 @@ def embed_corpus(
     batch_size: int,
     precision: str,
     model_name: str,
+    seg_model: str | None = None,
+    normalize_embeddings: bool = True,
 ) -> None:
     metadata_dir = output_dir / "metadata"
     emb_path = output_dir / f"{corpus_name}.npy"
     ids_path = metadata_dir / f"{corpus_name}_ids.json"
 
-    if emb_path.exists() and not overwrite:
+    if emb_path.exists():
+        # Resume-safe: a completed embedding is reused even when --overwrite is
+        # passed, so re-runs never redo finished corpora. Use --overwrite only to
+        # force-redo a partial/corrupt embed (delete the .npy first).
         log.info("Skipping %s — %s already exists", corpus_name, emb_path)
         return
 
-    input_path = config["input_path"](model_name)
+    input_path = config["input_path"](seg_model or model_name)
     log.info("Embedding %s (%s)", corpus_name, input_path)
     records = load_jsonl(input_path)
     texts = [r[config["text_field"]] for r in records]
@@ -187,7 +203,10 @@ def embed_corpus(
     tmp_dir = output_dir / f"{corpus_name}_batches"
     manifest_path = tmp_dir / "manifest.json"
 
-    if overwrite and tmp_dir.exists():
+    if overwrite and tmp_dir.exists() and not manifest_path.exists():
+        # Resume-safe: keep a batch checkpoint dir that still has a valid manifest
+        # so an interrupted embed continues from the last completed batch instead
+        # of restarting from zero.
         shutil.rmtree(tmp_dir)
 
     completed_batches: set[int] = set()
@@ -225,7 +244,7 @@ def embed_corpus(
             batch_size=len(batch_texts),
             show_progress_bar=False,
             convert_to_numpy=True,
-            normalize_embeddings=args.normalize_embeddings,
+            normalize_embeddings=normalize_embeddings,
         ).astype(np.float16 if precision == "fp16" else np.float32)
 
         batch_path = tmp_dir / f"batch_{batch_i:05d}.npy"
@@ -260,7 +279,7 @@ def main() -> None:
     config = CORPUS_CONFIG[args.corpus]
 
     log.info("Loading model: %s", args.embed_model)
-    model = SentenceTransformer(args.embed_model, local_files_only=args.local_files_only)
+    model = load_embedder(args.embed_model, device=args.device, local_files_only=args.local_files_only)
     if precision == "fp16":
         model = model.half()
     log.info("Embedding dimension: %d", model.get_embedding_dimension())
@@ -272,6 +291,8 @@ def main() -> None:
         batch_size=args.batch_size,
         precision=precision,
         model_name=args.embed_model,
+        seg_model=args.seg_model,
+        normalize_embeddings=args.normalize_embeddings,
     )
 
     path = output_dir / f"{args.corpus}.npy"

@@ -44,7 +44,7 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import model_results_dir_for_model, append_grid_log, DEFAULT_EMBED_MODEL, N_SDG
+from model_utils import model_results_dir_for_model, append_grid_log, DEFAULT_EMBED_MODEL, N_SDG, resolve_model_alias
 
 MODEL_TAG = "lr"
 
@@ -55,7 +55,7 @@ log = logging.getLogger(__name__)
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="Train single-label LR.")
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                         help="Embedding model name")
     args = parser.parse_args()
     data_dir = model_results_dir_for_model(args.embed_model)

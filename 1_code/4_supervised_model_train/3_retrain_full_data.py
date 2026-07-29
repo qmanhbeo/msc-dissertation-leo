@@ -44,7 +44,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model, resolve_model_alias
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class _NetWrapper:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Retrain champion MLP on full train pool.")
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL,
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                         help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
     parser.add_argument("--data-dir", default=None,
                         help="Override data dir (derived from --model if omitted)")

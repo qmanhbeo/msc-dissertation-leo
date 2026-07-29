@@ -48,7 +48,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import preprocessed_dir, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL
+from model_utils import preprocessed_dir, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
 from segment_utils import segment_text, _ensure_nltk_data
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, sha256_file
 
@@ -191,7 +191,7 @@ def main() -> None:
     parser.add_argument("--text-field", default="text")
     parser.add_argument("--id-field", default="id")
     parser.add_argument("--prefix", default="doc", help="Prefix for segment_id and source_doc.")
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     parser.add_argument("--min-words", type=int, default=MIN_WORDS,
                         help="Drop texts (or segments) shorter than this many words (default: %(default)s)")
     parser.add_argument("--overwrite", action="store_true",

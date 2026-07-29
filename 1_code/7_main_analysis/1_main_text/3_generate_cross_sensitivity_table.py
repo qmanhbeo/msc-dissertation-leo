@@ -28,7 +28,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from collections import defaultdict
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model, resolve_model_alias
 
 SDG_NAMES = {
     1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
@@ -42,7 +42,7 @@ SDG_NAMES = {
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     return parser.parse_args()
 
 # ---------------------------------------------------------------------------
@@ -179,6 +179,128 @@ COVERAGE_NOTES = (
     "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG coverage-gap ranks against the "
     "canonical MPNet-LR column."
 )
+
+
+# ---------------------------------------------------------------------------
+# Domain-encoder sensitivity (same-dimension scientific encoder, SciBERT).
+# Added for the encoder-sensitivity robustness check: MPNet (768-d) vs
+# SciBERT (768-d) isolates architecture/domain from the dimensionality drop
+# that confounds the MPNet--MiniLM (384-d) pair.
+# ---------------------------------------------------------------------------
+ENC_AXIS_ENCODERS = [
+    ("all-mpnet-base-v2", "MPNet (768-d)"),
+    ("all-MiniLM-L6-v2", "MiniLM (384-d)"),
+    ("allenai/scibert_scivocab_uncased", "SciBERT (768-d)"),
+]
+ENC_AXIS_SEMANTIC_CAPTION = (
+    "Domain-encoder sensitivity of within-SDG semantic-gap rankings across embedding "
+    "architectures of differing domain specialisation but matched dimensionality."
+)
+ENC_AXIS_SEMANTIC_NOTES = (
+    "Each cell reports the within-SDG semantic-gap rank ($1 = \\text{largest gap}$, "
+    "$17 = \\text{smallest gap}$) under that encoder and assignment method. "
+    "MPNet (768-d) is the canonical general-purpose encoder; MiniLM (384-d) is a smaller "
+    "general-purpose encoder; SciBERT (768-d) is a scientific-domain encoder. "
+    "MPNet and SciBERT share dimensionality (768-d), isolating architecture/domain from "
+    "the dimensionality drop that confounds the MPNet--MiniLM pair "
+    "(Section~\\ref{sec:encoder-sensitivity}). "
+    "LR = canonical supervised logistic regression; policy segments capped at 50/doc/SDG. "
+    "MLP = 4-layer/384-hidden network. Zero-shot = nearest-centroid on SDG reference centroids. "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
+    "canonical MPNet-LR column."
+)
+ENC_AXIS_COVERAGE_CAPTION = (
+    "Domain-encoder sensitivity of within-SDG coverage-gap rankings across embedding "
+    "architectures of differing domain specialisation but matched dimensionality."
+)
+ENC_AXIS_COVERAGE_NOTES = (
+    "Each cell reports the within-SDG coverage-gap rank ($1 = \\text{largest gap}$, "
+    "$17 = \\text{smallest gap}$) under that encoder and assignment method. "
+    "MPNet (768-d) is the canonical general-purpose encoder; MiniLM (384-d) is a smaller "
+    "general-purpose encoder; SciBERT (768-d) is a scientific-domain encoder. "
+    "MPNet and SciBERT share dimensionality (768-d), isolating architecture/domain from "
+    "the dimensionality drop that confounds the MPNet--MiniLM pair "
+    "(Section~\\ref{sec:encoder-sensitivity}). "
+    "LR = canonical supervised logistic regression; MLP = 4-layer/384-hidden network; "
+    "Zero-shot = nearest-centroid on SDG reference centroids. Coverage gap is "
+    "document-weighted (Assumption A19) for all methods. "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG coverage-gap ranks "
+    "against the canonical MPNet-LR column."
+)
+
+
+def write_encoder_axis_semantic():
+    enc_subgroups = []
+    for m, sublabel in ENC_AXIS_ENCODERS:
+        lr = load_lr_gaps(m)
+        mlp = load_mlp_gaps(m)
+        zs = load_zs_gaps(m)
+        cols = []
+        if lr:
+            cols.append(("LR", compute_ranks(lr),
+                         "LR (canonical supervised) — policy segments capped at 50/doc/SDG"))
+        if mlp:
+            cols.append(("MLP", compute_ranks(mlp),
+                         "MLP (4-layer/384-hidden) — policy segments capped at 50/doc/SDG"))
+        if zs:
+            cols.append(("ZS", compute_ranks(zs),
+                         "Zero-shot nearest-centroid on SDG reference centroids"))
+        if cols:
+            enc_subgroups.append((sublabel, cols))
+    if not enc_subgroups:
+        print("WARNING: no encoder data for encoder-axis semantic table, skipping")
+        return
+    col_groups = [("Encoder (embedding architecture)", enc_subgroups)]
+    rho_by_col = assemble_table(
+        col_groups, OUT_MAIN / "tab_encoder_sensitivity_semantic.tex",
+        ENC_AXIS_SEMANTIC_CAPTION, ENC_AXIS_SEMANTIC_NOTES, "tab:encoder-sensitivity-semantic",
+    )
+    scibert_key = "Encoder (embedding architecture)::SciBERT (768-d)::LR"
+    scibert_rho = rho_by_col.get(scibert_key, float("nan"))
+    val = f"{scibert_rho:.2f}" if not np.isnan(scibert_rho) else "--"
+    (OUT_MAIN / "num_encoder_sensitivity_semantic.tex").write_text(
+        "\n".join([
+            "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+            rf"\newcommand{{\SciBERTSemanticRho}}{{{val}}}",
+        ]) + "\n", encoding="utf-8")
+    print(f"Written num_encoder_sensitivity_semantic.tex  scibert_lr_rho={val}")
+
+
+def write_encoder_axis_coverage():
+    enc_subgroups = []
+    for m, sublabel in ENC_AXIS_ENCODERS:
+        lr = load_lr_covgaps(m)
+        mlp = load_mlp_covgaps(m)
+        zs = load_zs_covgaps(m)
+        cols = []
+        if lr:
+            cols.append(("LR", compute_ranks(lr),
+                         "LR (canonical supervised) — coverage gap vs full policy corpus"))
+        if mlp:
+            cols.append(("MLP", compute_ranks(mlp),
+                         "MLP (4-layer/384-hidden) — coverage gap vs full policy corpus"))
+        if zs:
+            cols.append(("ZS", compute_ranks(zs),
+                         "Zero-shot nearest-centroid — coverage gap vs full policy corpus"))
+        if cols:
+            enc_subgroups.append((sublabel, cols))
+    if not enc_subgroups:
+        print("WARNING: no encoder data for encoder-axis coverage table, skipping")
+        return
+    col_groups = [("Encoder (embedding architecture)", enc_subgroups)]
+    rho_by_col = assemble_table(
+        col_groups, OUT_MAIN / "tab_encoder_sensitivity_coverage.tex",
+        ENC_AXIS_COVERAGE_CAPTION, ENC_AXIS_COVERAGE_NOTES, "tab:encoder-sensitivity-coverage",
+    )
+    scibert_key = "Encoder (embedding architecture)::SciBERT (768-d)::LR"
+    scibert_rho = rho_by_col.get(scibert_key, float("nan"))
+    val = f"{scibert_rho:.2f}" if not np.isnan(scibert_rho) else "--"
+    (OUT_MAIN / "num_encoder_sensitivity_coverage.tex").write_text(
+        "\n".join([
+            "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+            rf"\newcommand{{\SciBERTCoverageRho}}{{{val}}}",
+        ]) + "\n", encoding="utf-8")
+    print(f"Written num_encoder_sensitivity_coverage.tex  scibert_lr_rho={val}")
 
 
 def load_lr_covgaps(m):
@@ -879,6 +1001,8 @@ def run(args: argparse.Namespace) -> None:
     write_coverage_table()
     write_concept_coverage()
     write_num_cross_sensitivity()
+    write_encoder_axis_semantic()
+    write_encoder_axis_coverage()
     print("Cross-sensitivity table generation complete.")
 
 

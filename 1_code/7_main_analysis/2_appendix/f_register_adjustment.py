@@ -46,6 +46,7 @@ from model_utils import (
     embed_research_dir_for_model,
     scored_dir_for_model,
     preprocessed_dir,
+    resolve_model_alias,
 )
 from shard_pipeline_utils import resolve_manifest_path
 import semantic_gap_shared
@@ -70,7 +71,7 @@ SAMPLE_SIZE_PER_CLASS = 40_000
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run register-adjustment sensitivity analysis.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

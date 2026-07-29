@@ -52,7 +52,7 @@ from semantic_gap_shared import (
     write_csv,
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
 
 
 TARGET_SDGS = (17, 13, 9)
@@ -122,7 +122,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--sample-per-side", type=int, default=SAMPLE_PER_SIDE)
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

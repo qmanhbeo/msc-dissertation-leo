@@ -5,8 +5,19 @@ import json
 from pathlib import Path
 
 DEFAULT_EMBED_MODEL = "all-mpnet-base-v2"
-ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2"}
+ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2", "allenai/scibert_scivocab_uncased"}
 VALID_DIMS = {384, 768}
+# Raw (non-sentence-transformers) BERT checkpoints that lack a pooling head and
+# must be wrapped with mean pooling by embed_loader.load_embedder(). Used by the
+# domain-encoder sensitivity analysis (same-dimension scientific encoder).
+RAW_BERT_MODELS = {"allenai/scibert_scivocab_uncased"}
+
+# Short aliases for --embed-model so callers can write scibert/minilm/mpnet.
+MODEL_ALIASES = {
+    "mpnet": "all-mpnet-base-v2",
+    "minilm": "all-MiniLM-L6-v2",
+    "scibert": "allenai/scibert_scivocab_uncased",
+}
 N_SDG = 17
 RANDOM_SEED = 42
 # Numerical-stability / "degenerate centroid" thresholds used across scoring &
@@ -48,6 +59,17 @@ def _validate_model(model: str) -> None:
 
 def model_slug(model: str) -> str:
     return model.replace("/", "_").lower()
+
+def resolve_model_alias(name: str) -> str:
+    """Map a short alias (mpnet/minilm/scibert) to its canonical model id.
+
+    Idempotent for already-canonical names, so it is safe to apply
+    unconditionally at argument-parse time in every script that accepts
+    --embed-model.
+    """
+    if not name:
+        return name
+    return MODEL_ALIASES.get(name.strip().lower(), name)
 
 
 def preprocessed_dir() -> Path:

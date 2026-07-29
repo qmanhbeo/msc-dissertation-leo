@@ -23,7 +23,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, segmented_dir_for_model, embed_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, segmented_dir_for_model, embed_dir_for_model, resolve_model_alias
 
 SOURCE_FAMILY_MAP = {
     "policy_scrape": "curated_ai_sdg",
@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Add source_family to embedded policy metadata.")
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help="Embed model (default: %(default)s)")
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help="Embed model (default: %(default)s)")
     p.add_argument("--dry-run", action="store_true", help="Show what would change without writing.")
     return p.parse_args()
 

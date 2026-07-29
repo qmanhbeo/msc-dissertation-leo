@@ -55,7 +55,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from alignment_core import verify_unit_norms
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, resolve_model_alias
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -90,7 +90,7 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Optional cap on the number of policy segments used for PCA fitting. Default: 0 (use all policy segments).",
     )
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     p.add_argument("--n-components", type=int, default=2,
                   help="Number of PCA components for the semantic landscape projection (default: %(default)s)")
     return p.parse_args()

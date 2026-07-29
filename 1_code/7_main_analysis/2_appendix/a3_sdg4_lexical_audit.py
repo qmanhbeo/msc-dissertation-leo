@@ -32,7 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, open_text, resolve_research_text_path
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, open_text, resolve_research_text_path, resolve_model_alias
 from semantic_gap_shared import latex_escape, write_csv
 from shard_pipeline_utils import iter_jsonl, load_json
 
@@ -91,7 +91,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run SDG 4 lexical artefact audit.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     return p.parse_args()
 
 

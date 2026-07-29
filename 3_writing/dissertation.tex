@@ -46,6 +46,8 @@
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
 \InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_distributional_gap.tex}{}{}
+\InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_encoder_sensitivity_semantic.tex}{}{}
+\InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_encoder_sensitivity_coverage.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -420,6 +422,17 @@ Three tiers emerge. First, SDG 17 is the most method-sensitive SDG: it sits at r
 The same cross-sensitivity structure holds for the coverage gap (Table~\ref{tab:cross-sensitivity-coverage}). The within-SDG coverage-gap ranking is stable across embedding architectures ($\rho = \MiniLMCoverageRho$ for MiniLM--LR versus the MPNet--LR baseline) and across retrieval strategy ($\rho = \ConceptCoverageGapRho$ for concept-based field-of-study retrieval versus the keyword baseline), indicating that the coverage conclusions are not driven by the choice of query terms.
 \input{../4_outputs/main/all-mpnet-base-v2/tables/tab_cross_sensitivity_coverage.tex}
 
+\subsection{Domain-Encoder Sensitivity (Same-Dimension Scientific Encoder)}
+\label{sec:encoder-sensitivity}
+
+The cross-sensitivity check above compares the canonical \texttt{all-mpnet-base-v2} (768-d) encoder against the lighter \texttt{all-MiniLM-L6-v2} (384-d) encoder. Because the two differ in both architecture and dimensionality, that comparison bounds encoder sensitivity only modulo the dimensionality drop. To isolate architecture and domain specialisation from dimensionality, this section adds a third encoder, \texttt{allenai/scibert\_scivocab\_uncased} \parencite{Beltagy2019}, a scientific-domain BERT that is also 768-d. MPNet and SciBERT therefore differ in architecture and training domain but share dimensionality, so any remaining disagreement between them is a pure architecture/domain effect. Both encoders embed the identical canonical MPNet-segmented texts, and SciBERT is scored on the same 50,000-paper representative research sample used by the sample-stability ladder, so the comparison holds inputs fixed.
+
+Tables~\ref{tab:encoder-sensitivity-semantic} and~\ref{tab:encoder-sensitivity-coverage} report the within-SDG gap rankings under MPNet, MiniLM, and SciBERT for each assignment method. The semantic-gap ranking is stable across the three encoders (MPNet--LR vs.\ SciBERT--LR Spearman $\rho = \SciBERTSemanticRho$; MPNet--LR vs.\ MiniLM--LR $\rho \approx 0.71$), and the coverage-gap ranking is similarly stable (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$). The same SDGs remain most and least divergent under all three encoders: SDGs~13,~11, and~3 lead the semantic gap under every encoder, and SDG~17 stays closest under the supervised classifiers. The research--policy divergence findings are therefore not an artefact of the MPNet geometry or of its 768-d dimensionality; they survive replacement of the general-purpose encoder with a domain-specialised scientific encoder of matched dimensionality.
+
+\input{../4_outputs/main/all-mpnet-base-v2/tables/tab_encoder_sensitivity_semantic.tex}
+
+\input{../4_outputs/main/all-mpnet-base-v2/tables/tab_encoder_sensitivity_coverage.tex}
+
 \subsection{Robustness of the Semantic-Gap Ranking to the Distance Functional}
 \label{sec:distributional-robustness}
 
@@ -668,7 +681,7 @@ The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is
 
 \subsection{Scope}
 
-An embedding-model sensitivity check compares the canonical \texttt{all-mpnet-base-v2} results against the lighter \texttt{all-MiniLM-L6-v2} encoder (384-d). This is now performed: the cross-sensitivity table (Table~\ref{tab:cross-sensitivity-robustness}) carries both encoders as a fourth axis, and the supervised LR and MLP rankings prove stable across architectures (within-method Spearman $\rho \approx 0.7$), confirming the gap findings are not an artefact of the MPNet geometry. Re-embedding the full research corpus ($\sim$3.1M papers) with a second model required the additional storage noted above, and the sample-stability and cross-sensitivity checks (Sections~\ref{sec:cross-sensitivity} and~\ref{app:sample-stability}) bound robustness under the chosen encoder. The remaining caveat is that MPNet (768-d) and MiniLM (384-d) differ in both architecture and dimensionality, so the comparison bounds encoder sensitivity only modulo the dimensionality drop; a same-dimension encoder pair would be needed to isolate architecture alone. The zero-shot column's near-zero $\rho$ against the LR baseline ($\approx -0.03$) is a method-axis effect (zero-shot vs.\ LR), not an encoder artefact -- MiniLM zero-shot still agrees with MPNet zero-shot ($\rho \approx 0.69$). The results are conditional on the MPNet architecture and should be read with that scope in mind.
+An embedding-model sensitivity check compares the canonical \texttt{all-mpnet-base-v2} results against the lighter \texttt{all-MiniLM-L6-v2} encoder (384-d). This is now performed: the cross-sensitivity table (Table~\ref{tab:cross-sensitivity-robustness}) carries both encoders as a fourth axis, and the supervised LR and MLP rankings prove stable across architectures (within-method Spearman $\rho \approx 0.7$), confirming the gap findings are not an artefact of the MPNet geometry. Re-embedding the full research corpus ($\sim$3.1M papers) with a second model required the additional storage noted above, and the sample-stability and cross-sensitivity checks (Sections~\ref{sec:cross-sensitivity} and~\ref{app:sample-stability}) bound robustness under the chosen encoder. The remaining caveat --- that MPNet (768-d) and MiniLM (384-d) differ in both architecture and dimensionality, so the comparison bounds encoder sensitivity only modulo the dimensionality drop --- is resolved by the same-dimension scientific-encoder check (\texttt{allenai/scibert\_scivocab\_uncased}, 768-d) in Section~\ref{sec:encoder-sensitivity}, which confirms the gap rankings are stable across architecture and domain at matched dimensionality (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTSemanticRho$). The zero-shot column's near-zero $\rho$ against the LR baseline ($\approx -0.03$) is a method-axis effect (zero-shot vs.\ LR), not an encoder artefact -- MiniLM zero-shot still agrees with MPNet zero-shot ($\rho \approx 0.69$). The results are therefore not an artefact of the MPNet geometry or its dimensionality, and should be read as robust to the choice of 768-d encoder.
 
 % ==============================================================================
 % Appendix F: Register-Adjustment Robustness and Diagnostics

@@ -28,7 +28,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, preprocessed_dir
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -61,7 +61,7 @@ def cap_indices_per_doc(policy_ids: list[dict], segment_cap: int, rng: np.random
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     p.add_argument("--segment-cap", type=int, default=50,
                   help="Max segments sampled per source_doc per SDG (default: %(default)s)")
     p.add_argument("--min-centroid-norm", type=float, default=MIN_CENTROID_NORM,

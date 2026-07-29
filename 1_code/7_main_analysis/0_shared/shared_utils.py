@@ -79,6 +79,8 @@ MANUSCRIPT_TABLE_FILES = [
     "tab_interaction.tex",
     "num_distributional_gap.tex",
     "tab_distributional_gap.tex",
+    "tab_encoder_sensitivity_semantic.tex",
+    "tab_encoder_sensitivity_coverage.tex",
 ]
 
 MANUSCRIPT_FIGURE_FILES = [

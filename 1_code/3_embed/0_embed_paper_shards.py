@@ -38,8 +38,9 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from embed_utils import write_batch_manifest
+from embed_loader import load_embedder
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, segmented_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, segmented_dir_for_model, resolve_model_alias
 
 
 log = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--out-dir", default=None)
     p.add_argument("--status-dir", default=None)
     p.add_argument("--metadata-dir", default="")
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     p.add_argument("--batch-size", type=int, default=256,
                    help="Internal batch size passed to model.encode (GPU occupancy).")
     p.add_argument("--chunk-size", type=int, default=8192,
@@ -147,7 +148,7 @@ def main() -> None:
 
     device = resolve_device(args.device)
     try:
-        model = SentenceTransformer(args.embed_model, device=device, local_files_only=args.local_files_only)
+        model = load_embedder(args.embed_model, device=device, local_files_only=args.local_files_only)
     except Exception as exc:
         hint = "Model load failed. If the environment has no internet, ensure model cache exists and use --local-files-only."
         raise RuntimeError(f"{hint} Original error: {exc}") from exc

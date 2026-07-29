@@ -24,14 +24,14 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model, resolve_model_alias
 
 log = logging.getLogger(__name__)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build centroid similarity matrix CSV.")
-    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
+    parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=f"Embed model (default: {DEFAULT_EMBED_MODEL})")
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT), help="Manuscript output directory")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing CSV")
     args = parser.parse_args()

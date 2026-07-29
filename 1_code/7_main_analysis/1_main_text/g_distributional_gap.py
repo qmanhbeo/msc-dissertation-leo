@@ -92,6 +92,7 @@ from model_utils import (
     N_SDG,
     embed_research_dir_for_model,
     scored_dir_for_model,
+    resolve_model_alias,
 )
 from research_embedding_shards import (
     ResearchShard,
@@ -168,7 +169,7 @@ log = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run the distributional semantic-gap appendix stage.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
-    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, help=argparse.SUPPRESS)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     # Dev-only smoke flag: comma-separated SDG numbers (e.g. "17"). The summary
     # is marked partial when set; never used in canonical runs.
     p.add_argument("--limit-sdgs", default=None, help=argparse.SUPPRESS)
