@@ -200,34 +200,39 @@ def _write_combined_table(path, rows, cov_fmt, gap_fmt, concept_cov=None, concep
         r"\toprule",
     ]
 
+    h1_g = r"\multicolumn{7}{c}" if has_concept else r"\multicolumn{6}{c}"
     h1 = ["SDG",
-          r"\multicolumn{6}{c}{Coverage gap (\%)}",
-          r"\multicolumn{6}{c}{Semantic gap (cosine)}"]
-    if has_concept:
-        h1.append(r"\multicolumn{2}{c}{Concept ret. (LR)}")
+          f"{h1_g}{{Coverage gap (\\%)}}",
+          f"{h1_g}{{Semantic gap (cosine)}}"]
     lines.append(" & ".join(h1) + r" \\")
 
-    cm1 = [r"\cmidrule(lr){2-7}", r"\cmidrule(lr){8-13}"]
     if has_concept:
-        cm1.append(r"\cmidrule(lr){14-15}")
+        cm1 = [r"\cmidrule(lr){2-8}", r"\cmidrule(lr){9-15}"]
+    else:
+        cm1 = [r"\cmidrule(lr){2-7}", r"\cmidrule(lr){8-13}"]
     lines.append(" ".join(cm1))
 
     h2 = [""]
     for _ in range(2):
         h2.append(r"\multicolumn{3}{c}{MPNet (768d)}")
         h2.append(r"\multicolumn{3}{c}{MiniLM (384d)}")
-    if has_concept:
-        h2.append("cov.\\%")
-        h2.append("sem.")
+        if has_concept:
+            h2.append("Concept")
     lines.append(" & ".join(h2) + r" \\")
 
-    cm2 = [r"\cmidrule(lr){2-4}", r"\cmidrule(lr){5-7}",
-           r"\cmidrule(lr){8-10}", r"\cmidrule(lr){11-13}"]
+    if has_concept:
+        cm2 = [r"\cmidrule(lr){2-4}", r"\cmidrule(lr){5-7}",
+               r"\cmidrule(lr){9-11}", r"\cmidrule(lr){12-14}"]
+    else:
+        cm2 = [r"\cmidrule(lr){2-4}", r"\cmidrule(lr){5-7}",
+               r"\cmidrule(lr){8-10}", r"\cmidrule(lr){11-13}"]
     lines.append(" ".join(cm2))
 
-    h3 = [""] + (["LR", "MLP", "ZS"] * 4)
-    if has_concept:
-        h3 += ["", ""]
+    h3 = [""]
+    for _ in range(2):
+        h3 += ["LR", "MLP", "ZS", "LR", "MLP", "ZS"]
+        if has_concept:
+            h3.append("cov.\\%" if len(h3) < 9 else "sem.")
     lines.append(" & ".join(h3) + r" \\")
 
     lines.append(r"\midrule")
@@ -239,12 +244,17 @@ def _write_combined_table(path, rows, cov_fmt, gap_fmt, concept_cov=None, concep
             sdg, cov_vals, gap_vals = entry
             cc = cg = None
         cells = [str(sdg)]
-        for v in cov_vals:
+        for v in cov_vals[:3]:
             cells.append(cov_fmt.format(v) if v is not None else "--")
-        for v in gap_vals:
-            cells.append(gap_fmt.format(v) if v is not None else "--")
+        for v in cov_vals[3:]:
+            cells.append(cov_fmt.format(v) if v is not None else "--")
         if has_concept:
             cells.append(cov_fmt.format(cc * 100.0) if cc is not None else "--")
+        for v in gap_vals[:3]:
+            cells.append(gap_fmt.format(v) if v is not None else "--")
+        for v in gap_vals[3:]:
+            cells.append(gap_fmt.format(v) if v is not None else "--")
+        if has_concept:
             cells.append(gap_fmt.format(cg) if cg is not None else "--")
         lines.append(" & ".join(cells) + r" \\")
 
