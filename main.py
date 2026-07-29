@@ -84,7 +84,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, F, G) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, F, H.1) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
@@ -93,8 +93,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
     p.add_argument("--appendix-c0-corpus-split", action="store_true", help="Export reference-corpus split-size macros.")
     p.add_argument("--appendix-d1-model-selection", action="store_true", help="Export D.1 model-selection CV macros.")
-    p.add_argument("--appendix-g-distributional", action="store_true", help="Run G Distributional Semantic-Gap Metrics.")
-    p.add_argument("--appendix-g-replicate-seed", action="store_true", help="Also run the seed-43 replicate (default: seed 42 only).")
+    p.add_argument("--appendix-g-distributional", action="store_true", help="Run the distributional semantic-gap robustness (MAIN-RESULT Table; OPT-IN: not run by warm replay or --appendix-all; run before --build-pdf).")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
     p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
@@ -334,8 +333,8 @@ def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) 
     run_step("register-adjustment robustness", cmd, step_id="F")
 
 
-def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, replicate_seed: bool = False) -> None:
-    """Run Appendix G: distribution-aware semantic-gap metrics on the same clouds."""
+def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    """Run the distributional semantic-gap robustness (main-result table, opt-in)."""
     require_output_files(
         output_dir / "main" / model / "data",
         ["4_3_semantic_gap_distances.json"],
@@ -344,8 +343,6 @@ def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, r
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/g_distributional_gap.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
-    if replicate_seed:
-        cmd += ["--replicate-seed"]
     run_step("distributional semantic-gap metrics", cmd, step_id="G")
 
 
@@ -769,7 +766,6 @@ def main() -> None:
         run_semantic_gap_interpretability(output_dir, model=model)
         run_sample_stability(output_dir, model=model)
         run_register_adjustment(output_dir, model=model)
-        run_distributional_gap(output_dir, model=model)
         run_model_selection_nums(output_dir, model=model)
         run_corpus_split_sizes(output_dir, model=model)
         run_h1_cross_method_gap_values(output_dir, model=model)
@@ -808,7 +804,7 @@ def main() -> None:
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_g_distributional:
-        run_distributional_gap(output_dir, model=args.embed_model, replicate_seed=args.appendix_g_replicate_seed)
+        run_distributional_gap(output_dir, model=args.embed_model)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.warm_replay_without_appendix:

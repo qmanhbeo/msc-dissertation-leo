@@ -57,8 +57,8 @@ MANUSCRIPT_EXTRA_FILES = [
     "appendix/c_sample_stability/data/c_sample_stability_draws.jsonl",
     "appendix/c_sample_stability/data/c_sample_stability_per_sdg.json",
     "appendix/c_sample_stability/data/c_sample_stability_table.csv",
-    "appendix/g_distributional_gap/data/g_distributional_gap_summary.json",
-    "appendix/g_distributional_gap/data/g_distributional_gap_records.jsonl",
+    "main/data/g_distributional_gap_summary.json",
+    "main/data/g_distributional_gap_records.jsonl",
 ]
 
 MANUSCRIPT_TABLE_FILES = [
@@ -77,6 +77,8 @@ MANUSCRIPT_TABLE_FILES = [
     "tab_semantic_gap.tex",
     "num_interaction.tex",
     "tab_interaction.tex",
+    "num_distributional_gap.tex",
+    "tab_distributional_gap.tex",
 ]
 
 MANUSCRIPT_FIGURE_FILES = [
@@ -99,8 +101,6 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/f_register_adjustment/tables/tab_register_adjusted_semgap.tex",
     "appendix/c_sample_stability/tables/num_sample_stability.tex",
     "appendix/c_sample_stability/tables/tab_sample_stability.tex",
-    "appendix/g_distributional_gap/tables/num_distributional_gap.tex",
-    "appendix/g_distributional_gap/tables/tab_distributional_gap.tex",
     "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_gap_values.tex",
     "main/tables/num_model_selection.tex",
     "main/tables/num_reference_split.tex",

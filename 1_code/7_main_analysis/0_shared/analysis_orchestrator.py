@@ -42,7 +42,6 @@ APPENDIX_STEPS = [
     ("2_appendix/b2_semantic_gap_text_interpretability.py", False),
     ("2_appendix/c_sample_stability.py", False),
     ("2_appendix/f_register_adjustment.py", False),
-    ("2_appendix/g_distributional_gap.py", False),
     ("2_appendix/h1_cross_method_gap_values.py", False),
 ]
 
