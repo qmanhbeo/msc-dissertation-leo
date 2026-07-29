@@ -114,3 +114,7 @@ checkpoints/
 4_outputs/**/*.run.xml
 4_outputs/**/*.toc
 **/__pycache__/
+
+# === Literature: ignore extracted markdown text (keep source PDFs) ===
+0_literature/*.md
+0_literature/**/*.md
