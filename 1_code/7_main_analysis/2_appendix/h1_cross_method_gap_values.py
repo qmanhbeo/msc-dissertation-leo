@@ -232,7 +232,7 @@ def _write_combined_table(path, rows, cov_fmt, gap_fmt, concept_cov=None, concep
     for _ in range(2):
         h3 += ["LR", "MLP", "ZS", "LR", "MLP", "ZS"]
         if has_concept:
-            h3.append("cov.\\%" if len(h3) < 9 else "sem.")
+            h3.append("")
     lines.append(" & ".join(h3) + r" \\")
 
     lines.append(r"\midrule")
