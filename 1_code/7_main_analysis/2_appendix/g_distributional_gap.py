@@ -172,15 +172,18 @@ def parse_args() -> argparse.Namespace:
     # Dev-only smoke flag: comma-separated SDG numbers (e.g. "17"). The summary
     # is marked partial when set; never used in canonical runs.
     p.add_argument("--limit-sdgs", default=None, help=argparse.SUPPRESS)
+    # Run the seed-43 replicate alongside seed 42 (default: seed 42 only).
+    # The replicate bounds sampling noise; it is near-redundant for the ranking.
+    p.add_argument("--replicate-seed", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
-def config_payload(model: str) -> dict[str, Any]:
+def config_payload(model: str, sample_seeds: tuple[int, ...] = SAMPLE_SEEDS) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "embed_model": model,
         "research_sample_size": RESEARCH_SAMPLE_SIZE,
-        "sample_seeds": list(SAMPLE_SEEDS),
+        "sample_seeds": list(sample_seeds),
         "stream_tags": {"sample": STREAM_SAMPLE, "emd": STREAM_EMD, "c2st": STREAM_C2ST},
         "n_swd_projections": N_SWD_PROJECTIONS,
         "swd_projection_seed": SWD_PROJECTION_SEED,
@@ -994,11 +997,21 @@ def build_summary(
             "rms_within_policy": full.get("rms_within_policy"),
         }
 
+    max_seed_replicate_gap_delta = None
+    for entry in methods.values():
+        rep = entry.get("seed_replicate")
+        if rep and rep.get("max_abs_gap_delta") is not None:
+            delta = rep["max_abs_gap_delta"]
+            max_seed_replicate_gap_delta = (
+                delta if max_seed_replicate_gap_delta is None else max(max_seed_replicate_gap_delta, delta)
+            )
+
     return {
         "method": "distributional_semantic_gap_battery",
         "partial": partial,
         "config": cfg,
         "config_hash": cfg_hash,
+        "max_seed_replicate_gap_delta": max_seed_replicate_gap_delta,
         "methods": methods,
         "per_sdg_context": per_sdg_context,
     }
@@ -1060,6 +1073,11 @@ def write_tables(tables_dir: Path, summary: dict[str, Any]) -> None:
         num_lines.append(
             rf"\newcommand{{\DistGapShapeShareMean}}{{{np.mean(shape_shares) * 100:.0f}}}"
         )
+    max_delta = summary.get("max_seed_replicate_gap_delta")
+    if max_delta is not None:
+        num_lines.append(
+            rf"\newcommand{{\DistGapMaxSeedDelta}}{{{max_delta:.3f}}}"
+        )
     (tables_dir / "num_distributional_gap.tex").write_text(
         "\n".join(num_lines) + "\n", encoding="utf-8"
     )
@@ -1119,7 +1137,8 @@ def run(args: argparse.Namespace) -> None:
     )
     records_path = layout.data_dir / "g_distributional_gap_records.jsonl"
 
-    cfg = config_payload(model)
+    seeds = SAMPLE_SEEDS if args.replicate_seed else (SAMPLE_SEEDS[0],)
+    cfg = config_payload(model, sample_seeds=seeds)
     cfg_hash = compute_config_hash(cfg, scored_dir, embed_dir)
     log.info("Config hash: %s | output: %s", cfg_hash, layout.root)
 
@@ -1168,7 +1187,7 @@ def run(args: argparse.Namespace) -> None:
 
     # ── Sampled-family records ──
     for s in active_sdgs:
-        for seed in SAMPLE_SEEDS:
+        for seed in seeds:
             if ("sampled", s + 1, seed) in records:
                 continue
             if seed != SAMPLE_SEEDS[0] and sdg_rows[s].size <= RESEARCH_SAMPLE_SIZE:
