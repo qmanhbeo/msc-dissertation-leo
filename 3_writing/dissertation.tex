@@ -429,7 +429,7 @@ This dissociation is possible because the study separates two methodological rol
 
 The paper makes two contributions, and they carry different weight. The first is a measurement framework that separates classification from measurement, coverage from framing. This framework holds up across changes of assignment method, policy source family, and segment cap, as the checks in Section~\ref{sec:cross-sensitivity} and the appendices show. The second is a set of findings about how AI research and SDG policy actually relate. These findings are weaker: the relationship between coverage and semantic gaps reverses sign under some configurations (Table~\ref{tab:interaction}), and SDG~17's position depends heavily on the assignment method (Table~\ref{tab:cross-sensitivity-robustness}). The framework should be read as the paper's main contribution. The findings about alignment should be read as a first application, worth checking with a larger and more diverse policy corpus, not as settled results.
 
-The coverage and gap profiles are themselves conditional on corpus composition. The policy source-family split shifts the full-corpus profile: the curated AI/SDG sub-corpus is innovation-heavy (SDG~9 leads), while SDGi and UNGDC are climate-, partnerships-, and governance-oriented (SDGs~13,~17,~16 lead) (Tables~\ref{tab:policy-source-family-covshare},~\ref{tab:policy-source-family-gap}, Appendix~\ref{app:policy-source-family-sensitivity}). The cross-sensitivity table (Table~\ref{tab:cross-sensitivity-robustness}) is therefore the primary interpretive device: it reports gap ranks under all four sensitivity axes, and the discussion limits its claims to findings that survive this filtering.
+The coverage and gap profiles are themselves conditional on corpus composition. The policy source-family split shifts the full-corpus profile: the curated AI/SDG sub-corpus is innovation-heavy (SDG~9 leads), while SDGi and UNGDC are climate-, partnerships-, and governance-oriented (SDGs~13,~17,~16 lead) (Table~\ref{tab:policy-source-family}, Appendix~\ref{app:policy-source-family-sensitivity}). The cross-sensitivity table (Table~\ref{tab:cross-sensitivity-robustness}) is therefore the primary interpretive device: it reports gap ranks under all four sensitivity axes, and the discussion limits its claims to findings that survive this filtering.
 
 \subsection{Two Distinct Dimensions of Observed Divergence}
 
@@ -507,7 +507,7 @@ Alignment should therefore be understood as a multi-level empirical construct --
 \subsection{Policy Source-Family Sensitivity}
 \label{app:policy-source-family-sensitivity}
 
-The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Tables~\ref{tab:policy-source-family-covshare} and~\ref{tab:policy-source-family-gap} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
+The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Table~\ref{tab:policy-source-family} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
 
 The answer is mixed. The broad international-institutional profile is clearly source-family sensitive. The curated AI/SDG family is much more innovation-oriented, with SDG 9 leading its document-weighted profile, while the SDGi and UNGDC families are more strongly concentrated on climate, partnerships, governance, and, in the SDGi case, SDG 11-style institutional review language. At the same time, the broader full-corpus pattern is not driven by one family alone: both the UNGDC speeches and the full corpus are dominated by the climate--partnerships--governance block, and SDG 17 remains the largest semantic-gap case across all three families.
 
@@ -516,19 +516,10 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \begin{table}[ht]
 \centering
 \small
-\caption{Per-SDG policy source-family sensitivity: coverage share.}
-\label{tab:policy-source-family-covshare}
-\input{../4_outputs/appendix/all-mpnet-base-v2/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex}
-\par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of policy segments assigned to each SDG and the document-weighted share (\%) of that family's documents assigned to each SDG.\par
-\end{table}
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Per-SDG policy source-family sensitivity: semantic gap.}
-\label{tab:policy-source-family-gap}
-\input{../4_outputs/appendix/all-mpnet-base-v2/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex}
-\par\smallskip\footnotesize\emph{Notes:} For each policy source family, the table reports the number of capped policy segments and the within-SDG research--policy semantic gap. Each row compares the same SDG's gap across the three source families and the full corpus; read across a row to see whether the gap is stable or driven by one family.\par
+\caption{Per-SDG policy source-family sensitivity: coverage share and semantic gap.}
+\label{tab:policy-source-family}
+\input{../4_outputs/appendix/all-mpnet-base-v2/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_combined.tex}
+\par\smallskip\footnotesize\emph{Notes:} For each policy source family, \texttt{cov. (n)} is the document-weighted coverage share (\%) with the raw segment count in parentheses; \texttt{sem. (n)} is the within-SDG research--policy semantic gap with the capped segment count in parentheses. Read across a row to see whether the gap is stable or driven by one family.\par
 \end{table}
 
 \subsection{SDGi Circularity Note}

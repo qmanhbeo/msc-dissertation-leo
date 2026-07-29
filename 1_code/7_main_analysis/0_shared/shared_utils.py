@@ -89,8 +89,7 @@ MANUSCRIPT_FIGURE_FILES = [
 ]
 
 MANUSCRIPT_APPENDIX_TABLE_FILES = [
-    "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_covshare.tex",
-    "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_gap.tex",
+    "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_combined.tex",
     "appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex",
     "main/tables/num_pca_landscape.tex",
     "appendix/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret.tex",

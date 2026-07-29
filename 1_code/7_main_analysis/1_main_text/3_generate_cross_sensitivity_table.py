@@ -111,41 +111,33 @@ def load_cap_gaps():
 # ---------------------------------------------------------------------------
 def parse_policy_source_gaps():
     """Return {family_label: {sdg: gap}} parsing the appendix tex table."""
-    if not POLICY_GAP_TEX.exists():
+    if not POLICY_SOURCE_FAMILY_TEX.exists():
         return {}
-    text = POLICY_GAP_TEX.read_text(encoding="utf-8")
-    col_labels = []  # e.g. "Full Corpus", "Curated AI/SDG", "SDGi VNR/VLR", "UNGDC"
+    text = POLICY_SOURCE_FAMILY_TEX.read_text(encoding="utf-8")
     in_header = True
     families = {}
     for line in text.splitlines():
         line = line.strip()
-        # Skip non-data lines
         if not line or line.startswith("%") or line.startswith(r"\toprule") or line.startswith(r"\midrule") or line.startswith(r"\bottomrule") or line.startswith(r"\end") or line.startswith(r"\cmidrule"):
             continue
-        # Parse header
         if in_header and "SDG" in line and "&" in line:
-            parts = [p.strip() for p in line.rstrip("\\").split("&")]
-            for i in range(1, len(parts)):
-                col_labels.append(parts[i])
             in_header = False
             continue
         if in_header:
             continue
-        # Data row
         m = re.match(r"SDG\s+(\d+)", line)
         if not m:
             continue
         sdg = int(m.group(1))
         parts = [p.strip() for p in line.rstrip("\\").split("&")]
-        # Format: SDG & Full n & Full gap & Curated n & Curated gap & SDGi n & SDGi gap & UNGDC n & UNGDC gap
-        # parts[0] = "SDG 1", parts[1] = n, parts[2] = gap, parts[3] = n, parts[4] = gap, ...
-        # So gap values are at indices 2, 4, 6, 8
+        # Format: SDG & cov.(n) & sem.(n) & cov.(n) & sem.(n) & cov.(n) & sem.(n) & cov.(n) & sem.(n)
+        # sem.(n) cells at indices 2, 4, 6, 8 — cell format "0.435 (1,634)"
         gap_indices = [2, 4, 6, 8]
         labels = ["full", "curated", "sdgi", "ungdc"]
         for label, gi in zip(labels, gap_indices):
             if gi < len(parts):
                 try:
-                    val = float(parts[gi])
+                    val = float(parts[gi].split()[0])
                     families.setdefault(label, {})[sdg] = val
                 except ValueError:
                     pass
@@ -225,12 +217,12 @@ def load_canonical_research_profile():
 
 
 def parse_policy_source_covgaps(research_profile=None):
-    if not POLICY_GAP_COVSHARE_TEX.exists():
+    if not POLICY_SOURCE_FAMILY_TEX.exists():
         return {}
     if research_profile is None:
         research_profile = load_canonical_research_profile()
     research = research_profile
-    text = POLICY_GAP_COVSHARE_TEX.read_text(encoding="utf-8")
+    text = POLICY_SOURCE_FAMILY_TEX.read_text(encoding="utf-8")
     fam_share = {"full": {}, "curated": {}, "sdgi": {}, "ungdc": {}}
     in_header = True
     for line in text.splitlines():
@@ -247,10 +239,11 @@ def parse_policy_source_covgaps(research_profile=None):
             continue
         sdg = int(m.group(1))
         parts = [p.strip() for p in line.rstrip("\\").split("&")]
-        for label, gi in (("full", 2), ("curated", 4), ("sdgi", 6), ("ungdc", 8)):
+        # cov.(n) cells at indices 1, 3, 5, 7 — cell format "2.0 (1,646)"
+        for label, gi in (("full", 1), ("curated", 3), ("sdgi", 5), ("ungdc", 7)):
             if gi < len(parts):
                 try:
-                    fam_share[label][sdg] = float(parts[gi]) / 100.0
+                    fam_share[label][sdg] = float(parts[gi].split()[0]) / 100.0
                 except ValueError:
                     pass
     out = {}
@@ -744,7 +737,7 @@ def write_num_cross_sensitivity():
 # ---------------------------------------------------------------------------
 def run(args: argparse.Namespace) -> None:
     global model, root, OUT_MAIN, RETRAIN_JSON, retrain, lr_per_sdg, lr_macro
-    global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_GAP_TEX, POLICY_GAP_COVSHARE_TEX
+    global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_SOURCE_FAMILY_TEX
 
     model = args.embed_model
 
@@ -765,8 +758,7 @@ def run(args: argparse.Namespace) -> None:
     LR_GAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_distances.json"
     ZS_GAP_PATH = root / "main" / model / "zeroshot" / "semantic_gap_distances.json"
     CAP_PATH = root / "main" / model / "data" / "4_3_semantic_gap_robustness_caps.json"
-    POLICY_GAP_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_gap.tex"
-    POLICY_GAP_COVSHARE_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_covshare.tex"
+    POLICY_SOURCE_FAMILY_TEX = root / "appendix" / model / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_combined.tex"
 
     write_num_validation()
     write_validation_table()
