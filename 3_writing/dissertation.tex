@@ -45,6 +45,7 @@
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_reference_split.tex}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_iterative_register_check.tex}{}{}
 \InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_distributional_gap.tex}{}{}
 \InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_encoder_sensitivity_semantic.tex}{}{}
 \InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_encoder_sensitivity_coverage.tex}{}{}
@@ -682,6 +683,9 @@ The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is
 \section{Register-Adjustment Sensitivity}
 \label{app:register-robustness}
 
+\subsection{Naive Single-Regression Approach}
+\label{app:register-naive}
+
 This appendix reports an exploratory register-adjustment procedure that probes whether broad research-policy register differences contribute to the raw semantic gap. Following Biber and Conrad's distinction between register, genre, and style \parencite{biberConrad2009register}, the research--policy contrast is treated primarily as a register contrast: the two corpora differ in situation of use, audience, institutional setting, and communicative purpose, not merely in surface wording. A learned research--policy direction in embedding space may therefore capture a mixture of modality, abstraction, institutional stance, and substantive theme. The adjusted results are reported as a sensitivity diagnostic, not as corrected estimates.
 
 \paragraph{Procedure.}
@@ -705,6 +709,21 @@ This single-direction subtraction is a limited diagnostic. It attenuates one bro
 \caption{Global one-direction register sensitivity check for the semantic gap. Raw gap = the main semantic-gap estimate from the paper. Adjusted gap = the same within-SDG gap after subtracting one learned global research--policy direction from each embedding.}
 \label{tab:register-adjusted-semantic-gap}
 \input{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/tab_register_adjusted_semgap.tex}
+\end{table}
+
+\subsection{Stratified Iterative Register Removal}
+\label{app:register-iterative}
+
+To test whether the single projection exhausts register signal, I iteratively removed separating directions whose logistic-regression classifier is trained on SDG-stratified samples. At each iteration, exactly \RegisterIterNPerSdg{} research and \RegisterIterNPerSdg{} policy embeddings are drawn from each SDG, preventing the classifier from learning topic membership as a proxy for register. Each iteration orthogonalises the new direction against all previous ones, then held-out accuracy is measured on a stratified 15\% test split of the projected sample.
+
+Held-out accuracy dropped from \RegisterFirstAcc{} (iteration~1) to \RegisterFinalAcc{} by iteration~\RegisterIterFinalK{}, at which point no further linear register separation was detectable. The Spearman rank correlation between the iteration~1 and iteration~\RegisterIterFinalK{} gap vectors was \RegisterIterSpearmanRho{}, indicating that the additional removed directions did not materially shift the relative SDG ordering.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Stratified iterative register-removal diagnostic. Test acc.\ = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Mean gap = average within-SDG semantic gap after $k$ removals. Spearman $\rho$ = rank correlation of the gap vector at iteration~$k$ versus iteration~1.}
+\label{tab:iterative-register-check}
+\input{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/tab_iterative_register_check.tex}
 \end{table}
 \clearpage
 \section{Concept-Retrieval Sensitivity}

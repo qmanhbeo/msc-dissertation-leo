@@ -28,6 +28,7 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 
 ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = ROOT / "1_code"
@@ -66,6 +67,11 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 SAMPLE_SIZE_PER_CLASS = 40_000
+
+# Iterative register check (Appendix E2)
+ITERATIVE_N_PER_SDG = 1000
+ITERATIVE_ACC_THRESHOLD = 0.5
+ITERATIVE_MAX_K = 200
 
 # No module-level canonical path — computed in main() from --output-dir and --model.
 
@@ -126,6 +132,334 @@ def subtract_direction(emb: np.ndarray, g_dir: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(residual, axis=1, keepdims=True)
     norms = np.where(norms > 1e-12, norms, 1.0)
     return (residual / norms).astype(np.float32)
+
+
+def build_research_sdg_index(model: str) -> dict[int, list[tuple[int, int]]]:
+    """Map each SDG (1-17) to a list of (shard_id, row_index) from score shards."""
+    scored = scored_dir_for_model(model)
+    shards_meta = scored / "paper_scores_shards" / "metadata"
+    manifest_path = shards_meta / "manifest.json"
+    manifest = load_json(manifest_path)
+    shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
+
+    index: dict[int, list[tuple[int, int]]] = {sdg: [] for sdg in range(1, N_SDG + 1)}
+    for shard in shards:
+        shard_id = int(shard["shard_id"])
+        jsonl_path = shards_meta / f"part-{shard_id:05d}_ids.jsonl"
+        if not jsonl_path.exists():
+            log.warning("Score shard JSONL not found: %s", jsonl_path)
+            continue
+        with open(jsonl_path, encoding="utf-8") as fh:
+            for row_idx, line in enumerate(fh):
+                row = json.loads(line)
+                sdg = row.get("assigned_sdg")
+                if isinstance(sdg, (int, float)) and 1 <= int(sdg) <= N_SDG:
+                    index[int(sdg)].append((shard_id, row_idx))
+        log.info("  Indexed shard %d", shard_id)
+
+    total = sum(len(v) for v in index.values())
+    log.info("Research SDG index built: %d papers across %d SDGs", total, N_SDG)
+    return index
+
+
+def load_research_embeddings_for_sdg(
+    model: str,
+    entries: list[tuple[int, int]],
+    n_per_sdg: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Load up to n_per_sdg research embeddings from precomputed .npy shards."""
+    if len(entries) <= n_per_sdg:
+        chosen = entries
+    else:
+        chosen = [entries[i] for i in rng.choice(len(entries), size=n_per_sdg, replace=False)]
+
+    by_shard: dict[int, list[int]] = {}
+    for shard_id, row_idx in chosen:
+        by_shard.setdefault(shard_id, []).append(row_idx)
+
+    embed_dir = embed_research_dir_for_model(model)
+    parts: list[np.ndarray] = []
+    for shard_id, row_idxs in sorted(by_shard.items()):
+        emb_path = embed_dir / f"part-{shard_id:05d}.npy"
+        emb = np.load(emb_path, mmap_mode="r")
+        parts.append(np.asarray(emb[row_idxs]).copy())
+    return np.concatenate(parts, axis=0).astype(np.float32)
+
+
+def load_stratified_samples(
+    model: str,
+    sdg_index: dict[int, list[tuple[int, int]]],
+    n_per_sdg: int,
+    rng: np.random.Generator,
+    projector: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build a balanced 17-SDG × 2-corpus sample, optionally projected through G.
+
+    Returns (X, y, sdg_labels) where sdg_labels is an int array of 1-indexed SDG
+    for each row, used for stratified train/test splitting.
+    """
+    policy_emb = np.load(semantic_gap_shared.get_policy_emb(model)).astype(np.float32)
+    policy_scores = np.load(semantic_gap_shared.get_policy_scores(model))
+    policy_assignments = get_cluster_assignments(policy_scores)
+
+    X_parts: list[np.ndarray] = []
+    y_parts: list[np.ndarray] = []
+    sdg_parts: list[np.ndarray] = []
+
+    for sdg_idx in range(N_SDG):
+        sdg = sdg_idx + 1
+
+        res_emb = load_research_embeddings_for_sdg(model, sdg_index[sdg], n_per_sdg, rng)
+        n_res = len(res_emb)
+
+        policy_mask = np.array([a == sdg_idx for a in policy_assignments])
+        policy_idxs = np.where(policy_mask)[0]
+        if len(policy_idxs) == 0:
+            continue
+        n_take = min(n_per_sdg, len(policy_idxs))
+        chosen_policy = rng.choice(policy_idxs, size=n_take, replace=False)
+        pol_emb = policy_emb[chosen_policy].copy()
+
+        X_parts.append(res_emb)
+        y_parts.append(np.zeros(n_res, dtype=np.int32))
+        sdg_parts.append(np.full(n_res, sdg, dtype=np.int32))
+
+        X_parts.append(pol_emb)
+        y_parts.append(np.ones(len(pol_emb), dtype=np.int32))
+        sdg_parts.append(np.full(len(pol_emb), sdg, dtype=np.int32))
+
+    X = np.concatenate(X_parts, axis=0).astype(np.float32)
+    y = np.concatenate(y_parts, axis=0)
+    sdg_labels = np.concatenate(sdg_parts, axis=0)
+
+    if projector is not None and projector.shape[0] > 0:
+        for g_k in projector:
+            X = subtract_direction(X, g_k)
+
+    return X, y, sdg_labels
+
+
+def subtract_multiple_directions(emb: np.ndarray, G: np.ndarray) -> np.ndarray:
+    """Apply subtract_direction for each row in G."""
+    result = emb.copy()
+    for k in range(G.shape[0]):
+        result = subtract_direction(result, G[k])
+    return result
+
+
+def iterative_register_check(
+    model: str,
+    sdg_index: dict[int, list[tuple[int, int]]],
+    policy_emb: np.ndarray,
+    policy_assignments: list[int],
+    policy_ids: list,
+    research_centroids: np.ndarray,
+    research_cohesions: np.ndarray,
+    rng: np.random.Generator,
+    args: argparse.Namespace,
+) -> dict:
+    """Iteratively remove register directions via stratified 10-fold CV until accuracy ≤ threshold."""
+    from scipy.stats import spearmanr
+
+    G_list: list[np.ndarray] = []
+    iteration_results: list[dict] = []
+
+    for k in range(1, ITERATIVE_MAX_K + 1):
+        G = np.vstack(G_list) if G_list else np.zeros((0, policy_emb.shape[1]), dtype=np.float32)
+
+        log.info("Iterative check — iteration %d (G has %d rows)", k, G.shape[0])
+        X, y, sdg_labels = load_stratified_samples(
+            model, sdg_index, ITERATIVE_N_PER_SDG, rng,
+            projector=G if G.shape[0] > 0 else None,
+        )
+
+        # Combined stratification key: 34 classes (17 SDGs × 2 corpora)
+        stratify_key = sdg_labels * 2 + y
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.15, stratify=stratify_key, random_state=42 + k,
+        )
+
+        clf = LogisticRegression(C=1.0, penalty="l2", solver="lbfgs", max_iter=1000, random_state=42 + k)
+        clf.fit(X_train, y_train)
+        test_acc = float(clf.score(X_test, y_test))
+        log.info("  85/15 test accuracy: %.4f (n_train=%d, n_test=%d)", test_acc, len(X_train), len(X_test))
+
+        # Fit on full sample for the direction used in orthogonalisation
+        clf_full = LogisticRegression(C=1.0, penalty="l2", solver="lbfgs", max_iter=1000, random_state=42 + k)
+        clf_full.fit(X, y)
+        coef = clf_full.coef_.astype(np.float32).flatten()
+        g_k = (coef / np.linalg.norm(coef)).astype(np.float32)
+
+        for prev_g in G_list:
+            g_k = g_k - np.dot(g_k, prev_g) * prev_g
+        g_k_norm = float(np.linalg.norm(g_k))
+        if g_k_norm < 1e-8:
+            log.warning("  Direction collapsed after orthogonalisation; stopping.")
+            break
+        g_k = (g_k / g_k_norm).astype(np.float32)
+        G_list.append(g_k)
+
+        iteration_results.append({
+            "k": k,
+            "test_acc": round(test_acc, 4),
+        })
+        log.info("  Iteration %d complete", k)
+
+        if test_acc <= ITERATIVE_ACC_THRESHOLD:
+            log.info("  Test accuracy %.4f ≤ threshold %.4f — stopping.", test_acc, ITERATIVE_ACC_THRESHOLD)
+            break
+
+    # Recompute gaps using final G
+    G_final = np.vstack(G_list) if G_list else np.zeros((0, policy_emb.shape[1]), dtype=np.float32)
+    policy_adj = subtract_multiple_directions(policy_emb, G_final)
+
+    adj_pol_centroids = np.zeros((N_SDG, policy_emb.shape[1]), dtype=np.float32)
+    adj_pol_cohesions = np.zeros(N_SDG, dtype=np.float32)
+    for sdg_idx in range(N_SDG):
+        sdg = sdg_idx + 1
+        policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
+        if not policy_idxs:
+            continue
+        idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
+        centroid, cohesion = build_sub_centroid(policy_adj, idxs_capped)
+        if centroid is not None:
+            adj_pol_centroids[sdg_idx] = centroid
+            adj_pol_cohesions[sdg_idx] = cohesion
+
+    adj_res_centroids = np.zeros((N_SDG, research_centroids.shape[1]), dtype=np.float32)
+    for sdg_idx in range(N_SDG):
+        raw_mean = research_centroids[sdg_idx] * research_cohesions[sdg_idx]
+        adj_raw = raw_mean.copy()
+        for g_k in G_list:
+            adj_raw = adj_raw - np.dot(adj_raw, g_k) * g_k
+        norm_val = float(np.linalg.norm(adj_raw))
+        if norm_val > 1e-8:
+            adj_res_centroids[sdg_idx] = (adj_raw / norm_val).astype(np.float32)
+        else:
+            adj_res_centroids[sdg_idx] = research_centroids[sdg_idx]
+
+    # Load canonical raw gaps
+    canonical_semantic_path = (
+        output_main_dir_for_model(model, root=Path(args.output_dir))
+        / "data" / "4_3_semantic_gap_distances.json"
+    )
+    canonical = load_json(canonical_semantic_path)
+    canonical_raw = {e["sdg"]: e["semantic_gap"] for e in canonical["per_sdg"]}
+
+    iter_gaps: dict[int, float] = {}
+    for sdg_idx in range(N_SDG):
+        sdg = sdg_idx + 1
+        r_adj = adj_res_centroids[sdg_idx]
+        p_adj = adj_pol_centroids[sdg_idx]
+        if float(np.linalg.norm(r_adj)) > 1e-8 and float(np.linalg.norm(p_adj)) > 1e-8:
+            iter_gaps[sdg] = 1.0 - float(np.dot(r_adj, p_adj))
+
+    # Load E1 gaps for Spearman comparison
+    e1_path = (
+        Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
+        / "register_adjustment_results.json"
+    )
+    e1_results = load_json(e1_path)["per_sdg"]
+    e1_gaps = {r["sdg"]: r["adj_gap"] for r in e1_results if r["adj_gap"] is not None}
+
+    # Compute iteration-1 gaps (single direction only)
+    iter1_gaps: dict[int, float] = {}
+    if len(G_list) > 0:
+        policy_adj_iter1 = subtract_multiple_directions(policy_emb, np.vstack(G_list[0:1]))
+        adj_pol_c1 = np.zeros((N_SDG, policy_emb.shape[1]), dtype=np.float32)
+        for sdg_idx in range(N_SDG):
+            policy_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
+            if not policy_idxs:
+                continue
+            idxs_capped = cap_policy_indices_per_doc(policy_idxs, policy_ids, SEGMENT_CAP_PRIMARY, rng)
+            centroid, _ = build_sub_centroid(policy_adj_iter1, idxs_capped)
+            if centroid is not None:
+                adj_pol_c1[sdg_idx] = centroid
+        adj_res_c1 = np.zeros((N_SDG, research_centroids.shape[1]), dtype=np.float32)
+        for sdg_idx in range(N_SDG):
+            raw_mean = research_centroids[sdg_idx] * research_cohesions[sdg_idx]
+            adj_raw = raw_mean - np.dot(raw_mean, G_list[0]) * G_list[0]
+            nv = float(np.linalg.norm(adj_raw))
+            if nv > 1e-8:
+                adj_res_c1[sdg_idx] = (adj_raw / nv).astype(np.float32)
+            else:
+                adj_res_c1[sdg_idx] = research_centroids[sdg_idx]
+        for sdg_idx in range(N_SDG):
+            sdg = sdg_idx + 1
+            if float(np.linalg.norm(adj_res_c1[sdg_idx])) > 1e-8 and float(np.linalg.norm(adj_pol_c1[sdg_idx])) > 1e-8:
+                iter1_gaps[sdg] = 1.0 - float(np.dot(adj_res_c1[sdg_idx], adj_pol_c1[sdg_idx]))
+
+    # Spearman rank correlation: iteration-1 vs final
+    sdgs_common = sorted(set(iter1_gaps.keys()) & set(iter_gaps.keys()))
+    rho_iter1_final = 0.0
+    if len(sdgs_common) >= 3:
+        rho_iter1_final, _ = spearmanr(
+            [iter1_gaps[s] for s in sdgs_common],
+            [iter_gaps[s] for s in sdgs_common],
+        )
+
+    # Write outputs
+    out_root = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
+    tables_dir = out_root / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
+
+    # LaTeX table (truncated: show iter 1, every 10th, and the last)
+    mean_gaps = [np.mean(list(iter_gaps.values()))] if iter_gaps else [0.0]
+    last_k = iteration_results[-1]["k"]
+    show_ks = {1, last_k}
+    show_ks.update(range(10, last_k, 10))
+    tab_lines = [
+        "% Auto-generated by f_register_adjustment.py iterative check — do not edit",
+        r"\begin{tabular}{lrrr}",
+        r"\toprule",
+        r"Iteration & Test acc. & Mean gap & Spearman $\rho$ vs iter\,1 \\",
+        r"\midrule",
+    ]
+    for r in iteration_results:
+        if r["k"] not in show_ks:
+            continue
+        if r["k"] == 1:
+            mg = f"{mean_gaps[0]:.3f}"
+            sp = "1.000"
+        else:
+            mg = "—"
+            sp = f"{rho_iter1_final:.3f}"
+        tab_lines.append(f"{r['k']} & {r['test_acc']:.3f} & {mg} & {sp} \\\\")
+    tab_lines.extend([r"\bottomrule", r"\end{tabular}"])
+    (tables_dir / "tab_iterative_register_check.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+
+    # Numerical macros
+    num_lines = [
+        "% Auto-generated by f_register_adjustment.py iterative check",
+        rf"\newcommand{{\RegisterIterNPerSdg}}{{{ITERATIVE_N_PER_SDG}}}",
+        rf"\newcommand{{\RegisterFirstAcc}}{{{iteration_results[0]['test_acc']:.3f}}}",
+        rf"\newcommand{{\RegisterFinalAcc}}{{{iteration_results[-1]['test_acc']:.3f}}}",
+        rf"\newcommand{{\RegisterIterFinalK}}{{{len(iteration_results)}}}",
+        rf"\newcommand{{\RegisterIterSpearmanRho}}{{{rho_iter1_final:.3f}}}",
+    ]
+    (tables_dir / "num_iterative_register_check.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
+
+    # JSON
+    out_root.mkdir(parents=True, exist_ok=True)
+    with (out_root / "iterative_check_results.json").open("w") as f:
+        json.dump({
+            "iterations": iteration_results,
+            "final_k": len(iteration_results),
+            "spearman_rho_iter1_final": round(rho_iter1_final, 4),
+            "per_sdg_final_gaps": {str(k): round(v, 4) for k, v in iter_gaps.items()},
+            "note": "85/15 stratified train/test split on 1000-per-SDG samples; G-projected data at each iteration.",
+        }, f, indent=2)
+
+    # Lightweight iteration log (CSV)
+    csv_lines = ["iteration,test_acc"]
+    for r in iteration_results:
+        csv_lines.append(f"{r['k']},{r['test_acc']}")
+    (tables_dir / "iteration_results.csv").write_text("\n".join(csv_lines) + "\n", encoding="utf-8")
+
+    log.info("Iterative register check complete: %d iterations, Spearman ρ=%.4f", len(iteration_results), rho_iter1_final)
+    return {"iterations": iteration_results, "spearman_rho": rho_iter1_final}
 
 
 def run(args: argparse.Namespace) -> None:
@@ -377,6 +711,23 @@ def run(args: argparse.Namespace) -> None:
             "note": "Raw gaps loaded from canonical 4_3_semantic_gap_distances.json; adjusted gaps use segment cap 50.",
         }, f, indent=2)
     log.info("Saved: %s", out_root / "register_adjustment_results.json")
+
+    # ------------------------------------------------------------------
+    # 9. Iterative stratified register check (Appendix E2)
+    # ------------------------------------------------------------------
+    log.info("\n=== Iterative stratified register check ===")
+    sdg_index = build_research_sdg_index(model)
+    iterative_register_check(
+        model=model,
+        sdg_index=sdg_index,
+        policy_emb=policy_emb,
+        policy_assignments=policy_assignments,
+        policy_ids=policy_ids,
+        research_centroids=research_centroids,
+        research_cohesions=research_cohesions,
+        rng=rng,
+        args=args,
+    )
 
 
 def main() -> None:
