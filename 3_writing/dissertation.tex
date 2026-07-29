@@ -45,7 +45,7 @@
 \input{../4_outputs/main/all-mpnet-base-v2/tables/num_reference_split.tex}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
-\InputIfFileExists{../4_outputs/appendix/all-mpnet-base-v2/g_distributional_gap/tables/num_distributional_gap.tex}{}{}
+\InputIfFileExists{../4_outputs/main/all-mpnet-base-v2/tables/num_distributional_gap.tex}{}{}
 
 \hypersetup{
   pdftitle={Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks},
@@ -420,6 +420,25 @@ Three tiers emerge. First, SDG 17 is the most method-sensitive SDG: it sits at r
 The same cross-sensitivity structure holds for the coverage gap (Table~\ref{tab:cross-sensitivity-coverage}). The within-SDG coverage-gap ranking is stable across embedding architectures ($\rho = \MiniLMCoverageRho$ for MiniLM--LR versus the MPNet--LR baseline) and across retrieval strategy ($\rho = \ConceptCoverageGapRho$ for concept-based field-of-study retrieval versus the keyword baseline), indicating that the coverage conclusions are not driven by the choice of query terms.
 \input{../4_outputs/main/all-mpnet-base-v2/tables/tab_cross_sensitivity_coverage.tex}
 
+\subsection{Robustness of the Semantic-Gap Ranking to the Distance Functional}
+\label{sec:distributional-robustness}
+
+The centroid gap (\S\ref{sec:semantic-gap}) is the cosine distance between per-SDG mean embeddings. A reviewer may object that a single mean discards the shape of the two point clouds: two SDGs could share a mean direction yet differ in spread or modality. This section tests that objection directly by recomputing the per-SDG research--policy gap under a battery of distribution-aware metrics on the identical point clouds, holding the supervised SDG assignment and embeddings fixed; only the distance functional changes.
+
+The canonical gap is reproduced exactly as a validation gate: the full-corpus centroid gap equals the published value to $10^{-4}$, and the streamed research means reproduce the committed centroids exactly. Full-corpus metrics (sliced Wasserstein, Chamfer, Gaussian-2-Wasserstein, Grassmann, linear MMD) are computed over all assigned papers and carry no sampling variance; sampled metrics (exact EMD, Sinkhorn, energy, RBF-MMD, C2ST) use a 50,000-paper draw per SDG, with SDGs~1 and~17 using their full population.
+
+\input{../4_outputs/main/all-mpnet-base-v2/tables/tab_distributional_gap.tex}
+
+\textbf{Shape-sensitive metrics preserve the ranking.} Gaussian-2-Wasserstein ($\rho=\DistGapSpearmanFrechet$), RBF maximum mean discrepancy ($\rho=\DistGapSpearmanMmd$), exact optimal-transport EMD ($\rho=\DistGapSpearmanEmd$), sliced Wasserstein ($\rho=\DistGapSpearmanSwd$), and energy distance ($\rho=\DistGapSpearmanEnergy$) all preserve the canonical ordering at $p<0.001$. SDG~13 is the most divergent SDG under every metric; its primacy is unconditional.
+
+\textbf{What centroids discard is quantified, not hidden.} The Gaussian-2-Wasserstein distance decomposes into a mean term and a shape (covariance) term. Across SDGs the shape term accounts for a mean share of $\approx\DistGapShapeShareMean\%$ of the distance. Centroids therefore drop real distributional signal---but that signal does not reorder the SDGs, which is why the centroid ranking is robust.
+
+\textbf{Margin-level nuance.} The second and third canonical positions (SDGs~3 and~11) are less stable: several distribution-aware metrics elevate SDGs~1, 7, 12, and~14 instead. This is a genuine margin-level reshuffle among SDGs with similar gap magnitudes, not an error; the overall monotonic agreement (positive $\rho$ for every shape-sensitive metric) holds.
+
+\textbf{Separation, not ranking, from C2ST.} The classifier two-sample test returns AUC $\approx1$ for all 17 SDGs, so it confirms that research and policy are separable in every SDG but carries no ranking signal ($\rho\approx0$). Its near-constant value is expected, not a failure.
+
+\textbf{Sampling stability.} The sampled metrics use a 50,000-paper draw; a replicate seed changes any sampled gap by at most $\DistGapMaxSeedDelta$, confirming the estimate is stable and the default seed is representative. Together with the cross-sensitivity checks (\S\ref{sec:cross-sensitivity}), the centroid gap ranking is therefore robust to both the assignment method and the distance functional.
+
 %% ============================================================
 \section{Discussion}
 \label{sec:discussion}
@@ -471,7 +490,7 @@ The cross-sensitivity comparison (Table~\ref{tab:cross-sensitivity-robustness}) 
 
 \textbf{Scope: semantic proximity, not substantive alignment or policy influence.} The study measures semantic proximity in embedding space, not whether research and policy are substantively aligned or whether research is used by policy actors. Embedding proximity reflects shared vocabulary, not shared agenda, and does not measure policy influence, institutional mechanisms, or knowledge use — these would require methods beyond this study's scope.
 
-\textbf{Distance metric choice.} This study uses cosine distance between mean embeddings. A distribution-aware robustness check (Appendix~\ref{app:distributional-gap}) recomputes the per-SDG research--policy gap under Gaussian-2-Wasserstein, exact optimal-transport Earth Mover's Distance, sliced Wasserstein, energy distance, RBF maximum mean discrepancy, and Chamfer distance on the identical point clouds, holding the assignment fixed. The SDG ranking is preserved (Gaussian-2-Wasserstein $\rho=\DistGapSpearmanFrechet$, exact EMD $\rho=\DistGapSpearmanEmd$, sliced Wasserstein $\rho=\DistGapSpearmanSwd$, energy $\rho=\DistGapSpearmanEnergy$), and SDG~13 is the most divergent SDG under every metric. Centroids therefore discard real distributional shape --- the mean Gaussian-2-Wasserstein distance decomposes into a mean term and a shape (covariance) term, and the shape term accounts for a mean share of $\approx\DistGapShapeShareMean\%$ --- but that shape does not reorder the SDGs. The one metric that does not track the ranking, the classifier two-sample test (C2ST), returns AUC $\approx1$ in all SDGs and is a separation test rather than a ranker. Sampling stability is verified with a replicate seed: the maximum change in any sampled gap is $\DistGapMaxSeedDelta$.
+\textbf{Distance metric choice.} This study uses cosine distance between mean embeddings. A distribution-aware robustness check (Section~\ref{sec:distributional-robustness}) recomputes the per-SDG research--policy gap under Gaussian-2-Wasserstein, exact optimal-transport Earth Mover's Distance, sliced Wasserstein, energy distance, RBF maximum mean discrepancy, and Chamfer distance on the identical point clouds, holding the assignment fixed. The SDG ranking is preserved (Gaussian-2-Wasserstein $\rho=\DistGapSpearmanFrechet$, exact EMD $\rho=\DistGapSpearmanEmd$, sliced Wasserstein $\rho=\DistGapSpearmanSwd$, energy $\rho=\DistGapSpearmanEnergy$), and SDG~13 is the most divergent SDG under every metric. Centroids therefore discard real distributional shape --- the mean Gaussian-2-Wasserstein distance decomposes into a mean term and a shape (covariance) term, and the shape term accounts for a mean share of $\approx\DistGapShapeShareMean\%$ --- but that shape does not reorder the SDGs. The one metric that does not track the ranking, the classifier two-sample test (C2ST), returns AUC $\approx1$ in all SDGs and is a separation test rather than a ranker. Sampling stability is verified with a replicate seed: the maximum change in any sampled gap is $\DistGapMaxSeedDelta$.
 
 \textbf{Corpus scope and retrieval boundaries.} The policy corpus represents international institutional SDG discourse rather than the universe of AI sustainability policy. Domestic plans, sub-national policies, and non-English documents are not represented; the research corpus is also English-only. Both biases likely understate Global South perspectives. On the research side, the four-term query prioritises precision over recall, a deliberate choice (Section~\ref{sec:research-corpus}) that minimises non-AI noise but may miss specialised AI subfields whose practitioners do not use the four umbrella terms in their titles or abstracts. The OECD.AI methodology \parencite{OECDAiMethod} addresses this through field-of-study membership (the Artificial Intelligence or Machine Learning field of study in MAG, inherited by OpenAlex) rather than keyword search. The corpus is therefore a high-precision subset rather than a comprehensive census of AI-for-sustainability research. Results are conditional on these boundaries. Appendix~\ref{app:policy-source-data} makes the source-family sensitivity explicit.
 
@@ -683,31 +702,6 @@ This single-direction subtraction is a limited diagnostic. It attenuates one bro
 \label{tab:register-adjusted-semantic-gap}
 \input{../4_outputs/appendix/all-mpnet-base-v2/f_register_adjustment/tables/tab_register_adjusted_semgap.tex}
 \end{table}
-\clearpage
-\section{Distributional Robustness of the Semantic Gap}
-\label{app:distributional-gap}
-
-A reviewer may object that cosine distance between mean embeddings discards the shape of the research and policy point clouds: two SDGs could share a mean direction yet differ in spread or modality. This appendix tests that objection directly. Holding the supervised SDG assignment and the embedding point clouds fixed, it recomputes the per-SDG research--policy gap under a battery of distribution-aware metrics and compares each resulting ranking to the canonical centroid gap (Table~\ref{tab:distributional-gap}).
-
-The canonical gap is reproduced exactly as a gate: the full-corpus centroid gap equals the published value to $10^{-4}$, and the streamed research means reproduce \texttt{\small research\_centroids.npy} exactly. Every other metric uses the identical embeddings and assignment; only the distance functional changes. Full-corpus metrics (sliced Wasserstein, Chamfer, Gaussian-2-Wasserstein, Grassmann, linear MMD) are computed over all assigned papers and carry no sampling variance. Sampled metrics (exact EMD, Sinkhorn, energy, RBF-MMD, C2ST) use a 50,000-paper draw per SDG; SDGs~1 and~17 use their full population.
-
-\begin{table}[ht]
-\centering
-\caption{Per-SDG research--policy gap under distribution-aware metrics versus the canonical centroid gap. SWD = sliced Wasserstein; MMD$^2$ = squared RBF maximum mean discrepancy; Gauss.\ $W_2$ = Gaussian 2-Wasserstein; C2ST = classifier two-sample test AUC. The final row reports Spearman $\rho$ between each metric's ranking and the canonical ranking across the 17 SDGs.}
-\label{tab:distributional-gap}
-\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/all-mpnet-base-v2/g_distributional_gap/tables/tab_distributional_gap.tex}}
-\end{table}
-
-\textbf{Shape-sensitive metrics preserve the ranking.} Gaussian-2-Wasserstein ($\rho=\DistGapSpearmanFrechet$), linear maximum mean discrepancy ($\rho=\DistGapSpearmanMmd$), exact optimal-transport EMD ($\rho=\DistGapSpearmanEmd$), sliced Wasserstein ($\rho=\DistGapSpearmanSwd$), and energy distance ($\rho=\DistGapSpearmanEnergy$) all preserve the canonical ordering at $p<0.001$. The most divergent SDG is SDG~13 under every metric; its primacy is unconditional.
-
-\textbf{What centroids discard is quantified, not hidden.} The Gaussian-2-Wasserstein distance decomposes into a mean term and a shape (covariance) term. Across SDGs the shape term accounts for a mean share of $\approx\DistGapShapeShareMean\%$ of the distance. Centroids therefore drop real distributional signal --- but that signal does not reorder the SDGs, which is why the centroid ranking is robust.
-
-\textbf{Margin-level nuance.} The second and third canonical positions (SDGs~3 and~11) are less stable: several distribution-aware metrics elevate SDGs~1, 7, 12, and~14 instead. This is a genuine margin-level reshuffle among SDGs with similar gap magnitudes, not an error; the overall monotonic agreement (positive $\rho$ for every shape-sensitive metric) holds.
-
-\textbf{Separation, not ranking, from C2ST.} The classifier two-sample test returns AUC $\approx1$ for all 17 SDGs, so it confirms that research and policy are separable in every SDG but carries no ranking signal ($\rho\approx0$). Its near-constant value is expected, not a failure.
-
-\textbf{Sampling stability.} The sampled metrics use a 50,000-paper draw; a replicate seed changes any sampled gap by at most $\DistGapMaxSeedDelta$, confirming the estimate is stable and the default seed is representative.
-
 \clearpage
 \section{Concept-Retrieval Sensitivity}
 \label{app:concept-retrieval-sensitivity}

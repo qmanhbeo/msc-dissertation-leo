@@ -91,15 +91,15 @@ Not tracked in Git:
 | `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
 | `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, G) standalone (no PDF) |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
 | `python main.py --appendix-b2-interpret --overwrite` | Run B.1 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
 | `python main.py --appendix-f-register --overwrite` | Run F Register-Adjustment Robustness |
-| `python main.py --appendix-g-distributional --overwrite` | Run G Distributional Semantic-Gap Metrics (seed 42; add `--appendix-g-replicate-seed` for the seed-43 stability check) |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, G) standalone (requires existing main-text outputs). |
+| `python main.py --appendix-g-distributional --overwrite` | OPT-IN main-result table: distributional semantic-gap robustness. NOT run by warm replay or `--appendix-all`; run this before `--build-pdf`. |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (requires existing main-text outputs). |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot embedded` | Hydrate embedded snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot raw` | Hydrate raw snapshot for cold-replay rebuilds |
