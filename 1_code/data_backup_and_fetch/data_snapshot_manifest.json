@@ -1,5 +1,5 @@
 {
-  "current_version": "2026-07-26",
+  "current_version": "2026-07-29",
   "profiles": {
     "raw": {
       "version": "2026-07-26-095133",
@@ -14,17 +14,17 @@
       ]
     },
     "embedded": {
-      "version": "2026-07-28-000000",
-      "url": "https://drive.usercontent.google.com/download?id=1Agtnvo-CUu3L7i_-lbCyRvPYdPpwqoG1&export=download",
-      "sha256": "1edf8aae1f1b5c1d0c1df623a8ae9ac0d8e356e6599ac30164e7604aeed64a84",
+      "version": "2026-07-29-075706",
+      "url": "https://drive.usercontent.google.com/download?id=1Kux4ar3h7Gh2Qs5E0wFf40E3nVkHfRrv&export=download",
+      "sha256": "4fd186c7399e602fef1f858b33a5c46c7c3aba00a4abbfc2e5a05bd2e9f3d14d",
       "expected_repo_paths": [
         "2_data/3_embedded",
-        "2_data/2_segmented"
+        "2_data/3a_warm_replay_texts"
       ],
       "notes": [
-        "Embedded checkpoint (3_embedded/) plus the canonical segmented research text (2_segmented/), used for warm-replay analysis text extraction.",
-        "Excludes 0_raw, 1_preprocessed, and all downstream stages.",
-        "Both embedded models (all-mpnet-base-v2, all-minilm-l6-v2): ids files in 3_embedded/{model}/metadata and research_shards/metadata are ID/label-only; embedded text is canonical in 2_segmented/ (research + 7 reference sets) and 1_preprocessed/ (benchmark, osdg), so 3_embedded/ holds no duplicated text."
+        "Embedded checkpoint (3_embedded/) plus gzipped warm-replay appendix text (3a_warm_replay_texts/: research shards + policy.jsonl for the default model all-mpnet-base-v2), built by build_warm_replay_texts.py during backup.",
+        "Excludes 0_raw, 1_preprocessed, 2_segmented, and all downstream stages.",
+        "Both embedded models (all-mpnet-base-v2, all-minilm-l6-v2): ids files in 3_embedded/{model}/metadata and research_shards/metadata are ID/label-only. Canonical plain-text segment files live in 2_segmented/ (producer-side cold-replay artifact, not shipped); appendix readers (a3, b2) resolve 2_segmented/ first and fall back to the gzipped 3a_warm_replay_texts/ copy."
       ]
     }
   }
