@@ -16,6 +16,7 @@ RAW_ONLY_PATHS = (
 
 EMBEDDED_ONLY_PATHS = (
     Path("3_embedded"),
+    Path("3a_warm_replay_texts"),
 )
 
 FULL_PIPELINE_WARNING_LINES = (
@@ -51,9 +52,13 @@ SNAPSHOT_PROFILES: dict[str, SnapshotProfile] = {
     ),
     "embedded": SnapshotProfile(
         name="embedded",
-        description="Embedded checkpoint only (3_embedded/). For warm-replay analysis.",
+        description=(
+            "Embedded checkpoint (3_embedded/) plus gzipped warm-replay appendix text "
+            "(3a_warm_replay_texts/: research shards + policy.jsonl for the default model). "
+            "For warm-replay analysis."
+        ),
         excluded_data_paths=(),
-        included_data_paths=(Path("3_embedded"),),
+        included_data_paths=EMBEDDED_ONLY_PATHS,
         expected_repo_paths=EMBEDDED_ONLY_PATHS,
     ),
 }

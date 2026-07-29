@@ -52,6 +52,7 @@ from pathlib import Path
 
 import zstandard as zstd
 
+from build_warm_replay_texts import build_warm_replay_texts
 from data_snapshot_profiles import (
     SNAPSHOT_METADATA_FILE,
     build_snapshot_metadata,
@@ -413,6 +414,9 @@ def main() -> None:
 
     profiles = ["raw", "embedded"] if args.profile == "both" else [args.profile]
     for profile_name in profiles:
+        if profile_name == "embedded":
+            _log("refreshing 3a_warm_replay_texts/ (gzipped warm-replay appendix text)")
+            build_warm_replay_texts(source_dir=args.source_dir.resolve())
         snapshot = _create_snapshot(
             source_dir=args.source_dir.resolve(),
             output_dir=args.output_dir.resolve(),
