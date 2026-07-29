@@ -675,18 +675,7 @@ Rank & Config & CV macro-F1 \\
 The MLP test macro-F1 (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a separate evaluation from the CV grid-search results above. After the CV sweep, the champion MLP architecture (4 layers, 384 hidden, lr=3e-4) was retrained on the full training pool (n=\NTrainPool{}) and evaluated once against the held-out test set (n=\NTestPool{}), the same sanctioned single-use test evaluation applied to the LR champion. The resulting test macro-F1 of \MlpMacroFOne{} is not directly comparable to the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} from the grid search: the CV number is an average across five document-grouped folds on the training pool alone, while the test number is a single evaluation on a disjoint held-out sample after retraining on the full pool. Both numbers confirm that the LR---MLP gap is modest and that architecture choice is not the binding constraint on classification quality.
 
 % ==============================================================================
-% Appendix E: Model Sensitivity
-% ==============================================================================
-
-\section{Embedding-Model Sensitivity}
-\label{app:model-sensitivity}
-
-\subsection{Scope}
-
-An embedding-model sensitivity check compares the canonical \texttt{all-mpnet-base-v2} results against the lighter \texttt{all-MiniLM-L6-v2} encoder (384-d). This is now performed: the encoder-sensitivity tables (Tables~\ref{tab:encoder-sensitivity-semantic} and~\ref{tab:encoder-sensitivity-coverage}) carry all three encoders---MPNet, MiniLM, and SciBERT---each with three assignment methods, and the supervised LR and MLP rankings prove stable across architectures (within-method Spearman $\rho \approx 0.7$), confirming the gap findings are not an artefact of the MPNet geometry. Re-embedding the full research corpus ($\sim$3.1M papers) with a second model required the additional storage noted above, and the sample-stability and cross-sensitivity checks (Sections~\ref{sec:cross-sensitivity} and~\ref{app:sample-stability}) bound robustness under the chosen encoder. The remaining caveat --- that MPNet (768-d) and MiniLM (384-d) differ in both architecture and dimensionality, so the comparison bounds encoder sensitivity only modulo the dimensionality drop --- is resolved by the same-dimension scientific-encoder check (\texttt{allenai/scibert\_scivocab\_uncased}, 768-d) in Section~\ref{sec:encoder-sensitivity}, which shows the gap magnitude is encoder-dependent (SciBERT compresses it to \SciBERTMeanGap{}) but the relative ranking is moderately preserved (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTSemanticRho$) and the coverage ranking is highly stable ($\rho = \SciBERTCoverageRho$). The zero-shot column's near-zero $\rho$ against the LR baseline ($\approx -0.03$) is a method-axis effect (zero-shot vs.\ LR), not an encoder artefact -- MiniLM zero-shot still agrees with MPNet zero-shot ($\rho \approx 0.69$). The results are therefore not an artefact of the MPNet geometry or its dimensionality, and should be read as robust to the choice of 768-d encoder.
-
-% ==============================================================================
-% Appendix F: Register-Adjustment Robustness and Diagnostics
+% Appendix E: Register-Adjustment Robustness and Diagnostics
 % ==============================================================================
 
 \clearpage
