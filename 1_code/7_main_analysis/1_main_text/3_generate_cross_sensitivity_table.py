@@ -148,36 +148,27 @@ def parse_policy_source_gaps():
 # ---------------------------------------------------------------------------
 # Concept-retrieval variant: coverage/semantic gap loaders + Kendall tau
 # ---------------------------------------------------------------------------
-SEMANTIC_CAPTION = "Cross-sensitivity robustness of within-SDG semantic gap rankings across embedding architectures and assignment methods."
+SEMANTIC_CAPTION = "Cross-sensitivity robustness of within-SDG semantic-gap rankings across policy source, segment cap, and retrieval strategy."
 SEMANTIC_NOTES = (
-    "Each cell reports the within-SDG semantic gap rank "
-    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$) under that encoder and assignment method. "
-    "The base encoder is \\texttt{all-mpnet-base-v2} (768-d); the alternative encoder is "
-    "\\texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; "
-    "policy segments are capped at 50 per source document per SDG (Assumption A-CHUNKCAT). "
-    "Zero-shot = nearest-centroid assignment on the SDG reference centroids. "
-    "MLP = 4-layer/384-hidden network retrained on the full training pool. "
-    "Policy-source and segment-cap columns are LR-based. "
-    "\\textbf{Bold} = encoding-invariant (rank difference $\\le$1 between MPNet and MiniLM for the same assignment method); "
-    "\\textit{italic} = encoder-sensitive (rank difference $\\ge$4). "
-    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
-    "canonical MPNet-LR column."
+    "Each cell reports the within-SDG semantic-gap rank "
+    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$). "
+    "The Canon column is the canonical MPNet---LR ranking. "
+    "Policy-source columns compare the keyword-retrieved research profile against each policy-source family. "
+    "Segment-cap columns compare cap~20 and no cap. "
+    "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the canonical column."
 )
-COVERAGE_CAPTION = "Cross-sensitivity robustness of within-SDG coverage-gap rankings across embedding architectures and assignment methods."
+COVERAGE_CAPTION = "Cross-sensitivity robustness of within-SDG coverage-gap rankings across policy source and retrieval strategy."
 COVERAGE_NOTES = (
     "Each cell reports the within-SDG coverage-gap rank "
-    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$) under that encoder and assignment method. "
-    "The base encoder is \\texttt{all-mpnet-base-v2} (768-d); the alternative encoder is "
-    "\\texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; "
-    "MLP = 4-layer/384-hidden network; "
-    "Zero-shot = nearest-centroid assignment on the SDG reference centroids. "
+    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$). "
+    "The Canon column is the canonical MPNet---LR ranking. "
     "Coverage gap = $|\\text{research proportion} - \\text{policy proportion}|$ "
-    "per SDG, using document-weighted policy proportions (Assumption A19) for all methods. "
-    "Policy-source columns compare the canonical keyword-retrieved research profile against each policy-source family. "
+    "per SDG, using document-weighted policy proportions (Assumption A19). "
+    "Policy-source columns compare the keyword-retrieved research profile against each policy-source family. "
     "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
     "The Segment-cap axis is omitted: coverage gap is segment-cap-independent. "
-    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG coverage-gap ranks against the "
-    "canonical MPNet-LR column."
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG coverage-gap ranks against the canonical column."
 )
 
 
@@ -615,42 +606,14 @@ def write_validation_table():
 # Write tab_cross_sensitivity_robustness.tex
 # ---------------------------------------------------------------------------
 def write_cross_sensitivity():
-    ENCODER_CANONICAL = "all-mpnet-base-v2"
-    ENCODER_PARTNER = "all-MiniLM-L6-v2"
-    ENCODER_DIM = {"all-mpnet-base-v2": "768d", "all-MiniLM-L6-v2": "384d"}
-
     cap_20, cap_none = load_cap_gaps()
     policy_families = parse_policy_source_gaps()
-
-    def _enc_sub(m, sublabel):
-        lr = load_lr_gaps(m)
-        mlp = load_mlp_gaps(m)
-        zs = load_zs_gaps(m)
-        cols = []
-        if lr:
-            cols.append(("LR", compute_ranks(lr),
-                         "LR (canonical supervised) — policy segments capped at 50/doc/SDG"))
-        if mlp:
-            cols.append(("MLP", compute_ranks(mlp),
-                         "MLP (4-layer/384-hidden) — policy segments capped at 50/doc/SDG"))
-        if zs:
-            cols.append(("ZS", compute_ranks(zs),
-                         "Zero-shot nearest-centroid on SDG reference centroids"))
-        return sublabel, cols
-
-    enc_subgroups = []
-    c = _enc_sub(ENCODER_CANONICAL,
-                 f"{ENCODER_CANONICAL.split('-')[1]} ({ENCODER_DIM[ENCODER_CANONICAL]})")
-    if c[1]:
-        enc_subgroups.append(c)
-    p = _enc_sub(ENCODER_PARTNER,
-                 f"{ENCODER_PARTNER.split('-')[1]} ({ENCODER_DIM[ENCODER_PARTNER]})")
-    if p[1]:
-        enc_subgroups.append(p)
+    canon_gaps = load_lr_gaps("all-mpnet-base-v2")
 
     col_groups = []
-    if enc_subgroups:
-        col_groups.append(("Encoder (embedding architecture)", enc_subgroups))
+    if canon_gaps:
+        col_groups.append(("", [("Canon", compute_ranks(canon_gaps),
+                                 "Canonical MPNet-LR ranking")]))
 
     pcols = []
     family_labels = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC"}
@@ -729,7 +692,8 @@ def assemble_table(col_groups, out_path, caption, notes, label):
     n_cols = sum(group_total(g) for g in col_groups)
     has_nested = any(is_nested(g) for g in col_groups)
 
-    rowA = [r"\multirow{3}{*}{SDG}"]
+    n_header_rows = 2 if not has_nested else 3
+    rowA = [fr"\multirow{{{n_header_rows}}}{{*}}{{SDG}}"]
     midrules = []
     col_idx = 2
     for glabel, body in col_groups:
@@ -786,6 +750,11 @@ def assemble_table(col_groups, out_path, caption, notes, label):
         tex.append(" & ".join(rowC) + r" \\")
     tex.append(r"\midrule")
 
+    all_sdgs = set()
+    for _, ranks, _ in all_cols:
+        all_sdgs.update(ranks.keys())
+    all_sdgs = sorted(all_sdgs)
+
     STABLE_RANK_DELTA = 1
     SENSITIVE_RANK_DELTA = 4
     mpnet_lr = minilm_lr = None
@@ -812,11 +781,6 @@ def assemble_table(col_groups, out_path, caption, notes, label):
             return "i"
         return ""
 
-    all_sdgs = set()
-    for _, ranks, _ in all_cols:
-        all_sdgs.update(ranks.keys())
-    all_sdgs = sorted(all_sdgs)
-
     for sdg in all_sdgs:
         hl = _highlight(sdg)
         cells = [f"SDG {sdg}"]
@@ -830,7 +794,7 @@ def assemble_table(col_groups, out_path, caption, notes, label):
                 cells.append(str(v))
         tex.append(" & ".join(cells) + r" \\")
 
-    baseline = mpnet_lr
+    baseline = all_cols[0][1] if all_cols else None
     rho_cells = [r"Rank Corr ($\rho$)"]
     rho_by_col = {}
     if baseline:
@@ -862,11 +826,7 @@ def assemble_table(col_groups, out_path, caption, notes, label):
 
 
 def write_coverage_table():
-    ENCODER_CANONICAL = "all-mpnet-base-v2"
-    ENCODER_PARTNER = "all-MiniLM-L6-v2"
-    ENCODER_DIM = {"all-mpnet-base-v2": "768d", "all-MiniLM-L6-v2": "384d"}
-
-    # Load the canonical coverage JSON once and reuse for both the MPNet-LR
+    # Load the canonical coverage JSON once and reuse for both the Canon
     # column (coverage_gap_hard) and the policy-source profile (research_profile_hard).
     canon_cov_path = output_main_dir_for_model(model, root=root) / "data" / "4_2_coverage_document_weighted.json"
     with open(canon_cov_path) as f:
@@ -877,36 +837,10 @@ def write_coverage_table():
     # Coverage gap is segment-cap-independent: no Segment-cap group.
     policy_families = parse_policy_source_covgaps(research_profile=research_profile)
 
-    def _enc_sub(m, sublabel, preloaded_lr=None):
-        lr = preloaded_lr if preloaded_lr is not None else load_lr_covgaps(m)
-        mlp = load_mlp_covgaps(m)
-        zs = load_zs_covgaps(m)
-        cols = []
-        if lr:
-            cols.append(("LR", compute_ranks(lr),
-                         "LR (canonical supervised) — coverage gap vs full policy corpus"))
-        if mlp:
-            cols.append(("MLP", compute_ranks(mlp),
-                         "MLP (4-layer/384-hidden) — coverage gap vs full policy corpus"))
-        if zs:
-            cols.append(("ZS", compute_ranks(zs),
-                         "Zero-shot nearest-centroid — coverage gap vs full policy corpus"))
-        return sublabel, cols
-
-    enc_subgroups = []
-    c = _enc_sub(ENCODER_CANONICAL,
-                 f"{ENCODER_CANONICAL.split('-')[1]} ({ENCODER_DIM[ENCODER_CANONICAL]})",
-                 preloaded_lr=mpnet_lr)
-    if c[1]:
-        enc_subgroups.append(c)
-    p = _enc_sub(ENCODER_PARTNER,
-                 f"{ENCODER_PARTNER.split('-')[1]} ({ENCODER_DIM[ENCODER_PARTNER]})")
-    if p[1]:
-        enc_subgroups.append(p)
-
     col_groups = []
-    if enc_subgroups:
-        col_groups.append(("Encoder (embedding architecture)", enc_subgroups))
+    if mpnet_lr:
+        col_groups.append(("", [("Canon", compute_ranks(mpnet_lr),
+                                 "Canonical MPNet-LR coverage ranking")]))
 
     pcols = []
     family_labels = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC"}
@@ -930,17 +864,12 @@ def write_coverage_table():
 
     concept_rho_val = rho_by_col.get("Retrieval::Concept", float("nan"))
     concept_rho = f"{concept_rho_val:.2f}" if not np.isnan(concept_rho_val) else "--"
-    minilm_key = (f"Encoder (embedding architecture)::"
-                  f"{ENCODER_PARTNER.split('-')[1]} ({ENCODER_DIM[ENCODER_PARTNER]})::LR")
-    minilm_rho_val = rho_by_col.get(minilm_key, float("nan"))
-    minilm_rho = f"{minilm_rho_val:.2f}" if not np.isnan(minilm_rho_val) else "--"
     lines = [
         f"% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
         rf"\newcommand{{\ConceptCoverageGapRho}}{{{concept_rho}}}",
-        rf"\newcommand{{\MiniLMCoverageRho}}{{{minilm_rho}}}",
     ]
     (OUT_MAIN / "num_cross_sensitivity_coverage.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Written num_cross_sensitivity_coverage.tex  concept_rho={concept_rho} minilm_rho={minilm_rho}")
+    print(f"Written num_cross_sensitivity_coverage.tex  concept_rho={concept_rho}")
 
 
 def write_concept_coverage():
