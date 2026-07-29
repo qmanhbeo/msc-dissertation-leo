@@ -97,6 +97,7 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/f_register_adjustment/tables/tab_register_adjusted_semgap.tex",
     "appendix/c_sample_stability/tables/num_sample_stability.tex",
     "appendix/c_sample_stability/tables/tab_sample_stability.tex",
+    "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_gap_values.tex",
 ]
 
 MANUSCRIPT_APPENDIX_FIGURE_FILES = [

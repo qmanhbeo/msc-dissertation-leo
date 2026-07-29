@@ -26,7 +26,9 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, model_results_dir_for_model, scored_dir_for_model
+from collections import defaultdict
+
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_results_dir_for_model, scored_dir_for_model
 
 SDG_NAMES = {
     1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
@@ -164,10 +166,13 @@ SEMANTIC_NOTES = (
 COVERAGE_CAPTION = "Cross-sensitivity robustness of within-SDG coverage-gap rankings across embedding architectures and assignment methods."
 COVERAGE_NOTES = (
     "Each cell reports the within-SDG coverage-gap rank "
-    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$) under that encoder and policy-source configuration. "
+    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$) under that encoder and assignment method. "
     "The base encoder is \\texttt{all-mpnet-base-v2} (768-d); the alternative encoder is "
-    "\\texttt{all-MiniLM-L6-v2} (384-d). Coverage gap = $|\\text{research proportion} - \\text{policy proportion}|$ "
-    "per SDG, using document-weighted policy proportions (Assumption A19). "
+    "\\texttt{all-MiniLM-L6-v2} (384-d). LR = canonical supervised logistic-regression classifier; "
+    "MLP = 4-layer/384-hidden network; "
+    "Zero-shot = nearest-centroid assignment on the SDG reference centroids. "
+    "Coverage gap = $|\\text{research proportion} - \\text{policy proportion}|$ "
+    "per SDG, using document-weighted policy proportions (Assumption A19) for all methods. "
     "Policy-source columns compare the canonical keyword-retrieved research profile against each policy-source family. "
     "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
     "The Segment-cap axis is omitted: coverage gap is segment-cap-independent. "
@@ -186,6 +191,106 @@ def load_lr_covgaps(m):
     if not cg:
         return None
     return {int(k[3:]): v for k, v in cg.items()}
+
+
+def load_mlp_covgaps(m):
+    """Document-weighted coverage gap for MLP assignment.
+
+    Research counts from mlp_summary.json (already doc-level: 1 paper = 1 doc).
+    Policy profile computed from mlp_policy_scores.npy grouped by source_doc.
+
+    Returns {sdg: |res% - pol%|} or None if data missing.
+    """
+    scored_dir = scored_dir_for_model(m)
+    summary_path = scored_dir / "mlp_scores" / "mlp_summary.json"
+    if not summary_path.exists():
+        return None
+    with open(summary_path) as f:
+        summary = json.load(f)
+    res_counts = {int(k): v for k, v in summary["research_coverage"].items()}
+    res_total = summary["research_total"]
+
+    scores_path = scored_dir / "mlp_scores" / "mlp_policy_scores.npy"
+    ids_path = scored_dir / "metadata" / "policy_scores_ids.json"
+    if not scores_path.exists() or not ids_path.exists():
+        return None
+    policy_scores = np.load(scores_path)
+    with open(ids_path) as f:
+        policy_ids = json.load(f)
+
+    # Group segments by source_doc, average per-doc, argmax
+    doc_to_rows = defaultdict(list)
+    for i, r in enumerate(policy_ids):
+        doc_to_rows[r["source_doc"]].append(i)
+
+    n_docs = len(doc_to_rows)
+    doc_assignments = np.empty(n_docs, dtype=np.int32)
+    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
+        doc_vec = policy_scores[row_idxs].mean(axis=0)
+        doc_assignments[d_idx] = doc_vec.argmax()
+
+    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
+    pol_profile = pol_counts / pol_counts.sum()
+
+    gaps = {}
+    for i in range(N_SDG):
+        sdg = i + 1
+        res_share = res_counts.get(sdg, 0) / res_total
+        gaps[sdg] = float(abs(res_share - pol_profile[i]))
+    return gaps
+
+
+def load_zs_covgaps(m):
+    """Document-weighted coverage gap for zero-shot nearest-centroid assignment.
+
+    Research counts from ZS semantic_gap_distances.json (already doc-level).
+    Policy profile computed fresh by scoring policy embeddings against
+    SDG reference centroids, then document-weighting.
+
+    Returns {sdg: |res% - pol%|} or None if data missing.
+    """
+    gap_path = root / "main" / m / "zeroshot" / "semantic_gap_distances.json"
+    if not gap_path.exists():
+        return None
+    with open(gap_path) as f:
+        data = json.load(f)
+    res_counts = {r["sdg"]: r["n_papers"] for r in data["per_sdg"]}
+    res_total = sum(res_counts.values())
+
+    embed_dir = embed_dir_for_model(m)
+    emb_path = embed_dir / "policy.npy"
+    ids_path = embed_dir / "metadata" / "policy_ids.json"
+    centroids_path = scored_dir_for_model(m) / "sdg_centroids.npy"
+    if not (emb_path.exists() and ids_path.exists() and centroids_path.exists()):
+        return None
+
+    policy_emb = np.load(emb_path).astype(np.float32)
+    with open(ids_path) as f:
+        policy_ids = json.load(f)
+    centroids = np.load(centroids_path).astype(np.float32)
+
+    policy_scores = policy_emb @ centroids.T
+
+    # Document-weighted profile
+    doc_to_rows = defaultdict(list)
+    for i, r in enumerate(policy_ids):
+        doc_to_rows[r["source_doc"]].append(i)
+
+    n_docs = len(doc_to_rows)
+    doc_assignments = np.empty(n_docs, dtype=np.int32)
+    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
+        doc_vec = policy_scores[row_idxs].mean(axis=0)
+        doc_assignments[d_idx] = doc_vec.argmax()
+
+    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
+    pol_profile = pol_counts / pol_counts.sum()
+
+    gaps = {}
+    for i in range(N_SDG):
+        sdg = i + 1
+        res_share = res_counts.get(sdg, 0) / res_total
+        gaps[sdg] = float(abs(res_share - pol_profile[i]))
+    return gaps
 
 
 def load_concept_lr_gaps(m):
@@ -606,18 +711,26 @@ def write_coverage_table():
     # Coverage gap is segment-cap-independent: no Segment-cap group.
     policy_families = parse_policy_source_covgaps(research_profile=research_profile)
 
-    def _enc_sub(m, sublabel, preloaded=None):
-        lr = preloaded if preloaded is not None else load_lr_covgaps(m)
+    def _enc_sub(m, sublabel, preloaded_lr=None):
+        lr = preloaded_lr if preloaded_lr is not None else load_lr_covgaps(m)
+        mlp = load_mlp_covgaps(m)
+        zs = load_zs_covgaps(m)
         cols = []
         if lr:
             cols.append(("LR", compute_ranks(lr),
                          "LR (canonical supervised) — coverage gap vs full policy corpus"))
+        if mlp:
+            cols.append(("MLP", compute_ranks(mlp),
+                         "MLP (4-layer/384-hidden) — coverage gap vs full policy corpus"))
+        if zs:
+            cols.append(("ZS", compute_ranks(zs),
+                         "Zero-shot nearest-centroid — coverage gap vs full policy corpus"))
         return sublabel, cols
 
     enc_subgroups = []
     c = _enc_sub(ENCODER_CANONICAL,
                  f"{ENCODER_CANONICAL.split('-')[1]} ({ENCODER_DIM[ENCODER_CANONICAL]})",
-                 preloaded=mpnet_lr)
+                 preloaded_lr=mpnet_lr)
     if c[1]:
         enc_subgroups.append(c)
     p = _enc_sub(ENCODER_PARTNER,

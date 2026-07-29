@@ -707,7 +707,24 @@ Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword
 \input{../4_outputs/main/all-mpnet-base-v2/tables/tab_concept_coverage.tex}
 \end{table}
 
-\section{Detailed Policy Profiles by Source Family}
+\section{Supplementary Cross-Method Data}
+\label{app:cross-method-section}
+
+\subsection{Cross-Method Coverage and Semantic Gap Values}
+\label{app:cross-method-gap-values}
+
+Table~\ref{tab:app-cross-method-gap-values} reports the raw coverage gap and semantic gap values for each SDG across six encoder--assignment-method combinations. While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the table below shows the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Assumption A19); semantic gap policy centroids use a 50-segment-per-document cap.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\caption{Coverage gap and semantic gap values across embedding architectures and assignment methods.}
+\label{tab:app-cross-method-gap-values}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/all-mpnet-base-v2/h1_cross_method_gap_values/tables/tab_app_cross_method_gap_values.tex}}
+\par\smallskip\footnotesize\emph{Notes:} Coverage gap = $|\text{research proportion} - \text{policy proportion}|$ per SDG in percentage points, using document-weighted policy proportions (Assumption A19) for all methods. Semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap. All semantic gap values are cosine units.\par
+\end{table}
+
+\subsection{Detailed Policy Profiles by Source Family}
 \label{app:policy-source-data}
 
 The full policy corpus combines a curated AI/SDG sub-corpus, SDGi VNR/VLR reports, and UN General Debate speeches. These are all policy-facing texts, but they are not interchangeable genres. The family split reported in Table~\ref{tab:policy-source-family} therefore asks a narrow question: whether the full-corpus policy profile is broadly stable across source families or whether it is strongly shaped by corpus composition.
@@ -733,7 +750,7 @@ In accordance with the University's guidance on generative AI (``Use of GenAI is
 \small
 \caption{Declaration of AI use by permitted activity.}
 \label{tab:ai-declaration}
-\begin{tabular}{p{0.27\textwidth}p{0.20\textwidth}p{0.45\textwidth}}
+\begin{tabular}{p{0.18\textwidth}p{0.18\textwidth}p{0.56\textwidth}}
 \toprule
 \textbf{Activity} & \textbf{AI tool(s)} & \textbf{How output was used} \\
 \midrule
