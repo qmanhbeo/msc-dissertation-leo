@@ -217,7 +217,7 @@ def _write_combined_table(path, rows, cov_fmt, gap_fmt, concept_cov=None, concep
         h2.append(r"\multicolumn{3}{c}{MPNet (768d)}")
         h2.append(r"\multicolumn{3}{c}{MiniLM (384d)}")
         if has_concept:
-            h2.append("Concept")
+            h2.append("Retrieval")
     lines.append(" & ".join(h2) + r" \\")
 
     if has_concept:
@@ -232,7 +232,7 @@ def _write_combined_table(path, rows, cov_fmt, gap_fmt, concept_cov=None, concep
     for _ in range(2):
         h3 += ["LR", "MLP", "ZS", "LR", "MLP", "ZS"]
         if has_concept:
-            h3.append("")
+            h3.append("Concept")
     lines.append(" & ".join(h3) + r" \\")
 
     lines.append(r"\midrule")
