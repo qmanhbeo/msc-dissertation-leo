@@ -713,12 +713,12 @@ Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword
 \subsection{Cross-Method Coverage and Semantic Gap Values}
 \label{app:cross-method-gap-values}
 
-Table~\ref{tab:app-cross-method-gap-values} reports the raw coverage gap and semantic gap values for each SDG across six encoder--assignment-method combinations. While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the table below shows the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Assumption A19); semantic gap policy centroids use a 50-segment-per-document cap.
+Table~\ref{tab:app-cross-method-gap-values} reports the raw coverage gap and semantic gap values for each SDG across six encoder--assignment-method combinations, with an additional concept-retrieval LR column for comparison against the keyword-retrieved research corpus baseline (Appendix~\ref{app:concept-retrieval-sensitivity}). While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the table below shows the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Assumption A19); semantic gap policy centroids use a 50-segment-per-document cap.
 
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{Coverage gap and semantic gap values across embedding architectures and assignment methods.}
+\caption{Coverage gap and semantic gap values across embedding architectures, assignment methods, and retrieval strategies.}
 \label{tab:app-cross-method-gap-values}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/all-mpnet-base-v2/h1_cross_method_gap_values/tables/tab_app_cross_method_gap_values.tex}}
 \par\smallskip\footnotesize\emph{Notes:} Coverage gap = $|\text{research proportion} - \text{policy proportion}|$ per SDG in percentage points, using document-weighted policy proportions (Assumption A19) for all methods. Semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap. All semantic gap values are cosine units.\par
