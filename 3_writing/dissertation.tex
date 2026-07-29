@@ -584,22 +584,9 @@ Figure~\ref{fig:centroid-similarity-matrix} shows the full 17$\times$17 similari
 \subsection{Lexical Illustration of the Semantic Gap}
 \label{app:semantic-gap-text-interpretability}
 
-Table~\ref{tab:semantic-gap-text-interpretability} adds a small lexical interpretability check for two high-gap, policy-dominant cases (SDGs 17 and 13) and one lower-gap comparison case (SDG 9). The table is generated from deterministic samples of existing hard-assigned research and policy texts. It reports distinctive terms rather than selected quotations, so it is a descriptive guide to language patterns, not qualitative coding or proof of policy intent. Generic ML methodology vocabulary---such as \textit{model}, \textit{learning}, and \textit{neural}---is excluded from the term lists because these terms reflect the search strategy and would otherwise dominate every SDG regardless of its substantive frame.
+Table~\ref{tab:semantic-gap-text-interpretability-full} lists the TF-IDF terms most distinctive of the research and policy sides for each SDG. Generic ML methodology vocabulary---such as \textit{model}, \textit{learning}, and \textit{neural}---is excluded because these terms reflect the search strategy rather than SDG-specific framing.
 
-The contrast helps make the embedding distances more legible. In SDGs 17 and 13, the high semantic gaps correspond to a split between technical research language and more institutional, international, national-government, and climate-action policy language. SDG 17 is especially cautionary: its research-side terms are biomedical/ML-heavy, while its policy-side terms are international and agenda-oriented. SDG 9, by contrast, shows more overlap around technology, infrastructure, innovation, and systems language. This does not prove substantive alignment in SDG 9 or substantive failure in SDGs 13 and 17; it simply illustrates why shared SDG labels can conceal different textual framings.
-
-\begin{table}[ht]
-\centering
-\small
-\caption{Lexical interpretability check for selected semantic-gap cases.}
-\label{tab:semantic-gap-text-interpretability}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/all-mpnet-base-v2/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret.tex}
-}
-\par\smallskip\footnotesize\emph{Notes:} Terms are generated from deterministic samples of research and policy texts assigned to each SDG. The table is descriptive only and is not used to relabel records or replace the embedding-based semantic-gap estimates.\par
-\end{table}
-
-Table~\ref{tab:semantic-gap-text-interpretability-full} extends this analysis to all 17 SDGs, confirming that the research--policy term divergence is systematic rather than driven by the three selected cases.
+The contrasts echo the embedding patterns. The widest-gap SDGs (13, 11, 3, 1, 7, 8, 12; $\rho \geq 0.425$) consistently oppose technical measurement vocabulary---\textit{detection}, \textit{images}, \textit{yield}, \textit{regression}---against institutional or welfare terms---\textit{climate}, \textit{emissions}, \textit{health}, \textit{employment}. SDG~13 clarifies the pattern most sharply: research terms centre on crop monitoring and soil science while policy terms address national emissions commitments. Lower-gap SDGs (17, 15, 4, 6, 2, 9; $\rho \leq 0.289$) show narrower lexical divergence, such as the shared technology---infrastructure frame of SDG~9 or the social-media---partnership overlap of SDG~17. A further observation cuts across both groups: agricultural-AI vocabulary (\textit{crop}, \textit{soil}, \textit{agricultural}) appears on the research side of nine unrelated SDGs, reflecting a strong agri-tech skew in the AI-for-SDG literature rather than alignment with each goal's policy domain.
 
 \begin{table}[ht]
 \centering
@@ -609,7 +596,7 @@ Table~\ref{tab:semantic-gap-text-interpretability-full} extends this analysis to
 \resizebox{\textwidth}{!}{%
 \input{../4_outputs/appendix/all-mpnet-base-v2/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret_all.tex}
 }
-\par\smallskip\footnotesize\emph{Notes:} Terms are TF-IDF-weighted unigrams and bigrams from deterministic samples of research and policy texts assigned to each SDG. Same methodology as Table~\ref{tab:semantic-gap-text-interpretability} with five terms per side.\par
+\par\smallskip\footnotesize\emph{Notes:} Terms are TF-IDF-weighted unigrams and bigrams from deterministic samples of research and policy texts assigned to each SDG.\par
 \end{table}
 
 

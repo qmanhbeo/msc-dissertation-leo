@@ -1,11 +1,6 @@
 {
   "generated_from": "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py",
-  "target_sdgs": [
-    17,
-    13,
-    9
-  ],
-  "all_sdgs": [
+  "sdgs": [
     1,
     2,
     3,
@@ -26,8 +21,7 @@
   ],
   "random_seed": 42,
   "sample_per_side": 6000,
-  "terms_per_side_focal": 8,
-  "terms_per_side_full": 10,
+  "terms_per_side": 10,
   "examples_per_side": 3,
   "note": "Distinctive terms are a descriptive interpretability aid, not a qualitative coding scheme and not a replacement for the semantic-gap estimates. Representative examples are saved for audit only.",
   "rows": [
@@ -39,7 +33,7 @@
       "policy_assigned_usable_n": 1574,
       "research_sample_n": 2688,
       "policy_sample_n": 1574,
-      "research_terms": "alleviation, used, china, approach, factors, regression, based, effect, variables, zakat",
+      "research_terms": "alleviation, china, approach, studies, indonesia, zakat, literature, cluster, satellite, household",
       "policy_terms": "social, cent, national, people, protection, services, population, vulnerable, living, proportion",
       "interpretive_reading": ""
     },
@@ -51,7 +45,7 @@
       "policy_assigned_usable_n": 1696,
       "research_sample_n": 6000,
       "policy_sample_n": 1696,
-      "research_terms": "crop, detection, diseases, plant, used, leaf, images, precision, different, soil",
+      "research_terms": "crop, detection, diseases, plant, leaf, images, precision, soil, techniques, approach",
       "policy_terms": "population, food, children, prevalence, worst, access, hunger, million, rate, births",
       "interpretive_reading": ""
     },
@@ -63,7 +57,7 @@
       "policy_assigned_usable_n": 2747,
       "research_sample_n": 6000,
       "policy_sample_n": 2747,
-      "research_terms": "patients, cancer, disease, detection, images, cells, clinical, used, diagnosis, potential",
+      "research_terms": "patients, cancer, disease, detection, images, clinical, cells, diagnosis, potential, techniques",
       "policy_terms": "health, services, care, national, births, population, mortality, rate, people, access",
       "interpretive_reading": ""
     },
@@ -75,7 +69,7 @@
       "policy_assigned_usable_n": 1993,
       "research_sample_n": 6000,
       "policy_sample_n": 1993,
-      "research_terms": "brain, cognitive, sleep, neurons, factors, used, food, cells, motor, associated",
+      "research_terms": "brain, cognitive, sleep, neurons, food, cells, motor, expression, memory, agricultural",
       "policy_terms": "education, school, secondary, primary, national, children, percent, quality, access, vocational",
       "interpretive_reading": ""
     },
@@ -87,7 +81,7 @@
       "policy_assigned_usable_n": 1994,
       "research_sample_n": 2003,
       "policy_sample_n": 1994,
-      "research_terms": "stress, used, poor, patients, factors, breast, sleep, cancer, pain, associated",
+      "research_terms": "stress, poor, patients, breast, sleep, cancer, pain, clinical, language, approach",
       "policy_terms": "women, gender, violence, equality, national, rights, girls, government, cent, sexual",
       "interpretive_reading": ""
     },
@@ -99,7 +93,7 @@
       "policy_assigned_usable_n": 1157,
       "research_sample_n": 2229,
       "policy_sample_n": 1157,
-      "research_terms": "irrigation, soil, agricultural, crop, salinity, agriculture, sup, yield, sub, different",
+      "research_terms": "irrigation, soil, agricultural, crop, salinity, agriculture, sup, yield, sub, potential",
       "policy_terms": "sanitation, access, drinking, supply, national, wastewater, cent, services, population, resources",
       "interpretive_reading": ""
     },
@@ -111,7 +105,7 @@
       "policy_assigned_usable_n": 1671,
       "research_sample_n": 1639,
       "policy_sample_n": 1671,
-      "research_terms": "agricultural, agriculture, poverty, based, food, approach, battery, images, optimization, different",
+      "research_terms": "agricultural, agriculture, poverty, food, battery, approach, images, optimization, parameters, poor",
       "policy_terms": "energy, electricity, access, renewable, clean, worst best, population, affordable, index worst, cent",
       "interpretive_reading": ""
     },
@@ -123,7 +117,7 @@
       "policy_assigned_usable_n": 1956,
       "research_sample_n": 4219,
       "policy_sample_n": 1956,
-      "research_terms": "plant, detection, leaf, image, disease, food, used, based, cnn, convolutional",
+      "research_terms": "plant, detection, leaf, image, disease, food, cnn, convolutional, agricultural, techniques",
       "policy_terms": "employment, growth, labour, gdp, economic, worst, tourism, cent, government, work",
       "interpretive_reading": ""
     },
@@ -135,9 +129,9 @@
       "policy_assigned_usable_n": 3877,
       "research_sample_n": 6000,
       "policy_sample_n": 3877,
-      "research_terms": "agricultural, agriculture, iot, cancer, food, crop, detection, cell, based, farmers",
+      "research_terms": "agricultural, agriculture, iot, cancer, food, crop, detection, cell, farmers, farming",
       "policy_terms": "infrastructure, innovation, national, government, public, population, countries, access, intelligence, strategy",
-      "interpretive_reading": "Lower-gap comparison: differences remain visible, but the contrast is closer to a technology/infrastructure register split than to the broader institutional gap seen in SDGs 13 and 17."
+      "interpretive_reading": ""
     },
     {
       "sdg": 10,
@@ -147,7 +141,7 @@
       "policy_assigned_usable_n": 1261,
       "research_sample_n": 2187,
       "policy_sample_n": 1261,
-      "research_terms": "neurons, patients, wealth, pain, income inequality, effect, nerve, studies, sensory, cells",
+      "research_terms": "neurons, patients, wealth, pain, income inequality, effects, nerve, studies, sensory, cells",
       "policy_terms": "worst, countries, best, people, rights, national, cent, migration, government, population",
       "interpretive_reading": ""
     },
@@ -159,7 +153,7 @@
       "policy_assigned_usable_n": 1592,
       "research_sample_n": 3909,
       "policy_sample_n": 1592,
-      "research_terms": "detection, image, based, accident, fusion, used, object, traffic, agricultural, recognition",
+      "research_terms": "detection, image, accident, fusion, object, traffic, agricultural, recognition, approach, poor",
       "policy_terms": "housing, urban, city, transport, cities, public, national, waste, plan, green",
       "interpretive_reading": ""
     },
@@ -171,7 +165,7 @@
       "policy_assigned_usable_n": 1057,
       "research_sample_n": 4509,
       "policy_sample_n": 1057,
-      "research_terms": "food, agricultural, based, detection, image, different, content, used, quality, parameters",
+      "research_terms": "food, agricultural, detection, image, content, quality, parameters, rice, soil, approach",
       "policy_terms": "waste, consumption, national, recycling, production, public, procurement, management, economy, circular",
       "interpretive_reading": ""
     },
@@ -183,9 +177,9 @@
       "policy_assigned_usable_n": 3351,
       "research_sample_n": 6000,
       "policy_sample_n": 3351,
-      "research_terms": "soil, crop, agricultural, yield, moisture, rice, used, stress, detection, images",
+      "research_terms": "soil, crop, agricultural, yield, moisture, rice, stress, detection, images, agriculture",
       "policy_terms": "climate, change, emissions, national, countries, action, global, energy, nations, united",
-      "interpretive_reading": "High-gap case: both sides concern climate, but policy language is more institutional and commitment-oriented while research language is more technical and measurement-oriented."
+      "interpretive_reading": ""
     },
     {
       "sdg": 14,
@@ -195,7 +189,7 @@
       "policy_assigned_usable_n": 1447,
       "research_sample_n": 2217,
       "policy_sample_n": 1447,
-      "research_terms": "detection, images, imaging, cancer, used, tumor, breast, based, segmentation, radiomics",
+      "research_terms": "detection, images, imaging, cancer, tumor, breast, segmentation, radiomics, hyperspectral, techniques",
       "policy_terms": "marine, biodiversity, fish caught, ocean, sea, rate, worst, coastal, population, resources",
       "interpretive_reading": ""
     },
@@ -207,7 +201,7 @@
       "policy_assigned_usable_n": 1604,
       "research_sample_n": 6000,
       "policy_sample_n": 1604,
-      "research_terms": "soil, crop, agricultural, plant, spectral, sensing, field, used, remote, different",
+      "research_terms": "soil, crop, agricultural, plant, spectral, sensing, field, remote, images, yield",
       "policy_terms": "biodiversity, forest, worst, national, protected, population, area, species, freshwater, best",
       "interpretive_reading": ""
     },
@@ -219,7 +213,7 @@
       "policy_assigned_usable_n": 4893,
       "research_sample_n": 6000,
       "policy_sample_n": 4893,
-      "research_terms": "food, patients, cancer, images, used, poor, covid-, clinical, pain, imaging",
+      "research_terms": "food, patients, cancer, images, poor, covid-, clinical, pain, imaging, treatment",
       "policy_terms": "nations, international, peace, rights, united, security, human, law, world, global",
       "interpretive_reading": ""
     },
@@ -231,9 +225,9 @@
       "policy_assigned_usable_n": 4637,
       "research_sample_n": 620,
       "policy_sample_n": 4637,
-      "research_terms": "sentiment, agricultural, tweets, used, fusion, covid-, agriculture, twitter, social, yang",
-      "policy_terms": "countries, international, nations, oecd, united, agenda, global, report, financing, cooperation",
-      "interpretive_reading": "High-gap case: the research-side sample is technical and biomedical/ML-heavy, while policy language is international, institutional, and agenda-oriented."
+      "research_terms": "sentiment, agricultural, tweets, fusion, covid-, agriculture, twitter, social, yang, images",
+      "policy_terms": "countries, international, oecd, nations, united, agenda, global, report, financing, cooperation",
+      "interpretive_reading": ""
     }
   ]
 }
