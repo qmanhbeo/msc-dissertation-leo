@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gzip
 import json
 from pathlib import Path
 
@@ -87,6 +88,59 @@ def research_preprocessed_dir() -> Path:
 
 def research_segmented_dir_for_model(model: str) -> Path:
     return segmented_dir_for_model(model) / "research"
+
+
+# ── Warm-replay text fallback (3a_warm_replay_texts/) ────────────────────
+#
+# Canonical text lives in 2_segmented/{model}/ (plain .jsonl). The embedded
+# snapshot instead ships a gzipped copy of exactly the files the warm-replay
+# appendix consumers (a3, b2) need, under 3a_warm_replay_texts/{model}/,
+# built only by 1_code/data_backup_and_fetch/build_warm_replay_texts.py.
+# Resolution order: canonical plain file first, then the .gz fallback,
+# else fail closed.
+
+WARM_REPLAY_TEXTS_DIRNAME = "3a_warm_replay_texts"
+
+
+def warm_replay_texts_dir_for_model(model: str) -> Path:
+    _validate_model(model)
+    return DATA_ROOT / WARM_REPLAY_TEXTS_DIRNAME / model_slug(model)
+
+
+def resolve_research_text_path(model: str, shard_name: str) -> Path:
+    canonical = research_segmented_dir_for_model(model) / f"{shard_name}.jsonl"
+    if canonical.exists():
+        return canonical
+    fallback = warm_replay_texts_dir_for_model(model) / "research" / f"{shard_name}.jsonl.gz"
+    if fallback.exists():
+        return fallback
+    raise FileNotFoundError(
+        f"Research segment text for model {model!r} shard {shard_name!r} not found: "
+        f"neither {canonical} nor {fallback} exists. "
+        "Hydrate 2_segmented/ or fetch the embedded snapshot (3a_warm_replay_texts/)."
+    )
+
+
+def resolve_policy_text_path(model: str) -> Path:
+    canonical = segmented_dir_for_model(model) / "policy.jsonl"
+    if canonical.exists():
+        return canonical
+    fallback = warm_replay_texts_dir_for_model(model) / "policy.jsonl.gz"
+    if fallback.exists():
+        return fallback
+    raise FileNotFoundError(
+        f"Policy segment text for model {model!r} not found: "
+        f"neither {canonical} nor {fallback} exists. "
+        "Hydrate 2_segmented/ or fetch the embedded snapshot (3a_warm_replay_texts/)."
+    )
+
+
+def open_text(path: str | Path):
+    """Open a text file for reading, transparently decompressing .gz."""
+    p = Path(path)
+    if p.suffix == ".gz":
+        return gzip.open(p, "rt", encoding="utf-8")
+    return p.open(encoding="utf-8")
 
 
 def policy_preprocessed_dir() -> Path:

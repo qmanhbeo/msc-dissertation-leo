@@ -193,7 +193,7 @@ def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: l
         r"\midrule",
     ]
     for sdg in range(1, N_SDG + 1):
-        sdg_label = f"SDG {sdg}"
+        sdg_label = str(sdg)
         cells = []
         for family in ["full_policy_corpus", "curated_ai_sdg", "sdgi_vnr_vlr", "ungdc_speeches"]:
             sr = sem_lookup.get((family, sdg))

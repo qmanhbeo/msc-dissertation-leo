@@ -32,7 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, research_segmented_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, open_text, resolve_research_text_path
 from semantic_gap_shared import latex_escape, write_csv
 from shard_pipeline_utils import iter_jsonl, load_json
 
@@ -168,7 +168,7 @@ def _audit_single_shard(args: tuple[str, dict[str, set[int]]]) -> dict[str, Coun
     """Process a single text shard. Returns per-subset category counters."""
     counters = {subset: Counter() for subset in targets_per_subset}
     data_path = Path(data_path_str)
-    with data_path.open(encoding="utf-8") as f:
+    with open_text(data_path) as f:
         for row_idx, line in enumerate(f):
             matching = [subset for subset, rows in targets_per_subset.items() if row_idx in rows]
             if not matching:
@@ -192,7 +192,7 @@ def audit_subsets(
     jobs: list[tuple[str, dict[str, set[int]]]] = []
     for shard in text_manifest["shards"]:
         shard_id = int(shard["shard_id"])
-        data_path = str(research_segmented_dir_for_model(model) / f"{shard['name']}.jsonl")
+        data_path = str(resolve_research_text_path(model, shard["name"]))
         targets = {
             subset: refs.get(shard_id, set())
             for subset, refs in subset_refs.items()

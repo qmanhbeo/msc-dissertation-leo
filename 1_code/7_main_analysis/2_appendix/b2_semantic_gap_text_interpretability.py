@@ -52,7 +52,7 @@ from semantic_gap_shared import (
     write_csv,
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, segmented_dir_for_model, research_segmented_dir_for_model, preprocessed_dir
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path
 
 
 TARGET_SDGS = (17, 13, 9)
@@ -143,7 +143,7 @@ def load_research_shards(research_dir: Path, scored_dir: Path, model: str) -> li
             raise RuntimeError("Research and score manifests do not align on shard_id.")
         if int(research_shard["rows"]) != int(score_shard["rows"]):
             raise RuntimeError(f"Research and score manifests do not align on rows for shard {shard_id}.")
-        text_path = research_segmented_dir_for_model(model) / f"{research_shard['name']}.jsonl"
+        text_path = resolve_research_text_path(model, research_shard["name"])
         emb_path = resolve_manifest_path(
             research_shard["embedding_path"],
             allowed_dirs=(research_dir, scored_dir, preprocessed_dir()),
@@ -225,7 +225,7 @@ def collect_research(
         if emb.shape[0] != len(score_rows):
             raise RuntimeError(f"Embedding/score row mismatch for {shard['name']}")
 
-        with shard["text_path"].open(encoding="utf-8") as f:
+        with open_text(shard["text_path"]) as f:
             for row_idx, line in enumerate(f):
                 score_meta = score_rows[row_idx]
                 sdg = int(score_meta["assigned_sdg"])
@@ -271,7 +271,7 @@ def collect_policy(
     policy_ids_path: Path,
     policy_text_path: Path,
 ) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
-    with open(policy_text_path, encoding="utf-8") as _f:
+    with open_text(policy_text_path) as _f:
         policy_text_rows = [json.loads(line) for line in _f if line.strip()]
     policy_score_rows = load_json(policy_ids_path)
     if len(policy_text_rows) != policy_scores.shape[0] or len(policy_score_rows) != policy_scores.shape[0]:
@@ -422,7 +422,7 @@ def run(args: argparse.Namespace) -> None:
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(_POLICY_EMB, mmap_mode="r")
 
-    policy_text_path = segmented_dir_for_model(args.embed_model) / "policy.jsonl"
+    policy_text_path = resolve_policy_text_path(args.embed_model)
 
     log.info("Collecting policy samples and representative audit examples")
     policy_samples, policy_counts, policy_examples = collect_policy(

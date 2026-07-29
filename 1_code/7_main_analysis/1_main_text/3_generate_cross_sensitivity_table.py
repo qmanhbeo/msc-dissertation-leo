@@ -125,12 +125,12 @@ def parse_policy_source_gaps():
             continue
         if in_header:
             continue
-        m = re.match(r"SDG\s+(\d+)", line)
+        m = re.match(r"(\d+)", line)
         if not m:
             continue
         sdg = int(m.group(1))
         parts = [p.strip() for p in line.rstrip("\\").split("&")]
-        # Format: SDG & cov.(n) & sem.(n) & cov.(n) & sem.(n) & cov.(n) & sem.(n) & cov.(n) & sem.(n)
+        # Format: num & cov.(n) & sem.(n) & cov.(n) & sem.(n) & cov.(n) & sem.(n) & cov.(n) & sem.(n)
         # sem.(n) cells at indices 2, 4, 6, 8 — cell format "0.435 (1,634)"
         gap_indices = [2, 4, 6, 8]
         labels = ["full", "curated", "sdgi", "ungdc"]
@@ -234,7 +234,7 @@ def parse_policy_source_covgaps(research_profile=None):
             continue
         if in_header:
             continue
-        m = re.match(r"SDG\s+(\d+)", line)
+        m = re.match(r"(\d+)", line)
         if not m:
             continue
         sdg = int(m.group(1))
