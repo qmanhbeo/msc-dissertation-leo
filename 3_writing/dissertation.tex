@@ -689,13 +689,13 @@ This single-direction subtraction is a limited diagnostic. It attenuates one bro
 
 A reviewer may object that cosine distance between mean embeddings discards the shape of the research and policy point clouds: two SDGs could share a mean direction yet differ in spread or modality. This appendix tests that objection directly. Holding the supervised SDG assignment and the embedding point clouds fixed, it recomputes the per-SDG research--policy gap under a battery of distribution-aware metrics and compares each resulting ranking to the canonical centroid gap (Table~\ref{tab:distributional-gap}).
 
-The canonical gap is reproduced exactly as a gate: the full-corpus centroid gap equals the published value to $10^{-4}$, and the streamed research means reproduce \texttt{research\_centroids.npy}. Every other metric uses the identical embeddings and assignment; only the distance functional changes. Full-corpus metrics (sliced Wasserstein, Chamfer, Gaussian-2-Wasserstein, Grassmann, linear MMD) are computed over all assigned papers and carry no sampling variance. Sampled metrics (exact EMD, Sinkhorn, energy, RBF-MMD, C2ST) use a 50,000-paper draw per SDG; SDGs~1 and~17 use their full population.
+The canonical gap is reproduced exactly as a gate: the full-corpus centroid gap equals the published value to $10^{-4}$, and the streamed research means reproduce \texttt{\small research\_centroids.npy} exactly. Every other metric uses the identical embeddings and assignment; only the distance functional changes. Full-corpus metrics (sliced Wasserstein, Chamfer, Gaussian-2-Wasserstein, Grassmann, linear MMD) are computed over all assigned papers and carry no sampling variance. Sampled metrics (exact EMD, Sinkhorn, energy, RBF-MMD, C2ST) use a 50,000-paper draw per SDG; SDGs~1 and~17 use their full population.
 
 \begin{table}[ht]
 \centering
 \caption{Per-SDG research--policy gap under distribution-aware metrics versus the canonical centroid gap. SWD = sliced Wasserstein; MMD$^2$ = squared RBF maximum mean discrepancy; Gauss.\ $W_2$ = Gaussian 2-Wasserstein; C2ST = classifier two-sample test AUC. The final row reports Spearman $\rho$ between each metric's ranking and the canonical ranking across the 17 SDGs.}
 \label{tab:distributional-gap}
-\input{../4_outputs/appendix/all-mpnet-base-v2/g_distributional_gap/tables/tab_distributional_gap.tex}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/all-mpnet-base-v2/g_distributional_gap/tables/tab_distributional_gap.tex}}
 \end{table}
 
 \textbf{Shape-sensitive metrics preserve the ranking.} Gaussian-2-Wasserstein ($\rho=\DistGapSpearmanFrechet$), linear maximum mean discrepancy ($\rho=\DistGapSpearmanMmd$), exact optimal-transport EMD ($\rho=\DistGapSpearmanEmd$), sliced Wasserstein ($\rho=\DistGapSpearmanSwd$), and energy distance ($\rho=\DistGapSpearmanEnergy$) all preserve the canonical ordering at $p<0.001$. The most divergent SDG is SDG~13 under every metric; its primacy is unconditional.
