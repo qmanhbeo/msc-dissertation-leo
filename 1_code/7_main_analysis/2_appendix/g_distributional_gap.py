@@ -215,8 +215,10 @@ def compute_config_hash(cfg: dict[str, Any], scored_dir: Path, embed_dir: Path) 
     return hasher.hexdigest()[:16]
 
 
-def load_canonical(output_dir: Path, model: str) -> dict[int, dict[str, Any]]:
-    data_dir = output_dir / "main" / model / "data"
+def load_canonical(model: str) -> dict[int, dict[str, Any]]:
+    """Read the canonical semantic-gap table (a fixed committed reference in
+    4_outputs, independent of this run's --output-dir) used by GATES 1-4."""
+    data_dir = DEFAULT_OUTPUT_ROOT / "main" / model / "data"
     require_output_files(data_dir, [CANONICAL_SEMANTIC_JSON])
     payload = load_json(data_dir / CANONICAL_SEMANTIC_JSON)
     return {int(row["sdg"]): row for row in payload["per_sdg"]}
@@ -730,7 +732,14 @@ def load_existing_records(path: Path, cfg_hash: str) -> dict[tuple, dict[str, An
         for line in f:
             if not line.strip():
                 continue
-            row = json.loads(line)
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                # Only possible for a truncated trailing line left by a kill
+                # during append_record. A completed record is always valid JSON,
+                # so skipping it is safe and idempotent on resume.
+                log.warning("Skipping malformed trailing record line (interrupted write?)")
+                continue
             if row.get("config_hash") != cfg_hash:
                 stale = True
                 break
@@ -1114,7 +1123,7 @@ def run(args: argparse.Namespace) -> None:
     cfg_hash = compute_config_hash(cfg, scored_dir, embed_dir)
     log.info("Config hash: %s | output: %s", cfg_hash, layout.root)
 
-    canonical = load_canonical(output_dir, model)
+    canonical = load_canonical(model)
     policy_state = load_policy_side(model, canonical)
     shards, total_rows = build_research_shards(embed_dir, scored_dir)
     log.info("Research corpus: %d rows across %d shards", total_rows, len(shards))
