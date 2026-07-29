@@ -623,16 +623,16 @@ The MLP swept n\_layers $\in \{1, 2, 4, 8, 16\}$ $\times$ hidden\_size $\in \{25
 Rank & Config & CV macro-F1 \\
 \midrule
 1 & MLP 4L/384h & \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{} \\
-2 & MLP 4L/256h & 0.8242 $\pm$ 0.0067 \\
-3--15 & MLP (2L--4L variants) & 0.821--0.824 \\
-16--26 & MLP (8L--16L variants) & 0.817--0.819 \\
+2 & MLP 4L/256h & \MlpCvMacroFoneFourLTwoFiftySixH{} $\pm$ \MlpCvMacroFoneFourLTwoFiftySixHStd{} \\
+3--15 & MLP (2L--4L variants) & \MlpCvRangeTwoLFourL{} \\
+16--26 & MLP (8L--16L variants) & \MlpCvRangeEightLSixteenL{} \\
 27 & LR C=10, L2 & \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{} \\
-28 & LR C=1, L2 & 0.8093 $\pm$ 0.0065 \\
+28 & LR C=1, L2 & \LrCvMacroFoneCOne{} $\pm$ \LrCvMacroFoneCOneStd{} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\noindent\textbf{Champion: LR (C=10.0, L2).} The gap between LR and MLP is 0.0136 macro-F1 ($\sim$1.5 pooled $\sigma$), a modest difference insufficient to justify the complexity trade-off. MLP requires 4 hidden layers, AdamW, learning rate tuning, early stopping, and dropout selection (36 configurations swept). LR requires one free parameter (C), no hidden layers, no dropout, no random seed sensitivity. For this study's purpose — building an interpretable supervised reference to compare corpora, not a classifier built to label single documents — LR is the right choice. LR provides 768 signed coefficients per SDG class, each directly attributable to a specific semantic dimension; MLP's hidden layers diffuse this information across non-linear transformations. The macro-F1 numbers are reported honestly: LR 0.811 $\pm$ 0.007, MLP 0.824 $\pm$ 0.006, gap $\sim$1.5$\sigma$. LR is chosen for transparency, not superior accuracy.
+\noindent\textbf{Champion: LR (C=10.0, L2).} The gap between LR and MLP is \LrMlpGap{} macro-F1 ($\sim$1.5 pooled $\sigma$), a modest difference insufficient to justify the complexity trade-off. MLP requires 4 hidden layers, AdamW, learning rate tuning, early stopping, and dropout selection (36 configurations swept). LR requires one free parameter (C), no hidden layers, no dropout, no random seed sensitivity. For this study's purpose — building an interpretable supervised reference to compare corpora, not a classifier built to label single documents — LR is the right choice. LR provides 768 signed coefficients per SDG class, each directly attributable to a specific semantic dimension; MLP's hidden layers diffuse this information across non-linear transformations. The macro-F1 numbers are reported honestly: LR 0.811 $\pm$ 0.007, MLP 0.824 $\pm$ 0.006, gap $\sim$1.5$\sigma$. LR is chosen for transparency, not superior accuracy.
 
 \subsection{Held-Out Test Evaluation of the MLP Robustness Check}
 
