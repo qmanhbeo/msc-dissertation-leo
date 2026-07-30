@@ -81,12 +81,6 @@ def parse_args() -> argparse.Namespace:
         help="Device for embedding (default: %(default)s).",
     )
     parser.add_argument(
-        "--seg-model", default=None,
-        help="Read segmented texts from this model's dir (default: this model). "
-             "Use 'all-mpnet-base-v2' so a domain encoder (e.g. SciBERT) embeds "
-             "the identical canonical inputs as the baseline encoder.",
-    )
-    parser.add_argument(
         "--batch-size", type=int, default=128,
         help="Batch size (default: %(default)s). Reduce to 64 for MPNet on 4GB GPUs.",
     )
@@ -119,7 +113,6 @@ def embed_corpus(
     batch_size: int,
     precision: str,
     model_name: str,
-    seg_model: str | None = None,
     normalize_embeddings: bool = True,
 ) -> None:
     metadata_dir = output_dir / "metadata"
@@ -139,7 +132,7 @@ def embed_corpus(
         if ids_path.exists():
             ids_path.unlink()
 
-    input_path = config["input_path"](seg_model or model_name)
+    input_path = config["input_path"](model_name)
     log.info("Embedding %s (%s)", corpus_name, input_path)
     records = load_jsonl(input_path)
     texts = [r[config["text_field"]] for r in records]
@@ -263,7 +256,6 @@ def main() -> None:
         batch_size=args.batch_size,
         precision=precision,
         model_name=args.embed_model,
-        seg_model=args.seg_model,
         normalize_embeddings=args.normalize_embeddings,
     )
 
