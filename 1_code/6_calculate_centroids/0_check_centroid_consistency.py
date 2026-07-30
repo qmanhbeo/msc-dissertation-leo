@@ -49,7 +49,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import N_SDG, embed_dir_for_model, embed_research_dir_for_model, scored_dir_for_model, DEFAULT_EMBED_MODEL, ZERO_NORM_EPS, resolve_model_alias
-from shard_pipeline_utils import ensure_dir, now_iso, read_json
+from shard_pipeline_utils import atomic_write_npy, ensure_dir, now_iso, read_json
 
 log = logging.getLogger(__name__)
 
@@ -297,10 +297,7 @@ def main() -> None:
     n_available = int(policy_centroid_available.sum())
     log.info("  %d / %d SDGs have non-zero policy centroids", n_available, N_SDG)
 
-    ensure_dir(policy_centroids_out.parent)
-    with policy_centroids_out.open("wb") as f:
-        np.save(f, policy_centroids)
-        f.flush()
+    atomic_write_npy(policy_centroids_out, policy_centroids)
     if not policy_centroids_out.exists():
         raise RuntimeError(f"Failed to write {policy_centroids_out}")
     log.info("Saved: %s", policy_centroids_out)

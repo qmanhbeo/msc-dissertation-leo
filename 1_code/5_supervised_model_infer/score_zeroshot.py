@@ -68,6 +68,8 @@ def parse_args() -> argparse.Namespace:
                   help="Centroids with L2 norm below this are treated as degenerate and "
                        "excluded from semantic-gap (default: %(default)s)")
     p.add_argument("--output-dir", default="4_outputs")
+    p.add_argument("--overwrite", action="store_true",
+                   help="Recompute zero-shot centroids even if outputs already exist.")
     return p.parse_args()
 
 
@@ -76,6 +78,16 @@ def run(args: argparse.Namespace) -> None:
 
     out_root = output_main_dir_for_model(model, root=Path(args.output_dir)) / "zeroshot"
     out_root.mkdir(parents=True, exist_ok=True)
+
+    if not args.overwrite:
+        expected = [
+            out_root / "research_centroids.npy",
+            out_root / "policy_centroids.npy",
+            out_root / "semantic_gap_distances.json",
+        ]
+        if all(p.exists() for p in expected):
+            log.info("Zero-shot outputs already exist at %s — skip. Use --overwrite to recompute.", out_root)
+            return
 
     # 1. Load reference centroids (same ones LR uses)
     centroids_path = scored_dir_for_model(model) / "sdg_centroids.npy"

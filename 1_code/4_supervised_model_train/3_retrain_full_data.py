@@ -45,6 +45,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model, output_main_dir_for_model, resolve_model_alias
+from shard_pipeline_utils import atomic_write_joblib
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -119,11 +120,19 @@ def main() -> None:
                         help="LogisticRegression class_weight (default: %(default)s)")
     parser.add_argument("--max-iter", type=int, default=LR_MAX_ITER,
                         help="LogisticRegression max iterations (default: %(default)s)")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Force retrain even if a previously trained model exists.")
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir) if args.data_dir else model_results_dir_for_model(args.embed_model)
     output_dir = data_dir / "model"
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not args.overwrite:
+        model_name = "mlp_retrained.joblib" if args.classifier_type == "mlp" else "sdg_classifier_retrained.joblib"
+        if (output_dir / model_name).exists():
+            log.info("Model already exists at %s — skip. Use --overwrite to retrain.", output_dir / model_name)
+            return
 
     t0 = time.perf_counter()
     embeddings = np.load(data_dir / "embeddings.npy")
@@ -364,12 +373,12 @@ def main() -> None:
         model_path = output_dir / "sdg_classifier_retrained.joblib"
         results_path = output_dir / "sdg_retrain_results.json"
 
-    joblib.dump(wrapper, model_path)
+    atomic_write_joblib(model_path, wrapper)
 
     if args.classifier_type != "mlp":
         # Also update sdg_classifier.joblib (used by 2_evaluate.py)
         canonical_path = output_dir / "sdg_classifier.joblib"
-        joblib.dump(wrapper, canonical_path)
+        atomic_write_joblib(canonical_path, wrapper)
         log.info("Saved canonical model → %s", canonical_path)
 
     with results_path.open("w") as f:

@@ -19,6 +19,15 @@ import time
 from pathlib import Path
 from typing import Any
 
+try:
+    import joblib
+except Exception:  # joblib is only needed for atomic_write_joblib
+    joblib = None
+try:
+    import numpy as np
+except Exception:  # numpy is only needed for atomic_write_npy
+    np = None
+
 
 def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
@@ -40,6 +49,37 @@ def atomic_write_json(path: Path, payload: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     with tmp.open("w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
+def atomic_write_npy(path: Path, arr: Any) -> None:
+    """Atomically write a NumPy array: write to a .tmp sibling, fsync, then replace.
+
+    Prevents a torn/corrupt .npy from being accepted as 'complete' by downstream
+    exists-skip checks after an interrupted run.
+    """
+    if np is None:
+        raise RuntimeError("numpy is required for atomic_write_npy")
+    ensure_dir(path.parent)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("wb") as f:
+        np.save(f, arr)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
+def atomic_write_joblib(path: Path, obj: Any) -> None:
+    """Atomically serialise an object with joblib: write to a .tmp sibling, then replace.
+
+    Protects the canonical trained model (e.g. sdg_classifier_retrained.joblib) from
+    corruption if the run is interrupted mid-dump.
+    """
+    if joblib is None:
+        raise RuntimeError("joblib is required for atomic_write_joblib")
+    ensure_dir(path.parent)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    joblib.dump(obj, tmp)
     os.replace(tmp, path)
 
 

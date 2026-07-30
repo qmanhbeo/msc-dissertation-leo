@@ -32,6 +32,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, ZERO_NORM_EPS, model_results_dir_for_model, scored_dir_for_model
+from shard_pipeline_utils import atomic_write_npy
 
 COHESION_WARN_THRESHOLD = 0.50
 
@@ -185,7 +186,7 @@ def main() -> None:
     else:
         log.info("All %d centroid norms ~= 1.0", N_SDG)
 
-    np.save(centroids_out, centroids)
+    atomic_write_npy(centroids_out, centroids)
     log.info("Saved: %s  shape=%s", centroids_out, centroids.shape)
 
     global_meta = {

@@ -18,6 +18,9 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+import os
+
+from shard_pipeline_utils import atomic_write_json
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +49,7 @@ def write_batch_manifest(
         "status": status,
         "last_updated_utc": datetime.utcnow().isoformat(),
     }
-    path.write_text(json.dumps(manifest, indent=2))
+    atomic_write_json(path, manifest)
 
 
 def concatenate_batches(
@@ -61,7 +64,7 @@ def concatenate_batches(
     manifest_path = tmp_dir / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     manifest["status"] = "concatenating"
-    manifest_path.write_text(json.dumps(manifest))
+    atomic_write_json(manifest_path, manifest)
 
     batch_files = sorted(tmp_dir.glob("batch_*.npy"),
                          key=lambda p: int(p.stem.split("_")[1]))

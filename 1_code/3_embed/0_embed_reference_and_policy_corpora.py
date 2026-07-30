@@ -209,10 +209,9 @@ def embed_corpus(
     tmp_dir = output_dir / f"{corpus_name}_batches"
     manifest_path = tmp_dir / "manifest.json"
 
-    if overwrite and tmp_dir.exists() and not manifest_path.exists():
-        # Resume-safe: keep a batch checkpoint dir that still has a valid manifest
-        # so an interrupted embed continues from the last completed batch instead
-        # of restarting from zero.
+    if overwrite and tmp_dir.exists():
+        # --overwrite forces a clean re-embed: drop the batch dir regardless of any
+        # valid manifest. (The stale .npy/.json were already removed above.)
         shutil.rmtree(tmp_dir)
 
     completed_batches: set[int] = set()

@@ -27,6 +27,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, segmented_dir_for_model
+from shard_pipeline_utils import atomic_write_json, atomic_write_npy
 
 POLICY_SOURCES = ["policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"]
 
@@ -111,8 +112,7 @@ def main() -> None:
         raise RuntimeError(f"Failed to write {tmp_emb}")
     tmp_emb.replace(emb_path)
 
-    with ids_path.open("w") as f:
-        json.dump(ids_meta, f)
+    atomic_write_json(ids_path, ids_meta)
 
     # Alignment check: verify policy.jsonl IDs == policy_ids.json IDs (position by position)
     seg_root = segmented_dir_for_model(args.embed_model)

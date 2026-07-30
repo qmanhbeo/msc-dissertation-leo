@@ -370,9 +370,13 @@ def main() -> None:
         segments = segment_records(records, model.tokenizer, model.max_seq_length, args.text_field, args.id_field, args.prefix, args.min_words)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open("w", encoding="utf-8") as f:
+        # Atomic write: stage to a .tmp sibling, then replace, so an interrupted
+        # run never leaves a torn file that a later exists-skip would accept.
+        tmp_path = output_path.with_suffix(output_path.suffix + ".tmp")
+        with tmp_path.open("w", encoding="utf-8") as f:
             for s in segments:
                 f.write(json.dumps(s, ensure_ascii=False) + "\n")
+        os.replace(tmp_path, output_path)
 
         log.info("Wrote %d segments -> %s", len(segments), output_path)
 

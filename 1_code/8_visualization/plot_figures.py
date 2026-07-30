@@ -55,6 +55,8 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate figures from the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true",
+                   help="Regenerate figures even if they already exist.")
     return p.parse_args()
 
 
@@ -147,6 +149,16 @@ def main() -> None:
     figures_dir = layout.figures_dir
 
     print(f"Canonical output dir: {layout.data_dir}")
+
+    if not args.overwrite:
+        expected = [
+            figures_dir / "fig3_coverage_profiles.pdf",
+            figures_dir / "fig4_semantic_gap.pdf",
+            figures_dir / "fig5_coverage_semantic_scatter.pdf",
+        ]
+        if all(p.exists() for p in expected):
+            print(f"Figures already exist at {figures_dir} — skip. Use --overwrite to regenerate.")
+            return
 
     # -----------------------------------------------------------------------
     # Load data

@@ -76,6 +76,7 @@ from model_utils import (
 )
 from shard_pipeline_utils import (
     atomic_write_json,
+    atomic_write_npy,
     ensure_dir,
     load_json,
     now_iso,
@@ -388,9 +389,7 @@ def run_research_lr(args) -> None:
             }
         )
 
-    ensure_dir(research_centroids_out.parent)
-    with research_centroids_out.open("wb") as f:
-        np.save(f, research_centroids)
+    atomic_write_npy(research_centroids_out, research_centroids)
     atomic_write_json(research_meta_out, meta)
 
     update_stage_status(
@@ -485,16 +484,10 @@ def run_policy_lr(args) -> None:
     log.info("Scoring %d policy segments against LR-based research centroids", policy_emb.shape[0])
     policy_vs_research = (policy_emb @ research_centroids.T).astype(np.float32)
 
-    policy_scores_out.parent.mkdir(parents=True, exist_ok=True)
-    with policy_scores_out.open("wb") as f:
-        np.save(f, policy_scores)
-        f.flush()
+    atomic_write_npy(policy_scores_out, policy_scores)
     log.info("Saved: %s  shape=%s", policy_scores_out, policy_scores.shape)
 
-    policy_vs_research_out.parent.mkdir(parents=True, exist_ok=True)
-    with policy_vs_research_out.open("wb") as f:
-        np.save(f, policy_vs_research)
-        f.flush()
+    atomic_write_npy(policy_vs_research_out, policy_vs_research)
     log.info("Saved: %s  shape=%s", policy_vs_research_out, policy_vs_research.shape)
 
     write_json(policy_score_ids_out, policy_score_ids)
@@ -580,8 +573,7 @@ def run_mlp(args) -> None:
         if norm > ZERO_NORM_EPS:
             mlp_research_centroids[sdg_idx] = (raw / norm).astype(np.float32)
 
-    with centroids_out.open("wb") as f:
-        np.save(f, mlp_research_centroids)
+    atomic_write_npy(centroids_out, mlp_research_centroids)
     log.info("Research centroids -> %s", centroids_out)
 
     # Research coverage profile
@@ -593,13 +585,11 @@ def run_mlp(args) -> None:
     policy_emb = np.load(embed_root / "policy.npy").astype(np.float32)
     policy_scores = model.predict_proba(policy_emb).astype(np.float32)
 
-    with policy_scores_out.open("wb") as f:
-        np.save(f, policy_scores)
+    atomic_write_npy(policy_scores_out, policy_scores)
     log.info("Policy scores -> %s  shape=%s", policy_scores_out, policy_scores.shape)
 
     policy_vs_research = (policy_emb @ mlp_research_centroids.T).astype(np.float32)
-    with pvr_out.open("wb") as f:
-        np.save(f, policy_vs_research)
+    atomic_write_npy(pvr_out, policy_vs_research)
     log.info("Policy vs research centroids -> %s", pvr_out)
 
     # Policy coverage profile

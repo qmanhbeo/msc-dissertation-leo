@@ -98,17 +98,20 @@ non-obvious facts that are easy to miss.
 Two distinct mechanisms protect different failure modes:
 
 - **Per-shard/batch resume** covers the expensive frontier stages (embed,
-  segment, score_supervised shard loop). These stages track completed shards
+  segment, score_supervised LR shard loop). These stages track completed shards
   in a manifest; on restart or snapshot re-hydration they skip completed work
   without re-running.  Do NOT add mtime-based fingerprinting here —
   `2_data/` re-hydration resets all mtimes, which would force a full expensive
   re-run and destroy the resume benefit.
 - **Fingerprint-gated skip** (via `shared_utils.should_skip` /
-  `record_fingerprint`) covers the cheap derived stages (analysis scripts,
-  centroids build, merge_policy, sample_segments, score_zeroshot,
-  retrain_full_data). Each stage fingerprints its *direct inputs*; if an
-  upstream re-runs, the fingerprint changes and the downstream re-derives.
-  These stages are fast enough that re-running on re-hydration is acceptable.
+  `record_fingerprint`) covers the 14 analysis/appendix scripts (Tier B).
+  Each stage fingerprints its *direct inputs*; if an upstream re-runs, the
+  fingerprint changes and the downstream re-derives.  These stages are fast
+  enough that re-running on re-hydration is acceptable.
+- **Existence-skip + `--overwrite`** covers centroids build,
+  merge_policy, score_zeroshot, retrain_full_data, and plot_figures.
+  If the output file(s) exist and `--overwrite` is not passed, the stage is
+  skipped.  Cheap enough that re-running on re-hydration is acceptable.
 
 `--overwrite` is designed for whole-replay use (`--cold-replay --overwrite`,
 `--warm-replay-without-appendix --overwrite`). Piecemeal `--overwrite` of
@@ -118,6 +121,26 @@ persist if you `--overwrite` one stage in isolation while its downstream
 outputs already exist from a prior run. In practice this is safe because
 warm replay freezes inputs and cold replay re-runs everything, so the
 staleness gap only opens on non-standard piecemeal workflows.
+
+### Checkpoint / Overwrite inventory
+
+| Stage | Resume mechanism | `--overwrite` | Atomic writes? | Comment |
+|---|---|---|---|---|
+| fetch (all) | incremental I/O per record | not forwarded | N/A | gitignored raw data; resume from last checkpoint per data source |
+| **preprocess** (8 small scripts) | `_resume.py` checkpoint: `rows_done` + `out_offset` | `--reset` forwarded | truncate-to-offset (heals torn tail) | just-added (2026-07-30) |
+| preprocess (research streaming) | `state.json` + shard manifest | `--reset` forwarded | `tmp.replace` per shard | already present |
+| segment (sharded / `--all`) | per-shard file-existence | forwarded | `tmp.replace` per shard | |
+| segment (single-file) | existence-skip | forwarded | `tmp.replace` (just-added) | |
+| embed (paper shards) | shard + chunk manifest | forwarded | `tmp.replace` per chunk/batch | |
+| embed (ref/policy corpora) | per-batch manifest + skip | forwarded | `tmp.replace` per batch; `atomic_write_npy` at concat | bug fix (2026-07-30): `--overwrite` now rmtree stale batches unconditionally |
+| merge_policy (.npy + ids) | existence-skip | forwarded | `.npy` tmp+replace; `atomic_write_json` for ids (just-added) | |
+| score_supervised (LR path) | shard manifest | forwarded | `atomic_write_npy` for centroids (just-added); shard scores already atomic | |
+| score_supervised (MLP path) | whole-output gate (no per-shard) | forwarded | `atomic_write_npy` (just-added) | no per-shard manifest — kill mid-loop loses MLP pass |
+| score_zeroshot | existence-skip | forwarded (just-added) | bare `np.save` | just-added `--overwrite` + skip guard |
+| centroids build / consistency / similarity | existence-skip | forwarded | `atomic_write_npy` (just-added); similarity CSV already atomic | |
+| retrain_full_data (LR + MLP) | existence-skip | forwarded (just-added) | `atomic_write_joblib` (just-added) | no per-epoch checkpoint; kill mid-MLP loses epochs |
+| plot_figures | existence-skip | forwarded (just-added) | N/A (matplotlib writes) | |
+| analysis / appendix (14 scripts) | `shared_utils.should_skip` / `record_fingerprint` | forwarded | tex,json via `open("w")` (small, fast) | Tier B — all verified correct (2026-07-30) |
 
 ## Layout
 
