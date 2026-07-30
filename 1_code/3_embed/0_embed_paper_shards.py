@@ -82,12 +82,12 @@ def resolve_device(name: str) -> str:
 
 
 def default_precision(model: str) -> str:
-    """MPNet stays fp32; MiniLM (smaller, 384-dim) is stored fp16 by default.
+    """MPNet stays fp32; MiniLM and SciBERT default to fp16.
 
-    The MiniLM encoder is used only as a cheap encoder-sensitivity/robustness
-    check, and fp16 halves its research embedding shards (~3.3GB vs ~6.6GB).
+    Both MiniLM and SciBERT are encoder-sensitivity checks, and fp16 halves
+    their embedding footprint.
     """
-    return "fp16" if model == "all-MiniLM-L6-v2" else "fp32"
+    return "fp16" if model in ("all-MiniLM-L6-v2", "allenai/scibert_scivocab_uncased") else "fp32"
 
 
 def load_texts(path: Path) -> list[str]:

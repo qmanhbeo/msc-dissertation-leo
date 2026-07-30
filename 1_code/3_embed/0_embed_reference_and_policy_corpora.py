@@ -137,12 +137,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def default_precision(model: str) -> str:
-    """MPNet stays fp32; MiniLM (smaller, 384-dim) is stored fp16 by default.
+    """MPNet stays fp32; MiniLM and SciBERT default to fp16.
 
-    MiniLM is only a cheap encoder-sensitivity/robustness check, and fp16
-    halves its embedding footprint.
+    Both MiniLM and SciBERT are encoder-sensitivity checks, and fp16 halves
+    their embedding footprint.
     """
-    return "fp16" if model == "all-MiniLM-L6-v2" else "fp32"
+    return "fp16" if model in ("all-MiniLM-L6-v2", "allenai/scibert_scivocab_uncased") else "fp32"
 
 
 def embed_corpus(
