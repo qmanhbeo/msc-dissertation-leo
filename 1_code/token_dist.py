@@ -59,7 +59,7 @@ SOURCE_DEFS = [
     {"group": "Policy", "label": "SDGi",
      "path": "sdgi/sdgi_clean.jsonl", "field": "text"},
     {"group": "Policy", "label": "Aurora",
-     "path": "aurora/aurora_texts.jsonl", "field": "text"},
+     "path": "aurora/aurora_clean.jsonl", "field": "text"},
     {"group": "Research", "label": "OpenAlex",
      "path": None, "field": "combined_text", "is_research": True},
 ]

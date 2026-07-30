@@ -4,8 +4,7 @@ Preprocess Aurora corpus: clean text and filter short entries.
 Input:  2_data/0_raw/aurora/aurora_raw.jsonl  (from fetch_aurora.py, has sdgs: list[int])
         2_data/0_raw/aurora/aurora.zip        (cross-check SDG mapping)
 
-Output: 2_data/1_preprocessed/individual_sources/aurora/aurora_texts.jsonl
-        2_data/1_preprocessed/individual_sources/aurora/aurora_manifest.json
+Output: 2_data/1_preprocessed/individual_sources/aurora/aurora_clean.jsonl
 
 Single-label texts are filtered at MLP training time, not here.
 
@@ -40,8 +39,7 @@ N_SDG = 17
 INPUT_FILE = raw_dir() / "aurora" / "aurora_raw.jsonl"
 AURORA_ZIP = raw_dir() / "aurora" / "aurora.zip"
 OUTPUT_DIR = individual_source_dir("aurora")
-OUTPUT_JSONL = OUTPUT_DIR / "aurora_texts.jsonl"
-MANIFEST_PATH = OUTPUT_DIR / "aurora_manifest.json"
+OUTPUT_JSONL = OUTPUT_DIR / "aurora_clean.jsonl"
 STATE_PATH = OUTPUT_DIR / "aurora_state.json"
 STATUS_DIR = OUTPUT_DIR / "metadata"
 
@@ -149,46 +147,11 @@ def transform(raw):
     }
 
 
-def finalize(out_path: Path) -> None:
-    per_sdg_counts = defaultdict(lambda: {"total": 0, "with_abstract": 0})
-    n_total = 0
-    n_abstract = 0
-    multi_count = 0
-    with out_path.open(encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            r = json.loads(line)
-            n_total += 1
-            if r.get("has_abstract"):
-                n_abstract += 1
-            if len(r["sdgs"]) > 1:
-                multi_count += 1
-            for sdg in r["sdgs"]:
-                per_sdg_counts[sdg]["total"] += 1
-                if r.get("has_abstract"):
-                    per_sdg_counts[sdg]["with_abstract"] += 1
-
-    manifest = {
-        "n_total": n_total,
-        "n_with_abstract": n_abstract,
-        "n_without_abstract": n_total - n_abstract,
-        "n_multi_label": multi_count,
-        "n_single_label": n_total - multi_count,
-        "per_sdg_counts": {str(k): dict(v) for k, v in sorted(per_sdg_counts.items())},
-    }
-    with MANIFEST_PATH.open("w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
-    log.info("Saved -> %s", MANIFEST_PATH)
-
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Preprocess Aurora corpus (resume-safe).")
     p.add_argument("--input", default=str(INPUT_FILE))
     p.add_argument("--zip", default=str(AURORA_ZIP))
     p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
-    p.add_argument("--manifest", default=str(MANIFEST_PATH))
     p.add_argument("--state", default=str(STATE_PATH))
     p.add_argument("--status-dir", default=str(STATUS_DIR))
     p.add_argument("--chunk-size", type=int, default=5000)
@@ -197,14 +160,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    global INPUT_FILE, AURORA_ZIP, OUTPUT_JSONL, MANIFEST_PATH, STATE_PATH, STATUS_DIR, _DOI_TO_ALL_SDGS
+    global INPUT_FILE, AURORA_ZIP, OUTPUT_JSONL, STATE_PATH, STATUS_DIR, _DOI_TO_ALL_SDGS
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
     INPUT_FILE = Path(args.input)
     AURORA_ZIP = Path(args.zip)
     OUTPUT_JSONL = Path(args.out_jsonl)
-    MANIFEST_PATH = Path(args.manifest)
     STATE_PATH = Path(args.state)
     STATUS_DIR = Path(args.status_dir)
 
@@ -219,8 +181,6 @@ def main() -> None:
         status_dir=STATUS_DIR,
         chunk_size=args.chunk_size,
         reset=args.reset,
-        finalize=finalize,
-        dumps=lambda r: json.dumps(r, ensure_ascii=False),
     )
 
     n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0

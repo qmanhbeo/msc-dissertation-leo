@@ -71,7 +71,7 @@ CORPORA = [
     },
     {
         "label": "Aurora",
-        "pre_path": str(individual_source_dir("aurora") / "aurora_texts.jsonl"),
+        "pre_path": str(individual_source_dir("aurora") / "aurora_clean.jsonl"),
         "pre_field": "text",
         "post_mpnet": str(preprocessed_dir() / "aurora/aurora_segmented_all-mpnet-base-v2.jsonl"),
         "post_minilm": str(preprocessed_dir() / "aurora/aurora_segmented_all-minilm-l6-v2.jsonl"),

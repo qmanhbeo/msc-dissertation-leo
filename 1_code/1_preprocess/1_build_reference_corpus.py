@@ -39,7 +39,7 @@ SOURCES = [
      "id_field": "id"},
     {"name": "sdg_knowledge_hub", "path": lambda: individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.jsonl",
      "id_field": "id"},
-    {"name": "aurora", "path": lambda: individual_source_dir("aurora") / "aurora_texts.jsonl",
+    {"name": "aurora", "path": lambda: individual_source_dir("aurora") / "aurora_clean.jsonl",
      "id_field": "doi"},
     {"name": "sdgi", "path": lambda: individual_source_dir("sdgi") / "sdgi_clean.jsonl",
      "id_field": "id"},
