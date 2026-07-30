@@ -229,9 +229,13 @@ def write_shard(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--input", default=str(raw_dir() / "openalex" / "papers.jsonl"))
-    p.add_argument("--out-dir", default=str(preprocessed_dir() / "research_corpus"))
-    p.add_argument("--status-dir", default=str(preprocessed_dir() / "research_corpus" / "metadata"))
+    p.add_argument("--retrieval", choices=["keyword", "concept"], default="keyword",
+                    help="Retrieval strategy: 'keyword' (canonical 4-term x 17-SDG via free-text search) "
+                         "or 'concept' (AI+ML field-of-study via concepts.id, no SDG filter). "
+                         "Controls default input and output paths.")
+    p.add_argument("--input", default=None)
+    p.add_argument("--out-dir", default=None)
+    p.add_argument("--status-dir", default=None)
     p.add_argument("--metadata-dir", default="")
     p.add_argument("--manifest", default="")
     p.add_argument("--state", default="")
@@ -249,6 +253,16 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    if args.input is None:
+        raw_subdir = "openalex_concept" if args.retrieval == "concept" else "openalex"
+        args.input = str(raw_dir() / raw_subdir / "papers.jsonl")
+    if args.out_dir is None:
+        out_subdir = "research_corpus_concept" if args.retrieval == "concept" else "research_corpus"
+        args.out_dir = str(preprocessed_dir() / out_subdir)
+    if args.status_dir is None:
+        status_out = "research_corpus_concept" if args.retrieval == "concept" else "research_corpus"
+        args.status_dir = str(preprocessed_dir() / status_out / "metadata")
 
     input_path = Path(args.input)
     out_dir = Path(args.out_dir)
