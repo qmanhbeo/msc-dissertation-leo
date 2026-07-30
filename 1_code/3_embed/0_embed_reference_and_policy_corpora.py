@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
-        help="Sentence-transformer model (default: %(default)s).",
+        help="Embedding model. One of: all-mpnet-base-v2 (default), all-MiniLM-L6-v2, allenai/scibert_scivocab_uncased. Short aliases: mpnet, minilm, scibert.",
     )
     parser.add_argument(
         "--device", choices=["auto", "cuda", "cpu"], default="auto",
