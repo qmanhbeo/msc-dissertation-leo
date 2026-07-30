@@ -589,10 +589,10 @@ def _run_concept_robustness(output_dir: Path, model: str, args: argparse.Namespa
         sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
         "--corpus", "research_concept",
         "--embed-model", model,
-        "--device", args.device, "--batch-size", str(args.batch_size),
-        "--chunk-size", "8192", "--local-files-only",
-        "--precision", args.precision, "--normalize-embeddings",
-    ] + _overwrite_flag(args.overwrite))
+"--device", args.device, "--batch-size", str(args.batch_size),
+         "--local-files-only",
+         "--precision", args.precision, "--normalize-embeddings",
+     ] + _overwrite_flag(args.overwrite))
 
     run_step("score concept research corpus (LR)", [
         sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
@@ -894,7 +894,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         embed_cmd = [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
             "--device", args.device, "--batch-size", str(args.batch_size),
-            "--chunk-size", "8192", "--local-files-only",
+            "--local-files-only",
             "--precision", args.precision,
             "--normalize-embeddings",
         ]
