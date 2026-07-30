@@ -60,8 +60,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--chunk-size", type=int, default=8192,
                    help="Texts per model.encode call. Amortizes per-call overhead and sets checkpoint granularity.")
     p.add_argument("--precision", choices=["fp32", "fp16"], default=None,
-                   help="Compute + storage precision for embeddings (fp16 ≈ 2x faster on Ampere GPUs). "
-                        "Default: fp16 for all-MiniLM-L6-v2, fp32 otherwise.")
+                   help="Compute + storage precision for embeddings. Default: fp16. "
+                        "Use fp32 for CPU-only runs.")
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     p.add_argument("--normalize-embeddings", action="store_true", default=True,
                    help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
@@ -83,12 +83,8 @@ def resolve_device(name: str) -> str:
 
 
 def default_precision(model: str) -> str:
-    """MPNet stays fp32; MiniLM and SciBERT default to fp16.
-
-    Both MiniLM and SciBERT are encoder-sensitivity checks, and fp16 halves
-    their embedding footprint.
-    """
-    return "fp16" if model in ("all-MiniLM-L6-v2", "allenai/scibert_scivocab_uncased") else "fp32"
+    """Default to fp16 for all models — safe for cosine-similarity-based analysis."""
+    return "fp16"
 
 
 def load_texts(path: Path) -> list[str]:
