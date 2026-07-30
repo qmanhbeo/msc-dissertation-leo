@@ -32,6 +32,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import preprocessed_dir, individual_source_dir
+from shard_pipeline_utils import atomic_write_json, ensure_dir
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -137,6 +138,19 @@ def main() -> None:
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(deduped, f, ensure_ascii=False)
     log.info("Wrote %d records -> %s", total_deduped, output_path)
+
+    metadata = {
+        "stage": "build_policy_corpus",
+        "total_raw": total_raw,
+        "total_deduped": total_deduped,
+        "total_removed": total_removed,
+        "per_source_raw": source_stats,
+        "per_source_deduped": dict(dedup_source_counts),
+    }
+    meta_path = preprocessed_dir() / "metadata" / "build_policy_corpus.json"
+    ensure_dir(meta_path.parent)
+    atomic_write_json(meta_path, metadata)
+    log.info("Wrote metadata -> %s", meta_path)
 
 
 if __name__ == "__main__":
