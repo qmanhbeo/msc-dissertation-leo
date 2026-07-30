@@ -276,7 +276,7 @@ def main() -> None:
     manifest_path = Path(args.manifest) if args.manifest else metadata_dir / "manifest.json"
     state_path = Path(args.state) if args.state else metadata_dir / "state.json"
     db_path = Path(args.db) if args.db else metadata_dir / "dedupe.sqlite"
-    pending_path = Path(args.pending) if args.pending else metadata_dir / "pending.jsonl"
+    pending_path = Path(args.pending) if args.pending else out_dir / "pending.jsonl"
 
     if args.reset:
         for p in (manifest_path, state_path, db_path, pending_path):
