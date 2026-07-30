@@ -81,8 +81,8 @@ def parse_args() -> argparse.Namespace:
         help="Device for embedding (default: %(default)s).",
     )
     parser.add_argument(
-        "--batch-size", type=int, default=128,
-        help="Batch size (default: %(default)s). Reduce to 64 for MPNet on 4GB GPUs.",
+        "--batch-size", type=int, default=64,
+        help="Batch size (default: %(default)s). 64 for mpnet on 4GB.",
     )
     parser.add_argument(
         "--precision", choices=["fp32", "fp16"], default=None,
