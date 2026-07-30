@@ -59,6 +59,109 @@ Warm replay rebuilds:
 
 To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler.
 
+## Pipeline architecture
+
+The analysis pipeline measures research-policy divergence in AI-for-SDG discourse
+using **three method axes** that share a unified data-preparation pipeline:
+
+### Unified stages (shared by all axes)
+
+```
+Preprocess (8 scripts) → Segment (7 corpora per model) → Embed (8 reference/policy + research shards)
+```
+
+- **Labeled corpora** (ground-truth SDG labels): osdg, benchmark, sdg_knowledge_hub, sdgi, aurora
+- **Unlabeled corpora** (to be assigned): research (OpenAlex), policy_scrape, policy_manual, ungdc_sdg
+- osdg and benchmark are **not segmented** (embedded directly from preprocessed JSONL)
+- sdgi plays a **dual role**: labeled training corpus AND merged into `policy.npy`
+- SciBERT **reuses MPNet's segmented texts** for both research (50k subset) and reference/policy (`--seg-model all-mpnet-base-v2`)
+
+The shared training-data prep (`0_prepare_data.py`) writes `embeddings.npy`, `labels.npy`,
+`sources.npy`, and train/test split indices to `2_data/4_supervised_model_results/{model}/`.
+
+### Three method axes
+
+| Axis | Classifier | Centroid built | Consumed by | Role |
+|---|---|---|---|---|
+| **A — Supervised LR** | Logistic Regression (C=10, lbfgs) | `research_centroids.npy` (from LR-assigned research papers) in `5_supervised_scored/{model}/` | `1_semantic_gap`, `0_coverage_gap`, `3_generate_cross_sensitivity_table` | **PRIMARY** — reported in dissertation main text |
+| **B — Supervised MLP** | 4-layer MLP (384-hidden) | `mlp_research_centroids.npy` in `5_supervised_scored/{model}/mlp_scores/` | `3_generate_cross_sensitivity_table` | Sensitivity axis |
+| **C — Zeroshot** | Nearest-centroid assignment | `sdg_centroids.npy` (reference, from labeled train split), `zeroshot/research_centroids.npy`, `zeroshot/policy_centroids.npy` in `4_outputs/main/{model}/zeroshot/` | `3_generate_cross_sensitivity_table`, `0_check_centroid_consistency`, `1_build_centroid_similarity_matrix` | Sensitivity axis |
+
+The **reference centroids** (`sdg_centroids.npy`) are built once from the labeled
+training split and serve as:
+- the assignment target for zeroshot scoring,
+- the input to the centroid similarity matrix, and
+- the basis for PCA semantic-landscape visualisation.
+
+The **supervised research centroids** (`research_centroids.npy` from `score_supervised --lr --research`)
+are the primary input to the semantic-gap analysis; the zeroshot produces its own
+research/policy centroids in a separate namespace for cross-method comparison.
+
+### Build-order constraint
+
+```mermaid
+flowchart TD
+    subgraph Sources[Data sources]
+        L["Labeled<br>osdg, benchmark, KH, sdgi, aurora"]
+        U["Unlabeled<br>research, policy_scrape, policy_manual, ungdc_sdg"]
+    end
+
+    subgraph Prep[Preprocess → Segment → Embed]
+        PSE["8 preprocess scripts<br>7 segment_corpus runs (per model)<br>8 embed + merge policy<br>embed_paper_shards (research)"]
+    end
+
+    subgraph Train[Shared training data]
+        PD["0_prepare_data.py<br>→ 4_supervised_model_results/{model}/<br>embeddings.npy, labels.npy<br>sources.npy, indices/"]
+    end
+
+    subgraph LR[Axis A: Supervised LR — PRIMARY]
+        R1["3_retrain_full_data LR<br>→ sdg_classifier.joblib"]
+        S1["score_supervised --lr --research<br>→ 5_supervised_scored/{model}/<br>research_centroids.npy<br>score_supervised --lr --policy<br>→ policy_scores.npy"]
+    end
+
+    subgraph MLP[Axis B: Supervised MLP — sensitivity]
+        R2["3_retrain_full_data MLP<br>→ mlp_retrained.joblib"]
+        S2["score_supervised --mlp<br>→ mlp_research_centroids.npy"]
+    end
+
+    subgraph ZS[Axis C: Zeroshot nearest-centroid — sensitivity]
+        RC["0_build_sdg_reference_centroids<br>→ 5_supervised_scored/{model}/<br>sdg_centroids.npy"]
+        ZSO["score_zeroshot<br>→ 4_outputs/main/{model}/zeroshot/<br>research_centroids.npy<br>policy_centroids.npy"]
+    end
+
+    subgraph Analysis[Downstream]
+        G1["0_coverage_gap<br>← LR policy_scores.npy"]
+        G2["1_semantic_gap<br>← supervised research_centroids.npy"]
+        XT["3_generate_cross_sensitivity_table<br>← LR + MLP + zeroshot artifacts"]
+        SM["1_build_centroid_similarity_matrix<br>← sdg_centroids.npy"]
+    end
+
+    L --> PSE
+    U --> PSE
+    PSE --> PD
+    PD --> R1
+    PD --> R2
+    PD --> RC
+    R1 --> S1
+    R2 --> S2
+    RC --> ZSO
+    S1 --> G1
+    S1 --> G2
+    S1 --> XT
+    S2 --> XT
+    ZSO --> XT
+    RC --> SM
+
+    style LR fill:#dae8fc,stroke:#2c6e9c
+    style MLP fill:#e8d4f1,stroke:#8e2c9c
+    style ZS fill:#f1e6d4,stroke:#9c6e2c
+```
+
+**Order constraint:** `0_prepare_data.py` MUST run before both
+`0_build_sdg_reference_centroids.py` and `3_retrain_full_data.py`, because both
+read the `embeddings.npy` / `labels.npy` files that `0_prepare_data.py` writes
+to `2_data/4_supervised_model_results/{model}/`.
+
 ## Tracked vs not tracked
 
 Tracked in Git:

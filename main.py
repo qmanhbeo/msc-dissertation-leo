@@ -1,3 +1,30 @@
+"""Dissertation reproducibility pipeline — single entrypoint.
+
+Architecture — three method axes sharing a unified preprocess→segment→embed stage:
+
+  Axis A — Supervised LR (PRIMARY result):
+    prepare_data → retrain LR → score_supervised --lr --research
+    → supervised research_centroids.npy → 1_semantic_gap, 0_coverage_gap
+
+  Axis B — Supervised MLP (sensitivity):
+    retrain MLP → score_supervised --mlp
+    → mlp_research_centroids.npy → cross-sensitivity table
+
+  Axis C — Zeroshot nearest-centroid (sensitivity):
+    build_sdg_reference_centroids → sdg_centroids.npy
+    → score_zeroshot → zeroshot/research_centroids.npy, policy_centroids.npy
+    → cross-sensitivity table
+
+Labeled corpora: osdg, benchmark, sdg_knowledge_hub, sdgi, aurora.
+Unlabeled: research (OpenAlex), policy_scrape, policy_manual, ungdc_sdg.
+osdg + benchmark are NOT segmented (embedded raw from preprocessed).
+sdgi is dual-role: labeled training corpus AND merged into policy.npy.
+SciBERT reuses MPNet segmented texts (--seg-model all-mpnet-base-v2).
+
+Build-order: 0_prepare_data MUST precede both build_reference_centroids
+and retrain_full_data (both read prepare_data's output files).
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -100,7 +127,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-c0-corpus-split", action="store_true", help="Export reference-corpus split-size macros.")
     p.add_argument("--appendix-d1-model-selection", action="store_true", help="Export D.1 model-selection CV macros.")
     p.add_argument("--appendix-g-distributional", action="store_true", help="Run the distributional semantic-gap robustness (MAIN-RESULT Table; OPT-IN: not run by warm replay or --appendix-all; run before --build-pdf).")
-    p.add_argument("--domain-encoder-sensitivity", action="store_true", help="Run the SciBERT domain-encoder sensitivity (encoder-axis tables). OPT-IN: not run by warm replay; run before --build-pdf.")
     # Deprecated aliases (hidden, kept for backward compatibility)
     p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
     p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
@@ -190,8 +216,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_h1_cross_method,
             args.appendix_c_sample_stability,
             args.appendix_g_distributional,
-            args.domain_encoder_sensitivity,
-            args.appendix_c0_corpus_split,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
             args.build_pdf,
@@ -381,210 +405,6 @@ def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_
     run_step("cross-method gap values", cmd, step_id="H1")
 
 
-def _prepare_scibert_research_subset(slug: str, output_dir: Path, overwrite: bool) -> Path:
-    """Build a 50k representative research subset (the *identical* MPNet-segmented
-    texts) for SciBERT to embed, so the encoder comparison isolates architecture
-    and domain alone. Returns the path to the subset input manifest.
-
-    The 50k indices are the sample-stability draw (tier "50k", first draw). Global
-    indices map onto the research embed manifest sorted by shard_id (cumulative
-    rows), exactly as c_sample_stability.py and research_embedding_shards.py do.
-    """
-    import datetime
-    import json as _json
-
-    from model_utils import segmented_dir_for_model
-
-    mpnet_seg = segmented_dir_for_model("all-mpnet-base-v2") / "research"
-    mpnet_manifest = mpnet_seg / "metadata" / "manifest.json"
-    if not mpnet_manifest.exists():
-        raise FileNotFoundError(f"MPNet research segment manifest missing: {mpnet_manifest}")
-    base = segmented_dir_for_model(slug)
-    subset_dir = base / "research_subset"
-    subset_meta = subset_dir / "metadata"
-    subset_meta.mkdir(parents=True, exist_ok=True)
-    subset_jsonl = subset_dir / "part-00001.jsonl"
-    subset_manifest = subset_meta / "manifest.json"
-
-    sample_root = ROOT / "2_data" / "5_supervised_scored" / "all-mpnet-base-v2"
-    candidates = sorted(sample_root.glob("paper_sample_seed_*/50k/draw_01_indices.npy"))
-    if not candidates:
-        raise FileNotFoundError(
-            "No 50k sample draw found under 2_data/5_supervised_scored/all-mpnet-base-v2/"
-        )
-    draw_path = candidates[0]
-    indices = np.sort(np.unique(np.load(draw_path).astype(np.int64)))
-    log.info("Selected %d research rows for SciBERT subset (draw=%s)", len(indices), draw_path.name)
-
-    if subset_jsonl.exists() and subset_manifest.exists():
-        # Resume-safe: reuse a previously built subset instead of re-scanning the
-        # 3.1M-segment research corpus. Verify row count matches the manifest so a
-        # partial/interrupted build (jsonl present, manifest missing or short) is
-        # detected and rebuilt.
-        try:
-            _meta = _json.loads(subset_manifest.read_text(encoding="utf-8"))
-            _expect = int(_meta.get("totals", {}).get("rows", -1))
-            _have = sum(1 for _ in subset_jsonl.open(encoding="utf-8"))
-            if _have == _expect:
-                log.info("SciBERT research subset already built (%d rows); reusing.", _have)
-                return subset_manifest
-            log.warning("Subset present but row count %d != %d; rebuilding", _have, _expect)
-        except Exception as exc:
-            log.warning("Subset present but unverifiable (%s); rebuilding", exc)
-
-    mpnet_data = _json.loads(mpnet_manifest.read_text(encoding="utf-8"))
-    shards = sorted(mpnet_data["shards"], key=lambda x: int(x["shard_id"]))
-    need = set(int(x) for x in indices)
-    offset = 0
-    written = 0
-    tmp_jsonl = subset_jsonl.with_suffix(".jsonl.tmp")
-    with tmp_jsonl.open("w", encoding="utf-8") as out:
-        for shard in shards:
-            name = shard["name"]
-            rows = int(shard["rows"])
-            in_path = mpnet_seg / f"{name}.jsonl"
-            if not in_path.exists():
-                raise FileNotFoundError(f"MPNet research shard missing: {in_path}")
-            with in_path.open(encoding="utf-8") as f:
-                for i, line in enumerate(f):
-                    g = offset + i
-                    if g in need:
-                        out.write(line if line.endswith("\n") else line + "\n")
-                        written += 1
-            offset += rows
-    tmp_jsonl.replace(subset_jsonl)  # atomic publish
-
-    if written != len(indices):
-        raise RuntimeError(
-            f"Subset row mismatch: expected {len(indices)}, wrote {written}"
-        )
-
-    manifest_data = {
-        "stage": "research_subset_for_encoder_sensitivity",
-        "schema_version": 1,
-        "created_at_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "model": slug,
-        "source_segment_model": "all-mpnet-base-v2",
-        "draw": str(draw_path),
-        "n_selected": written,
-        "shards": [{"shard_id": 1, "name": "part-00001", "rows": written}],
-        "totals": {"rows": written, "shards": 1},
-    }
-    tmp = subset_manifest.with_suffix(".json.tmp")
-    tmp.write_text(_json.dumps(manifest_data, indent=2))
-    tmp.replace(subset_manifest)
-    log.info("Built SciBERT research subset manifest: %s (%d rows)", subset_manifest, written)
-    return subset_manifest
-
-
-def run_domain_encoder_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    """Run the SciBERT domain-encoder sensitivity robustness check.
-
-    Mirrors the proven per-model analysis pipeline (_run_main_analysis_steps) but
-    embeds SciBERT from the *identical* MPNet-segmented texts (--seg-model) and on a
-    50k representative research subset, and runs the training-matrix build BEFORE
-    the reference-centroid step (a fresh model has no embeddings.npy yet).
-    """
-    SLUG = "allenai/scibert_scivocab_uncased"
-    subset_manifest = _prepare_scibert_research_subset(SLUG, output_dir, overwrite)
-
-    for corpus in ALL_EMBED_CORPORA:
-        run_step(
-            f"embed {corpus} {SLUG}",
-            [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-             "--corpus", corpus, "--embed-model", SLUG, "--seg-model", "all-mpnet-base-v2",
-             "--batch-size", "256", "--precision", "fp16", "--device", "auto",
-             "--normalize-embeddings"] + (["--overwrite"] if overwrite else []),
-            step_id="SCI",
-        )
-    run_step(
-        "merge policy corpus",
-        [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py", "--embed-model", SLUG]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-    run_step(
-        f"embed research 50k {SLUG}",
-        [sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-         "--input-manifest", str(subset_manifest), "--embed-model", SLUG,
-         "--device", "auto", "--batch-size", "256", "--precision", "fp16",
-         "--chunk-size", "8192", "--normalize-embeddings"]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-
-    # Training matrix (benchmark corpora) MUST precede the reference-centroid step.
-    run_step(
-        "prepare training data",
-        [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", SLUG],
-        step_id="SCI",
-    )
-    run_build_sdg_reference_centroids(SLUG, overwrite=overwrite)
-
-    run_step(
-        "retrain full data (LR)",
-        [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py", "--embed-model", SLUG],
-        step_id="SCI",
-    )
-    run_step(
-        "score research (LR)",
-        [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-         "--embed-model", SLUG, "--classifier", "lr", "--corpus", "research"]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-    run_step(
-        "score policy (LR)",
-        [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-         "--embed-model", SLUG, "--classifier", "lr", "--corpus", "policy"]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-    run_step(
-        "retrain full data (MLP)",
-        [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py",
-         "--embed-model", SLUG, "--classifier-type", "mlp"],
-        step_id="SCI",
-    )
-    run_step(
-        "score research (MLP)",
-        [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-         "--embed-model", SLUG, "--classifier", "mlp", "--corpus", "research"]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-    run_step(
-        "score policy (MLP)",
-        [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-         "--embed-model", SLUG, "--classifier", "mlp", "--corpus", "policy"]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-    run_step(
-        "check centroid consistency",
-        [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py",
-         "--output-dir", str(output_dir), "--embed-model", SLUG]
-        + (["--overwrite"] if overwrite else []),
-        step_id="SCI",
-    )
-    run_build_centroid_similarity_matrix(output_dir, SLUG, overwrite=overwrite)
-
-    # In-process analyses for SciBERT: zeroshot, coverage gap, semantic gap,
-    # interaction, and the cross-sensitivity generator (writes to SciBERT ns).
-    run_analysis(SLUG, output_dir, overwrite=overwrite)
-
-    # Regenerate the cross-sensitivity + encoder-axis tables under the canonical
-    # (default-model) namespace so the PDF includes SciBERT. The default-model
-    # gap files already exist; this just re-lays the combined table.
-    run_step(
-        "cross-sensitivity tables (default ns, incl. SciBERT)",
-        [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
-         "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL],
-        step_id="SCI",
-    )
-    log.info("Domain-encoder sensitivity complete. SciBERT slug=%s", SLUG)
-
-
 def _overwrite_flag(overwrite: bool) -> list[str]:
     return ["--overwrite"] if overwrite else []
 
@@ -610,14 +430,29 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
 def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = False, include_appendix: bool = False) -> None:
     """Run the main-text analysis steps for a given model (no input guard).
 
-    Steps 0-1 train the classifier deterministically from frozen embeddings.
-    Steps 2-3 run inference with the freshly-trained classifier.
-    Steps 4+ run analysis.
+    Step ordering (all share the same frozen labelled data from prepare_data):
+
+      0  prepare_data          → embeddings.npy, labels.npy, sources.npy, indices/
+      1  retrain_full_data LR  → sdg_classifier.joblib
+      0a build_sdg_reference_centroids → sdg_centroids.npy
+      2  score_supervised --lr --research → research_centroids.npy (supervised, PRIMARY)
+      3  score_supervised --lr --policy   → policy_scores.npy
+      3b retrain_full_data MLP           → mlp_retrained.joblib
+      3c score_supervised --mlp          → mlp_research_centroids.npy
+      4  check_centroid_consistency      → policy_centroids.npy (diagnostic)
+      9a build_centroid_similarity_matrix → similarity matrix (reads sdg_centroids.npy)
+
+    Then run_analysis() invokes in-process: score_zeroshot (→ zeroshot/
+    research_centroids.npy, policy_centroids.npy), coverage_gap, semantic_gap,
+    interaction, cross-sensitivity table, and (default model only) PCA + figures.
+
+    Three method axes—LR (PRIMARY), MLP (sensitivity), zeroshot (sensitivity)—
+    each produce their own research/policy centroids in separate namespaces.
     """
     model_args = ["--embed-model", model]
-    run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args, step_id="1")
+    run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "research"] + _overwrite_flag(overwrite), step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(overwrite), step_id="3")
     # MLP is scored for every encoder (not just the default), so the
@@ -721,11 +556,20 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
          "--text-field", "combined_text", "--id-field", "openalex_id",
          "--prefix", "paper", "--embed-model", model] + _overwrite_flag(args.overwrite)),
         # — EMBED (encode each source separately, then merge policy) —
-    ] + [
+    ]
+    if model == "allenai/scibert_scivocab_uncased":
+        # SciBERT reuses MPNet's segmented research texts; build the 50k
+        # representative subset before embedding.
+        pre_steps.append((
+            "build SciBERT research subset",
+            [sys.executable, "1_code/2_segment/2_sample_segments.py",
+             "--slug", model] + _overwrite_flag(args.overwrite),
+        ))
+    pre_steps = pre_steps + [
         (f"embed {corpus}", [
             sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
             "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
-        ] + model_args)
+        ] + model_args + (["--seg-model", "all-mpnet-base-v2"] if model == "allenai/scibert_scivocab_uncased" else []))
         for corpus in ALL_EMBED_CORPORA
     ] + [
         ("merge policy corpus", [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args),
@@ -742,6 +586,9 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         str(args.batch_size),
     ]
     embed_cmd.extend(model_args)
+    if model == "allenai/scibert_scivocab_uncased":
+        subset_manifest = segmented_dir_for_model(model) / "research_subset" / "metadata" / "manifest.json"
+        embed_cmd.extend(["--input-manifest", str(subset_manifest)])
     run_step("embed paper shards", embed_cmd)
 
     _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
@@ -958,7 +805,6 @@ def main() -> None:
         or args.appendix_d1_model_selection
         or args.appendix_h1_cross_method
         or args.appendix_g_distributional
-        or args.domain_encoder_sensitivity
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
@@ -1019,10 +865,6 @@ def main() -> None:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_g_distributional:
         run_distributional_gap(output_dir, model=args.embed_model)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.domain_encoder_sensitivity:
-        run_domain_encoder_sensitivity(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.warm_replay_without_appendix:
