@@ -519,13 +519,15 @@ def run_warm_replay(
 
 
 def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
-    print("NOTE: --cold-replay rebuilds from the raw snapshot (frozen data).")
-    print("      For fresh data, run: python main.py --fetch-data-snapshot --profile raw")
-    print("      Cold replay from frozen snapshots is deterministic and reproducible.")
-
-    model = args.embed_model
-    model_is_nondefault = model != DEFAULT_EMBED_MODEL
-    model_args = ["--embed-model", model] if model_is_nondefault else []
+    print("NOTE: --cold-replay rebuilds MPNet + MiniLM + SciBERT from the raw snapshot (frozen data) in ONE run.")
+    print("      It is deterministic and reproducible; no OpenAlex credentials needed when the raw snapshot is hydrated.")
+    if args.embed_model != DEFAULT_EMBED_MODEL:
+        print(f"NOTE: --embed-model {args.embed_model!r} is ignored by --cold-replay (all three encoders are rebuilt).")
+    COLD_REPLAY_MODELS = (
+        CANONICAL_SEGMENT_MODEL,
+        "all-MiniLM-L6-v2",
+        "allenai/scibert_scivocab_uncased",
+    )
 
     pre_steps = [
         # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
@@ -565,32 +567,49 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         "build research 50k subset",
         [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite),
     ))
-    pre_steps = pre_steps + [
-        (f"embed {corpus}", [
-            sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-            "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
-        ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL])
-        for corpus in ALL_EMBED_CORPORA
-    ] + [
-        ("merge policy corpus", [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args),
-    ]
     for label, cmd in pre_steps:
         run_step(label, cmd)
 
-    embed_cmd = [
-        sys.executable,
-        "1_code/3_embed/0_embed_paper_shards.py",
-        "--device",
-        args.device,
-        "--batch-size",
-        str(args.batch_size),
-    ]
-    embed_cmd.extend(model_args)
-    if model != CANONICAL_SEGMENT_MODEL:
-        embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
-    run_step("embed paper shards", embed_cmd)
+    # Per-model embed + analysis. Segments are canonical (shared); only the
+    # encoder (and its native context window) varies. MiniLM/SciBERT embed the
+    # shared 50k subset via --input-manifest; MPNet embeds the full corpus.
+    for model in COLD_REPLAY_MODELS:
+        model_args = ["--embed-model", model]
+        for corpus in ALL_EMBED_CORPORA:
+            run_step(
+                f"embed {corpus}",
+                [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
+                 "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
+                 ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL],
+            )
+        run_step(
+            "merge policy corpus",
+            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args,
+        )
+        embed_cmd = [
+            sys.executable,
+            "1_code/3_embed/0_embed_paper_shards.py",
+            "--device",
+            args.device,
+            "--batch-size",
+            str(args.batch_size),
+        ]
+        embed_cmd.extend(model_args)
+        if model != CANONICAL_SEGMENT_MODEL:
+            embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
+        run_step("embed paper shards", embed_cmd)
 
-    _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
+        _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
+
+    # The encoder-axis (cross-sensitivity) tables in the canonical model's dir
+    # were written during the first loop pass (MPNet) before MiniLM/SciBERT
+    # outputs existed. Regenerate them once now that all three are present so
+    # the PDF-consumed tables show the full 3-way encoder comparison.
+    run_step(
+        "regenerate canonical cross-sensitivity table (all 3 encoders)",
+        [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
+         "--output-dir", str(output_dir), "--embed-model", CANONICAL_SEGMENT_MODEL],
+    )
 
     print(
         "Cold replay complete. To build the dissertation PDF, run:\n"

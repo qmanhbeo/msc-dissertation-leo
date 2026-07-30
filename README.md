@@ -12,10 +12,10 @@ This repository contains the dissertation code, manuscript source, committed out
 | **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay-without-appendix` / `--warm-replay-with-appendix` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
-| **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). Also required for `--cold-replay` (OpenAlex API + HuggingFace model download). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
+| **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). For `--cold-replay`, a **live OpenAlex re-fetch** needs the OpenAlex API (see Credentials); with the frozen **raw snapshot** hydrated, cold replay is offline/deterministic and only needs the HuggingFace model download (one-time, cached). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
 | **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
 | **rclone** | Required for `--backup-data-snapshot` only (maintainer tool). Override remote via `--remote-root` or `DISSERTATION_SNAPSHOT_REMOTE_ROOT`. Not needed for warm/cold replay |
-| **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for `--cold-replay`. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
+| **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for a **live** `--cold-replay` OpenAlex re-fetch. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week. A `--cold-replay` from the frozen **raw snapshot** needs **no** key (deterministic/offline) |
 | **Embedding runtimes** (one-time, cold replay only) | Segmentation is **canonical and shared** — one ~17h pass at 384 tokens produces segments reused by every encoder. MPNet (`all-mpnet-base-v2`, primary) embeds the full corpus (~17h on 4 GB VRAM). MiniLM and SciBERT embed only the shared 50k-paper subset (~minutes each). SciBERT also loads as a raw BERT wrapped with mean pooling |
 | **Git** | Required for cloning and pulling updates |
 
@@ -193,7 +193,7 @@ Not tracked in Git:
 | `python main.py` | Read-only status check |
 | `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
 | `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
-| `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
+| `python main.py --cold-replay --overwrite` | Full pipeline from the raw frozen snapshot: rebuilds **all three encoder tracks** (MPNet + MiniLM + SciBERT) deterministically in one run. No OpenAlex credentials needed when the raw snapshot is hydrated (see [§Reproducibility boundaries](#reproducibility-boundaries)). |
 | `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
@@ -240,12 +240,14 @@ The fetch stage cannot be reproduced because its sources change continuously.
 
 ### Credentials
 
-`--cold-replay` requires OpenAlex API credentials. Copy `.env.example` to
-`.env` and fill in your key (free at https://openalex.org/keys). Without
-these the fetch stage raises `RuntimeError`. The 6 rate-limit fallback
-keys are optional — only `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are
-required. If provided, they enable parallel API key rotation during
-the full re-fetch.
+A **live** `--cold-replay` OpenAlex re-fetch requires OpenAlex API credentials.
+Copy `.env.example` to `.env` and fill in your key (free at
+https://openalex.org/keys). Without these the live fetch stage raises
+`RuntimeError`. The 6 rate-limit fallback keys are optional — only
+`OPENALEX_MAILTO` + `OPENALEX_API_KEY` are required. If provided, they enable
+parallel API key rotation during the full re-fetch. **Note:** a `--cold-replay`
+run from the frozen **raw snapshot** (`python main.py --fetch-data-snapshot raw`)
+is deterministic and offline — it needs **no** OpenAlex credentials.
 
 ### Snapshot scope
 

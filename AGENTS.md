@@ -68,6 +68,11 @@ non-obvious facts that are easy to miss.
 - `2_data/` is **gitignored** and hydrated from a frozen snapshot, not committed.
   Hydrate with `python main.py --fetch-data-snapshot embedded` (or `raw` for
   cold replay). Warm replay needs the embedded snapshot present first.
+- `--cold-replay --overwrite` rebuilds **all three encoder tracks**
+  (MPNet + MiniLM + SciBERT) from the raw snapshot in one run — no OpenAlex
+  credentials needed when the raw snapshot is hydrated. `--embed-model` is
+  ignored by `--cold-replay`. Single-model rebuilds stay available via
+  `--stage`.
 - The embedded snapshot ships `3_embedded/` + `3a_warm_replay_texts/` (gzipped
   A3/B2 appendix text for the default model, built only by
   `build_warm_replay_texts.py` during backup). Appendix readers resolve
