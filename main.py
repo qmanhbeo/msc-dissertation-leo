@@ -556,6 +556,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
         ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
         ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
+        ("preprocess concept corpus", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py", "--retrieval", "concept"] + _reset_flag(args.overwrite)),
         # — BUILD CONSOLIDATED CORPORA —
         ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
         ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
@@ -719,6 +720,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
             ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
             ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
+            ("preprocess concept corpus", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py", "--retrieval", "concept"] + _reset_flag(args.overwrite)),
             ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
             ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
         ]
