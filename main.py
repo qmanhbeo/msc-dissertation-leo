@@ -706,6 +706,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             ("fetch sdg knowledge hub", [sys.executable, "1_code/0_fetch/fetch_sdg_knowledge_hub.py"]),
             ("fetch aurora", [sys.executable, "1_code/0_fetch/fetch_aurora.py"]),
             ("fetch openalex", [sys.executable, "1_code/0_fetch/fetch_openalex.py"]),
+            ("fetch openalex concept", [sys.executable, "1_code/0_fetch/fetch_openalex.py", "--retrieval", "concept"]),
         ]
         for label, cmd in steps:
             run_step(label, cmd)
