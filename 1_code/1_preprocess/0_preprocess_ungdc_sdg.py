@@ -14,7 +14,7 @@ Strategy:
   5. Output documents (not segments) for downstream segmentation
 
 Preserves paragraph-level SDG keyword filtering before segmentation.
-Only the merge/segmentation step is now handled by segment_corpus.py.
+Only the merge/segmentation step is now handled by 1_segment_corpus.py.
 
 Run from project root:
     python 1_code/1_preprocess/0_preprocess_ungdc_sdg.py

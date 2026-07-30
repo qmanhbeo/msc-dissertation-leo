@@ -2,7 +2,7 @@
 Unified SDGi preprocessor — clean text only, no segmentation.
 
 Output per-document cleaned records to 1_preprocessed/individual_sources/sdgi/sdgi_clean.jsonl.
-Segmentation is now handled by segment_corpus.py in the dedicated segment stage.
+Segmentation is now handled by 1_segment_corpus.py in the dedicated segment stage.
 
 Preserves: English filter, text cleaning, SDG label extraction, metadata fields.
 

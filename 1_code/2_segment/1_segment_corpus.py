@@ -11,13 +11,13 @@ Handles both sdg: int and sdgs: list[int] label fields transparently.
 
 Paths are resolved via model_utils helpers. From project root:
     # Single-file corpora (KH, Aurora)
-    python 1_code/2_segment/segment_corpus.py \
+    python 1_code/2_segment/1_segment_corpus.py \
         --input <preprocessed_dir() / corpus / ..._clean.jsonl> \
         --output <segmented_dir_for_model(model) / corpus.jsonl> \
         --text-field text --id-field id --prefix kh --model all-mpnet-base-v2
 
     # Sharded corpora (Research)
-    python 1_code/2_segment/segment_corpus.py \
+    python 1_code/2_segment/1_segment_corpus.py \
         --sharded \
         --input-glob <research_preprocessed_dir() / part-*.jsonl> \
         --output-dir <research_segmented_dir_for_model(model)> \

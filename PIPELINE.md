@@ -38,26 +38,38 @@ DATA: 2_data/1_preprocessed/individual_sources/[source]/*
 
 => DATA: 2_data/1_preprocessed/[research_corpus | research_corpus_concept]/*.jsonl
 
-CODE: 1_code\1_preprocess\1_build_*.py
+CODE: 1_code/1_preprocess/1_build_*.py
 
- 2. build reference corpus (consolidate + dedup)
- 3. build policy corpus (consolidate + dedup)
+ 2.  build reference corpus (consolidate + dedup)
+ 3.  build policy corpus (consolidate + dedup)
 
 => DATA: 2_data/1_preprocessed/[policy | reference].jsonl. ONE clean jsonl each corpus
 
 # SEGMENT — canonical MPNet segments, shared, ONCE
 
- 9.  segment knowledge hub
-10.  segment aurora
-11.  segment policy scrape
-12.  segment policy manual
-13.  segment ungdc
-14.  segment sdgi
-15.  build policy corpus
-16.  segment research corpus
-17.  build research 50k subset
+CODE: 1_code/2_segment/1_segment_corpus.py
 
-══ PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) ═══════════════
+ 1.  segment reference
+ 2.  segment policy
+
+DATA: 2_data/2_segmented/[policy|reference].jsonl
+
+CODE: 1_code/2_segment/1_segment_corpus.py
+
+ 3.  segment canon research AND
+ 4.  build research 50k subset (one run)
+
+DATA: 2_data/2_segmented/research/part-*.jsonl
+DATA: 2_data/2_segmented/research_subset/part-*.jsonl
+
+CODE: 1_code/2_segment/1_segment_corpus.py
+
+ 3.  segment concept-based research
+
+DATA: 2_data/2_segmented/research_concept/part-*.jsonl
+
+
+# ══ PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) 
 
     for model m in [MPNet, MiniLM, SciBERT]:
 

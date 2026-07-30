@@ -561,9 +561,9 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
         ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
         # — SEGMENT (canonical, ONCE, shared by every encoder) —
-        ("segment reference & policy", [sys.executable, "1_code/2_segment/segment_corpus.py",
+        ("segment reference & policy", [sys.executable, "1_code/2_segment/1_segment_corpus.py",
          "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment research corpus", [sys.executable, "1_code/2_segment/segment_corpus.py",
+        ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py",
          "--sharded",
          "--input-glob", str(research_preprocessed_dir() / "part-*.jsonl"),
          "--output-dir", str(research_segmented_dir_for_model(CANONICAL_SEGMENT_MODEL)),
@@ -733,10 +733,10 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         if corpus == "all":
             steps = [
                 ("segment reference & policy",
-                 [sys.executable, "1_code/2_segment/segment_corpus.py",
+                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
                   "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("segment research corpus",
-                 [sys.executable, "1_code/2_segment/segment_corpus.py",
+                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
                   "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("build research 50k subset",
                  [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
@@ -744,7 +744,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         elif corpus == "research":
             steps = [
                 ("segment research corpus",
-                 [sys.executable, "1_code/2_segment/segment_corpus.py",
+                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
                   "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("build research 50k subset",
                  [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
@@ -752,7 +752,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         else:
             steps = [
                 (f"segment {corpus}",
-                 [sys.executable, "1_code/2_segment/segment_corpus.py",
+                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
                   "--corpus", corpus, "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
             ]
         for label, cmd in steps:

@@ -107,7 +107,7 @@ flowchart TD
     end
 
     subgraph Prep[Preprocess → Segment (canonical, ONCE) → Embed]
-        PSE["8 preprocess scripts<br>1 canonical segment_corpus run (shared by all models)<br>8 embed + merge policy<br>embed_paper_shards (full for primary, 50k subset for MiniLM/SciBERT)"]
+        PSE["8 preprocess scripts<br>1 canonical 1_segment_corpus run (shared by all models)<br>8 embed + merge policy<br>embed_paper_shards (full for primary, 50k subset for MiniLM/SciBERT)"]
     end
 
     subgraph Train[Shared training data]
