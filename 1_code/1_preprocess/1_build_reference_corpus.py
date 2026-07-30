@@ -1,8 +1,9 @@
 """
 Build consolidated reference corpus from individual SDG-labeled sources.
 
-Reads preprocessed JSONL from each reference source (osdg, benchmark,
-sdg_knowledge_hub, aurora, sdgi), normalises fields to a common schema,
+Reads preprocessed JSONL from individual_sources/ for each reference source
+(osdg, benchmark, sdg_knowledge_hub, aurora, sdgi), normalises fields to
+a common schema,
 deduplicates by exact text (first occurrence wins), and writes
 reference.json.
 
@@ -26,21 +27,21 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import preprocessed_dir
+from model_utils import preprocessed_dir, individual_source_dir
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 SOURCES = [
-    {"name": "osdg", "path": lambda: preprocessed_dir() / "osdg" / "osdg_clean.jsonl",
+    {"name": "osdg", "path": lambda: individual_source_dir("osdg") / "osdg_clean.jsonl",
      "id_field": "text_id"},
-    {"name": "benchmark", "path": lambda: preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.jsonl",
+    {"name": "benchmark", "path": lambda: individual_source_dir("sdg_benchmark") / "benchmark_clean.jsonl",
      "id_field": "id"},
-    {"name": "sdg_knowledge_hub", "path": lambda: preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl",
+    {"name": "sdg_knowledge_hub", "path": lambda: individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.jsonl",
      "id_field": "id"},
-    {"name": "aurora", "path": lambda: preprocessed_dir() / "aurora" / "aurora_texts.jsonl",
+    {"name": "aurora", "path": lambda: individual_source_dir("aurora") / "aurora_texts.jsonl",
      "id_field": "doi"},
-    {"name": "sdgi", "path": lambda: preprocessed_dir() / "sdgi" / "sdgi_clean.jsonl",
+    {"name": "sdgi", "path": lambda: individual_source_dir("sdgi") / "sdgi_clean.jsonl",
      "id_field": "id"},
 ]
 

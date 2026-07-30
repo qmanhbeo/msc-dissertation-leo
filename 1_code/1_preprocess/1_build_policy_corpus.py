@@ -1,8 +1,9 @@
 """
 Build consolidated policy corpus from individual policy sources.
 
-Reads preprocessed JSONL from each policy source (policy_scrape,
-policy_manual, ungdc_sdg, sdgi), normalises fields, adds source_family,
+Reads preprocessed JSONL from individual_sources/ for each policy source
+(policy_scrape, policy_manual, ungdc_sdg, sdgi), normalises fields,
+adds source_family,
 deduplicates by exact text (first occurrence wins), and writes policy.json.
 
 source_family mapping (moved from deleted 1_merge_policy_corpus.py):
@@ -30,7 +31,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import preprocessed_dir
+from model_utils import preprocessed_dir, individual_source_dir
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -43,13 +44,13 @@ SOURCE_FAMILY_MAP = {
 }
 
 SOURCES = [
-    {"name": "policy_scrape", "path": lambda: preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_clean.jsonl",
+    {"name": "policy_scrape", "path": lambda: individual_source_dir("policy_scrape") / "policy_scrape_clean.jsonl",
      "id_field": "id"},
-    {"name": "policy_manual", "path": lambda: preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_clean.jsonl",
+    {"name": "policy_manual", "path": lambda: individual_source_dir("policy_manual") / "policy_manual_clean.jsonl",
      "id_field": "id"},
-    {"name": "ungdc_sdg", "path": lambda: preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_clean.jsonl",
+    {"name": "ungdc_sdg", "path": lambda: individual_source_dir("ungdc_sdg") / "ungdc_sdg_clean.jsonl",
      "id_field": "id"},
-    {"name": "sdgi", "path": lambda: preprocessed_dir() / "sdgi" / "sdgi_clean.jsonl",
+    {"name": "sdgi", "path": lambda: individual_source_dir("sdgi") / "sdgi_clean.jsonl",
      "id_field": "id"},
 ]
 

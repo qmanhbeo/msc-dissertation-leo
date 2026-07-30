@@ -4,7 +4,7 @@ Extract SDG-relevant policy passages from the UN General Debate Corpus (UNGDC).
 Input:  2_data/0_raw/ungdc/TXT/Session <N> - <YEAR>/<ISO>_<session>_<year>.txt
         Sessions 70–80 (2015–2024) — post-SDG-adoption speeches only
 
-Output: 2_data/1_preprocessed/policy_all/ungdc_sdg/ungdc_sdg_clean.jsonl
+Output: 2_data/1_preprocessed/individual_sources/ungdc_sdg/ungdc_sdg_clean.jsonl
 
 Strategy:
   1. Read all speeches from sessions 70–80 (2015–2024)
@@ -35,11 +35,11 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 UNGDC_TXT_DIR = raw_dir() / "ungdc" / "TXT"
-OUTPUT_DIR = preprocessed_dir() / "policy_all" / "ungdc_sdg"
+OUTPUT_DIR = individual_source_dir("ungdc_sdg")
 OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_clean.jsonl"
 STATE_PATH = OUTPUT_DIR / "ungdc_sdg_state.json"
 STATUS_DIR = OUTPUT_DIR / "metadata"

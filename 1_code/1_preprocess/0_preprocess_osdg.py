@@ -2,8 +2,8 @@
 Preprocess OSDG corpus for use as SDG classification training signal.
 
 Input:  2_data/0_raw/osdg/osdg_dataset.csv  (TSV, 43,025 rows)
-Output: 2_data/1_preprocessed/osdg/osdg_clean.jsonl  — filtered, cleaned records
-        2_data/1_preprocessed/osdg/osdg_clean.csv    — flat CSV for inspection
+Output: 2_data/1_preprocessed/individual_sources/osdg/osdg_clean.jsonl  — filtered, cleaned records
+        2_data/1_preprocessed/individual_sources/osdg/osdg_clean.csv    — flat CSV for inspection
 
 Filtering:
   - Keep rows where agreement >= AGREEMENT_THRESHOLD (default 0.5)
@@ -39,17 +39,17 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 INPUT_FILE = raw_dir() / "osdg" / "osdg_dataset.csv"
-OUTPUT_JSONL = preprocessed_dir() / "osdg" / "osdg_clean.jsonl"
-OUTPUT_CSV = preprocessed_dir() / "osdg" / "osdg_clean.csv"
-STATE_PATH = preprocessed_dir() / "osdg" / "osdg_state.json"
-STATUS_DIR = preprocessed_dir() / "osdg" / "metadata"
+OUTPUT_JSONL = individual_source_dir("osdg") / "osdg_clean.jsonl"
+OUTPUT_CSV = individual_source_dir("osdg") / "osdg_clean.csv"
+STATE_PATH = individual_source_dir("osdg") / "osdg_state.json"
+STATUS_DIR = individual_source_dir("osdg") / "metadata"
 
 AGREEMENT_THRESHOLD = 0.5   # minimum annotator agreement to keep a row
 MIN_WORDS = 20              # drop texts shorter than this

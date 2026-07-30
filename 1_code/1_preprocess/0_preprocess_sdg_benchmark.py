@@ -2,8 +2,8 @@
 Preprocess SDG Benchmark corpus (expert-verified SDG-labeled texts).
 
 Input:  2_data/0_raw/sdg_benchmark/benchmark.csv  (1,251 rows, label True/False)
-Output: 2_data/1_preprocessed/sdg_benchmark/benchmark_clean.jsonl  — positive examples only
-        2_data/1_preprocessed/sdg_benchmark/benchmark_clean.csv    — flat CSV for inspection
+Output: 2_data/1_preprocessed/individual_sources/sdg_benchmark/benchmark_clean.jsonl  — positive examples only
+        2_data/1_preprocessed/individual_sources/sdg_benchmark/benchmark_clean.csv    — flat CSV for inspection
 
 Filtering:
   - Keep only rows where label == True (expert-confirmed SDG relevance)
@@ -36,17 +36,17 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 INPUT_FILE = raw_dir() / "sdg_benchmark" / "benchmark.csv"
-OUTPUT_JSONL = preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.jsonl"
-OUTPUT_CSV = preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.csv"
-STATE_PATH = preprocessed_dir() / "sdg_benchmark" / "sdg_benchmark_state.json"
-STATUS_DIR = preprocessed_dir() / "sdg_benchmark" / "metadata"
+OUTPUT_JSONL = individual_source_dir("sdg_benchmark") / "benchmark_clean.jsonl"
+OUTPUT_CSV = individual_source_dir("sdg_benchmark") / "benchmark_clean.csv"
+STATE_PATH = individual_source_dir("sdg_benchmark") / "sdg_benchmark_state.json"
+STATUS_DIR = individual_source_dir("sdg_benchmark") / "metadata"
 
 MIN_WORDS = 10  # lower threshold — benchmark texts tend to be shorter
 

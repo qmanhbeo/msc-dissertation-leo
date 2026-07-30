@@ -4,8 +4,8 @@ Preprocess Aurora corpus: clean text and filter short entries.
 Input:  2_data/0_raw/aurora/aurora_raw.jsonl  (from fetch_aurora.py, has sdgs: list[int])
         2_data/0_raw/aurora/aurora.zip        (cross-check SDG mapping)
 
-Output: 2_data/1_preprocessed/aurora/aurora_texts.jsonl
-        2_data/1_preprocessed/aurora/aurora_manifest.json
+Output: 2_data/1_preprocessed/individual_sources/aurora/aurora_texts.jsonl
+        2_data/1_preprocessed/individual_sources/aurora/aurora_manifest.json
 
 Single-label texts are filtered at MLP training time, not here.
 
@@ -33,14 +33,14 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 N_SDG = 17
 INPUT_FILE = raw_dir() / "aurora" / "aurora_raw.jsonl"
 AURORA_ZIP = raw_dir() / "aurora" / "aurora.zip"
-OUTPUT_JSONL = preprocessed_dir() / "aurora" / "aurora_texts.jsonl"
-OUTPUT_DIR = preprocessed_dir() / "aurora"
+OUTPUT_DIR = individual_source_dir("aurora")
+OUTPUT_JSONL = OUTPUT_DIR / "aurora_texts.jsonl"
 MANIFEST_PATH = OUTPUT_DIR / "aurora_manifest.json"
 STATE_PATH = OUTPUT_DIR / "aurora_state.json"
 STATUS_DIR = OUTPUT_DIR / "metadata"

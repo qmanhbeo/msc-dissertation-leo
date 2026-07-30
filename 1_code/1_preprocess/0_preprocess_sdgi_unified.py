@@ -1,7 +1,7 @@
 """
 Unified SDGi preprocessor — clean text only, no segmentation.
 
-Output per-document cleaned records to 1_preprocessed/sdgi/sdgi_clean.jsonl.
+Output per-document cleaned records to 1_preprocessed/individual_sources/sdgi/sdgi_clean.jsonl.
 Segmentation is now handled by segment_corpus.py in the dedicated segment stage.
 
 Preserves: English filter, text cleaning, SDG label extraction, metadata fields.
@@ -28,11 +28,11 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 INPUT_PARQUET = raw_dir() / "sdgi_corpus" / "sdgi_corpus.parquet"
-OUTPUT_DIR = preprocessed_dir() / "sdgi"
+OUTPUT_DIR = individual_source_dir("sdgi")
 OUTPUT_JSONL = OUTPUT_DIR / "sdgi_clean.jsonl"
 STATE_PATH = OUTPUT_DIR / "sdgi_state.json"
 STATUS_DIR = OUTPUT_DIR / "metadata"

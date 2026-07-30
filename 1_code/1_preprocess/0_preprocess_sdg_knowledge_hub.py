@@ -2,8 +2,8 @@
 Preprocess SDG Knowledge Hub corpus: extract multi-label texts for all 17 SDGs.
 
 Input:  2_data/0_raw/sdg_knowledge_hub/sdg_knowledge_hub.csv  (9,172 rows, multi-label)
-Output: 2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl
-        2_data/1_preprocessed/sdg_knowledge_hub/sdg_knowledge_hub_clean.csv
+Output: 2_data/1_preprocessed/individual_sources/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl
+        2_data/1_preprocessed/individual_sources/sdg_knowledge_hub/sdg_knowledge_hub_clean.csv
 
 Filtering:
   - Keep all texts regardless of SDG count (multi-label preserved)
@@ -39,14 +39,14 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 INPUT_FILE = raw_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub.csv"
-OUTPUT_JSONL = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl"
-OUTPUT_CSV = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.csv"
-STATE_PATH = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_kh_state.json"
-STATUS_DIR = preprocessed_dir() / "sdg_knowledge_hub" / "metadata"
+OUTPUT_JSONL = individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.jsonl"
+OUTPUT_CSV = individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.csv"
+STATE_PATH = individual_source_dir("sdg_knowledge_hub") / "sdg_kh_state.json"
+STATUS_DIR = individual_source_dir("sdg_knowledge_hub") / "metadata"
 
 MIN_WORDS = 20
 

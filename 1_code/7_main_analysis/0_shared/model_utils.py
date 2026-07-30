@@ -105,6 +105,14 @@ def preprocessed_dir() -> Path:
     return DATA_ROOT / "1_preprocessed"
 
 
+def individual_sources_dir() -> Path:
+    return preprocessed_dir() / "individual_sources"
+
+
+def individual_source_dir(source: str) -> Path:
+    return individual_sources_dir() / source
+
+
 def segmented_dir_for_model(model: str) -> Path:
     _validate_model(model)
     return DATA_ROOT / "2_segmented" / model_slug(model)
@@ -228,10 +236,6 @@ def open_text(path: str | Path):
     if p.suffix == ".gz":
         return gzip.open(p, "rt", encoding="utf-8")
     return p.open(encoding="utf-8")
-
-
-def policy_preprocessed_dir() -> Path:
-    return preprocessed_dir() / "policy_all"
 
 
 def embed_research_dir_for_model(model: str) -> Path:

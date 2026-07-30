@@ -6,8 +6,8 @@ Inputs:
   2_data/0_raw/policy_manual/texts/*.txt
 
 Outputs:
-  2_data/1_preprocessed/policy_all/policy_scrape/policy_scrape_clean.jsonl
-  2_data/1_preprocessed/policy_all/policy_manual/policy_manual_clean.jsonl
+  2_data/1_preprocessed/individual_sources/policy_scrape/policy_scrape_clean.jsonl
+  2_data/1_preprocessed/individual_sources/policy_manual/policy_manual_clean.jsonl
 
 Cleaning:
   1. Normalise Unicode (NFKC, smart quotes/hyphens)
@@ -35,7 +35,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import raw_dir, preprocessed_dir
+from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
 
@@ -43,16 +43,16 @@ SOURCE_CONFIGS = [
     {
         "source_name": "policy_scrape",
         "input_dir": raw_dir() / "policy_scrape" / "texts",
-        "output_jsonl": preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_clean.jsonl",
-        "state_path": preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_state.json",
-        "status_dir": preprocessed_dir() / "policy_all" / "policy_scrape" / "metadata",
+        "output_jsonl": individual_source_dir("policy_scrape") / "policy_scrape_clean.jsonl",
+        "state_path": individual_source_dir("policy_scrape") / "policy_scrape_state.json",
+        "status_dir": individual_source_dir("policy_scrape") / "metadata",
     },
     {
         "source_name": "policy_manual",
         "input_dir": raw_dir() / "policy_manual" / "texts",
-        "output_jsonl": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_clean.jsonl",
-        "state_path": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_state.json",
-        "status_dir": preprocessed_dir() / "policy_all" / "policy_manual" / "metadata",
+        "output_jsonl": individual_source_dir("policy_manual") / "policy_manual_clean.jsonl",
+        "state_path": individual_source_dir("policy_manual") / "policy_manual_state.json",
+        "status_dir": individual_source_dir("policy_manual") / "metadata",
     },
 ]
 

@@ -33,13 +33,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "1_code"))
 sys.path.insert(0, str(ROOT / "1_code" / "7_main_analysis" / "0_shared"))
 
-from model_utils import preprocessed_dir, RANDOM_SEED
+from model_utils import preprocessed_dir, individual_source_dir, RANDOM_SEED
 from sentence_transformers import SentenceTransformer
 
 CORPORA = [
     {
         "label": "OSDG",
-        "pre_path": str(preprocessed_dir() / "osdg/osdg_clean.jsonl"),
+        "pre_path": str(individual_source_dir("osdg") / "osdg_clean.jsonl"),
         "pre_field": "text",
         "post_mpnet": None,
         "post_minilm": None,
@@ -47,7 +47,7 @@ CORPORA = [
     },
     {
         "label": "Benchmark",
-        "pre_path": str(preprocessed_dir() / "sdg_benchmark/benchmark_clean.jsonl"),
+        "pre_path": str(individual_source_dir("sdg_benchmark") / "benchmark_clean.jsonl"),
         "pre_field": "text",
         "post_mpnet": None,
         "post_minilm": None,
@@ -55,7 +55,7 @@ CORPORA = [
     },
     {
         "label": "KH (pre)",
-        "pre_path": str(preprocessed_dir() / "sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl"),
+        "pre_path": str(individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.jsonl"),
         "pre_field": "text",
         "post_mpnet": str(preprocessed_dir() / "sdg_knowledge_hub/sdg_knowledge_hub_segmented_all-mpnet-base-v2.jsonl"),
         "post_minilm": str(preprocessed_dir() / "sdg_knowledge_hub/sdg_knowledge_hub_segmented_all-minilm-l6-v2.jsonl"),
@@ -63,7 +63,7 @@ CORPORA = [
     },
     {
         "label": "SDGi (pre)",
-        "pre_path": str(preprocessed_dir() / "sdgi_corpus/sdgi_clean.jsonl"),
+        "pre_path": str(individual_source_dir("sdgi") / "sdgi_clean.jsonl"),
         "pre_field": "text",
         "post_mpnet": str(preprocessed_dir() / "sdgi_corpus/sdgi_unified_all-mpnet-base-v2.jsonl"),
         "post_minilm": str(preprocessed_dir() / "sdgi_corpus/sdgi_unified_all-minilm-l6-v2.jsonl"),
@@ -71,7 +71,7 @@ CORPORA = [
     },
     {
         "label": "Aurora",
-        "pre_path": str(preprocessed_dir() / "aurora/aurora_texts.jsonl"),
+        "pre_path": str(individual_source_dir("aurora") / "aurora_texts.jsonl"),
         "pre_field": "text",
         "post_mpnet": str(preprocessed_dir() / "aurora/aurora_segmented_all-mpnet-base-v2.jsonl"),
         "post_minilm": str(preprocessed_dir() / "aurora/aurora_segmented_all-minilm-l6-v2.jsonl"),
