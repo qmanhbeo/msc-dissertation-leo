@@ -34,7 +34,7 @@ sys.path.insert(0, str(ROOT / "1_code"))
 sys.path.insert(0, str(ROOT / "1_code" / "7_main_analysis" / "0_shared"))
 
 from model_utils import preprocessed_dir, individual_source_dir, RANDOM_SEED
-from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
 
 CORPORA = [
     {
@@ -106,15 +106,13 @@ def load_texts(path: Path, field: str) -> list[str]:
     return texts
 
 
-def tokenize_lengths(texts: list[str], model: SentenceTransformer) -> np.ndarray:
-    encoded = model.tokenizer(texts, truncation=False, padding=False, return_length=True)
+def tokenize_lengths(texts: list[str], tokenizer) -> np.ndarray:
+    encoded = tokenizer(texts, truncation=False, padding=False, return_length=True)
     return np.array(encoded["length"], dtype=np.int32)
 
 
 def plot_model_panel(ax, model_name: str, max_len: int, model_label: str, corpus_data: list[dict]) -> None:
-    st = SentenceTransformer(model_name)
-    # Use the model's authoritative max_seq_length (NOT the tokenizer's 512).
-    max_len = int(st.max_seq_length)
+    tok = AutoTokenizer.from_pretrained("sentence-transformers/" + model_name)
     log.info("Tokenising %s (max_seq_length=%d) ...", model_label, max_len)
 
     for cp in corpus_data:
@@ -130,7 +128,7 @@ def plot_model_panel(ax, model_name: str, max_len: int, model_label: str, corpus
                 idx = rng.choice(len(texts), 50000, replace=False)
                 texts = [texts[i] for i in idx]
             if texts:
-                lengths = tokenize_lengths(texts, st)
+                lengths = tokenize_lengths(texts, tok)
                 clipped = np.clip(lengths, 0, max_len * 3)
                 ax.hist(clipped, bins=80, density=True, alpha=0.25, color=color,
                         histtype="stepfilled", linewidth=0)
@@ -148,7 +146,7 @@ def plot_model_panel(ax, model_name: str, max_len: int, model_label: str, corpus
                 idx = rng.choice(len(texts), 50000, replace=False)
                 texts = [texts[i] for i in idx]
             if texts:
-                lengths = tokenize_lengths(texts, st)
+                lengths = tokenize_lengths(texts, tok)
                 clipped = np.clip(lengths, 0, max_len * 3)
                 ax.hist(clipped, bins=80, density=True, alpha=0.25, color=color,
                         histtype="stepfilled", linewidth=0)

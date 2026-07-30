@@ -274,12 +274,8 @@ def main() -> None:
     tokenizer_mpnet = AutoTokenizer.from_pretrained(MPNET_MODEL)
     tokenizer_minilm = AutoTokenizer.from_pretrained(MINILM_MODEL)
 
-    # Derive the authoritative truncation limits from each model's max_seq_length
-    # (NOT the tokenizer's model_max_length, which is 512 for both and wrong).
-    from sentence_transformers import SentenceTransformer
-    global MPNET_LIMIT, MINILM_LIMIT
-    MPNET_LIMIT = int(SentenceTransformer(MPNET_MODEL).max_seq_length)
-    MINILM_LIMIT = int(SentenceTransformer(MINILM_MODEL).max_seq_length)
+    MPNET_LIMIT = 384
+    MINILM_LIMIT = 256
 
     print("Loading and tokenizing texts...", file=sys.stderr)
     texts_by_label = load_all_texts(args.max_sample_per_source)
