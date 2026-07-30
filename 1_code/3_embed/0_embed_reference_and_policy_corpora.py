@@ -86,8 +86,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--precision", choices=["fp32", "fp16"], default=None,
-        help="Compute + storage precision for embeddings. Default: fp16. "
-             "Use fp32 for CPU-only runs.",
+        help="Compute + storage precision for embeddings. Default: fp16.",
     )
     parser.add_argument("--normalize-embeddings", action="store_true", default=True,
                         help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")

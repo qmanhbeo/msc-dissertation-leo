@@ -60,8 +60,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--chunk-size", type=int, default=8192,
                    help="Texts per model.encode call. Amortizes per-call overhead and sets checkpoint granularity.")
     p.add_argument("--precision", choices=["fp32", "fp16"], default=None,
-                   help="Compute + storage precision for embeddings. Default: fp16. "
-                        "Use fp32 for CPU-only runs.")
+                   help="Compute + storage precision for embeddings. Default: fp16.")
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     p.add_argument("--normalize-embeddings", action="store_true", default=True,
                    help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
