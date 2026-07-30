@@ -19,6 +19,7 @@ Run from project root:
     python 1_code/1_preprocess/0_preprocess_sdg_benchmark.py
 """
 
+import argparse
 import csv
 import json
 import logging
@@ -36,6 +37,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 from model_utils import raw_dir, preprocessed_dir
+from _resume import resumable_records
 
 # ---------------------------------------------------------------------------
 # Config
@@ -43,6 +45,8 @@ from model_utils import raw_dir, preprocessed_dir
 INPUT_FILE = raw_dir() / "sdg_benchmark" / "benchmark.csv"
 OUTPUT_JSONL = preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.jsonl"
 OUTPUT_CSV = preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.csv"
+STATE_PATH = preprocessed_dir() / "sdg_benchmark" / "sdg_benchmark_state.json"
+STATUS_DIR = preprocessed_dir() / "sdg_benchmark" / "metadata"
 
 MIN_WORDS = 10  # lower threshold — benchmark texts tend to be shorter
 
@@ -84,79 +88,85 @@ def clean_text(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Resume-safe driver
 # ---------------------------------------------------------------------------
-def main() -> None:
-    log.info("Loading %s", INPUT_FILE)
-
-    raw_rows: list[dict] = []
+def read_records():
     with INPUT_FILE.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            raw_rows.append(row)
+            yield row
 
-    log.info("Loaded %d raw rows (%d True, %d False)",
-             len(raw_rows),
-             sum(1 for r in raw_rows if r["label"].strip().lower() == "true"),
-             sum(1 for r in raw_rows if r["label"].strip().lower() == "false"))
 
-    kept, dropped_label, dropped_text = [], 0, 0
+def transform(row: dict) -> dict | None:
+    # Keep only expert-confirmed positive examples
+    if row.get("label", "").strip().lower() != "true":
+        return None
+    text = clean_text(row.get("text", ""))
+    if len(text.split()) < MIN_WORDS:
+        return None
+    return {
+        "id": row.get("id", ""),
+        "text": text,
+        "sdgs": [int(row["sdg"])],
+        "word_count": len(text.split()),
+    }
 
-    for row in raw_rows:
-        # Keep only expert-confirmed positive examples
-        if row.get("label", "").strip().lower() != "true":
-            dropped_label += 1
-            continue
 
-        text = clean_text(row.get("text", ""))
-
-        if len(text.split()) < MIN_WORDS:
-            dropped_text += 1
-            log.warning("Dropping short text (id=%s, %d words)", row.get("id"), len(text.split()))
-            continue
-
-        sdg_val = int(row["sdg"])
-        kept.append({
-            "id": row.get("id", ""),
-            "text": text,
-            "sdgs": [sdg_val],
-            "word_count": len(text.split()),
-        })
-
-    log.info(
-        "Kept: %d  |  Dropped (False label): %d  |  Dropped (short text): %d",
-        len(kept), dropped_label, dropped_text,
-    )
-
-    # SDG distribution
-    sdg_counts = Counter(r["sdgs"][0] for r in kept)
-    log.info("SDG distribution: %s", dict(sorted(sdg_counts.items())))
-
-    # Word count summary
-    wcs = sorted(r["word_count"] for r in kept)
-    log.info(
-        "Text length — min: %d  median: %d  max: %d words",
-        wcs[0], wcs[len(wcs) // 2], wcs[-1],
-    )
-
-    # Save JSONL
-    OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_JSONL.open("w") as f:
-        for row in kept:
-            f.write(json.dumps(row) + "\n")
-    log.info("Saved JSONL → %s", OUTPUT_JSONL)
-
-    # Save CSV
+def finalize(out_path: Path) -> None:
     csv_fields = ["id", "sdgs", "word_count", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(kept)
-    log.info("Saved CSV  → %s", OUTPUT_CSV)
+        with out_path.open(encoding="utf-8") as jf:
+            for line in jf:
+                line = line.strip()
+                if line:
+                    writer.writerow(json.loads(line))
+    log.info("Saved CSV  -> %s", OUTPUT_CSV)
 
-    print(f"\nDone. {len(kept)} rows written to {OUTPUT_JSONL}")
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Preprocess SDG Benchmark corpus (resume-safe).")
+    p.add_argument("--input", default=str(INPUT_FILE))
+    p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
+    p.add_argument("--out-csv", default=str(OUTPUT_CSV))
+    p.add_argument("--state", default=str(STATE_PATH))
+    p.add_argument("--status-dir", default=str(STATUS_DIR))
+    p.add_argument("--chunk-size", type=int, default=5000)
+    p.add_argument("--reset", action="store_true", help="Delete checkpoint + output and start fresh.")
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    global INPUT_FILE, OUTPUT_JSONL, OUTPUT_CSV, STATE_PATH, STATUS_DIR
+    INPUT_FILE = Path(args.input)
+    OUTPUT_JSONL = Path(args.out_jsonl)
+    OUTPUT_CSV = Path(args.out_csv)
+    STATE_PATH = Path(args.state)
+    STATUS_DIR = Path(args.status_dir)
+
+    resumable_records(
+        stage="preprocess_sdg_benchmark",
+        read_records=read_records,
+        transform=transform,
+        out_path=OUTPUT_JSONL,
+        state_path=STATE_PATH,
+        status_dir=STATUS_DIR,
+        chunk_size=args.chunk_size,
+        reset=args.reset,
+        finalize=finalize,
+    )
+
+    if OUTPUT_JSONL.exists():
+        sdg_counts = Counter(json.loads(line)["sdgs"][0]
+                             for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip())
+    else:
+        sdg_counts = Counter()
+    print(f"\nDone. {sum(sdg_counts.values())} rows written to {OUTPUT_JSONL}")
     print(f"  SDGs covered: {sorted(sdg_counts.keys())}")
-    print(f"  Examples per SDG — min: {min(sdg_counts.values())}  max: {max(sdg_counts.values())}")
 
 
 if __name__ == "__main__":

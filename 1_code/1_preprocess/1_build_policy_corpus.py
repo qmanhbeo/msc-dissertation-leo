@@ -21,6 +21,7 @@ The caller then embeds each source file separately via
 
 import argparse
 import json
+import os
 import sys
 from collections import Counter
 from pathlib import Path
@@ -58,10 +59,17 @@ def load_jsonl(path: Path) -> list[dict]:
 
 
 def write_jsonl(records: list[dict], path: Path) -> None:
+    """Transactional-atomic write: read-all-then-write-all to a tmp file,
+    then replace. Inputs (segmented files) are always loaded fully before any
+    output is written, so an interrupted run never leaves the inputs partially
+    overwritten and a re-run cleanly regenerates every output.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r) + "\n")
+    os.replace(tmp, path)
 
 
 def main() -> None:
@@ -71,6 +79,10 @@ def main() -> None:
     parser.add_argument(
         "--embed-model", default=DEFAULT_EMBED_MODEL,
         help="Embed model name (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--overwrite", action="store_true",
+        help="Recompute (the stage is already non-incremental; kept for CLI parity).",
     )
     args = parser.parse_args()
 

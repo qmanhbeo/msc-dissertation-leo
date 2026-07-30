@@ -10,6 +10,7 @@ Run from project root:
     python 1_code/1_preprocess/0_preprocess_sdgi_unified.py
 """
 
+import argparse
 import json
 import logging
 import re
@@ -28,10 +29,13 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import raw_dir, preprocessed_dir
+from _resume import resumable_records
 
 INPUT_PARQUET = raw_dir() / "sdgi_corpus" / "sdgi_corpus.parquet"
 OUTPUT_DIR = preprocessed_dir() / "sdgi"
 OUTPUT_JSONL = OUTPUT_DIR / "sdgi_clean.jsonl"
+STATE_PATH = OUTPUT_DIR / "sdgi_state.json"
+STATUS_DIR = OUTPUT_DIR / "metadata"
 TARGET_LANGUAGE = "en"
 MIN_WORDS = 20
 
@@ -70,93 +74,98 @@ def sanitise_source_doc(value: str) -> str:
     return value.replace("/", "_").replace(" ", "_").replace("-", "_")
 
 
-def main() -> None:
-    log.info("Loading %s", INPUT_PARQUET)
+def read_records():
     df = pd.read_parquet(INPUT_PARQUET)
-    log.info("Loaded %d raw rows", len(df))
-
-    # --- English filter ---
-    def is_english(meta: object) -> bool:
-        if isinstance(meta, dict):
-            return meta.get("language", "") == TARGET_LANGUAGE
-        return False
-
-    n_before_lang = len(df)
-    df = df[df["metadata"].apply(is_english)].copy()
-    log.info("English rows: %d (dropped %d)", len(df), n_before_lang - len(df))
-
-    records_out: list[dict] = []
-    total_before_word = 0
-    total_after_word = 0
-
     for idx, row in df.iterrows():
-        meta = row["metadata"] if isinstance(row["metadata"], dict) else {}
+        yield idx, row
 
-        text = str(row.get("text", "") or "")
-        text = clean_text(text)
-        wc = len(text.split())
-        total_before_word = max(total_before_word, wc)
-        if wc < MIN_WORDS:
-            continue
-        total_after_word += wc
 
-        labels = row.get("labels")
-        if isinstance(labels, np.ndarray):
-            sdgs = sorted(int(l) for l in labels)
-        elif isinstance(labels, list):
-            sdgs = sorted(int(l) for l in labels)
-        elif labels is not None:
-            sdgs = [int(labels)]
-        else:
-            continue
+def transform(payload) -> dict | None:
+    idx, row = payload
 
-        country = meta.get("country", "unknown").upper()
-        doc_type = meta.get("type", "policy").upper()
-        locality = meta.get("locality", "")
-        year = meta.get("year")
-        file_id = meta.get("file_id", "")
+    meta = row["metadata"] if isinstance(row["metadata"], dict) else {}
+    if not (isinstance(meta, dict) and meta.get("language", "") == TARGET_LANGUAGE):
+        return None
 
-        source_doc = (
-            f"sdgi_{country}_{doc_type}"
-            + (f"_{locality}" if locality else "")
-            + (f"_{year}" if year else "")
-        )
-        source_doc = sanitise_source_doc(source_doc)
+    text = str(row.get("text", "") or "")
+    text = clean_text(text)
+    if len(text.split()) < MIN_WORDS:
+        return None
 
-        records_out.append({
-            "id": f"sdgi_{idx:05d}",
-            "text": text,
-            "source_doc": source_doc,
-            "sdgs": sdgs,
-            "institution": f"{country} ({doc_type})",
-            "year": year,
-            "original_file": file_id,
-            "country": country,
-        })
+    labels = row.get("labels")
+    if isinstance(labels, np.ndarray):
+        sdgs = sorted(int(l) for l in labels)
+    elif isinstance(labels, list):
+        sdgs = sorted(int(l) for l in labels)
+    elif labels is not None:
+        sdgs = [int(labels)]
+    else:
+        return None
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_JSONL.open("w", encoding="utf-8") as f:
-        for r in records_out:
-            f.write(json.dumps(r) + "\n")
+    country = meta.get("country", "unknown").upper()
+    doc_type = meta.get("type", "policy").upper()
+    locality = meta.get("locality", "")
+    year = meta.get("year")
+    file_id = meta.get("file_id", "")
 
-    log.info("Wrote %d documents -> %s", len(records_out), OUTPUT_JSONL)
+    source_doc = (
+        f"sdgi_{country}_{doc_type}"
+        + (f"_{locality}" if locality else "")
+        + (f"_{year}" if year else "")
+    )
+    source_doc = sanitise_source_doc(source_doc)
 
-    # --- Statistics ---
-    n_multi = sum(1 for r in records_out if len(r["sdgs"]) > 1)
-    n_single = len(records_out) - n_multi
-    log.info(
-        "Documents: %d total (%d single-label, %d multi-label)",
-        len(records_out), n_single, n_multi,
+    # NOTE: idx is the global parquet row index; it advances for EVERY input
+    # row (including dropped ones) because read_records yields all rows and
+    # resumable_records increments rows_done per yielded record. This
+    # guarantees id = sdgi_{idx:05d} reproduces exactly across resumes.
+    return {
+        "id": f"sdgi_{idx:05d}",
+        "text": text,
+        "source_doc": source_doc,
+        "sdgs": sdgs,
+        "institution": f"{country} ({doc_type})",
+        "year": year,
+        "original_file": file_id,
+        "country": country,
+    }
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Preprocess SDGi corpus (resume-safe).")
+    p.add_argument("--input", default=str(INPUT_PARQUET))
+    p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
+    p.add_argument("--state", default=str(STATE_PATH))
+    p.add_argument("--status-dir", default=str(STATUS_DIR))
+    p.add_argument("--chunk-size", type=int, default=5000)
+    p.add_argument("--reset", action="store_true", help="Delete checkpoint + output and start fresh.")
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    global INPUT_PARQUET, OUTPUT_JSONL, STATE_PATH, STATUS_DIR
+    INPUT_PARQUET = Path(args.input)
+    OUTPUT_JSONL = Path(args.out_jsonl)
+    STATE_PATH = Path(args.state)
+    STATUS_DIR = Path(args.status_dir)
+
+    resumable_records(
+        stage="preprocess_sdgi_unified",
+        read_records=read_records,
+        transform=transform,
+        out_path=OUTPUT_JSONL,
+        state_path=STATE_PATH,
+        status_dir=STATUS_DIR,
+        chunk_size=args.chunk_size,
+        reset=args.reset,
+        dumps=lambda r: json.dumps(r, ensure_ascii=False),
     )
 
-    from collections import Counter
-    sdg_counts: Counter = Counter()
-    for r in records_out:
-        for sdg in r["sdgs"]:
-            sdg_counts[sdg] += 1
-    log.info("SDG label distribution: %s", dict(sorted(sdg_counts.items())))
-
-    print(f"\nDone. {len(records_out)} documents -> {OUTPUT_JSONL}")
+    n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
+    print(f"\nDone. {n} documents -> {OUTPUT_JSONL}")
 
 
 if __name__ == "__main__":

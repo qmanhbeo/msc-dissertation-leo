@@ -14,6 +14,7 @@ Run from project root:
     python 1_code/1_preprocess/0_preprocess_aurora.py
 """
 
+import argparse
 import csv
 import io
 import json
@@ -33,6 +34,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 from model_utils import raw_dir, preprocessed_dir
+from _resume import resumable_records
 
 N_SDG = 17
 INPUT_FILE = raw_dir() / "aurora" / "aurora_raw.jsonl"
@@ -40,6 +42,8 @@ AURORA_ZIP = raw_dir() / "aurora" / "aurora.zip"
 OUTPUT_JSONL = preprocessed_dir() / "aurora" / "aurora_texts.jsonl"
 OUTPUT_DIR = preprocessed_dir() / "aurora"
 MANIFEST_PATH = OUTPUT_DIR / "aurora_manifest.json"
+STATE_PATH = OUTPUT_DIR / "aurora_state.json"
+STATUS_DIR = OUTPUT_DIR / "metadata"
 
 MIN_WORDS = 20
 
@@ -96,94 +100,75 @@ def build_doi_to_sdgs_from_zip(zip_path: Path) -> dict[str, list[int]]:
     return {doi: sorted(sdgs) for doi, sdgs in doi_to_sdgs.items()}
 
 
-def main() -> None:
+def read_records():
     if not INPUT_FILE.exists():
         log.error("Input not found: %s\n  Run fetch_aurora.py first.", INPUT_FILE)
         return
-
-    # Load raw records (already have sdgs: list[int])
-    log.info("Loading %s", INPUT_FILE)
     with INPUT_FILE.open(encoding="utf-8") as f:
-        raw = [json.loads(line) for line in f if line.strip()]
-    log.info("Loaded %d raw rows", len(raw))
+        for line in f:
+            line = line.strip()
+            if line:
+                yield json.loads(line)
 
-    # Cross-check SDGs against ZIP
-    doi_to_all_sdgs = build_doi_to_sdgs_from_zip(AURORA_ZIP)
-    n_sdg_restored = 0
-    n_restored_texts = 0
 
-    kept, dropped_no_text, dropped_text = [], 0, 0
-    multi_count = 0
+def transform(raw):
+    doi = raw.get("doi", "")
+    sdgs = raw.get("sdgs", [])
+    if not isinstance(sdgs, list):
+        sdgs = [int(sdgs)] if sdgs else []
+    sdgs = [s for s in sdgs if 1 <= s <= N_SDG]
 
-    for r in raw:
-        doi = r.get("doi", "")
-        sdgs = r.get("sdgs", [])
-        if not isinstance(sdgs, list):
-            sdgs = [int(sdgs)] if sdgs else []
-        sdgs = [s for s in sdgs if 1 <= s <= N_SDG]
+    # Cross-check: if ZIP has more SDGs than the raw record, restore them
+    if doi in _DOI_TO_ALL_SDGS:
+        zip_sdgs = set(_DOI_TO_ALL_SDGS[doi])
+        fetched_sdgs = set(sdgs)
+        restored = zip_sdgs - fetched_sdgs
+        if restored:
+            sdgs = sorted(zip_sdgs)
 
-        # Cross-check: if ZIP has more SDGs than the raw record, restore them
-        if doi in doi_to_all_sdgs:
-            zip_sdgs = set(doi_to_all_sdgs[doi])
-            fetched_sdgs = set(sdgs)
-            restored = zip_sdgs - fetched_sdgs
-            if restored:
-                sdgs = sorted(zip_sdgs)
-                n_sdg_restored += len(restored)
-                n_restored_texts += 1
+    if not sdgs:
+        return None
 
-        if not sdgs:
-            continue
+    text = raw.get("text", "") or ""
+    if not text.strip():
+        return None
 
-        text = r.get("text", "") or ""
-        if not text.strip():
-            dropped_no_text += 1
-            continue
+    text = clean_text(text)
+    if len(text.split()) < MIN_WORDS:
+        return None
 
-        text = clean_text(text)
-        if len(text.split()) < MIN_WORDS:
-            dropped_text += 1
-            continue
+    return {
+        "doi": doi,
+        "sdgs": sdgs,
+        "title": raw.get("title", ""),
+        "abstract": raw.get("abstract", ""),
+        "has_abstract": raw.get("has_abstract", False),
+        "text": text,
+        "word_count": len(text.split()),
+        "source": "aurora",
+    }
 
-        if len(sdgs) > 1:
-            multi_count += 1
 
-        kept.append({
-            "doi": doi,
-            "sdgs": sdgs,
-            "title": r.get("title", ""),
-            "abstract": r.get("abstract", ""),
-            "has_abstract": r.get("has_abstract", False),
-            "text": text,
-            "word_count": len(text.split()),
-            "source": "aurora",
-        })
-
-    log.info(
-        "Total: %d kept (%d multi-label)  |  Dropped (no text): %d  |  "
-        "Dropped (short text): %d  |  SDGs restored from ZIP: %d labels across %d texts",
-        len(kept), multi_count, dropped_no_text, dropped_text,
-        n_sdg_restored, n_restored_texts,
-    )
-
-    OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_JSONL.open("w", encoding="utf-8") as f:
-        for row in kept:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
-    log.info("Saved -> %s", OUTPUT_JSONL)
-
-    # Build manifest
+def finalize(out_path: Path) -> None:
     per_sdg_counts = defaultdict(lambda: {"total": 0, "with_abstract": 0})
     n_total = 0
     n_abstract = 0
-    for r in kept:
-        n_total += 1
-        if r.get("has_abstract"):
-            n_abstract += 1
-        for sdg in r["sdgs"]:
-            per_sdg_counts[sdg]["total"] += 1
+    multi_count = 0
+    with out_path.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            r = json.loads(line)
+            n_total += 1
             if r.get("has_abstract"):
-                per_sdg_counts[sdg]["with_abstract"] += 1
+                n_abstract += 1
+            if len(r["sdgs"]) > 1:
+                multi_count += 1
+            for sdg in r["sdgs"]:
+                per_sdg_counts[sdg]["total"] += 1
+                if r.get("has_abstract"):
+                    per_sdg_counts[sdg]["with_abstract"] += 1
 
     manifest = {
         "n_total": n_total,
@@ -197,7 +182,49 @@ def main() -> None:
         json.dump(manifest, f, indent=2)
     log.info("Saved -> %s", MANIFEST_PATH)
 
-    print(f"\nDone. {len(kept)} rows written to {OUTPUT_JSONL}")
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Preprocess Aurora corpus (resume-safe).")
+    p.add_argument("--input", default=str(INPUT_FILE))
+    p.add_argument("--zip", default=str(AURORA_ZIP))
+    p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
+    p.add_argument("--manifest", default=str(MANIFEST_PATH))
+    p.add_argument("--state", default=str(STATE_PATH))
+    p.add_argument("--status-dir", default=str(STATUS_DIR))
+    p.add_argument("--chunk-size", type=int, default=5000)
+    p.add_argument("--reset", action="store_true", help="Delete checkpoint + output and start fresh.")
+    return p.parse_args()
+
+
+def main() -> None:
+    global INPUT_FILE, AURORA_ZIP, OUTPUT_JSONL, MANIFEST_PATH, STATE_PATH, STATUS_DIR, _DOI_TO_ALL_SDGS
+    args = parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    INPUT_FILE = Path(args.input)
+    AURORA_ZIP = Path(args.zip)
+    OUTPUT_JSONL = Path(args.out_jsonl)
+    MANIFEST_PATH = Path(args.manifest)
+    STATE_PATH = Path(args.state)
+    STATUS_DIR = Path(args.status_dir)
+
+    _DOI_TO_ALL_SDGS = build_doi_to_sdgs_from_zip(AURORA_ZIP)
+
+    resumable_records(
+        stage="preprocess_aurora",
+        read_records=read_records,
+        transform=transform,
+        out_path=OUTPUT_JSONL,
+        state_path=STATE_PATH,
+        status_dir=STATUS_DIR,
+        chunk_size=args.chunk_size,
+        reset=args.reset,
+        finalize=finalize,
+        dumps=lambda r: json.dumps(r, ensure_ascii=False),
+    )
+
+    n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
+    print(f"\nDone. {n} rows written to {OUTPUT_JSONL}")
 
 
 if __name__ == "__main__":

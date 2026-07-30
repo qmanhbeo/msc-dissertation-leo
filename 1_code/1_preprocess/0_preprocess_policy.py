@@ -19,6 +19,7 @@ Run from project root:
     python 1_code/1_preprocess/0_preprocess_policy.py
 """
 
+import argparse
 import json
 import logging
 import re
@@ -35,6 +36,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import raw_dir, preprocessed_dir
+from _resume import resumable_records
 
 
 SOURCE_CONFIGS = [
@@ -42,11 +44,15 @@ SOURCE_CONFIGS = [
         "source_name": "policy_scrape",
         "input_dir": raw_dir() / "policy_scrape" / "texts",
         "output_jsonl": preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_clean.jsonl",
+        "state_path": preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_state.json",
+        "status_dir": preprocessed_dir() / "policy_all" / "policy_scrape" / "metadata",
     },
     {
         "source_name": "policy_manual",
         "input_dir": raw_dir() / "policy_manual" / "texts",
         "output_jsonl": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_clean.jsonl",
+        "state_path": preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_state.json",
+        "status_dir": preprocessed_dir() / "policy_all" / "policy_manual" / "metadata",
     },
 ]
 
@@ -99,7 +105,7 @@ def clean_document(raw: str) -> str:
     return text.strip()
 
 
-def process_source(config: dict) -> None:
+def process_source(config: dict, reset: bool) -> None:
     source_name = config["source_name"]
     input_dir = Path(config["input_dir"])
     output_jsonl = Path(config["output_jsonl"])
@@ -107,31 +113,47 @@ def process_source(config: dict) -> None:
     docs = discover_docs(input_dir)
     log.info("Source %s: %d documents", source_name, len(docs))
 
-    records = []
-    for doc_name, filepath in docs.items():
+    def read_records():
+        for doc_name, filepath in sorted(docs.items()):
+            yield doc_name, filepath
+
+    def transform(payload) -> dict | None:
+        doc_name, filepath = payload
         raw = filepath.read_text(encoding="utf-8", errors="replace")
         cleaned = clean_document(raw)
-        records.append({
+        return {
             "id": doc_name,
             "text": cleaned,
             "source_doc": doc_name,
-        })
+        }
 
-    output_jsonl.parent.mkdir(parents=True, exist_ok=True)
-    with output_jsonl.open("w", encoding="utf-8") as f:
-        for r in records:
-            f.write(json.dumps(r) + "\n")
+    resumable_records(
+        stage=f"preprocess_policy_{source_name}",
+        read_records=read_records,
+        transform=transform,
+        out_path=output_jsonl,
+        state_path=Path(config["state_path"]),
+        status_dir=Path(config["status_dir"]),
+        chunk_size=2000,
+        reset=reset,
+    )
 
-    log.info("Wrote %d documents -> %s", len(records), output_jsonl)
-    print(f"\nDone. {source_name}: {len(records)} documents written to {output_jsonl}")
-    for r in records:
-        wc = len(r["text"].split())
-        print(f"  {r['id']}: {wc} words")
+    n = sum(1 for line in output_jsonl.open(encoding="utf-8") if line.strip()) if output_jsonl.exists() else 0
+    log.info("Wrote %d documents -> %s", n, output_jsonl)
+    print(f"\nDone. {source_name}: {n} documents written to {output_jsonl}")
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Preprocess policy documents (resume-safe).")
+    p.add_argument("--reset", action="store_true", help="Delete checkpoints + outputs and start fresh.")
+    return p.parse_args()
 
 
 def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
     for config in SOURCE_CONFIGS:
-        process_source(config)
+        process_source(config, args.reset)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ Run from project root:
     python 1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py
 """
 
+import argparse
 import csv
 import hashlib
 import json
@@ -30,6 +31,7 @@ import unicodedata
 from pathlib import Path
 
 import sys
+import pandas as pd
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
@@ -38,10 +40,13 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 from model_utils import raw_dir, preprocessed_dir
+from _resume import resumable_records
 
 INPUT_FILE = raw_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub.csv"
 OUTPUT_JSONL = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl"
 OUTPUT_CSV = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.csv"
+STATE_PATH = preprocessed_dir() / "sdg_knowledge_hub" / "sdg_kh_state.json"
+STATUS_DIR = preprocessed_dir() / "sdg_knowledge_hub" / "metadata"
 
 MIN_WORDS = 20
 
@@ -73,58 +78,80 @@ def clean_text(text: str) -> str:
     text = _MULTI_SPACE.sub(" ", text)
     return text.strip()
 
-def main() -> None:
-    log.info("Loading %s", INPUT_FILE)
-
-    import pandas as pd
+def read_records():
     df = pd.read_csv(INPUT_FILE)
-
-    log.info("Loaded %d raw rows", len(df))
-
     sdg_cols = [c for c in df.columns if c.startswith("SDG-")]
-    kept, dropped_text, multi_count = [], 0, 0
-
     for _, row in df.iterrows():
-        text = clean_text(row.get("text", ""))
-        if len(text.split()) < MIN_WORDS:
-            dropped_text += 1
-            continue
+        yield row, sdg_cols
 
-        active = [int(c.split("-")[1]) for c in sdg_cols if row[c] == 1]
-        if not active:
-            continue
 
-        if len(active) > 1:
-            multi_count += 1
+def transform(payload) -> dict | None:
+    row, sdg_cols = payload
+    text = clean_text(row.get("text", ""))
+    if len(text.split()) < MIN_WORDS:
+        return None
+    active = [int(c.split("-")[1]) for c in sdg_cols if row[c] == 1]
+    if not active:
+        return None
+    return {
+        "id": hashlib.sha256(row["url"].encode()).hexdigest()[:16],
+        "url": row["url"],
+        "text": text,
+        "sdgs": active,
+        "word_count": len(text.split()),
+    }
 
-        kept.append({
-            "id": hashlib.sha256(row["url"].encode()).hexdigest()[:16],
-            "url": row["url"],
-            "text": text,
-            "sdgs": active,
-            "word_count": len(text.split()),
-        })
 
-    log.info(
-        "Total: %d kept (%d multi-label)  |  Dropped (short text): %d  |  SDG distribution: %s",
-        len(kept), multi_count, dropped_text,
-        dict(sorted({n: sum(1 for r in kept if len(r["sdgs"]) == n) for n in range(1, 18)}.items())),
-    )
-
-    OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_JSONL.open("w") as f:
-        for row in kept:
-            f.write(json.dumps(row) + "\n")
-    log.info("Saved JSONL -> %s", OUTPUT_JSONL)
-
+def finalize(out_path: Path) -> None:
     csv_fields = ["id", "sdgs", "word_count", "url", "text"]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(kept)
+        with out_path.open(encoding="utf-8") as jf:
+            for line in jf:
+                line = line.strip()
+                if line:
+                    writer.writerow(json.loads(line))
     log.info("Saved CSV  -> %s", OUTPUT_CSV)
 
-    print(f"\nDone. {len(kept)} rows written to {OUTPUT_JSONL}")
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Preprocess SDG Knowledge Hub corpus (resume-safe).")
+    p.add_argument("--input", default=str(INPUT_FILE))
+    p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
+    p.add_argument("--out-csv", default=str(OUTPUT_CSV))
+    p.add_argument("--state", default=str(STATE_PATH))
+    p.add_argument("--status-dir", default=str(STATUS_DIR))
+    p.add_argument("--chunk-size", type=int, default=5000)
+    p.add_argument("--reset", action="store_true", help="Delete checkpoint + output and start fresh.")
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    global INPUT_FILE, OUTPUT_JSONL, OUTPUT_CSV, STATE_PATH, STATUS_DIR
+    INPUT_FILE = Path(args.input)
+    OUTPUT_JSONL = Path(args.out_jsonl)
+    OUTPUT_CSV = Path(args.out_csv)
+    STATE_PATH = Path(args.state)
+    STATUS_DIR = Path(args.status_dir)
+
+    resumable_records(
+        stage="preprocess_sdg_knowledge_hub",
+        read_records=read_records,
+        transform=transform,
+        out_path=OUTPUT_JSONL,
+        state_path=STATE_PATH,
+        status_dir=STATUS_DIR,
+        chunk_size=args.chunk_size,
+        reset=args.reset,
+        finalize=finalize,
+    )
+
+    n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
+    print(f"\nDone. {n} rows written to {OUTPUT_JSONL}")
 
 if __name__ == "__main__":
     main()

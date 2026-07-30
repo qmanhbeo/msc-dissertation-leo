@@ -419,6 +419,11 @@ def _overwrite_flag(overwrite: bool) -> list[str]:
     return ["--overwrite"] if overwrite else []
 
 
+def _reset_flag(overwrite: bool) -> list[str]:
+    """Preprocess scripts are resume-safe; --overwrite forces a clean rebuild."""
+    return ["--reset"] if overwrite else []
+
+
 def run_build_sdg_reference_centroids(model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     run_step(
         "build SDG reference centroids",
@@ -551,14 +556,14 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
 
     pre_steps = [
         # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
-        ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"]),
-        ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"]),
-        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"]),
-        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"]),
-        ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"]),
-        ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"]),
-        ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"]),
-        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"]),
+        ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + _reset_flag(args.overwrite)),
+        ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
+        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + _reset_flag(args.overwrite)),
+        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + _reset_flag(args.overwrite)),
+        ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + _reset_flag(args.overwrite)),
+        ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
+        ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
+        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
         # — SEGMENT (canonical, ONCE, shared by every encoder) —
         ("segment knowledge hub", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--corpus", "sdg_knowledge_hub", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
@@ -572,7 +577,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
          "--corpus", "ungdc_sdg", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment sdgi", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--corpus", "sdgi", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL]),
+        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment research corpus", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--sharded",
          "--input-glob", str(research_preprocessed_dir() / "part-*.jsonl"),
@@ -727,14 +732,14 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "preprocess":
         steps = [
-            ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"]),
-            ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"]),
-            ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"]),
-            ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"]),
-            ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"]),
-            ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"]),
-            ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"]),
-            ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"]),
+            ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + _reset_flag(args.overwrite)),
+            ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
+            ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + _reset_flag(args.overwrite)),
+            ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + _reset_flag(args.overwrite)),
+            ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + _reset_flag(args.overwrite)),
+            ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
+            ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
+            ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
         ]
         for label, cmd in steps:
             run_step(label, cmd)
@@ -747,7 +752,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
                   "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("build policy corpus",
-                 [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL]),
+                 [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("segment research corpus",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
                   "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),

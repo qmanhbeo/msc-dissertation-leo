@@ -20,7 +20,9 @@ Run from project root:
     python 1_code/1_preprocess/0_filter_ungdc_sdg.py
 """
 
+import argparse
 import json
+import logging
 import re
 from pathlib import Path
 
@@ -34,10 +36,13 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import raw_dir, preprocessed_dir
+from _resume import resumable_records
 
 UNGDC_TXT_DIR = raw_dir() / "ungdc" / "TXT"
 OUTPUT_DIR = preprocessed_dir() / "policy_all" / "ungdc_sdg"
 OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_clean.jsonl"
+STATE_PATH = OUTPUT_DIR / "ungdc_sdg_state.json"
+STATUS_DIR = OUTPUT_DIR / "metadata"
 
 # Sessions after SDG adoption (September 2015 = Session 70)
 MIN_SESSION = 70
@@ -139,14 +144,9 @@ def parse_speech_file(path: Path) -> tuple[str, int, int] | None:
     return None
 
 
-def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
+def read_records():
     if not UNGDC_TXT_DIR.exists():
-        print(f"ERROR: {UNGDC_TXT_DIR} not found. Run fetch_ungdc.py first.")
         return
-
-    # Collect all session directories in range
     session_dirs = []
     for d in sorted(UNGDC_TXT_DIR.iterdir()):
         if not d.is_dir():
@@ -154,66 +154,84 @@ def main() -> None:
         parsed = parse_session_dir(d)
         if parsed and MIN_SESSION <= parsed[0] <= MAX_SESSION:
             session_dirs.append((parsed[0], parsed[1], d))
-
-    print(f"Found {len(session_dirs)} sessions ({MIN_SESSION}–{MAX_SESSION})")
-
-    all_records: list[dict] = []
-    speech_count = 0
-    kept_speech_count = 0
-    para_before_count = 0
-    para_after_count = 0
-
     for session_num, year, session_dir in session_dirs:
-        speech_files = sorted(session_dir.glob("*.txt"))
-        print(f"  Session {session_num} ({year}): {len(speech_files)} speeches", end="", flush=True)
-
-        session_docs = 0
-        for speech_path in speech_files:
+        for speech_path in sorted(session_dir.glob("*.txt")):
             parsed = parse_speech_file(speech_path)
             if not parsed:
                 continue
-            iso3, _, _ = parsed
-            speech_count += 1
+            yield session_num, year, speech_path
 
-            try:
-                text = speech_path.read_text(encoding="utf-8", errors="replace")
-            except Exception:
-                continue
 
-            paragraphs = split_paragraphs(text)
-            para_before_count += len(paragraphs)
-            relevant = [p for p in paragraphs if SDG_PATTERNS.search(p)]
-            if not relevant:
-                continue
+def transform(payload) -> dict | None:
+    session_num, year, speech_path = payload
+    parsed = parse_speech_file(speech_path)
+    if not parsed:
+        return None
+    iso3, _, _ = parsed
 
-            para_after_count += len(relevant)
-            kept_speech_count += 1
-            speech_text = " ".join(relevant)
-            source_doc = f"ungdc_{iso3}_{session_num}_{year}"
+    try:
+        text = speech_path.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return None
 
-            all_records.append({
-                "id": speech_path.stem,
-                "text": speech_text,
-                "source_doc": source_doc,
-                "institution": f"{iso3} (UNGDC speech)",
-                "year": year,
-                "session": session_num,
-            })
-            session_docs += 1
+    paragraphs = split_paragraphs(text)
+    relevant = [p for p in paragraphs if SDG_PATTERNS.search(p)]
+    if not relevant:
+        return None
 
-        print(f"  → {session_docs} documents")
+    speech_text = " ".join(relevant)
+    source_doc = f"ungdc_{iso3}_{session_num}_{year}"
 
-    with OUTPUT_JSONL.open("w", encoding="utf-8") as f:
-        for r in all_records:
-            f.write(json.dumps(r) + "\n")
+    return {
+        "id": speech_path.stem,
+        "text": speech_text,
+        "source_doc": source_doc,
+        "institution": f"{iso3} (UNGDC speech)",
+        "year": year,
+        "session": session_num,
+    }
 
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Filter UNGDC speeches for SDG content (resume-safe).")
+    p.add_argument("--txt-dir", default=str(UNGDC_TXT_DIR))
+    p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
+    p.add_argument("--state", default=str(STATE_PATH))
+    p.add_argument("--status-dir", default=str(STATUS_DIR))
+    p.add_argument("--chunk-size", type=int, default=5000)
+    p.add_argument("--reset", action="store_true", help="Delete checkpoint + output and start fresh.")
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+
+    global UNGDC_TXT_DIR, OUTPUT_JSONL, STATE_PATH, STATUS_DIR
+    UNGDC_TXT_DIR = Path(args.txt_dir)
+    OUTPUT_JSONL = Path(args.out_jsonl)
+    STATE_PATH = Path(args.state)
+    STATUS_DIR = Path(args.status_dir)
+
+    if not UNGDC_TXT_DIR.exists():
+        print(f"ERROR: {UNGDC_TXT_DIR} not found. Run fetch_ungdc.py first.")
+        return
+
+    resumable_records(
+        stage="filter_ungdc_sdg",
+        read_records=read_records,
+        transform=transform,
+        out_path=OUTPUT_JSONL,
+        state_path=STATE_PATH,
+        status_dir=STATUS_DIR,
+        chunk_size=args.chunk_size,
+        reset=args.reset,
+        dumps=lambda r: json.dumps(r, ensure_ascii=False),
+    )
+
+    n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
     print(f"\n{'='*60}")
-    print(f"Speeches scanned:             {speech_count}")
-    print(f"Speeches with SDG content:    {kept_speech_count} ({kept_speech_count/max(speech_count,1)*100:.1f}%)")
-    print(f"Paragraphs before filter:     {para_before_count}")
-    print(f"Paragraphs after filter:      {para_after_count}")
-    print(f"Filter retention:             {para_after_count/max(para_before_count,1)*100:.1f}%")
-    print(f"Total documents:              {len(all_records)}")
+    print(f"Total documents:              {n}")
     print(f"Output:                       {OUTPUT_JSONL}")
     print(f"{'='*60}")
 
