@@ -52,11 +52,13 @@ from shared_utils import (
     require_pdf_inputs,
 )
 from model_utils import (
+    CANONICAL_SEGMENT_MODEL,
     DEFAULT_EMBED_MODEL,
     embed_dir_for_model,
     embed_research_dir_for_model,
     research_preprocessed_dir,
     research_segmented_dir_for_model,
+    research_subset_manifest,
     scored_dir_for_model,
     segmented_dir_for_model,
     resolve_model_alias,
@@ -535,41 +537,39 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"]),
         ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"]),
         ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"]),
-        # — SEGMENT (token-count-aware segmentation into 2_segmented/{model}/) —
+        # — SEGMENT (canonical, ONCE, shared by every encoder) —
         ("segment knowledge hub", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "sdg_knowledge_hub", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+         "--corpus", "sdg_knowledge_hub", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment aurora", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "aurora", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+         "--corpus", "aurora", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment policy scrape", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "policy_scrape", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+         "--corpus", "policy_scrape", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment policy manual", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "policy_manual", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+         "--corpus", "policy_manual", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment ungdc", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "ungdc_sdg", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+         "--corpus", "ungdc_sdg", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment sdgi", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "sdgi", "--embed-model", model] + _overwrite_flag(args.overwrite)),
-        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", model]),
+         "--corpus", "sdgi", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
+        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL]),
         ("segment research corpus", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--sharded",
          "--input-glob", str(research_preprocessed_dir() / "part-*.jsonl"),
-         "--output-dir", str(research_segmented_dir_for_model(model)),
+         "--output-dir", str(research_segmented_dir_for_model(CANONICAL_SEGMENT_MODEL)),
          "--text-field", "combined_text", "--id-field", "openalex_id",
-         "--prefix", "paper", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+         "--prefix", "paper", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         # — EMBED (encode each source separately, then merge policy) —
     ]
-    if model == "allenai/scibert_scivocab_uncased":
-        # SciBERT reuses MPNet's segmented research texts; build the 50k
-        # representative subset before embedding.
-        pre_steps.append((
-            "build SciBERT research subset",
-            [sys.executable, "1_code/2_segment/2_sample_segments.py",
-             "--slug", model] + _overwrite_flag(args.overwrite),
-        ))
+    # Shared 50k representative subset (consumed by MiniLM + SciBERT instead of
+    # the full corpus); built once from the canonical segments.
+    pre_steps.append((
+        "build research 50k subset",
+        [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite),
+    ))
     pre_steps = pre_steps + [
         (f"embed {corpus}", [
             sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
             "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
-        ] + model_args + (["--seg-model", "all-mpnet-base-v2"] if model == "allenai/scibert_scivocab_uncased" else []))
+        ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL])
         for corpus in ALL_EMBED_CORPORA
     ] + [
         ("merge policy corpus", [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args),
@@ -586,9 +586,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         str(args.batch_size),
     ]
     embed_cmd.extend(model_args)
-    if model == "allenai/scibert_scivocab_uncased":
-        subset_manifest = segmented_dir_for_model(model) / "research_subset" / "metadata" / "manifest.json"
-        embed_cmd.extend(["--input-manifest", str(subset_manifest)])
+    if model != CANONICAL_SEGMENT_MODEL:
+        embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
     run_step("embed paper shards", embed_cmd)
 
     _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
@@ -704,24 +703,28 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             steps = [
                 ("segment reference & policy corpora",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
-                  "--all", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+                  "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("build policy corpus",
-                 [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", model]),
+                 [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL]),
                 ("segment research corpus",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
-                  "--corpus", "research", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+                  "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
+                ("build research 50k subset",
+                 [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
             ]
         elif corpus == "research":
             steps = [
                 ("segment research corpus",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
-                  "--corpus", "research", "--embed-model", model] + _overwrite_flag(args.overwrite)),
+                  "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
+                ("build research 50k subset",
+                 [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
             ]
         else:
             steps = [
                 (f"segment {corpus}",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
-                  "--corpus", corpus, "--embed-model", model] + _overwrite_flag(args.overwrite)),
+                  "--corpus", corpus, "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
             ]
         for label, cmd in steps:
             run_step(label, cmd)
@@ -732,7 +735,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
                 f"embed {corpus}",
                  [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
                   "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE, "--local-files-only",
-                  "--precision", args.precision, "--normalize-embeddings"] + model_args,
+                  "--precision", args.precision, "--normalize-embeddings"] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL],
             )
         run_step(
             "merge policy corpus",
@@ -746,6 +749,8 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             "--normalize-embeddings",
         ]
         embed_cmd.extend(model_args)
+        if model != CANONICAL_SEGMENT_MODEL:
+            embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
         run_step("embed paper shards", embed_cmd)
 
     elif stage == "train":

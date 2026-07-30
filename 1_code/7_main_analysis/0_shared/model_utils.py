@@ -27,6 +27,19 @@ NORM_EPS = 1e-12
 # Below this L2 norm a (policy/research) centroid is treated as degenerate and
 # excluded from semantic-gap computation.
 MIN_CENTROID_NORM = 0.5
+# Canonical segmentation shared by every encoder in the architecture-sensitivity
+# comparison. All models embed the SAME canonical segments, so the only varying
+# factor is the encoder (architecture + native context window). 384 is
+# all-mpnet-base-v2's native limit: it covers SciBERT (<=512) fully and MiniLM
+# truncates internally to 256 — a documented model property, not a hidden text
+# difference.
+CANONICAL_SEGMENT_MODEL = "all-mpnet-base-v2"
+CANONICAL_MAX_SEQ_LENGTH = 384
+# Shared, deterministic 50k-paper representative research subset drawn (seed 42)
+# from the canonical segments. Consumed by every non-primary (sensitivity)
+# encoder so the architecture comparison is on identical papers.
+RESEARCH_SUBSET_SEED = 42
+RESEARCH_SUBSET_SIZE = 50_000
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 DATA_ROOT = Path("2_data")
@@ -128,6 +141,23 @@ def research_segmented_dir_for_model(model: str) -> Path:
     return segmented_dir_for_model(model) / "research"
 
 
+def canonical_research_segment_dir() -> Path:
+    return research_segmented_dir_for_model(CANONICAL_SEGMENT_MODEL)
+
+
+def research_subset_dir() -> Path:
+    """Shared 50k-paper subset of the canonical research segments.
+
+    Sensitivity encoders (MiniLM, SciBERT) embed these identical texts rather
+    than the full corpus, so the architecture comparison is on identical papers.
+    """
+    return canonical_research_segment_dir() / "research_50k_subset"
+
+
+def research_subset_manifest() -> Path:
+    return research_subset_dir() / "metadata" / "manifest.json"
+
+
 # ── Warm-replay text fallback (3a_warm_replay_texts/) ────────────────────
 #
 # Canonical text lives in 2_segmented/{model}/ (plain .jsonl). The embedded
@@ -146,6 +176,16 @@ def warm_replay_texts_dir_for_model(model: str) -> Path:
 
 
 def resolve_research_text_path(model: str, shard_name: str) -> Path:
+    if model != CANONICAL_SEGMENT_MODEL:
+        # Sensitivity encoders embed the shared canonical 50k subset; their
+        # texts are the canonical segments for those papers, not their own
+        # (now-absent) segmented dir.
+        subset = research_subset_dir() / f"{shard_name}.jsonl"
+        if subset.exists():
+            return subset
+        subset_gz = research_subset_dir() / f"{shard_name}.jsonl.gz"
+        if subset_gz.exists():
+            return subset_gz
     canonical = research_segmented_dir_for_model(model) / f"{shard_name}.jsonl"
     if canonical.exists():
         return canonical
@@ -160,6 +200,15 @@ def resolve_research_text_path(model: str, shard_name: str) -> Path:
 
 
 def resolve_policy_text_path(model: str) -> Path:
+    if model != CANONICAL_SEGMENT_MODEL:
+        # Sensitivity encoders embed the canonical policy segments, so their
+        # policy text is the canonical model's, not their own (absent) dir.
+        canonical_policy = segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "policy.jsonl"
+        if canonical_policy.exists():
+            return canonical_policy
+        canonical_policy_gz = segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "policy.jsonl.gz"
+        if canonical_policy_gz.exists():
+            return canonical_policy_gz
     canonical = segmented_dir_for_model(model) / "policy.jsonl"
     if canonical.exists():
         return canonical
