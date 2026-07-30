@@ -177,7 +177,7 @@ def parse_args() -> argparse.Namespace:
         help="Run a single pipeline stage (assumes upstream outputs exist).",
     )
     p.add_argument("--corpus",
-                   choices=["all", "reference", "policy", "research"],
+                   choices=["all", "reference", "policy", "research", "research_concept"],
                    default="all",
                    help="Corpus to segment (default: all; only used with --stage segment).")
     return p.parse_args()
