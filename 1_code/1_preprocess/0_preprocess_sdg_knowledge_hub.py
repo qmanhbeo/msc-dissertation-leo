@@ -133,7 +133,7 @@ def main() -> None:
     )
 
     n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
-    print(f"\nDone. {n} rows written to {OUTPUT_JSONL}")
+    log.info("%d rows written to %s", n, OUTPUT_JSONL)
 
 if __name__ == "__main__":
     main()

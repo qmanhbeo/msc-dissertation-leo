@@ -38,6 +38,8 @@ if str(ANALYSIS_DIR) not in sys.path:
 from model_utils import raw_dir, preprocessed_dir, individual_source_dir
 from _resume import resumable_records
 
+log = logging.getLogger(__name__)
+
 UNGDC_TXT_DIR = raw_dir() / "ungdc" / "TXT"
 OUTPUT_DIR = individual_source_dir("ungdc_sdg")
 OUTPUT_JSONL = OUTPUT_DIR / "ungdc_sdg_clean.jsonl"
@@ -231,10 +233,7 @@ def main() -> None:
     )
 
     n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
-    print(f"\n{'='*60}")
-    print(f"Total documents:              {n}")
-    print(f"Output:                       {OUTPUT_JSONL}")
-    print(f"{'='*60}")
+    log.info("%d rows written to %s", n, OUTPUT_JSONL)
 
 
 if __name__ == "__main__":

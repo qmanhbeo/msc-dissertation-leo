@@ -24,7 +24,6 @@ import json
 import logging
 import re
 import unicodedata
-from collections import Counter
 from pathlib import Path
 
 import sys
@@ -143,13 +142,8 @@ def main() -> None:
         reset=args.reset,
     )
 
-    if OUTPUT_JSONL.exists():
-        sdg_counts = Counter(json.loads(line)["sdgs"][0]
-                             for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip())
-    else:
-        sdg_counts = Counter()
-    print(f"\nDone. {sum(sdg_counts.values())} rows written to {OUTPUT_JSONL}")
-    print(f"  SDGs covered: {sorted(sdg_counts.keys())}")
+    n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
+    log.info("%d rows written to %s", n, OUTPUT_JSONL)
 
 
 if __name__ == "__main__":

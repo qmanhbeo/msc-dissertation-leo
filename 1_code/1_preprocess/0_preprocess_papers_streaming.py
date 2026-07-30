@@ -422,13 +422,12 @@ def main() -> None:
         },
     )
     log.info(
-        "Done. scanned=%s kept=%s dropped=%s duplicate=%s written=%s",
+        "done: total_processed=%d kept=%d dropped=%d",
         state["rows_scanned"],
         state["rows_kept"],
         state["rows_dropped"],
-        state["rows_duplicate"],
-        state["rows_written"],
     )
+    log.info("%d rows written to %s", state["rows_written"], out_dir)
 
 
 if __name__ == "__main__":

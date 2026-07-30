@@ -179,7 +179,7 @@ def resumable_records(
         raise
 
     log.info(
-        "%s done: rows_done=%d kept=%d dropped=%d",
+        "%s done: total_processed=%d kept=%d dropped=%d",
         stage, rows_done, rows_kept, rows_dropped,
     )
     return state

@@ -28,7 +28,7 @@ if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
 from model_utils import preprocessed_dir, individual_source_dir
-from shard_pipeline_utils import atomic_write_json, ensure_dir
+from shard_pipeline_utils import atomic_write_json, ensure_dir, read_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -83,7 +83,9 @@ def main() -> None:
 
     output_path = preprocessed_dir() / "reference.jsonl"
     if output_path.exists() and not args.overwrite:
-        log.info("Skip — %s already exists", output_path)
+        meta_path = preprocessed_dir() / "metadata" / "build_reference_corpus.json"
+        kept = read_json(meta_path, {}).get("total_deduped", "?")
+        log.info("skip: %s already exists (kept=%s from earlier run)", output_path, kept)
         return
 
     all_records: list[dict] = []
@@ -119,17 +121,14 @@ def main() -> None:
     total_deduped = len(deduped)
     total_removed = total_raw - total_deduped
     log.info(
-        "Dedup: %d -> %d (%d removed, %.1f%%)",
+        "done: total_processed=%d kept=%d dropped=%d",
         total_raw, total_deduped, total_removed,
-        100.0 * total_removed / total_raw if total_raw else 0,
     )
-    log.info("Per-source deduped counts: %s", dict(dedup_source_counts))
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
         for rec in deduped:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    log.info("Wrote %d records -> %s", total_deduped, output_path)
+    log.info("%d rows written to %s", total_deduped, output_path)
 
     metadata = {
         "stage": "build_reference_corpus",
@@ -143,7 +142,6 @@ def main() -> None:
     meta_path = preprocessed_dir() / "metadata" / "build_reference_corpus.json"
     ensure_dir(meta_path.parent)
     atomic_write_json(meta_path, metadata)
-    log.info("Wrote metadata -> %s", meta_path)
 
 
 if __name__ == "__main__":

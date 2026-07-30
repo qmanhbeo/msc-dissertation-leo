@@ -140,8 +140,7 @@ def process_source(config: dict, reset: bool) -> None:
     )
 
     n = sum(1 for line in output_jsonl.open(encoding="utf-8") if line.strip()) if output_jsonl.exists() else 0
-    log.info("Wrote %d documents -> %s", n, output_jsonl)
-    print(f"\nDone. {source_name}: {n} documents written to {output_jsonl}")
+    log.info("%d rows written to %s", n, output_jsonl)
 
 
 def parse_args() -> argparse.Namespace:
