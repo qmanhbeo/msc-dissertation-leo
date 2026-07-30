@@ -88,7 +88,7 @@ def load_jsonl(path: Path, field: str, max_records: int | None = None) -> list[s
 
 
 def load_research_shards(n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE) -> list[str]:
-    base = preprocessed_dir() / "research_corpus"
+    base = preprocessed_dir() / "research"
     per_shard = target // n_shards
     records = []
     for i in range(1, n_shards + 1):

@@ -36,7 +36,7 @@ DATA: 2_data/1_preprocessed/individual_sources/[source]/*
  1.  preprocess research shards (canon)
  2.  preprocess concept-based research corpus (robustness)
 
-=> DATA: 2_data/1_preprocessed/[research_corpus | research_corpus_concept]/*.jsonl
+=> DATA: 2_data/1_preprocessed/[research | research_concept]/*.jsonl
 
 CODE: 1_code/1_preprocess/1_build_*.py
 

@@ -142,7 +142,7 @@ def raw_dir() -> Path:
 
 
 def research_preprocessed_dir() -> Path:
-    return preprocessed_dir() / "research_corpus"
+    return preprocessed_dir() / "research"
 
 
 def research_segmented_dir_for_model(model: str) -> Path:
@@ -167,7 +167,7 @@ def research_subset_manifest() -> Path:
 
 
 def research_concept_preprocessed_dir() -> Path:
-    return preprocessed_dir() / "research_corpus_concept"
+    return preprocessed_dir() / "research_concept"
 
 
 def research_concept_segmented_dir_for_model(model: str) -> Path:

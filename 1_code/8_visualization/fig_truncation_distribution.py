@@ -79,9 +79,9 @@ CORPORA = [
     },
     {
         "label": "Research\n(shard 10)",
-        "pre_path": str(preprocessed_dir() / "research_corpus/part-00010.jsonl"),
+        "pre_path": str(preprocessed_dir() / "research/part-00010.jsonl"),
         "pre_field": "combined_text",
-        "post_mpnet": str(preprocessed_dir() / "research_corpus/segmented_all-mpnet-base-v2/part-00010.jsonl"),
+        "post_mpnet": str(preprocessed_dir() / "research/segmented_all-mpnet-base-v2/part-00010.jsonl"),
         "post_minilm": None,
         "color": "#AA3377",
     },

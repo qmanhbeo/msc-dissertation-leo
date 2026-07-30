@@ -4,13 +4,13 @@ Streaming OpenAlex cleaner with checkpoint + resume safety.
 This stage reads the raw OpenAlex JSONL line-by-line and writes clean shards.
 It is safe to interrupt and resume. Progress is persisted under:
   - 2_data/3_embedded/{model}/research_shards/metadata/openalex_papers_to_clean_shards.json
-  - 2_data/1_preprocessed/research_corpus/metadata/state.json
+  - 2_data/1_preprocessed/research/metadata/state.json
 
 Outputs:
-  2_data/1_preprocessed/research_corpus/part-00001.jsonl
-  2_data/1_preprocessed/research_corpus/metadata/part-00001_ids.jsonl
-  2_data/1_preprocessed/research_corpus/metadata/manifest.json
-  2_data/1_preprocessed/research_corpus/metadata/dedupe.sqlite
+  2_data/1_preprocessed/research/part-00001.jsonl
+  2_data/1_preprocessed/research/metadata/part-00001_ids.jsonl
+  2_data/1_preprocessed/research/metadata/manifest.json
+  2_data/1_preprocessed/research/metadata/dedupe.sqlite
 """
 
 from __future__ import annotations
@@ -259,10 +259,10 @@ def main() -> None:
         raw_subdir = "openalex_concept" if args.retrieval == "concept" else "openalex"
         args.input = str(raw_dir() / raw_subdir / "papers.jsonl")
     if args.out_dir is None:
-        out_subdir = "research_corpus_concept" if args.retrieval == "concept" else "research_corpus"
+        out_subdir = "research_concept" if args.retrieval == "concept" else "research"
         args.out_dir = str(preprocessed_dir() / out_subdir)
     if args.status_dir is None:
-        status_out = "research_corpus_concept" if args.retrieval == "concept" else "research_corpus"
+        status_out = "research_concept" if args.retrieval == "concept" else "research"
         args.status_dir = str(preprocessed_dir() / status_out / "metadata")
 
     input_path = Path(args.input)
