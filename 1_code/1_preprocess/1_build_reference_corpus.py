@@ -5,9 +5,9 @@ Reads preprocessed JSONL from individual_sources/ for each reference source
 (osdg, benchmark, sdg_knowledge_hub, aurora, sdgi), normalises fields to
 a common schema,
 deduplicates by exact text (first occurrence wins), and writes
-reference.json.
+reference.jsonl.
 
-Output: preprocessed_dir() / "reference.json"  (JSON list of records)
+Output: preprocessed_dir() / "reference.jsonl"  (line-delimited JSON)
 
 Run from project root:
     python 1_code/1_preprocess/1_build_reference_corpus.py
@@ -78,10 +78,10 @@ def normalise_record(rec: dict, source_cfg: dict) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build consolidated reference corpus.")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing reference.json.")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing reference.jsonl.")
     args = parser.parse_args()
 
-    output_path = preprocessed_dir() / "reference.json"
+    output_path = preprocessed_dir() / "reference.jsonl"
     if output_path.exists() and not args.overwrite:
         log.info("Skip — %s already exists", output_path)
         return
@@ -127,7 +127,8 @@ def main() -> None:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
-        json.dump(deduped, f, ensure_ascii=False)
+        for rec in deduped:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     log.info("Wrote %d records -> %s", total_deduped, output_path)
 
     metadata = {

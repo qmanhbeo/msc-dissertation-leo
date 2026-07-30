@@ -4,14 +4,14 @@ Build consolidated policy corpus from individual policy sources.
 Reads preprocessed JSONL from individual_sources/ for each policy source
 (policy_scrape, policy_manual, ungdc_sdg, sdgi), normalises fields,
 adds source_family,
-deduplicates by exact text (first occurrence wins), and writes policy.json.
+deduplicates by exact text (first occurrence wins), and writes policy.jsonl.
 
 source_family mapping (moved from deleted 1_merge_policy_corpus.py):
   policy_scrape / policy_manual  → "curated_ai_sdg"
   ungdc_sdg                      → "ungdc_speeches"
   sdgi                           → "sdgi_vnr_vlr"
 
-Output: preprocessed_dir() / "policy.json"  (JSON list of records)
+Output: preprocessed_dir() / "policy.jsonl"  (line-delimited JSON)
 
 Run from project root:
     python 1_code/1_preprocess/1_build_policy_corpus.py
@@ -84,10 +84,10 @@ def normalise_record(rec: dict, source_cfg: dict) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build consolidated policy corpus.")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing policy.json.")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing policy.jsonl.")
     args = parser.parse_args()
 
-    output_path = preprocessed_dir() / "policy.json"
+    output_path = preprocessed_dir() / "policy.jsonl"
     if output_path.exists() and not args.overwrite:
         log.info("Skip — %s already exists", output_path)
         return
@@ -136,7 +136,8 @@ def main() -> None:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
-        json.dump(deduped, f, ensure_ascii=False)
+        for rec in deduped:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     log.info("Wrote %d records -> %s", total_deduped, output_path)
 
     metadata = {

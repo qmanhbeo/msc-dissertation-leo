@@ -207,8 +207,8 @@ def main() -> None:
 
     if args.all_corpora:
         corpora = [
-            ("reference", str(preprocessed_dir() / "reference.json"), "id", "ref"),
-            ("policy", str(preprocessed_dir() / "policy.json"), "id", "pol"),
+            ("reference", str(preprocessed_dir() / "reference.jsonl"), "id", "ref"),
+            ("policy", str(preprocessed_dir() / "policy.jsonl"), "id", "pol"),
         ]
         any_work = any(
             not (segmented_dir_for_model(args.embed_model) / f"{name}.jsonl").exists()
@@ -244,7 +244,7 @@ def main() -> None:
         args.prefix = "paper"
     elif args.corpus == "reference":
         if not args.input:
-            args.input = str(preprocessed_dir() / "reference.json")
+            args.input = str(preprocessed_dir() / "reference.jsonl")
         if not args.output:
             args.output = str(segmented_dir_for_model(args.embed_model) / "reference.jsonl")
         if not args.prefix or args.prefix == "doc":
@@ -253,7 +253,7 @@ def main() -> None:
             args.id_field = "id"
     elif args.corpus == "policy":
         if not args.input:
-            args.input = str(preprocessed_dir() / "policy.json")
+            args.input = str(preprocessed_dir() / "policy.jsonl")
         if not args.output:
             args.output = str(segmented_dir_for_model(args.embed_model) / "policy.jsonl")
         if not args.prefix or args.prefix == "doc":
