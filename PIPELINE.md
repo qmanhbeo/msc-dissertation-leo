@@ -7,6 +7,8 @@ Code: 1_code/0_fetch/fetch_openalex.py --retrieval [keyword | concept]
 
 Data: 2_data/0_raw/[openalex | openalex_concept]/*
 
+---
+
 Code: 1_code/0_fetch/*.py
 
  3. Fetch policy documents (web scraper) + fetch UNGDC + convert manually downloaded policy for Policy corpus
@@ -38,6 +40,8 @@ DATA: 2_data/1_preprocessed/individual_sources/[source]/*
 
 => DATA: 2_data/1_preprocessed/[research | research_concept]/*.jsonl
 
+---
+
 CODE: 1_code/1_preprocess/1_build_*.py
 
  2.  build reference corpus (consolidate + dedup)
@@ -54,6 +58,8 @@ CODE: 1_code/2_segment/1_segment_corpus.py
 
 DATA: 2_data/2_segmented/[policy|reference].jsonl
 
+---
+
 CODE: 1_code/2_segment/1_segment_corpus.py
 
  3.  segment canon research
@@ -61,54 +67,93 @@ CODE: 1_code/2_segment/1_segment_corpus.py
 
 DATA: 2_data/2_segmented/[research|research_concept]/part-*.jsonl
 
+---
 
-CODE: 1_code/2_segment/2_sample_segments.py.py
+CODE: 1_code/2_segment/2_sample_segments.py
 
  5.  build research 50k subset (for other embedding models' robustness tests)
 
 DATA: 2_data/2_segmented/research_subset/part-00001.jsonl
 
 
-# ══ PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) 
+# PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) 
 
-    for model m in [MPNet, MiniLM, SciBERT]:
+for model m in [MPNet, MiniLM, SciBERT]:
 
-    -- EMBED (m) --
-       embed osdg
-       embed benchmark
-       embed sdg_knowledge_hub
-       embed sdgi
-       embed aurora
-       embed policy_scrape
-       embed policy_manual
-       embed ungdc_sdg
-       merge policy corpus
-       embed paper shards   (full corpus for MPNet; 50k subset for MiniLM/SciBERT)
+## EMBED (m)
 
-    -- TRAIN + SCORE (m) --
-       prepare training data
-       retrain full data (LR)
-       build SDG reference centroids
-       score research shards (LR)
-       score policy corpus (LR)
-       retrain MLP
-       score MLP
-       check centroid consistency
-       build centroid similarity matrix
+CODE: 1_code/3_embed/0_embed_reference_and_policy_corpora.py
 
-    -- ANALYSIS (run_analysis, in-process) --
-       score_zeroshot                     [DEBT: runs for MiniLM/SciBERT]
-       0_coverage_gap                     ✓ all models (needed)
-       1_semantic_gap                     ✓ all models (needed)
-       2_coverage_semantic_interaction    [DEBT: runs for MiniLM/SciBERT]
-       3_generate_cross_sensitivity_table [DEBT: runs per-model, incomplete;
-                                            overwritten by final step below]
-       0_pca_semantic_landscape           ✓ MPNet-only (already correct)
-       appendix a2/a3/b2/c/f/h1           [DEBT: runs for MiniLM/SciBERT]
+1. embed reference
+2. embed policy
 
-    -- FIGURES --
-       plot figures                      ✓ MPNet-only (already correct)
+DATA: 2_data/3_embedded/[model]/[reference|policy].npy
 
-══ FINAL — after the loop ════════════════════════════════════════
+---
 
-18.  regenerate canonical cross-sensitivity table (all 3 encoders)
+CODE: 1_code/3_embed/0_embed_paper_shards.py
+
+3. embed paper shards   (full corpus for MPNet; 50k subset for MiniLM/SciBERT)
+4. embed concept-retrieved paper shards   (MPNet only)
+
+DATA: 
+- 2_data/3_embedded/[model]/research_shards.npy/part-*.npy (27 shards for MPNet, 1 shard each for MiniLM and SciBERT)
+- 2_data/3_embedded/[model]/research_concept/part-*.npy (MPNet only)
+
+
+## TRAIN (m)
+
+CODE: 1_code/4_supervised_model_train/*
+
+1. prepare training data (what does this do?)
+2. Per supervised model [LogReg, MLP]:
+
+    2.1. *LR and MLP grid search with CV done manually. Tested (retrain on train+val, is it?) on held-out test set. Results saved durably. No re-run in replays.*
+
+    2.2. retrain full train+val+test data (currently it's train + val)
+
+5. build SDG reference centroids (from original labelled reference texts)
+
+DATA: 2_data/4_supervised_model_results/[model]/*
+
+## SCORE (m)
+
+CODE: 1_code/5_supervised_model_infer/
+
+1. Per supervised model [LogReg, MLP]:
+
+    1.1. score research shards (use canon + concept-retrieval for MPNet; use subset for MiniLM + SciBERT)
+
+    1.2. score policy corpus
+
+    1.3. check centroid consistency (what does this do?)
+
+2. build centroid similarity matrix (LR only)
+3. score research & policy with zeroshot method (nearest-centroid SDG assignment)  (currently wrongly in 5_supervised_model_infer/. Should be in 6_calculate_centroids/ instead, before score_zeroshot.py)
+
+
+# ANALYSIS (run_analysis, in-process)
+
+For MPNet:
+
+1. 0_pca_semantic_landscape
+2. 0_coverage_gap: use canon + concept-retrieval + filtered policy corpus (Curated SDGi UNGDC) 
+3. 1_semantic_gap: use canon + concept-retrieval + filtered policy corpus (Curated SDGi UNGDC) 
+4. 2_coverage_semantic_interaction    [DEBT: runs for MiniLM/SciBERT]
+
+For MiniLM and SciBERT, and any robustness encoders to come: 
+
+1. 0_coverage_gap (use canon + concept-retrieval for MPNet; use subset for MiniLM + SciBERT)
+2. 1_semantic_gap (use canon + concept-retrieval for MPNet; use subset for MiniLM + SciBERT)
+
+3. 3_generate_cross_sensitivity_table [WRONG. DEBT: runs per-model, incomplete; overwritten by final step below]
+
+## FIGURES
+
+1. plot figures                      ✓ MPNet-only (already correct)
+
+# Robustness check — after the model loop
+
+1.  generate canonical cross-sensitivity table (with data from all 3 encoders + concept-retrieval + per-policy-corpus filters)
+
+5. appendix a2/a3/b2/c/f/h1 with canon MPNet only[DEBT: runs for MiniLM/SciBERT]
