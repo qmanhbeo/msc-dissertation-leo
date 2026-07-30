@@ -40,7 +40,7 @@ if str(ANALYSIS_DIR) not in sys.path:
 from embed_utils import write_batch_manifest
 from embed_loader import load_embedder
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, segmented_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, research_concept_segmented_dir_for_model, segmented_dir_for_model, resolve_model_alias
 
 
 log = logging.getLogger(__name__)
@@ -66,6 +66,8 @@ def parse_args() -> argparse.Namespace:
                    help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     p.add_argument("--local-files-only", action="store_true")
     p.add_argument("--limit-shards", type=int, default=0)
+    p.add_argument("--corpus", choices=["research", "research_concept"], default="research",
+                   help="Corpus to embed (default: %(default)s). Auto-derives input manifest and output dir.")
     p.add_argument("--overwrite", action="store_true",
                    help="Re-embed existing shards even if already complete")
     return p.parse_args()
@@ -121,19 +123,22 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
     embed_root = embed_dir_for_model(args.embed_model)
-    # Default to the canonical "research" segment dir; when an explicit
-    # --input-manifest is given (e.g. a concept variant) derive the segment
-    # dir from that manifest's parent so we read the correct segmented shards.
-    seg_root = (
-        Path(args.input_manifest).resolve().parent.parent
-        if args.input_manifest
-        else segmented_dir_for_model(args.embed_model) / "research"
-    )
+    if args.input_manifest:
+        seg_root = Path(args.input_manifest).resolve().parent.parent
+    elif args.corpus == "research_concept":
+        seg_root = research_concept_segmented_dir_for_model(args.embed_model)
+    else:
+        seg_root = segmented_dir_for_model(args.embed_model) / "research"
 
     input_manifest = Path(args.input_manifest) if args.input_manifest else seg_root / "metadata" / "manifest.json"
-    out_dir = Path(args.out_dir) if args.out_dir else embed_research_dir_for_model(args.embed_model)
+    if args.out_dir:
+        out_dir = Path(args.out_dir)
+    elif args.corpus == "research_concept":
+        out_dir = embed_dir_for_model(args.embed_model) / "research_concept"
+    else:
+        out_dir = embed_research_dir_for_model(args.embed_model)
     metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir) if args.status_dir else embed_research_dir_for_model(args.embed_model) / "metadata"
+    status_dir = Path(args.status_dir) if args.status_dir else out_dir / "metadata"
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)
