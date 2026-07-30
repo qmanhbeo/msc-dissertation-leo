@@ -48,7 +48,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import preprocessed_dir, research_concept_preprocessed_dir, research_concept_segmented_dir_for_model, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
+from model_utils import CANONICAL_MAX_SEQ_LENGTH, preprocessed_dir, research_concept_preprocessed_dir, research_concept_segmented_dir_for_model, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
 from segment_utils import segment_text, _ensure_nltk_data
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, sha256_file
 
@@ -217,8 +217,10 @@ def main() -> None:
         if not any_work:
             log.info("All corpora already exist — nothing to do")
             return
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer(args.embed_model)
+        tok = AutoTokenizer.from_pretrained(
+            "sentence-transformers/" + args.embed_model, local_files_only=True
+        )
+        max_seq_length = CANONICAL_MAX_SEQ_LENGTH
         for corpus_name, input_str, id_field, prefix in corpora:
             input_path = Path(input_str)
             output_path = segmented_dir_for_model(args.embed_model) / f"{corpus_name}.jsonl"
@@ -227,7 +229,7 @@ def main() -> None:
                 continue
             log.info("Processing %s", corpus_name)
             records = _load_records(input_path)
-            segments = segment_records(records, model.tokenizer, model.max_seq_length, "text", id_field, prefix)
+            segments = segment_records(records, tok, max_seq_length, "text", id_field, prefix)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open("w", encoding="utf-8") as f:
                 for s in segments:
@@ -270,10 +272,11 @@ def main() -> None:
 
     model_slug = args.embed_model.replace("/", "_").lower()
 
-    from sentence_transformers import SentenceTransformer
-    log.info("Loading model: %s", args.embed_model)
-    model = SentenceTransformer(args.embed_model)
-    max_seq_length = model.max_seq_length
+    log.info("Loading tokenizer: %s", args.embed_model)
+    tok = AutoTokenizer.from_pretrained(
+        "sentence-transformers/" + args.embed_model, local_files_only=True
+    )
+    max_seq_length = CANONICAL_MAX_SEQ_LENGTH
 
     if args.sharded:
         input_paths = sorted(Path(p) for p in glob.glob(args.input_glob))
@@ -339,7 +342,7 @@ def main() -> None:
 
         log.info("Loading: %s", input_path)
         records = _load_records(input_path)
-        segments = segment_records(records, model.tokenizer, model.max_seq_length, args.text_field, args.id_field, args.prefix, args.min_words)
+        segments = segment_records(records, tok, max_seq_length, args.text_field, args.id_field, args.prefix, args.min_words)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         # Atomic write: stage to a .tmp sibling, then replace, so an interrupted
