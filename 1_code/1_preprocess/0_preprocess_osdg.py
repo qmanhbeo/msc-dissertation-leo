@@ -3,7 +3,6 @@ Preprocess OSDG corpus for use as SDG classification training signal.
 
 Input:  2_data/0_raw/osdg/osdg_dataset.csv  (TSV, 43,025 rows)
 Output: 2_data/1_preprocessed/individual_sources/osdg/osdg_clean.jsonl  — filtered, cleaned records
-        2_data/1_preprocessed/individual_sources/osdg/osdg_clean.csv    — flat CSV for inspection
 
 Filtering:
   - Keep rows where agreement >= AGREEMENT_THRESHOLD (default 0.5)
@@ -24,7 +23,6 @@ Run from project root:
 """
 
 import argparse
-import csv
 import json
 import logging
 import re
@@ -47,7 +45,6 @@ from _resume import resumable_records
 # ---------------------------------------------------------------------------
 INPUT_FILE = raw_dir() / "osdg" / "osdg_dataset.csv"
 OUTPUT_JSONL = individual_source_dir("osdg") / "osdg_clean.jsonl"
-OUTPUT_CSV = individual_source_dir("osdg") / "osdg_clean.csv"
 STATE_PATH = individual_source_dir("osdg") / "osdg_state.json"
 STATUS_DIR = individual_source_dir("osdg") / "metadata"
 
@@ -119,19 +116,6 @@ def transform(row: dict) -> dict | None:
     }
 
 
-def finalize(out_path: Path) -> None:
-    csv_fields = ["text_id", "sdgs", "agreement", "word_count", "doi", "text"]
-    with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
-        writer.writeheader()
-        with out_path.open(encoding="utf-8") as jf:
-            for line in jf:
-                line = line.strip()
-                if line:
-                    writer.writerow(json.loads(line))
-    log.info("Saved CSV  → %s", OUTPUT_CSV)
-
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Preprocess OSDG corpus (resume-safe).")
     p.add_argument("--input", default=str(INPUT_FILE))
@@ -164,7 +148,6 @@ def main() -> None:
         status_dir=STATUS_DIR,
         chunk_size=args.chunk_size,
         reset=args.reset,
-        finalize=finalize,
     )
 
     if OUTPUT_JSONL.exists():

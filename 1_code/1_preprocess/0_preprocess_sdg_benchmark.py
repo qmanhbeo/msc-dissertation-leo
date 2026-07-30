@@ -3,7 +3,6 @@ Preprocess SDG Benchmark corpus (expert-verified SDG-labeled texts).
 
 Input:  2_data/0_raw/sdg_benchmark/benchmark.csv  (1,251 rows, label True/False)
 Output: 2_data/1_preprocessed/individual_sources/sdg_benchmark/benchmark_clean.jsonl  — positive examples only
-        2_data/1_preprocessed/individual_sources/sdg_benchmark/benchmark_clean.csv    — flat CSV for inspection
 
 Filtering:
   - Keep only rows where label == True (expert-confirmed SDG relevance)
@@ -20,7 +19,6 @@ Run from project root:
 """
 
 import argparse
-import csv
 import json
 import logging
 import re
@@ -44,7 +42,6 @@ from _resume import resumable_records
 # ---------------------------------------------------------------------------
 INPUT_FILE = raw_dir() / "sdg_benchmark" / "benchmark.csv"
 OUTPUT_JSONL = individual_source_dir("sdg_benchmark") / "benchmark_clean.jsonl"
-OUTPUT_CSV = individual_source_dir("sdg_benchmark") / "benchmark_clean.csv"
 STATE_PATH = individual_source_dir("sdg_benchmark") / "sdg_benchmark_state.json"
 STATUS_DIR = individual_source_dir("sdg_benchmark") / "metadata"
 
@@ -113,19 +110,6 @@ def transform(row: dict) -> dict | None:
     }
 
 
-def finalize(out_path: Path) -> None:
-    csv_fields = ["id", "sdgs", "word_count", "text"]
-    with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
-        writer.writeheader()
-        with out_path.open(encoding="utf-8") as jf:
-            for line in jf:
-                line = line.strip()
-                if line:
-                    writer.writerow(json.loads(line))
-    log.info("Saved CSV  -> %s", OUTPUT_CSV)
-
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Preprocess SDG Benchmark corpus (resume-safe).")
     p.add_argument("--input", default=str(INPUT_FILE))
@@ -158,7 +142,6 @@ def main() -> None:
         status_dir=STATUS_DIR,
         chunk_size=args.chunk_size,
         reset=args.reset,
-        finalize=finalize,
     )
 
     if OUTPUT_JSONL.exists():

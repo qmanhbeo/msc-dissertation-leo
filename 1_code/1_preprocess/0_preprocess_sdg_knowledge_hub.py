@@ -3,7 +3,6 @@ Preprocess SDG Knowledge Hub corpus: extract multi-label texts for all 17 SDGs.
 
 Input:  2_data/0_raw/sdg_knowledge_hub/sdg_knowledge_hub.csv  (9,172 rows, multi-label)
 Output: 2_data/1_preprocessed/individual_sources/sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl
-        2_data/1_preprocessed/individual_sources/sdg_knowledge_hub/sdg_knowledge_hub_clean.csv
 
 Filtering:
   - Keep all texts regardless of SDG count (multi-label preserved)
@@ -22,7 +21,6 @@ Run from project root:
 """
 
 import argparse
-import csv
 import hashlib
 import json
 import logging
@@ -44,7 +42,6 @@ from _resume import resumable_records
 
 INPUT_FILE = raw_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub.csv"
 OUTPUT_JSONL = individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.jsonl"
-OUTPUT_CSV = individual_source_dir("sdg_knowledge_hub") / "sdg_knowledge_hub_clean.csv"
 STATE_PATH = individual_source_dir("sdg_knowledge_hub") / "sdg_kh_state.json"
 STATUS_DIR = individual_source_dir("sdg_knowledge_hub") / "metadata"
 
@@ -103,19 +100,6 @@ def transform(payload) -> dict | None:
     }
 
 
-def finalize(out_path: Path) -> None:
-    csv_fields = ["id", "sdgs", "word_count", "url", "text"]
-    with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
-        writer.writeheader()
-        with out_path.open(encoding="utf-8") as jf:
-            for line in jf:
-                line = line.strip()
-                if line:
-                    writer.writerow(json.loads(line))
-    log.info("Saved CSV  -> %s", OUTPUT_CSV)
-
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Preprocess SDG Knowledge Hub corpus (resume-safe).")
     p.add_argument("--input", default=str(INPUT_FILE))
@@ -148,7 +132,6 @@ def main() -> None:
         status_dir=STATUS_DIR,
         chunk_size=args.chunk_size,
         reset=args.reset,
-        finalize=finalize,
     )
 
     n = sum(1 for line in OUTPUT_JSONL.open(encoding="utf-8") if line.strip()) if OUTPUT_JSONL.exists() else 0
