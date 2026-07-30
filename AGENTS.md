@@ -93,6 +93,32 @@ non-obvious facts that are easy to miss.
 - Appendix stages (`--appendix-*`, `--appendix-all`) require existing main-text
   outputs first.
 
+## Pipeline invalidation model
+
+Two distinct mechanisms protect different failure modes:
+
+- **Per-shard/batch resume** covers the expensive frontier stages (embed,
+  segment, score_supervised shard loop). These stages track completed shards
+  in a manifest; on restart or snapshot re-hydration they skip completed work
+  without re-running.  Do NOT add mtime-based fingerprinting here —
+  `2_data/` re-hydration resets all mtimes, which would force a full expensive
+  re-run and destroy the resume benefit.
+- **Fingerprint-gated skip** (via `shared_utils.should_skip` /
+  `record_fingerprint`) covers the cheap derived stages (analysis scripts,
+  centroids build, merge_policy, sample_segments, score_zeroshot,
+  retrain_full_data). Each stage fingerprints its *direct inputs*; if an
+  upstream re-runs, the fingerprint changes and the downstream re-derives.
+  These stages are fast enough that re-running on re-hydration is acceptable.
+
+`--overwrite` is designed for whole-replay use (`--cold-replay --overwrite`,
+`--warm-replay-without-appendix --overwrite`). Piecemeal `--overwrite` of
+a single mid-pipeline script invalidates its direct downstream's fingerprint,
+but the pipeline does not implement a full make-style DAG — stale outputs can
+persist if you `--overwrite` one stage in isolation while its downstream
+outputs already exist from a prior run. In practice this is safe because
+warm replay freezes inputs and cold replay re-runs everything, so the
+staleness gap only opens on non-standard piecemeal workflows.
+
 ## Layout
 
 Numbered directories encode workflow role: `0_literature/`, `1_code/` (only active
