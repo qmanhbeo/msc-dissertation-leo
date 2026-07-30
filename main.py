@@ -557,7 +557,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     pre_steps = [
         # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
         ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + _reset_flag(args.overwrite)),
-        ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
+        ("preprocess ungdc", [sys.executable, "1_code/1_preprocess/0_preprocess_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
         ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + _reset_flag(args.overwrite)),
         ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + _reset_flag(args.overwrite)),
         ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + _reset_flag(args.overwrite)),
@@ -733,7 +733,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
     elif stage == "preprocess":
         steps = [
             ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + _reset_flag(args.overwrite)),
-            ("filter ungdc", [sys.executable, "1_code/1_preprocess/0_filter_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
+            ("preprocess ungdc", [sys.executable, "1_code/1_preprocess/0_preprocess_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
             ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + _reset_flag(args.overwrite)),
             ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + _reset_flag(args.overwrite)),
             ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + _reset_flag(args.overwrite)),

@@ -17,7 +17,7 @@ Preserves paragraph-level SDG keyword filtering before segmentation.
 Only the merge/segmentation step is now handled by segment_corpus.py.
 
 Run from project root:
-    python 1_code/1_preprocess/0_filter_ungdc_sdg.py
+    python 1_code/1_preprocess/0_preprocess_ungdc_sdg.py
 """
 
 import argparse

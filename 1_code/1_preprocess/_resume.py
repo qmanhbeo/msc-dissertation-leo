@@ -2,7 +2,7 @@
 Shared resume-safe checkpointing for the small preprocess scripts.
 
 This helper lets the otherwise pure per-record map scripts
-(0_preprocess_*.py, 0_filter_ungdc_sdg.py) gain true interrupt-and-resume
+(0_preprocess_*.py, 0_preprocess_ungdc_sdg.py) gain true interrupt-and-resume
 safety without changing their transform logic or output format.
 
 Design (correctness over micro-optimisation):
