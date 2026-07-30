@@ -59,7 +59,6 @@ from model_utils import (
     embed_dir_for_model,
     embed_research_dir_for_model,
     raw_dir,
-    research_concept_segmented_dir_for_model,
     research_preprocessed_dir,
     research_segmented_dir_for_model,
     research_subset_manifest,
@@ -568,8 +567,7 @@ def _run_concept_robustness(output_dir: Path, model: str, args: argparse.Namespa
 
     run_step("embed concept research corpus", [
         sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-        "--input-manifest", str(research_concept_segmented_dir_for_model(model) / "metadata" / "manifest.json"),
-        "--out-dir", str(concept_embed_dir),
+        "--corpus", "research_concept",
         "--embed-model", model,
         "--device", args.device, "--batch-size", str(args.batch_size),
         "--chunk-size", "8192", "--local-files-only",
@@ -669,9 +667,9 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         for corpus in ALL_EMBED_CORPORA:
             run_step(
                 f"embed {corpus}",
-                [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                 "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
-                 ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL]
+                 [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
+                  "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
+                  ] + model_args
                   + _overwrite_flag(args.overwrite),
             )
         embed_cmd = [
@@ -851,8 +849,8 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(
                 f"embed {corpus}",
                  [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                 "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE, "--local-files-only",
-                 "--precision", args.precision, "--normalize-embeddings"] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL]
+                  "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE, "--local-files-only",
+                  "--precision", args.precision, "--normalize-embeddings"] + model_args
                  + _overwrite_flag(args.overwrite),
             )
         embed_cmd = [

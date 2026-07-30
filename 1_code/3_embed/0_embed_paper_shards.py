@@ -2,17 +2,18 @@
 Embed segmented research shards into reusable embedding shards.
 
 Input manifest (from segmentation stage):
-   2_data/2_segmented/{model}/research/metadata/manifest.json
+    2_data/2_segmented/{model}/research/metadata/manifest.json
 
 Outputs:
-   2_data/3_embedded/{model}/research_shards/part-00001.npy
-   2_data/3_embedded/{model}/research_shards/metadata/part-00001_ids.jsonl
-   2_data/3_embedded/{model}/research_shards/metadata/manifest.json
+    2_data/3_embedded/{model}/research_shards/part-00001.npy
+    2_data/3_embedded/{model}/research_shards/metadata/part-00001_ids.jsonl
+    2_data/3_embedded/{model}/research_shards/metadata/manifest.json
 
 Uses per-batch incremental checkpointing within each shard for resume safety.
 
 Run from project root:
     python 1_code/3_embed/0_embed_paper_shards.py
+    python 1_code/3_embed/0_embed_paper_shards.py --corpus research_concept
 """
 
 from __future__ import annotations
@@ -50,9 +51,6 @@ STATUS_STAGE = "openalex_clean_shards_to_embeddings"
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input-manifest", default=None)
-    p.add_argument("--out-dir", default=None)
-    p.add_argument("--status-dir", default=None)
-    p.add_argument("--metadata-dir", default="")
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                    help="Embedding model. One of: all-mpnet-base-v2 (default), all-MiniLM-L6-v2, allenai/scibert_scivocab_uncased. Short aliases: mpnet, minilm, scibert.")
     p.add_argument("--batch-size", type=int, default=256,
@@ -122,7 +120,6 @@ def main() -> None:
     precision = args.precision or default_precision(args.embed_model)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    embed_root = embed_dir_for_model(args.embed_model)
     if args.input_manifest:
         seg_root = Path(args.input_manifest).resolve().parent.parent
     elif args.corpus == "research_concept":
@@ -131,14 +128,14 @@ def main() -> None:
         seg_root = segmented_dir_for_model(args.embed_model) / "research"
 
     input_manifest = Path(args.input_manifest) if args.input_manifest else seg_root / "metadata" / "manifest.json"
-    if args.out_dir:
-        out_dir = Path(args.out_dir)
-    elif args.corpus == "research_concept":
+
+    if args.corpus == "research_concept":
         out_dir = embed_dir_for_model(args.embed_model) / "research_concept"
     else:
         out_dir = embed_research_dir_for_model(args.embed_model)
-    metadata_dir = Path(args.metadata_dir) if args.metadata_dir else out_dir / "metadata"
-    status_dir = Path(args.status_dir) if args.status_dir else out_dir / "metadata"
+
+    metadata_dir = out_dir / "metadata"
+    status_dir = metadata_dir
     ensure_dir(out_dir)
     ensure_dir(metadata_dir)
     ensure_dir(status_dir)
