@@ -12,7 +12,7 @@ Architecture — three method axes sharing a unified preprocess→segment→embe
 
   Axis C — Zeroshot nearest-centroid (sensitivity):
     build_sdg_reference_centroids → sdg_centroids.npy
-    → score_zeroshot → zeroshot/research_centroids.npy, policy_centroids.npy
+    → score_zeroshot → research_centroids.npy, policy_centroids.npy
     → cross-sensitivity table
 
 Labeled corpora: osdg, benchmark, sdg_knowledge_hub, sdgi, aurora
@@ -58,6 +58,7 @@ from model_utils import (
     DEFAULT_EMBED_MODEL,
     embed_dir_for_model,
     embed_research_dir_for_model,
+    output_dir_for_model,
     raw_dir,
     research_preprocessed_dir,
     research_segmented_dir_for_model,
@@ -71,7 +72,6 @@ from analysis_orchestrator import run_analysis
 ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
-EMBED_BATCH_SIZE = "64"
 ALL_EMBED_CORPORA = ["reference", "policy"]
 
 
@@ -162,8 +162,8 @@ def parse_args() -> argparse.Namespace:
         help=argparse.SUPPRESS,
     )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
-    p.add_argument("--batch-size", type=int, default=256, help="Batch size for embed_paper_shards.py in --cold-replay mode.")
-    p.add_argument("--precision", choices=["fp32", "fp16"], default="fp32",
+    p.add_argument("--batch-size", type=int, default=64, help="Batch size for all embedding stages (ref+policy+research).")
+    p.add_argument("--precision", choices=["fp32", "fp16"], default="fp16",
                    help="Compute precision for embedding (fp16 ≈ 2x faster on Ampere GPUs).")
     p.add_argument(
         "--embed-model",
@@ -308,7 +308,7 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, ove
     _warn_non_default_model(model, "Sample-stability robustness (Appendix C)")
     actual_output_dir = _appendix_output_dir(output_dir, model)
     require_output_files(
-        output_dir / "main" / "data",
+        output_dir_for_model(model, root=output_dir) / "data",
         [
             "4_2_coverage_document_weighted.json",
             "4_3_semantic_gap_distances.json",
@@ -350,7 +350,7 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, o
 
 def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "Semantic-gap interpretability (Appendix B.2)")
-    require_output_files(output_dir / "main" / model / "data", ["4_3_semantic_gap_distances.json"])
+    require_output_files(output_dir_for_model(model, root=output_dir) / "data", ["4_3_semantic_gap_distances.json"])
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
@@ -373,7 +373,7 @@ def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, o
     """Run the distributional semantic-gap robustness (main-result table, opt-in)."""
     _warn_non_default_model(model, "Distributional gap (Appendix G)")
     require_output_files(
-        output_dir / "main" / model / "data",
+        output_dir_for_model(model, root=output_dir) / "data",
         ["4_3_semantic_gap_distances.json"],
     )
     actual_output_dir = _appendix_output_dir(output_dir, model)
@@ -500,14 +500,30 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         step_id="4",
     )
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
-    # Main-text (and optionally appendix) analyses, driven in-process by the
-    # orchestrator. Each analysis reads the 27 research embedding/score shards
-    # directly (shard-native, mmap); no consolidated array is built or cached.
+    # Zero-shot nearest-centroid assignment (SCORING, not analysis). Moved out of
+    # run_analysis() so the SCORE/ANALYSIS boundary matches the pipeline diagram.
+    run_step(
+        "zero-shot nearest-centroid assignment",
+        [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+         "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(overwrite),
+        step_id="5",
+    )
+    # Main-text analyses, driven in-process by the orchestrator. Each analysis
+    # reads the 27 research embedding/score shards directly (shard-native, mmap);
+    # no consolidated array is built or cached.
     # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
-    # Figures are MPNet-centric (fixed main/figures/ paths), so only plot for
-    # the default encoder; a second encoder's tree is a robustness artifact and
-    # must not overwrite the canonical figures.
+    # Cross-sensitivity table (default model only — for MiniLM/SciBERT the
+    # canonical table is regenerated after the cold-replay model loop from all
+    # three encoders' data).
+    if model == DEFAULT_EMBED_MODEL:
+        run_step("generate cross-sensitivity table",
+                 [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
+                  "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
+                 step_id="6")
+    # Figures are MPNet-centric (fixed 4_outputs/mpnet/figures/ paths), so only
+    # plot for the default encoder; a second encoder's tree is a robustness
+    # artifact and must not overwrite the canonical figures.
     if model == DEFAULT_EMBED_MODEL:
         run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
 
@@ -522,6 +538,11 @@ def _run_analysis_only(output_dir: Path, model: str, *,
     """
     _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+    if model == DEFAULT_EMBED_MODEL:
+        run_step("generate cross-sensitivity table",
+                 [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
+                  "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
+                 step_id="6")
     if model == DEFAULT_EMBED_MODEL:
         run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
                  "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
@@ -557,10 +578,10 @@ def run_warm_replay(
 
 
 def _run_concept_robustness(output_dir: Path, model: str, args: argparse.Namespace) -> None:
-    """Embed → score (LR) → coverage gap → semantic gap for the concept-retrieval corpus."""
+    """Embed → score (LR + MLP + ZS) → coverage gap → semantic gap for the concept-retrieval corpus."""
     concept_embed_dir = embed_dir_for_model(model) / "research_concept"
     concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
-    concept_data_dir = output_dir / "main" / model / "concept" / "data"
+    concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
     concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
     concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
 
@@ -596,6 +617,22 @@ def _run_concept_robustness(output_dir: Path, model: str, args: argparse.Namespa
         "--research-centroids", str(concept_centroids),
         "--research-centroid-meta", str(concept_centroids_meta),
         "--out-data-dir", str(concept_data_dir),
+    ] + _overwrite_flag(args.overwrite))
+
+    # MLP + ZS concept scoring for 3-way Retrieval column (LR/MLP/ZS)
+    run_step("score concept research corpus (MLP)", [
+        sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+        "--embed-model", model, "--classifier", "mlp",
+        "--corpus", "research_concept",
+    ] + _overwrite_flag(args.overwrite))
+
+    concept_zs_npy = scored_dir_for_model(model) / "zeroshot_concept"
+    run_step("zero-shot concept research corpus", [
+        sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+        "--embed-model", model,
+        "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+        "--out-dir", str(concept_zs_npy),
+        "--data-dir", str(concept_data_dir),
     ] + _overwrite_flag(args.overwrite))
 
 
@@ -685,7 +722,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
             embed_cmd.extend(["--corpus", "research_subset"])
         run_step("embed paper shards", embed_cmd)
 
-        _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
+        _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
+                                 include_appendix=(model == CANONICAL_SEGMENT_MODEL))
 
         # Concept-retrieval robustness pipeline (MPNet only)
         if model == CANONICAL_SEGMENT_MODEL:
@@ -698,7 +736,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     run_step(
         "regenerate canonical cross-sensitivity table (all 3 encoders)",
         [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
-         "--output-dir", str(output_dir), "--embed-model", CANONICAL_SEGMENT_MODEL],
+         "--output-dir", str(output_dir), "--embed-model", CANONICAL_SEGMENT_MODEL]
+        + _overwrite_flag(args.overwrite),
     )
 
     print(
@@ -848,7 +887,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(
                 f"embed {corpus}",
                  [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                  "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE, "--local-files-only",
+                  "--corpus", corpus, "--batch-size", str(args.batch_size), "--local-files-only",
                   "--precision", args.precision, "--normalize-embeddings"] + model_args
                  + _overwrite_flag(args.overwrite),
             )

@@ -8,12 +8,16 @@ lengths for the three main corpus categories:
     Policy                (Knowledge Hub + SDGi + Aurora)
     Research              (OpenAlex academic papers)
 
+Reads from the consolidated reference corpus (reference.jsonl) and groups by the
+source field preserved during the build_reference_corpus stage. Research reads
+from research_preprocessed shards.
+
 Outputs:
-      4_outputs/main/figures/fig2_token_distribution.pdf
-      4_outputs/main/figures/fig2_token_distribution.png
+      4_outputs/{model}/figures/fig2_token_distribution.pdf
+      4_outputs/{model}/figures/fig2_token_distribution.png
 
 Run:
-    python 1_code/token_dist.py [--overwrite]
+    python 1_code/token_dist.py [--overwrite] [--embed-model mpnet]
 """
 
 from __future__ import annotations
@@ -39,7 +43,7 @@ from scipy.stats import gaussian_kde
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "1_code" / "7_main_analysis" / "0_shared"))
-from model_utils import preprocessed_dir, RANDOM_SEED
+from model_utils import DEFAULT_EMBED_MODEL, model_slug, preprocessed_dir, research_preprocessed_dir, RANDOM_SEED, resolve_model_alias
 
 RNG = np.random.default_rng(RANDOM_SEED)
 MPNET_MODEL = "sentence-transformers/all-mpnet-base-v2"
@@ -47,48 +51,51 @@ MINILM_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 MPNET_LIMIT = 384
 MINILM_LIMIT = 256
 MAX_SAMPLE_PER_SOURCE = 10_000
-OUTPUT_DIR = ROOT / "4_outputs" / "main" / "figures"
+OUTPUT_DIR_TEMPLATE = ROOT / "4_outputs" / "{model}" / "figures"
 
-SOURCE_DEFS = [
-    {"group": "Reference / Training", "label": "OSDG",
-     "path": "osdg/osdg_clean.jsonl", "field": "text"},
-    {"group": "Reference / Training", "label": "Benchmark",
-     "path": "sdg_benchmark/benchmark_clean.jsonl", "field": "text"},
-    {"group": "Policy", "label": "Knowledge Hub",
-     "path": "sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl", "field": "text"},
-    {"group": "Policy", "label": "SDGi",
-     "path": "sdgi/sdgi_clean.jsonl", "field": "text"},
-    {"group": "Policy", "label": "Aurora",
-     "path": "aurora/aurora_clean.jsonl", "field": "text"},
-    {"group": "Research", "label": "OpenAlex",
-     "path": None, "field": "combined_text", "is_research": True},
-]
+SOURCE_GROUP = {
+    "osdg": "Reference / Training",
+    "benchmark": "Reference / Training",
+    "sdg_knowledge_hub": "Policy",
+    "sdgi": "Policy",
+    "aurora": "Policy",
+}
+
+SOURCE_LABEL = {
+    "osdg": "OSDG",
+    "benchmark": "Benchmark",
+    "sdg_knowledge_hub": "Knowledge Hub",
+    "sdgi": "SDGi",
+    "aurora": "Aurora",
+}
 
 log = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Token distribution analysis across corpora.")
+    p = argparse.ArgumentParser(description="Token-length distribution analysis across the three dissertation corpora.")
     p.add_argument("--max-sample-per-source", type=int, default=MAX_SAMPLE_PER_SOURCE,
-                   help="Max texts sampled per source corpus for the token-length analysis (default: %(default)s)")
+                   help="Maximum samples per source group (default: %(default)s)")
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
+                   help="Model slug for output path (default: %(default)s, slug: %(default)s)")
     return p.parse_args()
 
 
-def load_jsonl(path: Path, field: str, max_records: int | None = None) -> list[str]:
-    texts = []
+def load_consolidated_reference(path: Path, field: str = "text") -> dict[str, list[str]]:
+    source_texts: dict[str, list[str]] = defaultdict(list)
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
-            if field in obj and obj[field]:
-                texts.append(obj[field])
-    if max_records and len(texts) > max_records:
-        texts = list(RNG.choice(texts, size=max_records, replace=False))
-    return texts
+            src = obj.get("source", "unknown")
+            txt = obj.get(field, "")
+            if txt:
+                source_texts[src].append(txt)
+    return dict(source_texts)
 
 
-def load_research_shards(n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE) -> list[str]:
-    base = preprocessed_dir() / "research"
+def load_research_shards(base: Path, field: str = "combined_text",
+                         n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE) -> list[str]:
     per_shard = target // n_shards
     records = []
     for i in range(1, n_shards + 1):
@@ -97,8 +104,9 @@ def load_research_shards(n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE)
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 obj = json.loads(line)
-                if "combined_text" in obj and obj["combined_text"]:
-                    shard_texts.append(obj["combined_text"])
+                txt = obj.get(field, "")
+                if txt:
+                    shard_texts.append(txt)
         if len(shard_texts) > per_shard:
             shard_texts = list(RNG.choice(shard_texts, size=per_shard, replace=False))
         records.extend(shard_texts)
@@ -107,19 +115,30 @@ def load_research_shards(n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE)
 
 def load_all_texts(max_sample_per_source: int = MAX_SAMPLE_PER_SOURCE) -> dict[str, list[str]]:
     texts_by_label: dict[str, list[str]] = {}
-    for src in SOURCE_DEFS:
-        label = src["label"]
-        if src.get("is_research"):
-            texts = load_research_shards(n_shards=5, target=max_sample_per_source)
-        else:
-            path = preprocessed_dir() / src["path"]
-            if not path.exists():
-                log.warning("Path not found: %s", path)
+
+    ref_path = preprocessed_dir() / "reference.jsonl"
+    if ref_path.exists():
+        source_texts = load_consolidated_reference(ref_path)
+        for src_name, texts in source_texts.items():
+            label = SOURCE_LABEL.get(src_name)
+            if label is None:
                 continue
-            texts = load_jsonl(path, src["field"], max_records=max_sample_per_source)
-        if texts:
+            if len(texts) > max_sample_per_source:
+                texts = list(RNG.choice(texts, size=max_sample_per_source, replace=False))
             texts_by_label[label] = texts
-            log.info("  %s: %d texts", label, len(texts))
+            log.info("  %s (%s): %d texts", label, src_name, len(texts))
+    else:
+        log.warning("Reference corpus not found: %s", ref_path)
+
+    research_base = research_preprocessed_dir()
+    if research_base.exists():
+        texts = load_research_shards(research_base, n_shards=5, target=max_sample_per_source)
+        if texts:
+            texts_by_label["OpenAlex"] = texts
+            log.info("  OpenAlex: %d texts", len(texts))
+    else:
+        log.warning("Research corpus not found: %s", research_base)
+
     return texts_by_label
 
 
@@ -264,7 +283,8 @@ def plot_kde(group_arrays: dict[str, np.ndarray], output_dir: Path) -> None:
 def main() -> None:
     args = parse_args()
 
-    output_dir = OUTPUT_DIR
+    output_dir = ROOT / "4_outputs" / model_slug(args.embed_model) / "figures"
+    output_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = output_dir / "fig2_token_distribution.pdf"
     if pdf_path.exists() and not args.overwrite:
         print(f"{pdf_path} exists. Use --overwrite to regenerate.")
@@ -273,9 +293,6 @@ def main() -> None:
     print("Loading tokenizers...", file=sys.stderr)
     tokenizer_mpnet = AutoTokenizer.from_pretrained(MPNET_MODEL)
     tokenizer_minilm = AutoTokenizer.from_pretrained(MINILM_MODEL)
-
-    MPNET_LIMIT = 384
-    MINILM_LIMIT = 256
 
     print("Loading and tokenizing texts...", file=sys.stderr)
     texts_by_label = load_all_texts(args.max_sample_per_source)
@@ -295,22 +312,29 @@ def main() -> None:
 
     print("\n--- 3. Group-Level Aggregates (MPNet tokens) ---\n")
     group_lengths: dict[str, np.ndarray] = {}
-    for src in SOURCE_DEFS:
-        gname = src["group"]
-        label = src["label"]
-        if label not in tokenized:
+    label_to_group = {}
+    for src_name, group_name in SOURCE_GROUP.items():
+        label = SOURCE_LABEL[src_name]
+        label_to_group[label] = group_name
+
+    for label, d in tokenized.items():
+        if label == "OpenAlex":
+            gname = "Research"
+        else:
+            gname = label_to_group.get(label)
+        if gname is None:
             continue
         if gname not in group_lengths:
-            group_lengths[gname] = tokenized[label]["mpnet"]
+            group_lengths[gname] = d["mpnet"]
         else:
-            group_lengths[gname] = np.concatenate([group_lengths[gname],
-                                                   tokenized[label]["mpnet"]])
+            group_lengths[gname] = np.concatenate([group_lengths[gname], d["mpnet"]])
 
     for gname, arr in group_lengths.items():
-        w_pooled = np.concatenate([tokenized[l]["words"]
-                                   for l in tokenized
-                                   if any(s["label"] == l and s["group"] == gname
-                                          for s in SOURCE_DEFS)])
+        w_pooled = np.concatenate([
+            tokenized[l]["words"]
+            for l in tokenized
+            if (label_to_group.get(l) == gname) or (l == "OpenAlex" and gname == "Research")
+        ])
         print(f"  {gname:<30s} n={len(arr):<8d}  "
               f"min={arr.min():<6d}  p50={np.median(arr):<8.0f}  "
               f"p95={np.percentile(arr, 95):<8.0f}  "

@@ -52,7 +52,7 @@ from semantic_gap_shared import (
     write_csv,
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, model_slug, output_main_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, model_slug, output_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 
 
@@ -420,7 +420,7 @@ def run(args: argparse.Namespace) -> None:
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
 
-    gaps = semantic_gap_map(output_main_dir_for_model(args.embed_model, root=Path(args.output_dir)) / "data")
+    gaps = semantic_gap_map(output_dir_for_model(args.embed_model, root=Path(args.output_dir)) / "data")
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
     policy_emb = np.load(_POLICY_EMB, mmap_mode="r")

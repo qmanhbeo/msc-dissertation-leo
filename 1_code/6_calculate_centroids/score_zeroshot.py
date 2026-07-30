@@ -5,9 +5,9 @@ Computes per-SDG semantic gaps under zero-shot nearest-centroid assignment
 using the same post-fix reference centroids (sdg_centroids.npy) that the
 LR classifier uses as its class means.
 
-Outputs: {output_dir}/main/{model}/zeroshot/semantic_gap_distances.json  (per-SDG gaps)
-          {output_dir}/main/{model}/zeroshot/research_centroids.npy      (per-SDG mean of zs-assigned papers)
-          {output_dir}/main/{model}/zeroshot/policy_centroids.npy        (per-SDG mean of zs-assigned segments)
+Outputs: {data_dir}/semantic_gap_distances.json  (per-SDG gaps, default {output_dir}/{model}/data/)
+          {out_dir}/research_centroids.npy       (per-SDG mean of zs-assigned papers, default 2_data/.../zeroshot/)
+          {out_dir}/policy_centroids.npy         (per-SDG mean of zs-assigned segments, default 2_data/.../zeroshot/)
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, output_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -75,25 +75,36 @@ def parse_args() -> argparse.Namespace:
                         "research_shards/metadata/manifest.json). Used for the "
                         "concept-retrieval variant.")
     p.add_argument("--out-dir", default=None,
-                   help="Override zero-shot output root (default: canonical "
-                        "main/{model}/zeroshot/). Concept variant writes here.")
+                   help="Override zero-shot .npy output dir (default: canonical "
+                        "2_data/5_supervised_scored/{model}/zeroshot/). "
+                        "Concept variant writes to .../zeroshot_concept/.")
+    p.add_argument("--data-dir", default=None,
+                   help="Override semantic_gap_distances.json output dir (default: "
+                        "canonical 4_outputs/{model}/data/). "
+                        "Concept variant writes to .../data/concept/.")
     return p.parse_args()
 
 
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
+    output_root = Path(args.output_dir)
 
-    out_root = Path(args.out_dir) if args.out_dir else output_main_dir_for_model(model, root=Path(args.output_dir)) / "zeroshot"
-    out_root.mkdir(parents=True, exist_ok=True)
+    # .npy files → 2_data/5_supervised_scored/{model}/zeroshot/ (or custom)
+    npy_root = Path(args.out_dir) if args.out_dir else scored_dir_for_model(model) / "zeroshot"
+    npy_root.mkdir(parents=True, exist_ok=True)
+
+    # semantic_gap_distances.json → 4_outputs/{model}/data/ (or custom)
+    data_root = Path(args.data_dir) if args.data_dir else output_dir_for_model(model, root=output_root) / "data"
+    data_root.mkdir(parents=True, exist_ok=True)
 
     if not args.overwrite:
         expected = [
-            out_root / "research_centroids.npy",
-            out_root / "policy_centroids.npy",
-            out_root / "semantic_gap_distances.json",
+            npy_root / "research_centroids.npy",
+            npy_root / "policy_centroids.npy",
+            data_root / "semantic_gap_distances.json",
         ]
         if all(p.exists() for p in expected):
-            log.info("Zero-shot outputs already exist at %s — skip. Use --overwrite to recompute.", out_root)
+            log.info("Zero-shot outputs already exist — skip. Use --overwrite to recompute.")
             return
 
     # 1. Load reference centroids (same ones LR uses)
@@ -142,8 +153,8 @@ def run(args: argparse.Namespace) -> None:
     log.info("Research total papers: %d", res_counts.sum())
 
     research_centroids = centroid_from_sumcount(res_sums, res_counts)
-    np.save(out_root / "research_centroids.npy", research_centroids)
-    log.info("Saved research centroids: %s", out_root / "research_centroids.npy")
+    np.save(npy_root / "research_centroids.npy", research_centroids)
+    log.info("Saved research centroids: %s", npy_root / "research_centroids.npy")
 
     # 3. Score policy corpus
     log.info("Scoring policy corpus (zero-shot)...")
@@ -166,8 +177,8 @@ def run(args: argparse.Namespace) -> None:
         pol_counts[sdg_idx] += 1
 
     policy_centroids = centroid_from_sumcount(pol_sums, pol_counts)
-    np.save(out_root / "policy_centroids.npy", policy_centroids)
-    log.info("Saved policy centroids: %s", out_root / "policy_centroids.npy")
+    np.save(npy_root / "policy_centroids.npy", policy_centroids)
+    log.info("Saved policy centroids: %s", npy_root / "policy_centroids.npy")
 
     # 4. Compute semantic gaps
     per_sdg = []
@@ -199,7 +210,7 @@ def run(args: argparse.Namespace) -> None:
         "embedding_model": model,
         "per_sdg": per_sdg,
     }
-    gap_path = out_root / "semantic_gap_distances.json"
+    gap_path = data_root / "semantic_gap_distances.json"
     with gap_path.open("w", encoding="utf-8") as f:
         json.dump(out_data, f, indent=2)
     log.info("Saved: %s", gap_path)

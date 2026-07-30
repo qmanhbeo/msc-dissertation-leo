@@ -36,7 +36,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, model_slug, resolve_model_alias
 from shard_pipeline_utils import load_json
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 import semantic_gap_shared
@@ -245,7 +245,7 @@ def run(args: argparse.Namespace) -> None:
     _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
     _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / args.embed_model / "a2_source_family_sensitivity"
+    out_root = output_dir / "appendix" / model_slug(args.embed_model) / "a2_source_family_sensitivity"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):

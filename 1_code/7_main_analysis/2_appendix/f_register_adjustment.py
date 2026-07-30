@@ -46,7 +46,7 @@ from model_utils import (
     embed_dir_for_model,
     embed_research_dir_for_model,
     model_slug,
-    output_main_dir_for_model,
+    output_dir_for_model,
     scored_dir_for_model,
     preprocessed_dir,
     resolve_model_alias,
@@ -360,7 +360,7 @@ def iterative_register_check(
 
     # Load canonical raw gaps
     canonical_semantic_path = (
-        output_main_dir_for_model(model, root=Path(args.output_dir))
+        output_dir_for_model(model, root=Path(args.output_dir))
         / "data" / "4_3_semantic_gap_distances.json"
     )
     canonical = load_json(canonical_semantic_path)
@@ -475,7 +475,7 @@ def run(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     # 1. Load canonical raw gaps
     # ------------------------------------------------------------------
-    canonical_semantic_path = output_main_dir_for_model(model, root=Path(args.output_dir)) / "data" / "4_3_semantic_gap_distances.json"
+    canonical_semantic_path = output_dir_for_model(model, root=Path(args.output_dir)) / "data" / "4_3_semantic_gap_distances.json"
     log.info("Loading canonical raw gaps from %s", canonical_semantic_path)
     canonical = load_json(canonical_semantic_path)
     canonical_raw = {}

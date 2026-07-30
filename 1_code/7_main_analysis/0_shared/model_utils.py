@@ -70,23 +70,36 @@ def _validate_model(model: str) -> None:
         raise ValueError(f"Unknown embed model: {model!r}. Allowed: {sorted(ALLOWED_MODELS)}")
 
 
+MODEL_SLUG_MAP = {
+    "all-mpnet-base-v2": "mpnet",
+    "all-MiniLM-L6-v2": "minilm",
+    "allenai/scibert_scivocab_uncased": "scibert",
+}
+
+
 def model_slug(model: str) -> str:
-    return model.replace("/", "_").lower()
+    return MODEL_SLUG_MAP.get(model, model.replace("/", "_").lower())
 
 
-def output_main_dir_for_model(model: str | None, root: Path = DEFAULT_OUTPUT_ROOT) -> Path:
-    """Canonical ``4_outputs/main/{slug}/`` directory for a model.
+def output_dir_for_model(model: str | None, root: Path = DEFAULT_OUTPUT_ROOT) -> Path:
+    """Canonical ``4_outputs/{slug}/`` directory for a model.
 
     All 4_outputs model-scoped paths must be derived through this helper so
     that the on-disk layout is consistent with the 2_data slug (e.g.
-    ``allenai_scibert_scivocab_uncased``, not the nested slash form
-    ``allenai/scibert_scivocab_uncased``). ``model_slug`` is the identity for
-    models without a ``/`` (all-mpnet-base-v2, all-MiniLM-L6-v2), so this is
-    backward-compatible for them.
+    ``scibert``, not the nested slash form ``allenai/scibert_scivocab_uncased``).
     """
     if model is None:
-        return root / "main"
-    return root / "main" / model_slug(model)
+        return root
+    return root / model_slug(model)
+
+
+def zeroshot_dir_for_model(model: str) -> Path:
+    _validate_model(model)
+    return scored_dir_for_model(model) / "zeroshot"
+
+
+# Backward-compat alias for incremental migration.
+output_main_dir_for_model = output_dir_for_model
 
 
 def resolve_model_alias(name: str) -> str:

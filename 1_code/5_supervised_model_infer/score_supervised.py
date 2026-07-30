@@ -511,7 +511,12 @@ def run_mlp(args) -> None:
     embed_root = embed_dir_for_model(model_name)
     scored_root = scored_dir_for_model(model_name)
 
-    out_dir = scored_root / "mlp_scores"
+    if args.corpus == "research_concept":
+        out_dir = scored_root / "mlp_scores_concept"
+        manifest_path = embed_root / "research_concept" / "metadata" / "manifest.json"
+    else:
+        out_dir = scored_root / "mlp_scores"
+        manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
     summary_path = out_dir / "mlp_summary.json"
     centroids_out = out_dir / "mlp_research_centroids.npy"
     policy_scores_out = out_dir / "mlp_policy_scores.npy"
@@ -535,7 +540,6 @@ def run_mlp(args) -> None:
     log.info("MLP loaded (type=%s, input_dim=%d)", type(model).__name__, d)
 
     # -- Score research shards --
-    manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
     with open(manifest_path) as f:
         manifest = json.load(f)
 
@@ -646,8 +650,9 @@ def main() -> None:
                         help="Embed model (default: %(default)s)")
     parser.add_argument("--classifier", default="lr", choices=["lr", "mlp"],
                         help="Classifier family to score with (default: %(default)s)")
-    parser.add_argument("--corpus", default="research", choices=["research", "policy"],
-                        help="Corpus to score for the LR classifier (ignored for --classifier mlp, which scores both).")
+    parser.add_argument("--corpus", default="research", choices=["research", "policy", "research_concept"],
+                        help="Corpus to score for the LR classifier (ignored for --classifier mlp, which scores both). "
+                             "Use research_concept for the concept-retrieval variant.")
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--embedding-manifest", default=None)
     parser.add_argument("--out-dir", default=None)

@@ -9,15 +9,15 @@ Produces four publication-quality figures for the dissertation:
     Figure 4 — Coverage vs semantic gap scatter (diagnostic map)
 
 Inputs:
-      4_outputs/main/data/4_1_centroid_similarity_matrix.csv     — 17x17 pairwise centroid cosine similarity
-      4_outputs/main/data/4_4_interaction_scatter_data.csv       — per-SDG metrics table from coverage_semantic_interaction.py
-      4_outputs/main/data/4_2_coverage_document_weighted.json   — corpus-level n counts for legend labels
+      4_outputs/mpnet/data/4_1_centroid_similarity_matrix.csv     — 17x17 pairwise centroid cosine similarity
+      4_outputs/mpnet/data/4_4_interaction_scatter_data.csv       — per-SDG metrics table from coverage_semantic_interaction.py
+      4_outputs/mpnet/data/4_2_coverage_document_weighted.json   — corpus-level n counts for legend labels
 
 Outputs:
-     4_outputs/appendix/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf
-     4_outputs/main/figures/fig3_coverage_profiles.pdf
-     4_outputs/main/figures/fig4_semantic_gap.pdf
-     4_outputs/main/figures/fig5_coverage_semantic_scatter.pdf
+      4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf
+      4_outputs/mpnet/figures/fig3_coverage_profiles.pdf
+      4_outputs/mpnet/figures/fig4_semantic_gap.pdf
+      4_outputs/mpnet/figures/fig5_coverage_semantic_scatter.pdf
 
 Run:
     python 1_code/8_visualization/plot_figures.py
@@ -47,7 +47,7 @@ SHARED_DIR = ROOT / "1_code" / "7_main_analysis" / "0_shared"
 for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, model_slug, resolve_model_alias
 from shared_utils import ensure_canonical_outputs, require_output_files
 
 
@@ -134,7 +134,7 @@ def plot_centroid_similarity_heatmap(layout, model: str) -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")
     fig.tight_layout()
-    out_dir = layout.root.parent.parent / "appendix" / model / "a4_centroid_similarity" / "figures"
+    out_dir = layout.root.parent / "appendix" / model_slug(model) / "a4_centroid_similarity" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
     fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)

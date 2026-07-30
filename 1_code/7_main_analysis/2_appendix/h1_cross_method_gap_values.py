@@ -23,7 +23,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_slug, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 
 # ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ from shared_utils import fingerprint_of, should_skip, record_fingerprint
 # ---------------------------------------------------------------------------
 
 def _lr_covgaps(root, m):
-    p = output_main_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -82,7 +82,7 @@ def _mlp_covgaps(m):
 
 
 def _zs_covgaps(root, m):
-    gap_path = output_main_dir_for_model(m, root=root) / "zeroshot" / "semantic_gap_distances.json"
+    gap_path = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
     if not gap_path.exists():
         return None
     with open(gap_path) as f:
@@ -129,7 +129,7 @@ def _zs_covgaps(root, m):
 # ---------------------------------------------------------------------------
 
 def _lr_gaps(root, m):
-    p = output_main_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -147,7 +147,7 @@ def _mlp_gaps(m):
 
 
 def _zs_gaps(root, m):
-    p = output_main_dir_for_model(m, root=root) / "zeroshot" / "semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -156,7 +156,7 @@ def _zs_gaps(root, m):
 
 
 def _concept_covgaps(root, m):
-    p = output_main_dir_for_model(m, root=root) / "concept" / "data" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -168,7 +168,7 @@ def _concept_covgaps(root, m):
 
 
 def _concept_gaps(root, m):
-    p = output_main_dir_for_model(m, root=root) / "concept" / "data" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -247,7 +247,7 @@ def run(args):
     model = args.embed_model
     root = Path(args.output_dir)
 
-    out_dir = root / "appendix" / model / "h1_cross_method_gap_values" / "tables"
+    out_dir = root / "appendix" / model_slug(model) / "h1_cross_method_gap_values" / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     SCRIPT_VERSION = "1"
@@ -256,9 +256,9 @@ def run(args):
     fp_paths = []
     for _, m, _ in ENCODERS:
         fp_paths += [
-            output_main_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
-            output_main_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
-            output_main_dir_for_model(m, root=root) / "zeroshot" / "semantic_gap_distances.json",
+            output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
+            output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json",
             scored_dir_for_model(m) / "mlp_scores" / "mlp_summary.json",
         ]
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION

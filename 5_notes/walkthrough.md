@@ -965,7 +965,7 @@ If you want to connect the explanation above to the codebase, the project is lai
 - `1_code/7_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
 - `1_code/8_visualization/`: final plots
 - `3_writing/dissertation.tex`: the paper itself
-- `4_outputs/`: artifact root (`main/{model}/`, `appendix/{model}/`, `zeroshot/{model}/`)
+- `4_outputs/`: artifact root (`{model}/`, `appendix/{model}/`)
 
 So if you read the repository from `1_code/0_fetch/` to `1_code/7_main_analysis/`, you are basically walking through the same story this document just explained.
 

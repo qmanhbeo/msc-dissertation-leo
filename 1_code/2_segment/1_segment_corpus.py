@@ -48,7 +48,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import CANONICAL_MAX_SEQ_LENGTH, preprocessed_dir, research_concept_preprocessed_dir, research_concept_segmented_dir_for_model, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
+from model_utils import CANONICAL_MAX_SEQ_LENGTH, model_slug, preprocessed_dir, research_concept_preprocessed_dir, research_concept_segmented_dir_for_model, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
 from segment_utils import segment_text, _ensure_nltk_data
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, sha256_file
 
@@ -272,7 +272,7 @@ def main() -> None:
         if not args.id_field or args.id_field == "id":
             args.id_field = "id"
 
-    model_slug = args.embed_model.replace("/", "_").lower()
+    mslug = model_slug(args.embed_model)
 
     log.info("Loading tokenizer: %s", args.embed_model)
     tok = AutoTokenizer.from_pretrained(
@@ -285,7 +285,7 @@ def main() -> None:
         if not input_paths:
             log.error("No input files match: %s", args.input_glob)
             return
-        output_dir = Path(args.output_dir.format(model=model_slug))
+        output_dir = Path(args.output_dir.format(model=mslug))
         output_dir.mkdir(parents=True, exist_ok=True)
 
         tasks = [
@@ -336,7 +336,7 @@ def main() -> None:
             log.error("Single-file mode requires --input and --output.")
             return
         input_path = Path(args.input)
-        output_path = Path(args.output.format(model=model_slug))
+        output_path = Path(args.output.format(model=mslug))
 
         if output_path.exists() and not args.overwrite:
             log.info("Skip %s — already exists", output_path.name)

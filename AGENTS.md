@@ -79,7 +79,11 @@ non-obvious facts that are easy to miss.
   canonical `2_segmented/` first, then fall back to `3a_warm_replay_texts/`
   (`model_utils.resolve_research_text_path` / `resolve_policy_text_path`).
 - `4_outputs/` is committed for inspection but regenerable. Outputs are
-  namespaced by embedding model under `4_outputs/main/{model}/...`.
+  namespaced by embedding model under `4_outputs/{model}/...` (flattened
+  from the previous `main/{model}/` layout). Appendix outputs live under
+  `4_outputs/appendix/{model}/...`. Pipeline-intermediate `.npy` score
+  files are kept in `2_data/5_supervised_scored/{model}/zeroshot/` (they
+  are NOT publishable artifacts).
 - `--build-pdf --overwrite` requires **bash (WSL/Linux)** — not supported on bare
   Windows. It compiles `3_writing/dissertation.tex` via `latexmk`/`pdflatex`/`biber`.
 

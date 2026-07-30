@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from model_utils import model_slug, output_main_dir_for_model
+from model_utils import model_slug, output_dir_for_model
 
 log = logging.getLogger(__name__)
 
@@ -66,20 +66,25 @@ class DissertationOutputs:
 
 
 def _insert_model_in_rel(rel_path: str, model: str | None) -> str:
-    """Insert *model* after the top-level namespace prefix (main|appendix).
+    """Insert *model* into a relative path under 4_outputs.
+
+    The ``main/`` namespace is flattened — the model slug replaces it
+    directly.  The ``appendix/`` namespace keeps the prefix so multiple
+    appendix sub-analyses coexist.
 
     Examples:
-        "main/data/file.json" + "all-mpnet-base-v2"  → "main/all-mpnet-base-v2/data/file.json"
-        "appendix/c/data/f.json" + "all-mpnet-base-v2" → "appendix/all-mpnet-base-v2/c/data/f.json"
+        "main/data/file.json" + "mpnet"          → "mpnet/data/file.json"
+        "appendix/c/data/f.json" + "mpnet"       → "appendix/mpnet/c/data/f.json"
     """
     if model is None:
         return rel_path
     model = model_slug(model)
-    for prefix in ("main/", "appendix/"):
-        if rel_path.startswith(prefix):
-            ns = prefix.rstrip("/")
-            rest = rel_path[len(prefix):]
-            return f"{ns}/{model}/{rest}"
+    if rel_path.startswith("main/"):
+        rest = rel_path[len("main/"):]
+        return f"{model}/{rest}"
+    if rel_path.startswith("appendix/"):
+        rest = rel_path[len("appendix/"):]
+        return f"appendix/{model}/{rest}"
     return rel_path
 
 
@@ -169,17 +174,20 @@ MANUSCRIPT_APPENDIX_FIGURE_FILES = [
 
 
 def ensure_dissertation_outputs(output_dir: Path, subdir: str = "main", model: str | None = None) -> DissertationOutputs:
-    """Create and return the nested dissertation output layout.
+    """Create and return the dissertation output layout.
 
     When *model* is provided the output root becomes::
 
-        output_dir / subdir / {model} / data|tables|figures
+        output_dir / {model} / data|tables|figures    (when subdir="main")
+        output_dir / appendix / {model} / ...         (when subdir="appendix/...")
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     if model is not None:
         parts = subdir.split("/", 1)
-        if len(parts) == 2 and parts[0] in ("main", "appendix"):
+        if len(parts) == 2 and parts[0] == "appendix":
             root = output_dir / parts[0] / model_slug(model) / parts[1]
+        elif subdir == "main":
+            root = output_dir / model_slug(model)
         else:
             root = output_dir / subdir / model_slug(model)
     else:
@@ -208,11 +216,11 @@ def require_pdf_inputs(output_dir: Path, model: str | None = None) -> Path:
     root = Path(output_dir)
     missing = []
     for name in MANUSCRIPT_TABLE_FILES:
-        path = output_main_dir_for_model(model, root=root) / "tables" / name
+        path = output_dir_for_model(model, root=root) / "tables" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_FIGURE_FILES:
-        path = output_main_dir_for_model(model, root=root) / "figures" / name
+        path = output_dir_for_model(model, root=root) / "figures" / name
         if not path.exists():
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_EXTRA_FILES:
@@ -242,13 +250,13 @@ def canonical_artifact_paths(output_dir: Path, model: str | None = None) -> list
         if name == "dissertation.pdf":
             files.append(root / name)
         else:
-            files.append(output_main_dir_for_model(model, root=root) / "data" / name)
+            files.append(output_dir_for_model(model, root=root) / "data" / name)
     for name in MANUSCRIPT_EXTRA_FILES:
         files.append(root / _insert_model_in_rel(name, model))
     for name in MANUSCRIPT_TABLE_FILES:
-        files.append(output_main_dir_for_model(model, root=root) / "tables" / name)
+        files.append(output_dir_for_model(model, root=root) / "tables" / name)
     for name in MANUSCRIPT_FIGURE_FILES:
-        files.append(output_main_dir_for_model(model, root=root) / "figures" / name)
+        files.append(output_dir_for_model(model, root=root) / "figures" / name)
     for name in MANUSCRIPT_APPENDIX_TABLE_FILES:
         files.append(root / _insert_model_in_rel(name, model))
     for name in MANUSCRIPT_APPENDIX_FIGURE_FILES:

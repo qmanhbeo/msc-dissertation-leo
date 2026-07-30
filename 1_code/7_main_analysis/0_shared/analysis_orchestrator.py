@@ -7,6 +7,11 @@ research data. `run_analysis` now drives each script's `main()` in-process, and
 every script reads the research embedding/score shards directly (shard-native,
 mmap) — so no consolidated array is built or cached, and a re-embed / re-score
 is reflected immediately on the next run.
+
+SCORE steps (zeroshot, cross-sensitivity table) are NOT managed here — they
+live in _run_main_analysis_steps / _run_analysis_only in main.py. This
+orchestrator handles the pure analytical steps: coverage_gap, semantic_gap,
+interaction, and PCA.
 """
 
 from __future__ import annotations
@@ -20,20 +25,14 @@ from model_utils import DEFAULT_EMBED_MODEL
 ANALYSIS_ROOT = Path(__file__).resolve().parents[1]  # 7_main_analysis
 
 # (relative script path, only_when_default_model)
-# Mirrors the ordering/conditions previously in main.py _run_main_analysis_steps.
-# Every step here writes under main/{model}/ (model-namespaced) EXCEPT the PCA
-# semantic-landscape script, which emits fixed main/figures/ + main/tables/
-# paths that are MPNet-centric and must not be overwritten by a second encoder.
-# So PCA stays default-only; the encoder-sensitivity steps (zeroshot,
-# cross-sensitivity) run for every encoder so each gets its own namespaced
-# artifact (a second encoder's tree is a robustness artifact read by the
-# combined cross-sensitivity table).
+# PCA emits fixed main/figures/ + main/tables/ paths that are MPNet-centric
+# and must not be overwritten by a second encoder, so it stays default-only.
+# The other steps (coverage, semantic, interaction) write under main/{model}/
+# and are namespaced per-encoder for the cross-sensitivity table.
 MAIN_STEPS = [
-    (str(ANALYSIS_ROOT.parent / "6_calculate_centroids" / "score_zeroshot.py"), False),
     ("1_main_text/0_coverage_gap.py", False),
     ("1_main_text/1_semantic_gap.py", False),
     ("1_main_text/2_coverage_semantic_interaction.py", False),
-    ("1_main_text/3_generate_cross_sensitivity_table.py", False),
     ("1_main_text/0_pca_semantic_landscape.py", True),
 ]
 APPENDIX_STEPS = [

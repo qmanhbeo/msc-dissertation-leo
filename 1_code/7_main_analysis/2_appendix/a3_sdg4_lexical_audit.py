@@ -32,7 +32,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, open_text, resolve_research_text_path, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, model_slug, scored_dir_for_model, open_text, resolve_research_text_path, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import latex_escape, write_csv
 from shard_pipeline_utils import iter_jsonl, load_json
@@ -260,7 +260,7 @@ def write_table(path: Path, rows: list[dict]) -> None:
 
 def run(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir)
-    out_root = output_dir / "appendix" / args.embed_model / "a3_sdg4_audit"
+    out_root = output_dir / "appendix" / model_slug(args.embed_model) / "a3_sdg4_audit"
     data_dir = out_root / "data"
     tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
