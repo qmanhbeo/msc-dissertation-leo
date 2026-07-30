@@ -21,7 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -38,6 +38,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
+from embed_utils import concatenate_batches, write_batch_manifest
 from embed_loader import load_embedder
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
 from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, research_concept_segmented_dir_for_model, research_subset_dir, segmented_dir_for_model, resolve_model_alias
@@ -209,22 +210,70 @@ def main() -> None:
         n = len(texts)
         dim = int(model.get_embedding_dimension())
 
-        emb = model.encode(
-            texts,
-            batch_size=args.batch_size,
-            show_progress_bar=False,
-            convert_to_numpy=True,
-            normalize_embeddings=args.normalize_embeddings,
-        ).astype(np.float16 if precision == "fp16" else np.float32)
-        if emb.shape != (n, dim):
-            raise RuntimeError(f"Shape mismatch: {emb.shape} != ({n}, {dim})")
+        batches_dir = out_dir / f"{shard_name}_batches"
+        manifest_path = batches_dir / "manifest.json"
 
-        tmp_emb = out_emb.with_suffix(".npy.tmp")
-        with tmp_emb.open("wb") as f:
-            np.save(f, emb)
-            f.flush()
-        tmp_emb.replace(out_emb)
+        completed_batches: set[int] = set()
+        rows_completed: int = 0
 
+        if batches_dir.exists() and manifest_path.exists():
+            m = json.loads(manifest_path.read_text())
+            if m.get("status") == "concatenating":
+                log.info("Resuming %s — final concatenation", shard_name)
+                concatenate_batches(batches_dir, out_emb, n, dim)
+                generate_ids(in_data, out_ids)
+            else:
+                completed_batches = set(m.get("completed_batches", []))
+                rows_completed = m.get("rows_completed", 0)
+                log.info("Resuming %s from batch %d (%d/%d rows)",
+                         shard_name, len(completed_batches), rows_completed, n)
+        elif batches_dir.exists():
+            shutil.rmtree(batches_dir)
+            batches_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            batches_dir.mkdir(parents=True, exist_ok=True)
+
+        batch_starts = list(range(0, n, args.batch_size))
+        n_batches = len(batch_starts)
+
+        for batch_i, start in enumerate(batch_starts):
+            if batch_i in completed_batches:
+                continue
+
+            end = min(start + args.batch_size, n)
+            batch_texts = texts[start:end]
+
+            batch_emb = model.encode(
+                batch_texts,
+                batch_size=len(batch_texts),
+                show_progress_bar=False,
+                convert_to_numpy=True,
+                normalize_embeddings=args.normalize_embeddings,
+            ).astype(np.float16 if precision == "fp16" else np.float32)
+
+            batch_path = batches_dir / f"batch_{batch_i:05d}.npy"
+            tmp_batch = batch_path.with_suffix(".npy.tmp")
+            with tmp_batch.open("wb") as f:
+                np.save(f, batch_emb)
+            tmp_batch.replace(batch_path)
+
+            completed_batches.add(batch_i)
+            rows_completed += len(batch_emb)
+            write_batch_manifest(
+                manifest_path,
+                corpus_name=shard_name,
+                total_rows=n,
+                dim=dim,
+                completed_batches=sorted(completed_batches),
+                rows_completed=rows_completed,
+                status="in_progress",
+            )
+
+            pct = 100.0 * rows_completed / n
+            log.info("  batch %4d/%d (%5d–%5d, %5d docs)  %5.1f%%  → wrote %s",
+                     batch_i + 1, n_batches, start, end - 1, end - start, pct, batch_path)
+
+        concatenate_batches(batches_dir, out_emb, n, dim)
         generate_ids(in_data, out_ids)
 
         out_record = {
@@ -232,8 +281,8 @@ def main() -> None:
             "name": shard_name,
             "embedding_path": str(out_emb),
             "ids_path": str(out_ids),
-            "rows": int(emb.shape[0]),
-            "dim": int(emb.shape[1]),
+            "rows": n,
+            "dim": dim,
             "bytes": out_emb.stat().st_size,
             "sha256": sha256_file(out_emb),
             "ids_sha256": sha256_file(out_ids),
