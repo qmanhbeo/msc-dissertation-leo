@@ -1,0 +1,1740 @@
+{
+  "method": "distributional_semantic_gap_battery",
+  "partial": false,
+  "config": {
+    "schema_version": 1,
+    "embed_model": "all-mpnet-base-v2",
+    "research_sample_size": 50000,
+    "sample_seeds": [
+      42,
+      43
+    ],
+    "stream_tags": {
+      "sample": 0,
+      "emd": 1,
+      "c2st": 2
+    },
+    "n_swd_projections": 512,
+    "swd_projection_seed": 42,
+    "policy_segment_cap": 50,
+    "policy_cap_seed": 42,
+    "sinkhorn_eps_scale": 0.1,
+    "sinkhorn_max_iter": 2000,
+    "sinkhorn_marginal_tol": 1e-06,
+    "pca_subspace_k": 10,
+    "cov_ridge_scale": 0.001,
+    "c2st_folds": 5,
+    "c2st_lr_max_iter": 1000,
+    "min_cluster_size": 10,
+    "round_digits": 6,
+    "gate_atol": 0.0001,
+    "versions": {
+      "numpy": "2.4.4",
+      "scipy": "1.17.1",
+      "sklearn": "1.8.0"
+    }
+  },
+  "config_hash": "f9a21dacc1ab3081",
+  "max_seed_replicate_gap_delta": 0.013402,
+  "methods": {
+    "sliced_wasserstein": {
+      "gap_by_sdg": {
+        "SDG1": 0.017178,
+        "SDG2": 0.016249,
+        "SDG3": 0.017131,
+        "SDG4": 0.013986,
+        "SDG5": 0.016292,
+        "SDG6": 0.015898,
+        "SDG7": 0.018088,
+        "SDG8": 0.015798,
+        "SDG9": 0.014032,
+        "SDG10": 0.014382,
+        "SDG11": 0.016404,
+        "SDG12": 0.018319,
+        "SDG13": 0.018657,
+        "SDG14": 0.018139,
+        "SDG15": 0.014398,
+        "SDG16": 0.014071,
+        "SDG17": 0.013412
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG12": 2,
+        "SDG14": 3,
+        "SDG7": 4,
+        "SDG1": 5,
+        "SDG3": 6,
+        "SDG11": 7,
+        "SDG5": 8,
+        "SDG2": 9,
+        "SDG6": 10,
+        "SDG8": 11,
+        "SDG15": 12,
+        "SDG10": 13,
+        "SDG16": 14,
+        "SDG9": 15,
+        "SDG4": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        13,
+        12,
+        14
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "swd_projection_sd": 0.011541,
+          "swd_mc_standard_error": 0.00051
+        },
+        "SDG2": {
+          "swd_projection_sd": 0.01009,
+          "swd_mc_standard_error": 0.000446
+        },
+        "SDG3": {
+          "swd_projection_sd": 0.011008,
+          "swd_mc_standard_error": 0.000486
+        },
+        "SDG4": {
+          "swd_projection_sd": 0.008819,
+          "swd_mc_standard_error": 0.00039
+        },
+        "SDG5": {
+          "swd_projection_sd": 0.009945,
+          "swd_mc_standard_error": 0.00044
+        },
+        "SDG6": {
+          "swd_projection_sd": 0.009916,
+          "swd_mc_standard_error": 0.000438
+        },
+        "SDG7": {
+          "swd_projection_sd": 0.01134,
+          "swd_mc_standard_error": 0.000501
+        },
+        "SDG8": {
+          "swd_projection_sd": 0.010813,
+          "swd_mc_standard_error": 0.000478
+        },
+        "SDG9": {
+          "swd_projection_sd": 0.00941,
+          "swd_mc_standard_error": 0.000416
+        },
+        "SDG10": {
+          "swd_projection_sd": 0.009322,
+          "swd_mc_standard_error": 0.000412
+        },
+        "SDG11": {
+          "swd_projection_sd": 0.011424,
+          "swd_mc_standard_error": 0.000505
+        },
+        "SDG12": {
+          "swd_projection_sd": 0.011605,
+          "swd_mc_standard_error": 0.000513
+        },
+        "SDG13": {
+          "swd_projection_sd": 0.012601,
+          "swd_mc_standard_error": 0.000557
+        },
+        "SDG14": {
+          "swd_projection_sd": 0.011582,
+          "swd_mc_standard_error": 0.000512
+        },
+        "SDG15": {
+          "swd_projection_sd": 0.008914,
+          "swd_mc_standard_error": 0.000394
+        },
+        "SDG16": {
+          "swd_projection_sd": 0.008797,
+          "swd_mc_standard_error": 0.000389
+        },
+        "SDG17": {
+          "swd_projection_sd": 0.008417,
+          "swd_mc_standard_error": 0.000372
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.754902,
+        "p": 0.00046
+      }
+    },
+    "chamfer_symmetric": {
+      "gap_by_sdg": {
+        "SDG1": 0.469357,
+        "SDG2": 0.3727,
+        "SDG3": 0.410831,
+        "SDG4": 0.386497,
+        "SDG5": 0.409347,
+        "SDG6": 0.404077,
+        "SDG7": 0.419007,
+        "SDG8": 0.436647,
+        "SDG9": 0.388547,
+        "SDG10": 0.443362,
+        "SDG11": 0.422439,
+        "SDG12": 0.470999,
+        "SDG13": 0.388439,
+        "SDG14": 0.413887,
+        "SDG15": 0.406895,
+        "SDG16": 0.396275,
+        "SDG17": 0.378217
+      },
+      "rank_by_sdg": {
+        "SDG12": 1,
+        "SDG1": 2,
+        "SDG10": 3,
+        "SDG8": 4,
+        "SDG11": 5,
+        "SDG7": 6,
+        "SDG14": 7,
+        "SDG3": 8,
+        "SDG5": 9,
+        "SDG15": 10,
+        "SDG6": 11,
+        "SDG16": 12,
+        "SDG9": 13,
+        "SDG13": 14,
+        "SDG4": 15,
+        "SDG17": 16,
+        "SDG2": 17
+      },
+      "top3_sdgs": [
+        12,
+        1,
+        10
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "chamfer_research_to_policy": 0.639067,
+          "chamfer_policy_to_research": 0.299648
+        },
+        "SDG2": {
+          "chamfer_research_to_policy": 0.491728,
+          "chamfer_policy_to_research": 0.253672
+        },
+        "SDG3": {
+          "chamfer_research_to_policy": 0.55432,
+          "chamfer_policy_to_research": 0.267341
+        },
+        "SDG4": {
+          "chamfer_research_to_policy": 0.493082,
+          "chamfer_policy_to_research": 0.279912
+        },
+        "SDG5": {
+          "chamfer_research_to_policy": 0.544973,
+          "chamfer_policy_to_research": 0.27372
+        },
+        "SDG6": {
+          "chamfer_research_to_policy": 0.519964,
+          "chamfer_policy_to_research": 0.288191
+        },
+        "SDG7": {
+          "chamfer_research_to_policy": 0.557909,
+          "chamfer_policy_to_research": 0.280104
+        },
+        "SDG8": {
+          "chamfer_research_to_policy": 0.566187,
+          "chamfer_policy_to_research": 0.307107
+        },
+        "SDG9": {
+          "chamfer_research_to_policy": 0.529788,
+          "chamfer_policy_to_research": 0.247305
+        },
+        "SDG10": {
+          "chamfer_research_to_policy": 0.568999,
+          "chamfer_policy_to_research": 0.317726
+        },
+        "SDG11": {
+          "chamfer_research_to_policy": 0.546217,
+          "chamfer_policy_to_research": 0.298661
+        },
+        "SDG12": {
+          "chamfer_research_to_policy": 0.645304,
+          "chamfer_policy_to_research": 0.296693
+        },
+        "SDG13": {
+          "chamfer_research_to_policy": 0.521353,
+          "chamfer_policy_to_research": 0.255524
+        },
+        "SDG14": {
+          "chamfer_research_to_policy": 0.552218,
+          "chamfer_policy_to_research": 0.275555
+        },
+        "SDG15": {
+          "chamfer_research_to_policy": 0.522033,
+          "chamfer_policy_to_research": 0.291757
+        },
+        "SDG16": {
+          "chamfer_research_to_policy": 0.518378,
+          "chamfer_policy_to_research": 0.274171
+        },
+        "SDG17": {
+          "chamfer_research_to_policy": 0.465692,
+          "chamfer_policy_to_research": 0.290742
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.519608,
+        "p": 0.032537
+      }
+    },
+    "hausdorff_modified": {
+      "gap_by_sdg": {
+        "SDG1": 0.639067,
+        "SDG2": 0.491728,
+        "SDG3": 0.55432,
+        "SDG4": 0.493082,
+        "SDG5": 0.544973,
+        "SDG6": 0.519964,
+        "SDG7": 0.557909,
+        "SDG8": 0.566187,
+        "SDG9": 0.529788,
+        "SDG10": 0.568999,
+        "SDG11": 0.546217,
+        "SDG12": 0.645304,
+        "SDG13": 0.521353,
+        "SDG14": 0.552218,
+        "SDG15": 0.522033,
+        "SDG16": 0.518378,
+        "SDG17": 0.465692
+      },
+      "rank_by_sdg": {
+        "SDG12": 1,
+        "SDG1": 2,
+        "SDG10": 3,
+        "SDG8": 4,
+        "SDG7": 5,
+        "SDG3": 6,
+        "SDG14": 7,
+        "SDG11": 8,
+        "SDG5": 9,
+        "SDG9": 10,
+        "SDG15": 11,
+        "SDG13": 12,
+        "SDG6": 13,
+        "SDG16": 14,
+        "SDG4": 15,
+        "SDG2": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        12,
+        1,
+        10
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "hausdorff_directed_rp": 0.967001,
+          "hausdorff_directed_pr": 0.657617
+        },
+        "SDG2": {
+          "hausdorff_directed_rp": 0.96589,
+          "hausdorff_directed_pr": 0.495145
+        },
+        "SDG3": {
+          "hausdorff_directed_rp": 0.981033,
+          "hausdorff_directed_pr": 0.568944
+        },
+        "SDG4": {
+          "hausdorff_directed_rp": 0.955331,
+          "hausdorff_directed_pr": 0.614099
+        },
+        "SDG5": {
+          "hausdorff_directed_rp": 0.959277,
+          "hausdorff_directed_pr": 0.556355
+        },
+        "SDG6": {
+          "hausdorff_directed_rp": 0.967324,
+          "hausdorff_directed_pr": 0.649701
+        },
+        "SDG7": {
+          "hausdorff_directed_rp": 0.933437,
+          "hausdorff_directed_pr": 0.581833
+        },
+        "SDG8": {
+          "hausdorff_directed_rp": 0.963789,
+          "hausdorff_directed_pr": 0.564207
+        },
+        "SDG9": {
+          "hausdorff_directed_rp": 0.93159,
+          "hausdorff_directed_pr": 0.563618
+        },
+        "SDG10": {
+          "hausdorff_directed_rp": 0.977498,
+          "hausdorff_directed_pr": 0.616442
+        },
+        "SDG11": {
+          "hausdorff_directed_rp": 0.934461,
+          "hausdorff_directed_pr": 0.529568
+        },
+        "SDG12": {
+          "hausdorff_directed_rp": 0.969171,
+          "hausdorff_directed_pr": 0.66768
+        },
+        "SDG13": {
+          "hausdorff_directed_rp": 0.961368,
+          "hausdorff_directed_pr": 0.631622
+        },
+        "SDG14": {
+          "hausdorff_directed_rp": 0.925814,
+          "hausdorff_directed_pr": 0.592125
+        },
+        "SDG15": {
+          "hausdorff_directed_rp": 0.950143,
+          "hausdorff_directed_pr": 0.578802
+        },
+        "SDG16": {
+          "hausdorff_directed_rp": 0.96357,
+          "hausdorff_directed_pr": 0.594707
+        },
+        "SDG17": {
+          "hausdorff_directed_rp": 0.915369,
+          "hausdorff_directed_pr": 0.538444
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.588235,
+        "p": 0.013001
+      }
+    },
+    "gaussian_w2": {
+      "gap_by_sdg": {
+        "SDG1": 0.862541,
+        "SDG2": 0.776173,
+        "SDG3": 0.811295,
+        "SDG4": 0.689713,
+        "SDG5": 0.798757,
+        "SDG6": 0.767144,
+        "SDG7": 0.830979,
+        "SDG8": 0.802024,
+        "SDG9": 0.738121,
+        "SDG10": 0.750602,
+        "SDG11": 0.809008,
+        "SDG12": 0.856113,
+        "SDG13": 0.833105,
+        "SDG14": 0.830906,
+        "SDG15": 0.70214,
+        "SDG16": 0.732188,
+        "SDG17": 0.680766
+      },
+      "rank_by_sdg": {
+        "SDG1": 1,
+        "SDG12": 2,
+        "SDG13": 3,
+        "SDG7": 4,
+        "SDG14": 5,
+        "SDG3": 6,
+        "SDG11": 7,
+        "SDG8": 8,
+        "SDG5": 9,
+        "SDG2": 10,
+        "SDG6": 11,
+        "SDG10": 12,
+        "SDG9": 13,
+        "SDG16": 14,
+        "SDG15": 15,
+        "SDG4": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        1,
+        12,
+        13
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "gaussian_w2_mean_term": 0.322312,
+          "gaussian_w2_shape_term": 0.421665,
+          "gaussian_w2_shape_share": 0.566772,
+          "gaussian_w2_ridged": 0.862283,
+          "n_over_dim_policy": 2.127604
+        },
+        "SDG2": {
+          "gaussian_w2_mean_term": 0.256697,
+          "gaussian_w2_shape_term": 0.345748,
+          "gaussian_w2_shape_share": 0.573908,
+          "gaussian_w2_ridged": 0.775921,
+          "n_over_dim_policy": 1.934896
+        },
+        "SDG3": {
+          "gaussian_w2_mean_term": 0.294613,
+          "gaussian_w2_shape_term": 0.363586,
+          "gaussian_w2_shape_share": 0.552395,
+          "gaussian_w2_ridged": 0.811065,
+          "n_over_dim_policy": 3.161458
+        },
+        "SDG4": {
+          "gaussian_w2_mean_term": 0.206386,
+          "gaussian_w2_shape_term": 0.269318,
+          "gaussian_w2_shape_share": 0.566147,
+          "gaussian_w2_ridged": 0.689478,
+          "n_over_dim_policy": 2.68099
+        },
+        "SDG5": {
+          "gaussian_w2_mean_term": 0.27567,
+          "gaussian_w2_shape_term": 0.362343,
+          "gaussian_w2_shape_share": 0.567924,
+          "gaussian_w2_ridged": 0.798512,
+          "n_over_dim_policy": 2.580729
+        },
+        "SDG6": {
+          "gaussian_w2_mean_term": 0.257544,
+          "gaussian_w2_shape_term": 0.330965,
+          "gaussian_w2_shape_share": 0.562379,
+          "gaussian_w2_ridged": 0.766818,
+          "n_over_dim_policy": 1.580729
+        },
+        "SDG7": {
+          "gaussian_w2_mean_term": 0.32487,
+          "gaussian_w2_shape_term": 0.365656,
+          "gaussian_w2_shape_share": 0.529532,
+          "gaussian_w2_ridged": 0.83071,
+          "n_over_dim_policy": 2.048177
+        },
+        "SDG8": {
+          "gaussian_w2_mean_term": 0.275523,
+          "gaussian_w2_shape_term": 0.36772,
+          "gaussian_w2_shape_share": 0.571665,
+          "gaussian_w2_ridged": 0.801749,
+          "n_over_dim_policy": 2.473958
+        },
+        "SDG9": {
+          "gaussian_w2_mean_term": 0.200419,
+          "gaussian_w2_shape_term": 0.344404,
+          "gaussian_w2_shape_share": 0.63214,
+          "gaussian_w2_ridged": 0.737883,
+          "n_over_dim_policy": 3.911458
+        },
+        "SDG10": {
+          "gaussian_w2_mean_term": 0.221017,
+          "gaussian_w2_shape_term": 0.342386,
+          "gaussian_w2_shape_share": 0.607711,
+          "gaussian_w2_ridged": 0.750167,
+          "n_over_dim_policy": 1.540365
+        },
+        "SDG11": {
+          "gaussian_w2_mean_term": 0.306585,
+          "gaussian_w2_shape_term": 0.347909,
+          "gaussian_w2_shape_share": 0.531569,
+          "gaussian_w2_ridged": 0.80873,
+          "n_over_dim_policy": 2.082031
+        },
+        "SDG12": {
+          "gaussian_w2_mean_term": 0.326205,
+          "gaussian_w2_shape_term": 0.406725,
+          "gaussian_w2_shape_share": 0.554931,
+          "gaussian_w2_ridged": 0.85572,
+          "n_over_dim_policy": 1.464844
+        },
+        "SDG13": {
+          "gaussian_w2_mean_term": 0.372514,
+          "gaussian_w2_shape_term": 0.32155,
+          "gaussian_w2_shape_share": 0.463286,
+          "gaussian_w2_ridged": 0.832947,
+          "n_over_dim_policy": 4.00651
+        },
+        "SDG14": {
+          "gaussian_w2_mean_term": 0.322679,
+          "gaussian_w2_shape_term": 0.367725,
+          "gaussian_w2_shape_share": 0.532623,
+          "gaussian_w2_ridged": 0.83057,
+          "n_over_dim_policy": 1.664062
+        },
+        "SDG15": {
+          "gaussian_w2_mean_term": 0.194825,
+          "gaussian_w2_shape_term": 0.298176,
+          "gaussian_w2_shape_share": 0.604819,
+          "gaussian_w2_ridged": 0.701812,
+          "n_over_dim_policy": 1.882812
+        },
+        "SDG16": {
+          "gaussian_w2_mean_term": 0.213886,
+          "gaussian_w2_shape_term": 0.322214,
+          "gaussian_w2_shape_share": 0.601034,
+          "gaussian_w2_ridged": 0.731985,
+          "n_over_dim_policy": 6.191406
+        },
+        "SDG17": {
+          "gaussian_w2_mean_term": 0.197609,
+          "gaussian_w2_shape_term": 0.265833,
+          "gaussian_w2_shape_share": 0.573606,
+          "gaussian_w2_ridged": 0.680623,
+          "n_over_dim_policy": 4.9375
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.838235,
+        "p": 2.6e-05
+      }
+    },
+    "grassmann": {
+      "gap_by_sdg": {
+        "SDG1": 3.920856,
+        "SDG2": 3.73254,
+        "SDG3": 3.636525,
+        "SDG4": 3.332989,
+        "SDG5": 3.72762,
+        "SDG6": 3.71435,
+        "SDG7": 3.753215,
+        "SDG8": 3.616452,
+        "SDG9": 3.475157,
+        "SDG10": 3.429889,
+        "SDG11": 3.662986,
+        "SDG12": 3.673921,
+        "SDG13": 3.718375,
+        "SDG14": 3.786177,
+        "SDG15": 3.470506,
+        "SDG16": 3.427775,
+        "SDG17": 3.318316
+      },
+      "rank_by_sdg": {
+        "SDG1": 1,
+        "SDG14": 2,
+        "SDG7": 3,
+        "SDG2": 4,
+        "SDG5": 5,
+        "SDG13": 6,
+        "SDG6": 7,
+        "SDG12": 8,
+        "SDG11": 9,
+        "SDG3": 10,
+        "SDG8": 11,
+        "SDG9": 12,
+        "SDG15": 13,
+        "SDG10": 14,
+        "SDG16": 15,
+        "SDG4": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        1,
+        14,
+        7
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "grassmann_mean_principal_angle_deg": 69.538577,
+          "grassmann_max_principal_angle_deg": 85.89126,
+          "grassmann_explained_var_share_research": 0.362892,
+          "grassmann_explained_var_share_policy": 0.370298
+        },
+        "SDG2": {
+          "grassmann_mean_principal_angle_deg": 65.146526,
+          "grassmann_max_principal_angle_deg": 89.00504,
+          "grassmann_explained_var_share_research": 0.38721,
+          "grassmann_explained_var_share_policy": 0.392791
+        },
+        "SDG3": {
+          "grassmann_mean_principal_angle_deg": 63.674556,
+          "grassmann_max_principal_angle_deg": 87.399276,
+          "grassmann_explained_var_share_research": 0.306314,
+          "grassmann_explained_var_share_policy": 0.396506
+        },
+        "SDG4": {
+          "grassmann_mean_principal_angle_deg": 57.635522,
+          "grassmann_max_principal_angle_deg": 86.615268,
+          "grassmann_explained_var_share_research": 0.306301,
+          "grassmann_explained_var_share_policy": 0.350556
+        },
+        "SDG5": {
+          "grassmann_mean_principal_angle_deg": 65.069374,
+          "grassmann_max_principal_angle_deg": 87.100355,
+          "grassmann_explained_var_share_research": 0.333841,
+          "grassmann_explained_var_share_policy": 0.377148
+        },
+        "SDG6": {
+          "grassmann_mean_principal_angle_deg": 65.019861,
+          "grassmann_max_principal_angle_deg": 89.031659,
+          "grassmann_explained_var_share_research": 0.347907,
+          "grassmann_explained_var_share_policy": 0.380162
+        },
+        "SDG7": {
+          "grassmann_mean_principal_angle_deg": 65.840737,
+          "grassmann_max_principal_angle_deg": 89.318345,
+          "grassmann_explained_var_share_research": 0.345057,
+          "grassmann_explained_var_share_policy": 0.374312
+        },
+        "SDG8": {
+          "grassmann_mean_principal_angle_deg": 62.356713,
+          "grassmann_max_principal_angle_deg": 87.73732,
+          "grassmann_explained_var_share_research": 0.347512,
+          "grassmann_explained_var_share_policy": 0.372573
+        },
+        "SDG9": {
+          "grassmann_mean_principal_angle_deg": 60.357618,
+          "grassmann_max_principal_angle_deg": 89.881397,
+          "grassmann_explained_var_share_research": 0.29174,
+          "grassmann_explained_var_share_policy": 0.448105
+        },
+        "SDG10": {
+          "grassmann_mean_principal_angle_deg": 59.058192,
+          "grassmann_max_principal_angle_deg": 87.85783,
+          "grassmann_explained_var_share_research": 0.301159,
+          "grassmann_explained_var_share_policy": 0.395724
+        },
+        "SDG11": {
+          "grassmann_mean_principal_angle_deg": 63.652083,
+          "grassmann_max_principal_angle_deg": 87.839576,
+          "grassmann_explained_var_share_research": 0.350767,
+          "grassmann_explained_var_share_policy": 0.367125
+        },
+        "SDG12": {
+          "grassmann_mean_principal_angle_deg": 64.463241,
+          "grassmann_max_principal_angle_deg": 88.752986,
+          "grassmann_explained_var_share_research": 0.340093,
+          "grassmann_explained_var_share_policy": 0.396386
+        },
+        "SDG13": {
+          "grassmann_mean_principal_angle_deg": 64.752563,
+          "grassmann_max_principal_angle_deg": 88.996931,
+          "grassmann_explained_var_share_research": 0.345406,
+          "grassmann_explained_var_share_policy": 0.389623
+        },
+        "SDG14": {
+          "grassmann_mean_principal_angle_deg": 66.700237,
+          "grassmann_max_principal_angle_deg": 88.649255,
+          "grassmann_explained_var_share_research": 0.351079,
+          "grassmann_explained_var_share_policy": 0.408985
+        },
+        "SDG15": {
+          "grassmann_mean_principal_angle_deg": 59.982802,
+          "grassmann_max_principal_angle_deg": 85.584452,
+          "grassmann_explained_var_share_research": 0.33852,
+          "grassmann_explained_var_share_policy": 0.385474
+        },
+        "SDG16": {
+          "grassmann_mean_principal_angle_deg": 59.350399,
+          "grassmann_max_principal_angle_deg": 89.50689,
+          "grassmann_explained_var_share_research": 0.294515,
+          "grassmann_explained_var_share_policy": 0.423975
+        },
+        "SDG17": {
+          "grassmann_mean_principal_angle_deg": 55.962345,
+          "grassmann_max_principal_angle_deg": 88.557836,
+          "grassmann_explained_var_share_research": 0.354522,
+          "grassmann_explained_var_share_policy": 0.388889
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.497549,
+        "p": 0.042129
+      }
+    },
+    "linear_mmd": {
+      "gap_by_sdg": {
+        "SDG1": 0.322312,
+        "SDG2": 0.256697,
+        "SDG3": 0.294613,
+        "SDG4": 0.206386,
+        "SDG5": 0.27567,
+        "SDG6": 0.257544,
+        "SDG7": 0.32487,
+        "SDG8": 0.275523,
+        "SDG9": 0.200419,
+        "SDG10": 0.221017,
+        "SDG11": 0.306585,
+        "SDG12": 0.326205,
+        "SDG13": 0.372514,
+        "SDG14": 0.322679,
+        "SDG15": 0.194825,
+        "SDG16": 0.213886,
+        "SDG17": 0.197609
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG12": 2,
+        "SDG7": 3,
+        "SDG14": 4,
+        "SDG1": 5,
+        "SDG11": 6,
+        "SDG3": 7,
+        "SDG5": 8,
+        "SDG8": 9,
+        "SDG6": 10,
+        "SDG2": 11,
+        "SDG10": 12,
+        "SDG16": 13,
+        "SDG4": 14,
+        "SDG9": 15,
+        "SDG17": 16,
+        "SDG15": 17
+      },
+      "top3_sdgs": [
+        13,
+        12,
+        7
+      ],
+      "diagnostics": {
+        "SDG1": {},
+        "SDG2": {},
+        "SDG3": {},
+        "SDG4": {},
+        "SDG5": {},
+        "SDG6": {},
+        "SDG7": {},
+        "SDG8": {},
+        "SDG9": {},
+        "SDG10": {},
+        "SDG11": {},
+        "SDG12": {},
+        "SDG13": {},
+        "SDG14": {},
+        "SDG15": {},
+        "SDG16": {},
+        "SDG17": {}
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.82598,
+        "p": 4.4e-05
+      }
+    },
+    "centroid_gap_full_corpus": {
+      "gap_by_sdg": {
+        "SDG1": 0.435412,
+        "SDG2": 0.284926,
+        "SDG3": 0.464446,
+        "SDG4": 0.262241,
+        "SDG5": 0.333008,
+        "SDG6": 0.28166,
+        "SDG7": 0.43414,
+        "SDG8": 0.427018,
+        "SDG9": 0.289086,
+        "SDG10": 0.309134,
+        "SDG11": 0.460372,
+        "SDG12": 0.424928,
+        "SDG13": 0.477659,
+        "SDG14": 0.391982,
+        "SDG15": 0.229455,
+        "SDG16": 0.333485,
+        "SDG17": 0.218848
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG3": 2,
+        "SDG11": 3,
+        "SDG1": 4,
+        "SDG7": 5,
+        "SDG8": 6,
+        "SDG12": 7,
+        "SDG14": 8,
+        "SDG16": 9,
+        "SDG5": 10,
+        "SDG10": 11,
+        "SDG9": 12,
+        "SDG2": 13,
+        "SDG6": 14,
+        "SDG4": 15,
+        "SDG15": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        13,
+        3,
+        11
+      ],
+      "diagnostics": {
+        "SDG1": {},
+        "SDG2": {},
+        "SDG3": {},
+        "SDG4": {},
+        "SDG5": {},
+        "SDG6": {},
+        "SDG7": {},
+        "SDG8": {},
+        "SDG9": {},
+        "SDG10": {},
+        "SDG11": {},
+        "SDG12": {},
+        "SDG13": {},
+        "SDG14": {},
+        "SDG15": {},
+        "SDG16": {},
+        "SDG17": {}
+      },
+      "spearman_vs_canonical": {
+        "rho": 1.0,
+        "p": 0.0
+      }
+    },
+    "exact_emd": {
+      "gap_by_sdg": {
+        "SDG1": 0.695881,
+        "SDG2": 0.598914,
+        "SDG3": 0.682636,
+        "SDG4": 0.574618,
+        "SDG5": 0.647032,
+        "SDG6": 0.589911,
+        "SDG7": 0.661621,
+        "SDG8": 0.672028,
+        "SDG9": 0.621193,
+        "SDG10": 0.639057,
+        "SDG11": 0.655677,
+        "SDG12": 0.695064,
+        "SDG13": 0.655717,
+        "SDG14": 0.647844,
+        "SDG15": 0.575578,
+        "SDG16": 0.625177,
+        "SDG17": 0.545946
+      },
+      "rank_by_sdg": {
+        "SDG1": 1,
+        "SDG12": 2,
+        "SDG3": 3,
+        "SDG8": 4,
+        "SDG7": 5,
+        "SDG13": 6,
+        "SDG11": 7,
+        "SDG14": 8,
+        "SDG5": 9,
+        "SDG10": 10,
+        "SDG16": 11,
+        "SDG9": 12,
+        "SDG2": 13,
+        "SDG6": 14,
+        "SDG15": 15,
+        "SDG4": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        1,
+        12,
+        3
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "emd_n_per_side": 1634
+        },
+        "SDG2": {
+          "emd_n_per_side": 1486
+        },
+        "SDG3": {
+          "emd_n_per_side": 2428
+        },
+        "SDG4": {
+          "emd_n_per_side": 2059
+        },
+        "SDG5": {
+          "emd_n_per_side": 1982
+        },
+        "SDG6": {
+          "emd_n_per_side": 1214
+        },
+        "SDG7": {
+          "emd_n_per_side": 1573
+        },
+        "SDG8": {
+          "emd_n_per_side": 1900
+        },
+        "SDG9": {
+          "emd_n_per_side": 3004
+        },
+        "SDG10": {
+          "emd_n_per_side": 1183
+        },
+        "SDG11": {
+          "emd_n_per_side": 1599
+        },
+        "SDG12": {
+          "emd_n_per_side": 1125
+        },
+        "SDG13": {
+          "emd_n_per_side": 3077
+        },
+        "SDG14": {
+          "emd_n_per_side": 1278
+        },
+        "SDG15": {
+          "emd_n_per_side": 1446
+        },
+        "SDG16": {
+          "emd_n_per_side": 4755
+        },
+        "SDG17": {
+          "emd_n_per_side": 3792
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.892157,
+        "p": 1e-06
+      },
+      "seed_replicate": {
+        "seed": 43,
+        "max_abs_gap_delta": 0.013402,
+        "max_abs_rank_shift": 1,
+        "n_sdgs_replicated": 13
+      }
+    },
+    "sinkhorn": {
+      "gap_by_sdg": {
+        "SDG1": 0.552043,
+        "SDG2": 0.519134,
+        "SDG3": 0.561627,
+        "SDG4": 0.506754,
+        "SDG5": 0.537261,
+        "SDG6": 0.530594,
+        "SDG7": 0.55053,
+        "SDG8": 0.536396,
+        "SDG9": 0.523179,
+        "SDG10": 0.597933,
+        "SDG11": 0.530023,
+        "SDG12": 0.593213,
+        "SDG13": 0.49373,
+        "SDG14": 0.558879,
+        "SDG15": 0.531731,
+        "SDG16": 0.488456,
+        "SDG17": 0.445094
+      },
+      "rank_by_sdg": {
+        "SDG10": 1,
+        "SDG12": 2,
+        "SDG3": 3,
+        "SDG14": 4,
+        "SDG1": 5,
+        "SDG7": 6,
+        "SDG5": 7,
+        "SDG8": 8,
+        "SDG15": 9,
+        "SDG6": 10,
+        "SDG11": 11,
+        "SDG9": 12,
+        "SDG2": 13,
+        "SDG4": 14,
+        "SDG13": 15,
+        "SDG16": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        10,
+        12,
+        3
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "sinkhorn_epsilon": 0.091689
+        },
+        "SDG2": {
+          "sinkhorn_epsilon": 0.079622
+        },
+        "SDG3": {
+          "sinkhorn_epsilon": 0.090515
+        },
+        "SDG4": {
+          "sinkhorn_epsilon": 0.077316
+        },
+        "SDG5": {
+          "sinkhorn_epsilon": 0.084275
+        },
+        "SDG6": {
+          "sinkhorn_epsilon": 0.075689
+        },
+        "SDG7": {
+          "sinkhorn_epsilon": 0.08413
+        },
+        "SDG8": {
+          "sinkhorn_epsilon": 0.089269
+        },
+        "SDG9": {
+          "sinkhorn_epsilon": 0.085823
+        },
+        "SDG10": {
+          "sinkhorn_epsilon": 0.086606
+        },
+        "SDG11": {
+          "sinkhorn_epsilon": 0.086644
+        },
+        "SDG12": {
+          "sinkhorn_epsilon": 0.090021
+        },
+        "SDG13": {
+          "sinkhorn_epsilon": 0.084779
+        },
+        "SDG14": {
+          "sinkhorn_epsilon": 0.081931
+        },
+        "SDG15": {
+          "sinkhorn_epsilon": 0.077386
+        },
+        "SDG16": {
+          "sinkhorn_epsilon": 0.087313
+        },
+        "SDG17": {
+          "sinkhorn_epsilon": 0.076687
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.348039,
+        "p": 0.171013
+      },
+      "seed_replicate": {
+        "seed": 43,
+        "max_abs_gap_delta": 0.007058,
+        "max_abs_rank_shift": 2,
+        "n_sdgs_replicated": 13
+      }
+    },
+    "energy_distance": {
+      "gap_by_sdg": {
+        "SDG1": 0.27707,
+        "SDG2": 0.235124,
+        "SDG3": 0.250412,
+        "SDG4": 0.18527,
+        "SDG5": 0.245011,
+        "SDG6": 0.239695,
+        "SDG7": 0.286721,
+        "SDG8": 0.232187,
+        "SDG9": 0.175594,
+        "SDG10": 0.189577,
+        "SDG11": 0.260643,
+        "SDG12": 0.283368,
+        "SDG13": 0.328796,
+        "SDG14": 0.291253,
+        "SDG15": 0.177584,
+        "SDG16": 0.185237,
+        "SDG17": 0.181251
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG14": 2,
+        "SDG7": 3,
+        "SDG12": 4,
+        "SDG1": 5,
+        "SDG11": 6,
+        "SDG3": 7,
+        "SDG5": 8,
+        "SDG6": 9,
+        "SDG2": 10,
+        "SDG8": 11,
+        "SDG10": 12,
+        "SDG4": 13,
+        "SDG16": 14,
+        "SDG17": 15,
+        "SDG15": 16,
+        "SDG9": 17
+      },
+      "top3_sdgs": [
+        13,
+        14,
+        7
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "mean_cross_distance": 1.306413,
+          "mean_within_research_distance": 1.315128,
+          "mean_within_policy_distance": 1.020628
+        },
+        "SDG2": {
+          "mean_cross_distance": 1.253531,
+          "mean_within_research_distance": 1.284013,
+          "mean_within_policy_distance": 0.987926
+        },
+        "SDG3": {
+          "mean_cross_distance": 1.326024,
+          "mean_within_research_distance": 1.326455,
+          "mean_within_policy_distance": 1.075181
+        },
+        "SDG4": {
+          "mean_cross_distance": 1.242473,
+          "mean_within_research_distance": 1.2567,
+          "mean_within_policy_distance": 1.042975
+        },
+        "SDG5": {
+          "mean_cross_distance": 1.281005,
+          "mean_within_research_distance": 1.306232,
+          "mean_within_policy_distance": 1.010768
+        },
+        "SDG6": {
+          "mean_cross_distance": 1.228985,
+          "mean_within_research_distance": 1.25039,
+          "mean_within_policy_distance": 0.967885
+        },
+        "SDG7": {
+          "mean_cross_distance": 1.283183,
+          "mean_within_research_distance": 1.264467,
+          "mean_within_policy_distance": 1.015177
+        },
+        "SDG8": {
+          "mean_cross_distance": 1.305173,
+          "mean_within_research_distance": 1.297128,
+          "mean_within_policy_distance": 1.081031
+        },
+        "SDG9": {
+          "mean_cross_distance": 1.293374,
+          "mean_within_research_distance": 1.318068,
+          "mean_within_policy_distance": 1.093086
+        },
+        "SDG10": {
+          "mean_cross_distance": 1.299607,
+          "mean_within_research_distance": 1.325114,
+          "mean_within_policy_distance": 1.084522
+        },
+        "SDG11": {
+          "mean_cross_distance": 1.294789,
+          "mean_within_research_distance": 1.256011,
+          "mean_within_policy_distance": 1.072924
+        },
+        "SDG12": {
+          "mean_cross_distance": 1.306116,
+          "mean_within_research_distance": 1.320843,
+          "mean_within_policy_distance": 1.00802
+        },
+        "SDG13": {
+          "mean_cross_distance": 1.283497,
+          "mean_within_research_distance": 1.24673,
+          "mean_within_policy_distance": 0.991468
+        },
+        "SDG14": {
+          "mean_cross_distance": 1.264618,
+          "mean_within_research_distance": 1.258963,
+          "mean_within_policy_distance": 0.979019
+        },
+        "SDG15": {
+          "mean_cross_distance": 1.241063,
+          "mean_within_research_distance": 1.271833,
+          "mean_within_policy_distance": 1.032709
+        },
+        "SDG16": {
+          "mean_cross_distance": 1.306454,
+          "mean_within_research_distance": 1.322431,
+          "mean_within_policy_distance": 1.10524
+        },
+        "SDG17": {
+          "mean_cross_distance": 1.233263,
+          "mean_within_research_distance": 1.270238,
+          "mean_within_policy_distance": 1.015038
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.747549,
+        "p": 0.000561
+      },
+      "seed_replicate": {
+        "seed": 43,
+        "max_abs_gap_delta": 0.001632,
+        "max_abs_rank_shift": 0,
+        "n_sdgs_replicated": 13
+      }
+    },
+    "rbf_mmd": {
+      "gap_by_sdg": {
+        "SDG1": 0.119957,
+        "SDG2": 0.109603,
+        "SDG3": 0.109842,
+        "SDG4": 0.088476,
+        "SDG5": 0.111067,
+        "SDG6": 0.114701,
+        "SDG7": 0.13018,
+        "SDG8": 0.102979,
+        "SDG9": 0.078702,
+        "SDG10": 0.085141,
+        "SDG11": 0.11767,
+        "SDG12": 0.123597,
+        "SDG13": 0.148609,
+        "SDG14": 0.133514,
+        "SDG15": 0.084363,
+        "SDG16": 0.082627,
+        "SDG17": 0.086433
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG14": 2,
+        "SDG7": 3,
+        "SDG12": 4,
+        "SDG1": 5,
+        "SDG11": 6,
+        "SDG6": 7,
+        "SDG5": 8,
+        "SDG3": 9,
+        "SDG2": 10,
+        "SDG8": 11,
+        "SDG4": 12,
+        "SDG17": 13,
+        "SDG10": 14,
+        "SDG15": 15,
+        "SDG16": 16,
+        "SDG9": 17
+      },
+      "top3_sdgs": [
+        13,
+        14,
+        7
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "rbf_bandwidth": 1.35417
+        },
+        "SDG2": {
+          "rbf_bandwidth": 1.261921
+        },
+        "SDG3": {
+          "rbf_bandwidth": 1.345477
+        },
+        "SDG4": {
+          "rbf_bandwidth": 1.243508
+        },
+        "SDG5": {
+          "rbf_bandwidth": 1.298265
+        },
+        "SDG6": {
+          "rbf_bandwidth": 1.230356
+        },
+        "SDG7": {
+          "rbf_bandwidth": 1.297151
+        },
+        "SDG8": {
+          "rbf_bandwidth": 1.336182
+        },
+        "SDG9": {
+          "rbf_bandwidth": 1.310135
+        },
+        "SDG10": {
+          "rbf_bandwidth": 1.316101
+        },
+        "SDG11": {
+          "rbf_bandwidth": 1.31639
+        },
+        "SDG12": {
+          "rbf_bandwidth": 1.3418
+        },
+        "SDG13": {
+          "rbf_bandwidth": 1.302146
+        },
+        "SDG14": {
+          "rbf_bandwidth": 1.280082
+        },
+        "SDG15": {
+          "rbf_bandwidth": 1.244075
+        },
+        "SDG16": {
+          "rbf_bandwidth": 1.321459
+        },
+        "SDG17": {
+          "rbf_bandwidth": 1.238443
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 0.627451,
+        "p": 0.007011
+      },
+      "seed_replicate": {
+        "seed": 43,
+        "max_abs_gap_delta": 0.00106,
+        "max_abs_rank_shift": 0,
+        "n_sdgs_replicated": 13
+      }
+    },
+    "c2st": {
+      "gap_by_sdg": {
+        "SDG1": 0.995705,
+        "SDG2": 0.997179,
+        "SDG3": 0.996414,
+        "SDG4": 0.9972,
+        "SDG5": 0.996479,
+        "SDG6": 0.998476,
+        "SDG7": 0.998164,
+        "SDG8": 0.996096,
+        "SDG9": 0.997007,
+        "SDG10": 0.993977,
+        "SDG11": 0.99697,
+        "SDG12": 0.998467,
+        "SDG13": 0.997666,
+        "SDG14": 0.997107,
+        "SDG15": 0.997594,
+        "SDG16": 0.996693,
+        "SDG17": 0.994553
+      },
+      "rank_by_sdg": {
+        "SDG6": 1,
+        "SDG12": 2,
+        "SDG7": 3,
+        "SDG13": 4,
+        "SDG15": 5,
+        "SDG4": 6,
+        "SDG2": 7,
+        "SDG14": 8,
+        "SDG9": 9,
+        "SDG11": 10,
+        "SDG16": 11,
+        "SDG5": 12,
+        "SDG3": 13,
+        "SDG8": 14,
+        "SDG1": 15,
+        "SDG17": 16,
+        "SDG10": 17
+      },
+      "top3_sdgs": [
+        6,
+        12,
+        7
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "c2st_auc_sd": 0.000872
+        },
+        "SDG2": {
+          "c2st_auc_sd": 0.001175
+        },
+        "SDG3": {
+          "c2st_auc_sd": 0.001157
+        },
+        "SDG4": {
+          "c2st_auc_sd": 0.000654
+        },
+        "SDG5": {
+          "c2st_auc_sd": 0.001138
+        },
+        "SDG6": {
+          "c2st_auc_sd": 0.001017
+        },
+        "SDG7": {
+          "c2st_auc_sd": 0.001133
+        },
+        "SDG8": {
+          "c2st_auc_sd": 0.001721
+        },
+        "SDG9": {
+          "c2st_auc_sd": 0.000869
+        },
+        "SDG10": {
+          "c2st_auc_sd": 0.002644
+        },
+        "SDG11": {
+          "c2st_auc_sd": 0.001041
+        },
+        "SDG12": {
+          "c2st_auc_sd": 0.001672
+        },
+        "SDG13": {
+          "c2st_auc_sd": 0.000439
+        },
+        "SDG14": {
+          "c2st_auc_sd": 0.001681
+        },
+        "SDG15": {
+          "c2st_auc_sd": 0.000706
+        },
+        "SDG16": {
+          "c2st_auc_sd": 0.00081
+        },
+        "SDG17": {
+          "c2st_auc_sd": 0.001131
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": -0.046569,
+        "p": 0.859133
+      },
+      "seed_replicate": {
+        "seed": 43,
+        "max_abs_gap_delta": 0.00215,
+        "max_abs_rank_shift": 11,
+        "n_sdgs_replicated": 13
+      }
+    },
+    "centroid_gap_sampled": {
+      "gap_by_sdg": {
+        "SDG1": 0.435412,
+        "SDG2": 0.284182,
+        "SDG3": 0.463772,
+        "SDG4": 0.261945,
+        "SDG5": 0.332909,
+        "SDG6": 0.28166,
+        "SDG7": 0.434292,
+        "SDG8": 0.42753,
+        "SDG9": 0.288059,
+        "SDG10": 0.309134,
+        "SDG11": 0.463459,
+        "SDG12": 0.42413,
+        "SDG13": 0.477873,
+        "SDG14": 0.391828,
+        "SDG15": 0.229828,
+        "SDG16": 0.335303,
+        "SDG17": 0.218848
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG3": 2,
+        "SDG11": 3,
+        "SDG1": 4,
+        "SDG7": 5,
+        "SDG8": 6,
+        "SDG12": 7,
+        "SDG14": 8,
+        "SDG16": 9,
+        "SDG5": 10,
+        "SDG10": 11,
+        "SDG9": 12,
+        "SDG2": 13,
+        "SDG6": 14,
+        "SDG4": 15,
+        "SDG15": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        13,
+        3,
+        11
+      ],
+      "diagnostics": {
+        "SDG1": {
+          "exhaustive": true
+        },
+        "SDG2": {
+          "exhaustive": false
+        },
+        "SDG3": {
+          "exhaustive": false
+        },
+        "SDG4": {
+          "exhaustive": false
+        },
+        "SDG5": {
+          "exhaustive": false
+        },
+        "SDG6": {
+          "exhaustive": true
+        },
+        "SDG7": {
+          "exhaustive": false
+        },
+        "SDG8": {
+          "exhaustive": false
+        },
+        "SDG9": {
+          "exhaustive": false
+        },
+        "SDG10": {
+          "exhaustive": true
+        },
+        "SDG11": {
+          "exhaustive": false
+        },
+        "SDG12": {
+          "exhaustive": false
+        },
+        "SDG13": {
+          "exhaustive": false
+        },
+        "SDG14": {
+          "exhaustive": false
+        },
+        "SDG15": {
+          "exhaustive": false
+        },
+        "SDG16": {
+          "exhaustive": false
+        },
+        "SDG17": {
+          "exhaustive": true
+        }
+      },
+      "spearman_vs_canonical": {
+        "rho": 1.0,
+        "p": 0.0
+      },
+      "seed_replicate": {
+        "seed": 43,
+        "max_abs_gap_delta": 0.00452,
+        "max_abs_rank_shift": 0,
+        "n_sdgs_replicated": 13
+      }
+    },
+    "centroid_gap_canonical": {
+      "gap_by_sdg": {
+        "SDG1": 0.435412,
+        "SDG2": 0.284926,
+        "SDG3": 0.464446,
+        "SDG4": 0.262241,
+        "SDG5": 0.333008,
+        "SDG6": 0.28166,
+        "SDG7": 0.43414,
+        "SDG8": 0.427018,
+        "SDG9": 0.289086,
+        "SDG10": 0.309134,
+        "SDG11": 0.460372,
+        "SDG12": 0.424928,
+        "SDG13": 0.477659,
+        "SDG14": 0.391982,
+        "SDG15": 0.229455,
+        "SDG16": 0.333485,
+        "SDG17": 0.218848
+      },
+      "rank_by_sdg": {
+        "SDG13": 1,
+        "SDG3": 2,
+        "SDG11": 3,
+        "SDG1": 4,
+        "SDG7": 5,
+        "SDG8": 6,
+        "SDG12": 7,
+        "SDG14": 8,
+        "SDG16": 9,
+        "SDG5": 10,
+        "SDG10": 11,
+        "SDG9": 12,
+        "SDG2": 13,
+        "SDG6": 14,
+        "SDG4": 15,
+        "SDG15": 16,
+        "SDG17": 17
+      },
+      "top3_sdgs": [
+        13,
+        3,
+        11
+      ],
+      "diagnostics": {}
+    }
+  },
+  "per_sdg_context": {
+    "SDG1": {
+      "n_research": 16547,
+      "n_research_sampled": 16547,
+      "exhaustive_sample": true,
+      "n_policy_capped": 1634,
+      "unreliable": false,
+      "rms_within_research": 1.320335,
+      "rms_within_policy": 1.027771
+    },
+    "SDG2": {
+      "n_research": 79040,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1486,
+      "unreliable": false,
+      "rms_within_research": 1.29074,
+      "rms_within_policy": 0.994957
+    },
+    "SDG3": {
+      "n_research": 785877,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 2428,
+      "unreliable": false,
+      "rms_within_research": 1.3301,
+      "rms_within_policy": 1.083449
+    },
+    "SDG4": {
+      "n_research": 453225,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 2059,
+      "unreliable": false,
+      "rms_within_research": 1.262433,
+      "rms_within_policy": 1.050016
+    },
+    "SDG5": {
+      "n_research": 76401,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1982,
+      "unreliable": false,
+      "rms_within_research": 1.311051,
+      "rms_within_policy": 1.01733
+    },
+    "SDG6": {
+      "n_research": 34415,
+      "n_research_sampled": 34415,
+      "exhaustive_sample": true,
+      "n_policy_capped": 1214,
+      "unreliable": false,
+      "rms_within_research": 1.257014,
+      "rms_within_policy": 0.975483
+    },
+    "SDG7": {
+      "n_research": 124706,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1573,
+      "unreliable": false,
+      "rms_within_research": 1.271598,
+      "rms_within_policy": 1.025161
+    },
+    "SDG8": {
+      "n_research": 74641,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1900,
+      "unreliable": false,
+      "rms_within_research": 1.302088,
+      "rms_within_policy": 1.086866
+    },
+    "SDG9": {
+      "n_research": 566759,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 3004,
+      "unreliable": false,
+      "rms_within_research": 1.321499,
+      "rms_within_policy": 1.10483
+    },
+    "SDG10": {
+      "n_research": 42642,
+      "n_research_sampled": 42642,
+      "exhaustive_sample": true,
+      "n_policy_capped": 1183,
+      "unreliable": false,
+      "rms_within_research": 1.3291,
+      "rms_within_policy": 1.091277
+    },
+    "SDG11": {
+      "n_research": 149238,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1599,
+      "unreliable": false,
+      "rms_within_research": 1.262214,
+      "rms_within_policy": 1.079071
+    },
+    "SDG12": {
+      "n_research": 65438,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1125,
+      "unreliable": false,
+      "rms_within_research": 1.325461,
+      "rms_within_policy": 1.016392
+    },
+    "SDG13": {
+      "n_research": 129642,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 3077,
+      "unreliable": false,
+      "rms_within_research": 1.254069,
+      "rms_within_policy": 0.999533
+    },
+    "SDG14": {
+      "n_research": 62093,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1278,
+      "unreliable": false,
+      "rms_within_research": 1.264706,
+      "rms_within_policy": 0.988247
+    },
+    "SDG15": {
+      "n_research": 79857,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 1446,
+      "unreliable": false,
+      "rms_within_research": 1.277805,
+      "rms_within_policy": 1.040943
+    },
+    "SDG16": {
+      "n_research": 351230,
+      "n_research_sampled": 50000,
+      "exhaustive_sample": false,
+      "n_policy_capped": 4755,
+      "unreliable": false,
+      "rms_within_research": 1.326261,
+      "rms_within_policy": 1.115511
+    },
+    "SDG17": {
+      "n_research": 13393,
+      "n_research_sampled": 13393,
+      "exhaustive_sample": true,
+      "n_policy_capped": 3792,
+      "unreliable": false,
+      "rms_within_research": 1.275305,
+      "rms_within_policy": 1.022436
+    }
+  }
+}

@@ -8,14 +8,15 @@ This repository contains the dissertation code, manuscript source, committed out
 
 | Requirement | Details |
 |---|---|
-| **Disk space** | Curated snapshot: ~14 GB archive + 24.6 GB extracted ≈ 39 GB total. Full snapshot: ~22 GB archive + 43.5 GB extracted ≈ 66 GB total |
-| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
+| **Disk space** | Embedded snapshot: ~14 GB archive. Raw snapshot: ~3.7 GB archive |
+| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay-without-appendix` / `--warm-replay-with-appendix` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
 | **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). Also required for `--cold-replay` (OpenAlex API + HuggingFace model download). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
 | **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
+| **rclone** | Required for `--backup-data-snapshot` only (maintainer tool). Override remote via `--remote-root` or `DISSERTATION_SNAPSHOT_REMOTE_ROOT`. Not needed for warm/cold replay |
 | **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for `--cold-replay`. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
-| **Embedding runtimes** (one-time, cold replay only) | MiniLM (`all-MiniLM-L6-v2`): ~2.5 hours on 4 GB VRAM GPU. MPNet (`all-mpnet-base-v2`): ~17 hours on 4 GB VRAM GPU |
+| **Embedding runtimes** (one-time, cold replay only) | Segmentation is **canonical and shared** — one ~17h pass at 384 tokens produces segments reused by every encoder. MPNet (`all-mpnet-base-v2`, primary) embeds the full corpus (~17h on 4 GB VRAM). MiniLM and SciBERT embed only the shared 50k-paper subset (~minutes each). SciBERT also loads as a raw BERT wrapped with mean pooling |
 | **Git** | Required for cloning and pulling updates |
 
 All other dependencies (Python packages, LaTeX packages) are handled by Conda.
@@ -34,29 +35,132 @@ conda activate dissertation
 # optional: if you have an NVIDIA GPU with CUDA 12.1:
 # pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 
-python main.py --warm-replay --overwrite
+python main.py --warm-replay-without-appendix --overwrite
 ```
 
-This rebuilds main text outputs from the frozen curated data snapshot.
+This rebuilds main text outputs from the frozen embedded data snapshot.
 Appendix outputs are already committed in the repo and do not need
 regeneration. `--overwrite` is included because canonical outputs already exist
 in the repo; without it `main.py` fails closed to prevent accidental replacement.
-If the snapshot download fails, run `python main.py --fetch-data-snapshot curated`
+If the snapshot download fails, run `python main.py --fetch-data-snapshot embedded`
 then retry.
 
 ```bash
-# Or if you want to fetch the full data snapshot with all the raw, embedded, preprocessed, and scored data, do:
-python main.py --fetch-data-snapshot full
-python main.py --warm-replay --overwrite
+# Or if you want to fetch the raw data snapshot for cold-replay rebuilds:
+python main.py --fetch-data-snapshot raw
+python main.py --warm-replay-without-appendix --overwrite
 ```
 
 ## What the replay produces
 
 Warm replay rebuilds:
-- canonical machine-readable outputs under `4_outputs/main/data/`
-- manuscript tables and figures under `4_outputs/main/tables/` and `4_outputs/main/figures/`
+- canonical machine-readable outputs under `4_outputs/main/{model}/data/`
+- manuscript tables and figures under `4_outputs/main/{model}/tables/` and `4_outputs/main/{model}/figures/`
 
 To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler.
+
+## Pipeline architecture
+
+The analysis pipeline measures research-policy divergence in AI-for-SDG discourse
+using **three method axes** that share a unified data-preparation pipeline:
+
+### Unified stages (shared by all axes)
+
+```
+Preprocess (8 scripts) → Segment (canonical, 7 corpora ONCE) → Embed (8 reference/policy shared + research: full for primary, 50k subset for sensitivity)
+```
+
+- **Labeled corpora** (ground-truth SDG labels): osdg, benchmark, sdg_knowledge_hub, sdgi, aurora
+- **Unlabeled corpora** (to be assigned): research (OpenAlex), policy_scrape, policy_manual, ungdc_sdg
+- osdg and benchmark are **not segmented** (embedded directly from preprocessed JSONL)
+- sdgi plays a **dual role**: labeled training corpus AND merged into `policy.npy`
+- **All sensitivity encoders reuse the canonical (MPNet) segmented texts.** Segmentation runs ONCE at 384 tokens; every model embeds those identical segments so the only varying factor is the encoder. Research: MPNet embeds the full corpus; **MiniLM and SciBERT embed a shared 50k-paper subset** (`research_50k_subset`, deterministic seed-42 draw). Reference/policy: all models embed the canonical segments (`--seg-model all-mpnet-base-v2`). This removes the earlier per-model segmentation (and its chunking confound) plus the ~20GB+/model of redundant segmented text.
+
+The shared training-data prep (`0_prepare_data.py`) writes `embeddings.npy`, `labels.npy`,
+`sources.npy`, and train/test split indices to `2_data/4_supervised_model_results/{model}/`.
+
+### Three method axes
+
+| Axis | Classifier | Centroid built | Consumed by | Role |
+|---|---|---|---|---|
+| **A — Supervised LR** | Logistic Regression (C=10, lbfgs) | `research_centroids.npy` (from LR-assigned research papers) in `5_supervised_scored/{model}/` | `1_semantic_gap`, `0_coverage_gap`, `3_generate_cross_sensitivity_table` | **PRIMARY** — reported in dissertation main text |
+| **B — Supervised MLP** | 4-layer MLP (384-hidden) | `mlp_research_centroids.npy` in `5_supervised_scored/{model}/mlp_scores/` | `3_generate_cross_sensitivity_table` | Sensitivity axis |
+| **C — Zeroshot** | Nearest-centroid assignment | `sdg_centroids.npy` (reference, from labeled train split), `zeroshot/research_centroids.npy`, `zeroshot/policy_centroids.npy` in `4_outputs/main/{model}/zeroshot/` | `3_generate_cross_sensitivity_table`, `0_check_centroid_consistency`, `1_build_centroid_similarity_matrix` | Sensitivity axis |
+
+The **reference centroids** (`sdg_centroids.npy`) are built once from the labeled
+training split and serve as:
+- the assignment target for zeroshot scoring,
+- the input to the centroid similarity matrix, and
+- the basis for PCA semantic-landscape visualisation.
+
+The **supervised research centroids** (`research_centroids.npy` from `score_supervised --lr --research`)
+are the primary input to the semantic-gap analysis; the zeroshot produces its own
+research/policy centroids in a separate namespace for cross-method comparison.
+
+### Build-order constraint
+
+```mermaid
+flowchart TD
+    subgraph Sources[Data sources]
+        L["Labeled<br>osdg, benchmark, KH, sdgi, aurora"]
+        U["Unlabeled<br>research, policy_scrape, policy_manual, ungdc_sdg"]
+    end
+
+    subgraph Prep[Preprocess → Segment (canonical, ONCE) → Embed]
+        PSE["8 preprocess scripts<br>1 canonical segment_corpus run (shared by all models)<br>8 embed + merge policy<br>embed_paper_shards (full for primary, 50k subset for MiniLM/SciBERT)"]
+    end
+
+    subgraph Train[Shared training data]
+        PD["0_prepare_data.py<br>→ 4_supervised_model_results/{model}/<br>embeddings.npy, labels.npy<br>sources.npy, indices/"]
+    end
+
+    subgraph LR[Axis A: Supervised LR — PRIMARY]
+        R1["3_retrain_full_data LR<br>→ sdg_classifier.joblib"]
+        S1["score_supervised --lr --research<br>→ 5_supervised_scored/{model}/<br>research_centroids.npy<br>score_supervised --lr --policy<br>→ policy_scores.npy"]
+    end
+
+    subgraph MLP[Axis B: Supervised MLP — sensitivity]
+        R2["3_retrain_full_data MLP<br>→ mlp_retrained.joblib"]
+        S2["score_supervised --mlp<br>→ mlp_research_centroids.npy"]
+    end
+
+    subgraph ZS[Axis C: Zeroshot nearest-centroid — sensitivity]
+        RC["0_build_sdg_reference_centroids<br>→ 5_supervised_scored/{model}/<br>sdg_centroids.npy"]
+        ZSO["score_zeroshot<br>→ 4_outputs/main/{model}/zeroshot/<br>research_centroids.npy<br>policy_centroids.npy"]
+    end
+
+    subgraph Analysis[Downstream]
+        G1["0_coverage_gap<br>← LR policy_scores.npy"]
+        G2["1_semantic_gap<br>← supervised research_centroids.npy"]
+        XT["3_generate_cross_sensitivity_table<br>← LR + MLP + zeroshot artifacts"]
+        SM["1_build_centroid_similarity_matrix<br>← sdg_centroids.npy"]
+    end
+
+    L --> PSE
+    U --> PSE
+    PSE --> PD
+    PD --> R1
+    PD --> R2
+    PD --> RC
+    R1 --> S1
+    R2 --> S2
+    RC --> ZSO
+    S1 --> G1
+    S1 --> G2
+    S1 --> XT
+    S2 --> XT
+    ZSO --> XT
+    RC --> SM
+
+    style LR fill:#dae8fc,stroke:#2c6e9c
+    style MLP fill:#e8d4f1,stroke:#8e2c9c
+    style ZS fill:#f1e6d4,stroke:#9c6e2c
+```
+
+**Order constraint:** `0_prepare_data.py` MUST run before both
+`0_build_sdg_reference_centroids.py` and `3_retrain_full_data.py`, because both
+read the `embeddings.npy` / `labels.npy` files that `0_prepare_data.py` writes
+to `2_data/4_supervised_model_results/{model}/`.
 
 ## Tracked vs not tracked
 
@@ -71,7 +175,7 @@ Tracked in Git:
 Not tracked in Git:
 - `2_data/`
 
-`2_data/` is hydrated from the frozen curated snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
+`2_data/` is hydrated from the frozen embedded snapshot. `4_outputs/` is committed for marker inspection but can be regenerated from the snapshot and source code.
 
 ### Environment notes
 
@@ -80,37 +184,35 @@ Not tracked in Git:
 - `requirements.txt` is a human-edited core reference (13 packages). Not needed
   for rebuild — `environment.yml` already covers the pip layer.
 - Python version: `3.11`.
-- CPU is sufficient for `--warm-replay`
+- CPU is sufficient for `--warm-replay-without-appendix`
 
 ## Additional optional commands
 
 | Command | What it does |
 |---|---|
 | `python main.py` | Read-only status check |
-| `python main.py --warm-replay --overwrite` | Rebuild main text analysis from snapshot (no PDF) |
+| `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
+| `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from live data sources. Not recommended (long runtime; live changes may break reproducibility — see [§Reproducibility boundaries](#reproducibility-boundaries)). |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A1–A3, B1–B4, C, D, E) standalone (no PDF) |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (no PDF) |
 | `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
-| `python main.py --appendix-b1-pca --overwrite` | Run B.1 Combined Research-Policy PCA Landscape |
-| `python main.py --appendix-b2-centroid --overwrite` | Run B.2 Within-Corpus Centroid Structure |
-| `python main.py --appendix-b3-interpret --overwrite` | Run B.3 Lexical Illustration of the Semantic Gap |
-| `python main.py --appendix-b4-softmax --overwrite` | Run B.4 Softmax Multi-label SDG |
+| `python main.py --appendix-b2-interpret --overwrite` | Run B.1 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
-| `python main.py --appendix-d-sensitivity --overwrite` | Run D Model Sensitivity (all-mpnet-base-v2 vs MiniLM). Requires pre-embedded MPNet data (see below). |
-| `python main.py --appendix-e-register --overwrite` | Run E Register-Adjustment Robustness |
-| `python main.py --embed-model all-mpnet-base-v2 --appendix-all` | Run appendix stages with an alternative embedding model (e.g. MPNet for model sensitivity). Not a canonical manuscript step — only meaningful for the model sensitivity comparison in Appendix D. |
+| `python main.py --appendix-f-register --overwrite` | Run F Register-Adjustment Robustness |
+| `python main.py --appendix-g-distributional --overwrite` | OPT-IN main-result table: distributional semantic-gap robustness. NOT run by warm replay or `--appendix-all`; run this before `--build-pdf`. |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (requires existing main-text outputs). |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
-| `python main.py --fetch-data-snapshot curated` | Hydrate curated snapshot into `2_data/` |
-| `python main.py --fetch-data-snapshot full` | Hydrate full snapshot for audit |
-| `python main.py --backup-data-snapshot {curated\|full\|both}` | Create and upload a snapshot archive (maintainer-only — requires rclone on WSL) |
+| `python main.py --fetch-data-snapshot embedded` | Hydrate embedded snapshot into `2_data/` |
+| `python main.py --fetch-data-snapshot raw` | Hydrate raw snapshot for cold-replay rebuilds |
+| `python main.py --backup-data-snapshot {raw\|embedded\|both}` | Create and upload a snapshot archive (maintainer-only — requires rclone on WSL) |
 
 ## Reproducibility boundaries
 
 ### Warm replay (canonical target)
 
-Deterministic from the frozen curated snapshot. No network needed after
+Deterministic from the frozen embedded snapshot. No network needed after
 hydration. Byte-identical across runs and platforms.
 
 ### Full cold-replay pipeline
@@ -136,50 +238,29 @@ The fetch stage cannot be reproduced because its sources change continuously.
 | GitHub benchmark | `SDGClassification/benchmark@main` — moving branch |
 | HF dataset / Dataverse | `UNDP/sdgi-corpus` and UNGDC may be versioned |
 
-### Model sensitivity (Appendix D)
-
-`--appendix-d-sensitivity` compares `all-mpnet-base-v2` (768-d) against the canonical
-`all-MiniLM-L6-v2` (384-d).  This requires the MPNet data files
-(`2_data/2b_embedded_mpnet/*.npy`, research shards, and scored outputs under
-`2_data/3b_scored_mpnet/`) to have been produced by the one-time embedding
-pipeline:
-
-```bash
-# One-time: embed reference corpora with MPNet (GPU recommended, ~2-3h)
-python 1_code/2_embed/reference/0_embed_reference_corpora.py \
-    --model all-mpnet-base-v2 \
-    --corpora policy osdg benchmark sdg_knowledge_hub sdgi aurora
-
-# One-time: embed research paper shards with MPNet (GPU recommended, ~8-16h)
-python 1_code/2_embed/research/0_embed_paper_shards.py \
-    --model all-mpnet-base-v2 --device cuda
-
-# After embed files exist, run the comparison appendix:
-python main.py --appendix-d-sensitivity --overwrite
-```
-
-Once the MPNet embed files are frozen, `--appendix-d-sensitivity` is fully
-deterministic — it runs the same centroid/scoring/analysis pipeline on the
-MPNet embeddings and compares results against canonical MiniLM outputs.
-All outputs land under `4_outputs/appendix/d_model_sensitivity/`.
-
 ### Credentials
 
 `--cold-replay` requires OpenAlex API credentials. Copy `.env.example` to
 `.env` and fill in your key (free at https://openalex.org/keys). Without
-these the fetch stage raises `RuntimeError`. The 4 rate-limit fallback slots
-are optional — only `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are strictly
-required.
+these the fetch stage raises `RuntimeError`. The 6 rate-limit fallback
+keys are optional — only `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are
+required. If provided, they enable parallel API key rotation during
+the full re-fetch.
 
 ### Snapshot scope
 
-- **Curated snapshot**: excludes raw OpenAlex JSONL and rebuildable caches.
-  Warm replay from curated is the canonical reproducibility target.
-  Cold replay from curated will re-fetch OpenAlex live — outputs will differ
-  from the submitted state.
-- **Full snapshot**: preserves everything including raw API artifacts.
-  Available for bit-exact reconstruction if the original OpenAlex state is
-  needed.
+- **Embedded snapshot**: contains `3_embedded/` (frozen embeddings) plus
+  `3a_warm_replay_texts/` (gzipped copies of exactly the segment text the
+  appendix analyses A3/B2 read: research shards + `policy.jsonl` for the
+  default model). For warm-replay analysis.
+  Warm replay from embedded is the canonical reproducibility target.
+  No network needed after hydration. Byte-identical across runs and platforms.
+  Canonical plain-text segment files (`2_segmented/`) are a producer-side
+  artifact regenerated during cold replay; analysis code prefers them when
+  present and falls back to `3a_warm_replay_texts/` otherwise.
+- **Raw snapshot**: contains only `0_raw/`. For cold-replay rebuilds.
+  Cold replay from raw will re-run preprocessing, segmentation, embedding, and
+  training — outputs will differ from the submitted state due to OpenAlex live changes.
 
 ## Repository layout
 
@@ -190,7 +271,7 @@ the directory's role in the workflow:
 - `1_code/` — all pipeline and analysis code
 - `2_data/` — frozen data snapshot (hydrated from archive, gitignored)
 - `3_writing/` — manuscript source (`dissertation.tex`, `references.bib`, build script)
-- `4_outputs/` — committed outputs (`dissertation.pdf`, `main/` figures and tables, `appendix/` analyses)
+- `4_outputs/` — committed outputs (`dissertation.pdf`, `main/{model}/` figures and tables, `appendix/{model}/` analyses)
 - `5_notes/` — working notes, assumptions, and workflow logs
 
 Entrypoint and environment files at root:

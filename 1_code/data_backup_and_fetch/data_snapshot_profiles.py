@@ -10,23 +10,13 @@ from pathlib import Path
 SNAPSHOT_METADATA_DIR = Path("_snapshot_metadata")
 SNAPSHOT_METADATA_FILE = SNAPSHOT_METADATA_DIR / "snapshot_manifest.json"
 
-CURATED_EXCLUDED_PATHS = (
-    Path("0_raw/openalex"),
-    Path("3_scored/paper_sample_seed_42_141"),
-    Path("3_scored/register_adjustment_cache"),
-    Path("3_scored/paper_scores_shards/metadata/subset_index.sqlite"),
-    Path("3b_scored_mpnet/paper_sample_seed_42_141"),
-    Path("3b_scored_mpnet/register_adjustment_cache"),
-    Path("3b_scored_mpnet/paper_scores_shards/metadata/subset_index.sqlite"),
+RAW_ONLY_PATHS = (
+    Path("0_raw"),
 )
 
-BASE_WARM_REPLAY_PATHS = (
-    Path("2_data/0_raw"),
-    Path("2_data/1_preprocessed"),
-    Path("2_data/2_embedded"),
-    Path("2_data/2b_embedded_mpnet"),
-    Path("2_data/3_scored"),
-    Path("2_data/3b_scored_mpnet"),
+EMBEDDED_ONLY_PATHS = (
+    Path("3_embedded"),
+    Path("3a_warm_replay_texts"),
 )
 
 FULL_PIPELINE_WARNING_LINES = (
@@ -48,21 +38,28 @@ class SnapshotProfile:
     name: str
     description: str
     excluded_data_paths: tuple[Path, ...]
+    included_data_paths: tuple[Path, ...]
     expected_repo_paths: tuple[Path, ...]
 
 
 SNAPSHOT_PROFILES: dict[str, SnapshotProfile] = {
-    "full": SnapshotProfile(
-        name="full",
-        description="Literal data/ snapshot, including rebuildable caches and raw OpenAlex fetch artifacts.",
+    "raw": SnapshotProfile(
+        name="raw",
+        description="Raw fetched data only (0_raw/). For cold-replay rebuilds.",
         excluded_data_paths=(),
-        expected_repo_paths=BASE_WARM_REPLAY_PATHS,
+        included_data_paths=(Path("0_raw"),),
+        expected_repo_paths=RAW_ONLY_PATHS,
     ),
-    "curated": SnapshotProfile(
-        name="curated",
-        description="Marker-facing replay snapshot with warm-replay inputs preserved and large rebuildable caches removed.",
-        excluded_data_paths=CURATED_EXCLUDED_PATHS,
-        expected_repo_paths=BASE_WARM_REPLAY_PATHS,
+    "embedded": SnapshotProfile(
+        name="embedded",
+        description=(
+            "Embedded checkpoint (3_embedded/) plus gzipped warm-replay appendix text "
+            "(3a_warm_replay_texts/: research shards + policy.jsonl for the default model). "
+            "For warm-replay analysis."
+        ),
+        excluded_data_paths=(),
+        included_data_paths=EMBEDDED_ONLY_PATHS,
+        expected_repo_paths=EMBEDDED_ONLY_PATHS,
     ),
 }
 
@@ -75,13 +72,16 @@ def get_snapshot_profile(name: str) -> SnapshotProfile:
 
 
 def snapshot_archive_prefix(profile_name: str) -> str:
-    if profile_name == "full":
-        return "dissertation-data-snapshot"
     return f"dissertation-data-snapshot-{profile_name}"
 
 
 def should_exclude_data_path(rel_data_path: Path, profile: SnapshotProfile) -> bool:
     rel = Path(rel_data_path)
+    if profile.included_data_paths:
+        for included in profile.included_data_paths:
+            if rel == included or included in rel.parents:
+                return False
+        return True
     for excluded in profile.excluded_data_paths:
         if rel == excluded or excluded in rel.parents:
             return True

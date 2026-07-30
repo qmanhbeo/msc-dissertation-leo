@@ -2,23 +2,23 @@
 Fetch and extract the frozen dissertation data snapshot into ./2_data/.
 
 This script underlies the main entrypoint snapshot fetch path:
-- `python main.py --fetch-data-snapshot curated`
-- `python main.py --fetch-data-snapshot full`
+- `python main.py --fetch-data-snapshot embedded`
+- `python main.py --fetch-data-snapshot raw`
 
 It is intentionally separate from the operator backup script:
 - `backup_data_snapshot.py` creates and uploads archives.
 - `fetch_data_snapshot.py` downloads one frozen release snapshot and extracts it.
 
 Usage:
-    python main.py --fetch-data-snapshot curated
+    python main.py --fetch-data-snapshot embedded
 
 Debugging / direct script usage:
-    python 1_code/data_backup_and_fetch/fetch_data_snapshot.py --profile curated
+    python 1_code/data_backup_and_fetch/fetch_data_snapshot.py --profile embedded
 
 For local pre-release testing with a one-off archive:
     python 1_code/data_backup_and_fetch/fetch_data_snapshot.py \\
-        --profile curated \\
-        --url file:///tmp/dissertation-data-snapshot-curated.tar.zst \\
+        --profile embedded \\
+        --url file:///tmp/dissertation-data-snapshot-embedded.tar.zst \\
         --sha256 <digest>
 
 Reproducibility notes:
@@ -57,7 +57,7 @@ def log(msg: str) -> None:
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Fetch and extract the frozen dissertation data snapshot.")
-    p.add_argument("--profile", choices=["curated", "full"], default="curated")
+    p.add_argument("--profile", choices=["raw", "embedded"], default="embedded")
     p.add_argument("--manifest-path", type=Path, default=MANIFEST_PATH, help=argparse.SUPPRESS)
     p.add_argument("--url", default="", help="Optional one-off URL override for pre-release testing.")
     p.add_argument("--sha256", default="", help="Optional checksum override, usually paired with --url.")

@@ -26,12 +26,22 @@ import tarfile
 from datetime import datetime
 from pathlib import Path
 
+import sys
+
 import requests
 from tqdm import tqdm
 
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
+
 DATASET_PERSISTENT_ID = "doi:10.7910/DVN/0TJX8Y"
 DATASET_API_URL = f"https://dataverse.harvard.edu/api/datasets/:persistentId?persistentId={DATASET_PERSISTENT_ID}"
-OUTPUT_DIR = Path("2_data/0_raw/ungdc")
+OUTPUT_DIR = raw_dir() / "ungdc"
 CORPUS_DIR = OUTPUT_DIR / "UNGDC_1946-2025"
 METADATA_FILE = OUTPUT_DIR / "metadata.json"
 

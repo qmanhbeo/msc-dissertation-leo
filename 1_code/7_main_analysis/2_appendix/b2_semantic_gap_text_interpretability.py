@@ -1,0 +1,500 @@
+"""
+Semantic-gap text interpretability diagnostic.
+
+This appendix-stage diagnostic gives a small, reproducible language-level view
+of what the semantic gap looks like for three focal SDGs:
+
+  * SDG 17: high gap, policy-dominant
+  * SDG 13: high gap, policy-dominant
+  * SDG 9: lower-gap comparison case
+
+It does not relabel texts, change the semantic-gap estimates, or introduce a
+qualitative coding scheme. Distinctive terms are computed from deterministic
+samples of existing hard-assigned research and policy texts. Representative
+examples are saved for audit only and are not used as proof.
+
+Run from project root:
+    python 1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import heapq
+import json
+import logging
+import random
+import re
+import sys
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
+
+ROOT = Path(__file__).resolve().parents[3]
+CODE_ROOT = ROOT / "1_code"
+ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
+SHARED_DIR = ANALYSIS_ROOT / "0_shared"
+for path in (CODE_ROOT, SHARED_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+
+import semantic_gap_shared
+from semantic_gap_shared import (
+    get_cluster_assignments,
+    latex_escape,
+    latex_int,
+    load_json,
+    write_csv,
+)
+from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, model_slug, output_main_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
+
+
+ALL_TARGET_SDGS = tuple(range(1, 18))
+SAMPLE_PER_SIDE = 6000
+TERMS_PER_SIDE_FULL = 10
+EXAMPLES_PER_SIDE = 3
+MIN_WORDS = 30
+RANDOM_SEED = 42
+
+OUTPUT_SUBDIR = "b2_semantic_gap_interpretability"
+TERMS_CSV = "semantic_gap_distinctive_terms.csv"
+EXAMPLES_CSV = "semantic_gap_representative_examples.csv"
+SUMMARY_JSON = "semantic_gap_interpretability_summary.json"
+TABLE_TEX_FULL = "tab_b2_semantic_gap_interpret_all.tex"
+
+ML_STOPWORDS = {
+    "model", "models", "learning", "neural", "deep", "machine",
+    "algorithm", "algorithms", "method", "methods", "proposed",
+    "network", "networks", "accuracy", "performance", "training",
+    "classification", "feature", "features", "layer", "layers",
+    "dataset", "datasets",
+    "analysis", "prediction", "findings",
+    "factors", "regression", "based", "effect", "variables",
+    "used", "associated", "different",
+}
+
+CUSTOM_STOP_WORDS = set(ENGLISH_STOP_WORDS) | ML_STOPWORDS | {
+    "abstract",
+    "article",
+    "chapter",
+    "data",
+    "development",
+    "figure",
+    "goal",
+    "goals",
+    "paper",
+    "research",
+    "result",
+    "results",
+    "sdg",
+    "sdgs",
+    "study",
+    "sustainable",
+    "table",
+    "text",
+    "using",
+}
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+log = logging.getLogger(__name__)
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Run semantic-gap text interpretability diagnostic.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--seed", type=int, default=RANDOM_SEED)
+    p.add_argument("--sample-per-side", type=int, default=SAMPLE_PER_SIDE)
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    return p.parse_args()
+
+
+def load_research_shards(research_dir: Path, scored_dir: Path, model: str) -> list[dict[str, Any]]:
+    research_manifest = load_json(research_dir / "metadata" / "manifest.json")
+    score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
+
+    research_shards = sorted(research_manifest["shards"], key=lambda x: int(x["shard_id"]))
+    score_shards = sorted(score_manifest["shards"], key=lambda x: int(x["shard_id"]))
+
+    if len(research_shards) != len(score_shards):
+        raise RuntimeError("Research and score manifests have different shard counts.")
+
+    shards: list[dict[str, Any]] = []
+    for research_shard, score_shard in zip(research_shards, score_shards):
+        shard_id = int(research_shard["shard_id"])
+        if shard_id != int(score_shard["shard_id"]):
+            raise RuntimeError("Research and score manifests do not align on shard_id.")
+        if int(research_shard["rows"]) != int(score_shard["rows"]):
+            raise RuntimeError(f"Research and score manifests do not align on rows for shard {shard_id}.")
+        text_path = resolve_research_text_path(model, research_shard["name"])
+        emb_path = resolve_manifest_path(
+            research_shard["embedding_path"],
+            allowed_dirs=(research_dir, scored_dir, preprocessed_dir()),
+        )
+        shards.append(
+            {
+                "shard_id": shard_id,
+                "name": research_shard["name"],
+                "rows": int(research_shard["rows"]),
+                "text_path": text_path,
+                "emb_path": emb_path,
+                "score_ids_path": resolve_manifest_path(score_shard["ids_path"], allowed_dirs=(research_dir, scored_dir)),
+            }
+        )
+    return shards
+
+
+def usable_text(text: str) -> bool:
+    words = re.findall(r"[A-Za-z][A-Za-z-]+", text)
+    return len(words) >= MIN_WORDS
+
+
+def snippet(text: str, limit: int = 220) -> str:
+    compact = re.sub(r"\s+", " ", text).strip()
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3].rstrip() + "..."
+
+
+def add_sample(
+    samples: dict[int, list[tuple[float, str]]],
+    rngs: dict[int, random.Random],
+    sdg: int,
+    text: str,
+    sample_cap: int,
+) -> None:
+    key = rngs[sdg].random()
+    heap = samples[sdg]
+    item = (key, text)
+    if len(heap) < sample_cap:
+        heapq.heappush(heap, item)
+    elif key > heap[0][0]:
+        heapq.heapreplace(heap, item)
+
+
+def add_top_example(
+    heaps: dict[int, list[tuple[float, int, dict[str, Any]]]],
+    sdg: int,
+    score: float,
+    seq: int,
+    row: dict[str, Any],
+) -> None:
+    heap = heaps[sdg]
+    item = (float(score), seq, row)
+    if len(heap) < EXAMPLES_PER_SIDE:
+        heapq.heappush(heap, item)
+    elif score > heap[0][0]:
+        heapq.heapreplace(heap, item)
+
+
+def collect_research(
+    sample_cap: int,
+    seed: int,
+    research_centroids: np.ndarray,
+    model: str,
+    embed_dir: Path,
+    scored_dir: Path,
+) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
+    samples_heap: dict[int, list[tuple[float, str]]] = {sdg: [] for sdg in ALL_TARGET_SDGS}
+    rngs = {sdg: random.Random(seed + sdg * 101 + 1) for sdg in ALL_TARGET_SDGS}
+    counts = {sdg: 0 for sdg in ALL_TARGET_SDGS}
+    example_heaps: dict[int, list[tuple[float, int, dict[str, Any]]]] = {sdg: [] for sdg in ALL_TARGET_SDGS}
+    seq = 0
+
+    shards = load_research_shards(embed_dir, scored_dir, model)
+    for shard_idx, shard in enumerate(shards[:2], start=1):
+        emb = np.load(shard["emb_path"], mmap_mode="r")
+        score_rows = list(iter_jsonl(shard["score_ids_path"]))
+        if emb.shape[0] != len(score_rows):
+            raise RuntimeError(f"Embedding/score row mismatch for {shard['name']}")
+
+        with open_text(shard["text_path"]) as f:
+            for row_idx, line in enumerate(f):
+                score_meta = score_rows[row_idx]
+                sdg = int(score_meta["assigned_sdg"])
+                if sdg not in ALL_TARGET_SDGS:
+                    continue
+                payload = json.loads(line)
+                text = str(payload.get("text") or "")
+                if not usable_text(text):
+                    continue
+                counts[sdg] += 1
+                add_sample(samples_heap, rngs, sdg, text, sample_cap)
+                sim = float(np.dot(emb[row_idx], research_centroids[sdg - 1]))
+                seq += 1
+                add_top_example(
+                    example_heaps,
+                    sdg,
+                    sim,
+                    seq,
+                    {
+                        "side": "research",
+                        "sdg": sdg,
+                        "item_id": str(payload.get("openalex_id") or score_meta.get("openalex_id") or ""),
+                        "source": str(payload.get("publication_year") or ""),
+                        "centroid_similarity": round(sim, 6),
+                        "preview": snippet(text),
+                    },
+                )
+        log.info("Scanned research shard %s/%s (%s)", shard_idx, len(shards), shard["name"])
+
+    samples = {sdg: [text for _, text in sorted(heap, reverse=True)] for sdg, heap in samples_heap.items()}
+    examples = {
+        sdg: [row for _, _, row in sorted(heap, key=lambda item: item[0], reverse=True)]
+        for sdg, heap in example_heaps.items()
+    }
+    return samples, counts, examples
+
+
+def collect_policy(
+    sample_cap: int,
+    seed: int,
+    policy_scores: np.ndarray,
+    policy_emb: np.ndarray,
+    policy_ids_path: Path,
+    policy_text_path: Path,
+) -> tuple[dict[int, list[str]], dict[int, int], dict[int, list[dict[str, Any]]]]:
+    with open_text(policy_text_path) as _f:
+        policy_text_rows = [json.loads(line) for line in _f if line.strip()]
+    policy_score_rows = load_json(policy_ids_path)
+    if len(policy_text_rows) != policy_scores.shape[0] or len(policy_score_rows) != policy_scores.shape[0]:
+        raise RuntimeError("Policy text, score metadata, and score matrix row counts do not align.")
+
+    assignments = get_cluster_assignments(policy_scores) + 1
+    samples_heap: dict[int, list[tuple[float, str]]] = {sdg: [] for sdg in ALL_TARGET_SDGS}
+    rngs = {sdg: random.Random(seed + sdg * 101 + 2) for sdg in ALL_TARGET_SDGS}
+    counts = {sdg: 0 for sdg in ALL_TARGET_SDGS}
+    sdg_indices: dict[int, list[int]] = {sdg: [] for sdg in ALL_TARGET_SDGS}
+
+    for idx, sdg in enumerate(assignments):
+        sdg_int = int(sdg)
+        if sdg_int not in ALL_TARGET_SDGS:
+            continue
+        text = str(policy_text_rows[idx].get("text") or "")
+        if not usable_text(text):
+            continue
+        counts[sdg_int] += 1
+        sdg_indices[sdg_int].append(idx)
+        add_sample(samples_heap, rngs, sdg_int, text, sample_cap)
+
+    samples = {sdg: [text for _, text in sorted(heap, reverse=True)] for sdg, heap in samples_heap.items()}
+    examples: dict[int, list[dict[str, Any]]] = {}
+    for sdg in ALL_TARGET_SDGS:
+        idxs = sdg_indices[sdg]
+        if not idxs:
+            examples[sdg] = []
+            continue
+        vecs = policy_emb[idxs]
+        raw = vecs.mean(axis=0)
+        norm = float(np.linalg.norm(raw))
+        if norm < 1e-8:
+            examples[sdg] = []
+            continue
+        centroid = raw / norm
+        sims = vecs @ centroid
+        order = np.argsort(sims)[::-1][:EXAMPLES_PER_SIDE]
+        rows: list[dict[str, Any]] = []
+        for local_idx in order:
+            idx = idxs[int(local_idx)]
+            rows.append(
+                {
+                    "side": "policy",
+                    "sdg": sdg,
+                    "item_id": str(policy_score_rows[idx].get("id") or ""),
+                    "source": str(policy_score_rows[idx].get("source_doc") or ""),
+                    "centroid_similarity": round(float(sims[int(local_idx)]), 6),
+                    "preview": snippet(str(policy_text_rows[idx].get("text") or "")),
+                }
+            )
+        examples[sdg] = rows
+    return samples, counts, examples
+
+
+def is_valid_term(term: str) -> bool:
+    if not re.search(r"[a-zA-Z]", term):
+        return False
+    if len(term) < 3:
+        return False
+    tokens = term.split()
+    if any(token in CUSTOM_STOP_WORDS for token in tokens):
+        return False
+    if len(tokens) == 1 and len(tokens[0]) <= 2:
+        return False
+    return True
+
+
+def top_terms_for_sdg(research_texts: list[str], policy_texts: list[str], n_terms: int = TERMS_PER_SIDE_FULL) -> tuple[list[str], list[str]]:
+    if not research_texts or not policy_texts:
+        return [], []
+    docs = research_texts + policy_texts
+    vectorizer = TfidfVectorizer(
+        lowercase=True,
+        stop_words=list(CUSTOM_STOP_WORDS),
+        ngram_range=(1, 2),
+        min_df=3,
+        max_df=0.65,
+        max_features=20_000,
+        token_pattern=r"(?u)\b[a-zA-Z][a-zA-Z][a-zA-Z-]+\b",
+    )
+    matrix = vectorizer.fit_transform(docs)
+    n_research = len(research_texts)
+    terms = vectorizer.get_feature_names_out()
+    research_mean = np.asarray(matrix[:n_research].mean(axis=0)).ravel()
+    policy_mean = np.asarray(matrix[n_research:].mean(axis=0)).ravel()
+
+    def select(scores: np.ndarray) -> list[str]:
+        selected: list[str] = []
+        for idx in np.argsort(scores)[::-1]:
+            term = str(terms[idx])
+            if scores[idx] <= 0:
+                break
+            if not is_valid_term(term):
+                continue
+            if any(term in existing or existing in term for existing in selected):
+                continue
+            selected.append(term)
+            if len(selected) >= n_terms:
+                break
+        return selected
+
+    return select(research_mean - policy_mean), select(policy_mean - research_mean)
+
+
+def write_table(path: Path, rows: list[dict[str, Any]]) -> None:
+    lines = [
+        "% Auto-generated by 1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py — do not edit manually",
+        r"\scriptsize",
+        r"\begin{tabular}{lcp{0.28\textwidth}p{0.28\textwidth}}",
+        r"\toprule",
+        r"SDG & Gap & Research-side distinctive terms & Policy-side distinctive terms \\",
+        r"\midrule",
+    ]
+    for row in rows:
+        lines.append(
+            f"{latex_escape(str(row['sdg_label']))} & "
+            f"{float(row['semantic_gap']):.3f} & "
+            f"{latex_escape(str(row['research_terms']))} & "
+            f"{latex_escape(str(row['policy_terms']))} \\\\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}"])
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
+    payload = load_json(canonical_data_dir / "4_3_semantic_gap_distances.json")
+    return {int(row["sdg"]): float(row["semantic_gap"]) for row in payload["per_sdg"]}
+
+
+def run(args: argparse.Namespace) -> None:
+    embed_dir = embed_dir_for_model(args.embed_model)
+    research_embed_dir = embed_research_dir_for_model(args.embed_model)
+    scored_dir = scored_dir_for_model(args.embed_model)
+    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+    _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
+    output_dir = Path(args.output_dir)
+    out_root = output_dir / "appendix" / model_slug(args.embed_model) / OUTPUT_SUBDIR
+    data_dir = out_root / "data"
+    tables_dir = out_root / "tables"
+    for d in (data_dir, tables_dir):
+        d.mkdir(parents=True, exist_ok=True)
+
+    gaps = semantic_gap_map(output_main_dir_for_model(args.embed_model, root=Path(args.output_dir)) / "data")
+    research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+    policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
+    policy_emb = np.load(_POLICY_EMB, mmap_mode="r")
+
+    policy_text_path = resolve_policy_text_path(args.embed_model)
+
+    log.info("Collecting policy samples and representative audit examples")
+    policy_samples, policy_counts, policy_examples = collect_policy(
+        args.sample_per_side, args.seed, policy_scores, policy_emb, _POLICY_IDS, policy_text_path
+    )
+    log.info("Collecting research samples and representative audit examples")
+    research_samples, research_counts, research_examples = collect_research(
+        args.sample_per_side, args.seed, research_centroids, args.embed_model, research_embed_dir, scored_dir
+    )
+
+    terms: dict[int, tuple[list[str], list[str]]] = {}
+    for sdg in ALL_TARGET_SDGS:
+        terms[sdg] = top_terms_for_sdg(
+            research_samples[sdg], policy_samples[sdg], n_terms=TERMS_PER_SIDE_FULL
+        )
+
+    rows: list[dict[str, Any]] = []
+    for sdg in ALL_TARGET_SDGS:
+        rt, pt = terms[sdg]
+        rows.append({
+            "sdg": sdg,
+            "sdg_label": str(sdg),
+            "semantic_gap": round(gaps[sdg], 6),
+            "research_assigned_usable_n": research_counts[sdg],
+            "policy_assigned_usable_n": policy_counts[sdg],
+            "research_sample_n": len(research_samples[sdg]),
+            "policy_sample_n": len(policy_samples[sdg]),
+            "research_terms": ", ".join(rt[:TERMS_PER_SIDE_FULL]),
+            "policy_terms": ", ".join(pt[:TERMS_PER_SIDE_FULL]),
+            "interpretive_reading": "",
+        })
+
+    example_rows: list[dict[str, Any]] = []
+    for sdg in ALL_TARGET_SDGS:
+        example_rows.extend(research_examples[sdg])
+        example_rows.extend(policy_examples[sdg])
+
+    write_csv(
+        data_dir / TERMS_CSV,
+        [
+            "sdg",
+            "sdg_label",
+            "semantic_gap",
+            "research_assigned_usable_n",
+            "policy_assigned_usable_n",
+            "research_sample_n",
+            "policy_sample_n",
+            "research_terms",
+            "policy_terms",
+            "interpretive_reading",
+        ],
+        rows,
+    )
+    write_csv(
+        data_dir / EXAMPLES_CSV,
+        ["side", "sdg", "item_id", "source", "centroid_similarity", "preview"],
+        example_rows,
+    )
+    summary = {
+        "generated_from": "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py",
+        "sdgs": list(ALL_TARGET_SDGS),
+        "random_seed": args.seed,
+        "sample_per_side": args.sample_per_side,
+        "terms_per_side": TERMS_PER_SIDE_FULL,
+        "examples_per_side": EXAMPLES_PER_SIDE,
+        "note": (
+            "Distinctive terms are a descriptive interpretability aid, not a qualitative coding scheme "
+            "and not a replacement for the semantic-gap estimates. Representative examples are saved "
+            "for audit only."
+        ),
+        "rows": rows,
+    }
+    (data_dir / SUMMARY_JSON).write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    write_table(tables_dir / TABLE_TEX_FULL, rows)
+
+    log.info("Saved: %s", data_dir / TERMS_CSV)
+    log.info("Saved: %s", data_dir / EXAMPLES_CSV)
+    log.info("Saved: %s", data_dir / SUMMARY_JSON)
+    log.info("Saved: %s", tables_dir / TABLE_TEX_FULL)
+
+
+def main() -> None:
+    run(parse_args())
+
+
+if __name__ == "__main__":
+    main()

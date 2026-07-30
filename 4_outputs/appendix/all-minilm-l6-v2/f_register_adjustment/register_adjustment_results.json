@@ -1,0 +1,130 @@
+{
+  "n_train": 79987,
+  "train_accuracy": 0.9710577968919949,
+  "direction_norm": 43.26102066040039,
+  "per_sdg": [
+    {
+      "sdg": 1,
+      "name": "No Poverty",
+      "raw_gap": 0.343297,
+      "adj_gap": 0.342011,
+      "delta": -0.001286
+    },
+    {
+      "sdg": 2,
+      "name": "Zero Hunger",
+      "raw_gap": 0.29772,
+      "adj_gap": 0.265444,
+      "delta": -0.032276
+    },
+    {
+      "sdg": 3,
+      "name": "Good Health and Well-Being",
+      "raw_gap": 0.48236,
+      "adj_gap": 0.445165,
+      "delta": -0.037195
+    },
+    {
+      "sdg": 4,
+      "name": "Quality Education",
+      "raw_gap": 0.27874,
+      "adj_gap": 0.227865,
+      "delta": -0.050875
+    },
+    {
+      "sdg": 5,
+      "name": "Gender Equality",
+      "raw_gap": 0.461944,
+      "adj_gap": 0.447556,
+      "delta": -0.014388
+    },
+    {
+      "sdg": 6,
+      "name": "Clean Water and Sanitation",
+      "raw_gap": 0.291138,
+      "adj_gap": 0.258042,
+      "delta": -0.033096
+    },
+    {
+      "sdg": 7,
+      "name": "Affordable and Clean Energy",
+      "raw_gap": 0.392784,
+      "adj_gap": 0.352761,
+      "delta": -0.040023
+    },
+    {
+      "sdg": 8,
+      "name": "Decent Work and Economic Growth",
+      "raw_gap": 0.425315,
+      "adj_gap": 0.397979,
+      "delta": -0.027336
+    },
+    {
+      "sdg": 9,
+      "name": "Industry, Innovation and Infrastructure",
+      "raw_gap": 0.331096,
+      "adj_gap": 0.29102,
+      "delta": -0.040076
+    },
+    {
+      "sdg": 10,
+      "name": "Reduced Inequalities",
+      "raw_gap": 0.470338,
+      "adj_gap": 0.452142,
+      "delta": -0.018196
+    },
+    {
+      "sdg": 11,
+      "name": "Sustainable Cities and Communities",
+      "raw_gap": 0.35683,
+      "adj_gap": 0.331486,
+      "delta": -0.025344
+    },
+    {
+      "sdg": 12,
+      "name": "Responsible Consumption and Production",
+      "raw_gap": 0.318474,
+      "adj_gap": 0.279414,
+      "delta": -0.03906
+    },
+    {
+      "sdg": 13,
+      "name": "Climate Action",
+      "raw_gap": 0.49092,
+      "adj_gap": 0.477763,
+      "delta": -0.013157
+    },
+    {
+      "sdg": 14,
+      "name": "Life Below Water",
+      "raw_gap": 0.310809,
+      "adj_gap": 0.288219,
+      "delta": -0.02259
+    },
+    {
+      "sdg": 15,
+      "name": "Life on Land",
+      "raw_gap": 0.335232,
+      "adj_gap": 0.307721,
+      "delta": -0.027511
+    },
+    {
+      "sdg": 16,
+      "name": "Peace, Justice and Strong Institutions",
+      "raw_gap": 0.307939,
+      "adj_gap": 0.277561,
+      "delta": -0.030378
+    },
+    {
+      "sdg": 17,
+      "name": "Partnerships for the Goals",
+      "raw_gap": 0.253096,
+      "adj_gap": 0.246266,
+      "delta": -0.00683
+    }
+  ],
+  "mean_raw_gap": 0.3616,
+  "mean_adj_gap": 0.3346,
+  "mean_delta": -0.027,
+  "note": "Raw gaps loaded from canonical 4_3_semantic_gap_distances.json; adjusted gaps use segment cap 50."
+}

@@ -92,6 +92,7 @@ checkpoints/
 # === Marker-committed outputs ===
 !4_outputs/
 !4_outputs/**
+4_outputs/**/*_backup.csv
 4_outputs/dissertation.aux
 4_outputs/dissertation.bbl
 4_outputs/dissertation.bcf
@@ -113,3 +114,7 @@ checkpoints/
 4_outputs/**/*.run.xml
 4_outputs/**/*.toc
 **/__pycache__/
+
+# === Literature: ignore extracted markdown text (keep source PDFs) ===
+0_literature/*.md
+0_literature/**/*.md

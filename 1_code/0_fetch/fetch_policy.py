@@ -17,8 +17,18 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
+import sys
+
 import requests
 from tqdm import tqdm
+
+CODE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
+ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
+if str(ANALYSIS_DIR) not in sys.path:
+    sys.path.insert(0, str(ANALYSIS_DIR))
+from model_utils import raw_dir
 
 try:
     import pdfplumber
@@ -27,7 +37,7 @@ except ImportError:
     HAS_PDFPLUMBER = False
     print("Warning: pdfplumber not installed. Install with: pip install pdfplumber")
 
-OUTPUT_DIR = Path("2_data/0_raw/policy_scrape")
+OUTPUT_DIR = raw_dir() / "policy_scrape"
 PDFS_DIR = OUTPUT_DIR / "pdfs"
 TEXTS_DIR = OUTPUT_DIR / "texts"
 ARTIFACT_DIR = OUTPUT_DIR / "artifact"

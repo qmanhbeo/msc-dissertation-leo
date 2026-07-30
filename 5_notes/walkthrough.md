@@ -292,11 +292,11 @@ You can think of it like turning every paragraph into a point in a giant meaning
 
 The paper uses:
 
-- `all-MiniLM-L6-v2`
+- `all-mpnet-base-v2`
 
 This is a **Sentence-BERT** style embedding model that produces:
 
-- **384-dimensional vectors**
+- **768-dimensional vectors**
 
 ### Why this model?
 
@@ -938,7 +938,7 @@ It asks:
 - **Fetch**: collect AI research papers from OpenAlex and policy texts from several institutional sources.
 - **Clean**: remove duplicates, remove unusable text, and standardize the corpora.
 - **Segment**: split long policy documents into smaller meaningful pieces.
-- **Embed**: turn every text into a 384-dimensional meaning vector using `all-MiniLM-L6-v2`.
+- **Embed**: turn every text into a 768-dimensional meaning vector using `all-mpnet-base-v2`.
 - **Build SDG anchors**: create 17 SDG reference centroids from labeled datasets.
 - **Validate the anchors**: test whether the SDG centroids behave sensibly on benchmark data.
 - **Score research**: compare each research paper to all 17 SDG centroids.
@@ -957,13 +957,17 @@ If you want to connect the explanation above to the codebase, the project is lai
 - `main.py`: the top-level entrypoint
 - `1_code/0_fetch/`: data collection scripts
 - `1_code/1_preprocess/`: cleaning, filtering, merging, and segmenting
-- `1_code/2_embed/`: embeddings, SDG centroids, scoring, and validation
-- `1_code/3_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
-- `1_code/4_visualization/`: final plots
+- `1_code/2_segment/`: corpus segmentation
+- `1_code/3_embed/`: embeddings, SDG centroids, scoring, and validation
+- `1_code/4_supervised_model_train/`: classifier training
+- `1_code/5_supervised_model_infer/`: classifier inference
+- `1_code/6_calculate_centroids/`: compute research centroids
+- `1_code/7_main_analysis/`: coverage gap, semantic gap, robustness checks, and interaction tests
+- `1_code/8_visualization/`: final plots
 - `3_writing/dissertation.tex`: the paper itself
-- `4_outputs/`: the canonical results, tables, figures, and final PDF
+- `4_outputs/`: artifact root (`main/{model}/`, `appendix/{model}/`, `zeroshot/{model}/`)
 
-So if you read the repository from `1_code/0_fetch/` to `1_code/3_main_analysis/`, you are basically walking through the same story this document just explained.
+So if you read the repository from `1_code/0_fetch/` to `1_code/7_main_analysis/`, you are basically walking through the same story this document just explained.
 
 ---
 
