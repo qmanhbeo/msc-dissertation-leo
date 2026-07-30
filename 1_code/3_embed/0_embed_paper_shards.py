@@ -41,7 +41,7 @@ if str(ANALYSIS_DIR) not in sys.path:
 from embed_utils import write_batch_manifest
 from embed_loader import load_embedder
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, read_json, sha256_file, update_stage_status
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, research_concept_segmented_dir_for_model, segmented_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, embed_research_dir_for_model, research_concept_segmented_dir_for_model, research_subset_dir, segmented_dir_for_model, resolve_model_alias
 
 
 log = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def parse_args() -> argparse.Namespace:
                    help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     p.add_argument("--local-files-only", action="store_true")
     p.add_argument("--limit-shards", type=int, default=0)
-    p.add_argument("--corpus", choices=["research", "research_concept"], default="research",
+    p.add_argument("--corpus", choices=["research", "research_concept", "research_subset"], default="research",
                    help="Corpus to embed (default: %(default)s). Auto-derives input manifest and output dir.")
     p.add_argument("--overwrite", action="store_true",
                    help="Re-embed existing shards even if already complete")
@@ -124,6 +124,8 @@ def main() -> None:
         seg_root = Path(args.input_manifest).resolve().parent.parent
     elif args.corpus == "research_concept":
         seg_root = research_concept_segmented_dir_for_model(args.embed_model)
+    elif args.corpus == "research_subset":
+        seg_root = research_subset_dir()
     else:
         seg_root = segmented_dir_for_model(args.embed_model) / "research"
 

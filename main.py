@@ -61,7 +61,6 @@ from model_utils import (
     raw_dir,
     research_preprocessed_dir,
     research_segmented_dir_for_model,
-    research_subset_manifest,
     scored_dir_for_model,
     segmented_dir_for_model,
     resolve_model_alias,
@@ -683,7 +682,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         embed_cmd.extend(model_args)
         embed_cmd.extend(_overwrite_flag(args.overwrite))
         if model != CANONICAL_SEGMENT_MODEL:
-            embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
+            embed_cmd.extend(["--corpus", "research_subset"])
         run_step("embed paper shards", embed_cmd)
 
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite, include_appendix=True)
@@ -863,7 +862,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         embed_cmd.extend(model_args)
         embed_cmd.extend(_overwrite_flag(args.overwrite))
         if model != CANONICAL_SEGMENT_MODEL:
-            embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
+            embed_cmd.extend(["--corpus", "research_subset"])
         run_step("embed paper shards", embed_cmd)
 
     elif stage == "train":
