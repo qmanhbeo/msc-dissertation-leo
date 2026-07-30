@@ -738,6 +738,9 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
                 ("segment research corpus",
                  [sys.executable, "1_code/2_segment/1_segment_corpus.py",
                   "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
+                ("segment concept research corpus",
+                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
+                  "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("build research 50k subset",
                  [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
             ]

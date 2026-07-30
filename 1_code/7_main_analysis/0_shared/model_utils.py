@@ -166,6 +166,14 @@ def research_subset_manifest() -> Path:
     return research_subset_dir() / "metadata" / "manifest.json"
 
 
+def research_concept_preprocessed_dir() -> Path:
+    return preprocessed_dir() / "research_corpus_concept"
+
+
+def research_concept_segmented_dir_for_model(model: str) -> Path:
+    return segmented_dir_for_model(model) / "research_concept"
+
+
 # ── Warm-replay text fallback (3a_warm_replay_texts/) ────────────────────
 #
 # Canonical text lives in 2_segmented/{model}/ (plain .jsonl). The embedded

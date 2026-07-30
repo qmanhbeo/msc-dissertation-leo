@@ -48,7 +48,7 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import preprocessed_dir, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
+from model_utils import preprocessed_dir, research_concept_preprocessed_dir, research_concept_segmented_dir_for_model, research_preprocessed_dir, research_segmented_dir_for_model, segmented_dir_for_model, DEFAULT_EMBED_MODEL, resolve_model_alias
 from segment_utils import segment_text, _ensure_nltk_data
 from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, sha256_file
 
@@ -186,7 +186,7 @@ def segment_records(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Segment a preprocessed corpus.")
-    parser.add_argument("--corpus", choices=["reference", "policy", "research"],
+    parser.add_argument("--corpus", choices=["reference", "policy", "research", "research_concept"],
                         help="Known corpus name; auto-derives input/output from model_utils (alternative to --input/--output).")
     parser.add_argument("--input", help="Single input JSONL path.")
     parser.add_argument("--output", help="Single output JSONL path (supports {model} placeholder).")
@@ -239,6 +239,13 @@ def main() -> None:
         args.sharded = True
         args.input_glob = str(research_preprocessed_dir() / "part-*.jsonl")
         args.output_dir = str(research_segmented_dir_for_model(args.embed_model))
+        args.text_field = "combined_text"
+        args.id_field = "openalex_id"
+        args.prefix = "paper"
+    elif args.corpus == "research_concept":
+        args.sharded = True
+        args.input_glob = str(research_concept_preprocessed_dir() / "part-*.jsonl")
+        args.output_dir = str(research_concept_segmented_dir_for_model(args.embed_model))
         args.text_field = "combined_text"
         args.id_field = "openalex_id"
         args.prefix = "paper"

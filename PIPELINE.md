@@ -56,17 +56,17 @@ DATA: 2_data/2_segmented/[policy|reference].jsonl
 
 CODE: 1_code/2_segment/1_segment_corpus.py
 
- 3.  segment canon research AND
- 4.  build research 50k subset (one run)
+ 3.  segment canon research
+ 4.  segment concept-based research (for retrieval-method robustness)
 
-DATA: 2_data/2_segmented/research/part-*.jsonl
+DATA: 2_data/2_segmented/[research|research_concept]/part-*.jsonl
+
+
+CODE: 1_code/2_segment/2_sample_segments.py.py
+
+ 5.  build research 50k subset (for other embedding models' robustness tests)
+
 DATA: 2_data/2_segmented/research_subset/part-*.jsonl
-
-CODE: 1_code/2_segment/1_segment_corpus.py
-
- 3.  segment concept-based research
-
-DATA: 2_data/2_segmented/research_concept/part-*.jsonl
 
 
 # ══ PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) 
