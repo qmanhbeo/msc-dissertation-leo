@@ -114,7 +114,6 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Preprocess SDG Benchmark corpus (resume-safe).")
     p.add_argument("--input", default=str(INPUT_FILE))
     p.add_argument("--out-jsonl", default=str(OUTPUT_JSONL))
-    p.add_argument("--out-csv", default=str(OUTPUT_CSV))
     p.add_argument("--state", default=str(STATE_PATH))
     p.add_argument("--status-dir", default=str(STATUS_DIR))
     p.add_argument("--chunk-size", type=int, default=5000)
@@ -126,10 +125,9 @@ def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
-    global INPUT_FILE, OUTPUT_JSONL, OUTPUT_CSV, STATE_PATH, STATUS_DIR
+    global INPUT_FILE, OUTPUT_JSONL, STATE_PATH, STATUS_DIR
     INPUT_FILE = Path(args.input)
     OUTPUT_JSONL = Path(args.out_jsonl)
-    OUTPUT_CSV = Path(args.out_csv)
     STATE_PATH = Path(args.state)
     STATUS_DIR = Path(args.status_dir)
 
