@@ -286,13 +286,6 @@ def main() -> None:
         for p in metadata_dir.glob("part-*_ids.jsonl"):
             p.unlink()
 
-    if not args.reset and state_path.exists():
-        old_state = read_json(state_path, default=None)
-        if old_state and old_state.get("last_input_offset", 0) > 0 and old_state.get("rows_written", 0) > 0:
-            if input_path.stat().st_size <= old_state["last_input_offset"]:
-                log.info("skip: %s already has %d rows from earlier run", out_dir, old_state["rows_written"])
-                return
-
     state = read_json(
         state_path,
         default={
