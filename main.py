@@ -589,7 +589,7 @@ def _run_concept_robustness(output_dir: Path, model: str, args: argparse.Namespa
         sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
         "--corpus", "research_concept",
         "--embed-model", model,
-"--device", args.device, "--batch-size", "128",
+"--device", args.device,
          "--local-files-only",
          "--precision", args.precision, "--normalize-embeddings",
      ] + _overwrite_flag(args.overwrite))
@@ -893,7 +893,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             )
         embed_cmd = [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-            "--device", args.device, "--batch-size", "128",
+            "--device", args.device,
             "--local-files-only",
             "--precision", args.precision,
             "--normalize-embeddings",
