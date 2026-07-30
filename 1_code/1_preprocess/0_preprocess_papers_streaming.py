@@ -224,6 +224,7 @@ def write_shard(
     state["last_input_offset"] = max_offset
     state["rows_written"] = int(state["rows_written"]) + rows
     atomic_write_json(state_path, state)
+    log.info("Shard %s written: %d rows", shard_name, rows)
     return state
 
 
