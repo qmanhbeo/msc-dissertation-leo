@@ -201,6 +201,8 @@ def main() -> None:
                         help="Drop texts (or segments) shorter than this many words (default: %(default)s)")
     parser.add_argument("--overwrite", action="store_true",
                         help="Re-segment existing shards even if already complete")
+    parser.add_argument("--workers", type=int, default=0,
+                        help="Number of worker processes for sharded mode (default: os.cpu_count())")
     parser.add_argument("--all", action="store_true", dest="all_corpora",
                         help="Segment all non-research corpora in one model load.")
     args = parser.parse_args()
@@ -291,7 +293,7 @@ def main() -> None:
              args.text_field, args.id_field, args.prefix, args.overwrite)
             for shard_idx, in_path in enumerate(input_paths, start=1)
         ]
-        n_workers = max(1, min(os.cpu_count() or 2, len(tasks)))
+        n_workers = args.workers if args.workers > 0 else max(1, min(os.cpu_count() or 2, len(tasks)))
         mp_ctx = multiprocessing.get_context("spawn")
         manifest_entries: list[dict] = []
         total_segments = 0
