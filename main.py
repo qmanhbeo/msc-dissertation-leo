@@ -56,6 +56,7 @@ from model_utils import (
     DEFAULT_EMBED_MODEL,
     embed_dir_for_model,
     embed_research_dir_for_model,
+    raw_dir,
     research_preprocessed_dir,
     research_segmented_dir_for_model,
     research_subset_manifest,
@@ -523,6 +524,18 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     print("      It is deterministic and reproducible; no OpenAlex credentials needed when the raw snapshot is hydrated.")
     if args.embed_model != DEFAULT_EMBED_MODEL:
         print(f"NOTE: --embed-model {args.embed_model!r} is ignored by --cold-replay (all three encoders are rebuilt).")
+    # Input gate: cold replay rebuilds FROM the frozen raw snapshot (2_data/0_raw/),
+    # not from existing 4_outputs/. Refusing is based on missing *inputs*, never on
+    # the presence of prior derived outputs — so an interrupted run can simply be
+    # re-invoked to resume (each stage is resume-safe / idempotent on its own).
+    if not raw_dir().exists():
+        print(
+            "ERROR: raw snapshot not found at 2_data/0_raw/. "
+            "Cold replay rebuilds from the frozen raw snapshot — run "
+            "`python main.py --fetch-data-snapshot raw` first.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     COLD_REPLAY_MODELS = (
         CANONICAL_SEGMENT_MODEL,
         "all-MiniLM-L6-v2",
@@ -816,10 +829,12 @@ def main() -> None:
         return
 
     if (
-        args.warm_replay_without_appendix
-        or args.warm_replay_with_appendix
-        or args.cold_replay
-        or args.appendix_all
+        # NOTE: cold-replay and warm-replay gate on their *inputs* (raw snapshot /
+        # 3_embedded), not on prior 4_outputs/, so an interrupted run can be
+        # re-invoked to resume. They are intentionally excluded from this
+        # output-existence refuse guard. Appendix stages and build-pdf still
+        # protect committed results and require --overwrite to replace.
+        args.appendix_all
         or args.appendix_a2_family
         or args.appendix_a3_sdg4
         or args.appendix_b2_interpret
