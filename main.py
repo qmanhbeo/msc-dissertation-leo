@@ -593,11 +593,13 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
                 f"embed {corpus}",
                 [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
                  "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
-                 ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL],
+                 ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL]
+                  + _overwrite_flag(args.overwrite),
             )
         run_step(
             "merge policy corpus",
-            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args,
+            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args
+            + _overwrite_flag(args.overwrite),
         )
         embed_cmd = [
             sys.executable,
@@ -608,6 +610,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
             str(args.batch_size),
         ]
         embed_cmd.extend(model_args)
+        embed_cmd.extend(_overwrite_flag(args.overwrite))
         if model != CANONICAL_SEGMENT_MODEL:
             embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
         run_step("embed paper shards", embed_cmd)
@@ -766,12 +769,14 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(
                 f"embed {corpus}",
                  [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                  "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE, "--local-files-only",
-                  "--precision", args.precision, "--normalize-embeddings"] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL],
+                 "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE, "--local-files-only",
+                 "--precision", args.precision, "--normalize-embeddings"] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL]
+                 + _overwrite_flag(args.overwrite),
             )
         run_step(
             "merge policy corpus",
-            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args,
+            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args
+            + _overwrite_flag(args.overwrite),
         )
         embed_cmd = [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
@@ -781,6 +786,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             "--normalize-embeddings",
         ]
         embed_cmd.extend(model_args)
+        embed_cmd.extend(_overwrite_flag(args.overwrite))
         if model != CANONICAL_SEGMENT_MODEL:
             embed_cmd.extend(["--input-manifest", str(research_subset_manifest())])
         run_step("embed paper shards", embed_cmd)

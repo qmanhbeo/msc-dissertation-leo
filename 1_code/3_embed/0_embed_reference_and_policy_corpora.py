@@ -162,12 +162,18 @@ def embed_corpus(
     emb_path = output_dir / f"{corpus_name}.npy"
     ids_path = metadata_dir / f"{corpus_name}_ids.json"
 
-    if emb_path.exists():
-        # Resume-safe: a completed embedding is reused even when --overwrite is
-        # passed, so re-runs never redo finished corpora. Use --overwrite only to
-        # force-redo a partial/corrupt embed (delete the .npy first).
+    if emb_path.exists() and not overwrite:
+        # Resume-safe: a completed embedding is reused when --overwrite is not
+        # passed, so re-runs never redo finished corpora.
         log.info("Skipping %s — %s already exists", corpus_name, emb_path)
         return
+    if overwrite and emb_path.exists():
+        # --overwrite forces a clean re-embed: drop the stale .npy/.json so a
+        # changed segmentation/encoder produces fresh embeddings.
+        log.info("Overwrite requested — removing existing %s", emb_path)
+        emb_path.unlink()
+        if ids_path.exists():
+            ids_path.unlink()
 
     input_path = config["input_path"](seg_model or model_name)
     log.info("Embedding %s (%s)", corpus_name, input_path)
