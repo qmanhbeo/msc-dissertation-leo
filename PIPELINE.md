@@ -129,7 +129,7 @@ CODE: 1_code/5_supervised_model_infer/
     1.3. check centroid consistency (what does this do?)
 
 2. build centroid similarity matrix (LR only)
-3. score research & policy with zeroshot method (nearest-centroid SDG assignment)  (currently wrongly in 5_supervised_model_infer/. Should be in 6_calculate_centroids/ instead, before score_zeroshot.py)
+3. score research & policy with zeroshot method (nearest-centroid SDG assignment)
 
 
 # ANALYSIS (run_analysis, in-process)

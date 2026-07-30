@@ -29,7 +29,7 @@ ANALYSIS_ROOT = Path(__file__).resolve().parents[1]  # 7_main_analysis
 # artifact (a second encoder's tree is a robustness artifact read by the
 # combined cross-sensitivity table).
 MAIN_STEPS = [
-    (str(ANALYSIS_ROOT.parent / "5_supervised_model_infer" / "score_zeroshot.py"), False),
+    (str(ANALYSIS_ROOT.parent / "6_calculate_centroids" / "score_zeroshot.py"), False),
     ("1_main_text/0_coverage_gap.py", False),
     ("1_main_text/1_semantic_gap.py", False),
     ("1_main_text/2_coverage_semantic_interaction.py", False),

@@ -877,7 +877,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("score research shards (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "research"] + _overwrite_flag(args.overwrite))
         run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(args.overwrite))
         run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "mlp"] + _overwrite_flag(args.overwrite))
-        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/5_supervised_model_infer/score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(args.overwrite))
+        run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(args.overwrite))
 
     elif stage == "centroids":
         # Build the SDG reference centroids (sdg_centroids.npy) consumed by the

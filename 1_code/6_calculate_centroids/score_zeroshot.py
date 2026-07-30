@@ -70,13 +70,20 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default="4_outputs")
     p.add_argument("--overwrite", action="store_true",
                    help="Recompute zero-shot centroids even if outputs already exist.")
+    p.add_argument("--embedding-manifest", default=None,
+                   help="Override research embedding manifest (default: canonical "
+                        "research_shards/metadata/manifest.json). Used for the "
+                        "concept-retrieval variant.")
+    p.add_argument("--out-dir", default=None,
+                   help="Override zero-shot output root (default: canonical "
+                        "main/{model}/zeroshot/). Concept variant writes here.")
     return p.parse_args()
 
 
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
 
-    out_root = output_main_dir_for_model(model, root=Path(args.output_dir)) / "zeroshot"
+    out_root = Path(args.out_dir) if args.out_dir else output_main_dir_for_model(model, root=Path(args.output_dir)) / "zeroshot"
     out_root.mkdir(parents=True, exist_ok=True)
 
     if not args.overwrite:
@@ -103,7 +110,7 @@ def run(args: argparse.Namespace) -> None:
     # 2. Score research papers — accumulate per-SDG sums and counts.
     # Score research papers — load each shard's embedding directly (shard-native,
     # mmap). This is byte-identical to the former consolidated-array slice.
-    manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
+    manifest_path = Path(args.embedding_manifest) if args.embedding_manifest else embed_root / "research_shards" / "metadata" / "manifest.json"
     manifest = load_json(manifest_path)
     shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
     log.info("Scoring %d research shards (zero-shot)...", len(shards))
@@ -115,7 +122,7 @@ def run(args: argparse.Namespace) -> None:
         emb = np.load(
             resolve_manifest_path(
                 shard["embedding_path"],
-                allowed_dirs=(embed_research_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
+                 allowed_dirs=(embed_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
             ),
             mmap_mode="r",
         )
