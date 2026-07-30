@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--input-manifest", default=None)
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                    help="Embedding model. One of: all-mpnet-base-v2 (default), all-MiniLM-L6-v2, allenai/scibert_scivocab_uncased. Short aliases: mpnet, minilm, scibert.")
-    p.add_argument("--batch-size", type=int, default=128,
+    p.add_argument("--batch-size", type=int, default=256,
                    help="Internal batch size passed to model.encode (GPU occupancy).")
     p.add_argument("--precision", choices=["fp32", "fp16"], default=None,
                    help="Compute + storage precision for embeddings. Default: fp16.")
