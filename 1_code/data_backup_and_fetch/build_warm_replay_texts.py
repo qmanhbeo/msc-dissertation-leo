@@ -1,7 +1,7 @@
 """
 Materialize 2_data/3a_warm_replay_texts/ — the gzipped warm-replay text fallback.
 
-Canonical segment text lives in 2_data/2_segmented/{model}/ as plain .jsonl
+Canonical segment text lives in 2_data/2_segmented/ as plain .jsonl
 (kept plain for cold replay and manual inspection). The embedded snapshot
 instead ships a gzipped copy of exactly the files the warm-replay appendix
 consumers read:
@@ -117,7 +117,7 @@ def _plan_for_model(source_dir: Path, model: str) -> list[tuple[Path, str]]:
     if not isinstance(shards, list) or not shards:
         raise RuntimeError(f"embed manifest has no shards: {embed_manifest_path}")
 
-    segmented_root = source_dir / "2_segmented" / slug
+    segmented_root = source_dir / "2_segmented"
     plan: list[tuple[Path, str]] = []
     for shard in sorted(shards, key=lambda s: int(s["shard_id"])):
         name = str(shard["name"])

@@ -66,7 +66,7 @@ CODE: 1_code/2_segment/2_sample_segments.py.py
 
  5.  build research 50k subset (for other embedding models' robustness tests)
 
-DATA: 2_data/2_segmented/research_subset/part-*.jsonl
+DATA: 2_data/2_segmented/research_subset/part-00001.jsonl
 
 
 # ══ PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) 

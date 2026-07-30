@@ -74,7 +74,7 @@ Preprocess (8 scripts) → Segment (canonical, 7 corpora ONCE) → Embed (8 refe
 - **Unlabeled corpora** (to be assigned): research (OpenAlex), policy_scrape, policy_manual, ungdc_sdg
 - osdg and benchmark are **not segmented** (embedded directly from preprocessed JSONL)
 - sdgi plays a **dual role**: labeled training corpus AND merged into `policy.npy`
-- **All sensitivity encoders reuse the canonical (MPNet) segmented texts.** Segmentation runs ONCE at 384 tokens; every model embeds those identical segments so the only varying factor is the encoder. Research: MPNet embeds the full corpus; **MiniLM and SciBERT embed a shared 50k-paper subset** (`research_50k_subset`, deterministic seed-42 draw). Reference/policy: all models embed the canonical segments (`--seg-model all-mpnet-base-v2`). This removes the earlier per-model segmentation (and its chunking confound) plus the ~20GB+/model of redundant segmented text.
+- **All sensitivity encoders reuse the canonical (MPNet) segmented texts.** Segmentation runs ONCE at 384 tokens; every model embeds those identical segments so the only varying factor is the encoder. Research: MPNet embeds the full corpus; **MiniLM and SciBERT embed a shared 50k-paper subset** (`research_subset`, deterministic seed-42 draw). Reference/policy: all models embed the canonical segments (`--seg-model all-mpnet-base-v2`). This removes the earlier per-model segmentation (and its chunking confound) plus the ~20GB+/model of redundant segmented text.
 
 The shared training-data prep (`0_prepare_data.py`) writes `embeddings.npy`, `labels.npy`,
 `sources.npy`, and train/test split indices to `2_data/4_supervised_model_results/{model}/`.

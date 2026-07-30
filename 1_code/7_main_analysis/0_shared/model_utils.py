@@ -115,7 +115,7 @@ def individual_source_dir(source: str) -> Path:
 
 def segmented_dir_for_model(model: str) -> Path:
     _validate_model(model)
-    return DATA_ROOT / "2_segmented" / model_slug(model)
+    return DATA_ROOT / "2_segmented"
 
 
 def embed_dir_for_model(model: str) -> Path:
@@ -159,7 +159,7 @@ def research_subset_dir() -> Path:
     Sensitivity encoders (MiniLM, SciBERT) embed these identical texts rather
     than the full corpus, so the architecture comparison is on identical papers.
     """
-    return canonical_research_segment_dir() / "research_50k_subset"
+    return segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "research_subset"
 
 
 def research_subset_manifest() -> Path:
@@ -176,7 +176,7 @@ def research_concept_segmented_dir_for_model(model: str) -> Path:
 
 # ── Warm-replay text fallback (3a_warm_replay_texts/) ────────────────────
 #
-# Canonical text lives in 2_segmented/{model}/ (plain .jsonl). The embedded
+# Canonical text lives in 2_segmented/ (plain .jsonl). The embedded
 # snapshot instead ships a gzipped copy of exactly the files the warm-replay
 # appendix consumers (a3, b2) need, under 3a_warm_replay_texts/{model}/,
 # built only by 1_code/data_backup_and_fetch/build_warm_replay_texts.py.
@@ -192,17 +192,7 @@ def warm_replay_texts_dir_for_model(model: str) -> Path:
 
 
 def resolve_research_text_path(model: str, shard_name: str) -> Path:
-    if model != CANONICAL_SEGMENT_MODEL:
-        # Sensitivity encoders embed the shared canonical 50k subset; their
-        # texts are the canonical segments for those papers, not their own
-        # (now-absent) segmented dir.
-        subset = research_subset_dir() / f"{shard_name}.jsonl"
-        if subset.exists():
-            return subset
-        subset_gz = research_subset_dir() / f"{shard_name}.jsonl.gz"
-        if subset_gz.exists():
-            return subset_gz
-    canonical = research_segmented_dir_for_model(model) / f"{shard_name}.jsonl"
+    canonical = segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "research" / f"{shard_name}.jsonl"
     if canonical.exists():
         return canonical
     fallback = warm_replay_texts_dir_for_model(model) / "research" / f"{shard_name}.jsonl.gz"
@@ -216,16 +206,7 @@ def resolve_research_text_path(model: str, shard_name: str) -> Path:
 
 
 def resolve_policy_text_path(model: str) -> Path:
-    if model != CANONICAL_SEGMENT_MODEL:
-        # Sensitivity encoders embed the canonical policy segments, so their
-        # policy text is the canonical model's, not their own (absent) dir.
-        canonical_policy = segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "policy.jsonl"
-        if canonical_policy.exists():
-            return canonical_policy
-        canonical_policy_gz = segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "policy.jsonl.gz"
-        if canonical_policy_gz.exists():
-            return canonical_policy_gz
-    canonical = segmented_dir_for_model(model) / "policy.jsonl"
+    canonical = segmented_dir_for_model(CANONICAL_SEGMENT_MODEL) / "policy.jsonl"
     if canonical.exists():
         return canonical
     fallback = warm_replay_texts_dir_for_model(model) / "policy.jsonl.gz"
