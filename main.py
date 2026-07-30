@@ -15,10 +15,12 @@ Architecture — three method axes sharing a unified preprocess→segment→embe
     → score_zeroshot → zeroshot/research_centroids.npy, policy_centroids.npy
     → cross-sensitivity table
 
-Labeled corpora: osdg, benchmark, sdg_knowledge_hub, sdgi, aurora.
-Unlabeled: research (OpenAlex), policy_scrape, policy_manual, ungdc_sdg.
-osdg + benchmark are NOT segmented (embedded raw from preprocessed).
-sdgi is dual-role: labeled training corpus AND merged into policy.npy.
+Labeled corpora: osdg, benchmark, sdg_knowledge_hub, sdgi, aurora
+  (consolidated into reference corpus at preprocess time).
+Unlabeled: research (OpenAlex), policy (consolidated from policy_scrape,
+  policy_manual, ungdc_sdg, sdgi).
+sdgi is dual-role: labeled training corpus (in reference) AND
+  unlabeled policy corpus (in policy).
 SciBERT reuses MPNet segmented texts (--seg-model all-mpnet-base-v2).
 
 Build-order: 0_prepare_data MUST precede both build_reference_centroids
@@ -71,8 +73,7 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
 EMBED_BATCH_SIZE = "64"
-ALL_EMBED_CORPORA = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora",
-                     "policy_scrape", "policy_manual", "ungdc_sdg"]
+ALL_EMBED_CORPORA = ["reference", "policy"]
 
 
 def base_warm_replay_requirements(model: str = "") -> list[Path]:
@@ -80,16 +81,8 @@ def base_warm_replay_requirements(model: str = "") -> list[Path]:
     return [
         embed_root / "policy.npy",
         embed_root / "metadata" / "policy_ids.json",
-        embed_root / "osdg.npy",
-        embed_root / "metadata" / "osdg_ids.json",
-        embed_root / "benchmark.npy",
-        embed_root / "metadata" / "benchmark_ids.json",
-        embed_root / "sdg_knowledge_hub.npy",
-        embed_root / "metadata" / "sdg_knowledge_hub_ids.json",
-        embed_root / "sdgi.npy",
-        embed_root / "metadata" / "sdgi_ids.json",
-        embed_root / "aurora.npy",
-        embed_root / "metadata" / "aurora_ids.json",
+        embed_root / "reference.npy",
+        embed_root / "metadata" / "reference_ids.json",
         embed_research_dir_for_model(model) / "metadata" / "manifest.json",
     ]
 
@@ -184,8 +177,7 @@ def parse_args() -> argparse.Namespace:
         help="Run a single pipeline stage (assumes upstream outputs exist).",
     )
     p.add_argument("--corpus",
-                   choices=["all", "sdg_knowledge_hub", "aurora", "research",
-                            "policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"],
+                   choices=["all", "reference", "policy", "research"],
                    default="all",
                    help="Corpus to segment (default: all; only used with --stage segment).")
     return p.parse_args()
@@ -564,27 +556,19 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
         ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
         ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
+        # — BUILD CONSOLIDATED CORPORA —
+        ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
+        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
         # — SEGMENT (canonical, ONCE, shared by every encoder) —
-        ("segment knowledge hub", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "sdg_knowledge_hub", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment aurora", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "aurora", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment policy scrape", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "policy_scrape", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment policy manual", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "policy_manual", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment ungdc", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "ungdc_sdg", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment sdgi", [sys.executable, "1_code/2_segment/segment_corpus.py",
-         "--corpus", "sdgi", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
+        ("segment reference & policy", [sys.executable, "1_code/2_segment/segment_corpus.py",
+         "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
         ("segment research corpus", [sys.executable, "1_code/2_segment/segment_corpus.py",
          "--sharded",
          "--input-glob", str(research_preprocessed_dir() / "part-*.jsonl"),
          "--output-dir", str(research_segmented_dir_for_model(CANONICAL_SEGMENT_MODEL)),
          "--text-field", "combined_text", "--id-field", "openalex_id",
          "--prefix", "paper", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        # — EMBED (encode each source separately, then merge policy) —
+        # — EMBED (encode each source separately) —
     ]
     # Shared 50k representative subset (consumed by MiniLM + SciBERT instead of
     # the full corpus); built once from the canonical segments.
@@ -608,11 +592,6 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
                  ] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL]
                   + _overwrite_flag(args.overwrite),
             )
-        run_step(
-            "merge policy corpus",
-            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args
-            + _overwrite_flag(args.overwrite),
-        )
         embed_cmd = [
             sys.executable,
             "1_code/3_embed/0_embed_paper_shards.py",
@@ -740,6 +719,8 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
             ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
             ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
+            ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
+            ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
         ]
         for label, cmd in steps:
             run_step(label, cmd)
@@ -748,11 +729,9 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         corpus = args.corpus
         if corpus == "all":
             steps = [
-                ("segment reference & policy corpora",
+                ("segment reference & policy",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
                   "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-                ("build policy corpus",
-                 [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
                 ("segment research corpus",
                  [sys.executable, "1_code/2_segment/segment_corpus.py",
                   "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
@@ -785,11 +764,6 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
                  "--precision", args.precision, "--normalize-embeddings"] + model_args + ["--seg-model", CANONICAL_SEGMENT_MODEL]
                  + _overwrite_flag(args.overwrite),
             )
-        run_step(
-            "merge policy corpus",
-            [sys.executable, "1_code/3_embed/1_merge_policy_corpus.py"] + model_args
-            + _overwrite_flag(args.overwrite),
-        )
         embed_cmd = [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
             "--device", args.device, "--batch-size", str(args.batch_size),

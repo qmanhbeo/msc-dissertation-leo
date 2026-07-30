@@ -1,11 +1,12 @@
 """
 Prepare training and test data for the single-label SDG classifier.
 
-Loads embeddings and metadata from 3_embedded/{model}/metadata/*_ids.json,
+Loads consolidated reference embeddings and metadata from
+3_embedded/{model}/reference.npy + reference_ids.json, groups records
+by their source field (osdg, benchmark, sdg_knowledge_hub, sdgi, aurora),
 filters for single-label records, builds 17D one-hot vectors, and performs
 a per-source stratified 85/15 split with document-level grouping.
 
-Sources: osdg, benchmark, sdg_knowledge_hub, sdgi_corpus, aurora
 Excludes: policy (unlabeled), research_corpus (unlabeled)
 
 Outputs (saved to {output_root}/):
@@ -40,20 +41,8 @@ if str(ANALYSIS_DIR) not in sys.path:
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, embed_dir_for_model, model_results_dir_for_model, resolve_model_alias
 
-CORPORA = [
-    {"name": "osdg", "embed_file": "osdg.npy", "ids_file": "metadata/osdg_ids.json"},
-    {"name": "benchmark", "embed_file": "benchmark.npy", "ids_file": "metadata/benchmark_ids.json"},
-    {"name": "sdg_knowledge_hub", "embed_file": "sdg_knowledge_hub.npy", "ids_file": "metadata/sdg_knowledge_hub_ids.json"},
-    {"name": "sdgi", "embed_file": "sdgi.npy", "ids_file": "metadata/sdgi_ids.json"},
-    {"name": "aurora", "embed_file": "aurora.npy", "ids_file": "metadata/aurora_ids.json"},
-]
-
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-
-def _resolve_ids_path(corpus: dict, embed_root: Path) -> Path:
-    return embed_root / corpus["ids_file"]
 
 
 def load_ids(path: Path) -> list[dict]:
@@ -93,31 +82,46 @@ def main() -> None:
     output_dir = Path(args.output_root) if args.output_root else model_results_dir_for_model(args.embed_model)
     log.info("Embed root: %s  Output: %s  Model: %s", embed_root, output_dir, args.embed_model)
 
-    all_embs, all_labels, all_sources, all_source_docs = [], [], [], []
+    emb_path = embed_root / "reference.npy"
+    ids_path = embed_root / "metadata" / "reference_ids.json"
 
-    for corpus in CORPORA:
-        name = corpus["name"]
-        emb_path = embed_root / corpus["embed_file"]
-        ids_path = _resolve_ids_path(corpus, embed_root)
+    if not emb_path.exists() or not ids_path.exists():
+        log.error("Missing: %s or %s", emb_path, ids_path)
+        return
 
-        if not emb_path.exists() or not ids_path.exists():
-            log.warning("Missing: %s or %s — skipping", emb_path, ids_path)
+    all_embs = np.load(emb_path).astype(np.float32)
+    all_rows = load_ids(ids_path)
+
+    if len(all_embs) != len(all_rows):
+        log.error(
+            "Mismatch: reference.npy (%d) vs reference_ids.json (%d)",
+            len(all_embs), len(all_rows),
+        )
+        return
+
+    # Group by source field
+    source_to_indices: dict[str, list[int]] = defaultdict(list)
+    for i, entry in enumerate(all_rows):
+        src = entry.get("source", "unknown")
+        source_to_indices[src].append(i)
+
+    ordered_sources = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"]
+
+    embs_list, labels_list, sources_list, source_docs_list = [], [], [], []
+
+    for name in ordered_sources:
+        indices = source_to_indices.get(name, [])
+        if not indices:
+            log.warning("  %s: no records found — skipping", name)
             continue
 
-        embs = np.load(emb_path).astype(np.float32)
-        rows = load_ids(ids_path)
+        src_embs = all_embs[indices]
+        src_rows = [all_rows[i] for i in indices]
 
-        if len(embs) != len(rows):
-            log.error(
-                "Mismatch: %s embeddings (%d) vs IDs (%d) — skipping",
-                name, len(embs), len(rows),
-            )
-            continue
-
-        kept_indices = []
+        kept_sub_indices = []
         dropped_multi = 0
 
-        for i, entry in enumerate(rows):
+        for sub_i, entry in enumerate(src_rows):
             sdg = entry.get("sdg")
             sdgs = entry.get("sdgs")
             is_single = (
@@ -127,40 +131,39 @@ def main() -> None:
             if not is_single:
                 dropped_multi += 1
                 continue
+            kept_sub_indices.append(sub_i)
 
-            kept_indices.append(i)
-
-        kept_embs = embs[kept_indices]
-        labels = np.zeros((len(kept_indices), N_SDG), dtype=np.float32)
+        kept_embs = src_embs[kept_sub_indices]
+        labels = np.zeros((len(kept_sub_indices), N_SDG), dtype=np.float32)
         source_docs_corpus: list[str] = []
-        for j, i in enumerate(kept_indices):
-            entry = rows[i]
+        for j, sub_i in enumerate(kept_sub_indices):
+            entry = src_rows[sub_i]
             sdg = entry.get("sdg")
             sdgs = entry.get("sdgs")
             if sdg is not None and 1 <= sdg <= N_SDG:
                 labels[j, sdg - 1] = 1.0
             elif isinstance(sdgs, list) and len(sdgs) == 1 and 1 <= sdgs[0] <= N_SDG:
                 labels[j, sdgs[0] - 1] = 1.0
-            source_docs_corpus.append(entry.get("source_doc", f"{name}_{i}"))
+            source_docs_corpus.append(entry.get("source_doc", f"{name}_{sub_i}"))
 
-        all_embs.append(kept_embs)
-        all_labels.append(labels)
-        all_sources.extend([name] * len(kept_indices))
-        all_source_docs.extend(source_docs_corpus)
+        embs_list.append(kept_embs)
+        labels_list.append(labels)
+        sources_list.extend([name] * len(kept_sub_indices))
+        source_docs_list.extend(source_docs_corpus)
 
         log.info(
             "  %s: %d texts (dropped %d multi-label)",
-            name, len(kept_indices), dropped_multi,
+            name, len(kept_sub_indices), dropped_multi,
         )
 
-    if not all_embs:
+    if not embs_list:
         log.error("No corpora loaded — nothing to do.")
         return
 
-    embeddings = np.vstack(all_embs)
-    labels = np.vstack(all_labels)
-    sources = np.array(all_sources)
-    source_docs = np.array(all_source_docs)
+    embeddings = np.vstack(embs_list)
+    labels = np.vstack(labels_list)
+    sources = np.array(sources_list)
+    source_docs = np.array(source_docs_list)
 
     log.info("Total: %d texts", len(embeddings))
 

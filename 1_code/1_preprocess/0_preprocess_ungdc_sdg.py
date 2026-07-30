@@ -189,6 +189,7 @@ def transform(payload) -> dict | None:
         "institution": f"{iso3} (UNGDC speech)",
         "year": year,
         "session": session_num,
+        "source": "ungdc_sdg",
     }
 
 

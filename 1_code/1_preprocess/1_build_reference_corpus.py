@@ -1,19 +1,15 @@
 """
-Build consolidated policy corpus from individual policy sources.
+Build consolidated reference corpus from individual SDG-labeled sources.
 
-Reads preprocessed JSONL from each policy source (policy_scrape,
-policy_manual, ungdc_sdg, sdgi), normalises fields, adds source_family,
-deduplicates by exact text (first occurrence wins), and writes policy.json.
+Reads preprocessed JSONL from each reference source (osdg, benchmark,
+sdg_knowledge_hub, aurora, sdgi), normalises fields to a common schema,
+deduplicates by exact text (first occurrence wins), and writes
+reference.json.
 
-source_family mapping (moved from deleted 1_merge_policy_corpus.py):
-  policy_scrape / policy_manual  → "curated_ai_sdg"
-  ungdc_sdg                      → "ungdc_speeches"
-  sdgi                           → "sdgi_vnr_vlr"
-
-Output: preprocessed_dir() / "policy.json"  (JSON list of records)
+Output: preprocessed_dir() / "reference.json"  (JSON list of records)
 
 Run from project root:
-    python 1_code/1_preprocess/1_build_policy_corpus.py
+    python 1_code/1_preprocess/1_build_reference_corpus.py
 """
 
 import argparse
@@ -35,32 +31,22 @@ from model_utils import preprocessed_dir
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-SOURCE_FAMILY_MAP = {
-    "policy_scrape": "curated_ai_sdg",
-    "policy_manual": "curated_ai_sdg",
-    "ungdc_sdg": "ungdc_speeches",
-    "sdgi": "sdgi_vnr_vlr",
-}
-
 SOURCES = [
-    {"name": "policy_scrape", "path": lambda: preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_clean.jsonl",
+    {"name": "osdg", "path": lambda: preprocessed_dir() / "osdg" / "osdg_clean.jsonl",
+     "id_field": "text_id"},
+    {"name": "benchmark", "path": lambda: preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.jsonl",
      "id_field": "id"},
-    {"name": "policy_manual", "path": lambda: preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_clean.jsonl",
+    {"name": "sdg_knowledge_hub", "path": lambda: preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl",
      "id_field": "id"},
-    {"name": "ungdc_sdg", "path": lambda: preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_clean.jsonl",
-     "id_field": "id"},
+    {"name": "aurora", "path": lambda: preprocessed_dir() / "aurora" / "aurora_texts.jsonl",
+     "id_field": "doi"},
     {"name": "sdgi", "path": lambda: preprocessed_dir() / "sdgi" / "sdgi_clean.jsonl",
      "id_field": "id"},
 ]
 
-MERGED_ORDER = ["policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"]
-
 
 def load_jsonl(path: Path) -> list[dict]:
     records = []
-    if not path.exists():
-        log.warning("  Input not found: %s", path)
-        return records
     with path.open(encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -70,58 +56,63 @@ def load_jsonl(path: Path) -> list[dict]:
 
 
 def normalise_record(rec: dict, source_cfg: dict) -> dict:
+    """Map source-specific fields to the common reference schema."""
     source_name = source_cfg["name"]
     id_val = rec.get(source_cfg["id_field"], "")
+    sdgs = rec.get("sdgs")
+    if sdgs is None:
+        sdg = rec.get("sdg")
+        sdgs = [sdg] if sdg is not None else None
+    if isinstance(sdgs, int):
+        sdgs = [sdgs]
+
     return {
         "id": f"{source_name}_{id_val}",
         "text": rec.get("text", ""),
+        "sdgs": sdgs or [],
         "source": source_name,
-        "source_family": SOURCE_FAMILY_MAP.get(source_name, source_name),
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build consolidated policy corpus.")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing policy.json.")
+    parser = argparse.ArgumentParser(description="Build consolidated reference corpus.")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing reference.json.")
     args = parser.parse_args()
 
-    output_path = preprocessed_dir() / "policy.json"
+    output_path = preprocessed_dir() / "reference.json"
     if output_path.exists() and not args.overwrite:
         log.info("Skip — %s already exists", output_path)
         return
 
     all_records: list[dict] = []
-    source_stats: dict[str, int] = {}
+    source_stats: dict[str, dict] = {}
 
     for cfg in SOURCES:
         path = cfg["path"]()
         if not path.exists():
             log.warning("  %s: input not found — %s", cfg["name"], path)
-            source_stats[cfg["name"]] = 0
+            source_stats[cfg["name"]] = {"raw": 0, "after_norm": 0}
             continue
         raw = load_jsonl(path)
         normed = [normalise_record(r, cfg) for r in raw]
         all_records.extend(normed)
-        source_stats[cfg["name"]] = len(normed)
+        source_stats[cfg["name"]] = {"raw": len(raw), "after_norm": len(normed)}
         log.info("  %s: %d raw -> %d normalised", cfg["name"], len(raw), len(normed))
 
-    total_raw = sum(source_stats.values())
+    total_raw = sum(s["raw"] for s in source_stats.values())
     log.info("Total raw records: %d", total_raw)
 
-    # Dedup by exact text, ordered by MERGED_ORDER so policy_scrape seeds first
+    # Dedup by exact text (first occurrence keeps)
     seen_texts: set[str] = set()
     deduped: list[dict] = []
     dedup_source_counts: Counter = Counter()
-    for source_name in MERGED_ORDER:
-        for rec in all_records:
-            if rec.get("source") != source_name:
-                continue
-            text_key = rec.get("text", "").strip()
-            if not text_key or text_key in seen_texts:
-                continue
-            seen_texts.add(text_key)
-            deduped.append(rec)
-            dedup_source_counts[source_name] += 1
+    for rec in all_records:
+        text_key = rec.get("text", "").strip()
+        if not text_key or text_key in seen_texts:
+            continue
+        seen_texts.add(text_key)
+        deduped.append(rec)
+        dedup_source_counts[rec.get("source", "unknown")] += 1
 
     total_deduped = len(deduped)
     total_removed = total_raw - total_deduped

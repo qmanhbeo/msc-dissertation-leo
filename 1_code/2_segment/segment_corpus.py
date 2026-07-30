@@ -90,7 +90,7 @@ def _segment_shard_worker(task):
             except (json.JSONDecodeError, StopIteration):
                 pass
 
-    records = _load_jsonl(in_path)
+    records = _load_records(in_path)
     segments = segment_records(records, _WTOK, _WMAXLEN, text_field, id_field, prefix)
 
     tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
@@ -109,7 +109,13 @@ def _segment_shard_worker(task):
 MIN_WORDS = 20
 
 
-def _load_jsonl(path: Path) -> list[dict]:
+def _load_records(path: Path) -> list[dict]:
+    """Load records from JSONL or JSON array file."""
+    with path.open(encoding="utf-8") as f:
+        first_char = f.read(1)
+        f.seek(0)
+        if first_char == "[":
+            return json.load(f)
     records = []
     with path.open(encoding="utf-8") as f:
         for line in f:
@@ -180,8 +186,7 @@ def segment_records(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Segment a preprocessed corpus.")
-    parser.add_argument("--corpus", choices=["sdg_knowledge_hub", "aurora", "research",
-                                              "policy_scrape", "policy_manual", "ungdc_sdg", "sdgi"],
+    parser.add_argument("--corpus", choices=["reference", "policy", "research"],
                         help="Known corpus name; auto-derives input/output from model_utils (alternative to --input/--output).")
     parser.add_argument("--input", help="Single input JSONL path.")
     parser.add_argument("--output", help="Single output JSONL path (supports {model} placeholder).")
@@ -202,12 +207,8 @@ def main() -> None:
 
     if args.all_corpora:
         corpora = [
-            ("sdg_knowledge_hub", "sdg_knowledge_hub/sdg_knowledge_hub_clean.jsonl", "id", "kh"),
-            ("aurora", "aurora/aurora_texts.jsonl", "doi", "aurora"),
-            ("policy_scrape", "policy_all/policy_scrape/policy_scrape_clean.jsonl", "id", "pol_scrape"),
-            ("policy_manual", "policy_all/policy_manual/policy_manual_clean.jsonl", "id", "pol_manual"),
-            ("ungdc_sdg", "policy_all/ungdc_sdg/ungdc_sdg_clean.jsonl", "id", "ungdc"),
-            ("sdgi", "sdgi/sdgi_clean.jsonl", "id", "sdgi"),
+            ("reference", str(preprocessed_dir() / "reference.json"), "id", "ref"),
+            ("policy", str(preprocessed_dir() / "policy.json"), "id", "pol"),
         ]
         any_work = any(
             not (segmented_dir_for_model(args.embed_model) / f"{name}.jsonl").exists()
@@ -218,14 +219,14 @@ def main() -> None:
             return
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(args.embed_model)
-        for corpus_name, input_rel, id_field, prefix in corpora:
-            input_path = preprocessed_dir() / input_rel
+        for corpus_name, input_str, id_field, prefix in corpora:
+            input_path = Path(input_str)
             output_path = segmented_dir_for_model(args.embed_model) / f"{corpus_name}.jsonl"
             if output_path.exists() and not args.overwrite:
                 log.info("Skip %s — already exists", corpus_name)
                 continue
             log.info("Processing %s", corpus_name)
-            records = _load_jsonl(input_path)
+            records = _load_records(input_path)
             segments = segment_records(records, model.tokenizer, model.max_seq_length, "text", id_field, prefix)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open("w", encoding="utf-8") as f:
@@ -241,58 +242,22 @@ def main() -> None:
         args.text_field = "combined_text"
         args.id_field = "openalex_id"
         args.prefix = "paper"
-    elif args.corpus == "sdg_knowledge_hub":
+    elif args.corpus == "reference":
         if not args.input:
-            args.input = str(preprocessed_dir() / "sdg_knowledge_hub" / "sdg_knowledge_hub_clean.jsonl")
+            args.input = str(preprocessed_dir() / "reference.json")
         if not args.output:
-            args.output = str(segmented_dir_for_model(args.embed_model) / "sdg_knowledge_hub.jsonl")
+            args.output = str(segmented_dir_for_model(args.embed_model) / "reference.jsonl")
         if not args.prefix or args.prefix == "doc":
-            args.prefix = "kh"
+            args.prefix = "ref"
         if not args.id_field or args.id_field == "id":
             args.id_field = "id"
-    elif args.corpus == "aurora":
+    elif args.corpus == "policy":
         if not args.input:
-            args.input = str(preprocessed_dir() / "aurora" / "aurora_texts.jsonl")
+            args.input = str(preprocessed_dir() / "policy.json")
         if not args.output:
-            args.output = str(segmented_dir_for_model(args.embed_model) / "aurora.jsonl")
+            args.output = str(segmented_dir_for_model(args.embed_model) / "policy.jsonl")
         if not args.prefix or args.prefix == "doc":
-            args.prefix = "aurora"
-        if not args.id_field or args.id_field == "id":
-            args.id_field = "doi"
-    elif args.corpus == "policy_scrape":
-        if not args.input:
-            args.input = str(preprocessed_dir() / "policy_all" / "policy_scrape" / "policy_scrape_clean.jsonl")
-        if not args.output:
-            args.output = str(segmented_dir_for_model(args.embed_model) / "policy_scrape.jsonl")
-        if not args.prefix or args.prefix == "doc":
-            args.prefix = "pol_scrape"
-        if not args.id_field or args.id_field == "id":
-            args.id_field = "id"
-    elif args.corpus == "policy_manual":
-        if not args.input:
-            args.input = str(preprocessed_dir() / "policy_all" / "policy_manual" / "policy_manual_clean.jsonl")
-        if not args.output:
-            args.output = str(segmented_dir_for_model(args.embed_model) / "policy_manual.jsonl")
-        if not args.prefix or args.prefix == "doc":
-            args.prefix = "pol_manual"
-        if not args.id_field or args.id_field == "id":
-            args.id_field = "id"
-    elif args.corpus == "ungdc_sdg":
-        if not args.input:
-            args.input = str(preprocessed_dir() / "policy_all" / "ungdc_sdg" / "ungdc_sdg_clean.jsonl")
-        if not args.output:
-            args.output = str(segmented_dir_for_model(args.embed_model) / "ungdc_sdg.jsonl")
-        if not args.prefix or args.prefix == "doc":
-            args.prefix = "ungdc"
-        if not args.id_field or args.id_field == "id":
-            args.id_field = "id"
-    elif args.corpus == "sdgi":
-        if not args.input:
-            args.input = str(preprocessed_dir() / "sdgi" / "sdgi_clean.jsonl")
-        if not args.output:
-            args.output = str(segmented_dir_for_model(args.embed_model) / "sdgi.jsonl")
-        if not args.prefix or args.prefix == "doc":
-            args.prefix = "sdgi"
+            args.prefix = "pol"
         if not args.id_field or args.id_field == "id":
             args.id_field = "id"
 
@@ -366,7 +331,7 @@ def main() -> None:
             return
 
         log.info("Loading: %s", input_path)
-        records = _load_jsonl(input_path)
+        records = _load_records(input_path)
         segments = segment_records(records, model.tokenizer, model.max_seq_length, args.text_field, args.id_field, args.prefix, args.min_words)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)

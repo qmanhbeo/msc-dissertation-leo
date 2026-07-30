@@ -99,6 +99,7 @@ def transform(payload) -> dict | None:
         "text": text,
         "sdgs": active,
         "word_count": len(text.split()),
+        "source": "sdg_knowledge_hub",
     }
 
 

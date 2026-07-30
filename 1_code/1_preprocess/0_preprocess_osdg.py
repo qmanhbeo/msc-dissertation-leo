@@ -115,6 +115,7 @@ def transform(row: dict) -> dict | None:
         "sdgs": [int(row["sdg"])],
         "agreement": agreement,
         "word_count": len(text.split()),
+        "source": "osdg",
     }
 
 

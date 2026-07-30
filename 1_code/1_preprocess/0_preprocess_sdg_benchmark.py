@@ -109,6 +109,7 @@ def transform(row: dict) -> dict | None:
         "text": text,
         "sdgs": [int(row["sdg"])],
         "word_count": len(text.split()),
+        "source": "benchmark",
     }
 
 

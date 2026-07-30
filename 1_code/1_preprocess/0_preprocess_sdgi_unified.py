@@ -128,6 +128,7 @@ def transform(payload) -> dict | None:
         "year": year,
         "original_file": file_id,
         "country": country,
+        "source": "sdgi",
     }
 
 

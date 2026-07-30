@@ -4,9 +4,9 @@ Embed a single reference or policy corpus with per-batch incremental checkpointi
 Parameterized by corpus name — call once per source file.
 
 Usage:
-    python 1_code/3_embed/0_embed_reference_and_policy_corpora.py --corpus sdgi --batch-size 64
-    python 1_code/3_embed/0_embed_reference_and_policy_corpora.py --corpus policy_scrape --overwrite
-    python 1_code/3_embed/0_embed_reference_and_policy_corpora.py --corpus aurora --model all-MiniLM-L6-v2
+    python 1_code/3_embed/0_embed_reference_and_policy_corpora.py --corpus reference --batch-size 64
+    python 1_code/3_embed/0_embed_reference_and_policy_corpora.py --corpus policy --overwrite
+    python 1_code/3_embed/0_embed_reference_and_policy_corpora.py --corpus reference --model all-MiniLM-L6-v2
 
 Input paths resolved via model_utils helpers.
 Outputs per corpus:
@@ -33,56 +33,20 @@ if str(ANALYSIS_DIR) not in sys.path:
 
 from embed_utils import concatenate_batches, load_jsonl, write_batch_manifest
 from embed_loader import load_embedder
-from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, preprocessed_dir, segmented_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, embed_dir_for_model, segmented_dir_for_model, resolve_model_alias
 
 CORPUS_CONFIG = {
-    "osdg": {
-        "text_field": "text",
-        "id_field": "text_id",
-        "sdg_field": "sdgs",
-        "input_path": lambda model: preprocessed_dir() / "osdg" / "osdg_clean.jsonl",
-    },
-    "benchmark": {
-        "text_field": "text",
-        "id_field": "id",
-        "sdg_field": "sdgs",
-        "input_path": lambda model: preprocessed_dir() / "sdg_benchmark" / "benchmark_clean.jsonl",
-    },
-    "sdg_knowledge_hub": {
-        "text_field": "text",
-        "id_field": "id",
-        "sdg_field": "sdgs",
-        "input_path": lambda model: segmented_dir_for_model(model) / "sdg_knowledge_hub.jsonl",
-    },
-    "sdgi": {
+    "reference": {
         "text_field": "text",
         "id_field": "segment_id",
         "sdg_field": "sdgs",
-        "input_path": lambda model: segmented_dir_for_model(model) / "sdgi.jsonl",
+        "input_path": lambda model: segmented_dir_for_model(model) / "reference.jsonl",
     },
-    "aurora": {
-        "text_field": "text",
-        "id_field": "doi",
-        "sdg_field": "sdgs",
-        "input_path": lambda model: segmented_dir_for_model(model) / "aurora.jsonl",
-    },
-    "policy_scrape": {
+    "policy": {
         "text_field": "text",
         "id_field": "segment_id",
         "sdg_field": None,
-        "input_path": lambda model: segmented_dir_for_model(model) / "policy_scrape.jsonl",
-    },
-    "policy_manual": {
-        "text_field": "text",
-        "id_field": "segment_id",
-        "sdg_field": None,
-        "input_path": lambda model: segmented_dir_for_model(model) / "policy_manual.jsonl",
-    },
-    "ungdc_sdg": {
-        "text_field": "text",
-        "id_field": "segment_id",
-        "sdg_field": None,
-        "input_path": lambda model: segmented_dir_for_model(model) / "ungdc_sdg.jsonl",
+        "input_path": lambda model: segmented_dir_for_model(model) / "policy.jsonl",
     },
 }
 
@@ -200,6 +164,9 @@ def embed_corpus(
         if source_doc is None:
             source_doc = r.get(config["id_field"], "")
         entry["source_doc"] = source_doc
+        for extra_field in ("source_family", "source"):
+            if extra_field in r:
+                entry[extra_field] = r[extra_field]
         ids_meta.append(entry)
 
     dim = model.get_embedding_dimension()

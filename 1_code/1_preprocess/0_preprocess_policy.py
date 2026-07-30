@@ -125,6 +125,7 @@ def process_source(config: dict, reset: bool) -> None:
             "id": doc_name,
             "text": cleaned,
             "source_doc": doc_name,
+            "source": source_name,
         }
 
     resumable_records(
