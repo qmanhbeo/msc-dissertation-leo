@@ -68,8 +68,8 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from research_score_shards import aggregate_research_scores
-from shared_utils import ensure_canonical_outputs
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_NAMES, SDG_NUM_WORDS, scored_dir_for_model, resolve_model_alias
+from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_NAMES, SDG_NUM_WORDS, embed_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
 from semantic_gap_shared import latex_int
 
@@ -195,6 +195,7 @@ def parse_args() -> argparse.Namespace:
                    help="Override output data directory (default: canonical layout data_dir). Concept variant writes here.")
     p.add_argument("--out-tables-dir", default=None,
                    help="Override output tables directory (default: canonical layout tables_dir). Concept variant writes here.")
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -216,6 +217,17 @@ def run(args: argparse.Namespace) -> None:
     out_cov_gap_raw = Path(args.out_data_dir).joinpath("4_2_coverage_diagnostic_unweighted.json") if args.out_data_dir else layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = out_cov_gap
+    OUTPUTS = [out_cov_gap, out_cov_gap_raw]
+    fp = fingerprint_of(PAPER_SCORES_MANIFEST, POLICY_SCORES, POLICY_IDS,
+                        embed_dir_for_model(model) / "policy.npy",
+                        scored_dir / "research_centroids.npy")
+    fp += SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s — inputs unchanged", PRIMARY)
+        return
 
     # ---- Load scores ----
     log.info("Loading paper score shards: %s", PAPER_SCORES_MANIFEST)
@@ -462,6 +474,7 @@ def run(args: argparse.Namespace) -> None:
     ])
     (gen_dir / "tab_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_coverage.tex")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

@@ -65,10 +65,12 @@ def _load_module(rel_path: str):
     return mod
 
 
-def _run_step(rel_path: str, model: str, output_dir: Path) -> None:
+def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False) -> None:
     mod = _load_module(rel_path)
-    # Scripts parse argv via parse_args(); main() == run(parse_args()).
-    sys.argv = [str(ANALYSIS_ROOT / rel_path), "--embed-model", model, "--output-dir", str(output_dir)]
+    argv = [str(ANALYSIS_ROOT / rel_path), "--embed-model", model, "--output-dir", str(output_dir)]
+    if overwrite:
+        argv.append("--overwrite")
+    sys.argv = argv
     mod.main()
 
 
@@ -88,8 +90,8 @@ def run_analysis(
     """
     main_steps = [s for s in MAIN_STEPS if (not s[1] or model == DEFAULT_EMBED_MODEL)]
     for rel_path, _ in main_steps:
-        _run_step(rel_path, model, output_dir)
+        _run_step(rel_path, model, output_dir, overwrite=overwrite)
 
     if include_appendix:
         for rel_path, _ in APPENDIX_STEPS:
-            _run_step(rel_path, model, output_dir)
+            _run_step(rel_path, model, output_dir, overwrite=overwrite)

@@ -56,6 +56,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from alignment_core import verify_unit_norms
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
 import semantic_gap_shared
 from semantic_gap_shared import (
@@ -93,6 +94,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
     p.add_argument("--n-components", type=int, default=2,
                   help="Number of PCA components for the semantic landscape projection (default: %(default)s)")
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -188,6 +190,19 @@ def run(args: argparse.Namespace) -> None:
     figures_dir = out_root / "figures"
     for d in (data_dir, tables_dir, figures_dir):
         d.mkdir(parents=True, exist_ok=True)
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = data_dir / PCA_METADATA_JSON
+    OUTPUTS = [PRIMARY, figures_dir / "fig1_pca_semantic_landscape.pdf",
+               figures_dir / "fig1_pca_semantic_landscape.png",
+               tables_dir / PCA_NUM_TEX]
+    fp = fingerprint_of(_POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
+                        _RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
+                        embed_dir_for_model(args.embed_model) / "research_shards" / "metadata" / "manifest.json",
+                        scored_dir_for_model(args.embed_model) / "sdg_centroids.npy") + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
 
     rng = np.random.default_rng(args.seed)
 
@@ -439,6 +454,7 @@ def run(args: argparse.Namespace) -> None:
     write_num_tex(tables_dir / PCA_NUM_TEX, metadata)
     log.info("Saved: %s", metadata_path)
     log.info("Saved: %s", tables_dir / PCA_NUM_TEX)
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

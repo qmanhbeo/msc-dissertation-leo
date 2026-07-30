@@ -38,6 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 import semantic_gap_shared
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -85,6 +86,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run policy source-family sensitivity diagnostic.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -249,6 +251,16 @@ def run(args: argparse.Namespace) -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
+    SCRIPT_VERSION = "1"
+    PRIMARY = data_dir / SUMMARY_CSV
+    OUTPUTS = [PRIMARY, data_dir / COVERAGE_CSV, data_dir / SEMANTIC_CSV,
+               tables_dir / "tab_a2_policy_source_family_combined.tex"]
+    fp = fingerprint_of(_POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
+                        _RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
+
     source_family_map = build_source_family_map(args.embed_model)
 
     policy_scores = np.load(_POLICY_SCORES)
@@ -388,6 +400,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("Saved: %s", data_dir / COVERAGE_CSV)
     log.info("Saved: %s", data_dir / SEMANTIC_CSV)
     log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_combined.tex")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

@@ -24,6 +24,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 
 # ---------------------------------------------------------------------------
 # Coverage gap loaders
@@ -249,6 +250,22 @@ def run(args):
     out_dir = root / "appendix" / model / "h1_cross_method_gap_values" / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    SCRIPT_VERSION = "1"
+    PRIMARY = out_dir / "tab_app_cross_method_semgap.tex"
+    OUTPUTS = [PRIMARY, out_dir / "tab_app_cross_method_covgap.tex"]
+    fp_paths = []
+    for _, m, _ in ENCODERS:
+        fp_paths += [
+            output_main_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
+            output_main_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
+            output_main_dir_for_model(m, root=root) / "zeroshot" / "semantic_gap_distances.json",
+            scored_dir_for_model(m) / "mlp_scores" / "mlp_summary.json",
+        ]
+    fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        print(f"Skipping {PRIMARY} \u2014 inputs unchanged")
+        return
+
     # Coverage and semantic gaps
     cov_cols = {}
     for label, m, _ in ENCODERS:
@@ -321,6 +338,7 @@ def run(args):
             sem_rows, "{:.3f}", n_enc, has_concept,
             "Semantic gap (cosine)",
         )
+        record_fingerprint(OUTPUTS, fp, PRIMARY)
     else:
         print("WARNING: coverage or semantic gap data missing, skipping combined table")
 
@@ -329,6 +347,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    parser.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return parser.parse_args()
 
 

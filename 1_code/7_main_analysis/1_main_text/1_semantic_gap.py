@@ -78,8 +78,8 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 import semantic_gap_shared
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG, resolve_model_alias
-from shared_utils import ensure_canonical_outputs
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG, embed_dir_for_model, resolve_model_alias
+from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     SEGMENT_CAP_SENS_NONE,
@@ -119,6 +119,7 @@ def parse_args() -> argparse.Namespace:
                    help="Override output data directory (default: canonical layout data_dir). Concept variant writes here.")
     p.add_argument("--out-tables-dir", default=None,
                    help="Override output tables directory (default: canonical layout tables_dir). Concept variant writes here.")
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -141,6 +142,17 @@ def run(args: argparse.Namespace) -> None:
     out_sem_sens = Path(args.out_data_dir).joinpath("4_3_semantic_gap_robustness_caps.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = out_sem_gap
+    OUTPUTS = [out_sem_gap, out_sem_sens]
+    fp = fingerprint_of(_RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
+                        _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
+                        embed_dir_for_model(args.embed_model) / "policy.npy")
+    fp += SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
 
     # ---- Load research centroids/meta ----
     log.info("Loading research centroids: %s", _RESEARCH_CENTROIDS)
@@ -340,6 +352,7 @@ def run(args: argparse.Namespace) -> None:
     ])
     (gen_dir / "tab_semantic_gap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_semantic_gap.tex")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

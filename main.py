@@ -313,7 +313,7 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     )
 
 
-def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
     require_output_files(
         output_dir / "main" / "data",
@@ -326,24 +326,27 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> 
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c_sample_stability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("sample stability", cmd, step_id="C")
 
 
 
 
-def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("policy source-family sensitivity", cmd, step_id="A2")
 
 
-def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
 
 
@@ -351,24 +354,26 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
 
 
 
-def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     require_output_files(output_dir / "main" / model / "data", ["4_3_semantic_gap_distances.json"])
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("lexical illustration of the semantic gap", cmd, step_id="B2")
 
 
-def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/f_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("register-adjustment robustness", cmd, step_id="F")
 
 
-def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """Run the distributional semantic-gap robustness (main-result table, opt-in)."""
     require_output_files(
         output_dir / "main" / model / "data",
@@ -378,33 +383,35 @@ def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -
     cmd = [sys.executable, "1_code/7_main_analysis/1_main_text/g_distributional_gap.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("distributional semantic-gap metrics", cmd, step_id="G")
 
 
-def run_corpus_split_sizes(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_corpus_split_sizes(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """Export reference-corpus split-size macros to num_reference_split.tex."""
     import importlib.util
     script_path = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "c0_export_corpus_split_sizes.py"
     spec = importlib.util.spec_from_file_location("c0_export_corpus_split_sizes", script_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    mod.run(model, output_dir)
+    mod.run(model, output_dir, overwrite=overwrite)
 
 
-def run_model_selection_nums(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_model_selection_nums(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """Export grid-search CV macro-F1 values to num_model_selection.tex."""
     import importlib.util
     script_path = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "d1_export_model_selection_nums.py"
     spec = importlib.util.spec_from_file_location("d1_export_model_selection_nums", script_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    mod.run(model, output_dir)
+    mod.run(model, output_dir, overwrite=overwrite)
 
-def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     actual_output_dir = _appendix_output_dir(output_dir, model)
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
     run_step("cross-method gap values", cmd, step_id="H1")
 
 
@@ -866,50 +873,50 @@ def main() -> None:
         run_cold_replay(output_dir, args)
     elif args.appendix_all:
         model = args.embed_model
-        run_policy_source_family_sensitivity(output_dir, model=model)
-        run_sdg4_lexical_audit(output_dir, model=model)
-        run_semantic_gap_interpretability(output_dir, model=model)
-        run_sample_stability(output_dir, model=model)
-        run_register_adjustment(output_dir, model=model)
-        run_model_selection_nums(output_dir, model=model)
-        run_corpus_split_sizes(output_dir, model=model)
-        run_h1_cross_method_gap_values(output_dir, model=model)
+        run_policy_source_family_sensitivity(output_dir, model=model, overwrite=args.overwrite)
+        run_sdg4_lexical_audit(output_dir, model=model, overwrite=args.overwrite)
+        run_semantic_gap_interpretability(output_dir, model=model, overwrite=args.overwrite)
+        run_sample_stability(output_dir, model=model, overwrite=args.overwrite)
+        run_register_adjustment(output_dir, model=model, overwrite=args.overwrite)
+        run_model_selection_nums(output_dir, model=model, overwrite=args.overwrite)
+        run_corpus_split_sizes(output_dir, model=model, overwrite=args.overwrite)
+        run_h1_cross_method_gap_values(output_dir, model=model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a2_family:
-        run_policy_source_family_sensitivity(output_dir, model=args.embed_model)
+        run_policy_source_family_sensitivity(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a3_sdg4:
-        run_sdg4_lexical_audit(output_dir, model=args.embed_model)
+        run_sdg4_lexical_audit(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_b2_interpret:
-        run_semantic_gap_interpretability(output_dir, model=args.embed_model)
+        run_semantic_gap_interpretability(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_c_sample_stability:
-        run_sample_stability(output_dir, model=args.embed_model)
+        run_sample_stability(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_f_register:
-        run_register_adjustment(output_dir, model=args.embed_model)
+        run_register_adjustment(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_c0_corpus_split:
-        run_corpus_split_sizes(output_dir, model=args.embed_model)
+        run_corpus_split_sizes(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_d1_model_selection:
-        run_model_selection_nums(output_dir, model=args.embed_model)
+        run_model_selection_nums(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_h1_cross_method:
-        run_h1_cross_method_gap_values(output_dir, model=args.embed_model)
+        run_h1_cross_method_gap_values(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_g_distributional:
-        run_distributional_gap(output_dir, model=args.embed_model)
+        run_distributional_gap(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.warm_replay_without_appendix:

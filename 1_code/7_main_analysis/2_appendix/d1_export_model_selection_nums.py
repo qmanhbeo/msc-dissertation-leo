@@ -22,10 +22,10 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, model_results_dir_for_model, resolve_model_alias
-from shared_utils import ensure_canonical_outputs
+from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 
 
-def run(model: str, output_dir: Path) -> None:
+def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
     outs = ensure_canonical_outputs(output_dir, model=model)
     model_dir = model_results_dir_for_model(model) / "model"
 
@@ -34,6 +34,20 @@ def run(model: str, output_dir: Path) -> None:
     if not lr_path.exists():
         print(f"LR CV results not found at {lr_path}. Run 1_train_models_LR.py first.", file=sys.stderr)
         sys.exit(1)
+
+    gs_path = model_dir / "grid_search_log.json"
+    if not gs_path.exists():
+        print(f"Grid search log not found at {gs_path}. Run 1_train_models_MLP.py first.", file=sys.stderr)
+        sys.exit(1)
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = outs.tables_dir / "num_model_selection.tex"
+    OUTPUTS = [PRIMARY]
+    fp = fingerprint_of(lr_path, gs_path) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, overwrite, PRIMARY):
+        print(f"Skipping {PRIMARY} \u2014 inputs unchanged")
+        return
+
     with open(lr_path) as f:
         lr = json.load(f)
 
@@ -51,11 +65,6 @@ def run(model: str, output_dir: Path) -> None:
     lr_c1_mean = lr_c1["mean_f1"]
     lr_c1_std = lr_c1["std_f1"]
 
-    # --- MLP grid search ---
-    gs_path = model_dir / "grid_search_log.json"
-    if not gs_path.exists():
-        print(f"Grid search log not found at {gs_path}. Run 1_train_models_MLP.py first.", file=sys.stderr)
-        sys.exit(1)
     with open(gs_path) as f:
         gs = json.load(f)
 
@@ -112,18 +121,20 @@ def run(model: str, output_dir: Path) -> None:
     path = outs.tables_dir / "num_model_selection.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return parser.parse_args(argv)
 
 
 def main():
     args = parse_args()
-    run(args.embed_model, args.output_dir)
+    run(args.embed_model, args.output_dir, overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

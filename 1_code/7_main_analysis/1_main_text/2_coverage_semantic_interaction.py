@@ -70,7 +70,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from shared_utils import ensure_canonical_outputs, require_output_files
+from shared_utils import ensure_canonical_outputs, fingerprint_of, require_output_files, should_skip, record_fingerprint
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
 
@@ -153,6 +153,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compute H25 correlation outputs into the canonical output folder.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -173,6 +174,14 @@ def run(args: argparse.Namespace) -> None:
     out_scatter = layout.data_dir / "4_4_interaction_scatter_data.csv"
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = out_corr
+    OUTPUTS = [out_corr, out_scatter]
+    fp = fingerprint_of(coverage_gap_path, semantic_gap_path) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
 
     # ---- Load coverage data ----
     log.info("Loading coverage gap: %s", coverage_gap_path)
@@ -509,6 +518,7 @@ def run(args: argparse.Namespace) -> None:
     ])
     (gen_dir / "tab_interaction.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "tab_interaction.tex")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

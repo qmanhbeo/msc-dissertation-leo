@@ -90,11 +90,13 @@ from model_utils import (
     DEFAULT_EMBED_MODEL,
     DEFAULT_OUTPUT_ROOT,
     N_SDG,
+    embed_dir_for_model,
     embed_research_dir_for_model,
     output_main_dir_for_model,
     scored_dir_for_model,
     resolve_model_alias,
 )
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from research_embedding_shards import (
     ResearchShard,
     build_research_shards,
@@ -174,6 +176,7 @@ def parse_args() -> argparse.Namespace:
     # Dev-only smoke flag: comma-separated SDG numbers (e.g. "17"). The summary
     # is marked partial when set; never used in canonical runs.
     p.add_argument("--limit-sdgs", default=None, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -1183,6 +1186,21 @@ def run(args: argparse.Namespace) -> None:
         output_dir, subdir="main", model=model
     )
     records_path = layout.data_dir / "g_distributional_gap_records.jsonl"
+    summary_path = layout.data_dir / "g_distributional_gap_summary.json"
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = summary_path
+    OUTPUTS = [PRIMARY, records_path, layout.tables_dir / "num_distributional_gap.tex",
+               layout.tables_dir / "tab_distributional_gap.tex"]
+    fp = fingerprint_of(
+        manifest_path,
+        scored_dir / "paper_scores_shards" / "metadata" / "manifest.json",
+        embed_dir_for_model(model) / "policy.npy",
+        scored_dir / "policy_scores.npy",
+    ) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
 
     seeds = SAMPLE_SEEDS
     cfg = config_payload(model)
@@ -1265,6 +1283,7 @@ def run(args: argparse.Namespace) -> None:
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     write_tables(layout.tables_dir, summary)
     log.info("Saved distributional-gap outputs into %s", layout.root)
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

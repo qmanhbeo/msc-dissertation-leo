@@ -53,6 +53,7 @@ from model_utils import (
 )
 from shard_pipeline_utils import resolve_manifest_path
 import semantic_gap_shared
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
@@ -80,6 +81,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run register-adjustment sensitivity analysis.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -498,6 +500,25 @@ def run(args: argparse.Namespace) -> None:
             canonical["segment_cap"], SEGMENT_CAP_PRIMARY,
         )
 
+    SCRIPT_VERSION = "1"
+    out_root = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
+    tables_dir = out_root / "tables"
+    PRIMARY = tables_dir / "tab_register_adjusted_semgap.tex"
+    OUTPUTS = [PRIMARY, tables_dir / "num_register_adjustment.tex"]
+    fp = fingerprint_of(
+        canonical_semantic_path,
+        semantic_gap_shared.get_policy_emb(model),
+        semantic_gap_shared.get_policy_scores(model),
+        semantic_gap_shared.get_policy_ids(model),
+        semantic_gap_shared.get_research_centroids(model),
+        semantic_gap_shared.get_research_centroid_meta(model),
+        embed_dir_for_model(model) / "research_shards" / "metadata" / "manifest.json",
+        scored_dir_for_model(model) / "paper_scores_shards" / "metadata" / "manifest.json",
+    ) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
+
     # ------------------------------------------------------------------
     # 2. Load data using shared loaders
     # ------------------------------------------------------------------
@@ -747,6 +768,7 @@ def run(args: argparse.Namespace) -> None:
     ])
     (tables_dir / "tab_register_adjusted_semgap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", tables_dir / "tab_register_adjusted_semgap.tex")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

@@ -29,6 +29,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 from collections import defaultdict
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_results_dir_for_model, model_slug, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 
 SDG_NAMES = {
     1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
@@ -43,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    parser.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return parser.parse_args()
 
 # ---------------------------------------------------------------------------
@@ -963,6 +965,33 @@ def run(args: argparse.Namespace) -> None:
         lr_per_sdg[sdg_num] = v
     lr_macro = retrain["test_results"]["macro_f1"]
 
+    SCRIPT_VERSION = "1"
+    PRIMARY = OUT_MAIN / "tab_cross_sensitivity_robustness.tex"
+    OUTPUTS = [
+        OUT_MAIN / "num_validation.tex",
+        OUT_MAIN / "tab_validation.tex",
+        PRIMARY,
+        OUT_MAIN / "tab_cross_sensitivity_coverage.tex",
+        OUT_MAIN / "tab_concept_coverage.tex",
+        OUT_MAIN / "num_cross_sensitivity.tex",
+        OUT_MAIN / "num_concept_semantic.tex",
+        OUT_MAIN / "num_concept_coverage.tex",
+        OUT_MAIN / "num_cross_sensitivity_coverage.tex",
+        OUT_MAIN / "num_encoder_sensitivity_semantic.tex",
+        OUT_MAIN / "num_encoder_sensitivity_coverage.tex",
+    ]
+    fp_paths = [RETRAIN_JSON]
+    for m, _ in ENC_AXIS_ENCODERS:
+        fp_paths += [
+            output_main_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
+            output_main_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_robustness_caps.json",
+            output_main_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
+        ]
+    fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        print(f"Skipping {PRIMARY} \u2014 inputs unchanged")
+        return
+
     LR_GAP_PATH = output_main_dir_for_model(model, root=root) / "data" / "4_3_semantic_gap_distances.json"
     ZS_GAP_PATH = output_main_dir_for_model(model, root=root) / "zeroshot" / "semantic_gap_distances.json"
     CAP_PATH = output_main_dir_for_model(model, root=root) / "data" / "4_3_semantic_gap_robustness_caps.json"
@@ -977,6 +1006,7 @@ def run(args: argparse.Namespace) -> None:
     write_encoder_axis_semantic()
     write_encoder_axis_coverage()
     print("Cross-sensitivity table generation complete.")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

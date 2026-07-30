@@ -1,9 +1,60 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from model_utils import model_slug, output_main_dir_for_model
+
+log = logging.getLogger(__name__)
+
+
+def _file_fp(path: Path) -> str:
+    """Return a content-sensitive fingerprint for a single file (size + mtime + first 64KB)."""
+    if not path.exists():
+        return "missing"
+    st = path.stat()
+    h = hashlib.sha256()
+    h.update(str(st.st_size).encode())
+    h.update(str(st.st_mtime_ns).encode())
+    with path.open("rb") as f:
+        h.update(f.read(65536))
+    return h.hexdigest()
+
+
+def fingerprint_of(*paths: Path) -> str:
+    """Compute a combined fingerprint of one or more file paths."""
+    h = hashlib.sha256()
+    for p in paths:
+        h.update(_file_fp(p).encode())
+    return h.hexdigest()
+
+
+def _meta_path(primary: Path) -> Path:
+    return Path(str(primary) + ".opencode_fp.json")
+
+
+def should_skip(output_paths: list[Path], fp: str, overwrite: bool, primary: Path) -> bool:
+    """Return True iff outputs exist, fingerprint matches, and --overwrite is not set."""
+    if overwrite:
+        return False
+    if not all(p.exists() for p in output_paths):
+        return False
+    meta = _meta_path(primary)
+    if not meta.exists():
+        return False
+    try:
+        return json.loads(meta.read_text())["fingerprint"] == fp
+    except Exception:
+        return False
+
+
+def record_fingerprint(output_paths: list[Path], fp: str, primary: Path) -> None:
+    """Write the fingerprint sidecar next to *primary*."""
+    _meta_path(primary).write_text(json.dumps({"fingerprint": fp}, indent=2))
+    log.info("Fingerprint saved: %s", _meta_path(primary))
 
 
 @dataclass(frozen=True)

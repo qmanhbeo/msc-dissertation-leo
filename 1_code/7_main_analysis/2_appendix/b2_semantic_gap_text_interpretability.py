@@ -53,6 +53,7 @@ from semantic_gap_shared import (
 )
 from shard_pipeline_utils import iter_jsonl, resolve_manifest_path
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_model, embed_research_dir_for_model, model_slug, output_main_dir_for_model, scored_dir_for_model, open_text, preprocessed_dir, resolve_policy_text_path, resolve_research_text_path, resolve_model_alias
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 
 
 ALL_TARGET_SDGS = tuple(range(1, 18))
@@ -111,6 +112,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--sample-per-side", type=int, default=SAMPLE_PER_SIDE)
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -405,6 +407,19 @@ def run(args: argparse.Namespace) -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
+    SCRIPT_VERSION = "1"
+    PRIMARY = data_dir / SUMMARY_JSON
+    OUTPUTS = [PRIMARY, data_dir / TERMS_CSV, data_dir / EXAMPLES_CSV,
+               tables_dir / "tab_b2_semantic_gap_interpret_all.tex"]
+    fp = fingerprint_of(
+        embed_research_dir_for_model(args.embed_model) / "metadata" / "manifest.json",
+        scored_dir_for_model(args.embed_model) / "paper_scores_shards" / "metadata" / "manifest.json",
+        _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES, _RESEARCH_CENTROIDS,
+    ) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
+
     gaps = semantic_gap_map(output_main_dir_for_model(args.embed_model, root=Path(args.output_dir)) / "data")
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     policy_scores = np.load(_POLICY_SCORES).astype(np.float32)
@@ -490,6 +505,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("Saved: %s", data_dir / EXAMPLES_CSV)
     log.info("Saved: %s", data_dir / SUMMARY_JSON)
     log.info("Saved: %s", tables_dir / TABLE_TEX_FULL)
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

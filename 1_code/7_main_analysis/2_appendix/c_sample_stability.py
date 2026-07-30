@@ -40,7 +40,8 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, embed_research_dir_for_model, output_main_dir_for_model, scored_dir_for_model, resolve_model_alias
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 
 import semantic_gap_shared
 from shared_utils import ensure_dissertation_outputs, require_output_files
@@ -96,6 +97,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--cache-dir", default=None)
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -801,6 +803,22 @@ def run(args: argparse.Namespace) -> None:
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
+    SCRIPT_VERSION = "1"
+    PRIMARY = layout.data_dir / "c_sample_stability_summary.json"
+    OUTPUTS = [PRIMARY, layout.data_dir / "c_sample_stability_draws.jsonl",
+               layout.data_dir / "c_sample_stability_per_sdg.json",
+               layout.data_dir / "c_sample_stability_table.csv",
+               layout.tables_dir / "num_sample_stability.tex",
+               layout.tables_dir / "tab_sample_stability.tex"]
+    fp = fingerprint_of(
+        scored_dir / "paper_scores_shards" / "metadata" / "manifest.json",
+        embed_dir / "metadata" / "manifest.json",
+        _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
+    ) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
+
     expected_sig = _compute_cache_signature(scored_dir, embed_dir)
     manifest_path = cache_root / "manifest.json"
     try:
@@ -880,6 +898,7 @@ def run(args: argparse.Namespace) -> None:
         total_rows=total_rows,
     )
     log.info("Saved sample-stability outputs into %s", layout.data_dir)
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

@@ -33,6 +33,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, RANDOM_SEED, embed_research_dir_for_model, scored_dir_for_model, open_text, resolve_research_text_path, resolve_model_alias
+from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import latex_escape, write_csv
 from shard_pipeline_utils import iter_jsonl, load_json
 
@@ -92,6 +93,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--seed", type=int, default=RANDOM_SEED)
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
 
@@ -264,6 +266,17 @@ def run(args: argparse.Namespace) -> None:
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
+    SCRIPT_VERSION = "1"
+    PRIMARY = data_dir / AUDIT_JSON
+    OUTPUTS = [PRIMARY, data_dir / AUDIT_CSV, tables_dir / TABLE_TEX]
+    fp = fingerprint_of(
+        scored_dir_for_model(args.embed_model) / "paper_scores_shards" / "metadata" / "manifest.json",
+        embed_research_dir_for_model(args.embed_model) / "metadata" / "manifest.json",
+    ) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
+        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        return
+
     scored_dir = scored_dir_for_model(args.embed_model)
     research_dir = embed_research_dir_for_model(args.embed_model)
     score_manifest = load_json(scored_dir / "paper_scores_shards" / "metadata" / "manifest.json")
@@ -337,6 +350,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("Saved: %s", data_dir / AUDIT_CSV)
     log.info("Saved: %s", data_dir / AUDIT_JSON)
     log.info("Saved: %s", tables_dir / TABLE_TEX)
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def main() -> None:

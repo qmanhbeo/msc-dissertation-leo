@@ -22,7 +22,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, model_results_dir_for_model, resolve_model_alias
-from shared_utils import ensure_canonical_outputs
+from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 
 
 def latex_int(value: int) -> str:
@@ -31,7 +31,7 @@ def latex_int(value: int) -> str:
     return s.replace(",", "{,}")
 
 
-def run(model: str, output_dir: Path) -> None:
+def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
     outs = ensure_canonical_outputs(output_dir, model=model)
     model_dir = model_results_dir_for_model(model) / "model"
 
@@ -43,6 +43,14 @@ def run(model: str, output_dir: Path) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+
+    SCRIPT_VERSION = "1"
+    PRIMARY = outs.tables_dir / "num_reference_split.tex"
+    OUTPUTS = [PRIMARY]
+    fp = fingerprint_of(retrain_path) + SCRIPT_VERSION
+    if should_skip(OUTPUTS, fp, overwrite, PRIMARY):
+        print(f"Skipping {PRIMARY} \u2014 inputs unchanged")
+        return
 
     with open(retrain_path) as f:
         data = json.load(f)
@@ -62,18 +70,20 @@ def run(model: str, output_dir: Path) -> None:
     path = outs.tables_dir / "num_reference_split.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
+    record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return parser.parse_args(argv)
 
 
 def main():
     args = parse_args()
-    run(args.embed_model, args.output_dir)
+    run(args.embed_model, args.output_dir, overwrite=args.overwrite)
 
 
 if __name__ == "__main__":
