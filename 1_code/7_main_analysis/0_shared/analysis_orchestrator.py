@@ -40,6 +40,7 @@ APPENDIX_STEPS = [
     ("2_appendix/a3_sdg4_lexical_audit.py", False),
     ("2_appendix/b2_semantic_gap_text_interpretability.py", False),
     ("2_appendix/c_sample_stability.py", False),
+    ("2_appendix/c1_subset_balanced_stability.py", False),
     ("2_appendix/c0_export_corpus_split_sizes.py", False),
     ("2_appendix/d1_export_model_selection_nums.py", False),
     ("2_appendix/f_register_adjustment.py", False),

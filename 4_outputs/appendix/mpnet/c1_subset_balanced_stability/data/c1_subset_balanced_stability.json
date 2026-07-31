@@ -1,0 +1,128 @@
+{
+  "method": "subset_balanced_rank_stability",
+  "note": "Spearman rho between each sample-stability draw's within-SDG semantic-gap ranking and the full-corpus ranking (4_3_semantic_gap_distances.json). The 50k tier is comparable to the 40,597-segment policy corpus.",
+  "full_corpus_mean_semantic_gap": 0.35242935294117644,
+  "tiers": [
+    {
+      "tier_label": "1k",
+      "sample_size": 1000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.6497254901960784,
+      "std_rho": 0.12902661641372953,
+      "min_rho": 0.3137254901960785,
+      "max_rho": 0.8897058823529412
+    },
+    {
+      "tier_label": "2k",
+      "sample_size": 2000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.8026960784313725,
+      "std_rho": 0.09473380063877886,
+      "min_rho": 0.44852941176470595,
+      "max_rho": 0.9509803921568628
+    },
+    {
+      "tier_label": "5k",
+      "sample_size": 5000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9112990196078432,
+      "std_rho": 0.04121102512541681,
+      "min_rho": 0.7696078431372549,
+      "max_rho": 0.9730392156862747
+    },
+    {
+      "tier_label": "10k",
+      "sample_size": 10000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9506862745098041,
+      "std_rho": 0.027200979950459194,
+      "min_rho": 0.8112745098039217,
+      "max_rho": 0.9901960784313727
+    },
+    {
+      "tier_label": "20k",
+      "sample_size": 20000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9683088235294118,
+      "std_rho": 0.014029609588772581,
+      "min_rho": 0.931372549019608,
+      "max_rho": 0.9926470588235295
+    },
+    {
+      "tier_label": "50k",
+      "sample_size": 50000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9828431372549022,
+      "std_rho": 0.009473602004944938,
+      "min_rho": 0.9509803921568628,
+      "max_rho": 1.0
+    },
+    {
+      "tier_label": "100k",
+      "sample_size": 100000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9888480392156864,
+      "std_rho": 0.006534287983709921,
+      "min_rho": 0.9632352941176472,
+      "max_rho": 1.0
+    },
+    {
+      "tier_label": "200k",
+      "sample_size": 200000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9943627450980395,
+      "std_rho": 0.004604974075503875,
+      "min_rho": 0.9779411764705883,
+      "max_rho": 1.0
+    },
+    {
+      "tier_label": "500k",
+      "sample_size": 500000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9980882352941179,
+      "std_rho": 0.0019478741653240425,
+      "min_rho": 0.9926470588235295,
+      "max_rho": 1.0
+    },
+    {
+      "tier_label": "1m",
+      "sample_size": 1000000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9993137254901961,
+      "std_rho": 0.0012535992012298065,
+      "min_rho": 0.9950980392156863,
+      "max_rho": 1.0
+    },
+    {
+      "tier_label": "2m",
+      "sample_size": 2000000,
+      "n_draws": 100,
+      "n_usable_draws": 100,
+      "n_sdgs_used_median": 17.0,
+      "mean_rho": 0.9999264705882354,
+      "std_rho": 0.00041810593404978304,
+      "min_rho": 0.9975490196078433,
+      "max_rho": 1.0
+    }
+  ]
+}

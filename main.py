@@ -123,6 +123,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
+    p.add_argument("--appendix-c1-balanced-subset", action="store_true", help="Run C.1 Balanced-Subset Rank-Stability (consumes C sample-stability draws; appendix).")
     p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
     p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
     p.add_argument("--appendix-i1-assignment-method", action="store_true", help="Run I.1 Supervised vs Nearest-Centroid Assignment Comparison.")
@@ -213,6 +214,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_h1_cross_method,
             args.appendix_i1_assignment_method,
             args.appendix_c_sample_stability,
+            args.appendix_c1_balanced_subset,
             args.appendix_g_distributional,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
@@ -324,6 +326,17 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, ove
         cmd += ["--embed-model", model]
     cmd += _overwrite_flag(overwrite)
     run_step("sample stability", cmd, step_id="C")
+
+
+def run_subset_balanced_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
+    """C.1: rank-stability of the within-SDG semantic-gap ranking at balanced
+    research-subset sizes (consumes c_sample_stability draws + canonical 4_3)."""
+    _warn_non_default_model(model, "Balanced-subset rank stability (Appendix C.1)")
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c1_subset_balanced_stability.py", "--output-dir", str(output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
+    run_step("balanced-subset rank stability", cmd, step_id="C1")
 
 
 
@@ -1052,6 +1065,7 @@ def main() -> None:
         or args.appendix_a3_sdg4
         or args.appendix_b2_interpret
         or args.appendix_c_sample_stability
+        or args.appendix_c1_balanced_subset
         or args.appendix_c0_corpus_split
         or args.appendix_f_register
         or args.appendix_d1_model_selection
@@ -1078,6 +1092,7 @@ def main() -> None:
         run_sdg4_lexical_audit(output_dir, model=model, overwrite=args.overwrite)
         run_semantic_gap_interpretability(output_dir, model=model, overwrite=args.overwrite)
         run_sample_stability(output_dir, model=model, overwrite=args.overwrite)
+        run_subset_balanced_stability(output_dir, model=model, overwrite=args.overwrite)
         run_register_adjustment(output_dir, model=model, overwrite=args.overwrite)
         run_model_selection_nums(output_dir, model=model, overwrite=args.overwrite)
         run_corpus_split_sizes(output_dir, model=model, overwrite=args.overwrite)
@@ -1099,6 +1114,10 @@ def main() -> None:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_c_sample_stability:
         run_sample_stability(output_dir, model=args.embed_model, overwrite=args.overwrite)
+        if args.build_pdf:
+            build_pdf(output_dir, model=args.embed_model)
+    elif args.appendix_c1_balanced_subset:
+        run_subset_balanced_stability(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_f_register:
