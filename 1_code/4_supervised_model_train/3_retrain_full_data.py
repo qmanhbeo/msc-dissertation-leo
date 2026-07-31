@@ -36,6 +36,7 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GroupKFold
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
 if str(CODE_ROOT) not in sys.path:
@@ -55,6 +56,22 @@ LR_C = 10.0
 LR_PENALTY = "l2"
 LR_SOLVER = "lbfgs"
 LR_MAX_ITER = 1000
+
+# Champion MLP hyperparameters as selected by the manual grid-search CV
+# (grid_search_log.json, 2026-07-25): 4 layers / 384 hidden / lr=3e-4 / wd=0 /
+# dropout=0.3, CV macro-F1 0.8243. NOTE: the retrained MLP artifact
+# (mlp_retrained.joblib + model_config.json) was built with lr=1e-3 (script
+# argparse defaults), NOT this champion — a known discrepancy with the
+# dissertation text, which cites lr=3e-4. --cv-full-data uses the true champion.
+MLP_CHAMPION_CONFIG = {
+    "n_layers": 4,
+    "hidden_size": 384,
+    "lr": 3e-4,
+    "weight_decay": 0.0,
+    "dropout": 0.3,
+}
+
+CV_N_SPLITS = 5
 
 
 class MultiLabelMLP(nn.Module):
@@ -90,6 +107,199 @@ class _NetWrapper:
         return self.predict_proba(X).argmax(axis=1).astype(np.float32)
 
 
+def _cv_mlp_fold(
+    X_tr: np.ndarray,
+    Y_tr: np.ndarray,
+    X_val: np.ndarray,
+    Y_val: np.ndarray,
+    cfg: dict,
+) -> tuple[float, list[float], float, int]:
+    """Train an MLP on the fold-train portion with an internal 90/10 early-stop
+    split, then evaluate the best-epoch state on the fold's held-out portion.
+
+    Mirrors the canonical MLP training loop (stage 1 only) so the canonical
+    retrain path is not refactored. Returns
+    (macro_f1, per_sdg_f1, best_internal_val_f1, best_epoch).
+    """
+    import torch.optim as optim
+    from torch.utils.data import DataLoader, TensorDataset
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.manual_seed(RANDOM_SEED)
+    torch.backends.cudnn.deterministic = True
+    torch.use_deterministic_algorithms(True)
+
+    input_dim = X_tr.shape[1]
+    net = MultiLabelMLP(input_dim, cfg["n_layers"], cfg["hidden_size"], cfg["dropout"]).to(device)
+    criterion = nn.BCEWithLogitsLoss()
+    optimizer = optim.AdamW(net.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"])
+
+    X_t = torch.from_numpy(X_tr.astype(np.float32))
+    Y_t = torch.from_numpy(Y_tr.astype(np.float32))
+
+    n_val = max(1, int(len(X_t) * 0.1))
+    perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(RANDOM_SEED))
+    val_idx = perm[:n_val]
+    tr_idx = perm[n_val:]
+
+    train_ds = TensorDataset(X_t[tr_idx].to(device), Y_t[tr_idx].to(device))
+    val_ds = TensorDataset(X_t[val_idx].to(device), Y_t[val_idx].to(device))
+    _seed_loader = torch.Generator().manual_seed(RANDOM_SEED)
+    train_loader = DataLoader(train_ds, batch_size=256, shuffle=True, generator=_seed_loader)
+    val_loader = DataLoader(val_ds, batch_size=512)
+
+    best_val_f1 = -1.0
+    patience_counter = 0
+    best_epoch = 0
+    best_state = None
+
+    for epoch in range(100):
+        net.train()
+        for batch_X, batch_y in train_loader:
+            optimizer.zero_grad()
+            loss = criterion(net(batch_X), batch_y)
+            loss.backward()
+            optimizer.step()
+
+        net.eval()
+        all_preds, all_true = [], []
+        with torch.no_grad():
+            for batch_X, batch_y in val_loader:
+                all_preds.append(torch.sigmoid(net(batch_X)).cpu().numpy())
+                all_true.append(batch_y.cpu().numpy())
+
+        val_preds = np.vstack(all_preds)
+        val_true = np.vstack(all_true)
+        val_pred_int = val_preds.argmax(axis=1)
+        val_pred_bin = np.zeros_like(val_preds)
+        val_pred_bin[np.arange(len(val_pred_int)), val_pred_int] = 1.0
+        val_f1 = f1_score(val_true, val_pred_bin, average="macro", zero_division=0)
+
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
+            best_epoch = epoch + 1
+            patience_counter = 0
+            best_state = {k: v.cpu().clone() for k, v in net.state_dict().items()}
+        else:
+            patience_counter += 1
+            if patience_counter >= 7:
+                break
+
+    net.load_state_dict(best_state)
+    net.eval()
+    X_val_t = torch.from_numpy(X_val.astype(np.float32)).to(device)
+    with torch.no_grad():
+        val_probs = torch.sigmoid(net(X_val_t)).cpu().numpy()
+    val_pred_int = val_probs.argmax(axis=1)
+    val_preds = np.zeros_like(val_probs)
+    val_preds[np.arange(len(val_pred_int)), val_pred_int] = 1.0
+
+    macro = float(f1_score(Y_val, val_preds, average="macro", zero_division=0))
+    per_sdg = f1_score(Y_val, val_preds, average=None, zero_division=0).tolist()
+    return macro, per_sdg, float(best_val_f1), best_epoch
+
+
+def run_cv_full_data(data_dir: Path, classifier_type: str) -> None:
+    """EXPLORATORY (manual only): GroupKFold CV on 100% of labelled data with
+    the grid-search champion hyperparameters.
+
+    Unlike the canonical path, which trains on indices/train.npy (85%) and
+    evaluates once on indices/test.npy (15%), this uses ALL rows (train+test)
+    in document-grouped K-fold CV and reports the mean macro-F1. It writes
+    cv_full_data_results.json and saves/overwrites NO model artifacts.
+    """
+    embeddings = np.load(data_dir / "embeddings.npy")
+    labels = np.load(data_dir / "labels.npy")
+
+    sd_path = data_dir / "source_docs.npy"
+    if sd_path.exists():
+        groups = np.load(sd_path)
+        log.info("Document-grouped CV (%s): %d unique groups, %d rows",
+                 sd_path.name, len(np.unique(groups)), len(embeddings))
+    else:
+        groups = None
+        log.warning("source_docs.npy not found — falling back to ungrouped folds")
+
+    if classifier_type == "mlp":
+        cfg = dict(MLP_CHAMPION_CONFIG)
+    else:
+        cfg = {"C": LR_C, "penalty": LR_PENALTY, "solver": LR_SOLVER,
+               "class_weight": None, "max_iter": LR_MAX_ITER}
+
+    cv = GroupKFold(n_splits=CV_N_SPLITS)
+    fold_scores: list[float] = []
+    fold_per_sdg: list[list[float]] = []
+    fold_n_train: list[int] = []
+    fold_n_val: list[int] = []
+
+    t0 = time.perf_counter()
+    for fold, (tr_i, va_i) in enumerate(cv.split(embeddings, groups=groups)):
+        if classifier_type == "mlp":
+            macro, per_sdg, internal_val_f1, best_epoch = _cv_mlp_fold(
+                embeddings[tr_i], labels[tr_i], embeddings[va_i], labels[va_i], cfg,
+            )
+            log.info("  Fold %d/%d: macro-F1=%.4f (internal val %.4f @ epoch %d)",
+                     fold + 1, CV_N_SPLITS, macro, internal_val_f1, best_epoch)
+        else:
+            y_int_train = labels[tr_i].argmax(axis=1)
+            clf = LogisticRegression(
+                C=cfg["C"], penalty=cfg["penalty"], solver=cfg["solver"],
+                class_weight=cfg["class_weight"], max_iter=cfg["max_iter"],
+                random_state=RANDOM_SEED,
+            )
+            clf.fit(embeddings[tr_i], y_int_train)
+            preds_int = clf.predict(embeddings[va_i])
+            preds = np.zeros((len(preds_int), N_SDG), dtype=np.float32)
+            preds[np.arange(len(preds_int)), preds_int] = 1.0
+            macro = float(f1_score(labels[va_i], preds, average="macro", zero_division=0))
+            per_sdg = f1_score(labels[va_i], preds, average=None, zero_division=0).tolist()
+            log.info("  Fold %d/%d: macro-F1=%.4f", fold + 1, CV_N_SPLITS, macro)
+
+        fold_scores.append(macro)
+        fold_per_sdg.append(per_sdg)
+        fold_n_train.append(len(tr_i))
+        fold_n_val.append(len(va_i))
+
+    mean_f1 = float(np.mean(fold_scores))
+    std_f1 = float(np.std(fold_scores))
+    mean_per_sdg = [float(np.mean([f[c] for f in fold_per_sdg])) for c in range(N_SDG)]
+
+    results = {
+        "mode": "cv_full_data",
+        "classifier_type": classifier_type,
+        "config": cfg,
+        "cv": {
+            "n_splits": CV_N_SPLITS,
+            "grouped": groups is not None,
+            "groups_key": "source_doc" if groups is not None else None,
+            "seed": RANDOM_SEED,
+        },
+        "data": {"n_total": len(embeddings), "input_dim": embeddings.shape[1]},
+        "mean_macro_f1": round(mean_f1, 6),
+        "std_macro_f1": round(std_f1, 6),
+        "per_fold_macro_f1": [round(f, 6) for f in fold_scores],
+        "per_fold_n_train": fold_n_train,
+        "per_fold_n_val": fold_n_val,
+        "mean_per_sdg_f1": {f"SDG_{i+1}": round(mean_per_sdg[i], 6) for i in range(N_SDG)},
+        "elapsed_seconds": round(time.perf_counter() - t0, 1),
+    }
+
+    out_dir = data_dir / "model"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "cv_full_data_results.json"
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2, ensure_ascii=False)
+
+    print(f"\n{'='*70}")
+    print(f"  CV ON 100% OF LABELLED DATA — {classifier_type.upper()} "
+          f"(n={len(embeddings)}, GroupKFold({CV_N_SPLITS}), grouped={groups is not None})")
+    print(f"  Champion config: {cfg}")
+    print(f"  Mean macro-F1: {mean_f1:.4f} ± {std_f1:.4f}")
+    print(f"  Per-fold: {[f'{f:.4f}' for f in fold_scores]}")
+    print(f"{'='*70}")
+    log.info("Saved → %s", out_path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Retrain champion MLP on full train pool.")
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
@@ -122,11 +332,21 @@ def main() -> None:
                         help="LogisticRegression max iterations (default: %(default)s)")
     parser.add_argument("--overwrite", action="store_true",
                         help="Force retrain even if a previously trained model exists.")
+    parser.add_argument("--cv-full-data", action="store_true",
+                        help="EXPLORATORY (manual only): run GroupKFold CV on 100% of labelled data "
+                             "with the grid-search champion hyperparameters (LR: C=10/l2/lbfgs; "
+                             "MLP: 4/384/lr=3e-4). Writes cv_full_data_results.json and exits — does "
+                             "NOT retrain, save, or overwrite any model artifact. Not part of the "
+                             "main pipeline; not invoked by main.py.")
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir) if args.data_dir else model_results_dir_for_model(args.embed_model)
     output_dir = data_dir / "model"
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.cv_full_data:
+        run_cv_full_data(data_dir, args.classifier_type)
+        return
 
     if not args.overwrite:
         model_name = "mlp_retrained.joblib" if args.classifier_type == "mlp" else "sdg_classifier_retrained.joblib"
