@@ -74,6 +74,12 @@ DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
 ALL_EMBED_CORPORA = ["reference", "policy"]
 
+COLD_REPLAY_MODELS = (
+    CANONICAL_SEGMENT_MODEL,
+    "all-MiniLM-L6-v2",
+    "allenai/scibert_scivocab_uncased",
+)
+
 
 def base_warm_replay_requirements(model: str = "") -> list[Path]:
     embed_root = embed_dir_for_model(model)
@@ -112,7 +118,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, F, H.1) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C0, D1, F, H.1) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
@@ -187,10 +193,6 @@ def rel(path: Path) -> str:
         return str(path.relative_to(ROOT))
     except ValueError:
         return str(path)
-
-
-def _appendix_output_dir(base_output_dir: Path, model: str) -> Path:
-    return base_output_dir
 
 
 def action_requested(args: argparse.Namespace) -> bool:
@@ -306,7 +308,7 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
 
 def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "Sample-stability robustness (Appendix C)")
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     require_output_files(
         output_dir_for_model(model, root=output_dir) / "data",
         [
@@ -326,7 +328,7 @@ def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, ove
 
 def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "Policy source-family sensitivity (Appendix A.2)")
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
@@ -336,7 +338,7 @@ def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_
 
 def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "SDG-4 lexical artefact audit (Appendix A.3)")
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
@@ -351,7 +353,7 @@ def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, o
 def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "Semantic-gap interpretability (Appendix B.2)")
     require_output_files(output_dir_for_model(model, root=output_dir) / "data", ["4_3_semantic_gap_distances.json"])
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
@@ -361,7 +363,7 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
 
 def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "Register-adjustment robustness (Appendix F)")
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/f_register_adjustment.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
@@ -376,7 +378,7 @@ def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, o
         output_dir_for_model(model, root=output_dir) / "data",
         ["4_3_semantic_gap_distances.json"],
     )
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     cmd = [sys.executable, "1_code/7_main_analysis/1_main_text/g_distributional_gap.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
@@ -387,27 +389,25 @@ def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, o
 def run_corpus_split_sizes(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """Export reference-corpus split-size macros to num_reference_split.tex."""
     _warn_non_default_model(model, "Corpus split macro export (Appendix C.0)")
-    import importlib.util
-    script_path = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "c0_export_corpus_split_sizes.py"
-    spec = importlib.util.spec_from_file_location("c0_export_corpus_split_sizes", script_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    mod.run(model, output_dir, overwrite=overwrite)
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c0_export_corpus_split_sizes.py", "--output-dir", str(output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
+    run_step("corpus split macro export", cmd, step_id="C0")
 
 
 def run_model_selection_nums(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """Export grid-search CV macro-F1 values to num_model_selection.tex."""
     _warn_non_default_model(model, "Model-selection macro export (Appendix D.1)")
-    import importlib.util
-    script_path = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "d1_export_model_selection_nums.py"
-    spec = importlib.util.spec_from_file_location("d1_export_model_selection_nums", script_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    mod.run(model, output_dir, overwrite=overwrite)
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py", "--output-dir", str(output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
+    run_step("model-selection macro export", cmd, step_id="D1")
 
 def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     _warn_non_default_model(model, "Cross-method gap values (Appendix H.1)")
-    actual_output_dir = _appendix_output_dir(output_dir, model)
+    actual_output_dir = output_dir
     cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py", "--output-dir", str(actual_output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
@@ -508,11 +508,58 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
          "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(overwrite),
         step_id="5",
     )
+    # Concept-retrieval robustness (MPNet only): score the concept-retrieved
+    # research corpus with all three assignment methods (LR/MLP/ZS), feeding the
+    # Retrieval column of the cross-sensitivity tables (step 6).
+    if model == DEFAULT_EMBED_MODEL:
+        concept_embed_dir = embed_dir_for_model(model) / "research_concept"
+        concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
+        concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
+        concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
+        concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
+        run_step("score concept research corpus (LR)", [
+            sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+            "--embed-model", model, "--classifier", "lr", "--corpus", "research",
+            "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+            "--out-dir", str(concept_scores_dir),
+            "--metadata-dir", str(concept_scores_dir / "metadata"),
+            "--research-centroids-out", str(concept_centroids),
+            "--research-meta-out", str(concept_centroids_meta),
+        ] + _overwrite_flag(overwrite))
+        run_step("score concept research corpus (MLP)", [
+            sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+            "--embed-model", model, "--classifier", "mlp",
+            "--corpus", "research_concept",
+        ] + _overwrite_flag(overwrite))
+        run_step("zero-shot concept research corpus", [
+            sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+            "--embed-model", model,
+            "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+            "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
+            "--data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
     # Main-text analyses, driven in-process by the orchestrator. Each analysis
     # reads the 27 research embedding/score shards directly (shard-native, mmap);
     # no consolidated array is built or cached.
     # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+    # Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
+    # concept-retrieved corpus must run BEFORE the cross-sensitivity table,
+    # which consumes data/concept/4_2_* + 4_3_* for its Retrieval column.
+    if model == DEFAULT_EMBED_MODEL:
+        run_step("coverage gap (concept corpus)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
+        run_step("semantic gap (concept corpus)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--research-centroids", str(concept_centroids),
+            "--research-centroid-meta", str(concept_centroids_meta),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
     # Cross-sensitivity table (default model only — for MiniLM/SciBERT the
     # canonical table is regenerated after the cold-replay model loop from all
     # three encoders' data).
@@ -538,6 +585,26 @@ def _run_analysis_only(output_dir: Path, model: str, *,
     """
     _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+    # Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
+    # concept-retrieved corpus, before the cross-sensitivity table (step 6).
+    if model == DEFAULT_EMBED_MODEL:
+        concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
+        concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
+        concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
+        concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
+        run_step("coverage gap (concept corpus)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
+        run_step("semantic gap (concept corpus)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--research-centroids", str(concept_centroids),
+            "--research-centroid-meta", str(concept_centroids_meta),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
     if model == DEFAULT_EMBED_MODEL:
         run_step("generate cross-sensitivity table",
                  [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
@@ -577,65 +644,6 @@ def run_warm_replay(
     )
 
 
-def _run_concept_robustness(output_dir: Path, model: str, args: argparse.Namespace) -> None:
-    """Embed → score (LR + MLP + ZS) → coverage gap → semantic gap for the concept-retrieval corpus."""
-    concept_embed_dir = embed_dir_for_model(model) / "research_concept"
-    concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
-    concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
-    concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
-    concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
-
-    run_step("embed concept research corpus", [
-        sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-        "--corpus", "research_concept",
-        "--embed-model", model,
-"--device", args.device,
-         "--local-files-only",
-         "--precision", args.precision, "--normalize-embeddings",
-     ] + _overwrite_flag(args.overwrite))
-
-    run_step("score concept research corpus (LR)", [
-        sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-        "--embed-model", model, "--classifier", "lr", "--corpus", "research",
-        "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
-        "--out-dir", str(concept_scores_dir),
-        "--metadata-dir", str(concept_scores_dir / "metadata"),
-        "--research-centroids-out", str(concept_centroids),
-        "--research-meta-out", str(concept_centroids_meta),
-    ] + _overwrite_flag(args.overwrite))
-
-    run_step("coverage gap (concept corpus)", [
-        sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
-        "--output-dir", str(output_dir), "--embed-model", model,
-        "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
-        "--out-data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(args.overwrite))
-
-    run_step("semantic gap (concept corpus)", [
-        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
-        "--output-dir", str(output_dir), "--embed-model", model,
-        "--research-centroids", str(concept_centroids),
-        "--research-centroid-meta", str(concept_centroids_meta),
-        "--out-data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(args.overwrite))
-
-    # MLP + ZS concept scoring for 3-way Retrieval column (LR/MLP/ZS)
-    run_step("score concept research corpus (MLP)", [
-        sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-        "--embed-model", model, "--classifier", "mlp",
-        "--corpus", "research_concept",
-    ] + _overwrite_flag(args.overwrite))
-
-    concept_zs_npy = scored_dir_for_model(model) / "zeroshot_concept"
-    run_step("zero-shot concept research corpus", [
-        sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
-        "--embed-model", model,
-        "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
-        "--out-dir", str(concept_zs_npy),
-        "--data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(args.overwrite))
-
-
 def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     print("NOTE: --cold-replay rebuilds MPNet + MiniLM + SciBERT from the raw snapshot (frozen data) in ONE run.")
     print("      It is deterministic and reproducible; no OpenAlex credentials needed when the raw snapshot is hydrated.")
@@ -653,11 +661,6 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
-    COLD_REPLAY_MODELS = (
-        CANONICAL_SEGMENT_MODEL,
-        "all-MiniLM-L6-v2",
-        "allenai/scibert_scivocab_uncased",
-    )
 
     pre_steps = [
         # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
@@ -704,7 +707,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
             run_step(
                 f"embed {corpus}",
                  [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                  "--corpus", corpus, "--batch-size", EMBED_BATCH_SIZE,
+                  "--corpus", corpus, "--batch-size", str(args.batch_size),
                   ] + model_args
                   + _overwrite_flag(args.overwrite),
             )
@@ -721,13 +724,16 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         if model != CANONICAL_SEGMENT_MODEL:
             embed_cmd.extend(["--corpus", "research_subset"])
         run_step("embed paper shards", embed_cmd)
+        if model == CANONICAL_SEGMENT_MODEL:
+            run_step("embed concept research corpus", [
+                sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
+                "--corpus", "research_concept",
+                "--device", args.device,
+                "--batch-size", str(args.batch_size),
+            ] + model_args + _overwrite_flag(args.overwrite))
 
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
                                  include_appendix=(model == CANONICAL_SEGMENT_MODEL))
-
-        # Concept-retrieval robustness pipeline (MPNet only)
-        if model == CANONICAL_SEGMENT_MODEL:
-            _run_concept_robustness(output_dir, model, args)
 
     # The encoder-axis (cross-sensitivity) tables in the canonical model's dir
     # were written during the first loop pass (MPNet) before MiniLM/SciBERT
@@ -883,26 +889,43 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(label, cmd)
 
     elif stage == "embed":
-        for corpus in ALL_EMBED_CORPORA:
-            run_step(
-                f"embed {corpus}",
-                 [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                  "--corpus", corpus, "--batch-size", str(args.batch_size), "--local-files-only",
-                  "--precision", args.precision, "--normalize-embeddings"] + model_args
-                 + _overwrite_flag(args.overwrite),
-            )
-        embed_cmd = [
-            sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-            "--device", args.device,
-            "--local-files-only",
-            "--precision", args.precision,
-            "--normalize-embeddings",
-        ]
-        embed_cmd.extend(model_args)
-        embed_cmd.extend(_overwrite_flag(args.overwrite))
-        if model != CANONICAL_SEGMENT_MODEL:
-            embed_cmd.extend(["--corpus", "research_subset"])
-        run_step("embed paper shards", embed_cmd)
+        # Embed ALL three encoders (MPNet → MiniLM → SciBERT). Segments are
+        # canonical/shared; only the encoder varies. MPNet embeds the full
+        # research corpus (27 shards); MiniLM/SciBERT embed the shared 50k
+        # subset via --corpus research_subset (handled below by the
+        # model != CANONICAL_SEGMENT_MODEL check).
+        for embed_model in COLD_REPLAY_MODELS:
+            embed_model_args = ["--embed-model", embed_model]
+            for corpus in ALL_EMBED_CORPORA:
+                run_step(
+                    f"embed {corpus} ({embed_model})",
+                     [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
+                      "--corpus", corpus, "--batch-size", str(args.batch_size), "--local-files-only",
+                      "--precision", args.precision, "--normalize-embeddings"] + embed_model_args
+                     + _overwrite_flag(args.overwrite),
+                )
+            embed_cmd = [
+                sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
+                "--device", args.device,
+                "--local-files-only",
+                "--precision", args.precision,
+                "--normalize-embeddings",
+            ]
+            embed_cmd.extend(embed_model_args)
+            embed_cmd.extend(_overwrite_flag(args.overwrite))
+            if embed_model != CANONICAL_SEGMENT_MODEL:
+                embed_cmd.extend(["--corpus", "research_subset"])
+            run_step(f"embed paper shards ({embed_model})", embed_cmd)
+            if embed_model == CANONICAL_SEGMENT_MODEL:
+                run_step("embed concept research corpus (all-mpnet-base-v2)", [
+                    sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
+                    "--corpus", "research_concept",
+                    "--device", args.device,
+                    "--local-files-only",
+                    "--precision", args.precision,
+                    "--normalize-embeddings",
+                    "--embed-model", embed_model,
+                ] + _overwrite_flag(args.overwrite))
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
@@ -917,6 +940,35 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(args.overwrite))
         run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "mlp"] + _overwrite_flag(args.overwrite))
         run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(args.overwrite))
+        # Concept-retrieval robustness (MPNet only): score the concept-retrieved
+        # corpus with all three assignment methods.
+        if model == DEFAULT_EMBED_MODEL:
+            concept_embed_dir = embed_dir_for_model(model) / "research_concept"
+            concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
+            concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
+            concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
+            concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
+            run_step("score concept research corpus (LR)", [
+                sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+                "--embed-model", model, "--classifier", "lr", "--corpus", "research",
+                "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+                "--out-dir", str(concept_scores_dir),
+                "--metadata-dir", str(concept_scores_dir / "metadata"),
+                "--research-centroids-out", str(concept_centroids),
+                "--research-meta-out", str(concept_centroids_meta),
+            ] + _overwrite_flag(args.overwrite))
+            run_step("score concept research corpus (MLP)", [
+                sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+                "--embed-model", model, "--classifier", "mlp",
+                "--corpus", "research_concept",
+            ] + _overwrite_flag(args.overwrite))
+            run_step("zero-shot concept research corpus", [
+                sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+                "--embed-model", model,
+                "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+                "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
+                "--data-dir", str(concept_data_dir),
+            ] + _overwrite_flag(args.overwrite))
 
     elif stage == "centroids":
         # Build the SDG reference centroids (sdg_centroids.npy) consumed by the

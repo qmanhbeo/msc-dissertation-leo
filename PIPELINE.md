@@ -1,159 +1,213 @@
-# FETCH 
- 1. Download relevant policy documents manually 
+# SDG classification pipeline — execution order
 
-Code: 1_code/0_fetch/fetch_openalex.py --retrieval [keyword | concept]
-
- 2. Fetch OpenAlex for Research corpus (takes days): keyword-based (canon) OR concept-based (robustness test)
-
-Data: 2_data/0_raw/[openalex | openalex_concept]/*
-
----
-
-Code: 1_code/0_fetch/*.py
-
- 3. Fetch policy documents (web scraper) + fetch UNGDC + convert manually downloaded policy for Policy corpus
- 4. Fetch SDGi (for both Policy + Reference corpora) + OSDG + Knowledge Hub + SDG Benchmark + Aurora for Reference corpus
-
-Data: 2_data/0_raw/[source]/*
-
-
-# PREPROCESS (clean + trim)
-CODE: 1_code/1_preprocess/0_preprocess_*.py
-
- 1.  preprocess policy (scraped + manual)
- 2.  preprocess ungdc
- 3.  preprocess osdg
- 4.  preprocess sdg benchmark
- 5.  preprocess sdg knowledge hub
- 6.  preprocess aurora
- 7.  preprocess sdgi
-
-DATA: 2_data/1_preprocessed/individual_sources/[source]/*
-
-
-# BUILD CORPORA — shared, ONCE
- 
- CODE: 1_code/1_preprocess/0_preprocess_papers_streaming.py
-
- 1.  preprocess research shards (canon)
- 2.  preprocess concept-based research corpus (robustness)
-
-=> DATA: 2_data/1_preprocessed/[research | research_concept]/*.jsonl
+**Legend**
+- `[model]` ∈ {`mpnet`, `minilm`, `scibert`} — encoder slugs (MPNet = `all-mpnet-base-v2`, canonical; MiniLM = `all-MiniLM-L6-v2`; SciBERT = `allenai/scibert_scivocab_uncased`). Every artifact below is namespaced under `[model]`.
+- `[source]` — each raw/preprocessed data source.
+- **(MPNet only)** — step runs only for the canonical encoder; skipped for MiniLM/SciBERT.
+- **Chaining rule:** each stage consumes the previous stage's outputs; script cards show only outputs. External, manual, and shared (fan-out) inputs are annotated inline.
+- Segments are canonical (built once with the MPNet segmenter) and shared by every encoder — only the encoder (and its native context window) varies in the per-model loop.
 
 ---
 
-CODE: 1_code/1_preprocess/1_build_*.py
+## 1. FETCH — external + manual inputs
 
- 2.  build reference corpus (consolidate + dedup)
- 3.  build policy corpus (consolidate + dedup)
+- fetch research corpus (canon)
 
-=> DATA: 2_data/1_preprocessed/[policy | reference].jsonl. ONE clean jsonl each corpus
+  Script `1_code/0_fetch/fetch_openalex.py --retrieval keyword` --> Output: `2_data/0_raw/openalex/*`
 
-# SEGMENT — canonical MPNet segments, shared, ONCE
+- fetch concept-based research corpus (retrieval-method robustness)
 
-CODE: 1_code/2_segment/1_segment_corpus.py
+  Script `1_code/0_fetch/fetch_openalex.py --retrieval concept` --> Output: `2_data/0_raw/openalex_concept/*`
 
- 1.  segment reference
- 2.  segment policy
+- scrape policy documents
 
-DATA: 2_data/2_segmented/[policy|reference].jsonl
+  Script `1_code/0_fetch/fetch_policy.py` --> Output: `2_data/0_raw/policy_scrape/*`
 
----
+- convert manually downloaded policy documents
 
-CODE: 1_code/2_segment/1_segment_corpus.py
+  Script `1_code/0_fetch/convert_policy_manual.py` --> Output: `2_data/0_raw/policy_manual/*`
 
- 3.  segment canon research
- 4.  segment concept-based research (for retrieval-method robustness)
+- fetch UNGDC speeches
 
-DATA: 2_data/2_segmented/[research|research_concept]/part-*.jsonl
+  Script `1_code/0_fetch/fetch_ungdc.py` --> Output: `2_data/0_raw/ungdc_sdg/*`
 
----
+- fetch SDGi (dual-role source — feeds both Policy and Reference corpora; labelled in reference, unlabelled policy documents)
 
-CODE: 1_code/2_segment/2_sample_segments.py
+  Script `1_code/0_fetch/fetch_sdgi_corpus.py` --> Output: `2_data/0_raw/sdgi/*`
 
- 5.  build research 50k subset (for other embedding models' robustness tests)
+- fetch OSDG
 
-DATA: 2_data/2_segmented/research_subset/part-00001.jsonl
+  Script `1_code/0_fetch/fetch_osdg.py` --> Output: `2_data/0_raw/osdg/*`
 
+- fetch SDG Benchmark
 
-# PER-MODEL LOOP  ×3  (MPNet → MiniLM → SciBERT) 
+  Script `1_code/0_fetch/fetch_sdg_benchmark.py` --> Output: `2_data/0_raw/sdg_benchmark/*`
 
-for model m in [MPNet, MiniLM, SciBERT]:
+- fetch SDG Knowledge Hub
 
-## EMBED (m)
+  Script `1_code/0_fetch/fetch_sdg_knowledge_hub.py` --> Output: `2_data/0_raw/sdg_knowledge_hub/*`
 
-CODE: 1_code/3_embed/0_embed_reference_and_policy_corpora.py
+- fetch Aurora
 
-1. embed reference
-2. embed policy
+  Script `1_code/0_fetch/fetch_aurora.py` --> Output: `2_data/0_raw/aurora/*`
 
-DATA: 2_data/3_embedded/[model]/[reference|policy].npy
+Inputs (this stage only): manual policy downloads; `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY`. All fetchers write incrementally with resume — a kill loses nothing.
 
 ---
 
-CODE: 1_code/3_embed/0_embed_paper_shards.py
+## 2. PREPROCESS — clean + trim, then build consolidated corpora
 
-3. embed paper shards   (full corpus for MPNet; 50k subset for MiniLM/SciBERT)
-4. embed concept-retrieved paper shards   (MPNet only)
+- preprocess policy (scraped + manual)
+- preprocess ungdc
+- preprocess osdg
+- preprocess sdg benchmark
+- preprocess sdg knowledge hub
+- preprocess aurora
+- preprocess sdgi
 
-DATA: 
-- 2_data/3_embedded/[model]/research_shards.npy/part-*.npy (27 shards for MPNet, 1 shard each for MiniLM and SciBERT)
-- 2_data/3_embedded/[model]/research_concept/part-*.npy (MPNet only)
+  Script `1_code/1_preprocess/0_preprocess_*.py` --> Output: `2_data/1_preprocessed/individual_sources/[source]/*`
 
+- preprocess research shards (canon)
+- preprocess concept-based research corpus (`--retrieval concept`, retrieval-method robustness; streaming, resume-safe)
 
-## TRAIN (m)
+  Script `1_code/1_preprocess/0_preprocess_papers_streaming.py` --> Output: `2_data/1_preprocessed/{research, research_concept}/*.jsonl`
 
-CODE: 1_code/4_supervised_model_train/*
+- build reference corpus (consolidate + dedup)
+- build policy corpus (consolidate + dedup)
 
-1. prepare training data (what does this do?)
-2. Per supervised model [LogReg, MLP]:
+  Script `1_code/1_preprocess/1_build_reference_corpus.py` + `1_build_policy_corpus.py` --> Output: `2_data/1_preprocessed/{reference, policy}.jsonl` — ONE clean jsonl per corpus
 
-    2.1. *LR and MLP grid search with CV done manually. Tested (retrain on train+val, is it?) on held-out test set. Results saved durably. No re-run in replays.*
+---
 
-    2.2. retrain full train+val+test data (currently it's train + val)
+## 3. SEGMENT — once, shared across all encoders
 
-5. build SDG reference centroids (from original labelled reference texts)
+- segment reference
+- segment policy
 
-DATA: 2_data/4_supervised_model_results/[model]/*
+  Script `1_code/2_segment/1_segment_corpus.py` --> Output: `2_data/2_segmented/{reference, policy}.jsonl`
 
-## SCORE (m)
+- segment research (canon)
+- segment concept-based research (retrieval-method robustness)
 
-CODE: 1_code/5_supervised_model_infer/
+  Script `1_code/2_segment/1_segment_corpus.py` --> Output: `2_data/2_segmented/{research, research_concept}/part-*.jsonl`
 
-1. Per supervised model [LogReg, MLP]:
+- build research 50k subset (used by MiniLM/SciBERT to keep embedding feasible)
 
-    1.1. score research shards (use canon + concept-retrieval for MPNet; use subset for MiniLM + SciBERT)
+  Script `1_code/2_segment/2_sample_segments.py` --> Output: `2_data/2_segmented/research_subset/part-00001.jsonl`
 
-    1.2. score policy corpus
+---
 
-    1.3. check centroid consistency (what does this do?)
+## 4.–6. PER-MODEL LOOP — repeat for each m ∈ {mpnet, minilm, scibert}
 
-2. build centroid similarity matrix (LR only)
-3. score research & policy with zeroshot method (nearest-centroid SDG assignment)
+All artifacts below are namespaced under `[model]`. Steps marked (MPNet only) are skipped otherwise.
 
+### 4. EMBED
 
-# ANALYSIS (run_analysis, in-process)
+- embed reference corpus
+- embed policy corpus
 
-For MPNet:
+  Script `1_code/3_embed/0_embed_reference_and_policy_corpora.py` --> Output: `2_data/3_embedded/[model]/{reference, policy}.npy` (+ metadata ids)
 
-1. 0_pca_semantic_landscape
-2. 0_coverage_gap: use canon + concept-retrieval + filtered policy corpus (Curated SDGi UNGDC) 
-3. 1_semantic_gap: use canon + concept-retrieval + filtered policy corpus (Curated SDGi UNGDC) 
-4. 2_coverage_semantic_interaction    [DEBT: runs for MiniLM/SciBERT]
+- embed research shards (full corpus for MPNet — 27 shards; `--corpus research_subset` for MiniLM/SciBERT — 1 shard)
+- embed concept-retrieved paper shards (`--corpus research_concept`; MPNet only)
 
-For MiniLM and SciBERT, and any robustness encoders to come: 
+  Script `1_code/3_embed/0_embed_paper_shards.py` --> Output: `2_data/3_embedded/[model]/research_shards/part-*.npy` · `research_concept/part-*.npy`
 
-1. 0_coverage_gap (use canon + concept-retrieval for MPNet; use subset for MiniLM + SciBERT)
-2. 1_semantic_gap (use canon + concept-retrieval for MPNet; use subset for MiniLM + SciBERT)
+Invariant: research-corpus text = `"{title}. {abstract}"` (set in `0_preprocess_papers_streaming.py`) — any subset must embed the same string or the LR scores a different representation.
 
-3. 3_generate_cross_sensitivity_table [WRONG. DEBT: runs per-model, incomplete; overwritten by final step below]
+### 5. TRAIN
 
-## FIGURES
+- prepare training data (build one-hot 17-D labels from labelled reference texts — single-label records only; per-source stratified, document-grouped 85/15 train/test split)
 
-1. plot figures                      ✓ MPNet-only (already correct)
+  Script `1_code/4_supervised_model_train/0_prepare_data.py` --> Output: `2_data/4_supervised_model_results/[model]/{embeddings, labels, sources, source_docs}.npy` · `indices/{train, test}.npy` · `split_report.txt`
 
-# Robustness check — after the model loop
+- LR grid search (GroupKFold(5) CV on the train pool: C/l1_ratio/class_weight), champion selected by CV macro-F1
+- MLP grid search (GroupKFold(5) CV on the train pool: depth/width/lr), champion selected by CV macro-F1
+- results saved durably; NOT invoked by main.py (provenance-guarded); consumed by `d1_export_model_selection_nums.py` → Appendix D; no re-run in replays
 
-1.  generate canonical cross-sensitivity table (with data from all 3 encoders + concept-retrieval + per-policy-corpus filters)
+  Script `1_code/4_supervised_model_train/1_train_models_LR.py` + `1_train_models_MLP.py` --> Output: `2_data/4_supervised_model_results/[model]/model/{lr_cv_results.json, mlp_cv_results.json, grid_search_log.json}`
 
-5. appendix a2/a3/b2/c/f/h1 with canon MPNet only[DEBT: runs for MiniLM/SciBERT]
+- retrain LR champion on full train pool (C=10/l2/lbfgs; single-use held-out test evaluation) → `sdg_classifier_retrained.joblib` · test macro-F1 0.8231 → `sdg_retrain_results.json`
+- retrain MLP champion on full train pool (`--classifier-type mlp`) → `mlp_retrained.joblib` · `mlp_retrain_results.json`
+- test set NOT reabsorbed: the model is the measurement instrument; reported metrics describe the exact scoring artifact
+
+  Script `1_code/4_supervised_model_train/3_retrain_full_data.py` --> Output: `2_data/4_supervised_model_results/[model]/model/*.joblib` · `*_results.json` · `4_outputs/[model]/data/4_1_confusion_matrix.csv` (LR)
+
+- build SDG reference centroids (from original labelled reference texts)
+
+  Script `1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py` --> Output: `2_data/5_supervised_scored/[model]/sdg_centroids.npy`
+
+Exploratory (not adopted): `3_retrain_full_data.py --cv-full-data` — manual GroupKFold CV on 100% of labelled data with champion hyperparameters; writes `cv_full_data_results.json`, touches no artifacts. Measured +0.002 CV mean (0.8107 → 0.8127) for absorbing the test set — negligible, so the held-out test (0.8231) remains the headline. See Open items.
+
+### 6. SCORE
+
+- score research shards (`--classifier lr --corpus research`) → research_centroids.npy (supervised, PRIMARY)
+- score policy corpus (`--classifier lr --corpus policy`) → policy_scores.npy
+- score MLP (`--classifier mlp`) → mlp_scores/{mlp_summary.json, mlp_policy_scores.npy}
+- score concept-retrieval variant with the concept manifest (MPNet only): LR with `--embedding-manifest research_concept/metadata/manifest.json --out-dir paper_scores_shards_concept --research-centroids-out research_concept_centroids.npy`; MLP with `--corpus research_concept` → mlp_scores_concept/; zero-shot with `--embedding-manifest … --out-dir zeroshot_concept --data-dir data/concept`
+
+  Script `1_code/5_supervised_model_infer/score_supervised.py` + `1_code/6_calculate_centroids/score_zeroshot.py` --> Output: `2_data/5_supervised_scored/[model]/{research_centroids.npy, policy_scores.npy, paper_scores_shards/, mlp_scores/, research_concept_centroids.npy, mlp_scores_concept/, zeroshot_concept/}` · `4_outputs/[model]/data/concept/semantic_gap_distances.json` (zero-shot)
+
+- check centroid consistency (runtime SANITY GATE, not a producer: compare MLP-assigned SDG vs nearest-centroid SDG per corpus — per-SDG agreement + confusion; also saves policy centroids — diagnostic-only, read by nothing downstream)
+
+  Script `1_code/6_calculate_centroids/0_check_centroid_consistency.py` --> Output: `2_data/5_supervised_scored/[model]/{policy_centroids.npy, metadata/centroid_consistency.json}`
+
+- build centroid similarity matrix (LR only; reads sdg_centroids.npy)
+
+  Script `1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py` --> Output: `4_outputs/[model]/data/4_1_centroid_similarity_matrix.csv`
+
+- score research & policy with zeroshot method (nearest-centroid SDG assignment)
+
+  Script `1_code/6_calculate_centroids/score_zeroshot.py` --> Output: `2_data/5_supervised_scored/[model]/zeroshot/{research, policy}_centroids.npy` · `4_outputs/[model]/data/semantic_gap_distances.json`
+
+---
+
+## 7. ANALYSIS — in-process (run_analysis), shard-native mmap
+
+All main-text analyses run in a single process per encoder; each reads the research embedding/score shards directly (no consolidated array). Outputs → `4_outputs/[model]/data/*.json` · `tables/*.tex`.
+
+| script | runs on | notes |
+|---|---|---|
+| `0_pca_semantic_landscape.py` | MPNet only | fixed figures paths |
+| `0_coverage_gap.py` | all encoders | canon + concept (MPNet) / subset (MiniLM, SciBERT); filtered policy corpus (Curated SDGi UNGDC) |
+| `1_semantic_gap.py` | all encoders | canon + concept (MPNet) / subset (MiniLM, SciBERT); filtered policy corpus (Curated SDGi UNGDC) |
+| `2_coverage_semantic_interaction.py` | all encoders | reads 4_2 + 4_3; namespaced per-encoder |
+| `3_generate_cross_sensitivity_table.py` | default only, in-loop; regenerated post-loop | canonical tables: policy source × segment cap × retrieval (LR/MLP/ZS) + encoder axis (all 3 encoders) |
+| `g_distributional_gap.py` | opt-in | MAIN-RESULT Table; NOT run by warm replay or `--appendix-all`; run before `--build-pdf` |
+
+**Concept pass (MPNet only, after the in-process analyses above, before `3_generate_cross_sensitivity_table.py`):** re-invoke `0_coverage_gap.py` (`--paper-scores-manifest paper_scores_shards_concept/metadata/manifest.json --out-data-dir data/concept`) and `1_semantic_gap.py` (`--research-centroids research_concept_centroids.npy --research-centroid-meta metadata/research_concept_centroid_meta.json --out-data-dir data/concept`) → `4_outputs/[model]/data/concept/{4_2_*, 4_3_*}`. Must precede the cross-sensitivity table, whose Retrieval column reads these files plus `mlp_scores_concept/` and `zeroshot_concept/`.
+
+---
+
+## 8. FIGURES — MPNet only
+
+- plot manuscript figures (PCA landscape, coverage profiles, semantic gap, coverage×semantic scatter, centroid-similarity heatmap)
+
+  Script `1_code/8_visualization/plot_figures.py` --> Output: `4_outputs/[model]/figures/{fig1, fig3, fig4, fig5}*.{pdf, png}` · `4_outputs/appendix/[model]/a4_centroid_similarity/figures/*`
+
+---
+
+## 9. ROBUSTNESS + APPENDIX — cross-encoder, after the model loop
+
+**Regenerate canonical cross-sensitivity table** — run once AFTER the per-model loop, now that all three encoders' outputs exist:
+- `3_generate_cross_sensitivity_table.py` → `4_outputs/[model]/tables/{tab_cross_sensitivity_robustness.tex, tab_cross_sensitivity_coverage.tex, tab_encoder_sensitivity_semantic.tex, tab_encoder_sensitivity_coverage.tex, num_*.tex}` — the PDF-consumed tables (all 3 encoders + concept-retrieval + per-policy-corpus filters).
+
+**Appendix scripts** — run for the canonical encoder in replays (cold replay: `include_appendix` only for MPNet); standalone via `--appendix-*` for any `--embed-model` (outputs namespaced under `4_outputs/appendix/[model]/`, not consumed by the paper for non-default models):
+
+| script | appendix | output |
+|---|---|---|
+| `a2_policy_source_family_sensitivity.py` | A.2 | `appendix/[model]/a2_source_family_sensitivity/` |
+| `a3_sdg4_lexical_audit.py` | A.3 | `appendix/[model]/a3_sdg4_audit/` |
+| `b2_semantic_gap_text_interpretability.py` | B.2 | `appendix/[model]/b2_semantic_gap_interpretability/` |
+| `c_sample_stability.py` | C | `appendix/[model]/c_sample_stability/` |
+| `c0_export_corpus_split_sizes.py` | C.0 | `main/tables/num_reference_split.tex` |
+| `d1_export_model_selection_nums.py` | D.1 | `main/tables/num_model_selection.tex` |
+| `f_register_adjustment.py` | F | `appendix/[model]/f_register_adjustment/` |
+| `h1_cross_method_gap_values.py` | H.1 | `appendix/[model]/h1_cross_method_gap_values/` |
+
+---
+
+## Open items
+
+- **MLP champion config discrepancy:** grid search + dissertation text cite lr=3e-4, but the retrained artifact (`mlp_retrained.joblib` / `model_config.json`) and the script's argparse default use lr=1e-3. A replay reproduces the artifact, not the cited champion. Decide: change the script default to 3e-4 or update the text.
+- **`--cv-full-data` exploratory route:** exists in `3_retrain_full_data.py` (documented as exploratory, not invoked by main.py). Decision: not adopted — measured +0.002 CV mean for absorbing the test set; held-out test retained as headline.
