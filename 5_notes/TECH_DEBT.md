@@ -20,22 +20,20 @@ debt they describe.
 
 ## 2. Em dashes in pre-existing Results/Discussion prose
 
-- **Debt**: pre-existing em dashes (`---`) remain in Results/Discussion prose
-  that was not rewritten in the compression passes. New text avoids em dashes;
-  no document-wide purge was ever performed.
-- **Why deferred**: deliberate scope decision — purging the whole manuscript is
-  churn with no scientific value; only rewritten sections carry the convention.
-- **Retire by**: as each remaining section is touched/rewritten, remove its em
-  dashes in the same pass. (`grep -n -- '---' 3_writing/dissertation.tex`)
+- **RETIRED (2026-07-31)**: all 17 em dashes (`---`) in Results/Discussion prose
+  were removed in the same pass as the bug-fix commit. Each was replaced with a
+  context-appropriate separator (comma, colon, or hyphenated compound); the
+  document-wide sweep confirmed `grep -n -- '---' 3_writing/dissertation.tex`
+  returns zero. New text already avoided em dashes; the manuscript is now
+  consistent.
 
 ## 3. Word-count counter is an ad-hoc session script
 
-- **Debt**: the per-section word counter (strip LaTeX commands, bounded section
-  slicing) exists only as inline Python snippets run in agent sessions; it is
-  not committed anywhere reproducible.
-- **Why deferred**: the counter is a review-time aid, not a pipeline stage.
-- **Retire by**: committing it under `5_notes/` or `1_code/` if section-level
-  counts become a recurring check (e.g. before each supervisor submission).
+- **RETIRED (2026-07-31)**: the per-section word counter is now committed at
+  `5_notes/word_count.py` (strips LaTeX commands, bounded section slicing,
+  excludes appendix sections from the main-text total). Reproducible:
+  `python 5_notes/word_count.py`. Current main-text total ≈ 9,914 (above the
+  8.8k target — a separate content-trimming concern, see open Discussion pass).
 
 ## 4. Verification gap: register-stage macro emission not exercised by CI
 
