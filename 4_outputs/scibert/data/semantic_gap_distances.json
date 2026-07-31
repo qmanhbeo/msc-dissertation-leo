@@ -1,0 +1,126 @@
+{
+  "method": "zeroshot_nearest_centroid",
+  "segment_cap": 50,
+  "embedding_model": "allenai/scibert_scivocab_uncased",
+  "per_sdg": [
+    {
+      "sdg": 1,
+      "n_papers": 59,
+      "n_policy_capped": 1373,
+      "semantic_similarity": 0.9767584211157503,
+      "semantic_gap": 0.023241578884249714
+    },
+    {
+      "sdg": 2,
+      "n_papers": 494,
+      "n_policy_capped": 760,
+      "semantic_similarity": 0.9475658444101183,
+      "semantic_gap": 0.05243415558988174
+    },
+    {
+      "sdg": 3,
+      "n_papers": 21051,
+      "n_policy_capped": 1764,
+      "semantic_similarity": 0.9413452244477909,
+      "semantic_gap": 0.058654775552209104
+    },
+    {
+      "sdg": 4,
+      "n_papers": 4442,
+      "n_policy_capped": 1208,
+      "semantic_similarity": 0.96315240023697,
+      "semantic_gap": 0.03684759976302998
+    },
+    {
+      "sdg": 5,
+      "n_papers": 478,
+      "n_policy_capped": 858,
+      "semantic_similarity": 0.9687793435161239,
+      "semantic_gap": 0.031220656483876064
+    },
+    {
+      "sdg": 6,
+      "n_papers": 959,
+      "n_policy_capped": 702,
+      "semantic_similarity": 0.9542708826077235,
+      "semantic_gap": 0.045729117392276475
+    },
+    {
+      "sdg": 7,
+      "n_papers": 2318,
+      "n_policy_capped": 772,
+      "semantic_similarity": 0.9513248768562406,
+      "semantic_gap": 0.048675123143759436
+    },
+    {
+      "sdg": 8,
+      "n_papers": 126,
+      "n_policy_capped": 2911,
+      "semantic_similarity": 0.972391398076774,
+      "semantic_gap": 0.027608601923226006
+    },
+    {
+      "sdg": 9,
+      "n_papers": 5605,
+      "n_policy_capped": 1100,
+      "semantic_similarity": 0.9653715099209215,
+      "semantic_gap": 0.03462849007907853
+    },
+    {
+      "sdg": 10,
+      "n_papers": 347,
+      "n_policy_capped": 147,
+      "semantic_similarity": 0.9621742466866925,
+      "semantic_gap": 0.03782575331330751
+    },
+    {
+      "sdg": 11,
+      "n_papers": 1048,
+      "n_policy_capped": 1799,
+      "semantic_similarity": 0.9664483448907853,
+      "semantic_gap": 0.03355165510921465
+    },
+    {
+      "sdg": 12,
+      "n_papers": 1464,
+      "n_policy_capped": 1602,
+      "semantic_similarity": 0.9620052939414903,
+      "semantic_gap": 0.03799470605850974
+    },
+    {
+      "sdg": 13,
+      "n_papers": 598,
+      "n_policy_capped": 3140,
+      "semantic_similarity": 0.9601373287545145,
+      "semantic_gap": 0.03986267124548548
+    },
+    {
+      "sdg": 14,
+      "n_papers": 421,
+      "n_policy_capped": 1039,
+      "semantic_similarity": 0.9609354959057749,
+      "semantic_gap": 0.03906450409422513
+    },
+    {
+      "sdg": 15,
+      "n_papers": 1349,
+      "n_policy_capped": 892,
+      "semantic_similarity": 0.9601148925174723,
+      "semantic_gap": 0.039885107482527715
+    },
+    {
+      "sdg": 16,
+      "n_papers": 8108,
+      "n_policy_capped": 2685,
+      "semantic_similarity": 0.9516558767661176,
+      "semantic_gap": 0.048344123233882375
+    },
+    {
+      "sdg": 17,
+      "n_papers": 1133,
+      "n_policy_capped": 8290,
+      "semantic_similarity": 0.8940729638284003,
+      "semantic_gap": 0.10592703617159971
+    }
+  ]
+}

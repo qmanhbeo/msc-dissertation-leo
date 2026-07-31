@@ -70,13 +70,11 @@ log = logging.getLogger(__name__)
 SDG_NAMES = {
     1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
     5: "Gender Equality", 6: "Clean Water", 7: "Clean Energy",
-    8: "Decent Work", 9: "Industry & Infra.", 10: "Reduced Inequalities",
+    8: "Decent Work", 9: "Industry \\& Infra.", 10: "Reduced Inequalities",
     11: "Sustainable Cities", 12: "Responsible Cons.", 13: "Climate Action",
-    14: "Life Below Water", 15: "Life on Land", 16: "Peace & Justice",
+    14: "Life Below Water", 15: "Life on Land", 16: "Peace \\& Justice",
     17: "Partnerships",
 }
-
-MIN_CENTROID_NORM = 1e-6
 
 
 def agreement_stats(assign_a: np.ndarray, assign_b: np.ndarray) -> dict:

@@ -587,6 +587,48 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
 
 
+def _run_concept_analyses(output_dir: Path, model: str, overwrite: bool = False) -> None:
+    """Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
+    concept-retrieved corpus. Must run BEFORE the in-process analyses: H.1 and
+    the cross-sensitivity table consume data/concept/4_2_* + 4_3_*.
+    """
+    if model != DEFAULT_EMBED_MODEL:
+        return
+    concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
+    concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
+    concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
+    concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
+    run_step("coverage gap (concept corpus)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
+        "--out-data-dir", str(concept_data_dir),
+    ] + _overwrite_flag(overwrite))
+    run_step("semantic gap (concept corpus)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--research-centroids", str(concept_centroids),
+        "--research-centroid-meta", str(concept_centroids_meta),
+        "--out-data-dir", str(concept_data_dir),
+    ] + _overwrite_flag(overwrite))
+
+
+def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = False) -> None:
+    """Canonical post-analyses (MPNet only): cross-sensitivity table + figures.
+
+    Must run AFTER every encoder's per-model analyses so the encoder-axis
+    tables (which read MiniLM/SciBERT outputs) see all three encoders' data.
+    """
+    if model != DEFAULT_EMBED_MODEL:
+        return
+    run_step("generate cross-sensitivity table",
+             [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
+              "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
+             step_id="6")
+    run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
+             "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
+
+
 def _run_analysis_only(output_dir: Path, model: str, *,
                        include_appendix: bool = False,
                        overwrite: bool = False) -> None:
@@ -596,36 +638,9 @@ def _run_analysis_only(output_dir: Path, model: str, *,
     semantic gap, interaction, cross-sensitivity table, PCA, and figures.
     """
     _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
-    # Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
-    # concept-retrieved corpus. Must run BEFORE the in-process analyses: H.1 and
-    # the cross-sensitivity table consume data/concept/4_2_* + 4_3_*.
-    if model == DEFAULT_EMBED_MODEL:
-        concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
-        concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
-        concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
-        concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
-        run_step("coverage gap (concept corpus)", [
-            sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
-            "--output-dir", str(output_dir), "--embed-model", model,
-            "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
-            "--out-data-dir", str(concept_data_dir),
-        ] + _overwrite_flag(overwrite))
-        run_step("semantic gap (concept corpus)", [
-            sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
-            "--output-dir", str(output_dir), "--embed-model", model,
-            "--research-centroids", str(concept_centroids),
-            "--research-centroid-meta", str(concept_centroids_meta),
-            "--out-data-dir", str(concept_data_dir),
-        ] + _overwrite_flag(overwrite))
+    _run_concept_analyses(output_dir, model, overwrite=overwrite)
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
-    if model == DEFAULT_EMBED_MODEL:
-        run_step("generate cross-sensitivity table",
-                 [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
-                  "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
-                 step_id="6")
-    if model == DEFAULT_EMBED_MODEL:
-        run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
-                 "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
+    _run_analysis_poststeps(output_dir, model, overwrite=overwrite)
 
 
 def run_main_text(
@@ -991,7 +1006,21 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("build centroid similarity matrix", [sys.executable, "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(args.overwrite))
 
     elif stage == "analysis":
-        _run_analysis_only(output_dir, model, include_appendix=True, overwrite=args.overwrite)
+        if model != DEFAULT_EMBED_MODEL:
+            # Explicit single-encoder analysis (debug): honours --embed-model.
+            _run_analysis_only(output_dir, model, include_appendix=True, overwrite=args.overwrite)
+        else:
+            # Standard: analyse ALL three encoders in one run (mirrors
+            # --cold-replay and --stage embed). MiniLM/SciBERT run their
+            # per-model main analyses only; appendix steps run for the
+            # canonical encoder only. Concept analyses run first (H.1 and the
+            # cross-sensitivity table consume data/concept/*), and the
+            # canonical cross-sensitivity table + figures regenerate AFTER
+            # all three encoders' outputs exist.
+            _run_concept_analyses(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
+            for m in COLD_REPLAY_MODELS:
+                run_analysis(m, output_dir, include_appendix=(m == DEFAULT_EMBED_MODEL), overwrite=args.overwrite)
+            _run_analysis_poststeps(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
 
     else:
         raise ValueError(f"Unknown stage: {stage}")

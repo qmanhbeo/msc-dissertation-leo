@@ -5,35 +5,35 @@
 \caption{Domain-encoder sensitivity of within-SDG coverage-gap rankings across embedding architectures of differing domain specialisation but matched dimensionality.}
 \label{tab:encoder-sensitivity-coverage}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lccccc}
+\begin{tabular}{lccccccc}
 \toprule
-\multirow{3}{*}{SDG} & \multicolumn{5}{c}{Encoder (embedding architecture)} \\
+\multirow{3}{*}{SDG} & \multicolumn{7}{c}{Encoder (embedding architecture)} \\
 \cmidrule(lr){2-4}
-\cmidrule(lr){5-5}
-\cmidrule(lr){6-6}
- & \multicolumn{3}{c}{MPNet (768-d)} & \multicolumn{1}{c}{MiniLM (384-d)} & \multicolumn{1}{c}{SciBERT (768-d)} \\
-\cmidrule(lr){2-6}
- & LR & MLP & ZS & MLP & MLP \\
+\cmidrule(lr){5-6}
+\cmidrule(lr){7-8}
+ & \multicolumn{3}{c}{MPNet (768-d)} & \multicolumn{2}{c}{MiniLM (384-d)} & \multicolumn{2}{c}{SciBERT (768-d)} \\
+\cmidrule(lr){2-8}
+ & LR & MLP & ZS & LR & MLP & LR & MLP \\
 \midrule
-SDG 1 & 7 & 7 & 6 & 13 & 7 \\
-SDG 2 & 13 & 14 & 14 & 15 & 17 \\
-SDG 3 & 1 & 1 & 2 & 2 & 2 \\
-SDG 4 & 4 & 4 & 3 & 4 & 4 \\
-SDG 5 & 8 & 8 & 8 & 16 & 15 \\
-SDG 6 & 9 & 11 & 13 & 14 & 14 \\
-SDG 7 & 16 & 17 & 7 & 7 & 11 \\
-SDG 8 & 10 & 12 & 9 & 12 & 16 \\
-SDG 9 & 2 & 2 & 4 & 5 & 3 \\
-SDG 10 & 12 & 10 & 11 & 11 & 9 \\
-SDG 11 & 17 & 9 & 17 & 8 & 8 \\
-SDG 12 & 15 & 16 & 12 & 10 & 12 \\
-SDG 13 & 5 & 6 & 5 & 3 & 6 \\
-SDG 14 & 11 & 13 & 16 & 17 & 13 \\
-SDG 15 & 14 & 15 & 15 & 9 & 10 \\
-SDG 16 & 6 & 5 & 10 & 1 & 1 \\
-SDG 17 & 3 & 3 & 1 & 6 & 5 \\
+SDG 1 & \textbf{7} & \textbf{7} & \textbf{6} & \textbf{7} & \textbf{7} & \textbf{6} & \textbf{6} \\
+SDG 2 & 13 & 14 & 14 & 10 & 10 & 12 & 9 \\
+SDG 3 & \textbf{1} & \textbf{1} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{1} & \textbf{1} \\
+SDG 4 & \textbf{4} & \textbf{4} & \textbf{3} & \textbf{5} & \textbf{3} & \textbf{3} & \textbf{4} \\
+SDG 5 & \textit{8} & \textit{8} & \textit{8} & \textit{12} & \textit{8} & \textit{9} & \textit{10} \\
+SDG 6 & \textbf{9} & \textbf{11} & \textbf{13} & \textbf{9} & \textbf{11} & \textbf{11} & \textbf{12} \\
+SDG 7 & \textbf{16} & \textbf{17} & \textbf{7} & \textbf{16} & \textbf{17} & \textbf{16} & \textbf{14} \\
+SDG 8 & 10 & 12 & 9 & 13 & 14 & 8 & 8 \\
+SDG 9 & \textbf{2} & \textbf{2} & \textbf{4} & \textbf{2} & \textbf{2} & \textbf{2} & \textbf{2} \\
+SDG 10 & 12 & 10 & 11 & 15 & 13 & 14 & 16 \\
+SDG 11 & 17 & 9 & 17 & 14 & 15 & 15 & 15 \\
+SDG 12 & \textit{15} & \textit{16} & \textit{12} & \textit{11} & \textit{12} & \textit{13} & \textit{13} \\
+SDG 13 & \textbf{5} & \textbf{6} & \textbf{5} & \textbf{6} & \textbf{4} & \textbf{7} & \textbf{7} \\
+SDG 14 & 11 & 13 & 16 & 8 & 9 & 10 & 11 \\
+SDG 15 & 14 & 15 & 15 & 17 & 16 & 17 & 17 \\
+SDG 16 & 6 & 5 & 10 & 4 & 6 & 5 & 3 \\
+SDG 17 & \textbf{3} & \textbf{3} & \textbf{1} & \textbf{3} & \textbf{5} & \textbf{4} & \textbf{5} \\
 \midrule
-Rank Corr ($\rho$) & 1.00 & 0.89 & 0.80 & 0.47 & 0.63 \\
+Rank Corr ($\rho$) & 1.00 & 0.89 & 0.80 & 0.89 & 0.93 & 0.95 & 0.89 \\
 \bottomrule
 \end{tabular}
 }

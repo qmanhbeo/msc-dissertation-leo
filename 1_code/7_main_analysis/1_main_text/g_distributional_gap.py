@@ -106,6 +106,7 @@ from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
     RANDOM_SEED,
     SEGMENT_CAP_PRIMARY,
+    build_sub_centroid,
     cap_policy_indices_per_doc,
 )
 from shard_pipeline_utils import load_json
@@ -236,7 +237,11 @@ def load_policy_side(model: str, canonical: dict[int, dict[str, Any]]) -> dict[s
     n_policy_segments_capped exactly, proving the rng consumption order
     (one generator, SDGs 0..16) matches the canonical run byte-for-byte.
     """
-    policy_emb = np.load(semantic_gap_shared.get_policy_emb(model)).astype(np.float32)
+    # NOTE: policy.npy is fp16 (embedded with --precision fp16). Do NOT cast to
+    # float32 here: 1_semantic_gap.py consumes the raw fp16 rows, and its
+    # sub-centroid (float16 mean -> float32 unit) is the canonical measurement
+    # object. A float32 cast drifts the GATE 4 gap by ~1.5e-4 and false-fails.
+    policy_emb = np.load(semantic_gap_shared.get_policy_emb(model))
     policy_scores = np.load(semantic_gap_shared.get_policy_scores(model)).astype(np.float32)
     policy_ids = load_json(semantic_gap_shared.get_policy_ids(model))
     if policy_scores.shape[0] != len(policy_ids) or policy_emb.shape[0] != len(policy_ids):
@@ -546,10 +551,21 @@ def check_research_centroid_gate(
 
 
 def centroid_gap_and_gate4(
-    mu_r: np.ndarray, mu_p: np.ndarray, canonical_row: dict[str, Any]
+    research_centroid: np.ndarray, policy_cloud: np.ndarray, canonical_row: dict[str, Any]
 ) -> float:
-    """Full-corpus centroid gap; GATE 4: must reproduce the canonical gap."""
-    gap = 1.0 - float(normalize(mu_r) @ normalize(mu_p))
+    """Full-corpus centroid gap; GATE 4: must reproduce the canonical gap.
+
+    The canonical measurement object is
+        sim = research_centroids[sdg] . policy_sub_centroid
+    where policy_sub_centroid is build_sub_centroid's float16-mean -> float32
+    unit centroid of the capped policy cloud (policy.npy is fp16). Replicating
+    exactly what 1_semantic_gap.py computes is what makes the gate meaningful;
+    a float64 mean of the same cloud drifts by ~1.5e-4 and would false-fail.
+    """
+    unit_p, _ = build_sub_centroid(policy_cloud, list(range(policy_cloud.shape[0])))
+    if unit_p is None:
+        raise RuntimeError(f"GATE 4 FAILED for SDG {canonical_row['sdg']}: empty policy cloud")
+    gap = 1.0 - float(np.dot(research_centroid, unit_p))
     expected = canonical_row["semantic_gap"]
     if expected is not None and abs(gap - float(expected)) > GATE_ATOL:
         raise RuntimeError(
@@ -775,12 +791,13 @@ def build_full_record(
     swd_out: dict[str, float],
     policy_cloud: np.ndarray,
     canonical_row: dict[str, Any],
+    research_centroid: np.ndarray,
 ) -> dict[str, Any]:
     mu_r = stream_out["mu"]
     sig_r = covariance_from_moments(mu_r, stream_out["sum_xxT"], stream_out["n"])
     mu_p, sig_p, n_p = moments_of_cloud(policy_cloud)
     w2 = gaussian_w2_terms(mu_r, sig_r, mu_p, sig_p)
-    gap_full = centroid_gap_and_gate4(mu_r, mu_p, canonical_row)
+    gap_full = centroid_gap_and_gate4(research_centroid, policy_cloud, canonical_row)
     diff = mu_r - mu_p
     record = {
         "config_hash": cfg_hash,
@@ -1208,6 +1225,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("Config hash: %s | output: %s", cfg_hash, layout.root)
 
     canonical = load_canonical(model)
+    research_centroids = np.load(scored_dir_for_model(model) / "research_centroids.npy").astype(np.float64)
     policy_state = load_policy_side(model, canonical)
     shards, total_rows = build_research_shards(embed_dir, scored_dir)
     log.info("Research corpus: %d rows across %d shards", total_rows, len(shards))
@@ -1232,7 +1250,8 @@ def run(args: argparse.Namespace) -> None:
                 shards, sdg_rows[s], policy_state["clouds"][s], directions
             )
             record = build_full_record(
-                s, cfg_hash, stream_out[s], swd_out, policy_state["clouds"][s], canonical[s + 1]
+                s, cfg_hash, stream_out[s], swd_out, policy_state["clouds"][s], canonical[s + 1],
+                research_centroids[s],
             )
             record["runtime_seconds"] = round(time.time() - t0, 1)
             append_record(records_path, record)
