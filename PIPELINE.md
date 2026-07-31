@@ -6,10 +6,11 @@
 - **(MPNet only)** — step runs only for the canonical encoder; skipped for MiniLM/SciBERT.
 - **Chaining rule:** each stage consumes the previous stage's outputs; script cards show only outputs. External, manual, and shared (fan-out) inputs are annotated inline.
 - Segments are canonical (built once with the MPNet segmenter) and shared by every encoder — only the encoder (and its native context window) varies in the per-model loop.
+- **Stage mapping:** each section header names the `main.py --stage <stage>` value(s) that run it. There is no `--stage score` or `--stage figures`: scoring spans `--stage infer` + `--stage centroids` (see §6), and figures run inside `--stage analysis` (see §7). Appendix scripts run via `--appendix-*` flags, not `--stage`; the LR/MLP grid-search step is never invoked by main.py.
 
 ---
 
-## 1. FETCH — external + manual inputs
+## 1. FETCH — external + manual inputs (`--stage fetch`)
 
 - fetch research corpus (canon)
 
@@ -55,7 +56,7 @@ Inputs (this stage only): manual policy downloads; `.env` with `OPENALEX_MAILTO`
 
 ---
 
-## 2. PREPROCESS — clean + trim, then build consolidated corpora
+## 2. PREPROCESS — clean + trim, then build consolidated corpora (`--stage preprocess`)
 
 - preprocess policy (scraped + manual)
 - preprocess ungdc
@@ -79,7 +80,9 @@ Inputs (this stage only): manual policy downloads; `.env` with `OPENALEX_MAILTO`
 
 ---
 
-## 3. SEGMENT — once, shared across all encoders
+## 3. SEGMENT — once, shared across all encoders (`--stage segment`)
+
+Segments are canonical and shared by every encoder (always `--embed-model all-mpnet-base-v2`). `--stage segment --corpus <all|reference|policy|research|research_concept>` selects which corpora are segmented (default `all` runs the four steps below).
 
 - segment reference
 - segment policy
@@ -101,7 +104,7 @@ Inputs (this stage only): manual policy downloads; `.env` with `OPENALEX_MAILTO`
 
 All artifacts below are namespaced under `[model]`. Steps marked (MPNet only) are skipped otherwise.
 
-### 4. EMBED
+### 4. EMBED (`--stage embed`)
 
 - embed reference corpus
 - embed policy corpus
@@ -115,7 +118,9 @@ All artifacts below are namespaced under `[model]`. Steps marked (MPNet only) ar
 
 Invariant: research-corpus text = `"{title}. {abstract}"` (set in `0_preprocess_papers_streaming.py`) — any subset must embed the same string or the LR scores a different representation.
 
-### 5. TRAIN
+### 5. TRAIN (`--stage train`)
+
+`--stage train` runs exactly: prepare training data + retrain LR champion + retrain MLP champion. The SDG reference centroids (previously listed here) are built by `--stage centroids` — see §6.
 
 - prepare training data (build one-hot 17-D labels from labelled reference texts — single-label records only; per-source stratified, document-grouped 85/15 train/test split)
 
@@ -133,20 +138,17 @@ Invariant: research-corpus text = `"{title}. {abstract}"` (set in `0_preprocess_
 
   Script `1_code/4_supervised_model_train/3_retrain_full_data.py` --> Output: `2_data/4_supervised_model_results/[model]/model/*.joblib` · `*_results.json` · `4_outputs/[model]/data/4_1_confusion_matrix.csv` (LR)
 
+Exploratory (not adopted): `3_retrain_full_data.py --cv-full-data` — manual GroupKFold CV on 100% of labelled data with champion hyperparameters; writes `cv_full_data_results.json`, touches no artifacts. Measured +0.002 CV mean (0.8107 → 0.8127) for absorbing the test set — negligible, so the held-out test (0.8231) remains the headline. See Open items.
+
+### 6. SCORE — split across `--stage centroids` + `--stage infer`
+
+No single `--stage score` exists. The `centroids` stage builds the SDG reference centroids and runs the sanity gates; the `infer` stage performs SDG assignment. Cross-stage dependency: the zero-shot step needs `sdg_centroids.npy` (so `centroids` must run before `infer`), while the consistency gate reads the LR/MLP scores produced by `infer` — a piecemeal stage sequence is not a clean DAG, and only warm/cold replay guarantee the full interleaving.
+
+**`--stage centroids`** (internal order: build → consistency → similarity)
+
 - build SDG reference centroids (from original labelled reference texts)
 
   Script `1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py` --> Output: `2_data/5_supervised_scored/[model]/sdg_centroids.npy`
-
-Exploratory (not adopted): `3_retrain_full_data.py --cv-full-data` — manual GroupKFold CV on 100% of labelled data with champion hyperparameters; writes `cv_full_data_results.json`, touches no artifacts. Measured +0.002 CV mean (0.8107 → 0.8127) for absorbing the test set — negligible, so the held-out test (0.8231) remains the headline. See Open items.
-
-### 6. SCORE
-
-- score research shards (`--classifier lr --corpus research`) → research_centroids.npy (supervised, PRIMARY)
-- score policy corpus (`--classifier lr --corpus policy`) → policy_scores.npy
-- score MLP (`--classifier mlp`) → mlp_scores/{mlp_summary.json, mlp_policy_scores.npy}
-- score concept-retrieval variant with the concept manifest (MPNet only): LR with `--embedding-manifest research_concept/metadata/manifest.json --out-dir paper_scores_shards_concept --research-centroids-out research_concept_centroids.npy`; MLP with `--corpus research_concept` → mlp_scores_concept/; zero-shot with `--embedding-manifest … --out-dir zeroshot_concept --data-dir data/concept`
-
-  Script `1_code/5_supervised_model_infer/score_supervised.py` + `1_code/6_calculate_centroids/score_zeroshot.py` --> Output: `2_data/5_supervised_scored/[model]/{research_centroids.npy, policy_scores.npy, paper_scores_shards/, mlp_scores/, research_concept_centroids.npy, mlp_scores_concept/, zeroshot_concept/}` · `4_outputs/[model]/data/concept/semantic_gap_distances.json` (zero-shot)
 
 - check centroid consistency (runtime SANITY GATE, not a producer: compare MLP-assigned SDG vs nearest-centroid SDG per corpus — per-SDG agreement + confusion; also saves policy centroids — diagnostic-only, read by nothing downstream)
 
@@ -156,15 +158,24 @@ Exploratory (not adopted): `3_retrain_full_data.py --cv-full-data` — manual Gr
 
   Script `1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py` --> Output: `4_outputs/[model]/data/4_1_centroid_similarity_matrix.csv`
 
+**`--stage infer`** (internal order: LR → MLP → zero-shot → concept)
+
+- score research shards (`--classifier lr --corpus research`) → research_centroids.npy (supervised, PRIMARY)
+- score policy corpus (`--classifier lr --corpus policy`) → policy_scores.npy
+- score MLP (`--classifier mlp`) → mlp_scores/{mlp_summary.json, mlp_policy_scores.npy}
 - score research & policy with zeroshot method (nearest-centroid SDG assignment)
 
-  Script `1_code/6_calculate_centroids/score_zeroshot.py` --> Output: `2_data/5_supervised_scored/[model]/zeroshot/{research, policy}_centroids.npy` · `4_outputs/[model]/data/semantic_gap_distances.json`
+  Script `1_code/5_supervised_model_infer/score_supervised.py` + `1_code/6_calculate_centroids/score_zeroshot.py` --> Output: `2_data/5_supervised_scored/[model]/{research_centroids.npy, policy_scores.npy, paper_scores_shards/, mlp_scores/, zeroshot/{research, policy}_centroids.npy}` · `4_outputs/[model]/data/semantic_gap_distances.json`
+
+- score concept-retrieval variant with the concept manifest (MPNet only): LR with `--embedding-manifest research_concept/metadata/manifest.json --out-dir paper_scores_shards_concept --research-centroids-out research_concept_centroids.npy`; MLP with `--corpus research_concept` → mlp_scores_concept/; zero-shot with `--embedding-manifest … --out-dir zeroshot_concept --data-dir data/concept`
+
+  Script `1_code/5_supervised_model_infer/score_supervised.py` + `1_code/6_calculate_centroids/score_zeroshot.py` --> Output: `2_data/5_supervised_scored/[model]/{research_concept_centroids.npy, mlp_scores_concept/, zeroshot_concept/}` · `4_outputs/[model]/data/concept/semantic_gap_distances.json` (zero-shot)
 
 ---
 
-## 7. ANALYSIS — in-process (run_analysis), shard-native mmap
+## 7. ANALYSIS — in-process (run_analysis), shard-native mmap (`--stage analysis`)
 
-All main-text analyses run in a single process per encoder; each reads the research embedding/score shards directly (no consolidated array). Outputs → `4_outputs/[model]/data/*.json` · `tables/*.tex`.
+All main-text analyses run in a single process per encoder; each reads the research embedding/score shards directly (no consolidated array). Outputs → `4_outputs/[model]/data/*.json` · `tables/*.tex`. `--stage analysis` runs ALL THREE encoders in one invocation (MPNet appendix included; MiniLM/SciBERT main analyses only), then regenerates the canonical cross-sensitivity table + figures once all encoders' outputs exist; an explicit `--embed-model <non-default>` keeps the old single-encoder behaviour.
 
 | script | runs on | notes |
 |---|---|---|
@@ -177,9 +188,9 @@ All main-text analyses run in a single process per encoder; each reads the resea
 
 **Concept pass (MPNet only, after the in-process analyses above, before `3_generate_cross_sensitivity_table.py`):** re-invoke `0_coverage_gap.py` (`--paper-scores-manifest paper_scores_shards_concept/metadata/manifest.json --out-data-dir data/concept`) and `1_semantic_gap.py` (`--research-centroids research_concept_centroids.npy --research-centroid-meta metadata/research_concept_centroid_meta.json --out-data-dir data/concept`) → `4_outputs/[model]/data/concept/{4_2_*, 4_3_*}`. Must precede the cross-sensitivity table, whose Retrieval column reads these files plus `mlp_scores_concept/` and `zeroshot_concept/`.
 
----
+### Figures (MPNet only) — part of `--stage analysis`
 
-## 8. FIGURES — MPNet only
+There is no standalone `--stage figures`. `plot_figures.py` runs inside `--stage analysis` (post-step, once all three encoders' analyses exist) and as step 9 of the warm/cold per-model loop — always for the canonical encoder only.
 
 - plot manuscript figures (PCA landscape, coverage profiles, semantic gap, coverage×semantic scatter, centroid-similarity heatmap)
 
@@ -187,7 +198,7 @@ All main-text analyses run in a single process per encoder; each reads the resea
 
 ---
 
-## 9. ROBUSTNESS + APPENDIX — cross-encoder, after the model loop
+## 8. ROBUSTNESS + APPENDIX — cross-encoder, after the model loop (via `--appendix-*` flags, not `--stage`)
 
 **Regenerate canonical cross-sensitivity table** — run once AFTER the per-model loop, now that all three encoders' outputs exist:
 - `3_generate_cross_sensitivity_table.py` → `4_outputs/[model]/tables/{tab_cross_sensitivity_robustness.tex, tab_cross_sensitivity_coverage.tex, tab_encoder_sensitivity_semantic.tex, tab_encoder_sensitivity_coverage.tex, num_*.tex}` — the PDF-consumed tables (all 3 encoders + concept-retrieval + per-policy-corpus filters).
