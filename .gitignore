@@ -118,3 +118,6 @@ checkpoints/
 # === Literature: ignore extracted markdown text (keep source PDFs) ===
 0_literature/*.md
 0_literature/**/*.md
+
+# === Agent instructions: not part of the dissertation artifact ===
+AGENTS.md
