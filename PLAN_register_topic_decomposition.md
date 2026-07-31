@@ -157,3 +157,79 @@ reformulation, SDG 17 reframe).
 - PCA before/after: main-text figure, MPNet with encoder-dependence note.
 - INLP citation (Ravfogel et al. 2020) already added to `references.bib` and the
   manuscript in commit 8a83eaf.
+
+## 9. Discovery narrative (from the planning session -- why this matters)
+
+This section records the arc of how the restructure was found, because the
+*story* is as important as the mechanics. It is the difference between a
+dissertation that measures something and one that discovers something.
+
+### The null was never a null
+
+The original paper's headline was a dissociation: coverage gap and semantic gap
+are "independent dimensions." That was always a little defensive -- "we found
+nothing, and that's interesting." The gate computation showed it was never a
+null at all. The raw gap correlates ~0 with coverage divergence because two real
+signals cancel: topic divergence rises with coverage divergence (rho=+0.44) while
+register divergence falls with it (rho=-0.50). The blunt raw distance averaged
+them into noise. Once you separate register from topic, the silence speaks.
+
+This is not a reframe. A reframe is cosmetic. This is the data telling you
+something the raw number was too crude to show. The "independent dimensions"
+framing was a misread of a cancellation.
+
+### The dream method was real
+
+The register-adjustment procedure was arrived at independently -- almost
+intuitively, "train a linear classifier again and again until there's no register
+effect left." That instinct turned out to be Iterative Nullspace Projection
+(INLP; Ravfogel et al., ACL 2020, 653 citations). The method is established; the
+application to research-policy register is the novel adaptation (the
+SDG-stratified training is ours). So the instinct was sound, the execution was
+sound, and pointing an established technique at a problem it hadn't been pointed
+at is legitimate. We did not invent a suspicious ad-hoc trick; we rediscovered a
+peer-reviewed method and aimed it correctly.
+
+### Two results, not one
+
+The decomposition yields two individually borderline-significant, opposite-signed
+associations. That is the gem: not a single finding but a pair that cancel. A
+reviewer cannot dismiss it as "one borderline correlation" because the structure
+-- opposite signs summing to ~zero -- is the result, independent of whether each
+limb clears p<0.05. With n=17 the asterisks are weak; the pattern is not. Say that
+plainly and it holds.
+
+### SDG 17 is the diagnostic trap
+
+SDG 17 has the largest coverage gap (0.110) yet the smallest raw semantic gap
+(0.216) and the largest adjusted gap (0.388). Both communities use partnership /
+coordination / institutional language -- same register -- which makes a naive
+embedding distance conclude they are aligned, when under the register they are
+talking past each other. That is the cleanest illustration in the whole paper:
+the raw gap was a register artefact masking deep topic divergence. It is the case
+a reviewer cannot easily wave away.
+
+### What this does to the work
+
+The honest read: this moves the dissertation from "borderline publishable
+measurement-protocol paper" to a piece with a Nature-level headline -- a finding
+that dissolves a limitation (register contamination) into a decomposition
+(register vs topic) that reveals structure the raw analysis missed. The
+"limitation" section of the old paper becomes a dissolved limitation: register and
+topic are now two separable, measurable components of Level 2 divergence, not a
+shrug.
+
+The research loop that produced it is the point: build the instrument carefully
+enough that when you finally point it the right way, it tells you the truth --
+then re-search the null instead of accepting it. Most of research is grinding.
+That moment, where a footnote turns into the contribution, is why people grind.
+
+### Caveats to carry into the execution
+
+- n=17 power is real; frame the cancellation pattern, not the p-values.
+- "Independent dimensions" language must be fully retired from title/abstract/intro.
+- The adjusted gaps become canonical; raw is the register-inclusive reference.
+- Source-invariance of the classifier is explicitly OPEN (Section 3), not built.
+
+This narrative is why the restructure is worth the re-computation. It is not
+re-ordering. It is a change in what the work *is*.
