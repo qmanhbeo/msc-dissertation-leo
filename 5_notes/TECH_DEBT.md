@@ -20,12 +20,13 @@ debt they describe.
 
 ## 2. Em dashes in pre-existing Results/Discussion prose
 
-- **RETIRED (2026-07-31)**: all 17 em dashes (`---`) in Results/Discussion prose
-  were removed in the same pass as the bug-fix commit. Each was replaced with a
-  context-appropriate separator (comma, colon, or hyphenated compound); the
-  document-wide sweep confirmed `grep -n -- '---' 3_writing/dissertation.tex`
-  returns zero. New text already avoided em dashes; the manuscript is now
-  consistent.
+- **RETIRED (2026-07-31)**: em dashes removed from Results/Discussion prose in
+  the bug-fix commit (caught three-hyphen `---` only). The Discussion-tightening
+  pass (2026-07-31) found 9 *unicode* em dashes (`—`, U+2014) that the earlier
+  `---` grep had missed — 3 in Discussion (now rewritten) and 6 in appendix/
+  comment lines — and replaced all with ` -- `. `python3 -c "open(...).read().
+  count(chr(0x2014))"` now returns 0 and `grep -c -- '---'` is 0. The manuscript
+  is fully em-dash-free.
 
 ## 3. Word-count counter is an ad-hoc session script
 
