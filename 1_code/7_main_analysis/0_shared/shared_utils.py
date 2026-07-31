@@ -106,6 +106,8 @@ MANUSCRIPT_EXTRA_FILES = [
     "appendix/a2_source_family_sensitivity/data/policy_source_family_summary.csv",
     "appendix/a2_source_family_sensitivity/data/policy_source_family_coverage.csv",
     "appendix/a2_source_family_sensitivity/data/policy_source_family_semantic_gaps.csv",
+    "appendix/a2_source_family_sensitivity/data/policy_source_family_h25.csv",
+    "appendix/a2_source_family_sensitivity/data/policy_source_family_h25.json",
     "appendix/a3_sdg4_audit/data/sdg4_lexical_audit.csv",
     "appendix/a3_sdg4_audit/data/sdg4_lexical_audit_summary.json",
     "main/data/pca_landscape_metadata.json",
@@ -156,6 +158,8 @@ MANUSCRIPT_FIGURE_FILES = [
 
 MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_combined.tex",
+    "appendix/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_h25.tex",
+    "appendix/a2_source_family_sensitivity/tables/num_a2_policy_source_family_h25.tex",
     "appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex",
     "main/tables/num_pca_landscape.tex",
     "appendix/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret_all.tex",

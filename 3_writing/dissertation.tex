@@ -45,6 +45,7 @@
 \input{../4_outputs/mpnet/tables/num_reference_split.tex}
 \InputIfFileExists{../4_outputs/appendix/mpnet/c_sample_stability/tables/num_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/mpnet/c1_subset_balanced_stability/tables/num_subset_stability.tex}{}{}
+\InputIfFileExists{../4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/num_a2_policy_source_family_h25.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/mpnet/f_register_adjustment/tables/num_register_adjustment.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/mpnet/f_register_adjustment/tables/num_iterative_register_check.tex}{}{}
 \InputIfFileExists{../4_outputs/mpnet/tables/num_distributional_gap.tex}{}{}
@@ -345,7 +346,7 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs.
 
 \textbf{Smallest semantic gaps.} SDG~17 (\SemanticGapSdgSeventeen), SDG~15 (Life on Land, \SemanticGapSdgFifteen), SDG~4 (Quality Education, \SemanticGapSdgFour), SDG~2 (Zero Hunger, \SemanticGapSdgTwo), and SDG~6 (Clean Water, \SemanticGapSdgSix) show the narrowest gaps, meaning research and policy frame these goals in close terms. A narrow gap does not mean balanced attention: SDG~9 is still research-dominant, SDG~17 is policy-dominant, and SDG~4 carries the learning-vocabulary concern (Appendix~\ref{app:sdg4-lexical-audit}). Appendix~\ref{app:semantic-gap-text-interpretability} shows example texts for high- and low-gap cases. One qualification applies to the smallest-gap reading: it is register-sensitive. The single-direction register adjustment leaves the ordering broadly intact, but the stratified iterative variant flips SDG~17 from the smallest raw gap (\RegRawGapSdgSeventeen{}) to the largest adjusted gap (\RegIterGapSdgSeventeen{}), Appendix~\ref{app:register-robustness}. The canonical raw estimate is retained; SDG~17's position is conditional on the register treatment of the measurement.
 
-\subsection{Coverage--Semantic Interaction: Two Distinct Dimensions of Observed Divergence}
+\subsection{Coverage--Semantic Interaction: Two Distinct Dimensions of Observed Divergence}\label{sec:interaction}
 
 Table~\ref{tab:interaction} reports the H1a–H1d correlation tests between coverage measures and semantic gap scores across the SDGs.
 
@@ -360,6 +361,8 @@ The four predictors are research coverage, policy coverage, the absolute researc
 \end{table}
 
 The evidence does not support H1a: across the 17 SDGs, coverage divergence and semantic divergence show no detectable association ($r = \HPrimaryCovgapPearsonR$, 95\% CI $[$\HPrimaryCovgapCiLower, \HPrimaryCovgapCiUpper$]$, $p = \HPrimaryCovgapPearsonP$; $n = \HPrimaryN$). With only 17 SDG-level observations the design is powered to detect only very large correlations ($|\HPrimaryMinDetectableR|$ or larger at 80\% power, $\alpha = 0.05$); the wide interval is therefore consistent with either no effect or a moderate one, and this should be read as evidence against a strong monotonic relationship rather than evidence of exact independence. H1c likewise shows no detectable association: research coverage and semantic gap are uncorrelated ($r = \HPrimaryPearsonR$, 95\% CI $[$\HPrimaryCiLower, \HPrimaryCiUpper$]$, $p = \HPrimaryPearsonP$). Two exploratory tests, H1d (policy coverage, $r = \HPrimaryPolicyPearsonR$, 95\% CI $[$\HPrimaryPolicyCiLower, \HPrimaryPolicyCiUpper$]$, $p = \HPrimaryPolicyPearsonP$) and H1b (signed dominance, $r = \HPrimaryDominancePearsonR$, 95\% CI $[$\HPrimaryDominanceCiLower, \HPrimaryDominanceCiUpper$]$, $p = \HPrimaryDominancePearsonP$), are also near-zero. All correlations remain small and non-significant under both exclusions; however, H1a and H1b flip sign when SDG~17 is dropped (Table~\ref{tab:interaction}), consistent with SDG~17's broader sensitivity to measurement configuration (\S\ref{sec:cross-sensitivity}).
+
+The corpus asymmetry does not manufacture this null. Because the research corpus is the AI $\cap$ SDG intersection while the policy corpus pools AI-specific and broad institutional SDG discourse, I re-ran the interaction test with the policy side restricted to the curated AI/SDG family, a symmetric AI/SDG-vs-AI/SDG comparison that matches the research corpus's scope. The dissociation survives: research share remains uncorrelated with the gap ($\rho = \CuratedHPrimaryResearchSpearmanRho$, $p = \CuratedHPrimaryResearchSpearmanP$), and the coverage-gap correlation does not reach significance either ($\rho = \CuratedHPrimaryCovgapSpearmanRho$, $p = \CuratedHPrimaryCovgapSpearmanP$; Table~\ref{tab:policy-source-family-h25}, Appendix~\ref{app:policy-source-data}).
 
 Figure~\ref{fig:typology_scatter} shows each SDG. The most striking pattern is the absence of a pattern: SDGs with large coverage gaps span the full range of semantic gaps (e.g.\ SDG~16 has the largest coverage gap but a below-median semantic gap, while SDG~3 has a large coverage gap and the second-largest semantic gap). Research attention coexists with both low- and high-gap cases (e.g.\ SDG~9 high-coverage low-gap, SDG~3 high-coverage high-gap), which is why H1c is near zero. No SDG drives a positive association; the null result is consistent across all configurations.
 
@@ -452,7 +455,7 @@ Each scope condition below states the limit and the check that bounds it.
 
 \textbf{Estimate stability under sampling.} A 100-draw subsampling ladder (1k--2M papers) shows headline metrics stabilise well before the full corpus, so results are not sampling artefacts (Appendix~\ref{app:sample-stability}).
 
-\textbf{Corpus scope and retrieval.} The policy corpus is international-institutional SDG discourse in English; the research query prioritises precision over recall (Section~\ref{sec:research-corpus}), minimising non-AI noise at the cost of specialised subfields. The source-family split makes composition sensitivity explicit (Appendix~\ref{app:policy-source-data}).
+\textbf{Corpus scope and retrieval.} The policy corpus is international-institutional SDG discourse in English; the research query prioritises precision over recall (Section~\ref{sec:research-corpus}), minimising non-AI noise at the cost of specialised subfields. The source-family split makes composition sensitivity explicit (Appendix~\ref{app:policy-source-data}). The comparison is inherently asymmetric: AI-for-sustainability research is a well-defined, if niche, academic category, whereas ``AI and the SDGs'' is not yet a mainstream organising category in policy discourse, so a policy corpus exactly comparable to the research intersection does not exist. I addressed this as best I could by re-testing the central interaction on the curated AI/SDG policy family, a symmetric AI/SDG-vs-AI/SDG construction (Section~\ref{sec:interaction}, Appendix~\ref{app:policy-source-data}); broadening the research side to all-SDG research (dropping the AI-term intersection) would complete the symmetry and is left to future work.
 
 \textbf{OpenAlex upstream classification.} SDG tags inherit an upstream classifier's bias; un-tagged records are absent. This is a documented method-dependent boundary \parencite{Armitage2020}, and coverage proportions are read conditional on it.
 
@@ -782,6 +785,16 @@ The implication is interpretive rather than corrective. The full policy corpus s
 \label{tab:policy-source-family}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_combined.tex}}
 \par\smallskip\footnotesize\emph{Notes:} For each policy source family, \texttt{pol.\% (n)} is the document-weighted policy share (\%) with the document count in parentheses; \texttt{sem. (n)} is the within-SDG research--policy semantic gap with the capped segment count in parentheses. Read across a row to see whether the gap is stable or driven by one family.\par
+\end{table}
+
+The symmetric construction preserves the dissociation at the level of the interaction test. The H1a--H1d tests ask whether SDG coverage measures predict the within-SDG semantic gap (Section~\ref{sec:interaction}). Re-running those tests within each policy source family (Table~\ref{tab:policy-source-family-h25}) reproduces the full-corpus null under the curated construction: with policy restricted to the curated AI/SDG family, research share does not correlate with the gap ($\rho = \CuratedHPrimaryResearchSpearmanRho$, $p = \CuratedHPrimaryResearchSpearmanP$), and the coverage-gap correlation also does not reach significance ($\rho = \CuratedHPrimaryCovgapSpearmanRho$, $p = \CuratedHPrimaryCovgapSpearmanP$). The full-corpus row of Table~\ref{tab:policy-source-family-h25} reproduces the canonical interaction estimates (Section~\ref{sec:interaction}), confirming the replication is faithful. The null is therefore not an artefact of comparing an AI-specific research intersection with a broader policy union.
+
+\begin{table}[ht]
+\centering
+\caption{Per-family interaction test: coverage predictors vs the within-SDG semantic gap.}
+\label{tab:policy-source-family-h25}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_h25.tex}}
+\par\smallskip\footnotesize\emph{Notes:} Spearman $\rho$ (with two-sided $p$) between each coverage predictor and the within-SDG semantic gap across the reliable SDGs ($n$). Research share is the research-corpus proportion per SDG (family-independent); the coverage gap is $|\text{research}-\text{policy}|$ using the family's document-weighted policy share. The curated AI/SDG family is the symmetric AI/SDG-vs-AI/SDG control matching the research corpus's AI $\cap$ SDG scope.\par
 \end{table}
 
 \section{Declaration of AI Use}

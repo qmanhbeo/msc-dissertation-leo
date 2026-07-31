@@ -73,24 +73,36 @@ appendix stage reuses the existing draws:
 (mean 0.354 vs 0.352 full) because smaller research centroids are noisier; the
 ranking — which the dissociation rests on — is preserved. Both are reported.
 
-## Item 1 — corpus-asymmetry confound (DEFERRED, own whole session)
+## Item 1 — corpus-asymmetry confound (Option (b) DONE, 2026-07-31; Option (a) future work)
 
 **Concern.** Research corpus = AI cap SDG; policy corpus = broader union. The
 headline dissociation (coverage perpendicular framing) could partly be an
 artifact of comparing two differently-constructed corpora.
 
-**Scope of the dedicated session (not run in this pass).** Build an alternative
-construction and re-test the dissociation:
+**What was done — Option (b), the symmetric curated control (offline, no OpenAlex).**
+The "94-document curated AI/SDG set" in the original plan is the existing
+`curated_ai_sdg` policy source family (policy_scrape 31 + policy_manual 64
+docs). `a2_policy_source_family_sensitivity.py` was extended to replicate the
+canonical H25 interaction test (four coverage predictors vs within-SDG semantic
+gap, Spearman + Pearson, with/without SDG 4) for each policy source family,
+using the already-embedded full policy corpus. The full-corpus row exactly
+reproduces the canonical 4_4 values (research ρ=0.216, covgap ρ=-0.078),
+validating the replication. Result for the symmetric AI/SDG-vs-AI/SDG
+construction (curated family, n=17): research share vs gap ρ = -0.17 (p=0.51),
+coverage gap vs gap ρ = -0.41 (p=0.10) — the dissociation survives, and research
+share is not in the hypothesised positive direction. Emits
+`tab_a2_policy_source_family_h25.tex` + `num_a2_policy_source_family_h25.tex`
+(`\CuratedHPrimary*`, `\FullPolicyHPrimary*` macros).
 
-- Option (a): broaden the research corpus to all-SDG research (drop the AI-term
-  intersection), or
-- Option (b): narrow the policy corpus to the 94-document curated AI/SDG set.
-
-Then re-run coverage + semantic gap + H1a and ask whether the null survives the
-more symmetric construction. This needs new retrieval (OpenAlex) and
-re-embedding, so it is a sub-pipeline run and its own session. Manuscript impact:
-a new robustness subsection and possibly a reframing of the strength of the
-central claim.
+- Manuscript: one first-person Results sentence in the Coverage--Semantic
+  Interaction subsection (`\label{sec:interaction}` added) plus an appendix
+  paragraph + `tab:policy-source-family-h25` table under
+  `app:policy-source-data`; Limitations acknowledge that "AI and the SDGs" is
+  not yet a mainstream policy category, so the curated AI/SDG set is the
+  closest symmetric control fieldable.
+- Option (a) — broadening the research corpus to all-SDG (drop the AI-term
+  intersection) — is left as future work, stated in the manuscript; it needs
+  new OpenAlex retrieval + re-embedding (~1 week, API keys).
 
 ## Minor / cosmetic (optional, venue-agnostic)
 
