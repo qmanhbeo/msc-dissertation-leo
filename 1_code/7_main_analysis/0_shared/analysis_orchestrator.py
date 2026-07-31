@@ -44,6 +44,7 @@ APPENDIX_STEPS = [
     ("2_appendix/d1_export_model_selection_nums.py", False),
     ("2_appendix/f_register_adjustment.py", False),
     ("2_appendix/h1_cross_method_gap_values.py", False),
+    ("2_appendix/i1_assignment_method_comparison.py", False),
 ]
 
 _MODULE_CACHE: dict[str, object] = {}

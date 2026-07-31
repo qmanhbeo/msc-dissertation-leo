@@ -88,15 +88,6 @@ def load_concept_mlp_gaps(m):
     return {int(k): v for k, v in data["semantic_gaps"].items()}
 
 
-def load_concept_zs_gaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances.json"
-    if not p.exists():
-        return None
-    with open(p) as f:
-        data = json.load(f)
-    return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
-
-
 def _spearman(x, y):
     """Spearman rho via Pearson of the rank vectors (scipy-free).
 
@@ -216,7 +207,9 @@ ENC_AXIS_SEMANTIC_NOTES = (
     "the dimensionality drop that confounds the MPNet--MiniLM pair "
     "(Section~\\ref{sec:encoder-sensitivity}). "
     "LR = canonical supervised logistic regression; policy segments capped at 50/doc/SDG. "
-    "MLP = 4-layer/384-hidden network. Zero-shot = nearest-centroid on SDG reference centroids. "
+    "MLP = 4-layer/384-hidden network. Zero-shot = nearest-centroid on SDG reference centroids, "
+    "reported for the canonical MPNet encoder only (scoped to a single supervised-vs-"
+    "nearest-centroid comparison, Appendix~\\ref{app:assignment-method-comparison}). "
     "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
     "canonical MPNet-LR column."
 )
@@ -233,7 +226,8 @@ ENC_AXIS_COVERAGE_NOTES = (
     "the dimensionality drop that confounds the MPNet--MiniLM pair "
     "(Section~\\ref{sec:encoder-sensitivity}). "
     "LR = canonical supervised logistic regression; MLP = 4-layer/384-hidden network; "
-    "Zero-shot = nearest-centroid on SDG reference centroids. Coverage gap is "
+    "Zero-shot = nearest-centroid on SDG reference centroids, "
+    "reported for the canonical MPNet encoder only. Coverage gap is "
     "document-weighted (Assumption A19) for all methods. "
     "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG coverage-gap ranks "
     "against the canonical MPNet-LR column."
@@ -270,7 +264,7 @@ def write_encoder_axis_semantic():
     for m, sublabel in ENC_AXIS_ENCODERS:
         lr = load_lr_gaps(m)
         mlp = load_mlp_gaps(m)
-        zs = load_zs_gaps(m)
+        zs = load_zs_gaps(m) if m == DEFAULT_EMBED_MODEL else None
         cols = []
         if lr:
             cols.append(("LR", compute_ranks(lr),
@@ -280,7 +274,7 @@ def write_encoder_axis_semantic():
                          "MLP (4-layer/384-hidden) — policy segments capped at 50/doc/SDG"))
         if zs:
             cols.append(("ZS", compute_ranks(zs),
-                         "Zero-shot nearest-centroid on SDG reference centroids"))
+                         "Zero-shot nearest-centroid on SDG reference centroids (canonical encoder only)"))
         if cols:
             enc_subgroups.append((sublabel, cols))
     if not enc_subgroups:
@@ -326,7 +320,7 @@ def write_encoder_axis_coverage():
     for m, sublabel in ENC_AXIS_ENCODERS:
         lr = load_lr_covgaps(m)
         mlp = load_mlp_covgaps(m)
-        zs = load_zs_covgaps(m)
+        zs = load_zs_covgaps(m) if m == DEFAULT_EMBED_MODEL else None
         cols = []
         if lr:
             cols.append(("LR", compute_ranks(lr),
@@ -336,7 +330,7 @@ def write_encoder_axis_coverage():
                          "MLP (4-layer/384-hidden) — coverage gap vs full policy corpus"))
         if zs:
             cols.append(("ZS", compute_ranks(zs),
-                         "Zero-shot nearest-centroid — coverage gap vs full policy corpus"))
+                         "Zero-shot nearest-centroid — coverage gap vs full policy corpus (canonical encoder only)"))
         if cols:
             enc_subgroups.append((sublabel, cols))
     if not enc_subgroups:
@@ -487,50 +481,6 @@ def load_concept_mlp_covgaps(m):
     policy_scores = np.load(scores_path)
     with open(ids_path) as f:
         policy_ids = json.load(f)
-
-    doc_to_rows = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    doc_assignments = np.empty(n_docs, dtype=np.int32)
-    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_assignments[d_idx] = doc_vec.argmax()
-
-    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    pol_profile = pol_counts / pol_counts.sum()
-
-    gaps = {}
-    for i in range(N_SDG):
-        sdg = i + 1
-        res_share = res_counts.get(sdg, 0) / res_total
-        gaps[sdg] = float(abs(res_share - pol_profile[i]))
-    return gaps
-
-
-def load_concept_zs_covgaps(m):
-    gap_path = output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances.json"
-    if not gap_path.exists():
-        return None
-    with open(gap_path) as f:
-        data = json.load(f)
-    res_counts = {r["sdg"]: r["n_papers"] for r in data["per_sdg"]}
-    res_total = sum(res_counts.values())
-
-    e_dir = embed_dir_for_model(m)
-    emb_path = e_dir / "policy.npy"
-    ids_path = e_dir / "metadata" / "policy_ids.json"
-    centroids_path = scored_dir_for_model(m) / "sdg_centroids.npy"
-    if not (emb_path.exists() and ids_path.exists() and centroids_path.exists()):
-        return None
-
-    policy_emb = np.load(emb_path).astype(np.float32)
-    with open(ids_path) as f:
-        policy_ids = json.load(f)
-    centroids = np.load(centroids_path).astype(np.float32)
-
-    policy_scores = policy_emb @ centroids.T
 
     doc_to_rows = defaultdict(list)
     for i, r in enumerate(policy_ids):
@@ -736,7 +686,6 @@ def write_cross_sensitivity():
 
     concept_lr = load_concept_lr_gaps(model)
     concept_mlp = load_concept_mlp_gaps(model)
-    concept_zs = load_concept_zs_gaps(model)
     concept_sub_cols = []
     if concept_lr:
         concept_sub_cols.append(("LR", compute_ranks(concept_lr),
@@ -744,9 +693,6 @@ def write_cross_sensitivity():
     if concept_mlp:
         concept_sub_cols.append(("MLP", compute_ranks(concept_mlp),
                                  "MLP centroids (concept-based AI/ML retrieval)"))
-    if concept_zs:
-        concept_sub_cols.append(("ZS", compute_ranks(concept_zs),
-                                 "Zero-shot centroids (concept-based AI/ML retrieval)"))
     if concept_sub_cols:
         col_groups.append(("Retrieval", concept_sub_cols))
 
@@ -966,7 +912,6 @@ def write_coverage_table():
 
     concept_lr = load_concept_covgaps(model)
     concept_mlp = load_concept_mlp_covgaps(model)
-    concept_zs = load_concept_zs_covgaps(model)
     concept_sub_cols = []
     if concept_lr:
         concept_sub_cols.append(("LR", compute_ranks(concept_lr),
@@ -974,9 +919,6 @@ def write_coverage_table():
     if concept_mlp:
         concept_sub_cols.append(("MLP", compute_ranks(concept_mlp),
                                  "MLP centroid assignment (concept-based AI/ML retrieval)"))
-    if concept_zs:
-        concept_sub_cols.append(("ZS", compute_ranks(concept_zs),
-                                 "Zero-shot centroid assignment (concept-based AI/ML retrieval)"))
     if concept_sub_cols:
         col_groups.append(("Retrieval", concept_sub_cols))
 
@@ -1110,6 +1052,10 @@ def run(args: argparse.Namespace) -> None:
             output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_robustness_caps.json",
             output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
         ]
+    # Zero-shot gaps are a direct input to the ZS column (canonical encoder only).
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "semantic_gap_distances.json"
+    )
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         print(f"Skipping {PRIMARY} \u2014 inputs unchanged")

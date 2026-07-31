@@ -118,13 +118,14 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C0, D1, F, H.1) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C0, D1, F, H.1, I.1) standalone (requires existing main-text outputs).")
     p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
     p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
     p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
+    p.add_argument("--appendix-i1-assignment-method", action="store_true", help="Run I.1 Supervised vs Nearest-Centroid Assignment Comparison.")
     p.add_argument("--appendix-c0-corpus-split", action="store_true", help="Export reference-corpus split-size macros.")
     p.add_argument("--appendix-d1-model-selection", action="store_true", help="Export D.1 model-selection CV macros.")
     p.add_argument("--appendix-g-distributional", action="store_true", help="Run the distributional semantic-gap robustness (MAIN-RESULT Table; OPT-IN: not run by warm replay or --appendix-all; run before --build-pdf).")
@@ -210,6 +211,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_f_register,
             args.appendix_d1_model_selection,
             args.appendix_h1_cross_method,
+            args.appendix_i1_assignment_method,
             args.appendix_c_sample_stability,
             args.appendix_g_distributional,
             args.fetch_data_snapshot,
@@ -415,6 +417,16 @@ def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_
     run_step("cross-method gap values", cmd, step_id="H1")
 
 
+def run_i1_assignment_method_comparison(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
+    _warn_non_default_model(model, "Assignment-method comparison (Appendix I.1)")
+    actual_output_dir = output_dir
+    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/i1_assignment_method_comparison.py", "--output-dir", str(actual_output_dir)]
+    if model != DEFAULT_EMBED_MODEL:
+        cmd += ["--embed-model", model]
+    cmd += _overwrite_flag(overwrite)
+    run_step("assignment-method comparison", cmd, step_id="I1")
+
+
 def _overwrite_flag(overwrite: bool) -> list[str]:
     return ["--overwrite"] if overwrite else []
 
@@ -538,14 +550,9 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
             "--data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
-    # Main-text analyses, driven in-process by the orchestrator. Each analysis
-    # reads the 27 research embedding/score shards directly (shard-native, mmap);
-    # no consolidated array is built or cached.
-    # Must run BEFORE plot figures, which consumes the analysis outputs.
-    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     # Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
-    # concept-retrieved corpus must run BEFORE the cross-sensitivity table,
-    # which consumes data/concept/4_2_* + 4_3_* for its Retrieval column.
+    # concept-retrieved corpus. Must run BEFORE the in-process analyses: H.1 and
+    # the cross-sensitivity table consume data/concept/4_2_* + 4_3_*.
     if model == DEFAULT_EMBED_MODEL:
         run_step("coverage gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
@@ -560,6 +567,11 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
+    # Main-text analyses, driven in-process by the orchestrator. Each analysis
+    # reads the 27 research embedding/score shards directly (shard-native, mmap);
+    # no consolidated array is built or cached.
+    # Must run BEFORE plot figures, which consumes the analysis outputs.
+    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     # Cross-sensitivity table (default model only — for MiniLM/SciBERT the
     # canonical table is regenerated after the cold-replay model loop from all
     # three encoders' data).
@@ -584,9 +596,9 @@ def _run_analysis_only(output_dir: Path, model: str, *,
     semantic gap, interaction, cross-sensitivity table, PCA, and figures.
     """
     _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
-    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     # Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
-    # concept-retrieved corpus, before the cross-sensitivity table (step 6).
+    # concept-retrieved corpus. Must run BEFORE the in-process analyses: H.1 and
+    # the cross-sensitivity table consume data/concept/4_2_* + 4_3_*.
     if model == DEFAULT_EMBED_MODEL:
         concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
         concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
@@ -605,6 +617,7 @@ def _run_analysis_only(output_dir: Path, model: str, *,
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
+    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     if model == DEFAULT_EMBED_MODEL:
         run_step("generate cross-sensitivity table",
                  [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
@@ -1014,6 +1027,7 @@ def main() -> None:
         or args.appendix_f_register
         or args.appendix_d1_model_selection
         or args.appendix_h1_cross_method
+        or args.appendix_i1_assignment_method
         or args.appendix_g_distributional
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
@@ -1039,6 +1053,7 @@ def main() -> None:
         run_model_selection_nums(output_dir, model=model, overwrite=args.overwrite)
         run_corpus_split_sizes(output_dir, model=model, overwrite=args.overwrite)
         run_h1_cross_method_gap_values(output_dir, model=model, overwrite=args.overwrite)
+        run_i1_assignment_method_comparison(output_dir, model=model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_a2_family:
@@ -1071,6 +1086,10 @@ def main() -> None:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_h1_cross_method:
         run_h1_cross_method_gap_values(output_dir, model=args.embed_model, overwrite=args.overwrite)
+        if args.build_pdf:
+            build_pdf(output_dir, model=args.embed_model)
+    elif args.appendix_i1_assignment_method:
+        run_i1_assignment_method_comparison(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_g_distributional:

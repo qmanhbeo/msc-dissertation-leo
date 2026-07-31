@@ -750,7 +750,7 @@ Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword
 \subsection{Cross-Method Coverage and Semantic Gap Values}
 \label{app:cross-method-gap-values}
 
-Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} report the raw coverage gap and semantic gap values for each SDG across nine encoder--assignment-method combinations, with an additional concept-retrieval LR column for comparison against the keyword-retrieved research corpus baseline (Appendix~\ref{app:concept-retrieval-sensitivity}). While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the tables below show the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Assumption A19); semantic gap policy centroids use a 50-segment-per-document cap.
+Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} report the raw coverage gap and semantic gap values for each SDG across seven encoder--assignment-method combinations, with an additional concept-retrieval LR column for comparison against the keyword-retrieved research corpus baseline (Appendix~\ref{app:concept-retrieval-sensitivity}). While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the tables below show the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Assumption A19); semantic gap policy centroids use a 50-segment-per-document cap. The zero-shot nearest-centroid method is reported for the canonical MPNet encoder only; it is scoped to a single supervised-versus-nearest-centroid comparison (Appendix~\ref{app:assignment-method-comparison}), not a cross-encoder axis.
 
 \begin{table}[ht]
 \centering
@@ -769,6 +769,22 @@ Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} r
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex}}
 \par\smallskip\footnotesize\emph{Notes:} Semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap. All values are cosine units.\par
 \end{table}
+
+\subsection{Assignment-Method Comparison: Supervised vs.\ Nearest-Centroid}
+\label{app:assignment-method-comparison}
+
+The zero-shot nearest-centroid method is used in this study for one purpose only: a single comparison between the canonical supervised assignment (LR, with the MLP as robustness) and an assignment rule with no trained decision boundary. Under the zero-shot rule, every research paper and policy segment is assigned to the SDG whose train-split reference centroid is most similar (cosine) in embedding space. Table~\ref{tab:app-assignment-method-comparison} reports how often the two methods agree, per SDG and overall, for the research corpus (paper level) and the policy corpus (segment level), together with the LR-versus-zero-shot semantic-gap rank delta per SDG.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\caption{Assignment agreement between the supervised LR classifier and the zero-shot nearest-centroid rule, by SDG and overall, under the canonical MPNet encoder and keyword retrieval. Agree \% is the share of LR-assigned texts that the zero-shot rule also assigns to the same SDG. Semantic-gap ranks are $1 = \text{largest gap}$; $|\Delta|$ is the absolute rank difference between the two methods.}
+\label{tab:app-assignment-method-comparison}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/i1_assignment_method_comparison/tables/tab_app_assignment_method_comparison.tex}}
+\par\smallskip\footnotesize\emph{Notes:} Assignment agreement is computed over all texts (research: each paper; policy: each segment), without the 50-segment-per-document cap, which applies only to centroid building. The zero-shot rule assigns each text to the SDG with the highest cosine similarity to the train-split reference centroids ($\mathbf{s}_k$); the LR rule uses the trained classifier's argmax. MLP agreement against zero-shot is computed for the policy corpus only, because MLP research per-paper scores are not persisted (the research LR-vs-MLP gap-rank correlation is reported in Section~\ref{sec:encoder-sensitivity}).\par
+\end{table}
+
+The comparison confirms that the two methods largely agree on the broad assignment: the overall LR-versus-zero-shot agreement rate is high on both corpora (Table~\ref{tab:app-assignment-method-comparison}). Agreement is not uniform across SDGs, and the disagreements are concentrated where the reference centroids are least separated, in line with the centroid-similarity diagnostics (Appendix~\ref{app:centroid-similarity}). SDG~17, whose reference centroid is the flattest and most isolated in that analysis, is also the most method-sensitive goal here: it shows the largest rank delta between the two semantic-gap rankings, consistent with the assignment-method discussion in Section~\ref{sec:encoder-sensitivity}. The zero-shot rule, having no supervised decision boundary, anchors partnership discourse less sharply than the LR classifier.
 
 \subsection{Detailed Policy Profiles by Source Family}
 \label{app:policy-source-data}

@@ -1,0 +1,79 @@
+{
+  "iterations": [
+    {
+      "k": 1,
+      "test_acc": 0.9808,
+      "mean_gap": 0.3238,
+      "rho_vs_iter1": 1.0
+    },
+    {
+      "k": 2,
+      "test_acc": 0.9376,
+      "mean_gap": 0.3172,
+      "rho_vs_iter1": 0.9926
+    },
+    {
+      "k": 3,
+      "test_acc": 0.8898,
+      "mean_gap": 0.305,
+      "rho_vs_iter1": 0.9828
+    },
+    {
+      "k": 4,
+      "test_acc": 0.8539,
+      "mean_gap": 0.3008,
+      "rho_vs_iter1": 0.9534
+    },
+    {
+      "k": 5,
+      "test_acc": 0.8333,
+      "mean_gap": 0.2984,
+      "rho_vs_iter1": 0.9412
+    },
+    {
+      "k": 10,
+      "test_acc": 0.7616,
+      "mean_gap": 0.2628,
+      "rho_vs_iter1": 0.6912
+    },
+    {
+      "k": 15,
+      "test_acc": 0.6939,
+      "mean_gap": 0.2286,
+      "rho_vs_iter1": 0.5147
+    },
+    {
+      "k": 20,
+      "test_acc": 0.6188,
+      "mean_gap": 0.2159,
+      "rho_vs_iter1": 0.4975
+    },
+    {
+      "k": 30,
+      "test_acc": 0.5541,
+      "mean_gap": 0.2071,
+      "rho_vs_iter1": 0.4485
+    },
+    {
+      "k": 40,
+      "test_acc": 0.5408,
+      "mean_gap": 0.2049,
+      "rho_vs_iter1": 0.4608
+    },
+    {
+      "k": 50,
+      "test_acc": 0.522,
+      "mean_gap": 0.2053,
+      "rho_vs_iter1": 0.4559
+    },
+    {
+      "k": 94,
+      "test_acc": 0.4988,
+      "mean_gap": 0.2134,
+      "rho_vs_iter1": 0.4118
+    }
+  ],
+  "final_k": 94,
+  "spearman_rho_iter1_final": 0.4118,
+  "note": "85/15 stratified train/test split on 1000-per-SDG samples; G-projected data at each iteration."
+}

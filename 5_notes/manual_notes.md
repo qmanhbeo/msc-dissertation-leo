@@ -38,3 +38,12 @@ It is critical to acknowledge that querying a research corpus using explicit com
 ## For main text:
 
 Methodological Justification for Calibration Bias Controls (Assumption A15)To ensure that the observed semantic alignments reflect genuine conceptual engagement rather than mere stylistic mimicry, the analysis implements a strict calibration bias safeguard (A15). Because both the international policy corpus and the underlying OSDG training text are written in a highly stylized, institutional "UN-speak," policy documents enjoy an artificial linguistic head-start when evaluated against SDG centroids. Our pipeline mathematically isolates this baseline vocabulary inflation, establishing a structural noise threshold of $0.326$. While the raw analysis for Hypothesis 26 indicates a directional asymmetry of $0.144$—suggesting that policy frameworks actively engage with scientific research vectors more than vice versa—this observed signal is completely swallowed by the much larger $0.326$ dialect bias. Consequently, this relationship is conservatively treated as inconclusive, preventing an artifact of institutional vocabulary from being misconstrued as a genuine cross-disciplinary alignment.
+## Decision (2026-07-31): zero-shot scope
+
+Zero-shot nearest-centroid is scoped to a SINGLE comparison: canonical
+supervised (LR, MLP as robustness) vs zero-shot. It appears in the manuscript
+only as the MPNet zero-shot column in the encoder-sensitivity tables and in
+the new Appendix I.1 (supervised vs nearest-centroid assignment comparison).
+It must not span encoders/policy-source/segment-cap/retrieval axes in any
+manuscript-facing table or prose, though scripts still support it via flags.
+See AGENTS.md "Manuscript scope decisions" for the enforcement points.

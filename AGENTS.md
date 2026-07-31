@@ -97,6 +97,23 @@ non-obvious facts that are easy to miss.
 - Appendix stages (`--appendix-*`, `--appendix-all`) require existing main-text
   outputs first.
 
+## Manuscript scope decisions
+
+- **Zero-shot is a single comparison, not an axis.** The zero-shot
+  nearest-centroid method is scoped to ONE comparison: canonical supervised
+  (LR; MLP as robustness) vs nearest-centroid. It appears in the manuscript
+  ONLY as the single zero-shot column under the MPNet group of the
+  encoder-sensitivity tables and in Appendix I.1 (supervised vs nearest-
+  centroid assignment comparison). It must NOT span encoders, policy-source
+  families, segment caps, or retrieval strategies in any manuscript-facing
+  table or prose, even though the pipeline scripts can compute it across those
+  axes via flags. MLP keeps spanning encoders (it is a supervised robustness
+  check); only zero-shot is restricted.
+- `3_generate_cross_sensitivity_table.py` gates zero-shot columns to
+  `DEFAULT_EMBED_MODEL` only; `h1_cross_method_gap_values.py` emits zero-shot
+  only for MPNet (7 data columns + concept LR). Do not re-add ZS columns for
+  MiniLM/SciBERT without revoking this decision.
+
 ## Pipeline invalidation model
 
 Two distinct mechanisms protect different failure modes:
