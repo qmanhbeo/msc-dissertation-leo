@@ -59,10 +59,9 @@ LR_MAX_ITER = 1000
 
 # Champion MLP hyperparameters as selected by the manual grid-search CV
 # (grid_search_log.json, 2026-07-25): 4 layers / 384 hidden / lr=3e-4 / wd=0 /
-# dropout=0.3, CV macro-F1 0.8243. NOTE: the retrained MLP artifact
-# (mlp_retrained.joblib + model_config.json) was built with lr=1e-3 (script
-# argparse defaults), NOT this champion — a known discrepancy with the
-# dissertation text, which cites lr=3e-4. --cv-full-data uses the true champion.
+# dropout=0.3, CV macro-F1 0.8243. The argparse defaults below derive from this
+# champion so the retrained MLP artifact (mlp_retrained.joblib +
+# model_config.json) matches the dissertation text, which cites lr=3e-4.
 MLP_CHAMPION_CONFIG = {
     "n_layers": 4,
     "hidden_size": 384,
@@ -311,7 +310,7 @@ def main() -> None:
     # MLP-specific args
     parser.add_argument("--n-layers", type=int, default=4)
     parser.add_argument("--hidden-size", type=int, default=384)
-    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--lr", type=float, default=MLP_CHAMPION_CONFIG["lr"])
     parser.add_argument("--weight-decay", type=float, default=0.0)
     parser.add_argument("--dropout", type=float, default=0.3)
     parser.add_argument("--max-epochs", type=int, default=100)
@@ -333,7 +332,7 @@ def main() -> None:
     parser.add_argument("--overwrite", action="store_true",
                         help="Force retrain even if a previously trained model exists.")
     parser.add_argument("--cv-full-data", action="store_true",
-                        help="EXPLORATORY (manual only): run GroupKFold CV on 100% of labelled data "
+                        help="EXPLORATORY (manual only): run GroupKFold CV on 100%% of labelled data "
                              "with the grid-search champion hyperparameters (LR: C=10/l2/lbfgs; "
                              "MLP: 4/384/lr=3e-4). Writes cv_full_data_results.json and exits — does "
                              "NOT retrain, save, or overwrite any model artifact. Not part of the "
