@@ -268,6 +268,13 @@ def main() -> None:
                 rows_completed=rows_completed,
                 status="in_progress",
             )
+            # Release per-batch CUDA scratch immediately. A spike batch (any
+            # segment longer than the model window inflating dynamic padding,
+            # e.g. XML/math-junk abstracts up to 920 tokens) otherwise ratchets
+            # the caching-allocator watermark toward card capacity, forcing
+            # CPU-side eviction churn on every later batch (~6x slowdown on a
+            # 4GB card). Values are unaffected — only cached blocks are freed.
+            torch.cuda.empty_cache()
 
             pct = 100.0 * rows_completed / n
             log.info("  batch %4d/%d (%5d–%5d, %5d docs)  %5.1f%%  → wrote %s",

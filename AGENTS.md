@@ -182,3 +182,11 @@ pipeline code, see `1_code/README.md`), `2_data/` (gitignored), `3_writing/`
   `f"{title}. {abstract}"` (`1_code/1_preprocess/0_preprocess_papers_streaming.py`).
   Any subset must embed the same string or the LR scores a different
   representation.
+- **CUDA allocator watermark trap (small-VRAM cards).** If any corpus segment
+  exceeds the embedder's window (~512 tokens — e.g. XML/math-junk abstracts up
+  to 920 tokens), a single spike batch ratchets the caching-allocator watermark
+  toward card capacity; every later batch then pays CPU-side eviction churn
+  (~20 texts/s vs ~110 on a 4GB card, GPU otherwise healthy). The paper-shards
+  embedder (`0_embed_paper_shards.py`) calls `torch.cuda.empty_cache()` after
+  every batch to prevent this — values are unaffected. Don't "fix" throughput
+  by re-running with `--overwrite`; a running embed is safe to let finish.
