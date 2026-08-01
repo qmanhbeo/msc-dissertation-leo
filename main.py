@@ -375,6 +375,109 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
     )
 
 
+def _preprocess_steps(overwrite: bool) -> list[tuple[str, list[str]]]:
+    reset = _reset_flag(overwrite)
+    ow = _overwrite_flag(overwrite)
+    return [
+        ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + reset),
+        ("preprocess ungdc", [sys.executable, "1_code/1_preprocess/0_preprocess_ungdc_sdg.py"] + reset),
+        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + reset),
+        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + reset),
+        ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + reset),
+        ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + reset),
+        ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + reset),
+        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + reset),
+        ("preprocess concept corpus", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py", "--retrieval", "concept"] + reset),
+        ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + ow),
+        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + ow),
+    ]
+
+
+def _segment_steps(corpus: str, overwrite: bool) -> list[tuple[str, list[str]]]:
+    ow = _overwrite_flag(overwrite)
+    if corpus == "all":
+        steps = [
+            ("segment reference & policy", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            ("segment concept research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            ("build research 50k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
+        ]
+    elif corpus == "research":
+        steps = [
+            ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            ("build research 50k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
+        ]
+    else:
+        steps = [
+            (f"segment {corpus}", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", corpus, "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+        ]
+    return steps
+
+
+def _embed_model_steps(model: str, *, overwrite: bool, batch_size: int, device: str, precision: str) -> list[tuple[str, list[str]]]:
+    ow = _overwrite_flag(overwrite)
+    model_args = ["--embed-model", model]
+    steps: list[tuple[str, list[str]]] = []
+    for corpus in ALL_EMBED_CORPORA:
+        steps.append((f"embed {corpus} ({model})", [
+            sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
+            "--corpus", corpus, "--batch-size", str(batch_size),
+            "--local-files-only", "--precision", precision, "--normalize-embeddings",
+        ] + model_args + ow))
+    embed_cmd = [
+        sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
+        "--device", device, "--local-files-only", "--precision", precision, "--normalize-embeddings",
+    ] + model_args + ow
+    if model != CANONICAL_SEGMENT_MODEL:
+        embed_cmd += ["--corpus", "research_subset"]
+    steps.append((f"embed paper shards ({model})", embed_cmd))
+    if model == CANONICAL_SEGMENT_MODEL:
+        steps.append((f"embed concept research corpus ({model})", [
+            sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
+            "--corpus", "research_concept", "--device", device,
+            "--local-files-only", "--precision", precision, "--normalize-embeddings",
+            "--embed-model", model,
+        ] + ow))
+    return steps
+
+
+def _concept_retrieval_paths(model: str, output_dir: Path) -> dict:
+    return dict(
+        concept_embed_dir=embed_dir_for_model(model) / "research_concept",
+        concept_scores_dir=scored_dir_for_model(model) / "paper_scores_shards_concept",
+        concept_data_dir=output_dir_for_model(model, root=output_dir) / "data" / "concept",
+        concept_centroids=scored_dir_for_model(model) / "research_concept_centroids.npy",
+        concept_centroids_meta=scored_dir_for_model(model) / "metadata" / "research_centroid_meta.json",
+    )
+
+
+def _concept_track_steps(model: str, output_dir: Path, overwrite: bool) -> list[tuple[str, list[str]]]:
+    p = _concept_retrieval_paths(model, output_dir)
+    ow = _overwrite_flag(overwrite)
+    return [
+        ("score concept research corpus (LR)", [
+            sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+            "--embed-model", model, "--classifier", "lr", "--corpus", "research",
+            "--embedding-manifest", str(p["concept_embed_dir"] / "metadata" / "manifest.json"),
+            "--out-dir", str(p["concept_scores_dir"]),
+            "--metadata-dir", str(p["concept_scores_dir"] / "metadata"),
+            "--research-centroids-out", str(p["concept_centroids"]),
+            "--research-meta-out", str(p["concept_centroids_meta"]),
+        ] + ow),
+        ("score concept research corpus (MLP)", [
+            sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
+            "--embed-model", model, "--classifier", "mlp", "--corpus", "research_concept",
+        ] + ow),
+        ("zero-shot concept research corpus", [
+            sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+            "--embed-model", model,
+            "--embedding-manifest", str(p["concept_embed_dir"] / "metadata" / "manifest.json"),
+            "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
+            "--data-dir", str(p["concept_data_dir"]),
+        ] + ow),
+    ]
+
+
 def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = False, include_appendix: bool = False) -> None:
     """Single explicit linear pipeline: score -> cov gap -> register -> sem gap -> correlation.
 
@@ -597,6 +700,7 @@ def run_main_text(
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
     _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite, include_appendix=include_appendix)
+    _run_analysis_poststeps(output_dir, model, overwrite=args.overwrite)
 
 
 def run_warm_replay(
@@ -632,39 +736,9 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         )
         sys.exit(1)
 
-    pre_steps = [
-        # — PREPROCESS (clean and structure raw data into 1_preprocessed/) —
-        ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + _reset_flag(args.overwrite)),
-        ("preprocess ungdc", [sys.executable, "1_code/1_preprocess/0_preprocess_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
-        ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + _reset_flag(args.overwrite)),
-        ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + _reset_flag(args.overwrite)),
-        ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + _reset_flag(args.overwrite)),
-        ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
-        ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
-        ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
-        ("preprocess concept corpus", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py", "--retrieval", "concept"] + _reset_flag(args.overwrite)),
-        # — BUILD CONSOLIDATED CORPORA —
-        ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
-        ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
-        # — SEGMENT (canonical, ONCE, shared by every encoder) —
-        ("segment reference & policy", [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-         "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-         "--sharded",
-         "--input-glob", str(research_preprocessed_dir() / "part-*.jsonl"),
-         "--output-dir", str(research_segmented_dir_for_model(CANONICAL_SEGMENT_MODEL)),
-         "--text-field", "combined_text", "--id-field", "openalex_id",
-         "--prefix", "paper", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        ("segment concept research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-         "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-        # — EMBED (encode each source separately) —
-    ]
-    # Shared 50k representative subset (consumed by MiniLM + SciBERT instead of
-    # the full corpus); built once from the canonical segments.
-    pre_steps.append((
-        "build research 50k subset",
-        [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite),
-    ))
+    pre_steps = []
+    pre_steps += _preprocess_steps(args.overwrite)
+    pre_steps += _segment_steps("all", args.overwrite)
     for label, cmd in pre_steps:
         run_step(label, cmd)
 
@@ -672,50 +746,15 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     # encoder (and its native context window) varies. MiniLM/SciBERT embed the
     # shared 50k subset via --input-manifest; MPNet embeds the full corpus.
     for model in COLD_REPLAY_MODELS:
-        model_args = ["--embed-model", model]
-        for corpus in ALL_EMBED_CORPORA:
-            run_step(
-                f"embed {corpus}",
-                 [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                  "--corpus", corpus, "--batch-size", str(args.batch_size),
-                  ] + model_args
-                  + _overwrite_flag(args.overwrite),
-            )
-        embed_cmd = [
-            sys.executable,
-            "1_code/3_embed/0_embed_paper_shards.py",
-            "--device",
-            args.device,
-            "--batch-size",
-            str(args.batch_size),
-        ]
-        embed_cmd.extend(model_args)
-        embed_cmd.extend(_overwrite_flag(args.overwrite))
-        if model != CANONICAL_SEGMENT_MODEL:
-            embed_cmd.extend(["--corpus", "research_subset"])
-        run_step("embed paper shards", embed_cmd)
-        if model == CANONICAL_SEGMENT_MODEL:
-            run_step("embed concept research corpus", [
-                sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-                "--corpus", "research_concept",
-                "--device", args.device,
-                "--batch-size", str(args.batch_size),
-            ] + model_args + _overwrite_flag(args.overwrite))
-
+        for label, cmd in _embed_model_steps(model, overwrite=args.overwrite,
+                                             batch_size=args.batch_size, device=args.device,
+                                             precision=args.precision):
+            run_step(label, cmd)
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
                                  include_appendix=(model == CANONICAL_SEGMENT_MODEL))
-
-    # The encoder-axis (cross-sensitivity) tables in the canonical model's dir
-    # were written during the first loop pass (MPNet) before MiniLM/SciBERT
-    # outputs existed. Regenerate them once now that all three are present so
-    # the PDF-consumed tables show the full 3-way encoder comparison.
-    run_step(
-        "regenerate canonical cross-sensitivity table (all 3 encoders)",
-        [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
-         "--output-dir", str(output_dir), "--embed-model", CANONICAL_SEGMENT_MODEL]
-        + _overwrite_flag(args.overwrite),
-    )
-
+    # Cross-sensitivity table + figures (MPNet-only, needs all 3 encoders' data)
+    # are produced once now that every encoder pass has completed.
+    _run_analysis_poststeps(output_dir, CANONICAL_SEGMENT_MODEL, overwrite=args.overwrite)
     print(
         "Cold replay complete. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -809,53 +848,12 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(label, cmd)
 
     elif stage == "preprocess":
-        steps = [
-            ("preprocess policy", [sys.executable, "1_code/1_preprocess/0_preprocess_policy.py"] + _reset_flag(args.overwrite)),
-            ("preprocess ungdc", [sys.executable, "1_code/1_preprocess/0_preprocess_ungdc_sdg.py"] + _reset_flag(args.overwrite)),
-            ("preprocess osdg", [sys.executable, "1_code/1_preprocess/0_preprocess_osdg.py"] + _reset_flag(args.overwrite)),
-            ("preprocess sdg benchmark", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_benchmark.py"] + _reset_flag(args.overwrite)),
-            ("preprocess sdg knowledge hub", [sys.executable, "1_code/1_preprocess/0_preprocess_sdg_knowledge_hub.py"] + _reset_flag(args.overwrite)),
-            ("preprocess aurora", [sys.executable, "1_code/1_preprocess/0_preprocess_aurora.py"] + _reset_flag(args.overwrite)),
-            ("preprocess sdgi unified", [sys.executable, "1_code/1_preprocess/0_preprocess_sdgi_unified.py"] + _reset_flag(args.overwrite)),
-            ("preprocess research shards", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py"] + _reset_flag(args.overwrite)),
-            ("preprocess concept corpus", [sys.executable, "1_code/1_preprocess/0_preprocess_papers_streaming.py", "--retrieval", "concept"] + _reset_flag(args.overwrite)),
-            ("build reference corpus", [sys.executable, "1_code/1_preprocess/1_build_reference_corpus.py"] + _overwrite_flag(args.overwrite)),
-            ("build policy corpus", [sys.executable, "1_code/1_preprocess/1_build_policy_corpus.py"] + _overwrite_flag(args.overwrite)),
-        ]
-        for label, cmd in steps:
+        for label, cmd in _preprocess_steps(args.overwrite):
             run_step(label, cmd)
 
     elif stage == "segment":
         corpus = args.corpus
-        if corpus == "all":
-            steps = [
-                ("segment reference & policy",
-                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-                  "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-                ("segment research corpus",
-                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-                  "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-                ("segment concept research corpus",
-                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-                  "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-                ("build research 50k subset",
-                 [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
-            ]
-        elif corpus == "research":
-            steps = [
-                ("segment research corpus",
-                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-                  "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-                ("build research 50k subset",
-                 [sys.executable, "1_code/2_segment/2_sample_segments.py"] + _overwrite_flag(args.overwrite)),
-            ]
-        else:
-            steps = [
-                (f"segment {corpus}",
-                 [sys.executable, "1_code/2_segment/1_segment_corpus.py",
-                  "--corpus", corpus, "--embed-model", CANONICAL_SEGMENT_MODEL] + _overwrite_flag(args.overwrite)),
-            ]
-        for label, cmd in steps:
+        for label, cmd in _segment_steps(corpus, args.overwrite):
             run_step(label, cmd)
 
     elif stage == "embed":
@@ -865,37 +863,10 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         # subset via --corpus research_subset (handled below by the
         # model != CANONICAL_SEGMENT_MODEL check).
         for embed_model in COLD_REPLAY_MODELS:
-            embed_model_args = ["--embed-model", embed_model]
-            for corpus in ALL_EMBED_CORPORA:
-                run_step(
-                    f"embed {corpus} ({embed_model})",
-                     [sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-                      "--corpus", corpus, "--batch-size", str(args.batch_size), "--local-files-only",
-                      "--precision", args.precision, "--normalize-embeddings"] + embed_model_args
-                     + _overwrite_flag(args.overwrite),
-                )
-            embed_cmd = [
-                sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-                "--device", args.device,
-                "--local-files-only",
-                "--precision", args.precision,
-                "--normalize-embeddings",
-            ]
-            embed_cmd.extend(embed_model_args)
-            embed_cmd.extend(_overwrite_flag(args.overwrite))
-            if embed_model != CANONICAL_SEGMENT_MODEL:
-                embed_cmd.extend(["--corpus", "research_subset"])
-            run_step(f"embed paper shards ({embed_model})", embed_cmd)
-            if embed_model == CANONICAL_SEGMENT_MODEL:
-                run_step("embed concept research corpus (all-mpnet-base-v2)", [
-                    sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-                    "--corpus", "research_concept",
-                    "--device", args.device,
-                    "--local-files-only",
-                    "--precision", args.precision,
-                    "--normalize-embeddings",
-                    "--embed-model", embed_model,
-                ] + _overwrite_flag(args.overwrite))
+            for label, cmd in _embed_model_steps(embed_model, overwrite=args.overwrite,
+                                                 batch_size=args.batch_size, device=args.device,
+                                                 precision=args.precision):
+                run_step(label, cmd)
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
@@ -910,35 +881,9 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("score policy corpus (LR)", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(args.overwrite))
         run_step("score MLP", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py", "--embed-model", model, "--classifier", "mlp"] + _overwrite_flag(args.overwrite))
         run_step("zero-shot nearest-centroid assignment", [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py", "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(args.overwrite))
-        # Concept-retrieval robustness (MPNet only): score the concept-retrieved
-        # corpus with all three assignment methods.
         if model == DEFAULT_EMBED_MODEL:
-            concept_embed_dir = embed_dir_for_model(model) / "research_concept"
-            concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
-            concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
-            concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
-            concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
-            run_step("score concept research corpus (LR)", [
-                sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-                "--embed-model", model, "--classifier", "lr", "--corpus", "research",
-                "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
-                "--out-dir", str(concept_scores_dir),
-                "--metadata-dir", str(concept_scores_dir / "metadata"),
-                "--research-centroids-out", str(concept_centroids),
-                "--research-meta-out", str(concept_centroids_meta),
-            ] + _overwrite_flag(args.overwrite))
-            run_step("score concept research corpus (MLP)", [
-                sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-                "--embed-model", model, "--classifier", "mlp",
-                "--corpus", "research_concept",
-            ] + _overwrite_flag(args.overwrite))
-            run_step("zero-shot concept research corpus", [
-                sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
-                "--embed-model", model,
-                "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
-                "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
-                "--data-dir", str(concept_data_dir),
-            ] + _overwrite_flag(args.overwrite))
+            for label, cmd in _concept_track_steps(model, output_dir, args.overwrite):
+                run_step(label, cmd)
 
     elif stage == "centroids":
         # Build the SDG reference centroids (sdg_centroids.npy) consumed by the
