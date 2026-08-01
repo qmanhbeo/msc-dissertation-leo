@@ -162,12 +162,14 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
   vary), so the uncapped code would train, e.g., 173 research vs 1000 policy and bias the
   learned register direction. Canon is unaffected (every SDG has >=18k research -> full
   1000/1000 balance). ~2-line change in `load_stratified_samples`.
-- **Method caveat (state precisely when framing):** the iterative check trains a 34-class
-  (17 SDG x 2 corpus) classifier and projects out its *flattened* (34 x dim) coefficient
-  vector, so each `g_k` removes a register-weighted blend of topic + register, not pure
-  register. This is the established canon method and the gate validated its outcome (the
-  cancellation pattern); keep it, but describe it as a register-weighted topic+register
-  projection, not a pure register removal.
+- **Method description (state precisely when framing):** the iterative check trains a
+  *binary* research-vs-policy classifier (label 0/1) on a sample balanced 1000 research +
+  1000 policy *within each SDG*; SDG is used only to stratify the sampling and the
+  train/test split (see `stratify_key = sdg_labels * 2 + y`), never as a classification
+  target. Each `g_k` is therefore a single pure research-vs-policy (register) direction --
+  NOT a topic+register blend. Describe it as register removal, not a blend. (Verified
+  against `f_register_adjustment.py`: `clf_full.fit(X, y)` with binary `y`; coef is
+  `(1, dim)`, flattened to one direction.)
 - Fingerprint `G` + raw inputs so downstream skips when unchanged.
 
 ### 6.2 `register_utils.py` (NEW, shared)
