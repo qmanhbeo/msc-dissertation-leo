@@ -25,6 +25,25 @@ SciBERT reuses MPNet segmented texts (--seg-model all-mpnet-base-v2).
 
 Build-order: 0_prepare_data MUST precede both build_reference_centroids
 and retrain_full_data (both read prepare_data's output files).
+
+Orchestration — replays are compositions, not bespoke scripts:
+
+  Warm replay  : run_main_text  -> _run_main_analysis_steps(model)
+                                      + _run_analysis_poststeps(model)
+  Cold replay  : pre_steps (preprocess+segment via builders)
+                  -> per-model _embed_model_steps + _run_main_analysis_steps
+                  -> _run_analysis_poststeps once (after the encoder loop)
+  --stage      : preprocess/segment/embed/train/infer/centroids/register_adjust
+                 delegate to the same shared builders; `--stage analysis`
+                 composes _run_main_analysis_steps for --embed-model only, then
+                 _run_analysis_poststeps.
+
+The cross-sensitivity table + figures are produced exactly once by
+_run_analysis_poststeps (gated to the default model); they are intentionally
+NOT part of _run_main_analysis_steps, so no consumer double-runs them.
+Appendices are driven entirely by the APPENDIX_SPECS registry in
+analysis_orchestrator.py — adding an appendix means adding one spec entry,
+never re-wiring dispatch.
 """
 
 from __future__ import annotations
@@ -498,10 +517,13 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
          1_semantic_gap raw -> adjusted (LR+MLP) -> concept variants (MPNet)
          -> adjusted zeroshot (MPNet) -> PCA landscape + PCA register before/after
 
-     10  CORRELATION + ROBUSTNESS
-         interaction (in-process) -> register decomposition + correlation + macros
-         (in-process, POST_ADJUSTED) -> cross-sensitivity table -> figures
-         + appendix analyses (if include_appendix)
+      10  CORRELATION + ROBUSTNESS
+          interaction (in-process) -> register decomposition + correlation + macros
+          (in-process, POST_ADJUSTED)
+          + appendix analyses (if include_appendix)
+          NOTE: cross-sensitivity table + figures are NOT produced here; they
+          are emitted exactly once by _run_analysis_poststeps, which every
+          consumer calls after this function.
 
     Three method axes—LR (PRIMARY), MLP (sensitivity), zeroshot (sensitivity)—
     each produce their own research/policy centroids in separate namespaces.
@@ -651,13 +673,10 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
     # Post-adjusted: decomposition table, extended interaction, correlation, macros, PCA before/after
     run_post_adjusted(model, output_dir, overwrite=overwrite)
-    # Cross-sensitivity table + figures (MPNet only — needs all 3 encoders' data)
-    if model == DEFAULT_EMBED_MODEL:
-        run_step("generate cross-sensitivity table",
-                 [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
-                  "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
-                 step_id="6")
-        run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
+    # NOTE: cross-sensitivity table + figures are NOT produced here. They are
+    # emitted exactly once by _run_analysis_poststeps (gated to the default
+    # model), which every consumer of this function calls afterwards. Producing
+    # them here too would double-run them (the original bug).
 
 
 def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = False) -> None:
@@ -674,18 +693,6 @@ def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = Fals
              step_id="6")
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
              "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
-
-
-def _run_analysis_only(output_dir: Path, model: str, *,
-                       include_appendix: bool = False,
-                       overwrite: bool = False) -> None:
-    """Run analysis + figures only (assumes upstream outputs exist).
-
-    Uses the same linear pipeline as warm replay — train/score stages are
-    existence-skipped if outputs already exist.
-    """
-    _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
-    _run_main_analysis_steps(output_dir, model, overwrite=overwrite, include_appendix=include_appendix)
 
 
 def run_main_text(
@@ -904,16 +911,12 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         )
 
     elif stage == "analysis":
-        if model != DEFAULT_EMBED_MODEL:
-            _run_analysis_only(output_dir, model, include_appendix=True, overwrite=args.overwrite)
-        else:
-            # Run the full linear pipeline per model (score -> cov gap -> register
-            # -> sem gap -> correlation).  Then regenerate the canonical
-            # cross-sensitivity table + figures once all three encoders' data exist.
-            for m in COLD_REPLAY_MODELS:
-                _run_main_analysis_steps(output_dir, m, overwrite=args.overwrite,
-                                         include_appendix=(m == DEFAULT_EMBED_MODEL))
-            _run_analysis_poststeps(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
+        # Single-model composition for --embed-model. Cross-sensitivity + figures
+        # are produced (MPNet-only gate inside _run_analysis_poststeps) here; the
+        # 3-encoder aggregation is cold-replay-only.
+        _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite,
+                                 include_appendix=True)
+        _run_analysis_poststeps(output_dir, model, overwrite=args.overwrite)
 
     else:
         raise ValueError(f"Unknown stage: {stage}")

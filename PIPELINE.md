@@ -191,7 +191,7 @@ The linear flow is strictly: **SCORE → COVERAGE GAP → REGISTER ADJUSTMENT �
 
 ## 7. ANALYSIS — in-process (run_analysis), shard-native mmap (`--stage analysis`)
 
-All main-text analyses run in a single process per encoder; each reads the research embedding/score shards directly (no consolidated array). Outputs → `4_outputs/[model]/data/*.json` · `tables/*.tex`. `--stage analysis` runs ALL THREE encoders in one invocation (MPNet appendix included; MiniLM/SciBERT main analyses only), then regenerates the canonical cross-sensitivity table + figures once all encoders' outputs exist; an explicit `--embed-model <non-default>` keeps the old single-encoder behaviour.
+All main-text analyses run in a single process per encoder; each reads the research embedding/score shards directly (no consolidated array). Outputs → `4_outputs/[model]/data/*.json` · `tables/*.tex`. `--stage analysis` composes the full linear analysis for `--embed-model` only (appendix analyses included when that is the default model), then calls `_run_analysis_poststeps` to regenerate the canonical cross-sensitivity table + figures. The cross-sensitivity table still needs all three encoders' main-text outputs present (existence-skipped if already built by a prior run); cold replay is the only path that builds all three encoders in one invocation.
 
 | script | runs on | notes |
 |---|---|---|
@@ -199,7 +199,7 @@ All main-text analyses run in a single process per encoder; each reads the resea
 | `0_coverage_gap.py` | all encoders | canon + concept (MPNet) / subset (MiniLM, SciBERT); filtered policy corpus (Curated SDGi UNGDC) |
 | `1_semantic_gap.py` | all encoders | canon + concept (MPNet) / subset (MiniLM, SciBERT); filtered policy corpus (Curated SDGi UNGDC) |
 | `2_coverage_semantic_interaction.py` | all encoders | reads 4_2 + 4_3; namespaced per-encoder |
-| `3_generate_cross_sensitivity_table.py` | default only, in-loop; regenerated post-loop | canonical tables: policy source × segment cap × retrieval (LR/MLP/ZS) + encoder axis (all 3 encoders) |
+| `3_generate_cross_sensitivity_table.py` | default only, via `_run_analysis_poststeps` (not inside `_run_main_analysis_steps`) | canonical tables: policy source × segment cap × retrieval (LR/MLP/ZS) + encoder axis (all 3 encoders) |
 | `g_distributional_gap.py` | opt-in | MAIN-RESULT Table; NOT run by warm replay or `--appendix-all`; run before `--build-pdf` |
 
 **Concept pass (MPNet only, after the in-process analyses above, before `3_generate_cross_sensitivity_table.py`):** re-invoke `0_coverage_gap.py` (`--paper-scores-manifest paper_scores_shards_concept/metadata/manifest.json --out-data-dir data/concept`) and `1_semantic_gap.py` (`--research-centroids research_concept_centroids.npy --research-centroid-meta metadata/research_concept_centroid_meta.json --out-data-dir data/concept`) → `4_outputs/[model]/data/concept/{4_2_*, 4_3_*}`. Must precede the cross-sensitivity table, whose Retrieval column reads these files plus `mlp_scores_concept/` and `zeroshot_concept/`.
