@@ -1,17 +1,18 @@
 """
-Analysis orchestrator: run every main-text and appendix analysis for a model
-IN A SINGLE PROCESS.
+Analysis orchestrator: run in-process main-text and appendix analyses.
 
 Each analysis was previously a separate `subprocess`, re-opening the 27-shard
-research data. `run_analysis` now drives each script's `main()` in-process, and
+research data.  The orchestrator drives each script's `main()` in-process, and
 every script reads the research embedding/score shards directly (shard-native,
-mmap) — so no consolidated array is built or cached, and a re-embed / re-score
-is reflected immediately on the next run.
+mmap) — so no consolidated array is built or cached.
 
-SCORE steps (zeroshot, cross-sensitivity table) are NOT managed here — they
-live in _run_main_analysis_steps / _run_analysis_only in main.py. This
-orchestrator handles the pure analytical steps: coverage_gap, semantic_gap,
-interaction, and PCA.
+Coverage gap, semantic gap, and PCA are now subprocess steps in the linear
+pipeline (run_linear_pipeline in main.py) — NOT run here.  This orchestrator
+handles:
+  - MAIN_STEPS:        in-process interaction analysis
+  - APPENDIX_STEPS:    in-process appendix analyses
+  - POST_ADJUSTED:     in-process register decomposition, extended interaction,
+                       correlation table, consolidated macros, PCA before/after
 """
 
 from __future__ import annotations
@@ -24,17 +25,12 @@ from model_utils import DEFAULT_EMBED_MODEL
 
 ANALYSIS_ROOT = Path(__file__).resolve().parents[1]  # 7_main_analysis
 
-# (relative script path, only_when_default_model)
-# PCA emits fixed main/figures/ + main/tables/ paths that are MPNet-centric
-# and must not be overwritten by a second encoder, so it stays default-only.
-# The other steps (coverage, semantic, interaction) write under main/{model}/
-# and are namespaced per-encoder for the cross-sensitivity table.
+# In-process main-text analyses (coverage_gap, semantic_gap, PCA moved to
+# subprocess steps in the linear pipeline).
 MAIN_STEPS = [
-    ("1_main_text/0_coverage_gap.py", False),
-    ("1_main_text/1_semantic_gap.py", False),
     ("1_main_text/2_coverage_semantic_interaction.py", False),
-    ("1_main_text/0_pca_semantic_landscape.py", True),
 ]
+
 APPENDIX_STEPS = [
     ("2_appendix/a2_policy_source_family_sensitivity.py", False),
     ("2_appendix/a3_sdg4_lexical_audit.py", False),
@@ -43,9 +39,19 @@ APPENDIX_STEPS = [
     ("2_appendix/c1_subset_balanced_stability.py", False),
     ("2_appendix/c0_export_corpus_split_sizes.py", False),
     ("2_appendix/d1_export_model_selection_nums.py", False),
-    ("2_appendix/f_register_adjustment.py", False),
     ("2_appendix/h1_cross_method_gap_values.py", False),
     ("2_appendix/i1_assignment_method_comparison.py", False),
+]
+
+# Post-adjusted generators: run AFTER adjusted JSONs exist.
+# These read the raw + adjusted JSONs and produce decomposition tables,
+# extended interaction JSONs, and consolidated LaTeX macros.
+POST_ADJUSTED_STEPS = [
+    "0_shared/g_register_decomposition.py",
+    "0_shared/g_interaction_extended.py",
+    "0_shared/h1_register_correlation_table.py",
+    "0_shared/generate_tex_macros.py",
+    ("1_main_text/0_pca_register_before_after.py", True),
 ]
 
 _MODULE_CACHE: dict[str, object] = {}
@@ -88,55 +94,30 @@ def run_analysis(
     include_appendix: bool = False,
     overwrite: bool = False,
 ) -> None:
-    """Run all analysis scripts for `model` in-process.
+    """Run in-process interaction analysis (+ optional appendix) for `model`.
 
-    Each script reads the 27 research embedding/score shards directly (shard-
-    native, mmap), so no consolidated array is built or cached. Runs main-text
-    analyses and, optionally, appendix analyses — each via its `main()` with no
-    subprocess boundary.
+    Coverage gap, semantic gap, and PCA are run as subprocess steps in the
+    linear pipeline BEFORE this function is called.
     """
-    main_steps = [s for s in MAIN_STEPS if (not s[1] or model == DEFAULT_EMBED_MODEL)]
-    for rel_path, _ in main_steps:
-        _run_step(rel_path, model, output_dir, overwrite=overwrite)
+    for rel_path, only_default in MAIN_STEPS:
+        if not only_default or model == DEFAULT_EMBED_MODEL:
+            _run_step(rel_path, model, output_dir, overwrite=overwrite)
 
     if include_appendix:
         for rel_path, _ in APPENDIX_STEPS:
             _run_step(rel_path, model, output_dir, overwrite=overwrite)
 
 
-# Steps that support --embeddings adjusted (produce adjusted JSON outputs).
-# Each entry: (script_path, classifier). LR adjusted runs first, then MLP.
-ADJUSTED_STEPS = [
-    ("1_main_text/1_semantic_gap.py", "lr"),
-    ("1_main_text/1_semantic_gap.py", "mlp"),
-]
-
-# Post-adjusted generators: run AFTER adjusted JSONs exist.
-# These read the raw + adjusted JSONs and produce decomposition tables,
-# extended interaction JSONs, and consolidated LaTeX macros.
-POST_ADJUSTED_STEPS = [
-    "0_shared/g_register_decomposition.py",
-    "0_shared/g_interaction_extended.py",
-    "0_shared/h1_register_correlation_table.py",
-    "0_shared/generate_tex_macros.py",
-    ("1_main_text/0_pca_register_before_after.py", True),
-]
-
-
-def run_analysis_adjusted(
+def run_post_adjusted(
     model: str,
     output_dir: Path,
     *,
     overwrite: bool = False,
 ) -> None:
-    """Run adjusted analyses (register-adjusted embeddings) for `model`.
+    """Run post-adjusted generators (decomposition, correlation, macros, PCA before/after).
 
-    Produces adjusted semantic-gap JSONs under data/adjusted/, then runs
-    post-adjusted generators (decomposition table, interaction extension,
-    consolidated macros).
+    Must run AFTER adjusted semantic-gap JSONs exist under data/adjusted/.
     """
-    for rel_path, classifier in ADJUSTED_STEPS:
-        _run_step(rel_path, model, output_dir, overwrite=overwrite, embeddings="adjusted", classifier=classifier)
     for item in POST_ADJUSTED_STEPS:
         if isinstance(item, tuple):
             rel_path, only_default = item

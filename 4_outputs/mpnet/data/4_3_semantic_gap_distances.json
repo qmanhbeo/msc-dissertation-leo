@@ -1,5 +1,8 @@
 {
   "method": "centroid_to_centroid",
+  "embedding_model": "all-mpnet-base-v2",
+  "classifier": "lr",
+  "embeddings": "raw",
   "segment_cap": 50,
   "min_cluster_size": 10,
   "random_seed": 42,

@@ -66,7 +66,7 @@ from model_utils import (
     segmented_dir_for_model,
     resolve_model_alias,
 )
-from analysis_orchestrator import run_analysis, run_analysis_adjusted
+from analysis_orchestrator import run_analysis, run_post_adjusted
 
 
 ROOT = Path(__file__).resolve().parent
@@ -124,7 +124,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
     p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
     p.add_argument("--appendix-c1-balanced-subset", action="store_true", help="Run C.1 Balanced-Subset Rank-Stability (consumes C sample-stability draws; appendix).")
-    p.add_argument("--appendix-f-register", action="store_true", help="Run F Register-Adjustment Robustness.")
     p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
     p.add_argument("--appendix-i1-assignment-method", action="store_true", help="Run I.1 Supervised vs Nearest-Centroid Assignment Comparison.")
     p.add_argument("--appendix-c0-corpus-split", action="store_true", help="Export reference-corpus split-size macros.")
@@ -153,12 +152,6 @@ def parse_args() -> argparse.Namespace:
             "Create a dissertation data snapshot archive via the backup utility. "
             "Defaults to embedded; 'both' runs raw then embedded."
         ),
-    )
-    p.add_argument(
-        "--register-adjustment",
-        action="store_true",
-        dest="appendix_f_register",
-        help=argparse.SUPPRESS,
     )
     p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
@@ -209,7 +202,6 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_a2_family,
             args.appendix_a3_sdg4,
             args.appendix_b2_interpret,
-            args.appendix_f_register,
             args.appendix_d1_model_selection,
             args.appendix_h1_cross_method,
             args.appendix_i1_assignment_method,
@@ -376,16 +368,6 @@ def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMB
     run_step("lexical illustration of the semantic gap", cmd, step_id="B2")
 
 
-def run_register_adjustment(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "Register-adjustment robustness (Appendix F)")
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/f_register_adjustment.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("register-adjustment robustness", cmd, step_id="F")
-
-
 def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """Run the distributional semantic-gap robustness (main-result table, opt-in)."""
     _warn_non_default_model(model, "Distributional gap (Appendix G)")
@@ -478,35 +460,41 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
 
 
 def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = False, include_appendix: bool = False) -> None:
-    """Run the main-text analysis steps for a given model (no input guard).
+    """Single explicit linear pipeline: score -> cov gap -> register -> sem gap -> correlation.
 
-    Step ordering (all share the same frozen labelled data from prepare_data):
+    Pipeline order (all share the same frozen labelled data from prepare_data):
 
-      0  prepare_data          → embeddings.npy, labels.npy, sources.npy, indices/
-      1  retrain_full_data LR  → sdg_classifier.joblib
-      0a build_sdg_reference_centroids → sdg_centroids.npy
-      2  score_supervised --lr --research → research_centroids.npy (supervised, PRIMARY)
-      3  score_supervised --lr --policy   → policy_scores.npy
-      3b retrain_full_data MLP           → mlp_retrained.joblib
-      3c score_supervised --mlp          → mlp_research_centroids.npy
-      4  check_centroid_consistency      → policy_centroids.npy (diagnostic)
-      9a build_centroid_similarity_matrix → similarity matrix (reads sdg_centroids.npy)
+      5  CLASSIFY / SCORE
+         build centroids -> score research/policy LR -> retrain+score MLP
+         -> centroid consistency -> centroid similarity -> zeroshot
+         + concept corpus scoring (MPNet only)
 
-    Then run_analysis() invokes in-process: score_zeroshot (→ zeroshot/
-    research_centroids.npy, policy_centroids.npy), coverage_gap, semantic_gap,
-    interaction, cross-sensitivity table, and (default model only) PCA + figures.
+      7  COVERAGE GAP (raw)
+         0_coverage_gap + concept variant (MPNet only)
+
+      8  REGISTER ADJUSTMENT (INLP -> G)
+         register_adjust.py
+
+      9  SEMANTIC GAP BEFORE & AFTER + PCA
+         1_semantic_gap raw -> adjusted (LR+MLP) -> concept variants (MPNet)
+         -> adjusted zeroshot (MPNet) -> PCA landscape + PCA register before/after
+
+     10  CORRELATION + ROBUSTNESS
+         interaction (in-process) -> register decomposition + correlation + macros
+         (in-process, POST_ADJUSTED) -> cross-sensitivity table -> figures
+         + appendix analyses (if include_appendix)
 
     Three method axes—LR (PRIMARY), MLP (sensitivity), zeroshot (sensitivity)—
     each produce their own research/policy centroids in separate namespaces.
     """
     model_args = ["--embed-model", model]
+
+    # ==== STAGE 5: CLASSIFY / SCORE ==========================================
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args + _overwrite_flag(overwrite), step_id="1")
     run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "research"] + _overwrite_flag(overwrite), step_id="2")
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(overwrite), step_id="3")
-    # MLP is scored for every encoder (not just the default), so the
-    # cross-sensitivity table can carry an MLP sub-column per encoder.
     run_step(
         "retrain MLP",
         [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py",
@@ -525,24 +513,15 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         step_id="4",
     )
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
-    # Zero-shot nearest-centroid assignment (SCORING, not analysis). Moved out of
-    # run_analysis() so the SCORE/ANALYSIS boundary matches the pipeline diagram.
     run_step(
         "zero-shot nearest-centroid assignment",
         [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
          "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(overwrite),
         step_id="5",
     )
-    # Register-adjustment (INLP -> G matrix). Must run before the adjusted pass
-    # so G.npy exists for register_utils.load_G(). Resume-safe; skips if complete.
-    run_step(
-        "register_adjust (INLP -> G)",
-        [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
-         "--embed-model", model] + _overwrite_flag(overwrite),
-    )
     # Concept-retrieval robustness (MPNet only): score the concept-retrieved
     # research corpus with all three assignment methods (LR/MLP/ZS), feeding the
-    # Retrieval column of the cross-sensitivity tables (step 6).
+    # Retrieval column of the cross-sensitivity tables (stage 10).
     if model == DEFAULT_EMBED_MODEL:
         concept_embed_dir = embed_dir_for_model(model) / "research_concept"
         concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
@@ -570,9 +549,12 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
             "--data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
-    # Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
-    # concept-retrieved corpus. Must run BEFORE the in-process analyses: H.1 and
-    # the cross-sensitivity table consume data/concept/4_2_* + 4_3_*.
+
+    # ==== STAGE 7: COVERAGE GAP (raw) ========================================
+    run_step("coverage gap (raw)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+    ] + _overwrite_flag(overwrite))
     if model == DEFAULT_EMBED_MODEL:
         run_step("coverage gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
@@ -580,6 +562,21 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
             "--out-data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
+
+    # ==== STAGE 8: REGISTER ADJUSTMENT (INLP -> G) ===========================
+    run_step(
+        "register_adjust (INLP -> G)",
+        [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
+         "--embed-model", model] + _overwrite_flag(overwrite),
+    )
+
+    # ==== STAGE 9: SEMANTIC GAP BEFORE & AFTER + PCA =========================
+    # Raw semantic gap
+    run_step("semantic gap (raw)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+    ] + _overwrite_flag(overwrite))
+    if model == DEFAULT_EMBED_MODEL:
         run_step("semantic gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
@@ -587,7 +584,18 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
-        # ---- Concept adjusted (register-removed) semantic gaps ----
+    # Adjusted semantic gap (LR + MLP) — needs G
+    run_step("semantic gap (adjusted, LR)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--embeddings", "adjusted",
+    ] + _overwrite_flag(overwrite))
+    run_step("semantic gap (adjusted, MLP)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--classifier", "mlp", "--embeddings", "adjusted",
+    ] + _overwrite_flag(overwrite))
+    if model == DEFAULT_EMBED_MODEL:
         run_step("semantic gap (concept corpus, adjusted)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
@@ -600,92 +608,37 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         run_step("semantic gap (concept corpus, MLP adjusted)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
-            "--classifier", "mlp",
-            "--embeddings", "adjusted",
+            "--classifier", "mlp", "--embeddings", "adjusted",
             "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
             "--out-data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
-    # Main-text analyses, driven in-process by the orchestrator. Each analysis
-    # reads the 27 research embedding/score shards directly (shard-native, mmap);
-    # no consolidated array is built or cached.
-    # Must run BEFORE plot figures, which consumes the analysis outputs.
-    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
-
-    # ---- Adjusted pass (register-adjusted embeddings) ----
-    # Produces adjusted semantic-gap JSONs under data/adjusted/. Coverage is
-    # adjustment-invariant (§6.3) so 4_2 is reused.
-    if model == DEFAULT_EMBED_MODEL:
-        # MPNet: adjusted semantic gap + adjusted ZS
-        run_analysis_adjusted(model, output_dir, overwrite=overwrite)
+        # Adjusted zeroshot (MPNet only)
         run_step(
             "zero-shot nearest-centroid (adjusted)",
             [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
              "--embed-model", model, "--output-dir", str(output_dir),
              "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
         )
-    else:
-        # MiniLM / SciBERT: adjusted semantic gap only (own G)
-        run_analysis_adjusted(model, output_dir, overwrite=overwrite)
+    # PCA: semantic landscape + register before/after (MPNet only, fixed paths)
+    if model == DEFAULT_EMBED_MODEL:
+        run_step("PCA semantic landscape", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/0_pca_semantic_landscape.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+        ] + _overwrite_flag(overwrite))
 
-    # Cross-sensitivity table (default model only — for MiniLM/SciBERT the
-    # canonical table is regenerated after the cold-replay model loop from all
-    # three encoders' data).
+    # ==== STAGE 10: CORRELATION + ROBUSTNESS =================================
+    # In-process: interaction analysis (+ optional appendix)
+    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+    # Post-adjusted: decomposition table, extended interaction, correlation, macros, PCA before/after
+    run_post_adjusted(model, output_dir, overwrite=overwrite)
+    # Cross-sensitivity table + figures (MPNet only — needs all 3 encoders' data)
     if model == DEFAULT_EMBED_MODEL:
         run_step("generate cross-sensitivity table",
                  [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
                   "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
                  step_id="6")
-    # Figures are MPNet-centric (fixed 4_outputs/mpnet/figures/ paths), so only
-    # plot for the default encoder; a second encoder's tree is a robustness
-    # artifact and must not overwrite the canonical figures.
-    if model == DEFAULT_EMBED_MODEL:
         run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
-
-
-def _run_concept_analyses(output_dir: Path, model: str, overwrite: bool = False) -> None:
-    """Concept-retrieval robustness (MPNet only): coverage + semantic gap for the
-    concept-retrieved corpus. Must run BEFORE the in-process analyses: H.1 and
-    the cross-sensitivity table consume data/concept/4_2_* + 4_3_*.
-    """
-    if model != DEFAULT_EMBED_MODEL:
-        return
-    concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
-    concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
-    concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
-    concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
-    run_step("coverage gap (concept corpus)", [
-        sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
-        "--output-dir", str(output_dir), "--embed-model", model,
-        "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
-        "--out-data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(overwrite))
-    run_step("semantic gap (concept corpus)", [
-        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
-        "--output-dir", str(output_dir), "--embed-model", model,
-        "--research-centroids", str(concept_centroids),
-        "--research-centroid-meta", str(concept_centroids_meta),
-        "--out-data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(overwrite))
-    # ---- Concept adjusted (register-removed) semantic gaps ----
-    run_step("semantic gap (concept corpus, adjusted)", [
-        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
-        "--output-dir", str(output_dir), "--embed-model", model,
-        "--embeddings", "adjusted",
-        "--research-centroids", str(concept_centroids),
-        "--research-centroid-meta", str(concept_centroids_meta),
-        "--out-data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(overwrite))
-    mlp_concept_dir = scored_dir_for_model(model) / "mlp_scores_concept"
-    run_step("semantic gap (concept corpus, MLP adjusted)", [
-        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
-        "--output-dir", str(output_dir), "--embed-model", model,
-        "--classifier", "mlp",
-        "--embeddings", "adjusted",
-        "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
-        "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
-        "--out-data-dir", str(concept_data_dir),
-    ] + _overwrite_flag(overwrite))
 
 
 def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = False) -> None:
@@ -709,20 +662,11 @@ def _run_analysis_only(output_dir: Path, model: str, *,
                        overwrite: bool = False) -> None:
     """Run analysis + figures only (assumes upstream outputs exist).
 
-    Does NOT retrain, score, or build centroids — only derives coverage gap,
-    semantic gap, interaction, cross-sensitivity table, PCA, and figures.
-    Includes register-adjusted pass for completeness.
+    Uses the same linear pipeline as warm replay — train/score stages are
+    existence-skipped if outputs already exist.
     """
     _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
-    _run_concept_analyses(output_dir, model, overwrite=overwrite)
-    run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
-    run_step(
-        "register_adjust (INLP -> G)",
-        [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
-         "--embed-model", model] + _overwrite_flag(overwrite),
-    )
-    run_analysis_adjusted(model, output_dir, overwrite=overwrite)
-    _run_analysis_poststeps(output_dir, model, overwrite=overwrite)
+    _run_main_analysis_steps(output_dir, model, overwrite=overwrite, include_appendix=include_appendix)
 
 
 def run_main_text(
@@ -1100,33 +1044,14 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "analysis":
         if model != DEFAULT_EMBED_MODEL:
-            # Explicit single-encoder analysis (debug): honours --embed-model.
             _run_analysis_only(output_dir, model, include_appendix=True, overwrite=args.overwrite)
         else:
-            # Standard: analyse ALL three encoders in one run (mirrors
-            # --cold-replay and --stage embed). MiniLM/SciBERT run their
-            # per-model main analyses only; appendix steps run for the
-            # canonical encoder only. Concept analyses run first (H.1 and the
-            # cross-sensitivity table consume data/concept/*), and the
-            # canonical cross-sensitivity table + figures regenerate AFTER
-            # all three encoders' outputs exist.
-            _run_concept_analyses(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
+            # Run the full linear pipeline per model (score -> cov gap -> register
+            # -> sem gap -> correlation).  Then regenerate the canonical
+            # cross-sensitivity table + figures once all three encoders' data exist.
             for m in COLD_REPLAY_MODELS:
-                run_analysis(m, output_dir, include_appendix=(m == DEFAULT_EMBED_MODEL), overwrite=args.overwrite)
-            for m in COLD_REPLAY_MODELS:
-                run_step(
-                    f"register_adjust (INLP -> G) [{m}]",
-                    [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
-                     "--embed-model", m] + _overwrite_flag(args.overwrite),
-                )
-            for m in COLD_REPLAY_MODELS:
-                run_analysis_adjusted(m, output_dir, overwrite=args.overwrite)
-            run_step(
-                "zero-shot nearest-centroid (adjusted)",
-                [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
-                 "--embed-model", DEFAULT_EMBED_MODEL, "--output-dir", str(output_dir),
-                 "--embeddings", "adjusted"] + _overwrite_flag(args.overwrite),
-            )
+                _run_main_analysis_steps(output_dir, m, overwrite=args.overwrite,
+                                         include_appendix=(m == DEFAULT_EMBED_MODEL))
             _run_analysis_poststeps(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
 
     else:
@@ -1161,7 +1086,6 @@ def main() -> None:
         or args.appendix_c_sample_stability
         or args.appendix_c1_balanced_subset
         or args.appendix_c0_corpus_split
-        or args.appendix_f_register
         or args.appendix_d1_model_selection
         or args.appendix_h1_cross_method
         or args.appendix_i1_assignment_method
@@ -1187,7 +1111,6 @@ def main() -> None:
         run_semantic_gap_interpretability(output_dir, model=model, overwrite=args.overwrite)
         run_sample_stability(output_dir, model=model, overwrite=args.overwrite)
         run_subset_balanced_stability(output_dir, model=model, overwrite=args.overwrite)
-        run_register_adjustment(output_dir, model=model, overwrite=args.overwrite)
         run_model_selection_nums(output_dir, model=model, overwrite=args.overwrite)
         run_corpus_split_sizes(output_dir, model=model, overwrite=args.overwrite)
         run_h1_cross_method_gap_values(output_dir, model=model, overwrite=args.overwrite)
@@ -1212,10 +1135,6 @@ def main() -> None:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_c1_balanced_subset:
         run_subset_balanced_stability(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_f_register:
-        run_register_adjustment(output_dir, model=args.embed_model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
     elif args.appendix_c0_corpus_split:

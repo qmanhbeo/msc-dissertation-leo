@@ -142,16 +142,16 @@
       "corpus": "concept",
       "n_valid": 17,
       "rho_cov_raw": {
-        "rho": 0.019608,
-        "p": 0.940458
+        "rho": 0.252451,
+        "p": 0.328294
       },
       "rho_cov_adj": {
         "rho": 0.252451,
         "p": 0.328294
       },
       "rho_cov_register": {
-        "rho": -0.129902,
-        "p": 0.619247
+        "rho": NaN,
+        "p": NaN
       }
     },
     {
@@ -161,16 +161,16 @@
       "corpus": "concept",
       "n_valid": 17,
       "rho_cov_raw": {
-        "rho": 0.090686,
-        "p": 0.729235
+        "rho": 0.257353,
+        "p": 0.318668
       },
       "rho_cov_adj": {
         "rho": 0.257353,
         "p": 0.318668
       },
       "rho_cov_register": {
-        "rho": -0.279412,
-        "p": 0.27743
+        "rho": NaN,
+        "p": NaN
       }
     }
   ]

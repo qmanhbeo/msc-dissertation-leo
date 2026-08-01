@@ -144,6 +144,8 @@ MANUSCRIPT_TABLE_FILES = [
     "tab_distributional_gap.tex",
     "tab_encoder_sensitivity_semantic.tex",
     "tab_encoder_sensitivity_coverage.tex",
+    "tab_register_decomposition.tex",
+    "num_register_topic_decomposition.tex",
 ]
 
 MANUSCRIPT_FIGURE_FILES = [
@@ -166,8 +168,8 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex",
     "main/tables/num_pca_landscape.tex",
     "appendix/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret_all.tex",
-    "appendix/f_register_adjustment/tables/num_register_adjustment.tex",
-    "appendix/f_register_adjustment/tables/tab_register_adjusted_semgap.tex",
+    "main/tables/num_iterative_register_check.tex",
+    "main/tables/tab_iterative_register_check.tex",
     "appendix/c_sample_stability/tables/num_sample_stability.tex",
     "appendix/c_sample_stability/tables/tab_sample_stability.tex",
     "appendix/c1_subset_balanced_stability/tables/num_subset_stability.tex",

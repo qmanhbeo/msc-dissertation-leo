@@ -145,8 +145,8 @@ def register_dir_for_model(model: str, track: str) -> Path:
 
 
 # --------------------------------------------------------------------------- #
-# Loaders (mirror 2_appendix/f_register_adjustment.py, shared-code-copied so the
-# stage is self-contained; canonical source of truth for the INLP engine)
+# Loaders (canonical source of truth for the INLP engine; this stage is the only
+# INLP trainer — downstream scripts load G via register_utils.load_G())
 # --------------------------------------------------------------------------- #
 
 

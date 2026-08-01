@@ -323,8 +323,9 @@ def run(args: argparse.Namespace) -> None:
     else:
         correlation_direction = "NOT SUPPORTED (WEAK CORRELATION)"
         correlation_story = (
-            "Near-zero correlation: research attention does not predict semantic gap direction. "
-            "Coverage and semantic divergence are largely independent dimensions."
+            "Near-zero raw correlation: research attention does not predict semantic gap direction, "
+            "but coverage and framing are not independent — a positive topic signal is cancelled by a "
+            "negative register signal (adjusted gap is positively associated with coverage divergence)."
         )
     log.info("  Research-coverage direction: %s", correlation_direction)
     log.info("  Pearson r=%.3f  p=%.3f  Spearman ρ=%.3f", r_primary, p_primary, rho_primary)

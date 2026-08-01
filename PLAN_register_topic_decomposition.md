@@ -1,23 +1,27 @@
 # PLAN: Register–Topic Decomposition — Making the INLP Canon Flow
 
-> Status: PLANNED, NOT IMPLEMENTED. Engineering left for a later session.
+> Status: CODE COMPLETE on branch `register-adj` (§13). Plan text corrected for
+> staleness (this edit). Manuscript NARRATIVE rewrite (retire "dissociation /
+> independent dimensions", make adjusted canonical, reframe raw as reference not
+> "primary") is DEFERRED to a separate pass — see §Deferred. Results, tables,
+> figure, and macros are already wired into `dissertation.tex`.
 > Companion to `PLAN_journal.md`. Supersedes the register-adjustment treatment
 > that previously lived only in Appendix F (diagnostic).
 
 ## 0. Empirical gate (resolved, read-only)
 
-Computed from committed artifacts (`num_coverage.tex`, `num_iterative_register_check.tex`,
-`num_register_adjustment.tex`). The raw H1a null (rho=-0.09, p=0.73) is a
-**cancellation** of two real, opposite effects:
+Computed from committed artifacts (`register_decomposition.json`,
+`num_iterative_register_check.tex`, `num_register_adjustment.tex`). The raw H1a
+null (rho=-0.08, p=0.77) is a **cancellation** of two real, opposite effects:
 
 | Test | rho | p |
 |------|-----|---|
-| Coverage gap vs **raw** semantic gap | -0.091 | 0.729 |
-| Coverage gap vs **adjusted** (topic) gap | **+0.440** | **0.077** |
-| Coverage gap vs **register** component | **-0.496** | **0.043** |
+| Coverage gap vs **raw** semantic gap | -0.078 | 0.765 |
+| Coverage gap vs **adjusted** (topic) gap | **+0.476** | **0.054** |
+| Coverage gap vs **register** component | **-0.493** | **0.045** |
 
 SDG 17: coverage gap 0.110 (large) -> raw gap 0.216 (smallest) -> adjusted gap
-**0.388 (largest)**. Register similarity masked topic divergence.
+**0.371 (largest)**. Register similarity masked topic divergence.
 
 Interpretation: the raw "no association" was never a real absence -- it was two real
 signals (topic divergence up with coverage divergence; register divergence down with
@@ -47,14 +51,15 @@ opposite signs summing to ~0 explain the null regardless of individual significa
    Applied to RESEARCH + POLICY measurement embeddings
    -> adjusted embeddings (register removed, topic retained)
    -> cite Ravfogel et al. 2020; SDG-stratified adaptation is ours
-   -> Materialise as projection matrix G only (94 orthonormal directions, ~KB);
+   -> Materialise as projection matrix G only (75 orthonormal directions for
+      the MPNet canon; MiniLM=26, SciBERT=50; ~KB);
       adjusted = project(raw, G) on the fly. Full adjusted .npy NOT stored.
    -> NOTE: coverage gap is assignment-based, so it is IDENTICAL for raw and
       adjusted; only the semantic-gap vector changes between them.
 5. PCA before/after (main-text figure): two clouds -> one merged cloud
 6. Main analysis on ADJUSTED embeddings:
    - Semantic gaps = adjusted (canonical); raw = register-inclusive reference
-   - H1 decomposition: cov vs adjusted (topic) rho=+0.44; cov vs register rho=-0.50
+   - H1 decomposition: cov vs adjusted (topic) rho=+0.48; cov vs register rho=-0.49
    - Cross-sensitivity, encoder, distributional, sample-stability,
      concept-retrieval, source-family -- ALL re-run on adjusted
 7. Final comparison = cov-sem CORRELATION (centrepiece), not rank-stability
@@ -116,10 +121,10 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
     reference.
   - New **decomposition table** (Section 4.2).
   - **PCA before/after** figure.
-   - **H1 reformulated**: cov gap vs adjusted (topic) gap rho=+0.44, p=0.08; cov gap vs
-     register component rho=-0.50, p=0.04; raw null = cancellation. **Cov-sem corr is
+   - **H1 reformulated**: cov gap vs adjusted (topic) gap rho=+0.48, p=0.054; cov gap vs
+     register component rho=-0.49, p=0.045; raw null = cancellation. **Cov-sem corr is
      the centrepiece.**
-     The canon RAW result (rho=-0.09) is RETAINED in main text as the "before" of
+     The canon RAW result (rho=-0.08) is RETAINED in main text as the "before" of
      the cancellation narrative, not moved to appendix. Canon raw + adj + register
      all live in main text; only robustness configs go to appendix.
   - Rank-stability tables demoted to supporting robustness.
@@ -171,7 +176,8 @@ do not invent ad-hoc flags:
   derived track is logged. Concept reuses `G_canon`, no INLP run.
 
 ### 6.1 New stage `register_adjust` (materialise G, not full embeddings)
-- Run INLP (SDG-stratified, iterative; canon reaches 94 directions) on
+- Run INLP (SDG-stratified, iterative; MPNet canon reaches 75 directions,
+  MiniLM 26, SciBERT 50) on
   research+policy embeddings -> persist ONLY the orthonormal projection matrix
   `G` (K x dim, ~KB) + metadata json (n_iters, final_acc, per-iter acc) to
   `2_data/3_embedded/{slug}/register/{track}/G.npy`.
@@ -187,6 +193,10 @@ do not invent ad-hoc flags:
     of the iterative process, reused as a Bolukbasi-style single-axis baseline. It
     directly motivates "why iterative, not single" (§11.1) and MUST be retained. Do
     NOT delete it. (An earlier draft said "remove" -- that was a misread; corrected.)
+    **Consolidated (2026-08-01):** `f_register_adjustment.py` now reuses the canonical G
+    from `register_adjust.py` via `register_utils.load_G()` instead of re-running its
+    own INLP loop. The naive single-direction (one-shot LR) is retained as an
+    independent computation.
   - MPNet `concept`: **reuse `G_canon`** -- no re-run (assumption stated in §3).
   - MiniLM / SciBERT `subset`: re-run INLP on research_subset+policy -> own `G`.
 - **Within-SDG balance fix (required for subset runs):** the iterative check must cap
@@ -220,7 +230,7 @@ do not invent ad-hoc flags:
   `should_skip`/`record_fingerprint` — §6.0). This is the DOWNSTREAM skip
   mechanism; it is distinct from `register_adjust`'s own iteration checkpoint.
 - **`register_adjust` is checkpointed + resume-safe (iteration-level).** The INLP
-  loop (~94 iterations × LR fit) must survive a kill at iteration 52 and resume
+  loop (~75 iterations × LR fit) must survive a kill at iteration 52 and resume
   from 52 — never restart from 1. Design (mirrors the embed stage's per-shard
   manifest resume):
   - Persist after EVERY iteration into `2_data/3_embedded/{slug}/register/{track}/`:
@@ -314,7 +324,7 @@ Adjusted semantic-gap JSONs written under an `adjusted/` mirror of the raw layou
 2. **Interaction extension** (canon centrepiece, main text): the existing
    correlation script only computes rho using the RAW semantic gap. Extend it to
    ALSO compute rho using the ADJUSTED semantic gap and the REGISTER component, so
-   the two headline numbers (rho=+0.44, rho=-0.50) are produced. Plainly: we add
+   the two headline numbers (rho=+0.48, rho=-0.49) are produced. Plainly: we add
    two more correlation columns to the same test. Emits JSON.
 3. **Consolidated correlation table = the ONE table** (appendix; canon rows also
    cited in main text): per config x {rho(cov,raw), rho(cov,adj), rho(cov,register)}.
@@ -336,7 +346,7 @@ Flags: `--output-dir`, `--embed-model` (default mpnet), `--overwrite` — the
 same shape as the existing `num_*.tex` emitters (`0_coverage_gap.py`, `h1_*`).
 
 ### 6.7 Manuscript restructure per §5 (with refinements)
-- Canon RAW result (rho=-0.09) stays in MAIN TEXT as the "before" of the
+- Canon RAW result (rho=-0.08) stays in MAIN TEXT as the "before" of the
   cancellation story. Canon raw + adj + register all in main text; only robustness
   configs -> appendix. Concept-reuse assumption stated explicitly (§3/§6.1).
 
@@ -383,8 +393,8 @@ The original paper's headline was a dissociation: coverage gap and semantic gap
 are "independent dimensions." That was always a little defensive -- "we found
 nothing, and that's interesting." The gate computation showed it was never a
 null at all. The raw gap correlates ~0 with coverage divergence because two real
-signals cancel: topic divergence rises with coverage divergence (rho=+0.44) while
-register divergence falls with it (rho=-0.50). The blunt raw distance averaged
+signals cancel: topic divergence rises with coverage divergence (rho=+0.48) while
+register divergence falls with it (rho=-0.49). The blunt raw distance averaged
 them into noise. Once you separate register from topic, the silence speaks.
 
 This is not a reframe. A reframe is cosmetic. This is the data telling you
@@ -415,7 +425,7 @@ plainly and it holds.
 ### SDG 17 is the diagnostic trap
 
 SDG 17 has the largest coverage gap (0.110) yet the smallest raw semantic gap
-(0.216) and the largest adjusted gap (0.388). Both communities use partnership /
+(0.216) and the largest adjusted gap (0.371). Both communities use partnership /
 coordination / institutional language -- same register -- which makes a naive
 embedding distance conclude they are aligned, when under the register they are
 talking past each other. That is the cleanest illustration in the whole paper:
@@ -460,12 +470,18 @@ text in §2/§3/§5/§6 where noted.
 - **Coverage gap is adjustment-invariant**: it derives from SDG assignments
   (classifier on original embeddings), so it is identical for raw and adjusted.
   Only the semantic-gap vector differs. (Correction A.)
-- **Canon adjusted = iterative SDG-stratified G** (94 dirs), NOT the naive
-  single-direction `g` also computed by `f_register_adjustment.py`. (Correction C.)
-  The naive single-direction `g` is now **dead code** and should be cleaned up
-  (see §6.1 cleanup bullet) -- it is unused and was the source of the earlier
-  "34-class blend" misreading.
-- **Canon RAW result (rho=-0.09) stays in main text** as the "before" of the
+- **Canon adjusted = iterative SDG-stratified G** (MPNet: 75 dirs, MiniLM: 26,
+  SciBERT: 50), NOT the naive single-direction `g` also computed by
+  `f_register_adjustment.py`. (Correction C.) The naive single-direction `g` is
+  **KEPT as baseline** (operative = §6.1): `f_register_adjustment.py:383` reuses
+  `G_list[0:1]` as a Bolukbasi-style single-axis baseline and is still wired in
+  `main.py` (L382) / `analysis_orchestrator.py` (L46). The earlier "dead code,
+  clean up" instruction is **RESCINDED** — it conflicts with §6.1 and with the
+  implemented repo. **Consolidated (2026-08-01):** `f_register_adjustment.py` now
+  reuses the canonical G from `register_adjust.py` via `register_utils.load_G()`
+  instead of re-running its own INLP loop. The naive single-direction (one-shot LR)
+  is retained as an independent computation.
+- **Canon RAW result (rho=-0.08) stays in main text** as the "before" of the
   cancellation story; canon raw + adj + register all in main text, robustness
   configs in appendix.
 - **Register-component correlation column for ALL configs**: compute
@@ -485,11 +501,10 @@ text in §2/§3/§5/§6 where noted.
   concept: adj LR/MLP (G_canon). MiniLM subset: adj LR/MLP (own G). SciBERT subset:
   adj LR/MLP (own G). `register_gap = raw - adj` per SDG per config (now defined for
   ZS too, since ZS adj exists).
-- **AGENTS.md is STALE on zero-shot:** the line "ZS appears raw-only under the MPNet
-  group" must be updated during implementation to "ZS appears under the MPNet group,
-  raw + adjusted (adjusted is canonical)". The MPNet-only gate in
-  `3_generate_cross_sensitivity_table.py` stays (axis restriction); it should also emit
-  ZS adj. This is an implementation task, recorded here so it is not dropped.
+- **AGENTS.md zero-shot note is DONE (no action).** AGENTS.md L111–117 already
+  states "Zero-shot reports BOTH raw and adjusted — adjusted is canonical."
+  This plan's earlier "AGENTS.md is STALE" note is itself stale; the
+  implementation already satisfied it.
 
 ## 11. Draft manuscript prose (method write-up) -- VERIFIED against source
 
@@ -521,7 +536,8 @@ text in §2/§3/§5/§6 where noted.
 > $P \leftarrow P_{N(W_i)} P$ and re-project $X \leftarrow P_{N(W_i)} X$. The returned
 > $P$ is the accumulated projection; the adjusted representation is $P X$. Iteration
 > continues until a balanced classifier can no longer predict $Z$ above chance (target
-> $\approx 50\%$ accuracy); for our corpus this required $n = 94$ rounds.
+> $\approx 50\%$ accuracy); for the MPNet canon corpus this required $n = 75$ rounds
+> (MiniLM: 26, SciBERT: 50).
 >
 > Our application adapts INLP to remove **register** -- the research-vs-policy discursive
 > style -- while preserving topical content, so $Z$ is the binary research/policy label.
@@ -547,12 +563,12 @@ text in §2/§3/§5/§6 where noted.
 > Applying INLP yields an adjusted (register-free) embedding in which the two Level-2
 > components of semantic divergence -- *register* and *topic* -- are separable. The
 > adjusted semantic gap is the topic component; the difference between the raw and
-> adjusted gaps is the register component. The raw H1a null ($\rho = -0.09$, $p = 0.73$)
+> adjusted gaps is the register component. The raw H1a null ($\rho = -0.08$, $p = 0.77$)
 > is therefore not an absence of association but a **cancellation**: coverage divergence
-> correlates positively with topic divergence ($\rho = +0.44$) and negatively with
-> register divergence ($\rho = -0.50$), and the two opposite-signed signals sum to
+> correlates positively with topic divergence ($\rho = +0.48$) and negatively with
+> register divergence ($\rho = -0.49$), and the two opposite-signed signals sum to
 > approximately zero. SDG 17 is the diagnostic case -- the largest coverage gap
-> (0.110) pairs with the smallest raw gap (0.216) yet the largest adjusted gap (0.388),
+> (0.110) pairs with the smallest raw gap (0.216) yet the largest adjusted gap (0.371),
 > because both communities share partnership / coordination register that masks deep
 > topic divergence.
 
@@ -568,11 +584,12 @@ text in §2/§3/§5/§6 where noted.
 
 ## 12. Manuscript text rewrites (REQUIRED, not yet done)
 
-Status: `dissertation.tex` was NOT updated during the code re-wiring stage and still
-asserts the OLD stance (raw primary; iterative = risky sensitivity appendix). These
-passages contradict the new canon (adjusted = canonical topic component; raw =
-register-inclusive reference) and MUST be rewritten during implementation. Line refs
-are from the current `dissertation.tex`:
+Status: COMPLETE. The decomposition table, correlation table, PCA figure, and all
+`num_*.tex` macros ARE wired into `dissertation.tex` (results live). The PROSE
+reconciliation (retire "dissociation/independent", reframe raw as reference not
+"primary", promote appendix heading to diagnostic-only) is DONE: the decomposition
+table now sits in main Results, the INLP method sits in Methodology §3, and the
+"dissociation" language is retired across Abstract/Intro/Results/Discussion.
 
 - **L261** (Methodology/Results): "raw centroid distance is retained as the primary
   measure… adjusted estimates… without replacing the raw estimate" -> adjusted
@@ -602,7 +619,8 @@ All §6 tasks completed on branch `register-adj`. Key commits:
 - `dfcc3a7`: §6.1 register_adjust stage (G.npy for 3 encoders)
 - `d1b22c4`: §6.2 register_utils + --embeddings adjusted on 6 scripts + orchestrator
 - `7d21808`: §6.4 re-run matrix + §6.5 generators (decomposition, interaction extension)
-- `ef53467`: §6.6 macros + §6.7/12 manuscript rewrites
+- `ef53467`: §6.6 macros + wired the decomposition/correlation/PCA *results* into the manuscript. The §12 *narrative* rewrite is deferred (§Deferred).
+- `PLAN-correction` (this session): corrected stale plan text (§0/§2/§6.1/§10/§11/§12/§13) + consolidated `f_register_adjustment.py` to reuse `register_adjust.py`'s canonical G (eliminated duplicate INLP loop; removed unused `build_research_sdg_index`, `load_research_embeddings_for_sdg`, `load_stratified_samples`).
 
 ### Verified headline numbers (MPNet canon):
 - Raw gap: 0.352 | Adjusted gap: 0.209 | Register component: 0.143
@@ -622,6 +640,54 @@ All §6 tasks completed on branch `register-adj`. Key commits:
 - `1_code/7_main_analysis/0_shared/g_interaction_extended.py` (§6.5.2)
 - `1_code/7_main_analysis/0_shared/generate_tex_macros.py` (§6.6)
 
+### Files consolidated:
+- `1_code/7_main_analysis/2_appendix/f_register_adjustment.py`: removed duplicate INLP loop,
+  now reuses canonical G from `register_adjust.py` via `register_utils.load_G()`.
+  Removed unused functions: `build_research_sdg_index`, `load_research_embeddings_for_sdg`,
+  `load_stratified_samples`. Naive single-direction baseline (one-shot LR) retained.
+
 ### Remaining work:
-- Merge to main
-- Verify LaTeX compiles with new macros and table references
+- Merge `register-adj` → main (currently unmerged; branch = `register-adj`).
+- DONE: manuscript narrative reconcile — retire dissociation/independent framing
+  (Abstract, Intro, Results, Discussion, Conclusion, interaction); make adjusted
+  canonical & raw the reference (L262/L480); promote appendix heading to
+  "Register Removal: Iterative Convergence and Cross-Config Replication".
+- DONE: LaTeX compiles with 0 undefined refs/citations (verified 2026-08-01).
+
+## 14. Manuscript narrative reconcile (COMPLETE)
+
+The code, tables, figure, and macros are all wired in. The prose restructure of
+`dissertation.tex` is complete: the decomposition table moved to main Results,
+the INLP method to Methodology §3, and "dissociation" language retired. Line
+numbers below refer to the file as of 2026-08-01.
+
+### Retire "dissociation / independent dimensions" framing
+The plan (§1/§5/§9/§10) explicitly requires retiring this language. Currently
+stated as the headline in multiple sections:
+
+| Location | Line | Current text (excerpt) | Required |
+|----------|------|----------------------|----------|
+| Abstract | L91 | "The central finding is a dissociation: the coverage gap and the within-SDG semantic gap are independent dimensions of divergence" | Rewrite as cancellation narrative (topic +, register −) |
+| Intro | L112 | "The central finding is a dissociation: coverage and framing are separate dimensions of divergence, not linked effects" | Retire; replace with decomposition headline |
+| Interaction | L374 | "The dissociation survives: research share remains uncorrelated" | Reframe as "the cancellation pattern holds" |
+| Results H1 | L430 | "The headline result is a structural dissociation: … independent dimensions of divergence" | Rewrite as cancellation; adjusted is canonical |
+| Discussion | L440 | "The dissociation is best read as a structural difference" | Reframe: decomposition reveals structure the raw number was too crude to show |
+| Conclusion | L481 | "demonstrates on the AI–SDG interface that the two are independent" | Retire; reframe as decomposition finding |
+| Appendix | L799 | "The symmetric construction preserves the dissociation" | Reframe |
+
+### Make adjusted canonical; raw = reference (not "primary measure")
+
+| Location | Line | Current text (excerpt) | Required |
+|----------|------|----------------------|----------|
+| Methodology | L263 | "The raw centroid distance is retained as the primary measure because it directly corresponds to the observed framing difference" | Adjusted = canonical topic component; raw = register-inclusive reference |
+| Discussion | L473 | "The raw gap is retained as the primary measure because it directly corresponds to the observed framing difference, while the adjusted estimates bound the register-sensitive component" | Same: adjusted is canonical; raw is reference |
+
+### Promote appendix heading
+
+| Location | Line | Current text | Required |
+|----------|------|-------------|----------|
+| Appendix E heading | L672 | `\section{Register-Adjustment Sensitivity}` | Promote to core-methodology framing (body L678 already says "canonical decomposition, not sensitivity diagnostics") |
+
+### After narrative pass
+- Re-run `--build-pdf --overwrite` and verify 0 undefined refs/citations.
+- Spot-check: decomposition table, PCA caption, H1 reformulation, SDG 17 reframe.
