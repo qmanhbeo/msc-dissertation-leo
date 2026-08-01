@@ -68,11 +68,13 @@ def _load_module(rel_path: str):
     return mod
 
 
-def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False) -> None:
+def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False, embeddings: str = "raw") -> None:
     mod = _load_module(rel_path)
     argv = [str(ANALYSIS_ROOT / rel_path), "--embed-model", model, "--output-dir", str(output_dir)]
     if overwrite:
         argv.append("--overwrite")
+    if embeddings != "raw":
+        argv.extend(["--embeddings", embeddings])
     sys.argv = argv
     mod.main()
 
@@ -98,3 +100,24 @@ def run_analysis(
     if include_appendix:
         for rel_path, _ in APPENDIX_STEPS:
             _run_step(rel_path, model, output_dir, overwrite=overwrite)
+
+
+# Steps that support --embeddings adjusted (produce adjusted JSON outputs).
+ADJUSTED_STEPS = [
+    "1_main_text/1_semantic_gap.py",
+]
+
+
+def run_analysis_adjusted(
+    model: str,
+    output_dir: Path,
+    *,
+    overwrite: bool = False,
+) -> None:
+    """Run adjusted analyses (register-adjusted embeddings) for `model`.
+
+    Produces adjusted semantic-gap JSONs under data/adjusted/. Consumer scripts
+    (interaction, cross-sensitivity, h1) read these in a later step.
+    """
+    for rel_path in ADJUSTED_STEPS:
+        _run_step(rel_path, model, output_dir, overwrite=overwrite, embeddings="adjusted")

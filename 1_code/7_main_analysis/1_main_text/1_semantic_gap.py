@@ -81,6 +81,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 import semantic_gap_shared
+import register_utils
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG, embed_dir_for_model, resolve_model_alias
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import (
@@ -122,6 +123,8 @@ def parse_args() -> argparse.Namespace:
                    help="Override output data directory (default: canonical layout data_dir). Concept variant writes here.")
     p.add_argument("--out-tables-dir", default=None,
                    help="Override output tables directory (default: canonical layout tables_dir). Concept variant writes here.")
+    p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
+                   help="Use raw (default) or register-adjusted embeddings (project via G).")
     p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
@@ -141,8 +144,18 @@ def run(args: argparse.Namespace) -> None:
         Path(args.out_data_dir).mkdir(parents=True, exist_ok=True)
     if args.out_tables_dir:
         Path(args.out_tables_dir).mkdir(parents=True, exist_ok=True)
-    out_sem_gap = Path(args.out_data_dir).joinpath("4_3_semantic_gap_distances.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_distances.json"
-    out_sem_sens = Path(args.out_data_dir).joinpath("4_3_semantic_gap_robustness_caps.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
+
+    # Determine output paths and fingerprint based on --embeddings mode.
+    is_adjusted = args.embeddings == "adjusted"
+    if is_adjusted:
+        adj_data_dir = layout.data_dir / "adjusted"
+        adj_data_dir.mkdir(parents=True, exist_ok=True)
+        out_sem_gap = adj_data_dir / "4_3_semantic_gap_distances.json"
+        out_sem_sens = adj_data_dir / "4_3_semantic_gap_robustness_caps.json"
+    else:
+        out_sem_gap = Path(args.out_data_dir).joinpath("4_3_semantic_gap_distances.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_distances.json"
+        out_sem_sens = Path(args.out_data_dir).joinpath("4_3_semantic_gap_robustness_caps.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
+
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
@@ -153,8 +166,10 @@ def run(args: argparse.Namespace) -> None:
                         _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
                         embed_dir_for_model(args.embed_model) / "policy.npy")
     fp += SCRIPT_VERSION
+    if is_adjusted:
+        fp += f"_adjusted_{register_utils.track_for_model(args.embed_model)}"
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
-        log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
+        log.info("Skipping %s — inputs unchanged", PRIMARY)
         return
 
     # ---- Load research centroids/meta ----
@@ -178,6 +193,14 @@ def run(args: argparse.Namespace) -> None:
 
     # Hard assignment (0-indexed SDG index).
     policy_assignments = get_cluster_assignments(policy_scores)
+
+    # ---- Adjusted mode: project through G ----
+    if is_adjusted:
+        G = register_utils.load_G(args.embed_model)
+        log.info("Projecting research centroids through G (%d directions)...", G.shape[0])
+        research_centroids = register_utils.project(research_centroids, G)
+        log.info("Projecting policy embeddings through G...")
+        policy_emb = register_utils.project(policy_emb, G)
 
     log.info("Paper cluster sizes by SDG:")
     for sdg_idx in range(N_SDG):
@@ -252,6 +275,8 @@ def run(args: argparse.Namespace) -> None:
     # ---- Build output JSON ----
     primary_out = {
         "method": "centroid_to_centroid",
+        "embedding_model": args.embed_model,
+        "embeddings": args.embeddings,
         "segment_cap": args.segment_cap,
         "min_cluster_size": MIN_CLUSTER_SIZE,
         "random_seed": RANDOM_SEED,
@@ -289,7 +314,12 @@ def run(args: argparse.Namespace) -> None:
     log.info("")
     log.info("Next step: python 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py")
 
-    # ---- Write LaTeX generated outputs ----
+    # ---- Write LaTeX generated outputs (raw mode only) ----
+    if is_adjusted:
+        log.info("Adjusted mode: skipping tex generation (adjusted JSON written to %s)", out_sem_gap)
+        record_fingerprint(OUTPUTS, fp, PRIMARY)
+        return
+
     gen_dir = tables_dir
 
     # Extract per-SDG values from primary_results (SDG order 1–17)

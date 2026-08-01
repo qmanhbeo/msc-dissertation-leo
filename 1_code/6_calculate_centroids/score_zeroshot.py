@@ -31,6 +31,13 @@ for path in (CODE_ROOT, SHARED_DIR):
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, output_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
+# register_utils may not be on path when run standalone; add it.
+import sys as _sys
+_ANALYSIS_ROOT = Path(__file__).resolve().parents[2] / "7_main_analysis" / "0_shared"
+if str(_ANALYSIS_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_ANALYSIS_ROOT))
+import register_utils
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
@@ -82,6 +89,8 @@ def parse_args() -> argparse.Namespace:
                    help="Override semantic_gap_distances.json output dir (default: "
                         "canonical 4_outputs/{model}/data/). "
                         "Concept variant writes to .../data/concept/.")
+    p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
+                   help="Use raw (default) or register-adjusted embeddings (project via G).")
     return p.parse_args()
 
 
@@ -107,10 +116,20 @@ def run(args: argparse.Namespace) -> None:
             log.info("Zero-shot outputs already exist — skip. Use --overwrite to recompute.")
             return
 
+    # ---- Adjusted mode: load G ----
+    is_adjusted = args.embeddings == "adjusted"
+    G = None
+    if is_adjusted:
+        G = register_utils.load_G(model)
+        log.info("Adjusted mode: G loaded (%d directions)", G.shape[0])
+
     # 1. Load reference centroids (same ones LR uses)
     centroids_path = scored_dir_for_model(model) / "sdg_centroids.npy"
     log.info("Loading reference centroids: %s", centroids_path)
     centroids = np.load(centroids_path).astype(np.float32)
+    if is_adjusted:
+        log.info("Projecting reference centroids through G...")
+        centroids = register_utils.project(centroids, G)
     assert centroids.shape[0] == N_SDG
     embed_dim = centroids.shape[1]
     norms = np.linalg.norm(centroids, axis=1)
@@ -138,6 +157,8 @@ def run(args: argparse.Namespace) -> None:
             mmap_mode="r",
         )
         embeddings = np.asarray(emb).astype(np.float32)
+        if is_adjusted:
+            embeddings = register_utils.project(embeddings, G)
         scores = embeddings @ centroids.T
         assignments = scores.argmax(axis=1)
         for sdg_idx in range(N_SDG):
@@ -159,6 +180,8 @@ def run(args: argparse.Namespace) -> None:
     # 3. Score policy corpus
     log.info("Scoring policy corpus (zero-shot)...")
     policy_emb = np.load(embed_root / "policy.npy").astype(np.float32)
+    if is_adjusted:
+        policy_emb = register_utils.project(policy_emb, G)
     policy_ids = load_json(embed_root / "metadata" / "policy_ids.json")
 
     policy_scores = policy_emb @ centroids.T
@@ -206,11 +229,17 @@ def run(args: argparse.Namespace) -> None:
 
     out_data = {
         "method": "zeroshot_nearest_centroid",
-        "segment_cap": args.segment_cap,
         "embedding_model": model,
+        "embeddings": args.embeddings,
+        "segment_cap": args.segment_cap,
         "per_sdg": per_sdg,
     }
-    gap_path = data_root / "semantic_gap_distances.json"
+    if is_adjusted:
+        gap_dir = data_root / "adjusted"
+        gap_dir.mkdir(parents=True, exist_ok=True)
+        gap_path = gap_dir / "semantic_gap_distances.json"
+    else:
+        gap_path = data_root / "semantic_gap_distances.json"
     with gap_path.open("w", encoding="utf-8") as f:
         json.dump(out_data, f, indent=2)
     log.info("Saved: %s", gap_path)

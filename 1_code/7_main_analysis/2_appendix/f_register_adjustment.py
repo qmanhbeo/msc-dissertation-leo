@@ -53,6 +53,7 @@ from model_utils import (
 )
 from shard_pipeline_utils import resolve_manifest_path
 import semantic_gap_shared
+import register_utils
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
@@ -81,6 +82,8 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run register-adjustment sensitivity analysis.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
+                   help="Use raw (default) or register-adjusted embeddings (project via G).")
     p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
@@ -195,6 +198,7 @@ def load_stratified_samples(
     n_per_sdg: int,
     rng: np.random.Generator,
     projector: np.ndarray | None = None,
+    G: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Build a balanced 17-SDG × 2-corpus sample, optionally projected through G.
 
@@ -205,6 +209,9 @@ def load_stratified_samples(
     policy_scores = np.load(semantic_gap_shared.get_policy_scores(model))
     policy_assignments = get_cluster_assignments(policy_scores)
 
+    if G is not None and G.shape[0] > 0:
+        policy_emb = register_utils.project(policy_emb, G)
+
     X_parts: list[np.ndarray] = []
     y_parts: list[np.ndarray] = []
     sdg_parts: list[np.ndarray] = []
@@ -213,6 +220,8 @@ def load_stratified_samples(
         sdg = sdg_idx + 1
 
         res_emb = load_research_embeddings_for_sdg(model, sdg_index[sdg], n_per_sdg, rng)
+        if G is not None and G.shape[0] > 0:
+            res_emb = register_utils.project(res_emb, G)
         n_res = len(res_emb)
 
         policy_mask = np.array([a == sdg_idx for a in policy_assignments])
@@ -305,12 +314,14 @@ def iterative_register_check(
     research_cohesions: np.ndarray,
     rng: np.random.Generator,
     args: argparse.Namespace,
+    is_adjusted: bool = False,
 ) -> dict:
     """Iteratively remove register directions via stratified 10-fold CV until accuracy ≤ threshold."""
     from scipy.stats import spearmanr
 
     G_list: list[np.ndarray] = []
     iteration_results: list[dict] = []
+    G_preloaded = register_utils.load_G(model) if is_adjusted else None
 
     for k in range(1, ITERATIVE_MAX_K + 1):
         G = np.vstack(G_list) if G_list else np.zeros((0, policy_emb.shape[1]), dtype=np.float32)
@@ -319,6 +330,7 @@ def iterative_register_check(
         X, y, sdg_labels = load_stratified_samples(
             model, sdg_index, ITERATIVE_N_PER_SDG, rng,
             projector=G if G.shape[0] > 0 else None,
+            G=G_preloaded,
         )
 
         # Combined stratification key: 34 classes (17 SDGs × 2 corpora)
@@ -471,6 +483,7 @@ def iterative_register_check(
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
     rng = np.random.default_rng(POLICY_SEGMENT_CAP_SEED)
+    is_adjusted = args.embeddings == "adjusted"
 
     # ------------------------------------------------------------------
     # 1. Load canonical raw gaps
@@ -502,9 +515,16 @@ def run(args: argparse.Namespace) -> None:
 
     SCRIPT_VERSION = "1"
     out_root = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
+    if is_adjusted:
+        out_root = out_root / "adjusted"
     tables_dir = out_root / "tables"
-    PRIMARY = tables_dir / "tab_register_adjusted_semgap.tex"
-    OUTPUTS = [PRIMARY, tables_dir / "num_register_adjustment.tex"]
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    if is_adjusted:
+        PRIMARY = out_root / "register_adjustment_results.json"
+        OUTPUTS = [PRIMARY]
+    else:
+        PRIMARY = tables_dir / "tab_register_adjusted_semgap.tex"
+        OUTPUTS = [PRIMARY, tables_dir / "num_register_adjustment.tex"]
     fp = fingerprint_of(
         canonical_semantic_path,
         semantic_gap_shared.get_policy_emb(model),
@@ -515,6 +535,8 @@ def run(args: argparse.Namespace) -> None:
         embed_dir_for_model(model) / "research_shards" / "metadata" / "manifest.json",
         scored_dir_for_model(model) / "paper_scores_shards" / "metadata" / "manifest.json",
     ) + SCRIPT_VERSION
+    if is_adjusted:
+        fp += f"_adjusted_{register_utils.track_for_model(model)}"
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
@@ -537,11 +559,20 @@ def run(args: argparse.Namespace) -> None:
     research_meta = load_json(semantic_gap_shared.get_research_centroid_meta(model))
     research_cohesions = np.array([float(r["mean_cos_to_centroid"]) for r in research_meta], dtype=np.float32)
 
+    # ---- Adjusted mode: project through G ----
+    if is_adjusted:
+        G = register_utils.load_G(model)
+        log.info("Projecting policy embeddings and research centroids through G...")
+        policy_emb = register_utils.project(policy_emb, G)
+        research_centroids = register_utils.project(research_centroids, G)
+
     # ------------------------------------------------------------------
     # 3. Train binary research-vs-policy classifier
     # ------------------------------------------------------------------
     log.info("Sampling %d research embeddings ...", SAMPLE_SIZE_PER_CLASS)
     research_sample = load_research_sample(model, SAMPLE_SIZE_PER_CLASS, rng)
+    if is_adjusted:
+        research_sample = register_utils.project(research_sample, G)
     log.info("  research sample shape: %s", research_sample.shape)
 
     n_train = min(SAMPLE_SIZE_PER_CLASS, n_policy)
@@ -672,38 +703,39 @@ def run(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     # 8. Write LaTeX output
     # ------------------------------------------------------------------
-    out_root = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
-    tables_dir = out_root / "tables"
-    tables_dir.mkdir(parents=True, exist_ok=True)
+    out_root_adj = Path(args.output_dir) / "appendix" / model_slug(model) / "f_register_adjustment"
+    if is_adjusted:
+        out_root_adj = out_root_adj / "adjusted"
+    out_root_adj.mkdir(parents=True, exist_ok=True)
 
     n_train_total = len(y_train)
     n_per_class = min(SAMPLE_SIZE_PER_CLASS, n_policy)
 
-    num_lines = [
-        "% Auto-generated by 1_code/7_main_analysis/2_appendix/f_register_adjustment.py — do not edit manually",
-        rf"\newcommand{{\RegisterClassifierTrainAcc}}{{{train_acc:.3f}}}",
-        rf"\newcommand{{\RegisterClassifierCoefNorm}}{{{coef_norm:.3f}}}",
-        rf"\newcommand{{\RegisterClassifierNTrain}}{{{n_train_total:,}}}".replace(",", "{,}"),
-        rf"\newcommand{{\RegisterClassifierNPerClass}}{{{n_per_class:,}}}".replace(",", "{,}"),
-        rf"\newcommand{{\MeanRawSemanticGap}}{{{mean_raw:.3f}}}",
-        rf"\newcommand{{\MeanAdjustedSemanticGap}}{{{mean_adj:.3f}}}",
-        rf"\newcommand{{\MeanSemanticGapDelta}}{{{mean_delta:.3f}}}",
-    ]
-    for r in results:
-        sdg_word = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
-                     "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
-                     "Fifteen", "Sixteen", "Seventeen"][r["sdg"] - 1]
-        if r["raw_gap"] is not None:
-            num_lines.append(rf"\newcommand{{\RegRawGapSdg{sdg_word}}}{{{r['raw_gap']:.4f}}}")
-        if r["adj_gap"] is not None:
-            num_lines.append(rf"\newcommand{{\RegAdjGapSdg{sdg_word}}}{{{r['adj_gap']:.4f}}}")
-        if r["delta"] is not None:
-            num_lines.append(rf"\newcommand{{\RegDeltaSdg{sdg_word}}}{{{r['delta']:.4f}}}")
-    (tables_dir / "num_register_adjustment.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", tables_dir / "num_register_adjustment.tex")
+    if not is_adjusted:
+        num_lines = [
+            "% Auto-generated by 1_code/7_main_analysis/2_appendix/f_register_adjustment.py — do not edit manually",
+            rf"\newcommand{{\RegisterClassifierTrainAcc}}{{{train_acc:.3f}}}",
+            rf"\newcommand{{\RegisterClassifierCoefNorm}}{{{coef_norm:.3f}}}",
+            rf"\newcommand{{\RegisterClassifierNTrain}}{{{n_train_total:,}}}".replace(",", "{,}"),
+            rf"\newcommand{{\RegisterClassifierNPerClass}}{{{n_per_class:,}}}".replace(",", "{,}"),
+            rf"\newcommand{{\MeanRawSemanticGap}}{{{mean_raw:.3f}}}",
+            rf"\newcommand{{\MeanAdjustedSemanticGap}}{{{mean_adj:.3f}}}",
+            rf"\newcommand{{\MeanSemanticGapDelta}}{{{mean_delta:.3f}}}",
+        ]
+        for r in results:
+            sdg_word = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+                         "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
+                         "Fifteen", "Sixteen", "Seventeen"][r["sdg"] - 1]
+            if r["raw_gap"] is not None:
+                num_lines.append(rf"\newcommand{{\RegRawGapSdg{sdg_word}}}{{{r['raw_gap']:.4f}}}")
+            if r["adj_gap"] is not None:
+                num_lines.append(rf"\newcommand{{\RegAdjGapSdg{sdg_word}}}{{{r['adj_gap']:.4f}}}")
+            if r["delta"] is not None:
+                num_lines.append(rf"\newcommand{{\RegDeltaSdg{sdg_word}}}{{{r['delta']:.4f}}}")
+        (tables_dir / "num_register_adjustment.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
+        log.info("Saved: %s", tables_dir / "num_register_adjustment.tex")
 
-    out_root.mkdir(parents=True, exist_ok=True)
-    with (out_root / "register_adjustment_results.json").open("w") as f:
+    with (out_root_adj / "register_adjustment_results.json").open("w") as f:
         json.dump({
             "n_train": n_train_total,
             "train_accuracy": float(train_acc),
@@ -731,6 +763,7 @@ def run(args: argparse.Namespace) -> None:
         research_cohesions=research_cohesions,
         rng=rng,
         args=args,
+        is_adjusted=is_adjusted,
     )
 
     # ------------------------------------------------------------------
@@ -738,56 +771,57 @@ def run(args: argparse.Namespace) -> None:
     # ------------------------------------------------------------------
     iter_gaps_for_table = iterative_result["final_gaps"]
 
-    sdg_words = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
-                 "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
-                 "Fifteen", "Sixteen", "Seventeen"]
-    iter_num_lines = [
-        "% Auto-generated by f_register_adjustment.py iterative check",
-    ]
-    for sdg_idx in range(N_SDG):
-        sdg = sdg_idx + 1
-        iter_gap = iter_gaps_for_table.get(sdg)
-        if iter_gap is not None:
-            iter_num_lines.append(
-                rf"\newcommand{{\RegIterGapSdg{sdg_words[sdg_idx]}}}{{{iter_gap:.4f}}}"
-            )
-    iter_num_path = tables_dir / "num_iterative_register_check.tex"
-    iter_num_existing = iter_num_path.read_text().splitlines() if iter_num_path.exists() else []
-    (iter_num_path).write_text(
-        "\n".join(iter_num_existing + iter_num_lines) + "\n", encoding="utf-8"
-    )
-    log.info("Saved (appended iterative per-SDG macros): %s", iter_num_path)
-
-    tab_lines = [
-        "% Auto-generated by 1_code/7_main_analysis/2_appendix/f_register_adjustment.py — do not edit manually",
-        r"\begin{tabular}{llrrrrr}",
-        r"\toprule",
-        r" & & & \multicolumn{2}{c}{Naive} & \multicolumn{2}{c}{Iterative} \\",
-        r"\cmidrule(lr){4-5} \cmidrule(lr){6-7}",
-        r" & Description & Raw gap & Adj. gap & $\Delta$ & Adj. gap & $\Delta$ \\",
-        r"\midrule",
-    ]
-    for r in sorted(results, key=lambda x: x["raw_gap"] or 0, reverse=True):
-        raw_str = f"{r['raw_gap']:.4f}" if r["raw_gap"] is not None else "N/A"
-        adj_str = f"{r['adj_gap']:.4f}" if r["adj_gap"] is not None else "N/A"
-        delta_str = f"{r['delta']:.4f}" if r["delta"] is not None else "N/A"
-        iter_adj = iter_gaps_for_table.get(r["sdg"])
-        iter_adj_str = f"{iter_adj:.4f}" if iter_adj is not None else "N/A"
-        iter_delta = (iter_adj - r["raw_gap"]) if iter_adj is not None and r["raw_gap"] is not None else None
-        iter_delta_str = f"{iter_delta:.4f}" if iter_delta is not None else "N/A"
-        tab_lines.append(
-            rf"{r['sdg']:2d} & {r['name']} & {raw_str} & {adj_str} & {delta_str} & {iter_adj_str} & {iter_delta_str} \\"
+    if not is_adjusted:
+        sdg_words = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+                     "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
+                     "Fifteen", "Sixteen", "Seventeen"]
+        iter_num_lines = [
+            "% Auto-generated by f_register_adjustment.py iterative check",
+        ]
+        for sdg_idx in range(N_SDG):
+            sdg = sdg_idx + 1
+            iter_gap = iter_gaps_for_table.get(sdg)
+            if iter_gap is not None:
+                iter_num_lines.append(
+                    rf"\newcommand{{\RegIterGapSdg{sdg_words[sdg_idx]}}}{{{iter_gap:.4f}}}"
+                )
+        iter_num_path = tables_dir / "num_iterative_register_check.tex"
+        iter_num_existing = iter_num_path.read_text().splitlines() if iter_num_path.exists() else []
+        (iter_num_path).write_text(
+            "\n".join(iter_num_existing + iter_num_lines) + "\n", encoding="utf-8"
         )
-    mean_iter_adj = float(np.mean(list(iter_gaps_for_table.values()))) if iter_gaps_for_table else 0.0
-    mean_iter_delta = mean_iter_adj - mean_raw
-    tab_lines.extend([
-        r"\midrule",
-        rf"\multicolumn{{2}}{{l}}{{Mean}} & {mean_raw:.4f} & {mean_adj:.4f} & {mean_delta:.4f} & {mean_iter_adj:.4f} & {mean_iter_delta:.4f} \\",
-        r"\bottomrule",
-        r"\end{tabular}",
-    ])
-    (tables_dir / "tab_register_adjusted_semgap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", tables_dir / "tab_register_adjusted_semgap.tex")
+        log.info("Saved (appended iterative per-SDG macros): %s", iter_num_path)
+
+        tab_lines = [
+            "% Auto-generated by 1_code/7_main_analysis/2_appendix/f_register_adjustment.py — do not edit manually",
+            r"\begin{tabular}{llrrrrr}",
+            r"\toprule",
+            r" & & & \multicolumn{2}{c}{Naive} & \multicolumn{2}{c}{Iterative} \\",
+            r"\cmidrule(lr){4-5} \cmidrule(lr){6-7}",
+            r" & Description & Raw gap & Adj. gap & $\Delta$ & Adj. gap & $\Delta$ \\",
+            r"\midrule",
+        ]
+        for r in sorted(results, key=lambda x: x["raw_gap"] or 0, reverse=True):
+            raw_str = f"{r['raw_gap']:.4f}" if r["raw_gap"] is not None else "N/A"
+            adj_str = f"{r['adj_gap']:.4f}" if r["adj_gap"] is not None else "N/A"
+            delta_str = f"{r['delta']:.4f}" if r["delta"] is not None else "N/A"
+            iter_adj = iter_gaps_for_table.get(r["sdg"])
+            iter_adj_str = f"{iter_adj:.4f}" if iter_adj is not None else "N/A"
+            iter_delta = (iter_adj - r["raw_gap"]) if iter_adj is not None and r["raw_gap"] is not None else None
+            iter_delta_str = f"{iter_delta:.4f}" if iter_delta is not None else "N/A"
+            tab_lines.append(
+                rf"{r['sdg']:2d} & {r['name']} & {raw_str} & {adj_str} & {delta_str} & {iter_adj_str} & {iter_delta_str} \\"
+            )
+        mean_iter_adj = float(np.mean(list(iter_gaps_for_table.values()))) if iter_gaps_for_table else 0.0
+        mean_iter_delta = mean_iter_adj - mean_raw
+        tab_lines.extend([
+            r"\midrule",
+            rf"\multicolumn{{2}}{{l}}{{Mean}} & {mean_raw:.4f} & {mean_adj:.4f} & {mean_delta:.4f} & {mean_iter_adj:.4f} & {mean_iter_delta:.4f} \\",
+            r"\bottomrule",
+            r"\end{tabular}",
+        ])
+        (tables_dir / "tab_register_adjusted_semgap.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+        log.info("Saved: %s", tables_dir / "tab_register_adjusted_semgap.tex")
     record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 

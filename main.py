@@ -66,7 +66,7 @@ from model_utils import (
     segmented_dir_for_model,
     resolve_model_alias,
 )
-from analysis_orchestrator import run_analysis
+from analysis_orchestrator import run_analysis, run_analysis_adjusted
 
 
 ROOT = Path(__file__).resolve().parent
@@ -533,6 +533,13 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
          "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(overwrite),
         step_id="5",
     )
+    # Register-adjustment (INLP -> G matrix). Must run before the adjusted pass
+    # so G.npy exists for register_utils.load_G(). Resume-safe; skips if complete.
+    run_step(
+        "register_adjust (INLP -> G)",
+        [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
+         "--embed-model", model] + _overwrite_flag(overwrite),
+    )
     # Concept-retrieval robustness (MPNet only): score the concept-retrieved
     # research corpus with all three assignment methods (LR/MLP/ZS), feeding the
     # Retrieval column of the cross-sensitivity tables (step 6).
@@ -585,6 +592,23 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     # no consolidated array is built or cached.
     # Must run BEFORE plot figures, which consumes the analysis outputs.
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+
+    # ---- Adjusted pass (register-adjusted embeddings) ----
+    # Produces adjusted semantic-gap JSONs under data/adjusted/. Coverage is
+    # adjustment-invariant (§6.3) so 4_2 is reused.
+    if model == DEFAULT_EMBED_MODEL:
+        # MPNet: adjusted semantic gap + adjusted ZS
+        run_analysis_adjusted(model, output_dir, overwrite=overwrite)
+        run_step(
+            "zero-shot nearest-centroid (adjusted)",
+            [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+             "--embed-model", model, "--output-dir", str(output_dir),
+             "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
+        )
+    else:
+        # MiniLM / SciBERT: adjusted semantic gap only (own G)
+        run_analysis_adjusted(model, output_dir, overwrite=overwrite)
+
     # Cross-sensitivity table (default model only — for MiniLM/SciBERT the
     # canonical table is regenerated after the cold-replay model loop from all
     # three encoders' data).
