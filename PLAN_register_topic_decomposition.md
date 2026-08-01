@@ -153,13 +153,12 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
 - Tracks / G sources:
   - MPNet `canon`: iterative SDG-stratified INLP on full research+policy ->
     `G_canon`. Use the **iterative** `G_list`, NOT the naive single-direction `g`.
-  - **Cleanup (dead code):** `f_register_adjustment.py` also computes a naive
-    single-direction `g` (one projection round). This is superseded by the iterative
-    `G_list` and is **not used anywhere** in the canon (per Correction C, §10) -- it
-    was the source of the earlier "blend" misreading (§6.1). Remove it during
-    implementation: delete the naive `g` block and any flag that selects it
-    (~few lines, low risk, no downstream dependents). Keeps the method unambiguously
-    INLP (iterative, exhaustive) and prevents regressions.
+  - **Naive single-direction is NOT dead code -- KEEP as baseline.** There is no
+    separate naive `g` block. The manuscript's "naive single-direction adjustment"
+    is `G_list[0:1]` (`f_register_adjustment.py:370-373`, `iter1_gaps`) -- iteration 1
+    of the iterative process, reused as a Bolukbasi-style single-axis baseline. It
+    directly motivates "why iterative, not single" (§11.1) and MUST be retained. Do
+    NOT delete it. (An earlier draft said "remove" -- that was a misread; corrected.)
   - MPNet `concept`: **reuse `G_canon`** -- no re-run (assumption stated in §3).
   - MiniLM / SciBERT `subset`: re-run INLP on research_subset+policy -> own `G`.
 - **Within-SDG balance fix (required for subset runs):** the iterative check must cap
@@ -177,6 +176,18 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
   NOT a topic+register blend. Describe it as register removal, not a blend. (Verified
   against `f_register_adjustment.py`: `clf_full.fit(X, y)` with binary `y`; coef is
   `(1, dim)`, flattened to one direction.)
+- **Pre-flight (subset INLP feasibility):** confirm
+  `embed_dir_for_model("minilm")/policy.npy` and
+  `embed_dir_for_model("scibert")/policy.npy` exist (per-model policy embeddings;
+  `get_policy_emb` -> `embed_dir_for_model(model)/policy.npy`). Subset INLP needs
+  research_subset + policy in those model spaces. If missing, run the embed stage for
+  policy before subset INLP. Verify on the hydrated snapshot, not from assumption.
+- **ZS adjusted added (canon MPNet):** zero-shot nearest-centroid is computed on
+  ADJUSTED embeddings too (project research texts + policy centroids through `G`, then
+  assign). Raw ZS alone is a redundant register-inclusive gap; ZS adj lets ZS participate
+  in the raw-vs-adjusted decomposition and in the supervised-vs-zero-shot comparison on
+  the canonical surface. ZS stays MPNet-group-only (AGENTS.md axis restriction intact).
+  Re-run matrix §6.4 updated accordingly.
 - Fingerprint `G` + raw inputs so downstream skips when unchanged.
 
 ### 6.2 `register_utils.py` (NEW, shared)
@@ -202,7 +213,7 @@ Adjusted semantic-gap JSONs written under an `adjusted/` mirror of the raw layou
 
 | Config | Raw sem (methods) | Adj sem (methods) |
 |---|---|---|
-| MPNet canon | LR, MLP, ZS | **LR, MLP** |
+| MPNet canon | LR, MLP, ZS | **LR, MLP, ZS** |
 | MPNet concept | -- | LR, MLP (reuse G_canon) |
 | MiniLM subset | -- | LR, MLP (own G) |
 | SciBERT subset | -- | LR, MLP (own G) |
@@ -373,9 +384,15 @@ text in §2/§3/§5/§6 where noted.
   writes the new `num_*.tex` macros. Applies to all new/changed stages going
   forward.
 - **Re-run matrix (semantic gaps; coverage reused)**:
-  MPNet canon: raw LR/MLP/ZS, adj LR/MLP. MPNet concept: adj LR/MLP (G_canon).
-  MiniLM subset: adj LR/MLP (own G). SciBERT subset: adj LR/MLP (own G).
-  `register_gap = raw - adj` per SDG per config.
+  MPNet canon: raw LR/MLP/ZS, adj LR/MLP/**ZS** (ZS adj added -- see §6.1). MPNet
+  concept: adj LR/MLP (G_canon). MiniLM subset: adj LR/MLP (own G). SciBERT subset:
+  adj LR/MLP (own G). `register_gap = raw - adj` per SDG per config (now defined for
+  ZS too, since ZS adj exists).
+- **AGENTS.md is STALE on zero-shot:** the line "ZS appears raw-only under the MPNet
+  group" must be updated during implementation to "ZS appears under the MPNet group,
+  raw + adjusted (adjusted is canonical)". The MPNet-only gate in
+  `3_generate_cross_sensitivity_table.py` stays (axis restriction); it should also emit
+  ZS adj. This is an implementation task, recorded here so it is not dropped.
 
 ## 11. Draft manuscript prose (method write-up) -- VERIFIED against source
 
@@ -451,3 +468,33 @@ text in §2/§3/§5/§6 where noted.
   call it a "34-class classifier" (the 34-way key is only the split-stratification, per
   §6.1). Both misstatements were caught and corrected during planning.
 - Keep the citation exact: Ravfogel et al., 2020, ACL; "Null It Out".
+
+## 12. Manuscript text rewrites (REQUIRED, not yet done)
+
+Status: `dissertation.tex` was NOT updated during the code re-wiring stage and still
+asserts the OLD stance (raw primary; iterative = risky sensitivity appendix). These
+passages contradict the new canon (adjusted = canonical topic component; raw =
+register-inclusive reference) and MUST be rewritten during implementation. Line refs
+are from the current `dissertation.tex`:
+
+- **L261** (Methodology/Results): "raw centroid distance is retained as the primary
+  measure… adjusted estimates… without replacing the raw estimate" -> adjusted
+  (register-removed) is canonical; raw retained as the register-inclusive reference
+  and the "before" of the cancellation story.
+- **L345**: "the canonical raw estimate is retained, so SDG 17's position is conditional
+  on the register treatment" -> reframe as the decomposition (raw vs adjusted are two
+  components of Level-2 divergence).
+- **L433**: SDG 17 "register treatment can flip its position entirely
+  (Appendix~ref{app:register-robustness})" -> adjusted is canonical; the flip is the
+  centrepiece decomposition result.
+- **L462** (Register effects): "aggressive multi-direction subtraction risks
+  overcorrection, so the raw gap is retained" -> iterative INLP is THE method
+  (Ravfogel et al., 2020); raw is reference, not primary.
+- **L662+** (`app:register-robustness`): promote from "sensitivity/robustness" framing
+  to core methodology; keep as the detailed-method appendix but change its epistemic
+  role.
+- Update macro citations (`RegisterIter*`, `\MeanSemanticGapDelta`) consumed in these
+  passages if their meaning changes after the re-run.
+
+These are prose edits only -- no pipeline code. They are the missing half of the
+restructure: the code re-wiring is done, the manuscript narrative is not.
