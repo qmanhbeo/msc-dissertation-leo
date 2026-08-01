@@ -1,0 +1,19 @@
+{
+  "balanced_sampling_used": true,
+  "generated_at_utc": "2026-08-01T15:49:03.981540Z",
+  "n_inlp_directions": 75,
+  "n_policy_projected_background": 40597,
+  "n_policy_used_for_pca_fit": 40597,
+  "n_research_projected_background": 40597,
+  "n_research_used_for_pca_fit": 40597,
+  "note": "PCA is visual-only. Main coverage and semantic-gap results remain computed in the original embedding space.",
+  "pc1_explained_variance_ratio": 0.0921652540564537,
+  "pc2_explained_variance_ratio": 0.03731900453567505,
+  "pca_fitted_on": "raw (single shared PCA for both panels)",
+  "policy_capped": false,
+  "policy_fit_cap": 0,
+  "random_seed": 42,
+  "segment_cap_for_policy_gap_overlay": 50,
+  "total_policy_embeddings_available": 40597,
+  "total_research_embeddings_available": 3105144
+}

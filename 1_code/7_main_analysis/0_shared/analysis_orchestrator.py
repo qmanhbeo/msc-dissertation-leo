@@ -114,6 +114,7 @@ POST_ADJUSTED_STEPS = [
     "0_shared/g_register_decomposition.py",
     "0_shared/g_interaction_extended.py",
     "0_shared/generate_tex_macros.py",
+    ("1_main_text/0_pca_register_before_after.py", True),
 ]
 
 
@@ -131,5 +132,11 @@ def run_analysis_adjusted(
     """
     for rel_path in ADJUSTED_STEPS:
         _run_step(rel_path, model, output_dir, overwrite=overwrite, embeddings="adjusted")
-    for rel_path in POST_ADJUSTED_STEPS:
+    for item in POST_ADJUSTED_STEPS:
+        if isinstance(item, tuple):
+            rel_path, only_default = item
+            if only_default and model != DEFAULT_EMBED_MODEL:
+                continue
+        else:
+            rel_path = item
         _run_step(rel_path, model, output_dir, overwrite=overwrite)

@@ -41,6 +41,7 @@
 \input{../4_outputs/mpnet/tables/num_concept_coverage.tex}
 \input{../4_outputs/mpnet/tables/num_concept_semantic.tex}
 \input{../4_outputs/mpnet/tables/num_pca_landscape.tex}
+\InputIfFileExists{../4_outputs/mpnet/tables/num_pca_register_before_after.tex}{}{}
 \input{../4_outputs/mpnet/tables/num_model_selection.tex}
 \input{../4_outputs/mpnet/tables/num_reference_split.tex}
 \InputIfFileExists{../4_outputs/appendix/mpnet/c_sample_stability/tables/num_sample_stability.tex}{}{}
@@ -260,6 +261,15 @@ A gap of 0 indicates perfectly overlapping semantic directions; a gap approachin
 The \emph{per-document segment cap} of $K=50$ (approximately 7,500 words) uses seeded random sampling, hence reproducible, and sits well above the median of roughly 14 segments per document. Repeating the computation at a cap of 20 and with no cap leaves the SDG gap rankings near-identical (rank correlation $\rho = \CapStabilityRho$; Table~\ref{tab:cross-sensitivity-robustness}, Section~\ref{sec:cross-sensitivity}), so the findings are robust to the cap.
 
 The semantic gap is not a clean measure of substantive disagreement. Following Biber and Conrad's distinction between register, genre, and style \parencite{biberConrad2009register}, I treat the research--policy contrast primarily as a register contrast: the two corpora differ in situation of use, audience, and communicative purpose, not merely in topic. Embedding distance therefore mixes genuine within-SDG substantive divergence with register divergence in abstraction, modality, and institutional stance \parencite{biber1988variation}. To separate these components, I decompose the raw centroid distance into a register-adjusted (topic) component and a register component using Iterative Nullspace Projection (INLP; \textcite{Ravfogel2020INLP}). The raw centroid distance is retained as the primary measure because it directly corresponds to the observed framing difference. After register removal, the mean adjusted gap is \MeanAdjustedGap{} (40\% compression from the raw mean of \MeanRawGap{}), and the residual register component averages \MeanRegisterComponent{} (Table~\ref{tab:register-decomposition}). The adjusted topic gap is the meaningful comparison: it isolates within-SDG divergence after removing the register channel.
+
+Figure~\ref{fig:pca-register-before-after} shows the geometric effect of INLP register removal: the raw embedding space (left) separates research and policy clouds, while the adjusted space (right) merges them, confirming that the separation is driven by register rather than topic. The effect is encoder-dependent --- SciBERT already fuses the clouds without INLP --- so this figure is MPNet-specific.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig2_pca_register_before_after.pdf}
+\caption{PCA before/after INLP register removal (MPNet). (a)~Raw embeddings: research and policy clouds are separated. (b)~Adjusted embeddings (register removed via INLP): the clouds merge, confirming that the raw separation is driven by register rather than topic. PCA is fitted once on the raw data; both panels share the same axes. Descriptive projection only; all reported distances remain in the original embedding space.}
+\label{fig:pca-register-before-after}
+\end{figure}
 
 \subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
 

@@ -148,6 +148,8 @@ MANUSCRIPT_TABLE_FILES = [
 MANUSCRIPT_FIGURE_FILES = [
     "fig1_pca_semantic_landscape.pdf",
     "fig1_pca_semantic_landscape.png",
+    "fig2_pca_register_before_after.pdf",
+    "fig2_pca_register_before_after.png",
     "fig3_coverage_profiles.pdf",
     "fig3_coverage_profiles.png",
     "fig4_semantic_gap.pdf",
