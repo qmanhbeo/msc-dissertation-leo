@@ -66,7 +66,7 @@ from model_utils import (
     segmented_dir_for_model,
     resolve_model_alias,
 )
-from analysis_orchestrator import run_analysis, run_post_adjusted
+from analysis_orchestrator import run_analysis, run_post_adjusted, APPENDIX_SPECS
 
 
 ROOT = Path(__file__).resolve().parent
@@ -118,21 +118,13 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C0, D1, F, H.1, I.1) standalone (requires existing main-text outputs).")
-    p.add_argument("--appendix-a2-family", action="store_true", help="Run A.2 Policy Source-Family Sensitivity.")
-    p.add_argument("--appendix-a3-sdg4", action="store_true", help="Run A.3 SDG 4 Lexical Artefact Audit.")
-    p.add_argument("--appendix-b2-interpret", action="store_true", help="Run B.1 Lexical Illustration of the Semantic Gap.")
-    p.add_argument("--appendix-c-sample-stability", action="store_true", help="Run C Sample-Stability Robustness (appendix).")
-    p.add_argument("--appendix-c1-balanced-subset", action="store_true", help="Run C.1 Balanced-Subset Rank-Stability (consumes C sample-stability draws; appendix).")
-    p.add_argument("--appendix-h1-cross-method", action="store_true", help="Run H.1 Cross-Method Gap Values.")
-    p.add_argument("--appendix-i1-assignment-method", action="store_true", help="Run I.1 Supervised vs Nearest-Centroid Assignment Comparison.")
-    p.add_argument("--appendix-c0-corpus-split", action="store_true", help="Export reference-corpus split-size macros.")
-    p.add_argument("--appendix-d1-model-selection", action="store_true", help="Export D.1 model-selection CV macros.")
-    p.add_argument("--appendix-g-distributional", action="store_true", help="Run the distributional semantic-gap robustness (MAIN-RESULT Table; OPT-IN: not run by warm replay or --appendix-all; run before --build-pdf).")
-    # Deprecated aliases (hidden, kept for backward compatibility)
-    p.add_argument("--policy-source-family-sensitivity", action="store_true", dest="appendix_a2_family", help=argparse.SUPPRESS)
-    p.add_argument("--sdg4-lexical-audit", action="store_true", dest="appendix_a3_sdg4", help=argparse.SUPPRESS)
-    p.add_argument("--semantic-gap-interpretability", action="store_true", dest="appendix_b2_interpret", help=argparse.SUPPRESS)
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C1, C0, D1, H.1, I.1) standalone (requires existing main-text outputs).")
+    # Appendix identities are registry-driven (analysis_orchestrator.APPENDIX_SPECS);
+    # the deprecated aliases below are hidden and preserved for backward compatibility.
+    for _spec in APPENDIX_SPECS:
+        p.add_argument(f"--{_spec['flag']}", action="store_true", help=_spec["help"])
+        for _alias in _spec.get("aliases", []):
+            p.add_argument(f"--{_alias}", action="store_true", dest=_spec["flag"].replace("-", "_"), help=argparse.SUPPRESS)
     p.add_argument(
         "--fetch-data-snapshot",
         nargs="?",
@@ -199,19 +191,11 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.warm_replay_with_appendix,
             args.cold_replay,
             args.appendix_all,
-            args.appendix_a2_family,
-            args.appendix_a3_sdg4,
-            args.appendix_b2_interpret,
-            args.appendix_d1_model_selection,
-            args.appendix_h1_cross_method,
-            args.appendix_i1_assignment_method,
-            args.appendix_c_sample_stability,
-            args.appendix_c1_balanced_subset,
-            args.appendix_g_distributional,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
             args.build_pdf,
         ]
+        + [getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS]
     )
 
 
@@ -302,124 +286,56 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     )
 
 
-def run_sample_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "Sample-stability robustness (Appendix C)")
-    actual_output_dir = output_dir
-    require_output_files(
-        output_dir_for_model(model, root=output_dir) / "data",
-        [
-            "4_2_coverage_document_weighted.json",
-            "4_3_semantic_gap_distances.json",
-            "4_4_interaction_correlation_asymmetry.json",
-        ],
-    )
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c_sample_stability.py", "--output-dir", str(actual_output_dir)]
+def run_appendix_spec(spec: dict, output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
+    """Run a single appendix script from APPENDIX_SPECS.
+
+    Registry-driven replacement for the 10 previously hand-written `run_*`
+    wrappers. Reproduces their exact subprocess command (script path, --output-dir,
+    optional --embed-model, --overwrite) so behaviour is unchanged.
+    """
+    _warn_non_default_model(model, spec["warn"])
+    if spec.get("requires"):
+        require_output_files(
+            output_dir_for_model(model, root=output_dir) / "data",
+            spec["requires"],
+        )
+    cmd = [sys.executable, "1_code/7_main_analysis/" + spec["script"], "--output-dir", str(output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
     cmd += _overwrite_flag(overwrite)
-    run_step("sample stability", cmd, step_id="C")
-
-
-def run_subset_balanced_stability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    """C.1: rank-stability of the within-SDG semantic-gap ranking at balanced
-    research-subset sizes (consumes c_sample_stability draws + canonical 4_3)."""
-    _warn_non_default_model(model, "Balanced-subset rank stability (Appendix C.1)")
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c1_subset_balanced_stability.py", "--output-dir", str(output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("balanced-subset rank stability", cmd, step_id="C1")
-
-
-
-
-def run_policy_source_family_sensitivity(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "Policy source-family sensitivity (Appendix A.2)")
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("policy source-family sensitivity", cmd, step_id="A2")
-
-
-def run_sdg4_lexical_audit(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "SDG-4 lexical artefact audit (Appendix A.3)")
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("SDG 4 lexical artefact audit", cmd, step_id="A3")
+    run_step(spec["run_label"], cmd, step_id=spec["step_id"])
 
 
 
 
 
 
-def run_semantic_gap_interpretability(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "Semantic-gap interpretability (Appendix B.2)")
-    require_output_files(output_dir_for_model(model, root=output_dir) / "data", ["4_3_semantic_gap_distances.json"])
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("lexical illustration of the semantic gap", cmd, step_id="B2")
 
 
-def run_distributional_gap(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    """Run the distributional semantic-gap robustness (main-result table, opt-in)."""
-    _warn_non_default_model(model, "Distributional gap (Appendix G)")
-    require_output_files(
-        output_dir_for_model(model, root=output_dir) / "data",
-        ["4_3_semantic_gap_distances.json"],
-    )
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/1_main_text/g_distributional_gap.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("distributional semantic-gap metrics", cmd, step_id="G")
 
 
-def run_corpus_split_sizes(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    """Export reference-corpus split-size macros to num_reference_split.tex."""
-    _warn_non_default_model(model, "Corpus split macro export (Appendix C.0)")
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/c0_export_corpus_split_sizes.py", "--output-dir", str(output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("corpus split macro export", cmd, step_id="C0")
 
 
-def run_model_selection_nums(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    """Export grid-search CV macro-F1 values to num_model_selection.tex."""
-    _warn_non_default_model(model, "Model-selection macro export (Appendix D.1)")
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py", "--output-dir", str(output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("model-selection macro export", cmd, step_id="D1")
-
-def run_h1_cross_method_gap_values(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "Cross-method gap values (Appendix H.1)")
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("cross-method gap values", cmd, step_id="H1")
 
 
-def run_i1_assignment_method_comparison(output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    _warn_non_default_model(model, "Assignment-method comparison (Appendix I.1)")
-    actual_output_dir = output_dir
-    cmd = [sys.executable, "1_code/7_main_analysis/2_appendix/i1_assignment_method_comparison.py", "--output-dir", str(actual_output_dir)]
-    if model != DEFAULT_EMBED_MODEL:
-        cmd += ["--embed-model", model]
-    cmd += _overwrite_flag(overwrite)
-    run_step("assignment-method comparison", cmd, step_id="I1")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def _overwrite_flag(overwrite: bool) -> list[str]:
@@ -1080,16 +996,7 @@ def main() -> None:
         # output-existence refuse guard. Appendix stages and build-pdf still
         # protect committed results and require --overwrite to replace.
         args.appendix_all
-        or args.appendix_a2_family
-        or args.appendix_a3_sdg4
-        or args.appendix_b2_interpret
-        or args.appendix_c_sample_stability
-        or args.appendix_c1_balanced_subset
-        or args.appendix_c0_corpus_split
-        or args.appendix_d1_model_selection
-        or args.appendix_h1_cross_method
-        or args.appendix_i1_assignment_method
-        or args.appendix_g_distributional
+        or any(getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS)
         or args.build_pdf
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
@@ -1106,57 +1013,19 @@ def main() -> None:
         run_cold_replay(output_dir, args)
     elif args.appendix_all:
         model = args.embed_model
-        run_policy_source_family_sensitivity(output_dir, model=model, overwrite=args.overwrite)
-        run_sdg4_lexical_audit(output_dir, model=model, overwrite=args.overwrite)
-        run_semantic_gap_interpretability(output_dir, model=model, overwrite=args.overwrite)
-        run_sample_stability(output_dir, model=model, overwrite=args.overwrite)
-        run_subset_balanced_stability(output_dir, model=model, overwrite=args.overwrite)
-        run_model_selection_nums(output_dir, model=model, overwrite=args.overwrite)
-        run_corpus_split_sizes(output_dir, model=model, overwrite=args.overwrite)
-        run_h1_cross_method_gap_values(output_dir, model=model, overwrite=args.overwrite)
-        run_i1_assignment_method_comparison(output_dir, model=model, overwrite=args.overwrite)
+        for spec in APPENDIX_SPECS:
+            if spec["in_all"]:
+                run_appendix_spec(spec, output_dir, model=model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_a2_family:
-        run_policy_source_family_sensitivity(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_a3_sdg4:
-        run_sdg4_lexical_audit(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_b2_interpret:
-        run_semantic_gap_interpretability(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_c_sample_stability:
-        run_sample_stability(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_c1_balanced_subset:
-        run_subset_balanced_stability(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_c0_corpus_split:
-        run_corpus_split_sizes(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_d1_model_selection:
-        run_model_selection_nums(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_h1_cross_method:
-        run_h1_cross_method_gap_values(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_i1_assignment_method:
-        run_i1_assignment_method_comparison(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
-    elif args.appendix_g_distributional:
-        run_distributional_gap(output_dir, model=args.embed_model, overwrite=args.overwrite)
-        if args.build_pdf:
-            build_pdf(output_dir, model=args.embed_model)
+    elif any(getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS):
+        model = args.embed_model
+        for spec in APPENDIX_SPECS:
+            if getattr(args, spec["flag"].replace("-", "_")):
+                run_appendix_spec(spec, output_dir, model=model, overwrite=args.overwrite)
+                if args.build_pdf:
+                    build_pdf(output_dir, model=args.embed_model)
+                break
     elif args.warm_replay_without_appendix:
         ensure_warm_replay_inputs(args)
         run_warm_replay(output_dir, args, include_appendix=False)
