@@ -480,16 +480,16 @@ def run(args: argparse.Namespace) -> None:
         # Combined stratification key: 34 classes (17 SDGs x 2 corpora)
         stratify_key = sdg_labels * 2 + y
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=TEST_SIZE, stratify=stratify_key, random_state=42 + k,
+            X, y, test_size=TEST_SIZE, stratify=stratify_key, random_state=POLICY_SEGMENT_CAP_SEED + k,
         )
 
-        clf = LogisticRegression(C=LR_C, penalty=LR_PENALTY, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=42 + k)
+        clf = LogisticRegression(C=LR_C, penalty=LR_PENALTY, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=POLICY_SEGMENT_CAP_SEED + k)
         clf.fit(X_train, y_train)
         test_acc = float(clf.score(X_test, y_test))
         log.info("  85/15 test accuracy: %.4f (n_train=%d, n_test=%d)", test_acc, len(X_train), len(X_test))
 
         # Fit on the full sample for the direction used in orthogonalisation
-        clf_full = LogisticRegression(C=LR_C, penalty=LR_PENALTY, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=42 + k)
+        clf_full = LogisticRegression(C=LR_C, penalty=LR_PENALTY, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=POLICY_SEGMENT_CAP_SEED + k)
         clf_full.fit(X, y)
         coef = clf_full.coef_.astype(np.float32).flatten()
         g_k = (coef / np.linalg.norm(coef)).astype(np.float32)

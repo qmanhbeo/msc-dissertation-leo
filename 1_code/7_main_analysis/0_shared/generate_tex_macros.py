@@ -18,7 +18,6 @@ Run from project root:
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 from pathlib import Path
@@ -31,7 +30,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, SDG_NUM_WORDS, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, SDG_NUM_WORDS, resolve_model_alias
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 from shard_pipeline_utils import load_json
 

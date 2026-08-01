@@ -106,18 +106,24 @@ def run(args: argparse.Namespace) -> None:
     data_root = Path(args.data_dir) if args.data_dir else output_dir_for_model(model, root=output_root) / "data"
     data_root.mkdir(parents=True, exist_ok=True)
 
+    # ---- Adjusted mode: load G ----
+    is_adjusted = args.embeddings == "adjusted"
+
     if not args.overwrite:
+        expected_json = (
+            data_root / "adjusted" / "semantic_gap_distances.json"
+            if is_adjusted
+            else data_root / "semantic_gap_distances.json"
+        )
         expected = [
             npy_root / "research_centroids.npy",
             npy_root / "policy_centroids.npy",
-            data_root / "semantic_gap_distances.json",
+            expected_json,
         ]
         if all(p.exists() for p in expected):
             log.info("Zero-shot outputs already exist — skip. Use --overwrite to recompute.")
             return
 
-    # ---- Adjusted mode: load G ----
-    is_adjusted = args.embeddings == "adjusted"
     G = None
     if is_adjusted:
         G = register_utils.load_G(model)

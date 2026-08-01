@@ -107,6 +107,15 @@ ADJUSTED_STEPS = [
     "1_main_text/1_semantic_gap.py",
 ]
 
+# Post-adjusted generators: run AFTER adjusted JSONs exist.
+# These read the raw + adjusted JSONs and produce decomposition tables,
+# extended interaction JSONs, and consolidated LaTeX macros.
+POST_ADJUSTED_STEPS = [
+    "0_shared/g_register_decomposition.py",
+    "0_shared/g_interaction_extended.py",
+    "0_shared/generate_tex_macros.py",
+]
+
 
 def run_analysis_adjusted(
     model: str,
@@ -116,8 +125,11 @@ def run_analysis_adjusted(
 ) -> None:
     """Run adjusted analyses (register-adjusted embeddings) for `model`.
 
-    Produces adjusted semantic-gap JSONs under data/adjusted/. Consumer scripts
-    (interaction, cross-sensitivity, h1) read these in a later step.
+    Produces adjusted semantic-gap JSONs under data/adjusted/, then runs
+    post-adjusted generators (decomposition table, interaction extension,
+    consolidated macros).
     """
     for rel_path in ADJUSTED_STEPS:
         _run_step(rel_path, model, output_dir, overwrite=overwrite, embeddings="adjusted")
+    for rel_path in POST_ADJUSTED_STEPS:
+        _run_step(rel_path, model, output_dir, overwrite=overwrite)

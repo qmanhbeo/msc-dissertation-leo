@@ -21,7 +21,6 @@ Run from project root:
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 from pathlib import Path
@@ -39,7 +38,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, resolve_model_alias
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
-from shard_pipeline_utils import load_json
+from shard_pipeline_utils import atomic_write_json, load_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -144,8 +143,7 @@ def run(args: argparse.Namespace) -> None:
         ],
     }
 
-    with out_json.open("w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2)
+    atomic_write_json(out_json, output)
     log.info("Saved: %s", out_json)
 
     # ---- Print headline ----

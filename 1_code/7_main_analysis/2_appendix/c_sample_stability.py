@@ -835,7 +835,9 @@ def run(args: argparse.Namespace) -> None:
         _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
     ) + SCRIPT_VERSION
     if is_adjusted:
+        g_path = register_utils.register_dir(args.embed_model) / "G.npy"
         fp += f"_adjusted_{register_utils.track_for_model(args.embed_model)}"
+        fp += fingerprint_of(g_path)
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
