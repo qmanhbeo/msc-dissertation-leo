@@ -883,8 +883,8 @@
       "policy_n_lr": 1810,
       "policy_agree_rate": 0.839227,
       "gap_rank_lr": 16,
-      "gap_rank_zs": 12,
-      "gap_rank_delta": 4
+      "gap_rank_zs": 11,
+      "gap_rank_delta": 5
     },
     {
       "sdg": 16,
@@ -893,8 +893,8 @@
       "policy_n_lr": 5408,
       "policy_agree_rate": 0.649408,
       "gap_rank_lr": 9,
-      "gap_rank_zs": 11,
-      "gap_rank_delta": 2
+      "gap_rank_zs": 12,
+      "gap_rank_delta": 3
     },
     {
       "sdg": 17,

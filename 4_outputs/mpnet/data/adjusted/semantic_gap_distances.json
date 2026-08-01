@@ -3,125 +3,160 @@
   "embedding_model": "all-mpnet-base-v2",
   "embeddings": "adjusted",
   "segment_cap": 50,
+  "note": "Zero-shot assigns in the space of the embeddings used: raw gaps assign on raw embeddings; adjusted gaps project research texts and policy centroids through G and re-assign on projected embeddings (PLAN_register_topic_decomposition.md \u00a76.1). Policy segments are capped at --segment-cap per (source_doc, SDG), matching the LR/MLP routes.",
   "per_sdg": [
     {
       "sdg": 1,
       "n_papers": 150646,
-      "n_policy_capped": 1206,
-      "semantic_similarity": 0.6301526774814682,
-      "semantic_gap": 0.3698473225185318
+      "n_policy_capped": 1430,
+      "semantic_similarity": 0.6296834663269815,
+      "semantic_gap": 0.37031653367301853,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 2,
       "n_papers": 156910,
-      "n_policy_capped": 1389,
-      "semantic_similarity": 0.8512553318807821,
-      "semantic_gap": 0.14874466811921794
+      "n_policy_capped": 1598,
+      "semantic_similarity": 0.8517922785753116,
+      "semantic_gap": 0.1482077214246884,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 3,
       "n_papers": 587742,
-      "n_policy_capped": 2075,
-      "semantic_similarity": 0.739618931033345,
-      "semantic_gap": 0.260381068966655
+      "n_policy_capped": 2441,
+      "semantic_similarity": 0.7516288383804776,
+      "semantic_gap": 0.24837116161952244,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 4,
       "n_papers": 420637,
-      "n_policy_capped": 2019,
-      "semantic_similarity": 0.8392846505849115,
-      "semantic_gap": 0.16071534941508847
+      "n_policy_capped": 2299,
+      "semantic_similarity": 0.8567993006779028,
+      "semantic_gap": 0.14320069932209722,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 5,
       "n_papers": 112743,
-      "n_policy_capped": 1902,
-      "semantic_similarity": 0.8247186500276475,
-      "semantic_gap": 0.17528134997235245
+      "n_policy_capped": 2131,
+      "semantic_similarity": 0.8366387267544728,
+      "semantic_gap": 0.16336127324552718,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 6,
       "n_papers": 79963,
-      "n_policy_capped": 1157,
-      "semantic_similarity": 0.8328542433158667,
-      "semantic_gap": 0.16714575668413334
+      "n_policy_capped": 1256,
+      "semantic_similarity": 0.8348472288411575,
+      "semantic_gap": 0.16515277115884253,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 7,
       "n_papers": 168855,
-      "n_policy_capped": 1410,
-      "semantic_similarity": 0.8122038645876393,
-      "semantic_gap": 0.18779613541236073
+      "n_policy_capped": 1691,
+      "semantic_similarity": 0.8119020963126952,
+      "semantic_gap": 0.18809790368730483,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 8,
       "n_papers": 97131,
-      "n_policy_capped": 1552,
-      "semantic_similarity": 0.8263635964750704,
-      "semantic_gap": 0.1736364035249296
+      "n_policy_capped": 1709,
+      "semantic_similarity": 0.8353518478568769,
+      "semantic_gap": 0.16464815214312312,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 9,
       "n_papers": 235096,
-      "n_policy_capped": 2003,
-      "semantic_similarity": 0.8729147308995505,
-      "semantic_gap": 0.12708526910044948
+      "n_policy_capped": 2508,
+      "semantic_similarity": 0.8679613863289803,
+      "semantic_gap": 0.13203861367101966,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 10,
       "n_papers": 33742,
-      "n_policy_capped": 604,
-      "semantic_similarity": 0.7216185646581913,
-      "semantic_gap": 0.2783814353418087
+      "n_policy_capped": 839,
+      "semantic_similarity": 0.7657609734956232,
+      "semantic_gap": 0.23423902650437678,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 11,
       "n_papers": 182235,
-      "n_policy_capped": 2064,
-      "semantic_similarity": 0.8228564783097412,
-      "semantic_gap": 0.17714352169025882
+      "n_policy_capped": 2236,
+      "semantic_similarity": 0.828589245805061,
+      "semantic_gap": 0.171410754194939,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 12,
       "n_papers": 96295,
-      "n_policy_capped": 1253,
-      "semantic_similarity": 0.7879457386995379,
-      "semantic_gap": 0.21205426130046212
+      "n_policy_capped": 1367,
+      "semantic_similarity": 0.7929591090754582,
+      "semantic_gap": 0.2070408909245418,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 13,
       "n_papers": 121934,
-      "n_policy_capped": 2818,
-      "semantic_similarity": 0.7904519465168578,
-      "semantic_gap": 0.2095480534831422
+      "n_policy_capped": 3124,
+      "semantic_similarity": 0.798401351584211,
+      "semantic_gap": 0.201598648415789,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 14,
       "n_papers": 70810,
-      "n_policy_capped": 1243,
-      "semantic_similarity": 0.8700775431860143,
-      "semantic_gap": 0.12992245681398573
+      "n_policy_capped": 1398,
+      "semantic_similarity": 0.8789916547422326,
+      "semantic_gap": 0.12100834525776738,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 15,
       "n_papers": 128608,
-      "n_policy_capped": 1305,
-      "semantic_similarity": 0.8861641075289186,
-      "semantic_gap": 0.11383589247108139
+      "n_policy_capped": 1583,
+      "semantic_similarity": 0.9009665361097936,
+      "semantic_gap": 0.0990334638902064,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 16,
       "n_papers": 233573,
-      "n_policy_capped": 4018,
-      "semantic_similarity": 0.7524208088294508,
-      "semantic_gap": 0.24757919117054916
+      "n_policy_capped": 4674,
+      "semantic_similarity": 0.7928571332620262,
+      "semantic_gap": 0.20714286673797377,
+      "unreliable": false,
+      "unreliable_reason": null
     },
     {
       "sdg": 17,
       "n_papers": 228224,
-      "n_policy_capped": 3024,
-      "semantic_similarity": 0.6531077385306882,
-      "semantic_gap": 0.34689226146931185
+      "n_policy_capped": 3504,
+      "semantic_similarity": 0.6621186145623197,
+      "semantic_gap": 0.3378813854376803,
+      "unreliable": false,
+      "unreliable_reason": null
     }
   ]
 }
