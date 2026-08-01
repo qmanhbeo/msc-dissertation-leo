@@ -366,3 +366,78 @@ text in §2/§3/§5/§6 where noted.
   MPNet canon: raw LR/MLP/ZS, adj LR/MLP. MPNet concept: adj LR/MLP (G_canon).
   MiniLM subset: adj LR/MLP (own G). SciBERT subset: adj LR/MLP (own G).
   `register_gap = raw - adj` per SDG per config.
+
+## 11. Draft manuscript prose (method write-up) -- VERIFIED against source
+
+> Internal note: the algorithm in `tables/algo.tex` of
+> `0_literature/register_adj/RavfogelS_etal_2020_INSP.gz` matches our implementation
+> **exactly** (GetProjectionMatrix: TrainClassifier -> GetNullSpaceBasis -> B B^T ->
+> accumulate P -> re-project; return P). The method is unambiguously **INLP**
+> (Ravfogel, Elazar, Gonen, Twiton & Goldberg, 2020, *"Null It Out: Guarding
+> Protected Attributes by Iterative Nullspace Projection"*, ACL). Citation key already
+> in `references.bib` (added in 8a83eaf). Safe to describe faithfully and cite
+> precisely. The prose below is drafted to be lifted into Section 3 (Methodology) and
+> the Results/decomposition text.
+
+### 11.1 Section 3 -- register removal (INLP) subsection (draft)
+
+> We remove the register component from the measurement embeddings using **Iterative
+> Nullspace Projection (INLP; Ravfogel et al., 2020)**. INLP removes an attribute from
+> a representation by repeatedly training a linear classifier to predict that attribute
+> from the (progressively projected) representations, and then projecting the
+> representations onto the **null space** of the classifier's weight matrix, so that the
+> attribute is no longer linearly separable (Ravfogel et al., 2020, p.155: "repeated
+> training of linear classifiers that predict a certain property we aim to remove,
+> followed by projection of the representations on their null-space").
+>
+> Formally, given representations $X$ and a protected attribute $Z$ to remove, INLP
+> initialises $P = I$ and for each round $i = 1 \dots n$: (1) train a linear classifier
+> with weights $W_i$ on $(P X, Z)$; (2) obtain an orthonormal basis $B_i$ of the null
+> space of $W_i$; (3) set the round projection $P_{N(W_i)} = B_i B_i^\top$; (4) compose
+> $P \leftarrow P_{N(W_i)} P$ and re-project $X \leftarrow P_{N(W_i)} X$. The returned
+> $P$ is the accumulated projection; the adjusted representation is $P X$. Iteration
+> continues until a balanced classifier can no longer predict $Z$ above chance (target
+> $\approx 50\%$ accuracy); for our corpus this required $n = 94$ rounds.
+>
+> Our application adapts INLP to remove **register** -- the research-vs-policy discursive
+> style -- while preserving topical content, so $Z$ is the binary research/policy label.
+> Because topic could otherwise leak into the register probe, each round's classifier is
+> trained on a sample balanced 1:1 in research and policy *within each SDG*; SDG is used
+> only to stratify the sampling and the train/test split, never as a classification
+> target, so each projected direction $g_k$ is a pure register direction rather than a
+> topic--register blend. INLP is data-driven: it learns and removes *all* directions on
+> which register is linearly encoded, rather than assuming a single hand-picked axis
+> (cf. Bolukbasi et al., 2016). This exhaustive, deterministic removal is what makes the
+> register--topic decomposition reproducible and auditable.
+>
+> Although INLP was introduced for fairness debiasing, its authors note it "can be
+> utilized to remove specific components from a representation, in a controlled and
+> deterministic manner" (Ravfogel et al., 2020) -- motivating its use here for
+> register--topic disentanglement. We apply INLP to the *measurement surface*
+> (research + policy embeddings) only; the SDG assignment classifier (Section 3.x) is
+> trained on the original embeddings, since register is a genuine topical signal for
+> SDG identification (see Section 3, open question).
+
+### 11.2 Results -- decomposition framing (draft, lift into Section 4/5)
+
+> Applying INLP yields an adjusted (register-free) embedding in which the two Level-2
+> components of semantic divergence -- *register* and *topic* -- are separable. The
+> adjusted semantic gap is the topic component; the difference between the raw and
+> adjusted gaps is the register component. The raw H1a null ($\rho = -0.09$, $p = 0.73$)
+> is therefore not an absence of association but a **cancellation**: coverage divergence
+> correlates positively with topic divergence ($\rho = +0.44$) and negatively with
+> register divergence ($\rho = -0.50$), and the two opposite-signed signals sum to
+> approximately zero. SDG 17 is the diagnostic case -- the largest coverage gap
+> (0.110) pairs with the smallest raw gap (0.216) yet the largest adjusted gap (0.388),
+> because both communities share partnership / coordination register that masks deep
+> topic divergence.
+
+### 11.3 Method-attribution guardrail (internal, do NOT lift verbatim)
+
+- State INLP as the **canon method**; describe our contribution as the *SDG-stratified
+  adaptation* (within-SDG 1:1 balance; SDG used only for sampling/split stratification)
+  and the *research-policy register* target -- not as a new debiasing algorithm.
+- Never call it a "single-direction projection" (that is Bolukbasi, not INLP) and never
+  call it a "34-class classifier" (the 34-way key is only the split-stratification, per
+  §6.1). Both misstatements were caught and corrected during planning.
+- Keep the citation exact: Ravfogel et al., 2020, ACL; "Null It Out".
