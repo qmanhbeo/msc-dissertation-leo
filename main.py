@@ -673,10 +673,17 @@ def _run_analysis_only(output_dir: Path, model: str, *,
 
     Does NOT retrain, score, or build centroids — only derives coverage gap,
     semantic gap, interaction, cross-sensitivity table, PCA, and figures.
+    Includes register-adjusted pass for completeness.
     """
     _warn_non_default_model(model, "Full analysis (coverage gap, semantic gap, interaction, cross-sensitivity, PCA)")
     _run_concept_analyses(output_dir, model, overwrite=overwrite)
     run_analysis(model, output_dir, include_appendix=include_appendix, overwrite=overwrite)
+    run_step(
+        "register_adjust (INLP -> G)",
+        [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
+         "--embed-model", model] + _overwrite_flag(overwrite),
+    )
+    run_analysis_adjusted(model, output_dir, overwrite=overwrite)
     _run_analysis_poststeps(output_dir, model, overwrite=overwrite)
 
 
@@ -1068,6 +1075,20 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             _run_concept_analyses(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
             for m in COLD_REPLAY_MODELS:
                 run_analysis(m, output_dir, include_appendix=(m == DEFAULT_EMBED_MODEL), overwrite=args.overwrite)
+            for m in COLD_REPLAY_MODELS:
+                run_step(
+                    f"register_adjust (INLP -> G) [{m}]",
+                    [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
+                     "--embed-model", m] + _overwrite_flag(args.overwrite),
+                )
+            for m in COLD_REPLAY_MODELS:
+                run_analysis_adjusted(m, output_dir, overwrite=args.overwrite)
+            run_step(
+                "zero-shot nearest-centroid (adjusted)",
+                [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+                 "--embed-model", DEFAULT_EMBED_MODEL, "--output-dir", str(output_dir),
+                 "--embeddings", "adjusted"] + _overwrite_flag(args.overwrite),
+            )
             _run_analysis_poststeps(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
 
     else:

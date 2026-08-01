@@ -28,12 +28,12 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, embed_research_dir_for_model, output_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, output_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
 # register_utils may not be on path when run standalone; add it.
 import sys as _sys
-_ANALYSIS_ROOT = Path(__file__).resolve().parents[2] / "7_main_analysis" / "0_shared"
+_ANALYSIS_ROOT = Path(__file__).resolve().parents[1] / "7_main_analysis" / "0_shared"
 if str(_ANALYSIS_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_ANALYSIS_ROOT))
 import register_utils
