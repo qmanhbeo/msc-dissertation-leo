@@ -24,7 +24,6 @@ Run from project root:
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import logging
 import math
@@ -48,6 +47,7 @@ from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, embed_dir_for_
 from shard_pipeline_utils import load_json
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 import semantic_gap_shared
+import register_utils
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     MIN_CLUSTER_SIZE,
@@ -99,6 +99,8 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Run policy source-family sensitivity diagnostic.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
+                   help="Use raw (default) or register-adjusted embeddings (project via G).")
     p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
@@ -408,19 +410,29 @@ def run(args: argparse.Namespace) -> None:
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
     _RESEARCH_CENTROIDS = semantic_gap_shared.get_research_centroids(args.embed_model)
     _RESEARCH_CENTROID_META = semantic_gap_shared.get_research_centroid_meta(args.embed_model)
+    is_adjusted = args.embeddings == "adjusted"
+
     output_dir = Path(args.output_dir)
     out_root = output_dir / "appendix" / model_slug(args.embed_model) / "a2_source_family_sensitivity"
-    data_dir = out_root / "data"
-    tables_dir = out_root / "tables"
+    if is_adjusted:
+        data_dir = out_root / "data" / "adjusted"
+        tables_dir = out_root / "tables" / "adjusted"
+    else:
+        data_dir = out_root / "data"
+        tables_dir = out_root / "tables"
     for d in (data_dir, tables_dir):
         d.mkdir(parents=True, exist_ok=True)
 
     SCRIPT_VERSION = "2"
     PRIMARY = data_dir / SUMMARY_CSV
     OUTPUTS = [PRIMARY, data_dir / COVERAGE_CSV, data_dir / SEMANTIC_CSV,
-               tables_dir / "tab_a2_policy_source_family_combined.tex",
-               data_dir / H25_CSV, data_dir / H25_JSON, tables_dir / H25_TEX,
-               tables_dir / "num_a2_policy_source_family_h25.tex"]
+               data_dir / H25_CSV, data_dir / H25_JSON]
+    if not is_adjusted:
+        OUTPUTS += [
+            tables_dir / "tab_a2_policy_source_family_combined.tex",
+            tables_dir / H25_TEX,
+            tables_dir / "num_a2_policy_source_family_h25.tex",
+        ]
     canonical_coverage = (Path(args.output_dir) / model_slug(args.embed_model)
                           / "data" / CANONICAL_COVERAGE_FILE)
     if not canonical_coverage.exists():
@@ -428,6 +440,10 @@ def run(args: argparse.Namespace) -> None:
     fp = fingerprint_of(_POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
                         _RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
                         canonical_coverage) + SCRIPT_VERSION
+    if is_adjusted:
+        g_path = register_utils.register_dir(args.embed_model) / "G.npy"
+        fp += f"_adjusted_{register_utils.track_for_model(args.embed_model)}"
+        fp += fingerprint_of(g_path)
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
@@ -439,6 +455,13 @@ def run(args: argparse.Namespace) -> None:
     policy_ids = load_json(_POLICY_IDS)
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
     research_meta = load_json(_RESEARCH_CENTROID_META)
+
+    if is_adjusted:
+        G = register_utils.load_G(args.embed_model)
+        log.info("Projecting policy embeddings and research centroids through G...")
+        policy_emb = register_utils.project(policy_emb, G)
+        research_centroids = register_utils.project(research_centroids, G)
+
     policy_assignments = get_cluster_assignments(policy_scores)
 
     row_family: list[str] = []
@@ -565,7 +588,8 @@ def run(args: argparse.Namespace) -> None:
         ],
         semantic_rows,
     )
-    write_table_combined(tables_dir / "tab_a2_policy_source_family_combined.tex", semantic_rows, coverage_rows)
+    if not is_adjusted:
+        write_table_combined(tables_dir / "tab_a2_policy_source_family_combined.tex", semantic_rows, coverage_rows)
 
     # ---- Per-family H25 replication (Item 1 symmetry control) ----
     cov_data = load_json(canonical_coverage)
@@ -657,18 +681,21 @@ def run(args: argparse.Namespace) -> None:
         for row in h25_rows
     ]
     (data_dir / H25_JSON).write_text(json.dumps(h25_summary, indent=2) + "\n", encoding="utf-8")
-    write_table_h25(tables_dir / H25_TEX, h25_rows)
-    write_h25_macros(tables_dir / "num_a2_policy_source_family_h25.tex", h25_rows)
+    if not is_adjusted:
+        write_table_h25(tables_dir / H25_TEX, h25_rows)
+        write_h25_macros(tables_dir / "num_a2_policy_source_family_h25.tex", h25_rows)
 
     log.info("Saved: %s", data_dir / H25_CSV)
     log.info("Saved: %s", data_dir / H25_JSON)
-    log.info("Saved: %s", tables_dir / H25_TEX)
-    log.info("Saved: %s", tables_dir / "num_a2_policy_source_family_h25.tex")
+    if not is_adjusted:
+        log.info("Saved: %s", tables_dir / H25_TEX)
+        log.info("Saved: %s", tables_dir / "num_a2_policy_source_family_h25.tex")
 
     log.info("Saved: %s", data_dir / SUMMARY_CSV)
     log.info("Saved: %s", data_dir / COVERAGE_CSV)
     log.info("Saved: %s", data_dir / SEMANTIC_CSV)
-    log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_combined.tex")
+    if not is_adjusted:
+        log.info("Saved: %s", tables_dir / "tab_a2_policy_source_family_combined.tex")
     record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 

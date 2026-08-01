@@ -1,7 +1,8 @@
 {
   "method": "zeroshot_nearest_centroid",
-  "segment_cap": 50,
   "embedding_model": "all-mpnet-base-v2",
+  "embeddings": "raw",
+  "segment_cap": 50,
   "per_sdg": [
     {
       "sdg": 1,

@@ -86,6 +86,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
 import semantic_gap_shared
+import register_utils
 from model_utils import (
     DEFAULT_EMBED_MODEL,
     DEFAULT_OUTPUT_ROOT,
@@ -177,6 +178,8 @@ def parse_args() -> argparse.Namespace:
     # Dev-only smoke flag: comma-separated SDG numbers (e.g. "17"). The summary
     # is marked partial when set; never used in canonical runs.
     p.add_argument("--limit-sdgs", default=None, help=argparse.SUPPRESS)
+    p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
+                   help="Use raw (default) or register-adjusted embeddings (project via G).")
     p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
@@ -309,7 +312,8 @@ def build_sdg_row_index(
 
 
 def iter_sdg_chunks(
-    shards: list[ResearchShard], rows: np.ndarray, chunk_rows: int
+    shards: list[ResearchShard], rows: np.ndarray, chunk_rows: int,
+    G: np.ndarray | None = None,
 ) -> Iterator[np.ndarray]:
     """Yield float32 embedding chunks for the given sorted global row indices."""
     for shard in shards:
@@ -321,7 +325,10 @@ def iter_sdg_chunks(
         emb = np.load(shard.emb_path, mmap_mode="r")
         for lo in range(0, local.size, chunk_rows):
             sel = local[lo : lo + chunk_rows]
-            yield np.asarray(emb[sel], dtype=np.float32)
+            chunk = np.asarray(emb[sel], dtype=np.float32)
+            if G is not None and G.shape[0] > 0:
+                chunk = register_utils.project(chunk, G)
+            yield chunk
 
 
 def normalize(vec: np.ndarray) -> np.ndarray:
@@ -337,6 +344,7 @@ def stream_moments_and_chamfer(
     policy_clouds: list[np.ndarray],
     active_sdgs: list[int],
     dim: int,
+    G: np.ndarray | None = None,
 ) -> dict[int, dict[str, Any]]:
     """Single shard-major pass over ALL research rows of the active SDGs.
 
@@ -372,6 +380,8 @@ def stream_moments_and_chamfer(
             pol = policy_clouds[sdg_idx]
             for lo in range(0, local.size, STREAM_CHUNK_ROWS):
                 chunk32 = np.asarray(emb[local[lo : lo + STREAM_CHUNK_ROWS]], dtype=np.float32)
+                if G is not None and G.shape[0] > 0:
+                    chunk32 = register_utils.project(chunk32, G)
                 chunk64 = chunk32.astype(np.float64)
                 a["sum_x"] += chunk64.sum(axis=0)
                 a["sum_xxT"] += chunk64.T @ chunk64
@@ -437,6 +447,7 @@ def compute_swd_full(
     rows: np.ndarray,
     policy_cloud: np.ndarray,
     directions: np.ndarray,
+    G: np.ndarray | None = None,
 ) -> dict[str, float]:
     """Sliced Wasserstein over the COMPLETE research cloud vs capped policy cloud.
 
@@ -445,7 +456,7 @@ def compute_swd_full(
     """
     proj = np.empty((rows.size, N_SWD_PROJECTIONS), dtype=np.float32)
     cursor = 0
-    for chunk in iter_sdg_chunks(shards, rows, STREAM_CHUNK_ROWS):
+    for chunk in iter_sdg_chunks(shards, rows, STREAM_CHUNK_ROWS, G=G):
         proj[cursor : cursor + chunk.shape[0]] = chunk @ directions
         cursor += chunk.shape[0]
     if cursor != rows.size:
@@ -534,9 +545,13 @@ def rms_within_distance(mu: np.ndarray) -> float:
 
 
 def check_research_centroid_gate(
-    mu_by_sdg: dict[int, np.ndarray], model: str, active_sdgs: list[int]
+    mu_by_sdg: dict[int, np.ndarray], model: str, active_sdgs: list[int],
+    is_adjusted: bool = False,
 ) -> None:
     """GATE 3: streamed research means must reproduce research_centroids.npy."""
+    if is_adjusted:
+        log.info("GATE 3 skipped (adjusted mode)")
+        return
     committed = np.load(scored_dir_for_model(model) / "research_centroids.npy")
     for sdg_idx in active_sdgs:
         ours = normalize(mu_by_sdg[sdg_idx])
@@ -551,7 +566,8 @@ def check_research_centroid_gate(
 
 
 def centroid_gap_and_gate4(
-    research_centroid: np.ndarray, policy_cloud: np.ndarray, canonical_row: dict[str, Any]
+    research_centroid: np.ndarray, policy_cloud: np.ndarray, canonical_row: dict[str, Any],
+    is_adjusted: bool = False,
 ) -> float:
     """Full-corpus centroid gap; GATE 4: must reproduce the canonical gap.
 
@@ -566,6 +582,8 @@ def centroid_gap_and_gate4(
     if unit_p is None:
         raise RuntimeError(f"GATE 4 FAILED for SDG {canonical_row['sdg']}: empty policy cloud")
     gap = 1.0 - float(np.dot(research_centroid, unit_p))
+    if is_adjusted:
+        return gap
     expected = canonical_row["semantic_gap"]
     if expected is not None and abs(gap - float(expected)) > GATE_ATOL:
         raise RuntimeError(
@@ -582,6 +600,7 @@ def sample_research_cloud(
     rows: np.ndarray,
     sdg_idx: int,
     seed: int,
+    G: np.ndarray | None = None,
 ) -> tuple[np.ndarray, bool]:
     """Seeded research sample (documented stream: [seed, sdg, STREAM_SAMPLE]).
 
@@ -596,6 +615,8 @@ def sample_research_cloud(
         picked = np.sort(rng.choice(rows, size=RESEARCH_SAMPLE_SIZE, replace=False))
         exhaustive = False
     cloud = load_sampled_research_embeddings(manifest_path, picked, embed_dir)
+    if G is not None and G.shape[0] > 0:
+        cloud = register_utils.project(cloud, G)
     return cloud, exhaustive
 
 
@@ -792,12 +813,13 @@ def build_full_record(
     policy_cloud: np.ndarray,
     canonical_row: dict[str, Any],
     research_centroid: np.ndarray,
+    is_adjusted: bool = False,
 ) -> dict[str, Any]:
     mu_r = stream_out["mu"]
     sig_r = covariance_from_moments(mu_r, stream_out["sum_xxT"], stream_out["n"])
     mu_p, sig_p, n_p = moments_of_cloud(policy_cloud)
     w2 = gaussian_w2_terms(mu_r, sig_r, mu_p, sig_p)
-    gap_full = centroid_gap_and_gate4(research_centroid, policy_cloud, canonical_row)
+    gap_full = centroid_gap_and_gate4(research_centroid, policy_cloud, canonical_row, is_adjusted=is_adjusted)
     diff = mu_r - mu_p
     record = {
         "config_hash": cfg_hash,
@@ -1193,6 +1215,7 @@ def run(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir)
     active_sdgs = parse_limit_sdgs(args.limit_sdgs)
     partial = len(active_sdgs) != N_SDG
+    is_adjusted = args.embeddings == "adjusted"
     if partial:
         log.warning("DEV MODE: --limit-sdgs=%s — summary will be marked partial", args.limit_sdgs)
 
@@ -1202,31 +1225,56 @@ def run(args: argparse.Namespace) -> None:
     layout = ensure_dissertation_outputs(
         output_dir, subdir="main", model=model
     )
+    if is_adjusted:
+        layout.root = layout.root / "adjusted"
+        layout.data_dir = layout.root / "data"
+        layout.tables_dir = layout.root / "tables"
+        layout.data_dir.mkdir(parents=True, exist_ok=True)
+        layout.tables_dir.mkdir(parents=True, exist_ok=True)
     records_path = layout.data_dir / "g_distributional_gap_records.jsonl"
     summary_path = layout.data_dir / "g_distributional_gap_summary.json"
 
     SCRIPT_VERSION = "1"
     PRIMARY = summary_path
-    OUTPUTS = [PRIMARY, records_path, layout.tables_dir / "num_distributional_gap.tex",
-               layout.tables_dir / "tab_distributional_gap.tex"]
+    OUTPUTS = [PRIMARY, records_path]
+    if not is_adjusted:
+        OUTPUTS += [
+            layout.tables_dir / "num_distributional_gap.tex",
+            layout.tables_dir / "tab_distributional_gap.tex",
+        ]
     fp = fingerprint_of(
         manifest_path,
         scored_dir / "paper_scores_shards" / "metadata" / "manifest.json",
         embed_dir_for_model(model) / "policy.npy",
         scored_dir / "policy_scores.npy",
     ) + SCRIPT_VERSION
+    if is_adjusted:
+        g_path = register_utils.register_dir(model) / "G.npy"
+        fp += f"_adjusted_{register_utils.track_for_model(model)}"
+        fp += fingerprint_of(g_path)
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
 
     seeds = SAMPLE_SEEDS
     cfg = config_payload(model)
+    cfg["embeddings"] = args.embeddings
     cfg_hash = compute_config_hash(cfg, scored_dir, embed_dir)
     log.info("Config hash: %s | output: %s", cfg_hash, layout.root)
 
     canonical = load_canonical(model)
     research_centroids = np.load(scored_dir_for_model(model) / "research_centroids.npy").astype(np.float64)
     policy_state = load_policy_side(model, canonical)
+
+    G = register_utils.load_G(model) if is_adjusted else None
+    if is_adjusted:
+        log.info("Projecting policy embeddings and research centroids through G...")
+        research_centroids = register_utils.project(research_centroids.astype(np.float32), G).astype(np.float64)
+        for sdg_idx in range(N_SDG):
+            policy_state["clouds"][sdg_idx] = register_utils.project(
+                policy_state["clouds"][sdg_idx].astype(np.float32), G
+            ).astype(np.float64)
+
     shards, total_rows = build_research_shards(embed_dir, scored_dir)
     log.info("Research corpus: %d rows across %d shards", total_rows, len(shards))
     sdg_rows = build_sdg_row_index(shards, canonical)
@@ -1238,20 +1286,22 @@ def run(args: argparse.Namespace) -> None:
     if missing_full:
         log.info("Full-corpus pass for %d SDGs: %s", len(missing_full), [s + 1 for s in missing_full])
         stream_out = stream_moments_and_chamfer(
-            shards, sdg_rows, policy_state["clouds"], missing_full, policy_state["dim"]
+            shards, sdg_rows, policy_state["clouds"], missing_full, policy_state["dim"],
+            G=G,
         )
         check_research_centroid_gate(
-            {s: stream_out[s]["mu"] for s in missing_full}, model, missing_full
+            {s: stream_out[s]["mu"] for s in missing_full}, model, missing_full,
+            is_adjusted=is_adjusted,
         )
         directions = swd_direction_matrix(policy_state["dim"])
         for s in missing_full:
             t0 = time.time()
             swd_out = compute_swd_full(
-                shards, sdg_rows[s], policy_state["clouds"][s], directions
+                shards, sdg_rows[s], policy_state["clouds"][s], directions, G=G
             )
             record = build_full_record(
                 s, cfg_hash, stream_out[s], swd_out, policy_state["clouds"][s], canonical[s + 1],
-                research_centroids[s],
+                research_centroids[s], is_adjusted=is_adjusted,
             )
             record["runtime_seconds"] = round(time.time() - t0, 1)
             append_record(records_path, record)
@@ -1277,7 +1327,7 @@ def run(args: argparse.Namespace) -> None:
             if seed != SAMPLE_SEEDS[0] and sdg_rows[s].size <= RESEARCH_SAMPLE_SIZE:
                 continue  # exhaustive: replicate draw would be identical
             cloud, exhaustive = sample_research_cloud(
-                manifest_path, embed_dir, sdg_rows[s], s, seed
+                manifest_path, embed_dir, sdg_rows[s], s, seed, G=G
             )
             record = build_sampled_record(
                 s, seed, cfg_hash, cloud, exhaustive, policy_state["clouds"][s]
@@ -1300,7 +1350,8 @@ def run(args: argparse.Namespace) -> None:
     summary = build_summary(records, canonical, cfg, cfg_hash, active_sdgs, partial)
     summary_path = layout.data_dir / "g_distributional_gap_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    write_tables(layout.tables_dir, summary)
+    if not is_adjusted:
+        write_tables(layout.tables_dir, summary)
     log.info("Saved distributional-gap outputs into %s", layout.root)
     record_fingerprint(OUTPUTS, fp, PRIMARY)
 

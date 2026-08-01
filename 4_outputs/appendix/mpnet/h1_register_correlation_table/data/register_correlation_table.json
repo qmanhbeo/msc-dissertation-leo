@@ -1,0 +1,177 @@
+{
+  "embedding_model": "all-mpnet-base-v2",
+  "n_configs": 9,
+  "configs": [
+    {
+      "label": "MPNet LR",
+      "encoder": "all-mpnet-base-v2",
+      "method": "LR",
+      "corpus": "canon",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": -0.078431,
+        "p": 0.76478
+      },
+      "rho_cov_adj": {
+        "rho": 0.47549,
+        "p": 0.053723
+      },
+      "rho_cov_register": {
+        "rho": -0.492647,
+        "p": 0.044525
+      }
+    },
+    {
+      "label": "MPNet MLP",
+      "encoder": "all-mpnet-base-v2",
+      "method": "MLP",
+      "corpus": "canon",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": -0.107843,
+        "p": 0.68035
+      },
+      "rho_cov_adj": {
+        "rho": 0.262255,
+        "p": 0.309209
+      },
+      "rho_cov_register": {
+        "rho": -0.54902,
+        "p": 0.022461
+      }
+    },
+    {
+      "label": "MPNet ZS",
+      "encoder": "all-mpnet-base-v2",
+      "method": "ZS",
+      "corpus": "canon",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": -0.272059,
+        "p": 0.290796
+      },
+      "rho_cov_adj": {
+        "rho": 0.193627,
+        "p": 0.456497
+      },
+      "rho_cov_register": {
+        "rho": -0.414216,
+        "p": 0.098331
+      }
+    },
+    {
+      "label": "MiniLM LR",
+      "encoder": "all-MiniLM-L6-v2",
+      "method": "LR",
+      "corpus": "subset",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": -0.335784,
+        "p": 0.187614
+      },
+      "rho_cov_adj": {
+        "rho": 0.289216,
+        "p": 0.260203
+      },
+      "rho_cov_register": {
+        "rho": -0.593137,
+        "p": 0.012085
+      }
+    },
+    {
+      "label": "MiniLM MLP",
+      "encoder": "all-MiniLM-L6-v2",
+      "method": "MLP",
+      "corpus": "subset",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": 0.029412,
+        "p": 0.91078
+      },
+      "rho_cov_adj": {
+        "rho": 0.392157,
+        "p": 0.1195
+      },
+      "rho_cov_register": {
+        "rho": -0.323529,
+        "p": 0.205247
+      }
+    },
+    {
+      "label": "SciBERT LR",
+      "encoder": "allenai/scibert_scivocab_uncased",
+      "method": "LR",
+      "corpus": "subset",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": -0.122549,
+        "p": 0.639378
+      },
+      "rho_cov_adj": {
+        "rho": 0.262255,
+        "p": 0.309209
+      },
+      "rho_cov_register": {
+        "rho": -0.262255,
+        "p": 0.309209
+      }
+    },
+    {
+      "label": "SciBERT MLP",
+      "encoder": "allenai/scibert_scivocab_uncased",
+      "method": "MLP",
+      "corpus": "subset",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": -0.058824,
+        "p": 0.822559
+      },
+      "rho_cov_adj": {
+        "rho": 0.142157,
+        "p": 0.586263
+      },
+      "rho_cov_register": {
+        "rho": -0.154412,
+        "p": 0.554032
+      }
+    },
+    {
+      "label": "Concept LR",
+      "encoder": "all-mpnet-base-v2",
+      "method": "LR",
+      "corpus": "concept",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": 0.252451,
+        "p": 0.328294
+      },
+      "rho_cov_adj": {
+        "rho": 0.252451,
+        "p": 0.328294
+      },
+      "rho_cov_register": {
+        "rho": NaN,
+        "p": NaN
+      }
+    },
+    {
+      "label": "Concept MLP",
+      "encoder": "all-mpnet-base-v2",
+      "method": "MLP",
+      "corpus": "concept",
+      "n_valid": 17,
+      "rho_cov_raw": {
+        "rho": 0.257353,
+        "p": 0.318668
+      },
+      "rho_cov_adj": {
+        "rho": 0.257353,
+        "p": 0.318668
+      },
+      "rho_cov_register": {
+        "rho": NaN,
+        "p": NaN
+      }
+    }
+  ]
+}
