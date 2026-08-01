@@ -116,12 +116,18 @@ def parse_args() -> argparse.Namespace:
                    help="Override research centroids .npy (default: canonical per-model path). Used for the concept-retrieval variant.")
     p.add_argument("--research-centroid-meta", default=None,
                    help="Override research centroid metadata .json (default: canonical per-model path).")
+    p.add_argument("--mlp-centroids", default=None,
+                   help="Override MLP research centroids .npy (default: canonical per-model path). Used for the concept-retrieval variant.")
+    p.add_argument("--mlp-policy-scores", default=None,
+                   help="Override MLP policy scores .npy (default: canonical per-model path). Used for the concept-retrieval variant.")
     p.add_argument("--out-data-dir", default=None,
                    help="Override output data directory (default: canonical layout data_dir). Concept variant writes here.")
     p.add_argument("--out-tables-dir", default=None,
                    help="Override output tables directory (default: canonical layout tables_dir). Concept variant writes here.")
     p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
                    help="Use raw (default) or register-adjusted embeddings (project via G).")
+    p.add_argument("--classifier", choices=["lr", "mlp"], default="lr",
+                   help="Classifier for cluster assignments: lr (default) or mlp.")
     p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
@@ -130,11 +136,45 @@ def parse_args() -> argparse.Namespace:
 # Main
 # ---------------------------------------------------------------------------
 def run(args: argparse.Namespace) -> None:
-    _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
-    _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
-    _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
-    _RESEARCH_CENTROIDS = Path(args.research_centroids) if args.research_centroids else semantic_gap_shared.get_research_centroids(args.embed_model)
-    _RESEARCH_CENTROID_META = Path(args.research_centroid_meta) if args.research_centroid_meta else semantic_gap_shared.get_research_centroid_meta(args.embed_model)
+    is_mlp = args.classifier == "mlp"
+
+    # ---- Load data paths based on classifier ----
+    if is_mlp:
+        _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+        _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+        _POLICY_SCORES = Path(args.mlp_policy_scores) if args.mlp_policy_scores else semantic_gap_shared.get_mlp_policy_scores(args.embed_model)
+        _RESEARCH_CENTROIDS = Path(args.mlp_centroids) if args.mlp_centroids else semantic_gap_shared.get_mlp_research_centroids(args.embed_model)
+        # MLP centroids don't have a pre-built metadata JSON; build it on the fly.
+        if args.mlp_centroids:
+            # Concept variant: build metadata from the override centroids + mlp_summary.json
+            # We need to find the right mlp_summary.json — it's in the same dir as the centroids.
+            _mlp_dir = Path(args.mlp_centroids).parent
+            _summary_path = _mlp_dir / "mlp_summary.json"
+            if _summary_path.exists():
+                _summary = load_json(_summary_path)
+                centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
+                research_meta = []
+                for sdg_idx in range(N_SDG):
+                    sdg = sdg_idx + 1
+                    n_papers = int(_summary.get("research_coverage", {}).get(str(sdg), 0))
+                    norm = float(np.linalg.norm(centroids[sdg_idx]))
+                    research_meta.append({
+                        "sdg": sdg,
+                        "n_papers_assigned": n_papers,
+                        "raw_centroid_norm": round(norm, 6),
+                        "mean_cos_to_centroid": round(norm, 6),
+                        "zero_flag": norm < 1e-8,
+                    })
+            else:
+                research_meta = semantic_gap_shared.build_mlp_centroid_meta(args.embed_model)
+        else:
+            research_meta = semantic_gap_shared.build_mlp_centroid_meta(args.embed_model)
+    else:
+        _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
+        _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
+        _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
+        _RESEARCH_CENTROIDS = Path(args.research_centroids) if args.research_centroids else semantic_gap_shared.get_research_centroids(args.embed_model)
+        _RESEARCH_CENTROID_META = Path(args.research_centroid_meta) if args.research_centroid_meta else semantic_gap_shared.get_research_centroid_meta(args.embed_model)
 
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
     if args.out_data_dir:
@@ -144,14 +184,19 @@ def run(args: argparse.Namespace) -> None:
 
     # Determine output paths and fingerprint based on --embeddings mode.
     is_adjusted = args.embeddings == "adjusted"
+    sem_gap_name = "4_3_mlp_semantic_gap_distances.json" if is_mlp else "4_3_semantic_gap_distances.json"
+    sem_sens_name = "4_3_mlp_semantic_gap_robustness_caps.json" if is_mlp else "4_3_semantic_gap_robustness_caps.json"
     if is_adjusted:
-        adj_data_dir = layout.data_dir / "adjusted"
+        if args.out_data_dir:
+            adj_data_dir = Path(args.out_data_dir)
+        else:
+            adj_data_dir = layout.data_dir / "adjusted"
         adj_data_dir.mkdir(parents=True, exist_ok=True)
-        out_sem_gap = adj_data_dir / "4_3_semantic_gap_distances.json"
-        out_sem_sens = adj_data_dir / "4_3_semantic_gap_robustness_caps.json"
+        out_sem_gap = adj_data_dir / sem_gap_name
+        out_sem_sens = adj_data_dir / sem_sens_name
     else:
-        out_sem_gap = Path(args.out_data_dir).joinpath("4_3_semantic_gap_distances.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_distances.json"
-        out_sem_sens = Path(args.out_data_dir).joinpath("4_3_semantic_gap_robustness_caps.json") if args.out_data_dir else layout.data_dir / "4_3_semantic_gap_robustness_caps.json"
+        out_sem_gap = Path(args.out_data_dir).joinpath(sem_gap_name) if args.out_data_dir else layout.data_dir / sem_gap_name
+        out_sem_sens = Path(args.out_data_dir).joinpath(sem_sens_name) if args.out_data_dir else layout.data_dir / sem_sens_name
 
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
@@ -159,13 +204,21 @@ def run(args: argparse.Namespace) -> None:
     SCRIPT_VERSION = "1"
     PRIMARY = out_sem_gap
     OUTPUTS = [out_sem_gap, out_sem_sens]
-    fp = fingerprint_of(_RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
-                        _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
-                        embed_dir_for_model(args.embed_model) / "policy.npy")
+
+    # Fingerprint: include classifier-specific input files.
+    if is_mlp:
+        fp = fingerprint_of(
+            semantic_gap_shared.get_mlp_research_centroids(args.embed_model),
+            _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
+        )
+    else:
+        fp = fingerprint_of(_RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
+                            _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
+                            embed_dir_for_model(args.embed_model) / "policy.npy")
     fp += SCRIPT_VERSION
     if is_adjusted:
         g_path = register_utils.register_dir(args.embed_model) / "G.npy"
-        fp += f"_adjusted_{register_utils.track_for_model(args.embed_model)}"
+        fp += f"_adjusted_{args.classifier}_{register_utils.track_for_model(args.embed_model)}"
         fp += fingerprint_of(g_path)
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s — inputs unchanged", PRIMARY)
@@ -174,7 +227,11 @@ def run(args: argparse.Namespace) -> None:
     # ---- Load research centroids/meta ----
     log.info("Loading research centroids: %s", _RESEARCH_CENTROIDS)
     research_centroids = np.load(_RESEARCH_CENTROIDS).astype(np.float32)
-    research_meta = load_json(_RESEARCH_CENTROID_META)
+    if is_mlp:
+        # research_meta was built by build_mlp_centroid_meta() above.
+        pass
+    else:
+        research_meta = load_json(_RESEARCH_CENTROID_META)
     if research_centroids.shape[0] != N_SDG:
         raise RuntimeError(f"Expected research centroids shape ({N_SDG}, d), got {research_centroids.shape}")
     if len(research_meta) != N_SDG:
@@ -232,49 +289,54 @@ def run(args: argparse.Namespace) -> None:
                  r["sdg"], r["semantic_gap"], r["semantic_similarity"],
                  r["n_papers"], r["n_policy_docs_capped"])
 
-    # ---- Sensitivity analyses ----
-    log.info("")
-    log.info("=" * 60)
-    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
-    log.info("=" * 60)
-    rng_lo = np.random.default_rng(RANDOM_SEED)
-    sens_lo = compute_sdg_semantic_gaps(
-        research_centroids, research_counts, research_cohesions,
-        policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
-    )
+    # ---- Sensitivity analyses (LR only; skip for MLP) ----
+    if is_mlp:
+        sens_lo = primary_results  # placeholder; not used for MLP output
+        sens_none = primary_results
+    else:
+        log.info("")
+        log.info("=" * 60)
+        log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
+        log.info("=" * 60)
+        rng_lo = np.random.default_rng(RANDOM_SEED)
+        sens_lo = compute_sdg_semantic_gaps(
+            research_centroids, research_counts, research_cohesions,
+            policy_emb, policy_assignments,
+            policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
+        )
 
-    log.info("")
-    log.info("=" * 60)
-    log.info("SENSITIVITY: no segment cap (uncapped)")
-    log.info("=" * 60)
-    sens_none = compute_sdg_semantic_gaps(
-        research_centroids, research_counts, research_cohesions,
-        policy_emb, policy_assignments,
-        policy_ids, SEGMENT_CAP_SENS_NONE, rng_lo
-    )
+        log.info("")
+        log.info("=" * 60)
+        log.info("SENSITIVITY: no segment cap (uncapped)")
+        log.info("=" * 60)
+        sens_none = compute_sdg_semantic_gaps(
+            research_centroids, research_counts, research_cohesions,
+            policy_emb, policy_assignments,
+            policy_ids, SEGMENT_CAP_SENS_NONE, rng_lo
+        )
 
-    # Check sensitivity: do rankings change substantially across caps?
-    # A finding is robust if its gap rank is stable across caps.
-    log.info("")
-    log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
-    log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "none")
-    log.info("  " + "-" * 48)
-    for i in range(N_SDG):
-        sdg = i + 1
-        g20   = sens_lo[i]["semantic_gap"]
-        g50   = primary_results[i]["semantic_gap"]
-        gnone = sens_none[i]["semantic_gap"]
-        vals = [g20, g50, gnone]
-        if any(v is None for v in vals):
-            log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 3))
-        else:
-            log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, gnone)
+        # Check sensitivity: do rankings change substantially across caps?
+        # A finding is robust if its gap rank is stable across caps.
+        log.info("")
+        log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
+        log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "none")
+        log.info("  " + "-" * 48)
+        for i in range(N_SDG):
+            sdg = i + 1
+            g20   = sens_lo[i]["semantic_gap"]
+            g50   = primary_results[i]["semantic_gap"]
+            gnone = sens_none[i]["semantic_gap"]
+            vals = [g20, g50, gnone]
+            if any(v is None for v in vals):
+                log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 3))
+            else:
+                log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, gnone)
 
     # ---- Build output JSON ----
     primary_out = {
         "method": "centroid_to_centroid",
         "embedding_model": args.embed_model,
+        "classifier": args.classifier,
         "embeddings": args.embeddings,
         "segment_cap": args.segment_cap,
         "min_cluster_size": MIN_CLUSTER_SIZE,
@@ -313,9 +375,9 @@ def run(args: argparse.Namespace) -> None:
     log.info("")
     log.info("Next step: python 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py")
 
-    # ---- Write LaTeX generated outputs (raw mode only) ----
-    if is_adjusted:
-        log.info("Adjusted mode: skipping tex generation (adjusted JSON written to %s)", out_sem_gap)
+    # ---- Write LaTeX generated outputs (raw LR mode only) ----
+    if is_adjusted or is_mlp:
+        log.info("Adjusted/MLP mode: skipping tex generation (JSON written to %s)", out_sem_gap)
         record_fingerprint(OUTPUTS, fp, PRIMARY)
         return
 

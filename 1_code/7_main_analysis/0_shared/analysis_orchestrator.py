@@ -68,13 +68,15 @@ def _load_module(rel_path: str):
     return mod
 
 
-def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False, embeddings: str = "raw") -> None:
+def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False, embeddings: str = "raw", classifier: str = "lr") -> None:
     mod = _load_module(rel_path)
     argv = [str(ANALYSIS_ROOT / rel_path), "--embed-model", model, "--output-dir", str(output_dir)]
     if overwrite:
         argv.append("--overwrite")
     if embeddings != "raw":
         argv.extend(["--embeddings", embeddings])
+    if classifier != "lr":
+        argv.extend(["--classifier", classifier])
     sys.argv = argv
     mod.main()
 
@@ -103,8 +105,10 @@ def run_analysis(
 
 
 # Steps that support --embeddings adjusted (produce adjusted JSON outputs).
+# Each entry: (script_path, classifier). LR adjusted runs first, then MLP.
 ADJUSTED_STEPS = [
-    "1_main_text/1_semantic_gap.py",
+    ("1_main_text/1_semantic_gap.py", "lr"),
+    ("1_main_text/1_semantic_gap.py", "mlp"),
 ]
 
 # Post-adjusted generators: run AFTER adjusted JSONs exist.
@@ -113,6 +117,7 @@ ADJUSTED_STEPS = [
 POST_ADJUSTED_STEPS = [
     "0_shared/g_register_decomposition.py",
     "0_shared/g_interaction_extended.py",
+    "0_shared/h1_register_correlation_table.py",
     "0_shared/generate_tex_macros.py",
     ("1_main_text/0_pca_register_before_after.py", True),
 ]
@@ -130,8 +135,8 @@ def run_analysis_adjusted(
     post-adjusted generators (decomposition table, interaction extension,
     consolidated macros).
     """
-    for rel_path in ADJUSTED_STEPS:
-        _run_step(rel_path, model, output_dir, overwrite=overwrite, embeddings="adjusted")
+    for rel_path, classifier in ADJUSTED_STEPS:
+        _run_step(rel_path, model, output_dir, overwrite=overwrite, embeddings="adjusted", classifier=classifier)
     for item in POST_ADJUSTED_STEPS:
         if isinstance(item, tuple):
             rel_path, only_default = item

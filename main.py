@@ -587,6 +587,25 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
         ] + _overwrite_flag(overwrite))
+        # ---- Concept adjusted (register-removed) semantic gaps ----
+        run_step("semantic gap (concept corpus, adjusted)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--embeddings", "adjusted",
+            "--research-centroids", str(concept_centroids),
+            "--research-centroid-meta", str(concept_centroids_meta),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
+        mlp_concept_dir = scored_dir_for_model(model) / "mlp_scores_concept"
+        run_step("semantic gap (concept corpus, MLP adjusted)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--classifier", "mlp",
+            "--embeddings", "adjusted",
+            "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
+            "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
     # Main-text analyses, driven in-process by the orchestrator. Each analysis
     # reads the 27 research embedding/score shards directly (shard-native, mmap);
     # no consolidated array is built or cached.
@@ -646,6 +665,25 @@ def _run_concept_analyses(output_dir: Path, model: str, overwrite: bool = False)
         "--output-dir", str(output_dir), "--embed-model", model,
         "--research-centroids", str(concept_centroids),
         "--research-centroid-meta", str(concept_centroids_meta),
+        "--out-data-dir", str(concept_data_dir),
+    ] + _overwrite_flag(overwrite))
+    # ---- Concept adjusted (register-removed) semantic gaps ----
+    run_step("semantic gap (concept corpus, adjusted)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--embeddings", "adjusted",
+        "--research-centroids", str(concept_centroids),
+        "--research-centroid-meta", str(concept_centroids_meta),
+        "--out-data-dir", str(concept_data_dir),
+    ] + _overwrite_flag(overwrite))
+    mlp_concept_dir = scored_dir_for_model(model) / "mlp_scores_concept"
+    run_step("semantic gap (concept corpus, MLP adjusted)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--classifier", "mlp",
+        "--embeddings", "adjusted",
+        "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
+        "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
         "--out-data-dir", str(concept_data_dir),
     ] + _overwrite_flag(overwrite))
 

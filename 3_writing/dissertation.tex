@@ -695,6 +695,19 @@ The decomposition reveals a striking pattern for SDG~17 (Partnerships for the Go
 \input{../4_outputs/mpnet/tables/tab_register_decomposition.tex}
 \end{table}
 
+\subsection{Cross-Config Cancellation Replicates}
+\label{app:register-correlation}
+
+Table~\ref{tab:register-correlation} extends the register--topic decomposition (Table~\ref{tab:register-decomposition}) across all encoder--method configurations. For each config, three Spearman correlations are reported: coverage gap versus raw semantic gap, coverage gap versus adjusted (topic) gap, and coverage gap versus register component. The cancellation pattern --- near-zero raw correlation, positive adjusted correlation, negative register correlation --- replicates across all LR and MLP configs, confirming that the register--topic decomposition is not specific to the canonical MPNet--LR specification. MLP configs use the same INLP projection matrix as their encoder's LR config (the G matrix was learned on the LR classifier's research--policy separation and applied to the MLP centroids and policy embeddings in the same embedding space). Concept-retrieval rows use the concept-retrieved research corpus (Appendix~\ref{app:concept-retrieval-sensitivity}) with the same policy corpus.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Coverage-vs-gap Spearman correlations across configs. Raw gap = main semantic-gap estimate. Adj.\ gap = after INLP register removal. Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs.}
+\label{tab:register-correlation}
+\input{../4_outputs/appendix/mpnet/h1_register_correlation_table/tables/tab_register_correlation.tex}
+\end{table}
+
 \subsection{Iteration-Level Diagnostic}
 \label{app:register-iterative}
 

@@ -30,6 +30,51 @@ def get_research_centroids(model: str = DEFAULT_EMBED_MODEL) -> Path:
 def get_research_centroid_meta(model: str = DEFAULT_EMBED_MODEL) -> Path:
     return scored_dir_for_model(model) / "metadata" / "research_centroid_meta.json"
 
+
+# ---------------------------------------------------------------------------
+# MLP classifier paths (parallel to LR paths above)
+# ---------------------------------------------------------------------------
+
+def get_mlp_research_centroids(model: str = DEFAULT_EMBED_MODEL) -> Path:
+    return scored_dir_for_model(model) / "mlp_scores" / "mlp_research_centroids.npy"
+
+
+def get_mlp_research_centroid_meta(model: str = DEFAULT_EMBED_MODEL) -> Path:
+    return scored_dir_for_model(model) / "mlp_scores" / "mlp_research_centroid_meta.json"
+
+
+def get_mlp_policy_scores(model: str = DEFAULT_EMBED_MODEL) -> Path:
+    return scored_dir_for_model(model) / "mlp_scores" / "mlp_policy_scores.npy"
+
+
+def build_mlp_centroid_meta(model: str = DEFAULT_EMBED_MODEL) -> list[dict]:
+    """Build centroid metadata for MLP from mlp_summary.json.
+
+    MLP centroids don't have a pre-built metadata JSON like LR, so we
+    synthesize one from mlp_summary.json (research_coverage) and compute
+    mean_cos_to_centroid from the centroids themselves.
+    """
+    summary_path = scored_dir_for_model(model) / "mlp_scores" / "mlp_summary.json"
+    centroids_path = get_mlp_research_centroids(model)
+    summary = load_json(summary_path)
+    centroids = np.load(centroids_path).astype(np.float32)
+    research_coverage = summary["research_coverage"]
+
+    meta = []
+    for sdg_idx in range(N_SDG):
+        sdg = sdg_idx + 1
+        n_papers = int(research_coverage.get(str(sdg), 0))
+        centroid = centroids[sdg_idx]
+        norm = float(np.linalg.norm(centroid))
+        meta.append({
+            "sdg": sdg,
+            "n_papers_assigned": n_papers,
+            "raw_centroid_norm": round(norm, 6),
+            "mean_cos_to_centroid": round(norm, 6),
+            "zero_flag": norm < 1e-8,
+        })
+    return meta
+
 SEGMENT_CAP_PRIMARY = 50
 SEGMENT_CAP_SENS_LO = 20
 SEGMENT_CAP_SENS_HI = 100
