@@ -142,6 +142,34 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
   are centralised here. Tables (`tab_*.tex`) may still be emitted by their
   generator; macros are not.
 
+### 6.0.1 CLI flag conventions (repo-standard — every new/changed script)
+New and modified scripts MUST reuse the repo's existing argument conventions —
+do not invent ad-hoc flags:
+
+- **`--embed-model`** on every script that touches a model namespace:
+  `default=DEFAULT_EMBED_MODEL`, `type=resolve_model_alias`,
+  `help=argparse.SUPPRESS` (the orchestrator/`main.py` always sets it). Leaf
+  scripts do NOT expose `--model`; only `main.py` aliases it.
+- **`--output-dir`** (`default=str(DEFAULT_OUTPUT_ROOT)`) on every script that
+  writes under `4_outputs/`. Exception: `register_adjust.py` writes only to
+  gitignored `2_data/` and does NOT take `--output-dir`.
+- **`--overwrite`** (`action="store_true"`, hidden) on every script that writes
+  outputs; forwarded via the existing `main.py._overwrite_flag()`. For
+  `register_adjust.py` it forces a clean re-run (rmtree the checkpoint) — the
+  same role it plays for the embed/segment stages.
+- **Value-choice flags are kebab-case with lowercase `choices=[...]` and visible
+  help** — the established pattern (`--classifier {lr,mlp}`,
+  `--corpus {research,policy,research_concept}`, `--stage {fetch,...}`,
+  `--profile {raw,embedded}`, `--retrieval {keyword,concept}`).
+- **New `--embeddings {raw,adjusted}`** follows that pattern exactly:
+  `choices=["raw","adjusted"]`, `default="raw"` (un-flagged runs keep today's
+  outputs), visible help.
+- **Derive, don't add, corpus/track flags.** `register_adjust.py` derives its
+  track from `--embed-model` (mpnet → `canon` = full research shards; MiniLM /
+  SciBERT → `subset` = `research_subset`) exactly as the embed stage auto-selects
+  `--corpus research_subset` for non-canonical encoders — no `--track` flag; the
+  derived track is logged. Concept reuses `G_canon`, no INLP run.
+
 ### 6.1 New stage `register_adjust` (materialise G, not full embeddings)
 - Run INLP (SDG-stratified, iterative; canon reaches 94 directions) on
   research+policy embeddings -> persist ONLY the orthonormal projection matrix
@@ -188,7 +216,57 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
   in the raw-vs-adjusted decomposition and in the supervised-vs-zero-shot comparison on
   the canonical surface. ZS stays MPNet-group-only (AGENTS.md axis restriction intact).
   Re-run matrix §6.4 updated accordingly.
-- Fingerprint `G` + raw inputs so downstream skips when unchanged.
+- Fingerprint `G` + raw inputs so downstream skips when unchanged (Tier-B
+  `should_skip`/`record_fingerprint` — §6.0). This is the DOWNSTREAM skip
+  mechanism; it is distinct from `register_adjust`'s own iteration checkpoint.
+- **`register_adjust` is checkpointed + resume-safe (iteration-level).** The INLP
+  loop (~94 iterations × LR fit) must survive a kill at iteration 52 and resume
+  from 52 — never restart from 1. Design (mirrors the embed stage's per-shard
+  manifest resume):
+  - Persist after EVERY iteration into `2_data/3_embedded/{slug}/register/{track}/`:
+    - `G.npy` — accumulated orthonormal directions (rows 1..k), written with
+      `shard_pipeline_utils.atomic_write_npy` (tmp + fsync + replace, so a torn
+      write is never treated as complete). This file IS the stage's deliverable.
+    - `checkpoint.json` — `atomic_write_json`: `schema_version`, `completed_k`,
+      per-iteration records `[{k, test_acc}]`, the recorded config + inputs
+      fingerprints (§below), and the run's config values (named constants +
+      seeds + classifier hyperparameters). On completion this file doubles as the
+      `meta.json` (n_iters, final_acc, per-iter acc) named at the top of §6.1.
+    - `register/{track}/status/` heartbeat via `update_stage_status` (the embed
+      stage's status-dir pattern) for long-job monitoring.
+  - **Resume protocol on startup:**
+    1. `checkpoint.json` exists + `G.npy` row count == `completed_k` → interrupted
+       run. Recompute the config + inputs fingerprints NOW and compare. On match →
+       resume at iteration `completed_k + 1` using the loaded `G`. On mismatch →
+       **fail closed** (`RuntimeError`; require `--overwrite` for a clean
+       recompute). Never silently resume on changed inputs/configs.
+    2. Checkpoint shows the stopping criterion was met → stage complete; skip
+       (existence-skip, consistent with the cheap stages).
+    3. `--overwrite` → rmtree `register/{track}/` and start fresh.
+  - **Deterministic per-iteration RNG (REQUIRED).** Today the loop draws every
+    iteration's sample from ONE sequential `np.random.default_rng(
+    POLICY_SEGMENT_CAP_SEED)`, so a resumed run at k=52 would sample differently
+    than an uninterrupted run. Refactor `iterative_register_check` to seed each
+    iteration independently — `iteration_rng = np.random.default_rng(
+    POLICY_SEGMENT_CAP_SEED + k)` — used for BOTH `load_stratified_samples` and
+    `compute_gaps_for_directions`. Iteration k then depends only on (frozen
+    inputs, `G[:k-1]`, k), making resume-from-52 bit-identical to a full run.
+    (The classifier `random_state=42+k` and `train_test_split(random_state=42+k)`
+    are already per-iteration.) This changes the old appendix script's sampled
+    draws — fine, the canon re-run supersedes it.
+  - **Inputs + config fingerprint = content-based, NOT mtime-based.** AGENTS.md:
+    `2_data/` re-hydration resets mtimes, so an mtime fingerprint would force a
+    full re-run after every hydration and destroy the resume benefit. Use
+    `sha256_file` over: the research embed manifest (per-shard `sha256` fields are
+    already recorded by the embed stage), the research score-shard manifest,
+    `policy.npy`, `policy_scores.npy`, `policy_ids.json`, `research_centroids.npy`
+    + its meta. The config fingerprint covers `ITERATIVE_N_PER_SDG`,
+    `ITERATIVE_ACC_THRESHOLD`, `ITERATIVE_MAX_K`, the within-SDG balance-cap rule
+    (§6.1), segment cap, seeds, classifier hyperparameters (C/penalty/solver/
+    max_iter), and a `SCRIPT_VERSION`. All inputs are ~MBs — cheap to hash once
+    at startup.
+  - Downstream consumers (`register_utils.load_G`) read only the final `G.npy` +
+    completed `checkpoint.json`, so they are blind to resume state.
 
 ### 6.2 `register_utils.py` (NEW, shared)
 - `load_G(model, track)`, `project(emb, G)`, `project_centroids(path, G)`,
@@ -196,9 +274,17 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
   `get_research_centroids_adjusted(path, G)`.
 - `--embeddings {raw,adjusted}` flag added to the 8 downstream scripts
   (semantic_gap, interaction, cross_sensitivity, encoder_sensitivity,
-  distributional, sample_stability, concept_retrieval, source_family); the flag
-  swaps the two shared loaders above. Segment-cap / concept / encoder overrides
-  still apply.
+  distributional, sample_stability, concept_retrieval, source_family) AND to
+  `score_zeroshot.py` (the ZS-adjusted pass, §6.1); the flag swaps the two shared
+  loaders above. Segment-cap / concept / encoder overrides still apply.
+  - Shape per §6.0.1: `choices=["raw","adjusted"]`, `default="raw"`, visible.
+  - Raw runs keep today's canonical output paths; adjusted runs write to the
+    `adjusted/` mirror (§6.4). Each pass carries its own
+    `should_skip`/`record_fingerprint` state, so raw and adjusted never collide
+    in the Tier-B skip logic.
+  - The orchestrator (`analysis_orchestrator._run_step`, `main.py`) passes
+    `--embeddings adjusted` explicitly for the adjusted pass; scripts default to
+    `raw` when run standalone.
 
 ### 6.3 Coverage gap is adjustment-invariant (no re-run needed)
 - `0_coverage_gap.py` derives coverage from SDG **assignments** (classifier on
@@ -236,11 +322,18 @@ Adjusted semantic-gap JSONs written under an `adjusted/` mirror of the raw layou
    + raw/adj semantic-gap JSONs -> JSON (+ its `tab_*.tex`).
 4. **PCA before/after** (main text): project a stratified sample (raw vs adj) of
    research+policy clouds; two-clouds -> one figure. MPNet, encoder-dependence note.
+- **Flags (all new generators):** `--output-dir`, `--embed-model` (default
+  mpnet), `--overwrite` — mirroring the existing generators (`0_coverage_gap.py`,
+  `h1_cross_method_gap_values.py`). The PCA before/after generator additionally
+  takes `--seed` (default `RANDOM_SEED`) and `--n-components` (default 2),
+  mirroring `0_pca_semantic_landscape.py`.
 
 ### 6.6 Consolidated macro script
 `generate_tex_macros.py` reads the JSONs from 6.5.1-6.5.3 (+ existing raw JSONs)
 and writes the restructure's `num_*.tex` macros (decomposition, centrepiece rho's,
 correlation-table summary). Run LAST after all JSONs exist.
+Flags: `--output-dir`, `--embed-model` (default mpnet), `--overwrite` — the
+same shape as the existing `num_*.tex` emitters (`0_coverage_gap.py`, `h1_*`).
 
 ### 6.7 Manuscript restructure per §5 (with refinements)
 - Canon RAW result (rho=-0.09) stays in MAIN TEXT as the "before" of the
@@ -248,6 +341,10 @@ correlation-table summary). Run LAST after all JSONs exist.
   configs -> appendix. Concept-reuse assumption stated explicitly (§3/§6.1).
 
 ### 6.8 Build, verify, commit, push to `register-adj`.
+- Also record the new `register_adjust` row (iteration-level checkpoint manifest;
+  `--overwrite` → rmtree; atomic `G.npy`/`checkpoint.json`) in AGENTS.md's
+  checkpoint/overwrite inventory. AGENTS.md is local-only (gitignored) — the note
+  does not get committed.
 
 ## 7. Verification
 
