@@ -595,3 +595,33 @@ are from the current `dissertation.tex`:
 
 These are prose edits only -- no pipeline code. They are the missing half of the
 restructure: the code re-wiring is done, the manuscript narrative is not.
+
+## 13. Implementation summary (2026-08-01)
+
+All §6 tasks completed on branch `register-adj`. Key commits:
+- `dfcc3a7`: §6.1 register_adjust stage (G.npy for 3 encoders)
+- `d1b22c4`: §6.2 register_utils + --embeddings adjusted on 6 scripts + orchestrator
+- `7d21808`: §6.4 re-run matrix + §6.5 generators (decomposition, interaction extension)
+- `ef53467`: §6.6 macros + §6.7/12 manuscript rewrites
+
+### Verified headline numbers (MPNet canon):
+- Raw gap: 0.352 | Adjusted gap: 0.209 | Register component: 0.143
+- rho(cov,topic) = +0.48 (p=0.054) | rho(cov,register) = -0.49 (p=0.045)
+- Raw rho(cov,gap) = -0.08 (p=0.765) — null because register cancels topic signal
+- SDG 17: raw 0.216 → adjusted 0.371 (flips from smallest to largest gap)
+
+### G.npy produced for:
+- MPNet canon: 75 iterations, G(75,768), acc 0.4998
+- MiniLM subset: 26 iterations, G(26,384), acc 0.4949
+- SciBERT subset: 50 iterations, G(50,768), acc 0.4988
+
+### Files created:
+- `1_code/7_main_analysis/0_shared/register_adjust.py` (§6.1)
+- `1_code/7_main_analysis/0_shared/register_utils.py` (§6.2)
+- `1_code/7_main_analysis/0_shared/g_register_decomposition.py` (§6.5.1)
+- `1_code/7_main_analysis/0_shared/g_interaction_extended.py` (§6.5.2)
+- `1_code/7_main_analysis/0_shared/generate_tex_macros.py` (§6.6)
+
+### Remaining work:
+- Merge to main
+- Verify LaTeX compiles with new macros and table references
