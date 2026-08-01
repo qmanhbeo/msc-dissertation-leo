@@ -47,6 +47,10 @@ opposite signs summing to ~0 explain the null regardless of individual significa
    Applied to RESEARCH + POLICY measurement embeddings
    -> adjusted embeddings (register removed, topic retained)
    -> cite Ravfogel et al. 2020; SDG-stratified adaptation is ours
+   -> Materialise as projection matrix G only (94 orthonormal directions, ~KB);
+      adjusted = project(raw, G) on the fly. Full adjusted .npy NOT stored.
+   -> NOTE: coverage gap is assignment-based, so it is IDENTICAL for raw and
+      adjusted; only the semantic-gap vector changes between them.
 5. PCA before/after (main-text figure): two clouds -> one merged cloud
 6. Main analysis on ADJUSTED embeddings:
    - Semantic gaps = adjusted (canonical); raw = register-inclusive reference
@@ -86,6 +90,12 @@ Open sub-decisions if we ever pursue source-invariance:
 Plan records this as OPEN -- default execution uses original-embedding classifier +
 measurement-surface INLP. Source-invariance noted as future work, not built now.
 
+   Separately: the concept-retrieval track REUSES `G_canon` rather than learning
+   its own INLP. This assumes the research-vs-policy register direction is
+   corpus-general from canon research to concept-retrieved research; if concept
+   papers carry a different register, residual register remains in the adjusted
+   concept gap. This assumption is stated explicitly in the manuscript.
+
 ## 4. New artifacts
 
 - **Decomposition table** (per-SDG, main-text Results): `raw gap | adjusted gap |
@@ -106,9 +116,12 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
     reference.
   - New **decomposition table** (Section 4.2).
   - **PCA before/after** figure.
-  - **H1 reformulated**: cov gap vs adjusted (topic) gap rho=+0.44, p=0.08; cov gap vs
-    register component rho=-0.50, p=0.04; raw null = cancellation. **Cov-sem corr is
-    the centrepiece.**
+   - **H1 reformulated**: cov gap vs adjusted (topic) gap rho=+0.44, p=0.08; cov gap vs
+     register component rho=-0.50, p=0.04; raw null = cancellation. **Cov-sem corr is
+     the centrepiece.**
+     The canon RAW result (rho=-0.09) is RETAINED in main text as the "before" of
+     the cancellation narrative, not moved to appendix. Canon raw + adj + register
+     all live in main text; only robustness configs go to appendix.
   - Rank-stability tables demoted to supporting robustness.
 - **Discussion:** retire "independence/dissociation"; SDG 17 reframed as "high topic
   divergence masked by register similarity"; decomposition = key contribution; cov-sem
@@ -117,21 +130,104 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
   p-values (n=17 power); source-invariance as future work.
 - **Abstract / Conclusion / title:** "dissociation" -> "register-topic decomposition."
 
-## 6. Engineering tasks (execution)
+## 6. Engineering tasks (execution) -- REVISED ARCHITECTURE
 
-1. **New stage `register_adjust`**: INLP (94 SDG-stratified iterations) on raw
-   research+policy embeddings -> save adjusted embeddings to
-   `2_data/3_embedded/<model>/adjusted/` (~10 GB, gitignored). Fingerprint so
-   downstream skips if present.
-2. **`--embeddings adjusted` flag** on: semantic_gap, interaction, cross_sensitivity,
-   encoder_sensitivity, distributional, sample_stability, concept_retrieval,
-   source_family. (Engine exists in `f_register_adjustment.py`; integration, not new
-   math.)
-3. **Re-run all** on adjusted; regenerate `num_*.tex` macros.
-4. **Decomposition table** generator (raw / adjusted / register / coverage per SDG).
-5. **PCA before/after** figure script.
-6. **Update manuscript** per Section 5; rebuild `num_*` inputs.
-7. Build, verify, commit, push.
+### 6.0 Design principle (applies to all new/changed stages)
+- Expensive analysis stages emit **JSON only** (already true for semantic_gap,
+  coverage, interaction, cross_method, etc.).
+- A single consolidated macro script
+  `1_code/7_main_analysis/0_shared/generate_tex_macros.py` (NEW) reads the
+  restructure JSONs and writes ALL new `num_*.tex` macros. Per-script `num_*.tex`
+  emission is grandfathered for existing stages, but the restructure's new macros
+  are centralised here. Tables (`tab_*.tex`) may still be emitted by their
+  generator; macros are not.
+
+### 6.1 New stage `register_adjust` (materialise G, not full embeddings)
+- Run INLP (SDG-stratified, iterative; canon reaches 94 directions) on
+  research+policy embeddings -> persist ONLY the orthonormal projection matrix
+  `G` (K x dim, ~KB) + metadata json (n_iters, final_acc, per-iter acc) to
+  `2_data/3_embedded/{slug}/register/{track}/G.npy`.
+- NO full adjusted `.npy` arrays are stored (~10 GB MPNet cost avoided entirely).
+- Adjusted embeddings are produced on the fly by `project(raw, G)` (orthonormal
+  subtract-all + per-row L2 renorm) -- mathematically identical to stored adjusted.
+- Tracks / G sources:
+  - MPNet `canon`: iterative SDG-stratified INLP on full research+policy ->
+    `G_canon`. Use the **iterative** `G_list`, NOT the naive single-direction `g`.
+  - MPNet `concept`: **reuse `G_canon`** -- no re-run (assumption stated in §3).
+  - MiniLM / SciBERT `subset`: re-run INLP on research_subset+policy -> own `G`.
+- **Within-SDG balance fix (required for subset runs):** the iterative check must cap
+  policy per SDG at `min(ITERATIVE_N_PER_SDG, n_available_research_for_that_sdg)` so research
+  and policy stay equally represented *within* each SDG. In the 50k subset, rare SDGs have
+  <1000 research (SDG 1: 173-263; SDG 17: 208-500; SDG 6/14: ~550-810; minilm vs scibert
+  vary), so the uncapped code would train, e.g., 173 research vs 1000 policy and bias the
+  learned register direction. Canon is unaffected (every SDG has >=18k research -> full
+  1000/1000 balance). ~2-line change in `load_stratified_samples`.
+- **Method caveat (state precisely when framing):** the iterative check trains a 34-class
+  (17 SDG x 2 corpus) classifier and projects out its *flattened* (34 x dim) coefficient
+  vector, so each `g_k` removes a register-weighted blend of topic + register, not pure
+  register. This is the established canon method and the gate validated its outcome (the
+  cancellation pattern); keep it, but describe it as a register-weighted topic+register
+  projection, not a pure register removal.
+- Fingerprint `G` + raw inputs so downstream skips when unchanged.
+
+### 6.2 `register_utils.py` (NEW, shared)
+- `load_G(model, track)`, `project(emb, G)`, `project_centroids(path, G)`,
+  `get_policy_emb_adjusted(model, track)`,
+  `get_research_centroids_adjusted(path, G)`.
+- `--embeddings {raw,adjusted}` flag added to the 8 downstream scripts
+  (semantic_gap, interaction, cross_sensitivity, encoder_sensitivity,
+  distributional, sample_stability, concept_retrieval, source_family); the flag
+  swaps the two shared loaders above. Segment-cap / concept / encoder overrides
+  still apply.
+
+### 6.3 Coverage gap is adjustment-invariant (no re-run needed)
+- `0_coverage_gap.py` derives coverage from SDG **assignments** (classifier on
+  ORIGINAL embeddings, per OPEN decision). Coverage gap is IDENTICAL for raw and
+  adjusted; only the semantic-gap vector changes. Do NOT re-run coverage per
+  raw/adjusted -- reuse the existing coverage JSON for both.
+
+### 6.4 Re-run matrix (semantic gaps only; coverage reused per §6.3)
+Adjusted semantic-gap JSONs written under an `adjusted/` mirror of the raw layout
+(e.g. `4_outputs/{model}/data/adjusted/4_3_semantic_gap_distances.json`,
+`.../data/concept/adjusted/...`).
+
+| Config | Raw sem (methods) | Adj sem (methods) |
+|---|---|---|
+| MPNet canon | LR, MLP, ZS | **LR, MLP** |
+| MPNet concept | -- | LR, MLP (reuse G_canon) |
+| MiniLM subset | -- | LR, MLP (own G) |
+| SciBERT subset | -- | LR, MLP (own G) |
+
+`register_gap[sdg] = raw_gap[sdg] - adj_gap[sdg]` per config -> feeds rho(cov, register).
+
+### 6.5 New generators (all JSON-out; macros centralised per §6.0)
+1. **Decomposition table** (canon, main text): per-SDG raw / adj / register /
+   coverage. Inputs: `num_register_adjustment.tex` source values (or its JSON) +
+   `4_2_coverage_document_weighted.json`. New script
+   `0_shared/g_register_decomposition.py` -> JSON.
+2. **Interaction extension** (canon centrepiece, main text): the existing
+   correlation script only computes rho using the RAW semantic gap. Extend it to
+   ALSO compute rho using the ADJUSTED semantic gap and the REGISTER component, so
+   the two headline numbers (rho=+0.44, rho=-0.50) are produced. Plainly: we add
+   two more correlation columns to the same test. Emits JSON.
+3. **Consolidated correlation table = the ONE table** (appendix; canon rows also
+   cited in main text): per config x {rho(cov,raw), rho(cov,adj), rho(cov,register)}.
+   New script `0_shared/h1_register_correlation_table.py` reads per-config coverage
+   + raw/adj semantic-gap JSONs -> JSON (+ its `tab_*.tex`).
+4. **PCA before/after** (main text): project a stratified sample (raw vs adj) of
+   research+policy clouds; two-clouds -> one figure. MPNet, encoder-dependence note.
+
+### 6.6 Consolidated macro script
+`generate_tex_macros.py` reads the JSONs from 6.5.1-6.5.3 (+ existing raw JSONs)
+and writes the restructure's `num_*.tex` macros (decomposition, centrepiece rho's,
+correlation-table summary). Run LAST after all JSONs exist.
+
+### 6.7 Manuscript restructure per §5 (with refinements)
+- Canon RAW result (rho=-0.09) stays in MAIN TEXT as the "before" of the
+  cancellation story. Canon raw + adj + register all in main text; only robustness
+  configs -> appendix. Concept-reuse assumption stated explicitly (§3/§6.1).
+
+### 6.8 Build, verify, commit, push to `register-adj`.
 
 ## 7. Verification
 
@@ -231,5 +327,40 @@ That moment, where a footnote turns into the contribution, is why people grind.
 - The adjusted gaps become canonical; raw is the register-inclusive reference.
 - Source-invariance of the classifier is explicitly OPEN (Section 3), not built.
 
-This narrative is why the restructure is worth the re-computation. It is not
-re-ordering. It is a change in what the work *is*.
+  This narrative is why the restructure is worth the re-computation. It is not
+  re-ordering. It is a change in what the work *is*.
+
+## 10. Revised architecture decisions (post-planning, locked)
+
+Captured during architecture review before implementation. Supersedes conflicting
+text in §2/§3/§5/§6 where noted.
+
+- **G-only materialisation**: adjusted embeddings are NOT stored as full `.npy`
+  arrays. INLP persists only the orthonormal projection matrix `G` (K x dim, ~KB)
+  per (model, track); adjusted arrays are produced on the fly by `project(raw, G)`.
+  Mathematically identical to stored adjusted; removes the ~10 GB MPNet cost.
+  (Correction B.)
+- **Coverage gap is adjustment-invariant**: it derives from SDG assignments
+  (classifier on original embeddings), so it is identical for raw and adjusted.
+  Only the semantic-gap vector differs. (Correction A.)
+- **Canon adjusted = iterative SDG-stratified G** (94 dirs), NOT the naive
+  single-direction `g` also computed by `f_register_adjustment.py`. (Correction C.)
+- **Canon RAW result (rho=-0.09) stays in main text** as the "before" of the
+  cancellation story; canon raw + adj + register all in main text, robustness
+  configs in appendix.
+- **Register-component correlation column for ALL configs**: compute
+  rho(cov, register) per config to test whether the opposite-sign cancellation
+  replicates across encoders/concept.
+- **MPNet canon does MLP-adjusted too** (not LR-only): canon adjusted methods =
+  LR + MLP. Raw canon methods = LR + MLP + ZS (ZS adjusted is out of scope per
+  AGENTS.md; ZS appears raw-only under the MPNet group).
+- **Concept track reuses `G_canon`** (no INLP re-run); assumption stated explicitly
+  in manuscript (§3/§6.1).
+- **JSON-out / consolidated-macro design principle**: expensive analysis stages
+  emit JSON; a single `generate_tex_macros.py` reads the restructure JSONs and
+  writes the new `num_*.tex` macros. Applies to all new/changed stages going
+  forward.
+- **Re-run matrix (semantic gaps; coverage reused)**:
+  MPNet canon: raw LR/MLP/ZS, adj LR/MLP. MPNet concept: adj LR/MLP (G_canon).
+  MiniLM subset: adj LR/MLP (own G). SciBERT subset: adj LR/MLP (own G).
+  `register_gap = raw - adj` per SDG per config.

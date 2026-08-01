@@ -41,9 +41,12 @@ Minimum cluster size:
   are dominated by noise.
 
   Note on coverage gap interaction:
-  SDGs with very small research clusters (SDG 1: 43 papers, SDG 10: 20 papers) are precisely
-  the SDGs that appear "neglected" in coverage gap analysis. Their semantic gap estimates may
-  be noisy. This is acknowledged in Assumption A-SPARSE.
+   The lowest-coverage SDGs (SDG 1 and SDG 17 are the two smallest research clusters by
+   proportion; SDG 10 is also low) are precisely the SDGs that appear "neglected" in coverage
+   gap analysis. In absolute terms they are not empty: SDG 1 has ~18.3k papers in the full
+   corpus (~170-260 in the 50k research subset) and SDG 10 ~38.4k, all well above
+   MIN_CLUSTER_SIZE, so their semantic-gap estimates are not cluster-size limited. Residual
+   noise is acknowledged in Assumption A-SPARSE.
 
 Inputs:
   2_data/5_supervised_scored/{model}/research_centroids.npy       (17, dim)    float32
