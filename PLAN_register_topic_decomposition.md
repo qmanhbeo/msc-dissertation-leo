@@ -153,6 +153,13 @@ measurement-surface INLP. Source-invariance noted as future work, not built now.
 - Tracks / G sources:
   - MPNet `canon`: iterative SDG-stratified INLP on full research+policy ->
     `G_canon`. Use the **iterative** `G_list`, NOT the naive single-direction `g`.
+  - **Cleanup (dead code):** `f_register_adjustment.py` also computes a naive
+    single-direction `g` (one projection round). This is superseded by the iterative
+    `G_list` and is **not used anywhere** in the canon (per Correction C, §10) -- it
+    was the source of the earlier "blend" misreading (§6.1). Remove it during
+    implementation: delete the naive `g` block and any flag that selects it
+    (~few lines, low risk, no downstream dependents). Keeps the method unambiguously
+    INLP (iterative, exhaustive) and prevents regressions.
   - MPNet `concept`: **reuse `G_canon`** -- no re-run (assumption stated in §3).
   - MiniLM / SciBERT `subset`: re-run INLP on research_subset+policy -> own `G`.
 - **Within-SDG balance fix (required for subset runs):** the iterative check must cap
@@ -347,6 +354,9 @@ text in §2/§3/§5/§6 where noted.
   Only the semantic-gap vector differs. (Correction A.)
 - **Canon adjusted = iterative SDG-stratified G** (94 dirs), NOT the naive
   single-direction `g` also computed by `f_register_adjustment.py`. (Correction C.)
+  The naive single-direction `g` is now **dead code** and should be cleaned up
+  (see §6.1 cleanup bullet) -- it is unused and was the source of the earlier
+  "34-class blend" misreading.
 - **Canon RAW result (rho=-0.09) stays in main text** as the "before" of the
   cancellation story; canon raw + adj + register all in main text, robustness
   configs in appendix.
