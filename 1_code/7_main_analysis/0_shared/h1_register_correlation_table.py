@@ -139,15 +139,6 @@ def _zs_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
     return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
 
 
-def _mlp_gaps(model: str) -> dict[int, float] | None:
-    """Load MLP raw gaps from mlp_summary.json (legacy path, for backward compat)."""
-    p = scored_dir_for_model(model) / "mlp_scores" / "mlp_summary.json"
-    data = _load_json(p)
-    if data is None:
-        return None
-    return {int(k): v for k, v in data["semantic_gaps"].items()}
-
-
 def _mlp_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
     """Load MLP raw gaps from the new 4_3_mlp_semantic_gap_distances.json."""
     p = output_dir_for_model(model, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
@@ -234,9 +225,6 @@ def _build_config_row(
             raw = _concept_mlp_raw_gaps(root)
         else:
             raw = _mlp_raw_gaps(root, model)
-            # Fallback to legacy mlp_summary.json if new path doesn't exist yet
-            if raw is None:
-                raw = _mlp_gaps(model)
     else:
         return None
 

@@ -251,6 +251,10 @@ def run(args: argparse.Namespace) -> None:
     policy_assignments = get_cluster_assignments(policy_scores)
 
     # ---- Adjusted mode: project through G ----
+    # Intentional design (PLAN_register_topic_decomposition.md §6.1): LR/MLP keep
+    # their RAW-space hard assignments (policy_assignments above come from raw
+    # scores) and only project the cluster CENTROIDS/VECTORS through G for the
+    # gap. This differs from zero-shot, which RE-ASSIGNS on projected embeddings.
     if is_adjusted:
         G = register_utils.load_G(args.embed_model)
         log.info("Projecting research centroids through G (%d directions)...", G.shape[0])

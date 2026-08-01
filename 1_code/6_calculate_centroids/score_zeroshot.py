@@ -29,6 +29,7 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, output_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
+from semantic_gap_shared import cap_policy_indices_per_doc, MIN_CLUSTER_SIZE
 from shard_pipeline_utils import load_json, resolve_manifest_path
 
 # register_utils may not be on path when run standalone; add it.
@@ -51,19 +52,6 @@ def centroid_from_sumcount(sums: np.ndarray, counts: np.ndarray) -> np.ndarray:
             if norm > ZERO_NORM_EPS:
                 out[i] = (raw / norm).astype(np.float32)
     return out
-
-
-def cap_indices_per_doc(policy_ids: list[dict], segment_cap: int, rng: np.random.Generator) -> list[int]:
-    doc_to_indices: dict[str, list[int]] = {}
-    for i, row in enumerate(policy_ids):
-        doc_to_indices.setdefault(row["source_doc"], []).append(i)
-    selected: list[int] = []
-    for indices in doc_to_indices.values():
-        if len(indices) <= segment_cap:
-            selected.extend(indices)
-        else:
-            selected.extend(rng.choice(indices, size=segment_cap, replace=False).tolist())
-    return sorted(selected)
 
 
 def parse_args() -> argparse.Namespace:
@@ -164,6 +152,9 @@ def run(args: argparse.Namespace) -> None:
         )
         embeddings = np.asarray(emb).astype(np.float32)
         if is_adjusted:
+            # Adjusted ZS: project research embeddings through G and RE-ASSIGN on
+            # the projected space (intentional; PLAN_register_topic_decomposition
+            # §6.1). LR/MLP keep raw-space clusters and only project vectors.
             embeddings = register_utils.project(embeddings, G)
         scores = embeddings @ centroids.T
         assignments = scores.argmax(axis=1)
@@ -189,14 +180,26 @@ def run(args: argparse.Namespace) -> None:
     if is_adjusted:
         policy_emb = register_utils.project(policy_emb, G)
     policy_ids = load_json(embed_root / "metadata" / "policy_ids.json")
+    if policy_emb.shape[0] != len(policy_ids):
+        raise ValueError(
+            f"policy_emb has {policy_emb.shape[0]} rows but {len(policy_ids)} policy_ids"
+        )
 
     policy_scores = policy_emb @ centroids.T
     policy_assignments = policy_scores.argmax(axis=1)
 
-    # Apply segment cap
+    # Apply per-(SDG, doc) segment cap, mirroring the LR/MLP route
+    # (semantic_gap_shared.compute_sdg_semantic_gaps): each SDG caps its own
+    # assigned policy segments at --segment-cap per source_doc, so the policy
+    # sub-centroid uses at most segment_cap segments per (doc, SDG). This matches
+    # the documented --segment-cap intent and the supervised routes (it previously
+    # capped globally per doc across all SDGs, an asymmetry).
     rng = np.random.Generator(np.random.PCG64(RANDOM_SEED))
-    capped_idxs = cap_indices_per_doc(policy_ids, args.segment_cap, rng)
-    log.info("Policy: %d total segments, %d capped", len(policy_ids), len(capped_idxs))
+    capped_idxs: list[int] = []
+    for sdg_idx in range(N_SDG):
+        sdg_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
+        capped_idxs.extend(cap_policy_indices_per_doc(sdg_idxs, policy_ids, args.segment_cap, rng))
+    log.info("Policy: %d total segments, %d capped (per-SDG cap)", len(policy_ids), len(capped_idxs))
 
     pol_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
     pol_counts = np.zeros(N_SDG, dtype=np.int64)
@@ -210,34 +213,61 @@ def run(args: argparse.Namespace) -> None:
     log.info("Saved policy centroids: %s", npy_root / "policy_centroids.npy")
 
     # 4. Compute semantic gaps
+    # Reliability rule mirrors the LR/MLP route (semantic_gap_shared): a gap is
+    # unreliable (and reported as None) when the research or capped-policy cluster
+    # is too small, OR when either centroid norm is degenerate (legacy guard kept
+    # as a secondary check). This aligns ZS with the supervised routes.
     per_sdg = []
     for sdg_idx in range(N_SDG):
         r = research_centroids[sdg_idx]
         p = policy_centroids[sdg_idx]
         rn = float(np.linalg.norm(r))
         pn = float(np.linalg.norm(p))
-        if rn < args.min_centroid_norm or pn < args.min_centroid_norm:
+        n_papers = int(res_counts[sdg_idx])
+        n_policy_capped = int(pol_counts[sdg_idx])
+        cluster_small = (n_papers < MIN_CLUSTER_SIZE) or (n_policy_capped < MIN_CLUSTER_SIZE)
+        norm_degenerate = (rn < args.min_centroid_norm) or (pn < args.min_centroid_norm)
+        unreliable = cluster_small or norm_degenerate
+        if unreliable:
             sim = None
             gap = None
+            reason = "small_cluster" if cluster_small else "degenerate_centroid"
         else:
             sim = float(r @ p)
             gap = 1.0 - sim
+            reason = None
         per_sdg.append({
             "sdg": sdg_idx + 1,
-            "n_papers": int(res_counts[sdg_idx]),
-            "n_policy_capped": int(pol_counts[sdg_idx]),
+            "n_papers": n_papers,
+            "n_policy_capped": n_policy_capped,
             "semantic_similarity": sim,
             "semantic_gap": gap,
+            "unreliable": unreliable,
+            "unreliable_reason": reason,
         })
-        log.info("  SDG %2d  gap=%s  n_res=%d  n_pol=%d",
+        log.info("  SDG %2d  gap=%s  n_res=%d  n_pol=%d%s",
                  sdg_idx + 1, f"{gap:.4f}" if gap is not None else "N/A",
-                 res_counts[sdg_idx], pol_counts[sdg_idx])
+                 n_papers, n_policy_capped,
+                 "  [unreliable]" if unreliable else "")
 
     out_data = {
         "method": "zeroshot_nearest_centroid",
         "embedding_model": model,
         "embeddings": args.embeddings,
         "segment_cap": args.segment_cap,
+        # Documented assignment-space rule (PLAN_register_topic_decomposition.md §6.1):
+        # raw ZS assigns on raw embeddings, while adjusted ZS projects research
+        # texts and policy centroids through G and RE-ASSIGNS on the projected
+        # embeddings (clusters in projected space). This is intentional design,
+        # not a bug; only LR/MLP keep raw-space clusters and merely project the
+        # vectors for the gap.
+        "note": (
+            "Zero-shot assigns in the space of the embeddings used: raw gaps assign on "
+            "raw embeddings; adjusted gaps project research texts and policy centroids "
+            "through G and re-assign on projected embeddings (PLAN_register_topic_"
+            "decomposition.md §6.1). Policy segments are capped at --segment-cap per "
+            "(source_doc, SDG), matching the LR/MLP routes."
+        ),
         "per_sdg": per_sdg,
     }
     if is_adjusted:

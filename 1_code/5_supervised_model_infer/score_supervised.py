@@ -66,7 +66,6 @@ from alignment_core import verify_unit_norms
 from model_utils import (
     N_SDG,
     ZERO_NORM_EPS,
-    NORM_EPS,
     embed_dir_for_model,
     embed_research_dir_for_model,
     model_results_dir_for_model,
@@ -545,14 +544,14 @@ def run_mlp(args) -> None:
 
     log.info("Scoring %d research shards with MLP...", len(manifest["shards"]))
     emb_dim = int(manifest.get("embedding_dim") or manifest["shards"][0]["dim"])
-    d = emb_dim
+    # The centroid arrays must use the model's true input dim, not the manifest
+    # dim (defensive: they should match).
+    assert emb_dim == d, f"manifest dim {emb_dim} != MLP input dim {d}"
     sums = np.zeros((N_SDG, d), dtype=np.float64)
     counts = np.zeros(N_SDG, dtype=np.int64)
 
-    project_root = Path.cwd()
     for shard in manifest["shards"]:
-        emb_rel = Path(shard["embedding_path"])
-        emb_path = project_root / emb_rel if not emb_rel.is_absolute() else emb_rel
+        emb_path = resolve_manifest_path(shard["embedding_path"], allowed_dirs=(embed_root,))
 
         emb = np.load(emb_path).astype(np.float32)
         log.info("  Scoring shard %s  shape=%s", shard["name"], emb.shape)
@@ -601,29 +600,17 @@ def run_mlp(args) -> None:
     policy_counts = np.bincount(policy_assigned, minlength=N_SDG)
     policy_coverage = {int(sdg + 1): int(policy_counts[sdg]) for sdg in range(N_SDG)}
 
-    # -- Semantic gaps --
-    gap = np.zeros(N_SDG, dtype=np.float32)
-    for sdg_idx in range(N_SDG):
-        mask = policy_assigned == sdg_idx
-        if mask.sum() == 0:
-            gap[sdg_idx] = np.nan
-            continue
-        pol_mean = policy_emb[mask].mean(axis=0)
-        pol_norm = pol_mean / (np.linalg.norm(pol_mean) + NORM_EPS)
-        gap[sdg_idx] = 1.0 - float(mlp_research_centroids[sdg_idx] @ pol_norm)
-
-    gap_dict = {int(idx + 1): float(gap[idx]) for idx in range(N_SDG)}
-    log.info("Semantic gaps computed. Range: %.4f-%.4f",
-             min(gap_dict.values()), max(gap_dict.values()))
-
     # -- Save summary JSON --
+    # NOTE: MLP semantic gaps are no longer computed here. The single, capped
+    # source of truth is 1_semantic_gap.py --classifier mlp (writes
+    # 4_3_mlp_semantic_gap_distances.json); the uncapped in-process value below
+    # was a divergent duplicate and has been removed.
     summary = {
         "model": "MLP",
         "research_coverage": coverage,
         "research_total": total,
         "policy_coverage": policy_coverage,
         "policy_total": int(policy_counts.sum()),
-        "semantic_gaps": gap_dict,
     }
     with summary_path.open("w") as f:
         json.dump(summary, f, indent=2)
@@ -633,11 +620,8 @@ def run_mlp(args) -> None:
     print(f"  MLP scoring complete")
     print(f"  Research papers scored: {total}")
     print(f"  Policy segments scored: {int(policy_counts.sum())}")
-    print(f"  Semantic gaps saved to: {summary_path}")
-    print(f"{'=' * 60}")
-    print(f"\n  Per-SDG semantic gaps:")
-    for sdg_idx in range(1, N_SDG + 1):
-        print(f"  SDG {sdg_idx:2d}: {gap_dict[sdg_idx]:.4f}")
+    print(f"  Summary (coverage) saved to: {summary_path}")
+    print(f"  MLP semantic gaps are produced by 1_semantic_gap.py --classifier mlp")
     print(f"{'=' * 60}")
 
 

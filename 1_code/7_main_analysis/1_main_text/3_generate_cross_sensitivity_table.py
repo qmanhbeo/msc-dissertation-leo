@@ -71,21 +71,23 @@ def load_zs_gaps(m):
 
 
 def load_mlp_gaps(m):
-    p = scored_dir_for_model(m) / "mlp_scores" / "mlp_summary.json"
+    # Capped, single-source MLP gap (mirrors load_lr_gaps). Replaces the
+    # uncapped mlp_summary.json["semantic_gaps"] value, which was divergent.
+    p = output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
         data = json.load(f)
-    return {int(k): v for k, v in data["semantic_gaps"].items()}
+    return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
 
 
 def load_concept_mlp_gaps(m):
-    p = scored_dir_for_model(m) / "mlp_scores_concept" / "mlp_summary.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
         data = json.load(f)
-    return {int(k): v for k, v in data["semantic_gaps"].items()}
+    return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
 
 
 def _spearman(x, y):
@@ -1067,6 +1069,14 @@ def run(args: argparse.Namespace) -> None:
     # Zero-shot gaps are a direct input to the ZS column (canonical encoder only).
     fp_paths.append(
         output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "semantic_gap_distances.json"
+    )
+    # MLP capped raw gaps (per encoder) + concept (MPNet only) — single source.
+    for m, _ in ENC_AXIS_ENCODERS:
+        fp_paths.append(
+            output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
+        )
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json"
     )
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):

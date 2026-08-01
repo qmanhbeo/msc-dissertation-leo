@@ -617,6 +617,14 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
         "--output-dir", str(output_dir), "--embed-model", model,
     ] + _overwrite_flag(overwrite))
+    # Raw MLP semantic gap (mirrors LR raw; capped, single source of truth).
+    # Runs for every model so the cross-sensitivity table has a capped MLP gap
+    # for all three encoders (replaces the uncapped mlp_summary.json value).
+    run_step("semantic gap (MLP, raw)", [
+        sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+        "--output-dir", str(output_dir), "--embed-model", model,
+        "--classifier", "mlp",
+    ] + _overwrite_flag(overwrite))
     if model == DEFAULT_EMBED_MODEL:
         run_step("semantic gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
@@ -650,6 +658,15 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
             "--classifier", "mlp", "--embeddings", "adjusted",
+            "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
+            "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
+            "--out-data-dir", str(concept_data_dir),
+        ] + _overwrite_flag(overwrite))
+        # Raw concept-MLP semantic gap (capped, single source of truth).
+        run_step("semantic gap (concept corpus, MLP)", [
+            sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+            "--output-dir", str(output_dir), "--embed-model", model,
+            "--classifier", "mlp",
             "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
             "--out-data-dir", str(concept_data_dir),

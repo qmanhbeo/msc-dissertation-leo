@@ -137,13 +137,15 @@ def _lr_gaps(root, m):
     return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
 
 
-def _mlp_gaps(m):
-    p = scored_dir_for_model(m) / "mlp_scores" / "mlp_summary.json"
+def _mlp_gaps(root, m):
+    # Capped, single-source MLP gap (mirrors _lr_gaps). Replaces the uncapped
+    # mlp_summary.json["semantic_gaps"] value, which was divergent.
+    p = output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
     if not p.exists():
         return None
     with open(p) as f:
         data = json.load(f)
-    return {int(k): v for k, v in data["semantic_gaps"].items()}
+    return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
 
 
 def _zs_gaps(root, m):
@@ -269,7 +271,7 @@ def run(args):
             output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
             output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
             output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json",
-            scored_dir_for_model(m) / "mlp_scores" / "mlp_summary.json",
+            output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json",
         ]
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
@@ -300,7 +302,7 @@ def run(args):
         if d:
             gap_cols[f"{label} LR"] = d
     for label, m, _ in ENCODERS:
-        d = _mlp_gaps(m)
+        d = _mlp_gaps(root, m)
         if d:
             gap_cols[f"{label} MLP"] = d
     # Zero-shot is scoped to the canonical encoder only (AGENTS.md).
