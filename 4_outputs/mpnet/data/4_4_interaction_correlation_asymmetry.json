@@ -3,7 +3,7 @@
     "hypothesis": "SDGs with the highest research attention show the largest within-SDG semantic gaps (research and policy talk past each other at points of engagement).",
     "primary_test": "research_proportion vs semantic_gap (Pearson r, Spearman rho, n=17)",
     "direction_found": "NOT SUPPORTED (WEAK CORRELATION)",
-    "story": "Near-zero correlation: research attention does not predict semantic gap direction. Coverage and semantic divergence are largely independent dimensions.",
+    "story": "Near-zero raw correlation: research attention does not predict semantic gap direction, but coverage and framing are not independent \u2014 a positive topic signal is cancelled by a negative register signal (adjusted gap is positively associated with coverage divergence).",
     "caveats": [
       "n=17 SDGs in the primary test gives low statistical power.",
       "SDG 4 research proportion (22%) may be inflated by ML 'learning' terminology.",
