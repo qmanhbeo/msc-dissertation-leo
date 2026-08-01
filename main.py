@@ -180,7 +180,7 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--stage",
-        choices=["fetch", "preprocess", "segment", "embed", "train", "infer", "centroids", "analysis"],
+        choices=["fetch", "preprocess", "segment", "embed", "train", "infer", "centroids", "register_adjust", "analysis"],
         help="Run a single pipeline stage (assumes upstream outputs exist).",
     )
     p.add_argument("--corpus",
@@ -1017,6 +1017,17 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         run_step("build SDG reference centroids", [sys.executable, "1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
         run_step("check centroid consistency", [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
         run_step("build centroid similarity matrix", [sys.executable, "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py", "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(args.overwrite))
+
+    elif stage == "register_adjust":
+        # New register-topic decomposition stage (PLAN_register_topic_decomposition.md §6.1):
+        # run INLP on research+policy embeddings and materialise ONLY the orthonormal
+        # projection matrix G to gitignored 2_data/. No --output-dir (never touches
+        # 4_outputs/); track is derived from --embed-model inside the script.
+        run_step(
+            "register_adjust (INLP -> G)",
+            [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
+             "--embed-model", model] + _overwrite_flag(args.overwrite),
+        )
 
     elif stage == "analysis":
         if model != DEFAULT_EMBED_MODEL:
