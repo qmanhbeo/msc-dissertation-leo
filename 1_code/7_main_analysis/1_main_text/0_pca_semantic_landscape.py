@@ -430,7 +430,6 @@ def run(args: argparse.Namespace) -> None:
     log.info("Saved: %s", png_path)
 
     metadata = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "random_seed": args.seed,
         "balanced_sampling_used": True,
         "total_research_embeddings_available": int(total_research),

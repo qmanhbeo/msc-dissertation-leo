@@ -66,6 +66,7 @@ from model_utils import (
     scored_dir_for_model,
     resolve_model_alias,
 )
+import register_utils
 from register_utils import load_G, project
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from research_embedding_shards import load_sampled_research_embeddings, total_research_embedding_rows
@@ -510,7 +511,6 @@ def run(args: argparse.Namespace) -> None:
 
     # --- Metadata + macros ---
     metadata = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "random_seed": args.seed,
         "balanced_sampling_used": True,
         "total_research_embeddings_available": int(total_research),
