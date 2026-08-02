@@ -39,14 +39,14 @@
 %% ====================  ROW 3: SEGMENT  ====================
 
 \node[t2, below=of r_prep] (r_seg) {\textbf{Segment}\\token-aware segmenter\\(3,105,144)};
-\node[t3, below=of p_prep] (p_seg) {\textbf{Segment + Merge}\\4 sources $\rightarrow$ segment\_text\\dedup $\rightarrow$ 40,547};
-\node[t1, below=of ref_prep] (ref_seg) {\textbf{Segment + Bypass}\\3 seg (KH, SDGi, Aurora);\\2 bypass (OSDG, Benchmark)\\(62,513 total)};
+\node[t3, below=of p_prep] (p_seg) {\textbf{Segment + Merge}\\4 sources $\rightarrow$ segment\_text\\dedup $\rightarrow$ 40,597};
+\node[t1, below=of ref_prep] (ref_seg) {\textbf{Segment + Bypass}\\3 seg (KH, SDGi, Aurora);\\2 bypass (OSDG, Benchmark)\\(62,173 total)};
 
 %% ====================  ROW 4: EMBED  ====================
 
 \node[shared, below=1.2cm of p_seg] (embed)
   {\textbf{Embedding}\\all-mpnet-base-v2 (768d, L2-normalised)\\
-   \textnormal{Research 3,105,144 $\mid$ Policy 40,547 $\mid$ Reference 62,513 $\mid$ Total 3,208,204}};
+   \textnormal{Research 3,105,144 $\mid$ Policy 40,597 $\mid$ Reference 62,173 $\mid$ Total 3,207,914}};
 
 %% ====================  ROW 5: TRAIN + SCORE  ====================
 
@@ -54,13 +54,13 @@
   {\textbf{Score Research}\\LR argmax over 17 SDGs\\(3,105,144 assignments)};
 
 \node[t3, right=0.3cm of score_res] (score_pol)
-  {\textbf{Score Policy}\\LR argmax over 17 SDGs\\(40,547 assignments)};
+  {\textbf{Score Policy}\\LR argmax over 17 SDGs\\(40,597 assignments)};
 
 \node[t1, right=0.3cm of score_pol] (train)
-  {\textbf{Train LR Classifier}\\Reference pool: 62,513\\
-   $\rightarrow$ 52,779 train / 9,734 test\\
+  {\textbf{Train LR Classifier}\\Reference pool: 62,173\\
+   $\rightarrow$ 52,835 train / 9,338 test\\
    $C=10$, L2, lbfgs\\
-   Macro-$F_1 = 0.823$};
+   Macro-$F_1 = 0.817$};
 
 %% ====================  ROW 6: ANALYSIS  ====================
 

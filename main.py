@@ -602,6 +602,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--output-dir", str(output_dir), "--embed-model", model,
             "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
             "--out-data-dir", str(concept_data_dir),
+            "--out-tables-dir", str(concept_data_dir / "tables"),
         ] + _overwrite_flag(overwrite))
 
     # ==== STAGE 8: REGISTER ADJUSTMENT (INLP -> G) ===========================
@@ -632,6 +633,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroids", str(concept_centroids),
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
+            "--out-tables-dir", str(concept_data_dir / "tables"),
         ] + _overwrite_flag(overwrite))
     # Adjusted semantic gap (LR + MLP) — needs G
     run_step("semantic gap (adjusted, LR)", [
@@ -652,6 +654,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroids", str(concept_centroids),
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
+            "--out-tables-dir", str(concept_data_dir / "tables"),
         ] + _overwrite_flag(overwrite))
         mlp_concept_dir = scored_dir_for_model(model) / "mlp_scores_concept"
         run_step("semantic gap (concept corpus, MLP adjusted)", [
@@ -661,6 +664,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
             "--out-data-dir", str(concept_data_dir),
+            "--out-tables-dir", str(concept_data_dir / "tables"),
         ] + _overwrite_flag(overwrite))
         # Raw concept-MLP semantic gap (capped, single source of truth).
         run_step("semantic gap (concept corpus, MLP)", [
@@ -670,6 +674,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
             "--out-data-dir", str(concept_data_dir),
+            "--out-tables-dir", str(concept_data_dir / "tables"),
         ] + _overwrite_flag(overwrite))
         # Adjusted zeroshot (MPNet only)
         run_step(
