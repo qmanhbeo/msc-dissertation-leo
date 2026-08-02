@@ -26,10 +26,9 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from collections import defaultdict
-
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_results_dir_for_model, model_slug, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
+from semantic_gap_shared import document_weighted_policy_profile, load_route_coverage_gap
 
 SDG_NAMES = {
     1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
@@ -382,10 +381,15 @@ def load_mlp_covgaps(m):
     """Document-weighted coverage gap for MLP assignment.
 
     Research counts from mlp_summary.json (already doc-level: 1 paper = 1 doc).
-    Policy profile computed from mlp_policy_scores.npy grouped by source_doc.
+    Policy profile uses the shared A19 document-weighting (single source of truth),
+    preferring the persisted mlp_coverage_document_weighted.json when available.
 
     Returns {sdg: |res% - pol%|} or None if data missing.
     """
+    cached = load_route_coverage_gap(m, "mlp")
+    if cached is not None:
+        return cached
+
     scored_dir = scored_dir_for_model(m)
     summary_path = scored_dir / "mlp_scores" / "mlp_summary.json"
     if not summary_path.exists():
@@ -403,19 +407,7 @@ def load_mlp_covgaps(m):
     with open(ids_path) as f:
         policy_ids = json.load(f)
 
-    # Group segments by source_doc, average per-doc, argmax
-    doc_to_rows = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    doc_assignments = np.empty(n_docs, dtype=np.int32)
-    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_assignments[d_idx] = doc_vec.argmax()
-
-    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    pol_profile = pol_counts / pol_counts.sum()
+    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -425,16 +417,28 @@ def load_mlp_covgaps(m):
     return gaps
 
 
-def load_zs_covgaps(m):
+def load_zs_covgaps(m, concept: bool = False):
     """Document-weighted coverage gap for zero-shot nearest-centroid assignment.
 
     Research counts from ZS semantic_gap_distances.json (already doc-level).
-    Policy profile computed fresh by scoring policy embeddings against
-    SDG reference centroids, then document-weighting.
+    Policy profile uses the shared A19 document-weighting (single source of truth),
+    preferring the persisted zs_coverage_document_weighted.json when available.
+
+    When `concept=True`, loads the concept-retrieved variant
+    (data/concept/semantic_gap_distances.json + zeroshot_concept/research_centroids.npy)
+    instead of the canonical keyword route.
 
     Returns {sdg: |res% - pol%|} or None if data missing.
     """
-    gap_path = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+    cached = load_route_coverage_gap(m, "zs")
+    if cached is not None and not concept:
+        return cached
+
+    gap_path = (
+        output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances.json"
+        if concept
+        else output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+    )
     if not gap_path.exists():
         return None
     with open(gap_path) as f:
@@ -445,7 +449,11 @@ def load_zs_covgaps(m):
     embed_dir = embed_dir_for_model(m)
     emb_path = embed_dir / "policy.npy"
     ids_path = embed_dir / "metadata" / "policy_ids.json"
-    centroids_path = scored_dir_for_model(m) / "sdg_centroids.npy"
+    centroids_path = (
+        scored_dir_for_model(m) / "zeroshot_concept" / "research_centroids.npy"
+        if concept
+        else scored_dir_for_model(m) / "sdg_centroids.npy"
+    )
     if not (emb_path.exists() and ids_path.exists() and centroids_path.exists()):
         return None
 
@@ -456,19 +464,7 @@ def load_zs_covgaps(m):
 
     policy_scores = policy_emb @ centroids.T
 
-    # Document-weighted profile
-    doc_to_rows = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    doc_assignments = np.empty(n_docs, dtype=np.int32)
-    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_assignments[d_idx] = doc_vec.argmax()
-
-    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    pol_profile = pol_counts / pol_counts.sum()
+    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -496,18 +492,7 @@ def load_concept_mlp_covgaps(m):
     with open(ids_path) as f:
         policy_ids = json.load(f)
 
-    doc_to_rows = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    doc_assignments = np.empty(n_docs, dtype=np.int32)
-    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_assignments[d_idx] = doc_vec.argmax()
-
-    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    pol_profile = pol_counts / pol_counts.sum()
+    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -515,6 +500,15 @@ def load_concept_mlp_covgaps(m):
         res_share = res_counts.get(sdg, 0) / res_total
         gaps[sdg] = float(abs(res_share - pol_profile[i]))
     return gaps
+
+
+def load_concept_zs_covgaps(m):
+    """Concept-retrieved zero-shot coverage gap (mirrors load_concept_mlp_covgaps).
+
+    Unused by current tables but kept available so a concept-ZS coverage column
+    resolves the correct concept centroids rather than the keyword sdg_centroids.npy.
+    """
+    return load_zs_covgaps(m, concept=True)
 
 
 def load_concept_lr_gaps(m):

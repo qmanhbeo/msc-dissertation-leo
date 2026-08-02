@@ -509,9 +509,13 @@ def main() -> None:
     for sdg_label, f1_s in per_sdg.items():
         log.info("  %s: %.4f", sdg_label, f1_s)
 
-    # ── Confusion matrix CSV (LR only) ─────────────────────────────────
-    # Rows = predicted SDG (classifier argmax), Columns = true SDG (human label)
-    # This is sklearn's default confusion_matrix convention.
+    # ── Confusion matrix CSV ──────────────────────────────────────────
+    # LR is single-label (softmax argmax) → sklearn confusion matrix (rows=pred, cols=true).
+    # MLP is multi-label (independent per-class sigmoid) → a single-label confusion
+    # matrix does not apply; instead emit a per-SDG binary (2x2) confusion summary
+    # at a fixed probability threshold.
+    cm_dir = output_dir_for_model(args.embed_model) / "data"
+    cm_dir.mkdir(parents=True, exist_ok=True)
     if args.classifier_type == "lr":
         y_true_int = Y_test.argmax(axis=1)              # (n_test,) ground-truth SDG 0-16
         y_pred_int = test_preds.argmax(axis=1)          # (n_test,) single-label prediction
@@ -522,13 +526,26 @@ def main() -> None:
         for i in range(N_SDG):
             cm_rows.append(f"SDG {i+1}," + ",".join(str(int(cm[i, j])) for j in range(N_SDG)))
 
-        cm_dir = output_dir_for_model(args.embed_model) / "data"
-        cm_dir.mkdir(parents=True, exist_ok=True)
         cm_path = cm_dir / "4_1_confusion_matrix.csv"
         cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")
         log.info("Saved confusion matrix CSV (ROWS=pred, COLS=true): %s", cm_path)
-    else:
-        log.info("Skipping confusion matrix CSV (non-canonical classifier %s)", args.classifier_type)
+    elif args.classifier_type == "mlp":
+        MLP_CONFUSION_THRESHOLD = 0.5
+        y_true_bin = Y_test                                   # (n_test, N_SDG) one-hot ground truth
+        y_pred_bin = (test_probs >= MLP_CONFUSION_THRESHOLD).astype(np.int64)
+        cm_rows = ["sdg,tn,fp,fn,tp,precision,recall"]
+        for k in range(N_SDG):
+            tn = int(((y_true_bin[:, k] == 0) & (y_pred_bin[:, k] == 0)).sum())
+            fp = int(((y_true_bin[:, k] == 0) & (y_pred_bin[:, k] == 1)).sum())
+            fn = int(((y_true_bin[:, k] == 1) & (y_pred_bin[:, k] == 0)).sum())
+            tp = int(((y_true_bin[:, k] == 1) & (y_pred_bin[:, k] == 1)).sum())
+            prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+            rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+            cm_rows.append(f"SDG {k+1},{tn},{fp},{fn},{tp},{prec:.4f},{rec:.4f}")
+        cm_path = cm_dir / "4_1_confusion_matrix_mlp.csv"
+        cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")
+        log.info("Saved MLP per-SDG confusion matrix (threshold=%.2f): %s",
+                 MLP_CONFUSION_THRESHOLD, cm_path)
 
     # ── Save ───────────────────────────────────────────────────────────
     if args.classifier_type == "mlp":

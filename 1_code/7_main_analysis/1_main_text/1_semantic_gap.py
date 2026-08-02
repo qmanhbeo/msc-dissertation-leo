@@ -293,48 +293,44 @@ def run(args: argparse.Namespace) -> None:
                  r["sdg"], r["semantic_gap"], r["semantic_similarity"],
                  r["n_papers"], r["n_policy_docs_capped"])
 
-    # ---- Sensitivity analyses (LR only; skip for MLP) ----
-    if is_mlp:
-        sens_lo = primary_results  # placeholder; not used for MLP output
-        sens_none = primary_results
-    else:
-        log.info("")
-        log.info("=" * 60)
-        log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
-        log.info("=" * 60)
-        rng_lo = np.random.default_rng(RANDOM_SEED)
-        sens_lo, _ = compute_sdg_semantic_gaps(
-            research_centroids, research_counts, research_cohesions,
-            policy_emb, policy_assignments,
-            policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
-        )
+    # ---- Sensitivity analyses (LR and MLP use the same computation) ----
+    log.info("")
+    log.info("=" * 60)
+    log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
+    log.info("=" * 60)
+    rng_lo = np.random.default_rng(RANDOM_SEED)
+    sens_lo, _ = compute_sdg_semantic_gaps(
+        research_centroids, research_counts, research_cohesions,
+        policy_emb, policy_assignments,
+        policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
+    )
 
-        log.info("")
-        log.info("=" * 60)
-        log.info("SENSITIVITY: no segment cap (uncapped)")
-        log.info("=" * 60)
-        sens_none, _ = compute_sdg_semantic_gaps(
-            research_centroids, research_counts, research_cohesions,
-            policy_emb, policy_assignments,
-            policy_ids, SEGMENT_CAP_SENS_NONE, rng_lo
-        )
+    log.info("")
+    log.info("=" * 60)
+    log.info("SENSITIVITY: no segment cap (uncapped)")
+    log.info("=" * 60)
+    sens_none, _ = compute_sdg_semantic_gaps(
+        research_centroids, research_counts, research_cohesions,
+        policy_emb, policy_assignments,
+        policy_ids, SEGMENT_CAP_SENS_NONE, rng_lo
+    )
 
-        # Check sensitivity: do rankings change substantially across caps?
-        # A finding is robust if its gap rank is stable across caps.
-        log.info("")
-        log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
-        log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "none")
-        log.info("  " + "-" * 48)
-        for i in range(N_SDG):
-            sdg = i + 1
-            g20   = sens_lo[i]["semantic_gap"]
-            g50   = primary_results[i]["semantic_gap"]
-            gnone = sens_none[i]["semantic_gap"]
-            vals = [g20, g50, gnone]
-            if any(v is None for v in vals):
-                log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 3))
-            else:
-                log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, gnone)
+    # Check sensitivity: do rankings change substantially across caps?
+    # A finding is robust if its gap rank is stable across caps.
+    log.info("")
+    log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
+    log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "none")
+    log.info("  " + "-" * 48)
+    for i in range(N_SDG):
+        sdg = i + 1
+        g20   = sens_lo[i]["semantic_gap"]
+        g50   = primary_results[i]["semantic_gap"]
+        gnone = sens_none[i]["semantic_gap"]
+        vals = [g20, g50, gnone]
+        if any(v is None for v in vals):
+            log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 3))
+        else:
+            log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, gnone)
 
     # ---- Build output JSON ----
     primary_out = {

@@ -10,8 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections import defaultdict
 from pathlib import Path
+
 
 import numpy as np
 
@@ -25,6 +25,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_slug, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
+from semantic_gap_shared import document_weighted_policy_profile, load_route_coverage_gap
 
 # ---------------------------------------------------------------------------
 # Coverage gap loaders
@@ -43,6 +44,10 @@ def _lr_covgaps(root, m):
 
 
 def _mlp_covgaps(m):
+    cached = load_route_coverage_gap(m, "mlp")
+    if cached is not None:
+        return cached
+
     scored_dir = scored_dir_for_model(m)
     summary_path = scored_dir / "mlp_scores" / "mlp_summary.json"
     if not summary_path.exists():
@@ -60,18 +65,7 @@ def _mlp_covgaps(m):
     with open(ids_path) as f:
         policy_ids = json.load(f)
 
-    doc_to_rows = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    doc_assignments = np.empty(n_docs, dtype=np.int32)
-    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_assignments[d_idx] = doc_vec.argmax()
-
-    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    pol_profile = pol_counts / pol_counts.sum()
+    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -81,8 +75,12 @@ def _mlp_covgaps(m):
     return gaps
 
 
-def _zs_covgaps(root, m):
-    gap_path = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+def _zs_covgaps(root, m, concept: bool = False):
+    gap_path = (
+        output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances.json"
+        if concept
+        else output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+    )
     if not gap_path.exists():
         return None
     with open(gap_path) as f:
@@ -93,7 +91,11 @@ def _zs_covgaps(root, m):
     embed_dir = embed_dir_for_model(m)
     emb_path = embed_dir / "policy.npy"
     ids_path = embed_dir / "metadata" / "policy_ids.json"
-    centroids_path = scored_dir_for_model(m) / "sdg_centroids.npy"
+    centroids_path = (
+        scored_dir_for_model(m) / "zeroshot_concept" / "research_centroids.npy"
+        if concept
+        else scored_dir_for_model(m) / "sdg_centroids.npy"
+    )
     if not (emb_path.exists() and ids_path.exists() and centroids_path.exists()):
         return None
 
@@ -104,18 +106,7 @@ def _zs_covgaps(root, m):
 
     policy_scores = policy_emb @ centroids.T
 
-    doc_to_rows = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    doc_assignments = np.empty(n_docs, dtype=np.int32)
-    for d_idx, (_, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_assignments[d_idx] = doc_vec.argmax()
-
-    pol_counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    pol_profile = pol_counts / pol_counts.sum()
+    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -176,6 +167,15 @@ def _concept_gaps(root, m):
     with open(p) as f:
         data = json.load(f)
     return {row["sdg"]: row["semantic_gap"] for row in data["per_sdg"] if row["semantic_gap"] is not None}
+
+
+def _concept_zs_covgaps(root, m):
+    """Concept-retrieved zero-shot coverage gap (mirrors _concept_gaps).
+
+    Unused by current tables but kept available so a concept-ZS coverage column
+    resolves the correct concept centroids rather than the keyword sdg_centroids.npy.
+    """
+    return _zs_covgaps(root, m, concept=True)
 
 
 # ---------------------------------------------------------------------------

@@ -69,9 +69,9 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_NAMES, SDG_NUM_WORDS, embed_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_NAMES, SDG_NUM_WORDS, embed_dir_for_model, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
-from semantic_gap_shared import latex_int
+from semantic_gap_shared import latex_int, document_weighted_policy_profile
 
 # ---------------------------------------------------------------------------
 # Config
@@ -182,6 +182,75 @@ def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarra
     return np.abs(research_profile - policy_profile)
 
 
+def _route_coverage_payload(model: str, route: str) -> dict | None:
+    """Build the coverage-gap payload for route 'mlp' or 'zs'.
+
+    Research proportions come from the route's own assignment counts; the policy
+    profile uses the shared A19 document-weighting (document_weighted_policy_profile).
+    Returns None if the route's inputs are absent (e.g. a model without that route).
+    """
+    if route == "mlp":
+        scored_dir = scored_dir_for_model(model)
+        summary_path = scored_dir / "mlp_scores" / "mlp_summary.json"
+        scores_path = scored_dir / "mlp_scores" / "mlp_policy_scores.npy"
+        ids_path = scored_dir / "metadata" / "policy_scores_ids.json"
+        if not (summary_path.exists() and scores_path.exists() and ids_path.exists()):
+            return None
+        with open(summary_path) as f:
+            summary = json.load(f)
+        res_counts = {int(k): v for k, v in summary["research_coverage"].items()}
+        res_total = summary["research_total"]
+        policy_scores = np.load(scores_path)
+        with open(ids_path) as f:
+            policy_ids = json.load(f)
+    else:  # zs
+        gap_path = output_dir_for_model(model) / "data" / "semantic_gap_distances.json"
+        embed_dir = embed_dir_for_model(model)
+        emb_path = embed_dir / "policy.npy"
+        ids_path = embed_dir / "metadata" / "policy_ids.json"
+        centroids_path = scored_dir_for_model(model) / "sdg_centroids.npy"
+        if not (gap_path.exists() and emb_path.exists() and ids_path.exists() and centroids_path.exists()):
+            return None
+        with open(gap_path) as f:
+            data = json.load(f)
+        res_counts = {r["sdg"]: r["n_papers"] for r in data["per_sdg"]}
+        res_total = sum(res_counts.values())
+        policy_emb = np.load(emb_path).astype(np.float32)
+        with open(ids_path) as f:
+            policy_ids = json.load(f)
+        centroids = np.load(centroids_path).astype(np.float32)
+        policy_scores = policy_emb @ centroids.T
+
+    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
+
+    sdg_labels = [f"SDG{i+1}" for i in range(N_SDG)]
+
+    def make_sdg_dict(arr: np.ndarray) -> dict:
+        return {sdg_labels[i]: round(float(v), 6) for i, v in enumerate(arr)}
+
+    res_profile = np.zeros(N_SDG, dtype=np.float64)
+    for sdg, c in res_counts.items():
+        res_profile[sdg - 1] = c / res_total
+    gap = np.abs(res_profile - pol_profile)
+
+    return {
+        "method": "document_weighted",
+        "route": route,
+        "note": (
+            f"Document-weighted coverage gap for the {route.upper()} assignment route. "
+            "Policy profile uses document-weighted assignment (Assumption A19); "
+            "research profile uses the route's own hard-assignment counts. "
+            "Coverage gap = |research_proportion - policy_proportion| per SDG."
+        ),
+        "n_policy_documents": int(pol_profile.shape[0]),
+        "research_profile_hard": make_sdg_dict(res_profile),
+        "policy_profile_hard_docweighted": make_sdg_dict(pol_profile),
+        "coverage_gap_hard": make_sdg_dict(gap),
+        "coverage_gap_total": round(float(gap.sum()), 6),
+        "coverage_gap_mean": round(float(gap.mean()), 6),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Args
 # ---------------------------------------------------------------------------
@@ -215,12 +284,14 @@ def run(args: argparse.Namespace) -> None:
         Path(args.out_tables_dir).mkdir(parents=True, exist_ok=True)
     out_cov_gap = Path(args.out_data_dir).joinpath("4_2_coverage_document_weighted.json") if args.out_data_dir else layout.data_dir / "4_2_coverage_document_weighted.json"
     out_cov_gap_raw = Path(args.out_data_dir).joinpath("4_2_coverage_diagnostic_unweighted.json") if args.out_data_dir else layout.data_dir / "4_2_coverage_diagnostic_unweighted.json"
+    out_cov_gap_mlp = layout.data_dir / "mlp_coverage_document_weighted.json"
+    out_cov_gap_zs = layout.data_dir / "zs_coverage_document_weighted.json"
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
     SCRIPT_VERSION = "1"
     PRIMARY = out_cov_gap
-    OUTPUTS = [out_cov_gap, out_cov_gap_raw]
+    OUTPUTS = [out_cov_gap, out_cov_gap_raw, out_cov_gap_mlp, out_cov_gap_zs]
     fp = fingerprint_of(PAPER_SCORES_MANIFEST, POLICY_SCORES, POLICY_IDS,
                         embed_dir_for_model(model) / "policy.npy",
                         scored_dir / "research_centroids.npy")
@@ -398,6 +469,20 @@ def run(args: argparse.Namespace) -> None:
     with out_cov_gap_raw.open("w", encoding="utf-8") as f:
         json.dump(coverage_gap_raw_out, f, indent=2)
     log.info("Saved: %s", out_cov_gap_raw)
+
+    # ---- Persist MLP/ZS route coverage gaps (single source of truth) ----
+    # Skipped under the concept override (--out-data-dir): the route JSONs are only
+    # meaningful for the canonical main-text run.
+    if args.out_data_dir is None:
+        for route, out_path in (("mlp", out_cov_gap_mlp), ("zs", out_cov_gap_zs)):
+            payload = _route_coverage_payload(model, route)
+            if payload is None:
+                log.info("Skipping %s coverage JSON (route inputs absent for model %s)",
+                         route.upper(), model)
+                continue
+            with out_path.open("w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2)
+            log.info("Saved: %s", out_path)
 
     log.info("")
     log.info("Next step: python 1_code/7_main_analysis/1_main_text/1_semantic_gap.py")

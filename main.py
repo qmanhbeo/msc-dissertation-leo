@@ -466,7 +466,7 @@ def _concept_retrieval_paths(model: str, output_dir: Path) -> dict:
         concept_scores_dir=scored_dir_for_model(model) / "paper_scores_shards_concept",
         concept_data_dir=output_dir_for_model(model, root=output_dir) / "data" / "concept",
         concept_centroids=scored_dir_for_model(model) / "research_concept_centroids.npy",
-        concept_centroids_meta=scored_dir_for_model(model) / "metadata" / "research_centroid_meta.json",
+        concept_centroids_meta=scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json",
     )
 
 
@@ -676,6 +676,19 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "zero-shot nearest-centroid (adjusted)",
             [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
              "--embed-model", model, "--output-dir", str(output_dir),
+             "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
+        )
+        # Concept-retrieved adjusted zeroshot (MPNet only): mirrors the keyword
+        # adjusted-ZS step but scores the concept-retrieved corpus via the
+        # distinct embedding manifest / output dirs, restoring ZS raw+adjusted
+        # symmetry across the retrieval axis.
+        run_step(
+            "zero-shot concept research corpus (adjusted)",
+            [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
+             "--embed-model", model,
+             "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+             "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
+             "--data-dir", str(concept_data_dir),
              "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
         )
     # PCA: semantic landscape + register before/after (MPNet only, fixed paths)

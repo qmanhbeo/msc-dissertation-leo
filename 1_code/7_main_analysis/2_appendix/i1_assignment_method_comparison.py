@@ -64,6 +64,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_slug, output_dir_for_model, preprocessed_dir, scored_dir_for_model, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from shard_pipeline_utils import load_json, resolve_manifest_path
+from semantic_gap_shared import doc_level_assignments
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -120,15 +121,11 @@ def confusion(assign_a: np.ndarray, assign_b: np.ndarray) -> list[list[int]]:
 
 
 def doc_level_assignment(score_matrix: np.ndarray, policy_ids: list[dict]) -> np.ndarray:
-    """Document-level assignment: mean score per source_doc, then argmax."""
-    doc_to_rows: dict[str, list[int]] = {}
-    for i, row in enumerate(policy_ids):
-        doc_to_rows.setdefault(row["source_doc"], []).append(i)
-    n_docs = len(doc_to_rows)
-    out = np.empty(n_docs, dtype=np.int32)
-    for d_idx, row_idxs in enumerate(doc_to_rows.values()):
-        out[d_idx] = score_matrix[row_idxs].mean(axis=0).argmax()
-    return out
+    """Document-level assignment: mean score per source_doc, then argmax.
+
+    Delegates to the single source of truth in semantic_gap_shared.
+    """
+    return doc_level_assignments(score_matrix, policy_ids)
 
 
 def gap_ranks(path: Path) -> dict[int, int]:

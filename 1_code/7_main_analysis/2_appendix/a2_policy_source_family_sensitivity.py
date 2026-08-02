@@ -110,28 +110,14 @@ def document_weighted_policy_profile_subset(
     policy_ids: list[dict],
     subset_indices: list[int],
 ) -> tuple[np.ndarray, dict[str, dict]]:
-    doc_to_rows: dict[str, list[int]] = defaultdict(list)
-    for idx in subset_indices:
-        doc_to_rows[policy_ids[idx]["source_doc"]].append(idx)
-
-    n_docs = len(doc_to_rows)
-    if n_docs == 0:
+    # Delegates to the single source of truth for Assumption A19 document-weighting
+    # (semantic_gap_shared.document_weighted_policy_profile), restricted to the
+    # subset's policy row indices.
+    if not subset_indices:
         raise RuntimeError("Subset has no policy documents.")
-
-    doc_vectors = np.zeros((n_docs, N_SDG), dtype=np.float32)
-    doc_meta: dict[str, dict] = {}
-    for d_idx, (source_doc, row_idxs) in enumerate(doc_to_rows.items()):
-        doc_vec = policy_scores[row_idxs].mean(axis=0)
-        doc_vectors[d_idx] = doc_vec
-        doc_meta[source_doc] = {
-            "n_segments": len(row_idxs),
-            "sdg_assignment": int(doc_vec.argmax()) + 1,
-        }
-
-    doc_assignments = doc_vectors.argmax(axis=1)
-    counts = np.bincount(doc_assignments, minlength=N_SDG).astype(np.float64)
-    hard_profile = counts / counts.sum()
-    return hard_profile, doc_meta
+    return semantic_gap_shared.document_weighted_policy_profile(
+        policy_scores, policy_ids, subset_indices=subset_indices
+    )
 
 
 def compute_family_semantic_rows(

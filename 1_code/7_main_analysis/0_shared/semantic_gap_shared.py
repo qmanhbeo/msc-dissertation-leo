@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import csv
+import json
 import logging
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model, scored_dir_for_model
+from model_utils import (
+    DEFAULT_EMBED_MODEL,
+    N_SDG,
+    embed_dir_for_model,
+    output_dir_for_model,
+    scored_dir_for_model,
+)
 from shard_pipeline_utils import load_json
 
 
@@ -74,6 +81,101 @@ def build_mlp_centroid_meta(model: str = DEFAULT_EMBED_MODEL) -> list[dict]:
             "zero_flag": norm < 1e-8,
         })
     return meta
+
+
+# ---------------------------------------------------------------------------
+# Document-weighted policy profile (Assumption A19) — single source of truth
+# ---------------------------------------------------------------------------
+def document_weighted_policy_profile(
+    policy_scores: np.ndarray,
+    policy_ids: list[dict],
+    subset_indices: list[int] | None = None,
+) -> tuple[np.ndarray, dict[str, dict]]:
+    """Canonical document-weighted hard-assignment policy profile (Assumption A19).
+
+    Each unique source_doc contributes equally regardless of how many segments it
+    contains. For each document, average its segment score vectors, hard-assign to
+    the top SDG (argmax), then compute the proportion of documents assigned to each
+    SDG.
+
+    This is the SINGLE source of truth for the A19 document-weighting logic, used by
+    the LR/MLP/ZS coverage gaps and the policy-source-family sensitivity analysis.
+    All prior inline copies have been replaced by this function so that a change to
+    the weighting propagates to every route.
+
+    Returns (hard_profile, doc_meta):
+      hard_profile: (N_SDG,) float64 proportion of documents per SDG (sums to 1.0).
+      doc_meta: {source_doc: {"n_segments": int, "sdg_assignment": int (1-indexed)}}.
+
+    If subset_indices is given, only those policy row indices are considered.
+    """
+    doc_to_rows: dict[str, list[int]] = defaultdict(list)
+    if subset_indices is None:
+        for i, r in enumerate(policy_ids):
+            doc_to_rows[r["source_doc"]].append(i)
+    else:
+        for i in subset_indices:
+            doc_to_rows[policy_ids[i]["source_doc"]].append(i)
+
+    n_docs = len(doc_to_rows)
+    doc_vectors = np.zeros((n_docs, N_SDG), dtype=np.float32)
+    doc_meta: dict[str, dict] = {}
+    for d_idx, (source_doc, row_idxs) in enumerate(doc_to_rows.items()):
+        doc_vec = policy_scores[row_idxs].mean(axis=0).astype(np.float32)
+        doc_vectors[d_idx] = doc_vec
+        doc_meta[source_doc] = {
+            "n_segments": len(row_idxs),
+            "sdg_assignment": int(doc_vec.argmax()) + 1,
+        }
+
+    doc_assignments = doc_vectors.argmax(axis=1)
+    counts = np.bincount(doc_assignments, minlength=N_SDG).astype(np.float64)
+    hard_profile = counts / counts.sum()
+    return hard_profile, doc_meta
+
+
+def doc_level_assignments(
+    score_matrix: np.ndarray,
+    policy_ids: list[dict],
+) -> np.ndarray:
+    """Document-level SDG assignment: mean score per source_doc, then argmax.
+
+    Returns an (n_docs,) int32 array aligned with the unique source_docs in
+    policy_ids insertion order. Used by cross-method assignment comparison.
+    """
+    doc_to_rows: dict[str, list[int]] = defaultdict(list)
+    for i, row in enumerate(policy_ids):
+        doc_to_rows[row["source_doc"]].append(i)
+    n_docs = len(doc_to_rows)
+    out = np.empty(n_docs, dtype=np.int32)
+    for d_idx, row_idxs in enumerate(doc_to_rows.values()):
+        out[d_idx] = score_matrix[row_idxs].mean(axis=0).argmax()
+    return out
+
+
+def load_route_coverage_gap(model: str, route: str) -> dict[int, float] | None:
+    """Load a persisted route coverage-gap JSON for the cross-sensitivity tables.
+
+    route: "mlp" or "zs". Returns {sdg: |res% - pol%|} or None if the persisted
+    artifact is absent (e.g. a model without that route). Falls back to on-the-fly
+    computation in the caller via `document_weighted_policy_profile`.
+    """
+    suffix = {
+        "mlp": "mlp_coverage_document_weighted.json",
+        "zs": "zs_coverage_document_weighted.json",
+    }.get(route)
+    if suffix is None:
+        return None
+    p = output_dir_for_model(model) / "data" / suffix
+    if not p.exists():
+        return None
+    with open(p) as f:
+        data = json.load(f)
+    cg = data.get("coverage_gap_hard")
+    if not cg:
+        return None
+    return {int(k[3:]): float(v) for k, v in cg.items()}
+
 
 SEGMENT_CAP_PRIMARY = 50
 SEGMENT_CAP_SENS_LO = 20
