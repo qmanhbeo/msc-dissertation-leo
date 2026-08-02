@@ -221,7 +221,7 @@ A text is assigned to the SDG with the highest predicted probability from the tr
 
 Because the classifier is trained on pooled reference data that are themselves policy-adjacent (Section~\ref{sec:supervised-classifier}), the scoring instrument behaves differently on the two corpora. Policy segments receive systematically higher LR predicted probabilities than research abstracts (mean \AffFifteenPolicyScore{} vs \AffFifteenPaperScore{}, a \AffFifteenDiff{} gap). The gap has two causes the data cannot separate: a genre artefact (the reference data skew toward policy vocabulary) or a substantive difference (policy texts address SDG implementation more directly). Either way the asymmetry does not threaten the findings: hard argmax assignment uses only within-corpus ranking, not absolute probability levels, so the directional gap does not reorder goals. It is not an SDGi circularity effect: the training set and scored policy corpus are disjoint by construction.
 
-The combined PCA landscape visualises this asymmetry (Figure~\ref{fig:pca-semantic-landscape}, Results): the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
+The combined PCA landscape visualises this asymmetry (Figure~\ref{fig:pca-register-before-after}a, Results): the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
 
 \subsection{Coverage Gap Analysis}
 
@@ -332,14 +332,7 @@ The coverage-gap ranking is stable across embedding architectures and retrieval 
 
 \subsection{Semantic Gap after Register Removal}\label{sec:semantic-gap}
 
-Figure~\ref{fig:pca-semantic-landscape} shows the combined research--policy embedding space: the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{fig1_pca_semantic_landscape.pdf}
-\caption{PCA semantic landscape of the combined research--policy embedding space. Descriptive two-dimensional projection only; formal semantic distances are computed in the original embedding space.}
-\label{fig:pca-semantic-landscape}
-\end{figure}
+Panel (a) of Figure~\ref{fig:pca-register-before-after} shows the combined research--policy embedding space: the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
 
 Figure~\ref{fig:pca-register-before-after} shows the geometric effect of INLP register removal: the raw embedding space (left) separates research and policy clouds, while the adjusted space (right) merges them, confirming that the separation is driven by register rather than topic. The effect is encoder-dependent --- SciBERT already fuses the clouds without INLP --- so this figure is MPNet-specific.
 
