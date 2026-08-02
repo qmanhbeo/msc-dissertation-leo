@@ -48,14 +48,14 @@ then retry.
 ```bash
 # Or if you want to fetch the raw data snapshot for cold-replay rebuilds:
 python main.py --fetch-data-snapshot raw
-python main.py --warm-replay-without-appendix --overwrite
+python main.py --cold-replay --overwrite
 ```
 
 ## What the replay produces
 
 Warm replay rebuilds:
-- canonical machine-readable outputs under `4_outputs/main/{model}/data/`
-- manuscript tables and figures under `4_outputs/main/{model}/tables/` and `4_outputs/main/{model}/figures/`
+- canonical machine-readable outputs under `4_outputs/{model}/data/`
+- manuscript tables and figures under `4_outputs/{model}/tables/` and `4_outputs/{model}/figures/`
 
 To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler.
 
@@ -85,7 +85,7 @@ The shared training-data prep (`0_prepare_data.py`) writes `embeddings.npy`, `la
 |---|---|---|---|---|
 | **A — Supervised LR** | Logistic Regression (C=10, lbfgs) | `research_centroids.npy` (from LR-assigned research papers) in `5_supervised_scored/{model}/` | `1_semantic_gap`, `0_coverage_gap`, `3_generate_cross_sensitivity_table` | **PRIMARY** — reported in dissertation main text |
 | **B — Supervised MLP** | 4-layer MLP (384-hidden) | `mlp_research_centroids.npy` in `5_supervised_scored/{model}/mlp_scores/` | `3_generate_cross_sensitivity_table` | Sensitivity axis |
-| **C — Zeroshot** | Nearest-centroid assignment | `sdg_centroids.npy` (reference, from labeled train split), `zeroshot/research_centroids.npy`, `zeroshot/policy_centroids.npy` in `4_outputs/main/{model}/zeroshot/` | `3_generate_cross_sensitivity_table`, `0_check_centroid_consistency`, `1_build_centroid_similarity_matrix` | Sensitivity axis |
+| **C — Zeroshot** | Nearest-centroid assignment | `sdg_centroids.npy` (reference, from labeled train split), `zeroshot/research_centroids.npy`, `zeroshot/policy_centroids.npy` in `4_outputs/{model}/zeroshot/` | `3_generate_cross_sensitivity_table`, `0_check_centroid_consistency`, `1_build_centroid_similarity_matrix` | Sensitivity axis |
 
 The **reference centroids** (`sdg_centroids.npy`) are built once from the labeled
 training split and serve as:
@@ -106,7 +106,7 @@ flowchart TD
         U["Unlabeled<br>research, policy_scrape, policy_manual, ungdc_sdg"]
     end
 
-    subgraph Prep[Preprocess → Segment (canonical, ONCE) → Embed]
+    subgraph Prep[Preprocess -> Segment (canonical, ONCE) -> Embed]
         PSE["8 preprocess scripts<br>1 canonical 1_segment_corpus run (shared by all models)<br>8 embed + merge policy<br>embed_paper_shards (full for primary, 50k subset for MiniLM/SciBERT)"]
     end
 
@@ -126,7 +126,7 @@ flowchart TD
 
     subgraph ZS[Axis C: Zeroshot nearest-centroid — sensitivity]
         RC["0_build_sdg_reference_centroids<br>→ 5_supervised_scored/{model}/<br>sdg_centroids.npy"]
-        ZSO["score_zeroshot<br>→ 4_outputs/main/{model}/zeroshot/<br>research_centroids.npy<br>policy_centroids.npy"]
+        ZSO["score_zeroshot<br>→ 4_outputs/{model}/zeroshot/<br>research_centroids.npy<br>policy_centroids.npy"]
     end
 
     subgraph Analysis[Downstream]
@@ -179,9 +179,9 @@ Not tracked in Git:
 
 ### Environment notes
 
-- `environment.yml` is the canonical rebuild path. Pins 13 core Python packages;
+- `environment.yml` is the canonical rebuild path. Pins 14 core Python packages;
   platform-specific libraries (CUDA, Linux libs) are handled by conda/pip per-OS.
-- `requirements.txt` is a human-edited core reference (13 packages). Not needed
+- `requirements.txt` is a human-edited core reference (14 packages). Not needed
   for rebuild — `environment.yml` already covers the pip layer.
 - Python version: `3.11`.
 - CPU is sufficient for `--warm-replay-without-appendix`
@@ -194,15 +194,17 @@ Not tracked in Git:
 | `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
 | `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from the raw frozen snapshot: rebuilds **all three encoder tracks** (MPNet + MiniLM + SciBERT) deterministically in one run. No OpenAlex credentials needed when the raw snapshot is hydrated (see [§Reproducibility boundaries](#reproducibility-boundaries)). |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (no PDF) |
-| `python main.py --appendix-a1-source --overwrite` | Run A.1 Per-SDG Source Comparison |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, B2, C, C1, C0, D1, H1, I1) standalone (no PDF) |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
-| `python main.py --appendix-b2-interpret --overwrite` | Run B.1 Lexical Illustration of the Semantic Gap |
+| `python main.py --appendix-b2-interpret --overwrite` | Run B.2 Lexical Illustration of the Semantic Gap |
 | `python main.py --appendix-c-sample-stability --overwrite` | Run C Sample-Stability Robustness |
-| `python main.py --appendix-f-register --overwrite` | Run F Register-Adjustment Robustness |
+| `python main.py --appendix-c1-balanced-subset --overwrite` | Run C.1 Balanced-Subset Rank-Stability |
+| `python main.py --appendix-c0-corpus-split --overwrite` | Run C.0 Corpus Split Macro Export |
+| `python main.py --appendix-d1-model-selection --overwrite` | Run D.1 Model-Selection CV Macros |
+| `python main.py --appendix-h1-cross-method --overwrite` | Run H.1 Cross-Method Gap Values |
+| `python main.py --appendix-i1-assignment-method --overwrite` | Run I.1 Assignment Method Comparison |
 | `python main.py --appendix-g-distributional --overwrite` | OPT-IN main-result table: distributional semantic-gap robustness. NOT run by warm replay or `--appendix-all`; run this before `--build-pdf`. |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, A3b, B2, C, F, H.1) standalone (requires existing main-text outputs). |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
 | `python main.py --fetch-data-snapshot embedded` | Hydrate embedded snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot raw` | Hydrate raw snapshot for cold-replay rebuilds |
@@ -220,12 +222,13 @@ hydration. Byte-identical across runs and platforms.
 ```mermaid
 flowchart LR
     Fetch["1. Fetch<br><em>live sources</em>"] --> Preproc["2. Preprocess<br><em>deterministic</em>"]
-    Preproc --> Embed["3. Embed<br><em>deterministic</em>"]
-    Embed --> Analyse["4. Analyse<br><em>deterministic</em>"]
-    Fetch -.-|"❌ will drift"| Note["OpenAlex changes daily,<br>policy URLs fragile,<br>manual PDFs not automatable"]
+    Preproc --> Seg["3. Segment<br><em>canonical, once</em>"]
+    Seg --> Embed["4. Embed<br><em>deterministic</em>"]
+    Embed --> Analyse["5. Analyse<br><em>deterministic</em>"]
+    Fetch -.-|"will drift"| Note["OpenAlex changes daily,<br>policy URLs fragile,<br>manual PDFs not automatable"]
 ```
 
-Three deterministic stages produce identical results given frozen inputs.
+Four deterministic stages produce identical results given frozen inputs.
 The fetch stage cannot be reproduced because its sources change continuously.
 
 ### What drifts on live re-fetch
@@ -233,8 +236,8 @@ The fetch stage cannot be reproduced because its sources change continuously.
 | Source | Drift mechanism |
 |---|---|
 | OpenAlex API | Papers added/deleted daily; abstracts and SDG classifications change |
-| Policy scrape URLs | ~42 hardcoded HTTP links; many unconfirmed; PDFs may 403/redirect |
-| Manual policy supplement | 64 PDFs from non-API sources — not automatable |
+| Policy scrape URLs | ~44 hardcoded HTTP links; many unconfirmed; PDFs may 403/redirect |
+| Manual policy supplement | 65 PDFs from non-API sources — not automatable |
 | GitHub benchmark | `SDGClassification/benchmark@main` — moving branch |
 | HF dataset / Dataverse | `UNDP/sdgi-corpus` and UNGDC may be versioned |
 
@@ -243,7 +246,7 @@ The fetch stage cannot be reproduced because its sources change continuously.
 A **live** `--cold-replay` OpenAlex re-fetch requires OpenAlex API credentials.
 Copy `.env.example` to `.env` and fill in your key (free at
 https://openalex.org/keys). Without these the live fetch stage raises
-`RuntimeError`. The 6 rate-limit fallback keys are optional — only
+`RuntimeError`. The 3 rate-limit fallback keys are optional — only
 `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are required. If provided, they enable
 parallel API key rotation during the full re-fetch. **Note:** a `--cold-replay`
 run from the frozen **raw snapshot** (`python main.py --fetch-data-snapshot raw`)

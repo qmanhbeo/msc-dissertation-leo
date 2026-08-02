@@ -5,7 +5,7 @@
 Structure:
 - `0_fetch/` source acquisition
 - `1_preprocess/` corpus cleaning, filtering, and shard building
-- `2_embed/` embeddings, centroids, and scoring producers
+- `3_embed/` embeddings, centroids, and scoring producers
 - `7_main_analysis/` coverage, semantic, interaction, sample-stability, and distributional-gap analysis
 - `8_visualization/` dissertation figures
 - `data_backup_and_fetch/` operator backup and marker-facing frozen data bootstrap utilities
