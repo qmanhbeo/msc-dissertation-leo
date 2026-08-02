@@ -100,9 +100,14 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 # ---- Named constants (result-affecting; recorded in the config fingerprint) ----
-SCRIPT_VERSION = "1"
+SCRIPT_VERSION = "2"
 SCHEMA_VERSION = 1
 
+# Retired as a sampling cap (plan §6.1 fix): the per-SDG-per-corpus count is now
+# the GLOBAL MIN over all (SDG, corpus) of available counts — a single number for
+# the whole track, with NO fixed ceiling. Kept only as a documented reference;
+# ``n_target`` (data-derived) supersedes it. MiniLM/SciBERT -> 263, MPNet -> 1207
+# under the frozen embedded snapshot.
 ITERATIVE_N_PER_SDG = 1000
 ITERATIVE_ACC_THRESHOLD = 0.5
 ITERATIVE_MAX_K = 200
@@ -119,11 +124,13 @@ DIRECTION_COLLAPSE_EPS = 1e-8
 TRACK_CANON = "canon"
 TRACK_SUBSET = "subset"
 
-# Within-SDG balance-cap rule version (plan §6.1): policy per SDG is capped at
-# min(n_per_sdg, n_research_available_for_that_sdg) so both corpora stay equally
-# represented within each SDG on the rare-SDG subset tracks.  Versioned string so
-# a change to the rule bumps the config fingerprint.
-WITHIN_SDG_BALANCE_CAP_RULE = "policy_capped_to_min(n_per_sdg, n_research_available)"
+# Within-SDG balance-cap rule version (plan §6.1, FIXED): every SDG/corpus pair
+# contributes exactly ``n_target = min(min_sdg avail_research, min_sdg
+# avail_policy)`` texts — ONE number for the whole track, no fixed per-SDG cap.
+# This removes the prior across-SDG skew where SDGs with more research coverage
+# contributed more rows to the pooled INLP classifier and were thus more strongly
+# gap-adjusted. Versioned string so a change bumps the config fingerprint.
+WITHIN_SDG_BALANCE_CAP_RULE = "global_min_over_sdg_corpus_no_cap"
 
 
 def parse_args() -> argparse.Namespace:
@@ -214,7 +221,7 @@ def subtract_direction(emb: np.ndarray, g_dir: np.ndarray) -> np.ndarray:
 def load_stratified_samples(
     model: str,
     sdg_index: dict[int, list[tuple[int, int]]],
-    n_per_sdg: int,
+    n_target: int,
     rng: np.random.Generator,
     policy_emb: np.ndarray,
     policy_assignments: np.ndarray,
@@ -222,11 +229,14 @@ def load_stratified_samples(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Build a balanced 17-SDG x 2-corpus sample, optionally projected through G.
 
-    Within-SDG balance fix (plan §6.1): policy per SDG is capped at
-    ``min(n_per_sdg, n_research_available)`` so research and policy stay equally
-    represented within each SDG — required for the rare-SDG subset tracks where
-    research can drop below 1000.  Canon is unaffected (every SDG has >=18k
-    research -> full 1000/1000 balance).
+    Global-min rule (plan §6.1, FIXED): every SDG/corpus pair contributes exactly
+    ``n_target`` texts, where ``n_target = min(min_sdg avail_research,
+    min_sdg avail_policy)`` is ONE number for the whole track — no fixed per-SDG
+    cap. This removes the prior across-SDG skew where SDGs with more research
+    coverage contributed more rows to the pooled INLP classifier and were thus
+    more strongly gap-adjusted. Because n_target is the global minimum available
+    count, both corpora are equally AND uniformly represented within and across
+    every SDG (MiniLM/SciBERT -> 263, MPNet -> 1207 under the frozen snapshot).
 
     Returns (X, y, sdg_labels) where sdg_labels is an int array of 1-indexed SDG
     per row, used for stratified train/test splitting.
@@ -234,21 +244,22 @@ def load_stratified_samples(
     X_parts: list[np.ndarray] = []
     y_parts: list[np.ndarray] = []
     sdg_parts: list[np.ndarray] = []
+    taken: list[tuple[int, int, int]] = []
 
     for sdg_idx in range(N_SDG):
         sdg = sdg_idx + 1
-
-        res_emb = load_research_embeddings_for_sdg(model, sdg_index[sdg], n_per_sdg, rng)
-        n_res = len(res_emb)
+        entries = sdg_index[sdg]
+        n_res = min(n_target, len(entries))
         if n_res == 0:
             continue
+        res_emb = load_research_embeddings_for_sdg(model, entries, n_res, rng)
 
         policy_mask = np.array([a == sdg_idx for a in policy_assignments])
         policy_idxs = np.where(policy_mask)[0]
-        if len(policy_idxs) == 0:
+        n_pol = min(n_target, len(policy_idxs))
+        if n_pol == 0:
             continue
-        n_take = min(n_per_sdg, len(policy_idxs), n_res)
-        chosen_policy = rng.choice(policy_idxs, size=n_take, replace=False)
+        chosen_policy = rng.choice(policy_idxs, size=n_pol, replace=False)
         pol_emb = policy_emb[chosen_policy].copy()
 
         X_parts.append(res_emb)
@@ -256,8 +267,11 @@ def load_stratified_samples(
         sdg_parts.append(np.full(n_res, sdg, dtype=np.int32))
 
         X_parts.append(pol_emb)
-        y_parts.append(np.ones(len(pol_emb), dtype=np.int32))
-        sdg_parts.append(np.full(len(pol_emb), sdg, dtype=np.int32))
+        y_parts.append(np.ones(n_pol, dtype=np.int32))
+        sdg_parts.append(np.full(n_pol, sdg, dtype=np.int32))
+        taken.append((sdg, n_res, n_pol))
+
+    log.info("  stratified per-SDG (res,pol): %s", taken)
 
     X = np.concatenate(X_parts, axis=0).astype(np.float32)
     y = np.concatenate(y_parts, axis=0)
@@ -275,13 +289,13 @@ def load_stratified_samples(
 # --------------------------------------------------------------------------- #
 
 
-def config_fingerprint() -> str:
+def config_fingerprint(n_target: int) -> str:
     cfg = {
         "script_version": SCRIPT_VERSION,
-        "iterative_n_per_sdg": ITERATIVE_N_PER_SDG,
+        "within_sdg_balance_cap_rule": WITHIN_SDG_BALANCE_CAP_RULE,
+        "n_target": n_target,
         "iterative_acc_threshold": ITERATIVE_ACC_THRESHOLD,
         "iterative_max_k": ITERATIVE_MAX_K,
-        "within_sdg_balance_cap_rule": WITHIN_SDG_BALANCE_CAP_RULE,
         "segment_cap": SEGMENT_CAP_PRIMARY,
         "seed": POLICY_SEGMENT_CAP_SEED,
         "classifier": {"C": LR_C, "penalty": LR_PENALTY, "solver": LR_SOLVER, "max_iter": LR_MAX_ITER},
@@ -311,13 +325,13 @@ def inputs_fingerprint(model: str) -> str:
     return h.hexdigest()
 
 
-def config_values() -> dict:
+def config_values(n_target: int) -> dict:
     return {
         "script_version": SCRIPT_VERSION,
-        "iterative_n_per_sdg": ITERATIVE_N_PER_SDG,
+        "within_sdg_balance_cap_rule": WITHIN_SDG_BALANCE_CAP_RULE,
+        "n_target": n_target,
         "iterative_acc_threshold": ITERATIVE_ACC_THRESHOLD,
         "iterative_max_k": ITERATIVE_MAX_K,
-        "within_sdg_balance_cap_rule": WITHIN_SDG_BALANCE_CAP_RULE,
         "segment_cap": SEGMENT_CAP_PRIMARY,
         "seed": POLICY_SEGMENT_CAP_SEED,
         "classifier": {"C": LR_C, "penalty": LR_PENALTY, "solver": LR_SOLVER, "max_iter": LR_MAX_ITER},
@@ -341,6 +355,7 @@ def _checkpoint_payload(
     iterations: list[dict],
     config_fp: str,
     inputs_fp: str,
+    n_target: int,
 ) -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
@@ -354,7 +369,7 @@ def _checkpoint_payload(
         "final_acc": iterations[-1]["test_acc"] if iterations else None,
         "config_fingerprint": config_fp,
         "inputs_fingerprint": inputs_fp,
-        "config": config_values(),
+        "config": config_values(n_target),
     }
 
 
@@ -400,7 +415,23 @@ def run(args: argparse.Namespace) -> None:
     status_dir = register_dir / "status"
 
     preflight(model)
-    config_fp = config_fingerprint()
+
+    # Derive the global per-SDG-per-corpus target BEFORE the fingerprint check so
+    # n_target is part of config_fingerprint. n_target = min over all (SDG, corpus)
+    # of available counts — ONE number for the whole track, no fixed cap.
+    policy_emb = np.load(get_policy_emb(model)).astype(np.float32)
+    policy_scores = np.load(get_policy_scores(model))
+    policy_assignments = get_cluster_assignments(policy_scores)
+    sdg_index = build_research_sdg_index(model)
+    res_avail = {sdg: len(sdg_index[sdg]) for sdg in range(1, N_SDG + 1)}
+    pol_avail = np.bincount(policy_assignments, minlength=N_SDG)
+    n_target = int(min(min(res_avail.values()), int(pol_avail[1:].min())))
+    log.info(
+        "Global per-SDG-per-corpus target n_target=%d (res_min=%d, pol_min=%d)",
+        n_target, min(res_avail.values()), int(pol_avail[1:].min()),
+    )
+
+    config_fp = config_fingerprint(n_target)
     inputs_fp = inputs_fingerprint(model)
     log.info("register_adjust: model=%s track=%s", model, track)
     log.info("  config fingerprint: %s", config_fp[:16])
@@ -460,11 +491,7 @@ def run(args: argparse.Namespace) -> None:
         iterations = []
 
     # -- Iterative INLP loop (per-iteration deterministic RNG) ---------------- #
-    policy_emb = np.load(get_policy_emb(model)).astype(np.float32)
-    policy_scores = np.load(get_policy_scores(model))
-    policy_assignments = get_cluster_assignments(policy_scores)
-    sdg_index = build_research_sdg_index(model)
-
+    # policy_emb / policy_assignments / sdg_index already loaded above.
     started_complete = False
     for k in range(completed_k + 1, ITERATIVE_MAX_K + 1):
         iteration_rng = np.random.default_rng(POLICY_SEGMENT_CAP_SEED + k)
@@ -472,7 +499,7 @@ def run(args: argparse.Namespace) -> None:
 
         log.info("Iteration %d (G has %d rows)", k, G_prev.shape[0] if G_prev is not None else 0)
         X, y, sdg_labels = load_stratified_samples(
-            model, sdg_index, ITERATIVE_N_PER_SDG, iteration_rng,
+            model, sdg_index, n_target, iteration_rng,
             policy_emb=policy_emb, policy_assignments=policy_assignments,
             projector=G_prev,
         )
@@ -504,7 +531,7 @@ def run(args: argparse.Namespace) -> None:
             payload = _checkpoint_payload(
                 model=model, track=track, complete=True, stopped_reason=stopped_reason,
                 completed_k=len(G_list), iterations=iterations,
-                config_fp=config_fp, inputs_fp=inputs_fp,
+                config_fp=config_fp, inputs_fp=inputs_fp, n_target=n_target,
             )
             _write_checkpoint(register_dir, G_list, payload)
             update_stage_status(status_dir, "register_adjust", "completed", {"model": model, "track": track, "completed_k": len(G_list), "reason": stopped_reason})
@@ -518,7 +545,7 @@ def run(args: argparse.Namespace) -> None:
         payload = _checkpoint_payload(
             model=model, track=track, complete=complete, stopped_reason=stopped_reason,
             completed_k=len(G_list), iterations=iterations,
-            config_fp=config_fp, inputs_fp=inputs_fp,
+            config_fp=config_fp, inputs_fp=inputs_fp, n_target=n_target,
         )
         _write_checkpoint(register_dir, G_list, payload)
         update_stage_status(
@@ -538,7 +565,7 @@ def run(args: argparse.Namespace) -> None:
         payload = _checkpoint_payload(
             model=model, track=track, complete=True, stopped_reason="max_k",
             completed_k=len(G_list), iterations=iterations,
-            config_fp=config_fp, inputs_fp=inputs_fp,
+            config_fp=config_fp, inputs_fp=inputs_fp, n_target=n_target,
         )
         _write_checkpoint(register_dir, G_list, payload)
         update_stage_status(status_dir, "register_adjust", "completed", {"model": model, "track": track, "completed_k": len(G_list), "reason": "max_k"})
