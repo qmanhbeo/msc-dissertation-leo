@@ -1,10 +1,10 @@
 {
-  "current_version": "2026-07-29",
+  "current_version": "2026-08-02",
   "profiles": {
     "raw": {
-      "version": "2026-07-26-095133",
-      "url": "https://drive.usercontent.google.com/download?id=1RFwuKoEUzNkk-cSDi4y9owKEJdsijsNV&export=download",
-      "sha256": "694277e7612b0396001adc246e4f888be9a109cc677e3e0658869b46fdae1225",
+      "version": "2026-08-02-230243",
+      "url": "https://drive.usercontent.google.com/download?id=1hauGPKfFkYXcXKfIgrDgKbmEyp2rQIqk&export=download",
+      "sha256": "6ff8ee2258989d60957cf06305e6875261b2cb61f6c13f52dbb511b278d0a6dc",
       "expected_repo_paths": [
         "2_data/0_raw"
       ],
@@ -14,9 +14,9 @@
       ]
     },
     "embedded": {
-      "version": "2026-07-29-075706",
-      "url": "https://drive.usercontent.google.com/download?id=1Kux4ar3h7Gh2Qs5E0wFf40E3nVkHfRrv&export=download",
-      "sha256": "4fd186c7399e602fef1f858b33a5c46c7c3aba00a4abbfc2e5a05bd2e9f3d14d",
+      "version": "2026-08-02-230243",
+      "url": "https://drive.usercontent.google.com/download?id=1QUowj3edd6XTNBGehscCzETEbSwo8EwA&export=download",
+      "sha256": "09a8da1e04a9c09689a68fcd4d073aa3160680ce2eea341b6939dc568f44bf5b",
       "expected_repo_paths": [
         "2_data/3_embedded",
         "2_data/3a_warm_replay_texts"
