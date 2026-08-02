@@ -82,8 +82,9 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 import semantic_gap_shared
 import register_utils
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG, embed_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG, embed_dir_for_model, resolve_model_alias, scored_dir_for_model
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
+from shard_pipeline_utils import sha256_file, load_json
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     SEGMENT_CAP_SENS_NONE,
@@ -137,6 +138,10 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 def run(args: argparse.Namespace) -> None:
     is_mlp = args.classifier == "mlp"
+    # Concept-retrieval variant reuses the canonical model's tables dir but writes
+    # its JSON under a concept subdir; it must NOT overwrite the main manuscript's
+    # num_semantic.tex / tab_semantic_gap.tex (which describe the raw MPNet gap).
+    is_concept = args.out_data_dir is not None
 
     # ---- Load data paths based on classifier ----
     if is_mlp:
@@ -201,7 +206,7 @@ def run(args: argparse.Namespace) -> None:
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
-    SCRIPT_VERSION = "1"
+    SCRIPT_VERSION = "2"
     PRIMARY = out_sem_gap
     OUTPUTS = [out_sem_gap, out_sem_sens]
 
@@ -266,6 +271,64 @@ def run(args: argparse.Namespace) -> None:
     for sdg_idx in range(N_SDG):
         n = int(research_counts[sdg_idx])
         log.info("  SDG %2d: %d papers", sdg_idx + 1, n)
+
+    # ---- Provenance fingerprint (fail-closed guard) ----
+    # Records the exact score-shard / embedding manifest / classifier artifact /
+    # G checkpoint that produced these gaps, so a cross-epoch re-score (different
+    # hydrated snapshot) or register-code change is visible instead of silently
+    # shifting the raw/adjusted gaps.
+    provenance = {
+        "embedding_model": args.embed_model,
+        "classifier": args.classifier,
+        "embeddings": args.embeddings,
+    }
+    scored = scored_dir_for_model(args.embed_model)
+    rs_manifest = scored / "paper_scores_shards" / "metadata" / "manifest.json"
+    if rs_manifest.exists():
+        rm = load_json(rs_manifest)
+        provenance["research_score_manifest"] = {
+            "path": str(rs_manifest),
+            "input_embedding_manifest": rm.get("input_embedding_manifest"),
+            "model_path": rm.get("model_path"),
+            "shard_sha256": [s.get("sha256") for s in rm.get("shards", [])],
+        }
+    pol_scores = scored / "policy_scores.npy"
+    pol_ids = scored / "metadata" / "policy_scores_ids.json"
+    provenance["policy_score"] = {
+        "ids_path": str(pol_ids),
+        "scores_path": str(pol_scores),
+        "scores_sha256": sha256_file(pol_scores) if pol_scores.exists() else None,
+    }
+    ed = embed_dir_for_model(args.embed_model)
+    pol_emb = ed / "policy.npy"
+    provenance["policy_embedding_sha256"] = sha256_file(pol_emb) if pol_emb.exists() else None
+    # The concept / override route builds its centroids from the
+    # concept-retrieved corpus (research_concept), NOT the full research corpus.
+    # Record the actual embedding manifest so a future concept-embedding drift
+    # is visible instead of silently masked behind the full-corpus manifest.
+    is_override = args.research_centroids is not None or args.mlp_centroids is not None
+    rmanifest = (
+        ed / "research_concept" / "metadata" / "manifest.json"
+        if is_override
+        else ed / "research_shards" / "metadata" / "manifest.json"
+    )
+    if rmanifest.exists():
+        provenance["research_embedding_manifest"] = (
+            load_json(rmanifest).get("input_embedding_manifest")
+            if load_json(rmanifest).get("input_embedding_manifest") else str(rmanifest)
+        )
+    if is_adjusted:
+        g_path = register_utils.register_dir(args.embed_model) / "G.npy"
+        track = register_utils.track_for_model(args.embed_model)
+        chk = register_utils.register_dir(args.embed_model) / "checkpoint.json"
+        reg = {"g_path": str(g_path), "track": track}
+        if g_path.exists():
+            reg["g_sha256"] = sha256_file(g_path)
+        if chk.exists():
+            cfg = load_json(chk).get("config", {})
+            reg["script_version"] = cfg.get("script_version")
+            reg["n_target"] = cfg.get("n_target")
+        provenance["register"] = reg
 
     log.info("Policy cluster sizes by SDG (raw segments):")
     for sdg_idx in range(N_SDG):
@@ -350,11 +413,13 @@ def run(args: argparse.Namespace) -> None:
         "per_sdg": primary_results,
         "reliable_sdgs": [r["sdg"] for r in primary_results if not r["unreliable"]],
         "unreliable_sdgs": [r["sdg"] for r in primary_results if r["unreliable"]],
+        "provenance": provenance,
     }
 
     sensitivity_out = {
         "method": "centroid_to_centroid",
         "random_seed": RANDOM_SEED,
+        "provenance": provenance,
         "note": (
             "Sensitivity analysis: same computation as 4_3_semantic_gap_distances.json but with an alternative "
             "per-document segment cap (20) and an uncapped (none) run. Use to verify finding robustness. "
@@ -375,8 +440,8 @@ def run(args: argparse.Namespace) -> None:
     log.info("")
     log.info("Next step: python 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py")
 
-    # ---- Write LaTeX generated outputs (raw LR mode only) ----
-    if is_adjusted or is_mlp:
+    # ---- Write LaTeX generated outputs (raw LR mode only; not concept variant) ----
+    if is_adjusted or is_mlp or is_concept:
         log.info("Adjusted/MLP mode: skipping tex generation (JSON written to %s)", out_sem_gap)
         record_fingerprint(OUTPUTS, fp, PRIMARY)
         return

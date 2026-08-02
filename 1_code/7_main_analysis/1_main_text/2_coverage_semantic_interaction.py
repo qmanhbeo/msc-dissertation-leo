@@ -331,7 +331,7 @@ def run(args: argparse.Namespace) -> None:
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
-    SCRIPT_VERSION = "1"
+    SCRIPT_VERSION = "2"
     PRIMARY = out_corr
     OUTPUTS = [out_corr, out_scatter, tables_dir / "tab_interaction.tex"]
     fp = fingerprint_of(coverage_gap_path, semantic_gap_path) + SCRIPT_VERSION
@@ -538,6 +538,10 @@ def run(args: argparse.Namespace) -> None:
             }
             for i in range(N_SDG)
         ],
+        "provenance": {
+            "semantic_gap_raw": sem_data.get("provenance"),
+            "coverage_gap_path": str(Path(coverage_gap_path).relative_to(Path(args.output_dir))),
+        },
     }
 
     with out_corr.open("w", encoding="utf-8") as f:
