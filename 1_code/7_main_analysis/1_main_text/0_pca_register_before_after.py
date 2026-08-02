@@ -318,7 +318,7 @@ def run(args: argparse.Namespace) -> None:
             _RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
             embed_dir_for_model(args.embed_model) / "research_shards" / "metadata" / "manifest.json",
             scored_dir_for_model(args.embed_model) / "sdg_centroids.npy",
-            embed_dir_for_model(args.embed_model) / "register" / "canon" / "G.npy",
+            register_utils.register_dir(args.embed_model) / "G.npy",
         )
         + SCRIPT_VERSION
     )
