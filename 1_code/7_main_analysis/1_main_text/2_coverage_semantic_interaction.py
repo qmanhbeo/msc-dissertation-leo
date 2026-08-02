@@ -71,8 +71,17 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from shared_utils import ensure_canonical_outputs, fingerprint_of, require_output_files, should_skip, record_fingerprint
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
+
+# Gap loaders for the cross-config H1 grid (reuse the consolidated register-correlation
+# table's per-config raw/adjusted gap readers so the grid stays consistent with it).
+from h1_register_correlation_table import (
+    _lr_raw_gaps, _lr_adj_gaps,
+    _zs_raw_gaps, _zs_adj_gaps,
+    _mlp_raw_gaps, _mlp_adj_gaps,
+    _concept_raw_gaps, _concept_adj_gaps,
+)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -147,6 +156,153 @@ def compute_four_tests(
 
 
 # ---------------------------------------------------------------------------
+# Cross-config H1 register-correlation grid
+# ---------------------------------------------------------------------------
+# Each row = one encoder--classifier config; each hypothesis (H1a--H1d) is a
+# block of 9 config rows. Columns = Spearman rho of the predictor with the raw
+# gap, the adjusted (topic) gap, and the register component (raw - adjusted).
+# Coverage predictors are read from the per-config coverage JSON (LR coverage is
+# reused for MLP/ZS rows, matching h1_register_correlation_table.py); gap vectors
+# use the same per-config raw/adjusted readers imported above.
+_H1_CONFIGS = [
+    ("MPNet LR", "all-mpnet-base-v2", "LR", "canon"),
+    ("MPNet MLP", "all-mpnet-base-v2", "MLP", "canon"),
+    ("MPNet ZS", "all-mpnet-base-v2", "ZS", "canon"),
+    ("MiniLM LR", "all-MiniLM-L6-v2", "LR", "subset"),
+    ("MiniLM MLP", "all-MiniLM-L6-v2", "MLP", "subset"),
+    ("SciBERT LR", "allenai/scibert_scivocab_uncased", "LR", "subset"),
+    ("SciBERT MLP", "allenai/scibert_scivocab_uncased", "MLP", "subset"),
+    ("Concept LR", "all-mpnet-base-v2", "LR", "concept"),
+    ("Concept MLP", "all-mpnet-base-v2", "MLP", "concept"),
+]
+
+_H1_GROUPS = [
+    ("H1a. Coverage gap $\\leftrightarrow$ Semantic gap", "covgap"),
+    ("H1b. Policy--research dominance $\\leftrightarrow$ Semantic gap", "dominance"),
+    ("H1c. Research coverage $\\leftrightarrow$ Semantic gap", "research"),
+    ("H1d. Policy coverage $\\leftrightarrow$ Semantic gap", "policy"),
+]
+
+
+def _spearman_dict(x: np.ndarray, y: np.ndarray) -> dict | None:
+    if x.size < 3 or y.size < 3:
+        return None
+    rho, p = stats.spearmanr(x, y)
+    return {"rho": round(float(rho), 6), "p": round(float(p), 6)}
+
+
+def _load_coverage_predictors(root: Path, model: str, corpus: str) -> dict | None:
+    """Return {covgap, dominance, research, policy} dicts keyed by SDG number."""
+    if corpus == "concept":
+        p = output_dir_for_model(model, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json"
+    else:
+        p = output_dir_for_model(model, root=root) / "data" / "4_2_coverage_document_weighted.json"
+    if not p.exists():
+        return None
+    data = load_json(p)
+
+    def _arr(key: str) -> dict[int, float]:
+        return {i: float(data[key][f"SDG{i}"]) for i in range(1, N_SDG + 1)}
+
+    research = _arr("research_profile_hard")
+    policy = _arr("policy_profile_hard_docweighted")
+    covgap = _arr("coverage_gap_hard")
+    dominance = {i: research[i] - policy[i] for i in range(1, N_SDG + 1)}
+    return {"research": research, "policy": policy, "covgap": covgap, "dominance": dominance}
+
+
+def _raw_gaps_for(method: str, root: Path, model: str) -> dict | None:
+    if method == "LR":
+        return _lr_raw_gaps(root, model)
+    if method == "ZS":
+        return _zs_raw_gaps(root, model)
+    if method == "MLP":
+        return _mlp_raw_gaps(root, model)
+    return None
+
+
+def _adj_gaps_for(method: str, root: Path, model: str) -> dict | None:
+    if method == "LR":
+        return _lr_adj_gaps(root, model)
+    if method == "ZS":
+        return _zs_adj_gaps(root, model)
+    if method == "MLP":
+        return _mlp_adj_gaps(root, model)
+    return None
+
+
+def _h1_config_row(label: str, model: str, method: str, corpus: str, root: Path) -> dict | None:
+    cov = _load_coverage_predictors(root, model, corpus)
+    if cov is None:
+        return None
+    raw = _raw_gaps_for(method, root, model)
+    if raw is None:
+        return None
+    adj = _adj_gaps_for(method, root, model)
+    out = {"label": label, "predictors": {}}
+    for pname in ("covgap", "dominance", "research", "policy"):
+        pred = cov[pname]
+        if adj is not None:
+            common = sorted(set(pred) & set(raw) & set(adj))
+        else:
+            common = sorted(set(pred) & set(raw))
+        if len(common) < 3:
+            out["predictors"][pname] = None
+            continue
+        x = np.array([pred[s] for s in common], dtype=float)
+        raw_arr = np.array([raw[s] for s in common], dtype=float)
+        rho_raw = _spearman_dict(x, raw_arr)
+        rho_adj = rho_reg = None
+        if adj is not None:
+            adj_arr = np.array([adj[s] for s in common], dtype=float)
+            reg_arr = raw_arr - adj_arr
+            rho_adj = _spearman_dict(x, adj_arr)
+            rho_reg = _spearman_dict(x, reg_arr)
+        out["predictors"][pname] = {"raw": rho_raw, "adj": rho_adj, "reg": rho_reg}
+    return out
+
+
+def _sig_stars(p: float) -> str:
+    if p < 0.001:
+        return "$^{***}$"
+    if p < 0.01:
+        return "$^{**}$"
+    if p < 0.05:
+        return "$^{*}$"
+    if p < 0.10:
+        return "$^{\\dagger}$"
+    return ""
+
+
+def _fmt_rho(v: dict | None) -> str:
+    if v is None:
+        return "--"
+    return f"{v['rho']:+.3f}{_sig_stars(v['p'])}"
+
+
+def write_h1_grid_tex(path: Path, rows: list[dict]) -> None:
+    lines = [
+        "% Auto-generated by 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py — do not edit manually",
+        r"\begin{tabular}{lccc}",
+        r"\toprule",
+        r" & Raw gap & Adj.\ gap & Register \\",
+        r"\midrule",
+    ]
+    for title, key in _H1_GROUPS:
+        lines.append(rf"\multicolumn{{4}}{{l}}{{\textbf{{{title}}}}} \\")
+        for r in rows:
+            pr = r["predictors"].get(key)
+            cells = [
+                _fmt_rho(pr["raw"] if pr else None),
+                _fmt_rho(pr["adj"] if pr else None),
+                _fmt_rho(pr["reg"] if pr else None),
+            ]
+            lines.append(f"{r['label']} & " + " & ".join(cells) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}"])
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
 # Args
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
@@ -177,7 +333,7 @@ def run(args: argparse.Namespace) -> None:
 
     SCRIPT_VERSION = "1"
     PRIMARY = out_corr
-    OUTPUTS = [out_corr, out_scatter]
+    OUTPUTS = [out_corr, out_scatter, tables_dir / "tab_interaction.tex"]
     fp = fingerprint_of(coverage_gap_path, semantic_gap_path) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
@@ -499,50 +655,16 @@ def run(args: argparse.Namespace) -> None:
     ]
     (gen_dir / "num_interaction.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", gen_dir / "num_interaction.tex")
+    # ---- H1 x config register-correlation grid (replaces the stale exclude-SDG rows) ----
+    h1_grid: list[dict] = []
+    for _label, _m, _method, _corpus in _H1_CONFIGS:
+        _row = _h1_config_row(_label, _m, _method, _corpus, Path(args.output_dir))
+        if _row is not None:
+            h1_grid.append(_row)
+        else:
+            log.warning("WARNING: missing data for %s -- skipping row", _label)
 
-    # ---- Multi-config H1 replications (all four predictors) ----
-    config_rows: list[tuple[str, dict]] = []  # (label, tests_dict with research/policy/covgap/dominance)
-
-    # 1. Primary observed SDGs + Excluding SDG 4 (already computed above).
-    config_rows.append(("Primary observed SDGs", tests_primary))
-    config_rows.append((r"Excluding SDG 4", tests_excl4))
-    config_rows.append((r"Excluding SDG 17", tests_excl17))
-
-    log.info("")
-    log.info("Multi-config H1 replications: %d configs x 4 predictors", len(config_rows))
-
-    # tab_interaction.tex — grouped tabular: 4 predictor groups x config rows
-    groups = [
-        ("H1a. Coverage gap $\\leftrightarrow$ Semantic gap", "covgap"),
-        ("H1b. Policy--research dominance $\\leftrightarrow$ Semantic gap", "dominance"),
-        ("H1c. Research coverage $\\leftrightarrow$ Semantic gap", "research"),
-        ("H1d. Policy coverage $\\leftrightarrow$ Semantic gap", "policy"),
-    ]
-    tab_lines = [
-        "% Auto-generated by 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py — do not edit manually",
-        r"\begin{tabular}{lrrrrr}",
-        r"\toprule",
-        r"Config & Pearson $r$ & $p$ & Spearman $\rho$ & $p$ \\",
-        r"\midrule",
-    ]
-    for g_title, g_key in groups:
-        tab_lines.append(rf"\multicolumn{{5}}{{l}}{{\textbf{{{g_title}}}}} \\")
-        for label, tests in config_rows:
-            c = tests.get(g_key, {})
-            if c.get("skipped"):
-                r_s, p_s, rho_s, pr_s, n_s = "--", "--", "--", "--", str(c.get("n", ""))
-            else:
-                r_s, p_s, rho_s, pr_s = (
-                    _fmt(c["pearson_r"]), f"{c['pearson_p']:.3f}",
-                    _fmt(c["spearman_rho"]), f"{c['spearman_p']:.3f}",
-                )
-                n_s = str(c["n"])
-            tab_lines.append(rf"{label} ($n$={n_s}) & {r_s} & {p_s} & {rho_s} & {pr_s} \\")
-    tab_lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-    ])
-    (gen_dir / "tab_interaction.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+    write_h1_grid_tex(gen_dir / "tab_interaction.tex", h1_grid)
     log.info("Saved: %s", gen_dir / "tab_interaction.tex")
     record_fingerprint(OUTPUTS, fp, PRIMARY)
 

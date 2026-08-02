@@ -175,7 +175,6 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/c1_subset_balanced_stability/tables/num_subset_stability.tex",
     "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_covgap.tex",
     "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex",
-    "appendix/h1_register_correlation_table/tables/tab_register_correlation.tex",
     "appendix/i1_assignment_method_comparison/tables/tab_app_assignment_method_comparison.tex",
     "main/tables/num_model_selection.tex",
     "main/tables/num_reference_split.tex",

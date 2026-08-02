@@ -159,7 +159,6 @@ APPENDIX_STEPS = [(spec["script"], False) for spec in APPENDIX_SPECS if spec["in
 POST_ADJUSTED_STEPS = [
     "0_shared/g_register_decomposition.py",
     "0_shared/g_interaction_extended.py",
-    "0_shared/h1_register_correlation_table.py",
     "0_shared/generate_tex_macros.py",
     ("1_main_text/0_pca_register_before_after.py", True),
 ]
