@@ -87,6 +87,7 @@ checkpoints/
 
 # === Private notes ===
 5_notes/private/
+5_notes/scratch/
 .supervisor-feedback/
 
 # === Marker-committed outputs ===
