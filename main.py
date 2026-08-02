@@ -780,18 +780,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     print("      It is deterministic and reproducible; no OpenAlex credentials needed when the raw snapshot is hydrated.")
     if args.embed_model != DEFAULT_EMBED_MODEL:
         print(f"NOTE: --embed-model {args.embed_model!r} is ignored by --cold-replay (all three encoders are rebuilt).")
-    # Input gate: cold replay rebuilds FROM the frozen raw snapshot (2_data/0_raw/),
-    # not from existing 4_outputs/. Refusing is based on missing *inputs*, never on
-    # the presence of prior derived outputs — so an interrupted run can simply be
-    # re-invoked to resume (each stage is resume-safe / idempotent on its own).
-    if not raw_dir().exists():
-        print(
-            "ERROR: raw snapshot not found at 2_data/0_raw/. "
-            "Cold replay rebuilds from the frozen raw snapshot — run "
-            "`python main.py --fetch-data-snapshot raw` first.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    # Auto-fetch the raw snapshot if missing (matches warm replay's auto-fetch behaviour).
+    ensure_cold_replay_inputs(args)
 
     pre_steps = []
     pre_steps += _preprocess_steps(args.overwrite)
@@ -878,6 +868,13 @@ def ensure_warm_replay_inputs(args: argparse.Namespace, *, model: str = DEFAULT_
     if len(missing) > 12:
         print(f"[info] ... and {len(missing) - 12} more")
     run_fetch_data_snapshot(args, profile_name="embedded", overwrite_data=(ROOT / "2_data").exists())
+
+
+def ensure_cold_replay_inputs(args: argparse.Namespace) -> None:
+    if raw_dir().exists():
+        return
+    print("[info] raw snapshot not found at 2_data/0_raw/ — fetching automatically")
+    run_fetch_data_snapshot(args, profile_name="raw", overwrite_data=False)
 
 
 def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) -> None:

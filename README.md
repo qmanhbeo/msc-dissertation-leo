@@ -46,8 +46,7 @@ If the snapshot download fails, run `python main.py --fetch-data-snapshot embedd
 then retry.
 
 ```bash
-# Or if you want to fetch the raw data snapshot for cold-replay rebuilds:
-python main.py --fetch-data-snapshot raw
+# Or if you want to rebuild from the raw data snapshot (cold replay):
 python main.py --cold-replay --overwrite
 ```
 
@@ -249,8 +248,8 @@ https://openalex.org/keys). Without these the live fetch stage raises
 `RuntimeError`. The 3 rate-limit fallback keys are optional — only
 `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are required. If provided, they enable
 parallel API key rotation during the full re-fetch. **Note:** a `--cold-replay`
-run from the frozen **raw snapshot** (`python main.py --fetch-data-snapshot raw`)
-is deterministic and offline — it needs **no** OpenAlex credentials.
+run from the frozen **raw snapshot** is deterministic and offline — it needs
+**no** OpenAlex credentials. The raw snapshot is auto-fetched if missing.
 
 ### Snapshot scope
 
