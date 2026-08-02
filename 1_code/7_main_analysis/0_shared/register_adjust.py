@@ -271,7 +271,7 @@ def load_stratified_samples(
         sdg_parts.append(np.full(n_pol, sdg, dtype=np.int32))
         taken.append((sdg, n_res, n_pol))
 
-    log.info("  stratified per-SDG (res,pol): %s", taken)
+    log.info("  stratified per-SDG: %d SDGs, n_target=%d", len(taken), n_target)
 
     X = np.concatenate(X_parts, axis=0).astype(np.float32)
     y = np.concatenate(y_parts, axis=0)
@@ -510,13 +510,13 @@ def run(args: argparse.Namespace) -> None:
             X, y, test_size=TEST_SIZE, stratify=stratify_key, random_state=POLICY_SEGMENT_CAP_SEED + k,
         )
 
-        clf = LogisticRegression(C=LR_C, penalty=LR_PENALTY, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=POLICY_SEGMENT_CAP_SEED + k)
+        clf = LogisticRegression(C=LR_C, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=POLICY_SEGMENT_CAP_SEED + k)
         clf.fit(X_train, y_train)
         test_acc = float(clf.score(X_test, y_test))
         log.info("  85/15 test accuracy: %.4f (n_train=%d, n_test=%d)", test_acc, len(X_train), len(X_test))
 
         # Fit on the full sample for the direction used in orthogonalisation
-        clf_full = LogisticRegression(C=LR_C, penalty=LR_PENALTY, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=POLICY_SEGMENT_CAP_SEED + k)
+        clf_full = LogisticRegression(C=LR_C, solver=LR_SOLVER, max_iter=LR_MAX_ITER, random_state=POLICY_SEGMENT_CAP_SEED + k)
         clf_full.fit(X, y)
         coef = clf_full.coef_.astype(np.float32).flatten()
         g_k = (coef / np.linalg.norm(coef)).astype(np.float32)
@@ -552,7 +552,7 @@ def run(args: argparse.Namespace) -> None:
             status_dir, "register_adjust", "running",
             {"model": model, "track": track, "completed_k": len(G_list), "test_acc": test_acc},
         )
-        log.info("  Iteration %d complete (checkpoint written)", k)
+        log.debug("  Iteration %d complete (checkpoint written)", k)
 
         if complete:
             started_complete = True

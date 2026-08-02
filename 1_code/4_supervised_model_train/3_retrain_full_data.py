@@ -471,7 +471,7 @@ def main() -> None:
 
         y_int_train = Y_train.argmax(axis=1)
         clf = LogisticRegression(
-            C=args.C, penalty=args.penalty, solver=args.solver,
+            C=args.C, solver=args.solver,
             class_weight=args.class_weight, max_iter=args.max_iter, random_state=RANDOM_SEED,
         )
         clf.fit(X_train, y_int_train)
@@ -506,8 +506,6 @@ def main() -> None:
     total_elapsed = time.perf_counter() - t0
 
     log.info("Test macro-F1=%.4f  micro-F1=%.4f", test_macro_f1, test_micro_f1)
-    for sdg_label, f1_s in per_sdg.items():
-        log.info("  %s: %.4f", sdg_label, f1_s)
 
     # ── Confusion matrix CSV ──────────────────────────────────────────
     # LR is single-label (softmax argmax) → sklearn confusion matrix (rows=pred, cols=true).
