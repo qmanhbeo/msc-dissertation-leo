@@ -10,10 +10,12 @@ Fitting logic:
   1. Load all usable policy embeddings (raw).
   2. Sample exactly the same number of research embeddings (same seed as
      the existing PCA landscape script).
-  3. Fit PCA on the BALANCED RAW combined sample.
-  4. Project raw and adjusted embeddings into the SAME PCA space so the
-     geometric shift is visually comparable.
-  5. Overlay SDG centroids and research/policy corpus centroids.
+  3. Fit PCA on the BALANCED RAW combined sample for panel (a).
+  4. Project raw embeddings into raw PCA space.
+  5. Project adjusted embeddings through G, then fit a SEPARATE PCA on
+     the balanced adjusted sample for panel (b).
+  6. Overlay SDG centroids and research/policy corpus centroids in each
+     panel's own PCA space.
 
 Outputs:
   4_outputs/{model}/figures/fig2_pca_register_before_after.pdf
@@ -82,7 +84,7 @@ from semantic_gap_shared import (
     load_json,
 )
 
-SCRIPT_VERSION = "1"
+SCRIPT_VERSION = "2"
 METADATA_JSON = "pca_register_before_after_metadata.json"
 NUM_TEX = "num_pca_register_before_after.tex"
 FIG_NAME = "fig2_pca_register_before_after"
@@ -375,21 +377,29 @@ def run(args: argparse.Namespace) -> None:
     research_fit_adj = project(research_fit_emb, G)
     policy_bg_adj = project(policy_emb, G)
 
-    # --- Fit PCA on RAW data ---
+    # --- Fit PCA on RAW data (panel a) ---
     fit_matrix = np.concatenate([policy_fit_emb, research_fit_emb], axis=0).astype(np.float32)
     log.info("PCA fit matrix shape: %s", fit_matrix.shape)
     pca = PCA(n_components=args.n_components, random_state=args.seed)
     pca.fit(fit_matrix)
     evr = pca.explained_variance_ratio_.astype(float)
-    log.info("PCA explained variance: PC1=%.4f, PC2=%.4f", evr[0], evr[1])
+    log.info("PCA explained variance (raw): PC1=%.4f, PC2=%.4f", evr[0], evr[1])
 
-    # --- Project raw clouds ---
+    # --- Fit PCA on ADJUSTED data (panel b) ---
+    fit_adj_matrix = np.concatenate([policy_fit_adj, research_fit_adj], axis=0).astype(np.float32)
+    log.info("Adjusted PCA fit matrix shape: %s", fit_adj_matrix.shape)
+    pca_adj = PCA(n_components=args.n_components, random_state=args.seed)
+    pca_adj.fit(fit_adj_matrix)
+    evr_adj = pca_adj.explained_variance_ratio_.astype(float)
+    log.info("PCA explained variance (adjusted): PC1=%.4f, PC2=%.4f", evr_adj[0], evr_adj[1])
+
+    # --- Project raw clouds into raw PCA ---
     policy_bg_raw = pca.transform(policy_fit_emb)
     research_bg_raw = pca.transform(research_fit_emb)
 
-    # --- Project adjusted clouds into SAME PCA space ---
-    policy_bg_adj_2d = pca.transform(policy_bg_adj)
-    research_bg_adj_2d = pca.transform(research_fit_adj)
+    # --- Project adjusted clouds into adjusted PCA ---
+    policy_bg_adj_2d = pca_adj.transform(policy_bg_adj)
+    research_bg_adj_2d = pca_adj.transform(research_fit_adj)
 
     # --- Centroids: raw and adjusted ---
     sdg_centroids = np.load(sdg_centroids_path).astype(np.float32)
@@ -424,11 +434,11 @@ def run(args: argparse.Namespace) -> None:
 
     # Project all centroids into PCA space
     ref_2d = pca.transform(sdg_centroids)
-    ref_adj_2d = pca.transform(ref_adj)
+    ref_adj_2d = pca_adj.transform(ref_adj)
     research_centroids_raw_2d = pca.transform(research_centroids)
-    research_centroids_adj_2d = pca.transform(research_centroids_adj)
+    research_centroids_adj_2d = pca_adj.transform(research_centroids_adj)
     policy_centroids_raw_2d = pca.transform(policy_centroids_raw)
-    policy_centroids_adj_2d = pca.transform(policy_centroids_adj)
+    policy_centroids_adj_2d = pca_adj.transform(policy_centroids_adj)
 
     # --- Draw two-panel figure ---
     plt.rcParams.update(
@@ -467,26 +477,24 @@ def run(args: argparse.Namespace) -> None:
         research_centroid_available, policy_centroid_available,
     )
     ax_adj.set_title("(b) Adjusted embeddings (register removed)", fontweight="bold")
-    ax_adj.set_xlabel(f"PC1 ({evr[0] * 100:.1f}% variance)")
-    ax_adj.set_ylabel(f"PC2 ({evr[1] * 100:.1f}% variance)")
+    ax_adj.set_xlabel(f"PC1 ({evr_adj[0] * 100:.1f}% variance)")
+    ax_adj.set_ylabel(f"PC2 ({evr_adj[1] * 100:.1f}% variance)")
     ax_adj.spines["top"].set_visible(False)
     ax_adj.spines["right"].set_visible(False)
     ax_adj.axhline(0.0, color="#cccccc", lw=0.6, zorder=1)
     ax_adj.axvline(0.0, color="#cccccc", lw=0.6, zorder=1)
 
-    # Match axis limits across panels for visual comparability
-    all_x = np.concatenate([policy_bg_raw[:, 0], research_bg_raw[:, 0],
-                            policy_bg_adj_2d[:, 0], research_bg_adj_2d[:, 0]])
-    all_y = np.concatenate([policy_bg_raw[:, 1], research_bg_raw[:, 1],
-                            policy_bg_adj_2d[:, 1], research_bg_adj_2d[:, 1]])
-    x_margin = (all_x.max() - all_x.min()) * 0.05
-    y_margin = (all_y.max() - all_y.min()) * 0.05
-    shared_xlim = (all_x.min() - x_margin, all_x.max() + x_margin)
-    shared_ylim = (all_y.min() - y_margin, all_y.max() + y_margin)
-    ax_raw.set_xlim(shared_xlim)
-    ax_raw.set_ylim(shared_ylim)
-    ax_adj.set_xlim(shared_xlim)
-    ax_adj.set_ylim(shared_ylim)
+    # Independent axis limits per panel
+    for ax, x_data, y_data in [
+        (ax_raw, np.concatenate([policy_bg_raw[:, 0], research_bg_raw[:, 0]]),
+                np.concatenate([policy_bg_raw[:, 1], research_bg_raw[:, 1]])),
+        (ax_adj, np.concatenate([policy_bg_adj_2d[:, 0], research_bg_adj_2d[:, 0]]),
+                 np.concatenate([policy_bg_adj_2d[:, 1], research_bg_adj_2d[:, 1]])),
+    ]:
+        x_m = (x_data.max() - x_data.min()) * 0.05
+        y_m = (y_data.max() - y_data.min()) * 0.05
+        ax.set_xlim(x_data.min() - x_m, x_data.max() + x_m)
+        ax.set_ylim(y_data.min() - y_m, y_data.max() + y_m)
 
     # Shared legend (right panel only to save space)
     legend_handles = [
@@ -523,8 +531,10 @@ def run(args: argparse.Namespace) -> None:
         "policy_fit_cap": int(args.policy_fit_cap),
         "pc1_explained_variance_ratio": float(evr[0]),
         "pc2_explained_variance_ratio": float(evr[1]),
+        "pc1_explained_variance_ratio_adj": float(evr_adj[0]),
+        "pc2_explained_variance_ratio_adj": float(evr_adj[1]),
         "n_inlp_directions": int(G.shape[0]),
-        "pca_fitted_on": "raw (single shared PCA for both panels)",
+        "pca_fitted_on": "independent: raw PCA for panel (a), adjusted PCA for panel (b)",
         "segment_cap_for_policy_gap_overlay": int(SEGMENT_CAP_PRIMARY),
         "note": (
             "PCA is visual-only. Main coverage and semantic-gap results remain "
