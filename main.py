@@ -894,7 +894,7 @@ def ensure_cold_replay_inputs(args: argparse.Namespace) -> None:
     if raw_dir().exists():
         return
     print("[info] raw snapshot not found at 2_data/0_raw/ — fetching automatically")
-    run_fetch_data_snapshot(args, profile_name="raw", overwrite_data=False)
+    run_fetch_data_snapshot(args, profile_name="raw", overwrite_data=True)
 
 
 def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) -> None:
