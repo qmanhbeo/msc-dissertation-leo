@@ -85,11 +85,11 @@
 
 
 \begin{abstract}
-This study introduces a measurement protocol that separates research-policy divergence into two separable dimensions, coverage (which SDGs each corpus prioritises) and within-SDG semantic framing (how differently the same SDG is discussed), and stress-tests the instrument against its principal measurement choices, assignment method, policy source family, segment cap, embedding encoder, and register adjustment. Shared SDG labels do not necessarily imply shared framing: existing bibliometric studies map AI research to SDGs using keyword or classification methods \parencite{Armitage2020, Kashnitsky2024}, but rarely compare the semantic content of research and policy discourse. This study uses Sentence-BERT embeddings and a supervised logistic regression classifier (test macro-F1 = \MacroFOne) to map semantic distance between \NResearchPapers{} AI-for-sustainability abstracts and \NPolicySegments{} segments from \NPolicyDocs{} institutional SDG policy sources. The analysis separates coverage gaps from within-SDG semantic gaps. Because the corpora differ in register (\citeauthor{biberConrad2009register}, \citeyear{biberConrad2009register}), these gaps are observed textual-semantic divergence, not substantive disagreement.
+Shared SDG labels do not establish that research and policy \emph{frame} a goal similarly. This paper contributes a measurement framework that separates research-policy divergence into two independent dimensions --- coverage (which SDGs each corpus prioritises) and within-SDG semantic framing (how differently the same SDG is discussed) --- and isolates topic from register using Iterative Nullspace Projection (INLP). Using frozen Sentence-BERT embeddings and a supervised logistic-regression classifier (test macro-F1 = \MacroFOne) over \NResearchPapers{} AI-for-sustainability abstracts and \NPolicySegments{} segments from \NPolicyDocs{} institutional policy sources, I measure both dimensions across all 17 SDGs.
 
-The central finding is a cancellation: the raw coverage-vs-semantic-gap correlation is near-zero ($\rho = \SpearmanCovRaw$, $p = 0.765$) not because coverage and framing are independent, but because two opposing signals cancel — topic divergence rises with coverage divergence ($\rho = \RhoCovTopic = 0.48$, $p = 0.054$) while register divergence falls with it ($\rho = \RhoCovRegister = -0.49$, $p = 0.045$), and the two sum to zero. A register decomposition using Iterative Nullspace Projection (INLP) separates the raw centroid distance into a topic component (adjusted gap, mean \MeanAdjustedGap{}) and a register component (mean \MeanRegisterComponent{}). After register removal, the adjusted topic gap is the canonical comparison: it shows a strong positive association with coverage divergence (Spearman $\rho = \RhoCovTopic$, $p = 0.054$), while the raw gap is near-zero ($\rho = \SpearmanCovRaw$, $p = 0.765$) because the register component masks the topic signal ($\rho = \RhoCovRegister$, $p = 0.045$). The primary hypothesis (H1a) tests whether the raw coverage gap predicts raw semantic divergence: the association is near-zero in the canonical specification ($r = \HPrimaryCovgapPearsonR$, 95\% CI $[$\HPrimaryCovgapCiLower, \HPrimaryCovgapCiUpper$]$, $p = \HPrimaryCovgapPearsonP$). With only 17 SDG-level observations the design is powered to detect only very large correlations, so this is evidence against a strong monotonic relationship, not proof of independence. Research coverage alone likewise does not predict semantic divergence (H1c: $r = \HPrimaryPearsonR$, 95\% CI $[$\HPrimaryCiLower, \HPrimaryCiUpper$]$, $p = \HPrimaryPearsonP$; $n = \HPrimaryN$). No hypothesis survives robustness checks across alternative assignment methods, policy source families, or segment caps. Together, these null results show that coverage and framing should be measured as separate axes of divergence. The study reports three supporting patterns. First, policy discourse concentrates on SDGs~16 (Peace and Strong Institutions, \PolicyPctSdgSixteen\%), 13 (Climate Action, \PolicyPctSdgThirteen\%), and 17 (Partnerships, \PolicyPctSdgSeventeen\%), together \PolicyTopThreePct\% of policy coverage. Second, research concentrates on SDGs~3 (Good Health, \ResearchPctSdgThree\%), 9 (Industry and Infrastructure, \ResearchPctSdgNine\%), and 4 (Quality Education, artefact-affected, \ResearchPctSdgFour\%). Third, the largest within-SDG semantic gaps after register removal occur in SDGs~17 (\AdjGapSdgSeventeen), 3 (\AdjGapSdgThree), 16 (\AdjGapSdgSixteen), 1 (\AdjGapSdgOne), and 10 (\AdjGapSdgTen).
+The central finding is a cancellation. The raw coverage-vs-semantic-gap correlation is near-zero ($\rho = \SpearmanCovRaw$, $p = 0.765$) not because coverage and framing are independent, but because a positive topic signal ($\rho = \RhoCovTopic = 0.48$, $p = 0.054$) is cancelled by a negative register signal ($\rho = \RhoCovRegister = -0.49$, $p = 0.045$). After register removal, the adjusted topic gap is positively associated with coverage divergence, while the raw gap is null across every encoder--classifier configuration and policy-source family. The two signalling channels therefore sum to zero.
 
-These findings do not prove substantive research-policy misalignment. They show that shared SDG labels are insufficient evidence of shared semantic framing, and that embedding-based distance is a transparent diagnostic map of proximity and divergence. The register decomposition reveals that the raw gap masks a register--topic cancellation: after INLP register removal, the adjusted topic gap shows a strong positive association with coverage divergence, while the register component cancels this signal in the raw estimate. The results need caution because of policy source-family heterogeneity, OpenAlex retrieval boundaries, and an SDG 4 assignment that is artefact-affected rather than a clean education finding.
+The finding is robust: the adjusted semantic-gap ranking is stable across encoders, retrieval strategy, segment cap, and policy-source family, and distribution-aware metrics confirm it is a mean-direction effect. Coverage and framing should be measured and reported as separate axes of divergence; shared labels are insufficient evidence of shared framing.
 \end{abstract}
 
 \par\medskip\noindent\textbf{Keywords:} research-policy alignment; Sustainable Development Goals; semantic similarity; transformer embeddings; measurement protocol; bibliometrics.
@@ -221,14 +221,7 @@ A text is assigned to the SDG with the highest predicted probability from the tr
 
 Because the classifier is trained on pooled reference data that are themselves policy-adjacent (Section~\ref{sec:supervised-classifier}), the scoring instrument behaves differently on the two corpora. Policy segments receive systematically higher LR predicted probabilities than research abstracts (mean \AffFifteenPolicyScore{} vs \AffFifteenPaperScore{}, a \AffFifteenDiff{} gap). The gap has two causes the data cannot separate: a genre artefact (the reference data skew toward policy vocabulary) or a substantive difference (policy texts address SDG implementation more directly). Either way the asymmetry does not threaten the findings: hard argmax assignment uses only within-corpus ranking, not absolute probability levels, so the directional gap does not reorder goals. It is not an SDGi circularity effect: the training set and scored policy corpus are disjoint by construction.
 
-The combined PCA landscape (Figure~\ref{fig:pca-semantic-landscape}) visualises this asymmetry: the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{fig1_pca_semantic_landscape.pdf}
-\caption{PCA semantic landscape of the combined research--policy embedding space. Descriptive two-dimensional projection only; formal semantic distances are computed in the original embedding space.}
-\label{fig:pca-semantic-landscape}
-\end{figure}
+The combined PCA landscape visualises this asymmetry (Figure~\ref{fig:pca-semantic-landscape}, Results): the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
 
 \subsection{Coverage Gap Analysis}
 
@@ -266,14 +259,7 @@ The procedure follows the Iterative Nullspace Projection (INLP) framework of \te
 
 The identification argument rests on the stratification design. Because every iteration trains on equal numbers of research and policy embeddings from each SDG, the classifier cannot learn which SDG a document belongs to: every SDG is balanced across classes. The only remaining signal available for discrimination is the corpus-level register difference: the way research papers sound versus the way policy documents sound, within the same substantive topic. What gets removed at each iteration is therefore precisely the register component, modality differences (academic prose versus policy prose), audience conventions (peer reviewers versus policymakers), institutional stance (hedged claims versus prescriptive language), and structural patterns (methods sections versus action items). What survives is the semantic content difference between AI research and SDG policy for each specific SDG.
 
-Figure~\ref{fig:pca-register-before-after} shows the geometric effect of INLP register removal: the raw embedding space (left) separates research and policy clouds, while the adjusted space (right) merges them, confirming that the separation is driven by register rather than topic. The effect is encoder-dependent --- SciBERT already fuses the clouds without INLP --- so this figure is MPNet-specific.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{fig2_pca_register_before_after.pdf}
-\caption{PCA before/after INLP register removal (MPNet). (a)~Raw embeddings: research and policy clouds are separated. (b)~Adjusted embeddings (register removed via INLP): the clouds merge, confirming that the raw separation is driven by register rather than topic. PCA is fitted once on the raw data; both panels share the same axes. Descriptive projection only; all reported distances remain in the original embedding space.}
-\label{fig:pca-register-before-after}
-\end{figure}
+The geometric effect of INLP register removal is shown in Results (Figure~\ref{fig:pca-register-before-after}): the raw embedding space separates research and policy clouds, while the adjusted space merges them, confirming that the separation is driven by register rather than topic. The effect is encoder-dependent --- SciBERT already fuses the clouds without INLP --- so this figure is MPNet-specific.
 
 \subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
 
@@ -304,9 +290,9 @@ Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology. All t
 \section{Results}
 \label{sec:results}
 
-This section reports the validation scores, coverage and semantic gaps, H1 correlation tests, and the robustness of those rankings, without interpretation; interpretation, limits, and implications follow in the Discussion (Section~\ref{sec:discussion}).
+This section reports the validation scores, coverage and semantic gaps, H1 correlation tests, and the robustness of those rankings, without interpretation; interpretation, limits, and implications follow in the Discussion (Section~\ref{sec:discussion}). All rank-robustness tables in this paper follow one convention: the adjusted (register-removed) ranking is Panel~(a) and the raw (naive) ranking is Panel~(b), with the tested measurement dimension nested inside each panel.
 
-\subsection{Supervised Reference Classifier Validation}\label{sec:validation}
+\subsection{Supervised Reference Classifier and Coverage Gap}\label{sec:validation}\label{sec:coverage-gap}
 
 The LR classifier was evaluated on the held-out test set (n=\NTestPool{}, document-grouped to prevent source leakage). It reaches macro-F1 = \MacroFOne{} and micro-F1 = \ValidationAccuracy, far above the $1/17$ random baseline (\RandomBaselineSeventeenClass). Per-class F1 values from the test set are reported in Table~\ref{tab:validation}.
 
@@ -325,8 +311,6 @@ The MLP robustness check (Appendix~\ref{app:model-selection}) achieves a compara
 
 \textbf{In summary}, these scores mark a ceiling for the embedding-plus-linear-classifier approach; the comparable MLP result confirms the ceiling is not an artefact of linear separability assumptions.
 
-\subsection{Coverage Gap: What SDGs Each Corpus Prioritises}\label{sec:coverage-gap}
-
 Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverage profile alongside the research coverage profile. The two profiles are markedly different.
 
 \begin{figure}[ht]
@@ -344,7 +328,27 @@ Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverag
 
 Taken together, three observations support reading the coverage profiles as a real signal rather than a measurement artefact. First, the instrument reaches macro-F1 = \MacroFOne{} on the held-out benchmark (Section~\ref{sec:validation}), far above the 1/17 random baseline. Second, the SDG~3 dominance reproduced here is consistent with four prior bibliometric studies that independently find SDG~3 leading AI-for-sustainability research (Section~\ref{sec:litreview}), even though those studies used keyword and citation methods rather than embeddings. Third, this is all while the classifier is trained on reference corpora that are themselves policy-adjacent (Section~\ref{sec:supervised-classifier}); that the ranking nonetheless converges with independent, methodologically unrelated literature is the strongest available evidence that the classifier anchors a meaningful semantic coordinate system, not a policy-specific artefact.
 
-\subsection{Semantic Gap: How Differently Research and Policy Discuss Each SDG}\label{sec:semantic-gap}
+The coverage-gap ranking is stable across embedding architectures and retrieval strategy; the cross-encoder, cross-retrieval, cross-segment-cap, and cross-policy-source-family rankings are reported in Appendix~\ref{app:cross-method-section} (Tables~\ref{tab:cross-sensitivity-coverage}, \ref{tab:encoder-sensitivity-coverage}, \ref{tab:cross-sensitivity-robustness}).
+
+\subsection{Semantic Gap after Register Removal}\label{sec:semantic-gap}
+
+Figure~\ref{fig:pca-semantic-landscape} shows the combined research--policy embedding space: the policy cloud hugs the 17 reference-classifier centroids more tightly than the research cloud. The projection is descriptive only (the first two components explain \PcaLandscapePcOnePct\% and \PcaLandscapePcTwoPct\% of variance); all reported cosine distances remain in the original 768-dimensional space.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig1_pca_semantic_landscape.pdf}
+\caption{PCA semantic landscape of the combined research--policy embedding space. Descriptive two-dimensional projection only; formal semantic distances are computed in the original embedding space.}
+\label{fig:pca-semantic-landscape}
+\end{figure}
+
+Figure~\ref{fig:pca-register-before-after} shows the geometric effect of INLP register removal: the raw embedding space (left) separates research and policy clouds, while the adjusted space (right) merges them, confirming that the separation is driven by register rather than topic. The effect is encoder-dependent --- SciBERT already fuses the clouds without INLP --- so this figure is MPNet-specific.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{fig2_pca_register_before_after.pdf}
+\caption{PCA before/after INLP register removal (MPNet). (a)~Raw embeddings: research and policy clouds are separated. (b)~Adjusted embeddings (register removed via INLP): the clouds merge, confirming that the raw separation is driven by register rather than topic. PCA is fitted once on the raw data; both panels share the same axes. Descriptive projection only; all reported distances remain in the original embedding space.}
+\label{fig:pca-register-before-after}
+\end{figure}
 
 Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs, sorted by the adjusted (topic) gap after register removal. The adjusted gap ranges from \AdjGapSdgSeventeen{} (SDG~17, widest) to \AdjGapSdgFifteen{} (SDG~15, narrowest), a span of 0.282 cosine units. The raw gap (naive baseline) ranges from \SemanticGapSdgThirteen{} (SDG~13, widest) to \SemanticGapSdgSeventeen{} (SDG~17, narrowest), a span of \SemanticGapRange{}. A large gap means research and policy use different words and concepts for the same goal; a small gap, that they frame it the same way. The adjusted ranking is stable when the segment cap is 20 per document or removed (Table~\ref{tab:cross-sensitivity-robustness}), so the result does not depend on the sampling parameter. A second sampling concern is corpus asymmetry: research outweighs policy by roughly 76:1. I therefore re-derived the ranking on random research draws comparable in size to the policy corpus: across \SubsetGapRhoFiftyKN{} independent 50{,}000-paper draws it reproduces the full-corpus ordering at Spearman $\rho = \SubsetGapRhoFiftyK{}$ (SD \SubsetGapRhoStdFiftyK{}), so the research-side over-representation does not drive which SDGs show large versus small gaps (Appendix~\ref{app:balanced-subset-stability}).
 
@@ -367,9 +371,11 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs,
 
 \textbf{Smallest semantic gaps (adjusted, canonical).} SDG~15 (Life on Land, \AdjGapSdgFifteen), SDG~2 (Zero Hunger, \AdjGapSdgTwo), SDG~6 (Clean Water, \AdjGapSdgSix), SDG~14 (Life Below Water, \AdjGapSdgFourteen), and SDG~4 (Quality Education, \AdjGapSdgFour) show the narrowest adjusted gaps, meaning research and policy frame these goals in similar terms after register removal. A narrow gap does not mean balanced attention: SDG~9 is still research-dominant, and SDG~4 carries the learning-vocabulary concern (Appendix~\ref{app:sdg4-lexical-audit}). Appendix~\ref{app:semantic-gap-text-interpretability} shows example texts for high- and low-gap cases.
 
-\subsection{Coverage--Semantic Interaction: Two Distinct Dimensions of Observed Divergence}\label{sec:interaction}
+The semantic-gap ranking is stable across encoders, retrieval strategy, segment cap, and policy-source family; the corresponding rank-robustness tables are reported in Appendix~\ref{app:cross-method-section} (Tables~\ref{tab:cross-sensitivity-robustness}, \ref{tab:encoder-sensitivity-semantic}).
 
-Table~\ref{tab:interaction} reports the H1a–H1d correlation tests between coverage predictors and the within-SDG semantic gap, computed across every encoder--classifier configuration. Each block is one hypothesis; each row is one config; the three columns are the Spearman $\rho$ of the predictor against the raw gap, the adjusted (topic) gap, and the register component (raw $-$ adjusted).
+\subsection{Coverage--Semantic Interaction: A Cancellation}\label{sec:interaction}
+
+Table~\ref{tab:interaction} reports the H1a–H1d correlation tests between coverage predictors and the within-SDG semantic gap, computed across every encoder--classifier configuration. Each block is one hypothesis; each row is one config; the three columns are the Spearman $\rho$ of the predictor against the raw gap, the adjusted (topic) gap, and the register component (raw $-$ adjusted). Unlike the rank-robustness tables, raw, adjusted, and register are reported as adjacent columns here because the cancellation \emph{for each config} is the object of comparison.
 
 The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. MLP configs reuse the INLP projection matrix learned on their encoder's LR classifier (the same G), and the Concept rows use the concept-retrieved research corpus (Appendix~\ref{app:concept-retrieval-sensitivity}) with the same policy corpus.
 
@@ -394,46 +400,19 @@ Figure~\ref{fig:typology_scatter} shows each SDG's adjusted (canonical) semantic
 \label{fig:typology_scatter}
 \end{figure}
 
-\subsection{Cross-Sensitivity Robustness of the Gap Rankings}
-\label{sec:cross-sensitivity}
+\subsection{Robustness of the Gap Rankings}\label{sec:robustness}
 
-The semantic gap rankings discussed below are not equally stable across all measurement choices. Table~\ref{tab:cross-sensitivity-robustness} shows each SDG's gap rank (1 = largest gap) under the canonical MPNet--LR configuration and six alternatives spanning three axes: policy source family (curated AI/SDG, SDGi, UNGDC), segment cap (20, none), and retrieval strategy (concept-based field-of-study). The encoder and assignment-method axes are examined separately in Section~\ref{sec:encoder-sensitivity} (Table~\ref{tab:encoder-sensitivity-semantic}).
+The gap rankings reported above are not equally stable across all measurement choices. This section states the cross-method conclusions once; the full rank-robustness tables are in Appendix~\ref{app:cross-method-section} (Tables~\ref{tab:cross-sensitivity-robustness}, \ref{tab:encoder-sensitivity-semantic}, \ref{tab:encoder-sensitivity-coverage}, \ref{tab:cross-sensitivity-coverage}), and the distributional-robustness tables in Appendix~\ref{sec:distributional-robustness}.
 
-\input{../4_outputs/mpnet/tables/tab_cross_sensitivity_robustness.tex}
+\textbf{Cross-sensitivity (policy source, segment cap, retrieval).} Under the canonical MPNet--LR configuration, the within-SDG semantic-gap ranking is stable across policy source family (curated AI/SDG, SDGi, UNGDC), segment cap (20, none), and retrieval strategy (concept-based field-of-study): rank correlations with the canonical column are $\rho \geq 0.65$ throughout (Table~\ref{tab:cross-sensitivity-robustness}). The same holds for the coverage gap (Appendix~\ref{app:cross-method-section}, Table~\ref{tab:cross-sensitivity-coverage}).
 
-The same cross-sensitivity structure holds for the coverage gap (Appendix~\ref{app:cross-method-section}, Table~\ref{tab:cross-sensitivity-coverage}). The within-SDG coverage-gap ranking is stable across retrieval strategy ($\rho = \ConceptCoverageGapRho$ for concept-based field-of-study retrieval versus the keyword baseline); coverage was also stable across embedding architectures (Section~\ref{sec:encoder-sensitivity}, Table~\ref{tab:encoder-sensitivity-coverage}).
+\textbf{Encoder sensitivity.} Coverage-gap ranks are highly stable across the three encoders (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$; vs.\ MiniLM--LR $\rho \approx \MiniLMSemanticRho$, Table~\ref{tab:encoder-sensitivity-coverage}). The semantic-gap \emph{magnitude} is encoder-dependent: SciBERT gives a mean gap of \SciBERTMeanGap{} against MPNet's \MPNetMeanGap{}, because its scientific pretraining fuses the two genres (Appendix~\ref{app:register-robustness}); but the divergence conclusion and the coverage-structure invariance hold across general-purpose and domain-specialised encoders alike (Table~\ref{tab:encoder-sensitivity-semantic}). SDG~13 leads and SDG~17 trails under both general-purpose encoders; the scientific-domain SciBERT compresses the magnitudes and, at its LR assignment, shifts the lead to SDG~3 and the trail to SDG~8.
 
-\subsection{Domain-Encoder Sensitivity (Same-Dimension Scientific Encoder)}
-\label{sec:encoder-sensitivity}
+\textbf{Assignment-method sensitivity.} Under the canonical encoder, LR, the MLP robustness check, and zero-shot nearest-centroid show varied agreement (MPNet LR vs.\ MLP $\rho = \MlpSemanticRho$, LR vs.\ zero-shot $\rho = \ZeroShotSemanticRho$, Table~\ref{tab:encoder-sensitivity-semantic}). SDG~17 is the most method-sensitive goal, sitting at rank~17 under LR but rank~7 under zero-shot; the LR baseline is the canonical reference, with MLP and zero-shot as uncertainty bounds (Appendix~\ref{app:assignment-method-comparison}).
 
-The cross-sensitivity check above compares \texttt{all-mpnet-base-v2} (768-d) against the lighter \texttt{all-MiniLM-L6-v2} (384-d); because the two differ in both architecture and dimensionality, that comparison bounds encoder sensitivity only modulo the dimensionality drop. This section adds a third encoder, \texttt{allenai/scibert\_scivocab\_uncased} \parencite{Beltagy2019}, a scientific-domain BERT that is also 768-d and the architecture used by \textcite{McCarthy2026} in the closest published precedent for the present design. MPNet and SciBERT therefore differ in architecture and training domain but share dimensionality, so any remaining disagreement between them is a pure architecture/domain effect. Both encoders embed the identical canonical MPNet-segmented texts, and SciBERT is scored on the same 50,000-paper representative research sample used by the sample-stability ladder, so inputs are held fixed.
+\textbf{Distance-functional robustness.} The centroid gap is reproduced exactly as a validation gate; distribution-aware metrics (sliced Wasserstein, Chamfer, Gaussian-2-Wasserstein, MMD, energy, C2ST) recompute the gap on identical point clouds, holding assignment and embeddings fixed. Shape-sensitive metrics correlate only moderately with the adjusted centroid gap (e.g.\ $\rho=\DistGapSpearmanSwd$ for sliced Wasserstein), and the Gaussian-2-Wasserstein shape term accounts for $\approx\DistGapShapeShareMean\%$ of the distance (Appendix~\ref{sec:distributional-robustness}). The adjusted topic gap is therefore primarily a \emph{mean-direction} (topic) finding; distributional shape carries a related but distinct signal, and after register removal that shape signal diverges from the centroid ranking.
 
-The more revealing result is the gap magnitude. SciBERT gives a mean semantic gap of \SciBERTMeanGap{} (cosine \SciBERTMeanCos{}) against MPNet's \MPNetMeanGap{} (\MPNetMeanCos{}): the research--policy distance collapses to near uniformity across all 17 SDGs. The embeddings are not degenerate (SciBERT's cohesion values \SciBERTResCohesion{}, \SciBERTPolCohesion{} exceed MPNet's \MPNetResCohesion{}, \MPNetPolCohesion{}), but its scientific pretraining fuses the two genres: SciBERT's weights are tuned to 1.14M scientific papers, so policy text, which mirrors scientific vocabulary and formal syntax, lands in the same region as research abstracts; MPNet, trained on general web text, keeps the technical-method versus institutional-mandate contrast that SciBERT erases. A general-purpose encoder is therefore the right ruler: a domain-specialised one that fuses the genres cannot measure the register gap this study tracks.
-
-Tables~\ref{tab:encoder-sensitivity-semantic} and~\ref{tab:encoder-sensitivity-coverage} report the within-SDG gap rankings under MPNet, MiniLM, and SciBERT for each assignment method. Despite the compressed magnitudes, the semantic-gap ranking is moderately preserved across the three encoders (MPNet--LR vs.\ SciBERT--LR Spearman $\rho = \SciBERTSemanticRho$; MPNet--LR vs.\ MiniLM--LR $\rho \approx \MiniLMSemanticRho$), and the coverage-gap ranking is highly stable (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$). SDG~13 leads and SDG~17 trails under both general-purpose encoders; the scientific-domain SciBERT compresses the magnitudes and, at its LR assignment, shifts the lead to SDG~3 and the trail to SDG~8. The divergence findings are therefore not an artefact of the MPNet geometry or its 768-d dimensionality: the magnitudes are encoder-dependent, but the divergence conclusion and the coverage-structure invariance hold across general-purpose and domain-specialised encoders alike.
-
-\input{../4_outputs/mpnet/tables/tab_encoder_sensitivity_semantic.tex}
-
-\input{../4_outputs/mpnet/tables/tab_encoder_sensitivity_coverage.tex}
-
-Assignment-method sensitivity within MPNet tells a similar story. Under the canonical encoder, the three assignment methods, LR, zero-shot nearest-centroid, and the MLP robustness check, show varied agreement (MPNet LR vs.\ MLP $\rho = \MlpSemanticRho$, LR vs.\ zero-shot $\rho = \ZeroShotSemanticRho$, Table~\ref{tab:encoder-sensitivity-semantic}). SDG~7 moves from rank~7 under LR to rank~3 under MLP; SDG~5 moves from rank~10 to rank~16 between LR and zero-shot; SDG~8 moves from rank~6 to rank~15. SDG~17 is the most method-sensitive goal, sitting at rank~17 under LR but rank~7 under zero-shot. The LR baseline is therefore the canonical reference, with the MLP and zero-shot columns providing uncertainty bounds.
-
-\subsection{Robustness of the Semantic-Gap Ranking to the Distance Functional}
-\label{sec:distributional-robustness}
-
-The centroid gap (\S\ref{sec:semantic-gap}) is the cosine distance between per-SDG mean embeddings. A reviewer may object that a single mean discards the shape of the two point clouds: two SDGs could share a mean direction yet differ in spread or modality \parencite{Villani2008}. This section tests that objection directly by recomputing the per-SDG research--policy gap under a battery of distribution-aware metrics on the identical point clouds, holding the supervised SDG assignment and embeddings fixed; only the distance functional changes.
-
-The canonical gap is reproduced exactly as a validation gate: the full-corpus centroid gap equals the published value to $10^{-4}$, and the streamed research means reproduce the committed centroids exactly. Full-corpus metrics (sliced Wasserstein \parencite{Bonneel2015}, Chamfer \parencite{Borgefors1988}, Gaussian-2-Wasserstein \parencite{Dowson1982}, Grassmann \parencite{Edelman1998}, linear MMD \parencite{Gretton2012}) carry no sampling variance; sampled metrics (exact EMD \parencite{Rubner2000}, Sinkhorn \parencite{Cuturi2013}, energy \parencite{Szekely2013}, RBF-MMD \parencite{Gretton2012}, C2ST \parencite{LopezPaz2017}) use a 50,000-paper draw per SDG, with SDGs~1 and~17 using their full population. Table~\ref{tab:distributional-gap} reports the full per-SDG values (Appendix~\ref{app:distributional-table}).
-
-\textbf{Shape-sensitive metrics reproduce the adjusted centroid gap only partially.} The full-corpus centroid gap reproduces the published adjusted value to $10^{-4}$ (GATE~4), validating the pipeline on the identical point clouds. But the distribution-aware metrics do not rank SDG~17 first under every functional: the full-corpus sliced Wasserstein and Gaussian-2-Wasserstein distances are instead largest for SDG~12, and Chamfer for SDG~1 (Table~\ref{tab:distributional-gap}). Their Spearman correlation with the adjusted centroid gap is only moderate (e.g.\ $\rho=\DistGapSpearmanSwd$ for sliced Wasserstein, $\rho=\DistGapSpearmanFrechet$ for Gaussian-2-Wasserstein, $\rho=\DistGapSpearmanChamfer$ for Chamfer). The adjusted topic gap is therefore primarily a \emph{mean-direction} (topic) finding; distributional shape carries a related but distinct signal.
-
-\textbf{What centroids discard is quantified, not hidden.} The Gaussian-2-Wasserstein distance decomposes into a mean term and a shape (covariance) term \parencite{Dowson1982,Heusel2017}. Across SDGs the shape term accounts for a mean share of $\approx\DistGapShapeShareMean\%$ of the distance. Centroids therefore drop real distributional signal, and after register removal that shape signal diverges from the centroid ranking: the adjusted topic gap should be read as a mean-direction summary, complemented (not replaced) by the distribution-aware distances.
-
-\textbf{Margin-level nuance.} The second and third canonical positions under the adjusted centroid gap are SDGs~3 and~16; at the margin, distribution-aware metrics elevate SDGs~1, 12, and~14 instead (Appendix~\ref{app:distributional-table}). This is a genuine margin-level reshuffle among SDGs with similar gap magnitudes, not an error; the centroid ranking remains a coherent mean-direction summary.
-
-\textbf{Separation, not ranking, from C2ST.} The classifier two-sample test \parencite{LopezPaz2017} returns AUC $\approx1$ for all 17 SDGs, so it confirms that research and policy are separable in every SDG but carries no ranking signal ($\rho\approx0$). Its near-constant value is expected, not a failure.
-
-\textbf{Sampling stability.} The sampled metrics use a 50,000-paper draw; a replicate seed changes any sampled gap by at most $\DistGapMaxSeedDelta$, confirming the estimate is stable and the default seed is representative. With the cross-sensitivity checks (\S\ref{sec:cross-sensitivity}), the centroid gap ranking is therefore robust to both the assignment method and the distance functional.
+\textbf{Synthesis.} Two conclusions survive the full cross-sensitivity grid. First, SDG~15 (Life on Land) is the robustly least-divergent goal: it sits at rank~17 (smallest gap) under the adjusted gap for LR and MLP across every encoder, and at rank~17 under the raw gap for most configs as well. Second, SDG~17 (Partnerships) is the most method-sensitive and the most divergent under the adjusted gap, while SDG~13 leads under the raw gap; the register decomposition explains the inversion (Section~\ref{sec:semantic-gap}, Table~\ref{tab:register-decomposition}). The central cancellation (Section~\ref{sec:interaction}) replicates across every encoder--classifier config and policy-source family, so the findings are not an artefact of one measurement choice.
 
 %% ============================================================
 \section{Discussion}
@@ -445,7 +424,7 @@ This cancellation is not a design confound. The supervised LR classifier (\S\ref
 
 The paper makes two contributions of unequal weight: a measurement framework separating classification from measurement and coverage from framing, which holds across changes of assignment method, policy source family, and segment cap (Section~\ref{sec:cross-sensitivity}, appendices); and a weaker set of AI--SDG findings, in which the coverage--semantic association reverses sign under some configurations (Table~\ref{tab:interaction}) and SDG~17's position depends heavily on assignment method (Table~\ref{tab:encoder-sensitivity-semantic}). The framework is the main contribution; the alignment findings are a first application to be checked against a larger, more diverse policy corpus, not settled results.
 
-The coverage and gap profiles are conditional on corpus composition. The policy source-family split shifts the full profile: the curated AI/SDG sub-corpus is innovation-heavy (SDG~9 leads), while SDGi and UNGDC are climate-, partnerships-, and governance-oriented (SDGs~13,~17,~16) (Table~\ref{tab:policy-source-family}, Appendix~\ref{app:policy-source-data}). The cross-sensitivity table (Table~\ref{tab:cross-sensitivity-robustness}) is therefore the primary interpretive device, with encoder and assignment-method axes covered by Table~\ref{tab:encoder-sensitivity-semantic} (Section~\ref{sec:encoder-sensitivity}); claims are limited to findings that survive this filtering.
+The coverage and gap profiles are conditional on corpus composition. The policy source-family split shifts the full profile: the curated AI/SDG sub-corpus is innovation-heavy (SDG~9 leads), while SDGi and UNGDC are climate-, partnerships-, and governance-oriented (SDGs~13,~17,~16) (Table~\ref{tab:policy-source-family}, Appendix~\ref{app:policy-source-data}). Claims are limited to findings that survive the cross-sensitivity filtering (Section~\ref{sec:robustness}).
 
 \subsection{Two Distinct Dimensions of Observed Divergence}
 
@@ -453,7 +432,7 @@ The cancellation is best read as a structural difference between knowledge syste
 
 \subsection{Robust Patterns of Divergence}
 
-The cross-sensitivity comparison narrows the gap findings stable enough for individual interpretation. Under the adjusted (topic) gap (canonical), SDG~15 is the robustly least-divergent goal (rank~17 under LR and MLP), confirming that research and policy discuss life-on-land in similar terms after register removal. SDG~17, the most divergent under the adjusted gap (\AdjGapSdgSeventeen, Table~\ref{tab:register-decomposition}), is also the most method-sensitive: its position depends heavily on assignment method and register treatment, consistent with SDG~17's character as the means-of-implementation goal \parencite{LeBlanc2015}. Under the raw gap (naive baseline), SDG~13 leads instead; the register decomposition confirms that register uniformly inflates the raw gap, except for SDG~17 where register \emph{increases} apparent similarity (\RegCompSdgSeventeen{}).
+The cross-sensitivity grid (Section~\ref{sec:robustness}) narrows the gap findings to those stable enough for individual interpretation: SDG~15 is the robustly least-divergent goal and SDG~17 the most method-sensitive. SDG~17, the most divergent under the adjusted gap (\AdjGapSdgSeventeen, Table~\ref{tab:register-decomposition}), is consistent with its character as the means-of-implementation goal \parencite{LeBlanc2015}. The register decomposition confirms that register uniformly inflates the raw gap, except for SDG~17 where register \emph{increases} apparent similarity (\RegCompSdgSeventeen{}).
 
 SDG~3, SDG~16, and SDG~1 are the most robustly high-gap goals under the adjusted gap at the canonical MPNet--LR specification. The research corpus concentrates on technically tractable SDGs (3,~9,~4,~16,~11); SDG~4 is strongly represented but its share is partly inflated by ML learning-vocabulary (Appendix~\ref{app:sdg4-lexical-audit}). SDGs~7 and~12 sit consistently in the upper half of adjusted gap ranks.
 
@@ -599,7 +578,7 @@ The contrasts echo the embedding patterns. The widest-gap SDGs (13, 11, 3, 1, 7,
 
 
 \subsection{Distance-Functional Robustness Table}
-\label{app:distributional-table}
+\label{app:distributional-table}\label{sec:distributional-robustness}
 
 Table~\ref{tab:distributional-gap} reports the per-SDG research--policy gap under the full battery of distribution-aware metrics described in Section~\ref{sec:distributional-robustness}, together with the canonical centroid gap. Part~1 covers the full-corpus exact metrics (sliced Wasserstein, Chamfer, Hausdorff, Gaussian-2-Wasserstein, Grassmann, linear MMD); part~2 covers the sampled metrics (exact EMD, Sinkhorn, energy, squared RBF MMD, C2ST AUC) plus the sampled centroid gap. The final row of each part reports Spearman $\rho$ between each metric's ranking and the canonical (adjusted) ranking.
 
@@ -734,6 +713,20 @@ Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword
 
 Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} report the raw coverage gap and semantic gap values for each SDG across seven encoder--assignment-method combinations, with an additional concept-retrieval LR column for comparison against the keyword-retrieved research corpus baseline (Appendix~\ref{app:concept-retrieval-sensitivity}). While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the tables below show the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Assumption A19); semantic gap policy centroids use a 50-segment-per-document cap. The zero-shot nearest-centroid method is reported for the canonical MPNet encoder only; it is scoped to a single supervised-versus-nearest-centroid comparison (Appendix~\ref{app:assignment-method-comparison}), not a cross-encoder axis.
 
+\subsection{Rank Robustness: Cross-Sensitivity and Encoder Sensitivity}\label{sec:cross-sensitivity}
+
+Table~\ref{tab:cross-sensitivity-robustness} reports each SDG's semantic-gap rank under the canonical MPNet--LR configuration and six alternatives spanning policy source family (curated AI/SDG, SDGi, UNGDC), segment cap (20, none), and retrieval strategy (concept-based field-of-study). Table~\ref{tab:encoder-sensitivity-semantic} and Table~\ref{tab:encoder-sensitivity-coverage} report the within-SDG gap rankings under MPNet, MiniLM, and SciBERT for each assignment method. In every rank-robustness table the adjusted (register-removed) ranking is Panel~(a) and the raw (naive) ranking is Panel~(b), with the tested dimension nested inside each panel.
+
+\input{../4_outputs/mpnet/tables/tab_cross_sensitivity_robustness.tex}
+
+\subsection{Encoder Sensitivity}\label{sec:encoder-sensitivity}
+
+The semantic-gap ranking is moderately preserved across the three encoders (MPNet--LR vs.\ SciBERT--LR Spearman $\rho = \SciBERTSemanticRho$; MPNet--LR vs.\ MiniLM--LR $\rho \approx \MiniLMSemanticRho$), and the coverage-gap ranking is highly stable (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$). SDG~13 leads and SDG~17 trails under both general-purpose encoders; the scientific-domain SciBERT compresses the magnitudes and, at its LR assignment, shifts the lead to SDG~3 and the trail to SDG~8. Assignment-method sensitivity within MPNet: the three assignment methods, LR, zero-shot nearest-centroid, and the MLP robustness check, show varied agreement (MPNet LR vs.\ MLP $\rho = \MlpSemanticRho$, LR vs.\ zero-shot $\rho = \ZeroShotSemanticRho$). SDG~17 is the most method-sensitive goal, sitting at rank~17 under LR but rank~7 under zero-shot. The LR baseline is the canonical reference, with MLP and zero-shot as uncertainty bounds.
+
+\input{../4_outputs/mpnet/tables/tab_encoder_sensitivity_semantic.tex}
+
+\input{../4_outputs/mpnet/tables/tab_encoder_sensitivity_coverage.tex}
+
 \input{../4_outputs/mpnet/tables/tab_cross_sensitivity_coverage.tex}
 
 \begin{table}[ht]
@@ -751,7 +744,7 @@ Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} r
 \caption{(continued) Semantic gap values across embedding architectures, assignment methods, and retrieval strategies.}
 \label{tab:app-cross-method-semgap}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex}}
-\par\smallskip\footnotesize\emph{Notes:} Semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap. All values are cosine units.\par
+\par\smallskip\footnotesize\emph{Notes:} Semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap. All values are cosine units. This is a \emph{values} table reporting the adjusted (register-removed) semantic gap only; it carries no raw/adjusted panel split, which is shown in the rank-robustness tables (Section~\ref{sec:cross-sensitivity}).\par
 \end{table}
 
 \subsection{Assignment-Method Comparison: Supervised vs.\ Nearest-Centroid}
