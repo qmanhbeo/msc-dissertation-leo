@@ -1,0 +1,158 @@
+{
+  "embedding_model": "allenai/scibert_scivocab_uncased",
+  "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+  "correlations": {
+    "coverage_vs_adjusted": {
+      "rho": 0.2328,
+      "p": 0.3685
+    },
+    "coverage_vs_register": {
+      "rho": -0.3186,
+      "p": 0.2126
+    }
+  },
+  "summary": {
+    "mean_raw_gap": 0.0454,
+    "mean_adjusted_gap": 0.0526,
+    "mean_register_component": -0.0072,
+    "mean_coverage_gap": 0.0594
+  },
+  "per_sdg": [
+    {
+      "sdg": 1,
+      "raw_gap": 0.043066,
+      "adjusted_gap": 0.045401,
+      "register_component": -0.002335,
+      "coverage_gap": 0.050557,
+      "name": "No Poverty"
+    },
+    {
+      "sdg": 2,
+      "raw_gap": 0.044206,
+      "adjusted_gap": 0.057832,
+      "register_component": -0.013626,
+      "coverage_gap": 0.024696,
+      "name": "Zero Hunger"
+    },
+    {
+      "sdg": 3,
+      "raw_gap": 0.055615,
+      "adjusted_gap": 0.047276,
+      "register_component": 0.008339,
+      "coverage_gap": 0.232256,
+      "name": "Good Health and Well-Being"
+    },
+    {
+      "sdg": 4,
+      "raw_gap": 0.043329,
+      "adjusted_gap": 0.046129,
+      "register_component": -0.0028,
+      "coverage_gap": 0.124803,
+      "name": "Quality Education"
+    },
+    {
+      "sdg": 5,
+      "raw_gap": 0.056908,
+      "adjusted_gap": 0.15844,
+      "register_component": -0.101532,
+      "coverage_gap": 0.032381,
+      "name": "Gender Equality"
+    },
+    {
+      "sdg": 6,
+      "raw_gap": 0.043512,
+      "adjusted_gap": 0.025455,
+      "register_component": 0.018057,
+      "coverage_gap": 0.02437,
+      "name": "Clean Water and Sanitation"
+    },
+    {
+      "sdg": 7,
+      "raw_gap": 0.050167,
+      "adjusted_gap": 0.035897,
+      "register_component": 0.01427,
+      "coverage_gap": 0.012644,
+      "name": "Affordable and Clean Energy"
+    },
+    {
+      "sdg": 8,
+      "raw_gap": 0.036206,
+      "adjusted_gap": 0.031138,
+      "register_component": 0.005068,
+      "coverage_gap": 0.034085,
+      "name": "Decent Work and Economic Growth"
+    },
+    {
+      "sdg": 9,
+      "raw_gap": 0.042473,
+      "adjusted_gap": 0.029684,
+      "register_component": 0.012789,
+      "coverage_gap": 0.148081,
+      "name": "Industry, Innovation and Infrastructure"
+    },
+    {
+      "sdg": 10,
+      "raw_gap": 0.052174,
+      "adjusted_gap": 0.059251,
+      "register_component": -0.007077,
+      "coverage_gap": 0.013751,
+      "name": "Reduced Inequalities"
+    },
+    {
+      "sdg": 11,
+      "raw_gap": 0.051387,
+      "adjusted_gap": 0.047533,
+      "register_component": 0.003854,
+      "coverage_gap": 0.012904,
+      "name": "Sustainable Cities and Communities"
+    },
+    {
+      "sdg": 12,
+      "raw_gap": 0.039547,
+      "adjusted_gap": 0.025716,
+      "register_component": 0.013831,
+      "coverage_gap": 0.023078,
+      "name": "Responsible Consumption and Production"
+    },
+    {
+      "sdg": 13,
+      "raw_gap": 0.052281,
+      "adjusted_gap": 0.060638,
+      "register_component": -0.008357,
+      "coverage_gap": 0.047836,
+      "name": "Climate Action"
+    },
+    {
+      "sdg": 14,
+      "raw_gap": 0.043342,
+      "adjusted_gap": 0.040211,
+      "register_component": 0.003131,
+      "coverage_gap": 0.026986,
+      "name": "Life Below Water"
+    },
+    {
+      "sdg": 15,
+      "raw_gap": 0.043641,
+      "adjusted_gap": 0.031165,
+      "register_component": 0.012476,
+      "coverage_gap": 0.004673,
+      "name": "Life on Land"
+    },
+    {
+      "sdg": 16,
+      "raw_gap": 0.04127,
+      "adjusted_gap": 0.087768,
+      "register_component": -0.046498,
+      "coverage_gap": 0.088344,
+      "name": "Peace, Justice and Strong Institutions"
+    },
+    {
+      "sdg": 17,
+      "raw_gap": 0.032352,
+      "adjusted_gap": 0.06488,
+      "register_component": -0.032528,
+      "coverage_gap": 0.108834,
+      "name": "Partnerships for the Goals"
+    }
+  ]
+}

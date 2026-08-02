@@ -1,0 +1,158 @@
+{
+  "embedding_model": "all-MiniLM-L6-v2",
+  "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+  "correlations": {
+    "coverage_vs_adjusted": {
+      "rho": 0.2574,
+      "p": 0.3187
+    },
+    "coverage_vs_register": {
+      "rho": -0.4534,
+      "p": 0.0675
+    }
+  },
+  "summary": {
+    "mean_raw_gap": 0.3613,
+    "mean_adjusted_gap": 0.1667,
+    "mean_register_component": 0.1946,
+    "mean_coverage_gap": 0.0515
+  },
+  "per_sdg": [
+    {
+      "sdg": 1,
+      "raw_gap": 0.25926,
+      "adjusted_gap": 0.203549,
+      "register_component": 0.055711,
+      "coverage_gap": 0.041667,
+      "name": "No Poverty"
+    },
+    {
+      "sdg": 2,
+      "raw_gap": 0.284351,
+      "adjusted_gap": 0.071524,
+      "register_component": 0.212827,
+      "coverage_gap": 0.019488,
+      "name": "Zero Hunger"
+    },
+    {
+      "sdg": 3,
+      "raw_gap": 0.473853,
+      "adjusted_gap": 0.247906,
+      "register_component": 0.225947,
+      "coverage_gap": 0.230423,
+      "name": "Good Health and Well-Being"
+    },
+    {
+      "sdg": 4,
+      "raw_gap": 0.291816,
+      "adjusted_gap": 0.178895,
+      "register_component": 0.112921,
+      "coverage_gap": 0.08532,
+      "name": "Quality Education"
+    },
+    {
+      "sdg": 5,
+      "raw_gap": 0.494488,
+      "adjusted_gap": 0.291269,
+      "register_component": 0.203219,
+      "coverage_gap": 0.01515,
+      "name": "Gender Equality"
+    },
+    {
+      "sdg": 6,
+      "raw_gap": 0.285215,
+      "adjusted_gap": 0.106451,
+      "register_component": 0.178764,
+      "coverage_gap": 0.020678,
+      "name": "Clean Water and Sanitation"
+    },
+    {
+      "sdg": 7,
+      "raw_gap": 0.418887,
+      "adjusted_gap": 0.136913,
+      "register_component": 0.281974,
+      "coverage_gap": 0.004063,
+      "name": "Affordable and Clean Energy"
+    },
+    {
+      "sdg": 8,
+      "raw_gap": 0.430582,
+      "adjusted_gap": 0.172599,
+      "register_component": 0.257983,
+      "coverage_gap": 0.018452,
+      "name": "Decent Work and Economic Growth"
+    },
+    {
+      "sdg": 9,
+      "raw_gap": 0.337828,
+      "adjusted_gap": 0.143583,
+      "register_component": 0.194245,
+      "coverage_gap": 0.117634,
+      "name": "Industry, Innovation and Infrastructure"
+    },
+    {
+      "sdg": 10,
+      "raw_gap": 0.454744,
+      "adjusted_gap": 0.218817,
+      "register_component": 0.235927,
+      "coverage_gap": 0.009924,
+      "name": "Reduced Inequalities"
+    },
+    {
+      "sdg": 11,
+      "raw_gap": 0.339397,
+      "adjusted_gap": 0.105711,
+      "register_component": 0.233686,
+      "coverage_gap": 0.019832,
+      "name": "Sustainable Cities and Communities"
+    },
+    {
+      "sdg": 12,
+      "raw_gap": 0.390683,
+      "adjusted_gap": 0.166791,
+      "register_component": 0.223892,
+      "coverage_gap": 0.013321,
+      "name": "Responsible Consumption and Production"
+    },
+    {
+      "sdg": 13,
+      "raw_gap": 0.515013,
+      "adjusted_gap": 0.178846,
+      "register_component": 0.336167,
+      "coverage_gap": 0.053905,
+      "name": "Climate Action"
+    },
+    {
+      "sdg": 14,
+      "raw_gap": 0.300169,
+      "adjusted_gap": 0.108908,
+      "register_component": 0.191261,
+      "coverage_gap": 0.022812,
+      "name": "Life Below Water"
+    },
+    {
+      "sdg": 15,
+      "raw_gap": 0.316873,
+      "adjusted_gap": 0.11099,
+      "register_component": 0.205883,
+      "coverage_gap": 0.000706,
+      "name": "Life on Land"
+    },
+    {
+      "sdg": 16,
+      "raw_gap": 0.307851,
+      "adjusted_gap": 0.228433,
+      "register_component": 0.079418,
+      "coverage_gap": 0.115394,
+      "name": "Peace, Justice and Strong Institutions"
+    },
+    {
+      "sdg": 17,
+      "raw_gap": 0.240915,
+      "adjusted_gap": 0.162831,
+      "register_component": 0.078084,
+      "coverage_gap": 0.08611,
+      "name": "Partnerships for the Goals"
+    }
+  ]
+}
