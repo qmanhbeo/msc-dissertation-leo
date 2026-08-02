@@ -379,7 +379,7 @@ Table~\ref{tab:interaction} reports the H1a–H1d correlation tests between cove
 
 The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. MLP configs reuse the INLP projection matrix learned on their encoder's LR classifier (the same G), and the Concept rows use the concept-retrieved research corpus (Appendix~\ref{app:concept-retrieval-sensitivity}) with the same policy corpus.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \caption{H1a–H1d coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier configs. Raw gap = main semantic-gap estimate. Adj.\ gap = after INLP register removal (canonical). Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.}
