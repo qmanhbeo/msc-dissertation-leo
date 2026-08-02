@@ -1,0 +1,17 @@
+family,family_label,n_primary,predictor,n,skipped,pearson_r,pearson_p,spearman_rho,spearman_p
+full_policy_corpus,Full corpus,17,research,17,False,0.201262,0.438579,-0.051471,0.844467
+full_policy_corpus,Full corpus,17,policy,17,False,0.468127,0.058078,0.438725,0.078117
+full_policy_corpus,Full corpus,17,covgap,17,False,0.486135,0.047864,0.47549,0.053723
+full_policy_corpus,Full corpus,17,dominance,17,False,-0.040842,0.876321,-0.267157,0.299918
+curated_ai_sdg,Curated AI/SDG,17,research,17,False,-0.268934,0.296591,-0.426471,0.087805
+curated_ai_sdg,Curated AI/SDG,17,policy,17,False,0.160937,0.537194,0.203217,0.43405
+curated_ai_sdg,Curated AI/SDG,17,covgap,17,False,0.068981,0.792502,-0.068627,0.793542
+curated_ai_sdg,Curated AI/SDG,17,dominance,17,False,-0.34031,0.181364,-0.485294,0.048308
+sdgi_vnr_vlr,SDGi VNR/VLR,17,research,17,False,0.456929,0.065198,0.132353,0.612593
+sdgi_vnr_vlr,SDGi VNR/VLR,17,policy,17,False,0.044118,0.866483,0.107909,0.680164
+sdgi_vnr_vlr,SDGi VNR/VLR,17,covgap,17,False,0.573365,0.016119,0.507353,0.037633
+sdgi_vnr_vlr,SDGi VNR/VLR,17,dominance,17,False,0.46368,0.060833,0.215686,0.405741
+ungdc_speeches,UNGDC speeches,16,research,16,False,0.015561,0.954387,-0.320588,0.226045
+ungdc_speeches,UNGDC speeches,16,policy,16,False,0.468736,0.067037,0.22419,0.403876
+ungdc_speeches,UNGDC speeches,16,covgap,16,False,0.437847,0.089847,0.297059,0.263863
+ungdc_speeches,UNGDC speeches,16,dominance,16,False,-0.389336,0.136074,-0.426471,0.099499

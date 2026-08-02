@@ -468,7 +468,8 @@ def run(args: argparse.Namespace) -> None:
 
     for family in FAMILY_ORDER:
         subset_indices = family_to_indices[family]
-        profile, doc_meta, _ = document_weighted_policy_profile_subset(policy_scores, policy_ids, subset_indices)
+        hard_profile, soft_profile, doc_meta = document_weighted_policy_profile_subset(policy_scores, policy_ids, subset_indices)
+        profile = hard_profile
         docs = len(doc_meta)
         segments = len(subset_indices)
         top3 = top3_sdgs(profile)
@@ -575,6 +576,8 @@ def run(args: argparse.Namespace) -> None:
         semantic_rows,
     )
     if not is_adjusted:
+        write_table_combined(tables_dir / "tab_a2_policy_source_family_combined.tex", semantic_rows, coverage_rows)
+    else:
         write_table_combined(tables_dir / "tab_a2_policy_source_family_combined.tex", semantic_rows, coverage_rows)
 
     # ---- Per-family H25 replication (Item 1 symmetry control) ----

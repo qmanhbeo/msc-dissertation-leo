@@ -1,6 +1,7 @@
 {
   "method": "centroid_to_centroid",
   "embedding_model": "allenai/scibert_scivocab_uncased",
+  "classifier": "lr",
   "embeddings": "adjusted",
   "segment_cap": 50,
   "min_cluster_size": 10,

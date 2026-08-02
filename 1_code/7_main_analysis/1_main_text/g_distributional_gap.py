@@ -1226,22 +1226,29 @@ def run(args: argparse.Namespace) -> None:
         output_dir, subdir="main", model=model
     )
     if is_adjusted:
-        layout.root = layout.root / "adjusted"
-        layout.data_dir = layout.root / "data"
-        layout.tables_dir = layout.root / "tables"
-        layout.data_dir.mkdir(parents=True, exist_ok=True)
-        layout.tables_dir.mkdir(parents=True, exist_ok=True)
+        import dataclasses
+        adj_root = layout.root / "adjusted"
+        adj_root.mkdir(parents=True, exist_ok=True)
+        adj_data = adj_root / "data"
+        adj_tables = adj_root / "tables"
+        adj_data.mkdir(parents=True, exist_ok=True)
+        adj_tables.mkdir(parents=True, exist_ok=True)
+        layout = dataclasses.replace(
+            layout,
+            root=adj_root,
+            data_dir=adj_data,
+            tables_dir=adj_tables,
+        )
     records_path = layout.data_dir / "g_distributional_gap_records.jsonl"
     summary_path = layout.data_dir / "g_distributional_gap_summary.json"
 
     SCRIPT_VERSION = "1"
     PRIMARY = summary_path
     OUTPUTS = [PRIMARY, records_path]
-    if not is_adjusted:
-        OUTPUTS += [
-            layout.tables_dir / "num_distributional_gap.tex",
-            layout.tables_dir / "tab_distributional_gap.tex",
-        ]
+    OUTPUTS += [
+        layout.tables_dir / "num_distributional_gap.tex",
+        layout.tables_dir / "tab_distributional_gap.tex",
+    ]
     fp = fingerprint_of(
         manifest_path,
         scored_dir / "paper_scores_shards" / "metadata" / "manifest.json",
@@ -1263,6 +1270,22 @@ def run(args: argparse.Namespace) -> None:
     log.info("Config hash: %s | output: %s", cfg_hash, layout.root)
 
     canonical = load_canonical(model)
+    # In adjusted mode the canonical reference for the rank-correlation must be the
+    # register-removed (adjusted) centroid gap, not the raw gap. Under raw embeddings
+    # the distribution-aware metrics track the register component; comparing them to
+    # the raw gap would conflate topic and register. So we substitute the adjusted
+    # semantic_gap as the reference ranking. (Other canonical fields used by GATE 1/2
+    # — n_policy_segments_capped, n_papers — are assignment counts and stay raw.)
+    if is_adjusted:
+        adj_canonical_path = output_dir_for_model(model) / "data" / "adjusted" / CANONICAL_SEMANTIC_JSON
+        if adj_canonical_path.exists():
+            adj_payload = load_json(adj_canonical_path)
+            adj_map = {int(r["sdg"]): r for r in adj_payload["per_sdg"]}
+            for s in canonical:
+                if s in adj_map and adj_map[s].get("semantic_gap") is not None:
+                    canonical[s]["semantic_gap"] = float(adj_map[s]["semantic_gap"])
+        else:
+            log.warning("Adjusted canonical %s not found; ρ reference falls back to raw gap", adj_canonical_path)
     research_centroids = np.load(scored_dir_for_model(model) / "research_centroids.npy").astype(np.float64)
     policy_state = load_policy_side(model, canonical)
 
@@ -1350,8 +1373,7 @@ def run(args: argparse.Namespace) -> None:
     summary = build_summary(records, canonical, cfg, cfg_hash, active_sdgs, partial)
     summary_path = layout.data_dir / "g_distributional_gap_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    if not is_adjusted:
-        write_tables(layout.tables_dir, summary)
+    write_tables(layout.tables_dir, summary)
     log.info("Saved distributional-gap outputs into %s", layout.root)
     record_fingerprint(OUTPUTS, fp, PRIMARY)
 

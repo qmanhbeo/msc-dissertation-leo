@@ -142,6 +142,25 @@ def plot_centroid_similarity_heatmap(layout, model: str) -> None:
     print("Saved: fig_a4_centroid_similarity_heatmap.pdf")
 
 
+def load_gap_maps(layout) -> tuple[dict[int, float], dict[int, float]]:
+    """Load per-SDG semantic gaps. Adjusted = after INLP register removal (canonical);
+    raw = the naive baseline. Falls back to empty maps if files are absent so the
+    script never crashes (raw-only rendering is used when no adjusted data exists)."""
+    adj_path = layout.data_dir / "adjusted" / "4_3_semantic_gap_distances.json"
+    raw_path = layout.data_dir / "4_3_semantic_gap_distances.json"
+    adj_map: dict[int, float] = {}
+    raw_map: dict[int, float] = {}
+    if adj_path.exists():
+        with open(adj_path) as f:
+            for r in json.load(f).get("per_sdg", []):
+                adj_map[int(r["sdg"])] = float(r["semantic_gap"])
+    if raw_path.exists():
+        with open(raw_path) as f:
+            for r in json.load(f).get("per_sdg", []):
+                raw_map[int(r["sdg"])] = float(r["semantic_gap"])
+    return adj_map, raw_map
+
+
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
@@ -182,6 +201,10 @@ def main() -> None:
         _cov_counts = json.load(f)
     N_RESEARCH_PAPERS = _cov_counts["n_research_papers"]
     N_POLICY_DOCS = _cov_counts["n_policy_documents"]
+
+    # Adjusted (register-removed, canonical) + raw (baseline) semantic gaps.
+    adj_map, raw_map = load_gap_maps(layout)
+    use_adjusted = bool(adj_map)
 
     # -----------------------------------------------------------------------
     # Figure 1 — Coverage profiles comparison
@@ -248,33 +271,59 @@ def main() -> None:
     print("Saved: fig3_coverage_profiles.pdf")
 
     # -----------------------------------------------------------------------
-    # Figure 2 — Semantic gap by SDG
+    # Figure 2 — Semantic gap by SDG (adjusted canonical, raw baseline)
     # -----------------------------------------------------------------------
     fig2, ax2 = plt.subplots(figsize=(7, 5.5))
 
-    df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
-    y = np.arange(len(df_sem))
-    colors = [RESEARCH_COLOR if v > median_semantic_gap else "#BBBBBB" for v in df_sem["semantic_gap"]]
-
-    ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
-    for i, val in enumerate(df_sem["semantic_gap"]):
-        ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
-    ax2.axvline(median_semantic_gap, color="grey", linestyle="--", linewidth=1,
-                label=f"Median ({median_semantic_gap:.3f})")
-    ax2.axvline(mean_semantic_gap, color="black", linestyle=":", linewidth=1,
-                label=f"Mean ({mean_semantic_gap:.3f})")
-    ax2.set_yticks(y)
-    ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=8.5)
-    ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
-    # ax2.set_title("Within-SDG semantic gap by SDG\nHigher values indicate greater research-policy semantic divergence", fontsize=8.5, loc="left")
-
-    high_patch = mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap")
-    low_patch = mpatches.Patch(color="#BBBBBB", alpha=0.88, label="Below median gap")
-    ax2.legend(handles=[
-        high_patch, low_patch,
-        plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median ({median_semantic_gap:.3f})"),
-        plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean ({mean_semantic_gap:.3f})"),
-    ], fontsize=7.5)
+    if use_adjusted:
+        fig2_df = pd.DataFrame({"sdg": list(adj_map.keys()), "gap": list(adj_map.values())})
+        fig2_df["raw"] = fig2_df["sdg"].map(raw_map)
+        fig2_df = fig2_df.sort_values("gap", ascending=False).reset_index(drop=True)
+        y = np.arange(len(fig2_df))
+        _med = float(np.median(fig2_df["gap"].to_numpy()))
+        _mean = float(np.mean(fig2_df["gap"].to_numpy()))
+        colors = [RESEARCH_COLOR if v > _med else "#BBBBBB" for v in fig2_df["gap"]]
+        ax2.barh(y, fig2_df["gap"], color=colors, alpha=0.88, label="Adjusted gap (canonical)")
+        for i, (_, row) in enumerate(fig2_df.iterrows()):
+            if pd.notna(row["raw"]):
+                ax2.plot(row["raw"], i, "D", color="#555555", markersize=5, alpha=0.85,
+                         label="Raw gap (baseline)" if i == 0 else None)
+        for i, val in enumerate(fig2_df["gap"]):
+            ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
+        ax2.axvline(_med, color="grey", linestyle="--", linewidth=1,
+                    label=f"Median (adj, {_med:.3f})")
+        ax2.axvline(_mean, color="black", linestyle=":", linewidth=1,
+                    label=f"Mean (adj, {_mean:.3f})")
+        ax2.set_yticks(y)
+        ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in fig2_df.iterrows()], fontsize=8.5)
+        ax2.set_xlabel("Semantic gap (1 − cosine similarity; adjusted = after INLP register removal)")
+        ax2.legend(handles=[
+            mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Adjusted gap (canonical)"),
+            plt.Line2D([0], [0], marker="D", color="#555555", linestyle="None", label="Raw gap (baseline)"),
+            plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median (adj, {median_semantic_gap:.3f})"),
+            plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean (adj, {mean_semantic_gap:.3f})"),
+        ], fontsize=7.5)
+    else:
+        df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
+        y = np.arange(len(df_sem))
+        colors = [RESEARCH_COLOR if v > median_semantic_gap else "#BBBBBB" for v in df_sem["semantic_gap"]]
+        ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
+        for i, val in enumerate(df_sem["semantic_gap"]):
+            ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
+        ax2.axvline(median_semantic_gap, color="grey", linestyle="--", linewidth=1,
+                    label=f"Median ({median_semantic_gap:.3f})")
+        ax2.axvline(mean_semantic_gap, color="black", linestyle=":", linewidth=1,
+                    label=f"Mean ({mean_semantic_gap:.3f})")
+        ax2.set_yticks(y)
+        ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=8.5)
+        ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
+        high_patch = mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap")
+        low_patch = mpatches.Patch(color="#BBBBBB", alpha=0.88, label="Below median gap")
+        ax2.legend(handles=[
+            high_patch, low_patch,
+            plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median ({median_semantic_gap:.3f})"),
+            plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean ({mean_semantic_gap:.3f})"),
+        ], fontsize=7.5)
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
     ax2.invert_yaxis()
@@ -287,32 +336,62 @@ def main() -> None:
 
     # -----------------------------------------------------------------------
     # Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
+    # Adjusted (canonical) gap is the solid blue series; raw gap is the open
+    # grey baseline so the reader can see both on the same coverage axis.
     # -----------------------------------------------------------------------
     fig3, ax3 = plt.subplots(figsize=(7.5, 6))
 
-    ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
-    ax3.axhline(median_semantic_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
-
-    xlim = (0, df["coverage_gap_abs"].max() * 1.12)
-    ylim = (max(0.0, df_sem_valid["semantic_gap"].min() * 0.92), df_sem_valid["semantic_gap"].max() * 1.08)
-
-    for _, row in df_sem_valid.iterrows():
-        sdg = int(row["sdg"])
-        x = row["coverage_gap_abs"]
-        y = row["semantic_gap"]
-        ax3.scatter(x, y, s=55, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
-        offsets = {4: (0.02, 0.003), 9: (-0.03, 0.003), 3: (0.02, -0.004),
-                   16: (0.02, 0.003), 8: (0.015, 0.003), 17: (0.02, -0.005),
-                   13: (0.02, -0.004), 12: (0.02, 0.003)}
-        dx, dy = offsets.get(sdg, (0.015, 0.002))
-        ax3.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx, y + dy),
-                     fontsize=8, color="black",
-                     arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
+    if use_adjusted:
+        _ymed = float(np.median(list(adj_map.values())))
+        ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
+        ax3.axhline(_ymed, color="grey", linestyle="--", linewidth=1, alpha=0.7)
+        xlim = (0, df["coverage_gap_abs"].max() * 1.12)
+        _adj_vals = list(adj_map.values())
+        _raw_vals = [raw_map.get(s, np.nan) for s in adj_map]
+        ylim = (max(0.0, min(_adj_vals) * 0.92), max(_adj_vals) * 1.08)
+        for sdg in adj_map:
+            x = df_sem_valid.loc[df_sem_valid["sdg"] == sdg, "coverage_gap_abs"]
+            if x.empty:
+                continue
+            x = float(x.iloc[0])
+            ax3.scatter(x, raw_map.get(sdg, np.nan), s=45, facecolors="none",
+                        edgecolors="#888888", zorder=4, alpha=0.7)
+            ax3.scatter(x, adj_map[sdg], s=55, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
+            offsets = {4: (0.02, 0.003), 9: (-0.03, 0.003), 3: (0.02, -0.004),
+                       16: (0.02, 0.003), 8: (0.015, 0.003), 17: (0.02, -0.005),
+                       13: (0.02, -0.004), 12: (0.02, 0.003)}
+            dx, dy = offsets.get(sdg, (0.015, 0.002))
+            ax3.annotate(f"SDG {sdg}", (x, adj_map[sdg]), xytext=(x + dx, adj_map[sdg] + dy),
+                         fontsize=8, color="black",
+                         arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
+        ax3.legend(handles=[
+            plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
+                       markersize=7, label="Adjusted gap (canonical)"),
+            plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
+                       markeredgecolor="#888888", markersize=7, label="Raw gap (baseline)"),
+        ], fontsize=8, loc="upper right")
+    else:
+        ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
+        ax3.axhline(median_semantic_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
+        xlim = (0, df["coverage_gap_abs"].max() * 1.12)
+        ylim = (max(0.0, df_sem_valid["semantic_gap"].min() * 0.92), df_sem_valid["semantic_gap"].max() * 1.08)
+        for _, row in df_sem_valid.iterrows():
+            sdg = int(row["sdg"])
+            x = row["coverage_gap_abs"]
+            y = row["semantic_gap"]
+            ax3.scatter(x, y, s=55, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
+            offsets = {4: (0.02, 0.003), 9: (-0.03, 0.003), 3: (0.02, -0.004),
+                       16: (0.02, 0.003), 8: (0.015, 0.003), 17: (0.02, -0.005),
+                       13: (0.02, -0.004), 12: (0.02, 0.003)}
+            dx, dy = offsets.get(sdg, (0.015, 0.002))
+            ax3.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx, y + dy),
+                         fontsize=8, color="black",
+                         arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
 
     ax3.set_xlim(xlim)
     ax3.set_ylim(ylim)
     ax3.set_xlabel("Absolute research–policy coverage gap (H1a predictor)")
-    ax3.set_ylabel("Within-SDG semantic gap (1 − cosine similarity)")
+    ax3.set_ylabel("Within-SDG semantic gap (adjusted = after INLP register removal)")
     ax3.set_title(
         "",
         fontsize=8.5,
