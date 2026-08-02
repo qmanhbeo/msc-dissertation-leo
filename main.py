@@ -218,8 +218,9 @@ def action_requested(args: argparse.Namespace) -> bool:
     )
 
 
-def run_step(label: str, cmd: list[str], step_id: str | None = None) -> None:
-    header = f"[{step_id}] {label}" if step_id else f"[{label}]"
+def run_step(label: str, cmd: list[str], step_id: str | None = None, *, model: str = "") -> None:
+    model_tag = f" [{model}]" if model else ""
+    header = f"[{step_id}]{model_tag} {label}" if step_id else f"[{label}]{model_tag}"
     sep = "=" * 70
     print(f"\n{sep}", file=sys.stderr)
     print(f"  {header}", file=sys.stderr)
@@ -382,6 +383,7 @@ def run_build_sdg_reference_centroids(model: str = DEFAULT_EMBED_MODEL, overwrit
         [sys.executable, "1_code/6_calculate_centroids/0_build_sdg_reference_centroids.py",
          "--embed-model", model] + _overwrite_flag(overwrite),
         step_id="0a",
+        model=model,
     )
 
 
@@ -391,6 +393,7 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
         [sys.executable, "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py",
          "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
         step_id="9a",
+        model=model,
     )
 
 
@@ -531,27 +534,30 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     model_args = ["--embed-model", model]
 
     # ==== STAGE 5: CLASSIFY / SCORE ==========================================
-    run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0")
-    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args + _overwrite_flag(overwrite), step_id="1")
+    run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0", model=model)
+    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args + _overwrite_flag(overwrite), step_id="1", model=model)
     run_build_sdg_reference_centroids(model, overwrite=overwrite)
-    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "research"] + _overwrite_flag(overwrite), step_id="2")
-    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(overwrite), step_id="3")
+    run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "research"] + _overwrite_flag(overwrite), step_id="2", model=model)
+    run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(overwrite), step_id="3", model=model)
     run_step(
         "retrain MLP",
         [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py",
          "--embed-model", model, "--classifier-type", "mlp"] + _overwrite_flag(overwrite),
         step_id="3b",
+        model=model,
     )
     run_step(
         "score MLP",
         [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
          "--embed-model", model, "--classifier", "mlp"] + _overwrite_flag(overwrite),
         step_id="3c",
+        model=model,
     )
     run_step(
         "check centroid consistency",
         [sys.executable, "1_code/6_calculate_centroids/0_check_centroid_consistency.py", "--output-dir", str(output_dir)] + model_args + _overwrite_flag(overwrite),
         step_id="4",
+        model=model,
     )
     run_build_centroid_similarity_matrix(output_dir, model, overwrite=overwrite)
     run_step(
@@ -559,6 +565,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
          "--embed-model", model, "--output-dir", str(output_dir)] + _overwrite_flag(overwrite),
         step_id="5",
+        model=model,
     )
     # Concept-retrieval robustness (MPNet only): score the concept-retrieved
     # research corpus with all three assignment methods (LR/MLP/ZS), feeding the
@@ -577,25 +584,25 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--metadata-dir", str(concept_scores_dir / "metadata"),
             "--research-centroids-out", str(concept_centroids),
             "--research-meta-out", str(concept_centroids_meta),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
         run_step("score concept research corpus (MLP)", [
             sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
             "--embed-model", model, "--classifier", "mlp",
             "--corpus", "research_concept",
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
         run_step("zero-shot concept research corpus", [
             sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
             "--embed-model", model,
             "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
             "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
             "--data-dir", str(concept_data_dir),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
 
     # ==== STAGE 7: COVERAGE GAP (raw) ========================================
     run_step("coverage gap (raw)", [
         sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
         "--output-dir", str(output_dir), "--embed-model", model,
-    ] + _overwrite_flag(overwrite))
+    ] + _overwrite_flag(overwrite), model=model)
     if model == DEFAULT_EMBED_MODEL:
         run_step("coverage gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
@@ -603,13 +610,14 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
             "--out-data-dir", str(concept_data_dir),
             "--out-tables-dir", str(concept_data_dir / "tables"),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
 
     # ==== STAGE 8: REGISTER ADJUSTMENT (INLP -> G) ===========================
     run_step(
         "register_adjust (INLP -> G)",
         [sys.executable, "1_code/7_main_analysis/0_shared/register_adjust.py",
          "--embed-model", model] + _overwrite_flag(overwrite),
+        model=model,
     )
 
     # ==== STAGE 9: SEMANTIC GAP BEFORE & AFTER + PCA =========================
@@ -617,7 +625,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_step("semantic gap (raw)", [
         sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
         "--output-dir", str(output_dir), "--embed-model", model,
-    ] + _overwrite_flag(overwrite))
+    ] + _overwrite_flag(overwrite), model=model)
     # Raw MLP semantic gap (mirrors LR raw; capped, single source of truth).
     # Runs for every model so the cross-sensitivity table has a capped MLP gap
     # for all three encoders (replaces the uncapped mlp_summary.json value).
@@ -625,7 +633,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
         "--output-dir", str(output_dir), "--embed-model", model,
         "--classifier", "mlp",
-    ] + _overwrite_flag(overwrite))
+    ] + _overwrite_flag(overwrite), model=model)
     if model == DEFAULT_EMBED_MODEL:
         run_step("semantic gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
@@ -634,18 +642,18 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
             "--out-tables-dir", str(concept_data_dir / "tables"),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
     # Adjusted semantic gap (LR + MLP) — needs G
     run_step("semantic gap (adjusted, LR)", [
         sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
         "--output-dir", str(output_dir), "--embed-model", model,
         "--embeddings", "adjusted",
-    ] + _overwrite_flag(overwrite))
+    ] + _overwrite_flag(overwrite), model=model)
     run_step("semantic gap (adjusted, MLP)", [
         sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
         "--output-dir", str(output_dir), "--embed-model", model,
         "--classifier", "mlp", "--embeddings", "adjusted",
-    ] + _overwrite_flag(overwrite))
+    ] + _overwrite_flag(overwrite), model=model)
     if model == DEFAULT_EMBED_MODEL:
         run_step("semantic gap (concept corpus, adjusted)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
@@ -655,7 +663,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--research-centroid-meta", str(concept_centroids_meta),
             "--out-data-dir", str(concept_data_dir),
             "--out-tables-dir", str(concept_data_dir / "tables"),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
         mlp_concept_dir = scored_dir_for_model(model) / "mlp_scores_concept"
         run_step("semantic gap (concept corpus, MLP adjusted)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
@@ -665,7 +673,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
             "--out-data-dir", str(concept_data_dir),
             "--out-tables-dir", str(concept_data_dir / "tables"),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
         # Raw concept-MLP semantic gap (capped, single source of truth).
         run_step("semantic gap (concept corpus, MLP)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
@@ -675,13 +683,14 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
             "--out-data-dir", str(concept_data_dir),
             "--out-tables-dir", str(concept_data_dir / "tables"),
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
         # Adjusted zeroshot (MPNet only)
         run_step(
             "zero-shot nearest-centroid (adjusted)",
             [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
              "--embed-model", model, "--output-dir", str(output_dir),
              "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
+            model=model,
         )
         # Concept-retrieved adjusted zeroshot (MPNet only): mirrors the keyword
         # adjusted-ZS step but scores the concept-retrieved corpus via the
@@ -695,13 +704,14 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
              "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
              "--data-dir", str(concept_data_dir),
              "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
+            model=model,
         )
     # PCA: semantic landscape + register before/after (MPNet only, fixed paths)
     if model == DEFAULT_EMBED_MODEL:
         run_step("PCA semantic landscape", [
             sys.executable, "1_code/7_main_analysis/1_main_text/0_pca_semantic_landscape.py",
             "--output-dir", str(output_dir), "--embed-model", model,
-        ] + _overwrite_flag(overwrite))
+        ] + _overwrite_flag(overwrite), model=model)
 
     # ==== STAGE 10: CORRELATION + ROBUSTNESS =================================
     # In-process: interaction analysis (+ optional appendix)
@@ -725,9 +735,11 @@ def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = Fals
     run_step("generate cross-sensitivity table",
              [sys.executable, "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
               "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite),
-             step_id="6")
+             step_id="6",
+             model=model)
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
-             "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9")
+             "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9",
+             model=model)
 
 
 def run_main_text(
@@ -760,6 +772,10 @@ def run_warm_replay(
     # replay always rebuilds every track.
     ordered = [m for m in COLD_REPLAY_MODELS if m != DEFAULT_EMBED_MODEL] + [DEFAULT_EMBED_MODEL]
     for model in ordered:
+        sep = "=" * 70
+        print(f"\n{sep}", file=sys.stderr)
+        print(f"  Encoder track: [{model}]", file=sys.stderr)
+        print(sep, file=sys.stderr)
         # Only the canonical (MPNet) track runs the appendix battery. The
         # non-canonical tracks run the CORE pipeline only (train -> classify ->
         # centroids -> register adjust -> coverage gap -> semantic gap ->
@@ -793,6 +809,10 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     # encoder (and its native context window) varies. MiniLM/SciBERT embed the
     # shared 50k subset via --input-manifest; MPNet embeds the full corpus.
     for model in COLD_REPLAY_MODELS:
+        sep = "=" * 70
+        print(f"\n{sep}", file=sys.stderr)
+        print(f"  Encoder track: [{model}]", file=sys.stderr)
+        print(sep, file=sys.stderr)
         for label, cmd in _embed_model_steps(model, overwrite=args.overwrite,
                                              batch_size=args.batch_size, device=args.device,
                                              precision=args.precision):
