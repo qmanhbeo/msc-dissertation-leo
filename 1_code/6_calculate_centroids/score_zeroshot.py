@@ -13,7 +13,6 @@ Outputs: {data_dir}/semantic_gap_distances.json  (per-SDG gaps, default {output_
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 from pathlib import Path
@@ -29,8 +28,8 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, RANDOM_SEED, ZERO_NORM_EPS, MIN_CENTROID_NORM, embed_dir_for_model, output_dir_for_model, scored_dir_for_model, preprocessed_dir, resolve_model_alias
-from semantic_gap_shared import cap_policy_indices_per_doc, MIN_CLUSTER_SIZE
-from shard_pipeline_utils import load_json, resolve_manifest_path
+from semantic_gap_shared import compute_sdg_semantic_gaps
+from shard_pipeline_utils import atomic_write_json, atomic_write_npy, load_json, resolve_manifest_path
 
 # register_utils may not be on path when run standalone; add it.
 import sys as _sys
@@ -141,12 +140,14 @@ def run(args: argparse.Namespace) -> None:
 
     res_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
     res_counts = np.zeros(N_SDG, dtype=np.int64)
+    res_cohesion_sums = np.zeros(N_SDG, dtype=np.float64)
+    res_cohesion_counts = np.zeros(N_SDG, dtype=np.int64)
 
     for shard in shards:
         emb = np.load(
             resolve_manifest_path(
                 shard["embedding_path"],
-                 allowed_dirs=(embed_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
+                allowed_dirs=(embed_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
             ),
             mmap_mode="r",
         )
@@ -164,6 +165,10 @@ def run(args: argparse.Namespace) -> None:
             if n > 0:
                 res_sums[sdg_idx] += embeddings[mask].sum(axis=0).astype(np.float64)
                 res_counts[sdg_idx] += n
+                # Mean cosine of assigned research vectors to their reference
+                # centroid = mean of the assignment score column for that SDG.
+                res_cohesion_sums[sdg_idx] += float(scores[mask, sdg_idx].sum())
+                res_cohesion_counts[sdg_idx] += n
         log.info("  Shard %s done", shard.get("name", shard["shard_id"]))
         del embeddings, scores, assignments
 
@@ -171,7 +176,11 @@ def run(args: argparse.Namespace) -> None:
     log.info("Research total papers: %d", res_counts.sum())
 
     research_centroids = centroid_from_sumcount(res_sums, res_counts)
-    np.save(npy_root / "research_centroids.npy", research_centroids)
+    research_cohesions = np.zeros(N_SDG, dtype=np.float32)
+    for sdg_idx in range(N_SDG):
+        n = int(res_cohesion_counts[sdg_idx])
+        research_cohesions[sdg_idx] = float(res_cohesion_sums[sdg_idx] / n) if n > 0 else 0.0
+    atomic_write_npy(npy_root / "research_centroids.npy", research_centroids)
     log.info("Saved research centroids: %s", npy_root / "research_centroids.npy")
 
     # 3. Score policy corpus
@@ -188,67 +197,34 @@ def run(args: argparse.Namespace) -> None:
     policy_scores = policy_emb @ centroids.T
     policy_assignments = policy_scores.argmax(axis=1)
 
-    # Apply per-(SDG, doc) segment cap, mirroring the LR/MLP route
-    # (semantic_gap_shared.compute_sdg_semantic_gaps): each SDG caps its own
-    # assigned policy segments at --segment-cap per source_doc, so the policy
-    # sub-centroid uses at most segment_cap segments per (doc, SDG). This matches
-    # the documented --segment-cap intent and the supervised routes (it previously
-    # capped globally per doc across all SDGs, an asymmetry).
+    # 4. Compute semantic gaps via the shared LR/MLP route so all three scoring
+    # methods use one gap implementation (single source of truth). The shared
+    # function applies the per-(SDG, doc) segment cap (matching the supervised
+    # routes), MIN_CLUSTER_SIZE and --min-centroid-norm reliability rules, and
+    # returns the per-SDG policy sub-centroid built from that same capped set.
     rng = np.random.Generator(np.random.PCG64(RANDOM_SEED))
-    capped_idxs: list[int] = []
-    for sdg_idx in range(N_SDG):
-        sdg_idxs = [i for i, a in enumerate(policy_assignments) if a == sdg_idx]
-        capped_idxs.extend(cap_policy_indices_per_doc(sdg_idxs, policy_ids, args.segment_cap, rng))
-    log.info("Policy: %d total segments, %d capped (per-SDG cap)", len(policy_ids), len(capped_idxs))
-
-    pol_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
-    pol_counts = np.zeros(N_SDG, dtype=np.int64)
-    for i in capped_idxs:
-        sdg_idx = policy_assignments[i]
-        pol_sums[sdg_idx] += policy_emb[i].astype(np.float64)
-        pol_counts[sdg_idx] += 1
-
-    policy_centroids = centroid_from_sumcount(pol_sums, pol_counts)
-    np.save(npy_root / "policy_centroids.npy", policy_centroids)
+    per_sdg, policy_centroids = compute_sdg_semantic_gaps(
+        research_centroids=research_centroids,
+        research_counts=res_counts,
+        research_cohesions=research_cohesions,
+        policy_emb=policy_emb,
+        policy_assignments=policy_assignments,
+        policy_ids=policy_ids,
+        segment_cap=args.segment_cap,
+        rng=rng,
+        min_centroid_norm=args.min_centroid_norm,
+    )
+    atomic_write_npy(npy_root / "policy_centroids.npy", policy_centroids)
     log.info("Saved policy centroids: %s", npy_root / "policy_centroids.npy")
-
-    # 4. Compute semantic gaps
-    # Reliability rule mirrors the LR/MLP route (semantic_gap_shared): a gap is
-    # unreliable (and reported as None) when the research or capped-policy cluster
-    # is too small, OR when either centroid norm is degenerate (legacy guard kept
-    # as a secondary check). This aligns ZS with the supervised routes.
-    per_sdg = []
-    for sdg_idx in range(N_SDG):
-        r = research_centroids[sdg_idx]
-        p = policy_centroids[sdg_idx]
-        rn = float(np.linalg.norm(r))
-        pn = float(np.linalg.norm(p))
-        n_papers = int(res_counts[sdg_idx])
-        n_policy_capped = int(pol_counts[sdg_idx])
-        cluster_small = (n_papers < MIN_CLUSTER_SIZE) or (n_policy_capped < MIN_CLUSTER_SIZE)
-        norm_degenerate = (rn < args.min_centroid_norm) or (pn < args.min_centroid_norm)
-        unreliable = cluster_small or norm_degenerate
-        if unreliable:
-            sim = None
-            gap = None
-            reason = "small_cluster" if cluster_small else "degenerate_centroid"
-        else:
-            sim = float(r @ p)
-            gap = 1.0 - sim
-            reason = None
-        per_sdg.append({
-            "sdg": sdg_idx + 1,
-            "n_papers": n_papers,
-            "n_policy_capped": n_policy_capped,
-            "semantic_similarity": sim,
-            "semantic_gap": gap,
-            "unreliable": unreliable,
-            "unreliable_reason": reason,
-        })
+    for row in per_sdg:
+        sdg_idx = row["sdg"] - 1
+        gap = row["semantic_gap"]
+        n_papers = row["n_papers"]
+        n_policy_capped = row["n_policy_segments_capped"]
         log.info("  SDG %2d  gap=%s  n_res=%d  n_pol=%d%s",
-                 sdg_idx + 1, f"{gap:.4f}" if gap is not None else "N/A",
+                 row["sdg"], f"{gap:.4f}" if gap is not None else "N/A",
                  n_papers, n_policy_capped,
-                 "  [unreliable]" if unreliable else "")
+                 "  [unreliable]" if row["unreliable"] else "")
 
     out_data = {
         "method": "zeroshot_nearest_centroid",
@@ -276,8 +252,7 @@ def run(args: argparse.Namespace) -> None:
         gap_path = gap_dir / "semantic_gap_distances.json"
     else:
         gap_path = data_root / "semantic_gap_distances.json"
-    with gap_path.open("w", encoding="utf-8") as f:
-        json.dump(out_data, f, indent=2)
+    atomic_write_json(gap_path, out_data)
     log.info("Saved: %s", gap_path)
     log.info("Zero-shot scoring complete.")
 

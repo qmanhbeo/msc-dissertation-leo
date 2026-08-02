@@ -148,11 +148,18 @@ def compute_sdg_semantic_gaps(
     policy_ids: list[dict],
     segment_cap: int,
     rng: np.random.Generator,
+    min_centroid_norm: float = 0.0,
 ) -> list[dict]:
     """
     Compute semantic gap for each SDG using research and policy sub-centroids.
+
+    Returns ``(results, policy_centroids)`` where ``policy_centroids`` is the
+    per-SDG unit policy sub-centroid (zeros where the cluster is empty/degenerate),
+    built from the same capped set used for the gap. Callers that persist the
+    policy centroid must use this array so the saved artifact matches the gap.
     """
     results = []
+    policy_centroids_out = np.zeros((N_SDG, policy_emb.shape[1]), dtype=np.float32)
 
     for sdg_idx in range(N_SDG):
         sdg = sdg_idx + 1
@@ -167,9 +174,16 @@ def compute_sdg_semantic_gaps(
         policy_docs_raw = {policy_ids[i]["source_doc"] for i in policy_idxs}
         policy_docs_capped = {policy_ids[i]["source_doc"] for i in policy_idxs_capped}
 
+        res_centroid = research_centroids[sdg_idx]
+        res_norm = float(np.linalg.norm(res_centroid))
+        res_cohesion = float(research_cohesions[sdg_idx])
+        pol_centroid, pol_cohesion = build_sub_centroid(policy_emb, policy_idxs_capped)
+        pol_norm = float(np.linalg.norm(pol_centroid)) if pol_centroid is not None else 0.0
+
         unreliable_paper = n_papers < MIN_CLUSTER_SIZE
         unreliable_policy = n_segments_capped < MIN_CLUSTER_SIZE
-        unreliable = unreliable_paper or unreliable_policy
+        norm_degenerate = (res_norm < min_centroid_norm) or (pol_norm < min_centroid_norm)
+        unreliable = unreliable_paper or unreliable_policy or norm_degenerate
 
         if unreliable:
             log.warning(
@@ -180,13 +194,18 @@ def compute_sdg_semantic_gaps(
                 n_segments_capped,
                 MIN_CLUSTER_SIZE,
             )
+            reason = (
+                "degenerate_centroid"
+                if norm_degenerate and not (unreliable_paper or unreliable_policy)
+                else "n_papers_too_small"
+                if unreliable_paper
+                else "n_policy_segments_too_small"
+            )
+        else:
+            reason = None
 
-        res_centroid = research_centroids[sdg_idx]
-        res_cohesion = float(research_cohesions[sdg_idx])
-        pol_centroid, pol_cohesion = build_sub_centroid(policy_emb, policy_idxs_capped)
-
-        if pol_centroid is None or float(np.linalg.norm(res_centroid)) < 1e-8:
-            log.warning("SDG %2d: could not build sub-centroid (empty cluster)", sdg)
+        if pol_centroid is None or res_norm < 1e-8 or norm_degenerate:
+            log.warning("SDG %2d: could not build sub-centroid (empty/degenerate cluster)", sdg)
             results.append(
                 {
                     "sdg": sdg,
@@ -201,13 +220,14 @@ def compute_sdg_semantic_gaps(
                     "research_cohesion": None,
                     "policy_cohesion": None,
                     "unreliable": True,
-                    "unreliable_reason": "empty_cluster",
+                    "unreliable_reason": "degenerate_centroid" if norm_degenerate else "empty_cluster",
                 }
             )
             continue
 
         sim = float(np.dot(res_centroid, pol_centroid))
         gap = 1.0 - sim
+        policy_centroids_out[sdg_idx] = pol_centroid
 
         results.append(
             {
@@ -223,13 +243,7 @@ def compute_sdg_semantic_gaps(
                 "research_cohesion": round(res_cohesion, 6),
                 "policy_cohesion": round(pol_cohesion, 6),
                 "unreliable": unreliable,
-                "unreliable_reason": (
-                    "n_papers_too_small"
-                    if unreliable_paper
-                    else "n_policy_segments_too_small"
-                    if unreliable_policy
-                    else None
-                ),
+                "unreliable_reason": reason,
             }
         )
 
@@ -249,7 +263,7 @@ def compute_sdg_semantic_gaps(
             " [UNRELIABLE]" if unreliable else "",
         )
 
-    return results
+    return results, policy_centroids_out
 
 
 def latex_escape(text: str) -> str:

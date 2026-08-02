@@ -278,7 +278,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("PRIMARY SEMANTIC GAP (segment cap = %d)", args.segment_cap)
     log.info("=" * 60)
     rng_primary = np.random.default_rng(RANDOM_SEED)
-    primary_results = compute_sdg_semantic_gaps(
+    primary_results, _ = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,
         policy_ids, args.segment_cap, rng_primary
@@ -303,7 +303,7 @@ def run(args: argparse.Namespace) -> None:
         log.info("SENSITIVITY: segment cap = %d", SEGMENT_CAP_SENS_LO)
         log.info("=" * 60)
         rng_lo = np.random.default_rng(RANDOM_SEED)
-        sens_lo = compute_sdg_semantic_gaps(
+        sens_lo, _ = compute_sdg_semantic_gaps(
             research_centroids, research_counts, research_cohesions,
             policy_emb, policy_assignments,
             policy_ids, SEGMENT_CAP_SENS_LO, rng_lo
@@ -313,7 +313,7 @@ def run(args: argparse.Namespace) -> None:
         log.info("=" * 60)
         log.info("SENSITIVITY: no segment cap (uncapped)")
         log.info("=" * 60)
-        sens_none = compute_sdg_semantic_gaps(
+        sens_none, _ = compute_sdg_semantic_gaps(
             research_centroids, research_counts, research_cohesions,
             policy_emb, policy_assignments,
             policy_ids, SEGMENT_CAP_SENS_NONE, rng_lo
