@@ -90,8 +90,8 @@ def document_weighted_policy_profile(
     policy_scores: np.ndarray,
     policy_ids: list[dict],
     subset_indices: list[int] | None = None,
-) -> tuple[np.ndarray, dict[str, dict]]:
-    """Canonical document-weighted hard-assignment policy profile (Assumption A19).
+) -> tuple[np.ndarray, np.ndarray, dict[str, dict]]:
+    """Canonical document-weighted policy profile (Assumption A19).
 
     Each unique source_doc contributes equally regardless of how many segments it
     contains. For each document, average its segment score vectors, hard-assign to
@@ -103,8 +103,10 @@ def document_weighted_policy_profile(
     All prior inline copies have been replaced by this function so that a change to
     the weighting propagates to every route.
 
-    Returns (hard_profile, doc_meta):
+    Returns (hard_profile, soft_profile, doc_meta):
       hard_profile: (N_SDG,) float64 proportion of documents per SDG (sums to 1.0).
+      soft_profile: (N_SDG,) float64 mean of document-level score vectors (soft/continuous
+        coverage proxy; does not sum to 1.0).
       doc_meta: {source_doc: {"n_segments": int, "sdg_assignment": int (1-indexed)}}.
 
     If subset_indices is given, only those policy row indices are considered.
@@ -131,7 +133,8 @@ def document_weighted_policy_profile(
     doc_assignments = doc_vectors.argmax(axis=1)
     counts = np.bincount(doc_assignments, minlength=N_SDG).astype(np.float64)
     hard_profile = counts / counts.sum()
-    return hard_profile, doc_meta
+    soft_profile = doc_vectors.mean(axis=0)
+    return hard_profile, soft_profile, doc_meta
 
 
 def doc_level_assignments(

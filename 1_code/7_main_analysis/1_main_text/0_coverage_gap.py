@@ -71,7 +71,7 @@ from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_NAMES, SDG_NUM_WORDS, embed_dir_for_model, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
-from semantic_gap_shared import latex_int, document_weighted_policy_profile
+from semantic_gap_shared import document_weighted_policy_profile, latex_int
 
 # ---------------------------------------------------------------------------
 # Config
@@ -107,68 +107,6 @@ def mean_score_profile(scores: np.ndarray) -> np.ndarray:
     This is a soft/continuous coverage proxy — does not sum to 1.
     """
     return scores.mean(axis=0)
-
-
-def document_weighted_policy_profile(
-    policy_scores: np.ndarray,
-    policy_ids: list[dict],
-) -> tuple[np.ndarray, np.ndarray, dict]:
-    """
-    Compute document-weighted per-SDG profiles for the policy corpus.
-
-    Each *document* (unique source_doc) contributes equally, regardless of how many segments
-    it contains. This counteracts SDSN/SDGi dominance (Assumption A19).
-
-    Method:
-      1. For each document, average all its segment score vectors → document score vector (17,).
-      2. Hard-assign the document to its top SDG (argmax of document score vector).
-      3. Compute the proportion of documents assigned to each SDG.
-      4. Also compute the mean of document score vectors as a soft profile.
-
-    Returns:
-      (hard_profile, soft_profile, doc_meta)
-      hard_profile: (N_SDG,) proportion of *documents* assigned to each SDG.
-      soft_profile: (N_SDG,) mean document-level cosine sim to each SDG centroid.
-      doc_meta: {source_doc: {n_segments, sdg_assignment, score_vector}} for diagnostics.
-    """
-    # Group row indices by source_doc.
-    doc_to_rows: dict[str, list[int]] = defaultdict(list)
-    for i, r in enumerate(policy_ids):
-        doc_to_rows[r["source_doc"]].append(i)
-
-    n_docs = len(doc_to_rows)
-    log.info("  Document-weighted: %d unique source_docs", n_docs)
-
-    doc_vectors = np.zeros((n_docs, N_SDG), dtype=np.float32)
-    doc_meta = {}
-
-    for d_idx, (source_doc, row_idxs) in enumerate(doc_to_rows.items()):
-        # Average segment scores for this document.
-        # This is the document's SDG score profile — its "topical footprint" in SDG space.
-        # ASSUMPTION (A-DOC-MEAN): Averaging segment scores assumes all segments of a document
-        # are equally representative. Long introductions and appendices contribute the same as
-        # substantive body text. A weighted average by segment word count would be more precise
-        # but requires loading word_count from policy_segments_all.jsonl. The current
-        # approach is conservative and avoids introducing another assumption about weights.
-        doc_vec = policy_scores[row_idxs].mean(axis=0)   # (17,)
-        doc_vectors[d_idx] = doc_vec
-
-        top_sdg = int(doc_vec.argmax()) + 1   # 1-indexed
-        doc_meta[source_doc] = {
-            "n_segments": len(row_idxs),
-            "sdg_assignment": top_sdg,
-            "top_score": round(float(doc_vec.max()), 6),
-        }
-
-    # Hard-assignment profile over documents.
-    doc_assignments = doc_vectors.argmax(axis=1)   # (n_docs,) int in 0..16
-    counts = np.bincount(doc_assignments, minlength=N_SDG).astype(float)
-    hard_profile = counts / counts.sum()
-
-    # Soft profile: mean of document-level score vectors.
-    soft_profile = doc_vectors.mean(axis=0)
-
-    return hard_profile, soft_profile, doc_meta
 
 
 def compute_coverage_gap(research_profile: np.ndarray, policy_profile: np.ndarray) -> np.ndarray:
@@ -221,7 +159,7 @@ def _route_coverage_payload(model: str, route: str) -> dict | None:
         centroids = np.load(centroids_path).astype(np.float32)
         policy_scores = policy_emb @ centroids.T
 
-    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
+    pol_profile, _, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     sdg_labels = [f"SDG{i+1}" for i in range(N_SDG)]
 

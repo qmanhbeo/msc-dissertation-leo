@@ -468,7 +468,7 @@ def run(args: argparse.Namespace) -> None:
 
     for family in FAMILY_ORDER:
         subset_indices = family_to_indices[family]
-        profile, doc_meta = document_weighted_policy_profile_subset(policy_scores, policy_ids, subset_indices)
+        profile, doc_meta, _ = document_weighted_policy_profile_subset(policy_scores, policy_ids, subset_indices)
         docs = len(doc_meta)
         segments = len(subset_indices)
         top3 = top3_sdgs(profile)

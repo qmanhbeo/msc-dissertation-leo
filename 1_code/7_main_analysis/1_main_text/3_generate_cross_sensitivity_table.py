@@ -407,7 +407,7 @@ def load_mlp_covgaps(m):
     with open(ids_path) as f:
         policy_ids = json.load(f)
 
-    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
+    pol_profile, _, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -464,7 +464,7 @@ def load_zs_covgaps(m, concept: bool = False):
 
     policy_scores = policy_emb @ centroids.T
 
-    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
+    pol_profile, _, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
@@ -492,7 +492,7 @@ def load_concept_mlp_covgaps(m):
     with open(ids_path) as f:
         policy_ids = json.load(f)
 
-    pol_profile, _ = document_weighted_policy_profile(policy_scores, policy_ids)
+    pol_profile, _, _ = document_weighted_policy_profile(policy_scores, policy_ids)
 
     gaps = {}
     for i in range(N_SDG):
