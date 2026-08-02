@@ -550,6 +550,13 @@ def run_mlp(args) -> None:
     sums = np.zeros((N_SDG, d), dtype=np.float64)
     counts = np.zeros(N_SDG, dtype=np.int64)
 
+    # Persist per-shard MLP research scores so downstream consumers (e.g. i1)
+    # can report research-level MLP-vs-ZS agreement directly, instead of
+    # proxying it via the LR-vs-MLP gap-rank correlation. Mirrors the LR
+    # paper_scores_shards layout; written atomically per shard.
+    shards_out_dir = out_dir / "mlp_research_scores_shards"
+    shards_out_dir.mkdir(parents=True, exist_ok=True)
+
     for shard in manifest["shards"]:
         emb_path = resolve_manifest_path(shard["embedding_path"], allowed_dirs=(embed_root,))
 
@@ -557,6 +564,12 @@ def run_mlp(args) -> None:
         log.info("  Scoring shard %s  shape=%s", shard["name"], emb.shape)
         scores = model.predict_proba(emb).astype(np.float32)
         assigned = scores.argmax(axis=1).astype(np.int64)
+
+        mlp_shard_path = shards_out_dir / f"{shard['name']}.npy"
+        tmp = mlp_shard_path.with_suffix(".npy.tmp")
+        with tmp.open("wb") as f:
+            np.save(f, scores)
+        tmp.replace(mlp_shard_path)
 
         for sdg_idx in range(N_SDG):
             mask = assigned == sdg_idx
