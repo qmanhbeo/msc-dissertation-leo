@@ -746,10 +746,25 @@ def run_warm_replay(
     *,
     include_appendix: bool = False,
 ) -> None:
-    model = args.embed_model
-    run_main_text(output_dir, args, include_appendix=include_appendix)
+    # Regenerate ALL three encoder tracks (MPNet + MiniLM + SciBERT) in ONE run.
+    # Process the non-canonical encoders first and the canonical (MPNet) LAST, so
+    # its poststep cross-sensitivity / encoder-sensitivity tables are assembled
+    # from the freshly regenerated MiniLM and SciBERT coverage / semantic /
+    # correlation values (the adjusted columns depend on each model's own G).
+    # --embed-model is intentionally ignored here (as in --cold-replay): warm
+    # replay always rebuilds every track.
+    ordered = [m for m in COLD_REPLAY_MODELS if m != DEFAULT_EMBED_MODEL] + [DEFAULT_EMBED_MODEL]
+    for model in ordered:
+        # Only the canonical (MPNet) track runs the appendix battery. The
+        # non-canonical tracks run the CORE pipeline only (train -> classify ->
+        # centroids -> register adjust -> coverage gap -> semantic gap ->
+        # correlation); their G / coverage / semantic / correlation values are
+        # what MPNet's cross-sensitivity table reads. This mirrors cold replay
+        # (main.py:791), which also gates include_appendix to the canonical model.
+        model_include_appendix = include_appendix and (model == DEFAULT_EMBED_MODEL)
+        run_main_text(output_dir, args, model=model, include_appendix=model_include_appendix)
     print(
-        "Main text outputs rebuilt. To build the dissertation PDF, run:\n"
+        "Main text + appendix outputs rebuilt for all encoder tracks. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
         "Note: --build-pdf requires bash (WSL/Linux) and is not supported on bare Windows."
     )
