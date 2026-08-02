@@ -219,13 +219,13 @@ SEMANTIC_CAPTION = "Cross-sensitivity robustness of within-SDG semantic-gap rank
 SEMANTIC_NOTES = (
     "Each cell reports the within-SDG semantic-gap rank "
     "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$). "
-    "The leading \\emph{Adj.\\ gap (canonical)} group reports the register-removed (adjusted) ranking, which is the "
-    "canonical measure of this study; the trailing \\emph{raw} columns report the naive baseline (un-adjusted) ranking. "
-    "Within each group, the Canon column is the canonical MPNet---LR ranking. "
+    "Panel~(a) reports the register-removed (adjusted) ranking, which is the canonical measure of this study; "
+    "Panel~(b) reports the naive baseline (un-adjusted, raw) ranking. "
+    "Within each panel, the Canon column is the canonical MPNet---LR ranking. "
     "Policy-source columns compare the keyword-retrieved research profile against each policy-source family. "
     "Segment-cap columns compare cap~20 and no cap. "
     "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
-    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the leading adjusted canonical column."
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against that panel's Canon column."
 )
 COVERAGE_CAPTION = "Cross-sensitivity robustness of within-SDG coverage-gap rankings across policy source and retrieval strategy."
 COVERAGE_NOTES = (
@@ -259,18 +259,19 @@ ENC_AXIS_SEMANTIC_CAPTION = (
 ENC_AXIS_SEMANTIC_NOTES = (
     "Each cell reports the within-SDG semantic-gap rank ($1 = \\text{largest gap}$, "
     "$17 = \\text{smallest gap}$) under that encoder and assignment method. "
-    "The register-removed (adjusted) ranking is the canonical measure; the raw ranking is the naive baseline. "
+    "Panel~(a) reports the register-removed (adjusted, canonical) ranking; "
+    "Panel~(b) reports the naive baseline (un-adjusted, raw) ranking. "
     "MPNet (768-d) is the canonical general-purpose encoder; MiniLM (384-d) is a smaller "
     "general-purpose encoder; SciBERT (768-d) is a scientific-domain encoder. "
     "MPNet and SciBERT share dimensionality (768-d), isolating architecture/domain from "
     "the dimensionality drop that confounds the MPNet--MiniLM pair "
     "(Section~\\ref{sec:encoder-sensitivity}). "
-    "LR (adj.)/MLP (adj.) = register-removed (canonical); LR (raw)/MLP (raw) = un-adjusted baseline. "
+    "LR = logistic regression; MLP = 4-layer/384-hidden network; "
     "Zero-shot = nearest-centroid on SDG reference centroids, "
     "reported for the canonical MPNet encoder only (scoped to a single supervised-vs-"
     "nearest-centroid comparison, Appendix~\\ref{app:assignment-method-comparison}). "
-    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
-    "canonical adjusted MPNet-LR column."
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against that "
+    "panel's canonical adjusted (Panel~a) or raw (Panel~b) MPNet-LR column."
 )
 ENC_AXIS_COVERAGE_CAPTION = (
     "Domain-encoder sensitivity of within-SDG coverage-gap rankings across embedding "
@@ -319,50 +320,61 @@ def load_mean_gap_and_cohesion(m):
 
 
 def write_encoder_axis_semantic():
-    enc_subgroups = []
+    enc_subgroups_adj = []
+    enc_subgroups_raw = []
     for m, sublabel in ENC_AXIS_ENCODERS:
         lr = load_lr_gaps(m)
         mlp = load_mlp_gaps(m)
         zs = load_zs_gaps(m) if m == DEFAULT_EMBED_MODEL else None
         lr_adj = load_lr_gaps_adj(m)
         mlp_adj = load_mlp_gaps_adj(m)
-        cols = []
+        zs_adj = load_zs_gaps_adj(m) if m == DEFAULT_EMBED_MODEL else None
+        cols_adj = []
+        cols_raw = []
         if lr_adj:
-            cols.append(("LR (adj.)", compute_ranks(lr_adj),
-                         "LR — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"))
+            cols_adj.append(("LR", compute_ranks(lr_adj),
+                             "LR — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"))
         if lr:
-            cols.append(("LR (raw)", compute_ranks(lr),
-                         "LR (canonical supervised, raw naive baseline) — policy segments capped at 50/doc/SDG"))
+            cols_raw.append(("LR", compute_ranks(lr),
+                             "LR (canonical supervised, raw naive baseline) — policy segments capped at 50/doc/SDG"))
         if mlp_adj:
-            cols.append(("MLP (adj.)", compute_ranks(mlp_adj),
-                         "MLP — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"))
+            cols_adj.append(("MLP", compute_ranks(mlp_adj),
+                             "MLP — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"))
         if mlp:
-            cols.append(("MLP (raw)", compute_ranks(mlp),
-                         "MLP (4-layer/384-hidden, raw naive baseline) — policy segments capped at 50/doc/SDG"))
+            cols_raw.append(("MLP", compute_ranks(mlp),
+                             "MLP (4-layer/384-hidden, raw naive baseline) — policy segments capped at 50/doc/SDG"))
+        if zs_adj:
+            cols_adj.append(("ZS", compute_ranks(zs_adj),
+                             "Zero-shot nearest-centroid (register-removed, adjusted) on SDG reference centroids (canonical encoder only)"))
         if zs:
-            cols.append(("ZS", compute_ranks(zs),
-                         "Zero-shot nearest-centroid on SDG reference centroids (canonical encoder only)"))
-        if cols:
-            enc_subgroups.append((sublabel, cols))
-    if not enc_subgroups:
+            cols_raw.append(("ZS", compute_ranks(zs),
+                             "Zero-shot nearest-centroid (raw naive baseline) on SDG reference centroids (canonical encoder only)"))
+        if cols_adj:
+            enc_subgroups_adj.append((sublabel, cols_adj))
+        if cols_raw:
+            enc_subgroups_raw.append((sublabel, cols_raw))
+    if not enc_subgroups_adj and not enc_subgroups_raw:
         print("WARNING: no encoder data for encoder-axis semantic table, skipping")
         return
-    col_groups = [("Encoder (embedding architecture)", enc_subgroups)]
-    rho_by_col = assemble_table(
-        col_groups, OUT_MAIN / "tab_encoder_sensitivity_semantic.tex",
-        ENC_AXIS_SEMANTIC_CAPTION, ENC_AXIS_SEMANTIC_NOTES, "tab:encoder-sensitivity-semantic",
+    rho_a, rho_b = assemble_paneled(
+        adj_groups=[("Encoder (embedding architecture)", enc_subgroups_adj)],
+        raw_groups=[("Encoder (embedding architecture)", enc_subgroups_raw)],
+        out_path=OUT_MAIN / "tab_encoder_sensitivity_semantic.tex",
+        caption=ENC_AXIS_SEMANTIC_CAPTION, notes=ENC_AXIS_SEMANTIC_NOTES, label="tab:encoder-sensitivity-semantic",
+        panel_a_note="Adjusted (register-removed, canonical).",
+        panel_b_note="Raw (naive baseline, un-adjusted).",
     )
-    scibert_key = "Encoder (embedding architecture)::SciBERT (768-d)::LR (adj.)"
-    scibert_rho = rho_by_col.get(scibert_key, float("nan"))
+    scibert_key = "Encoder (embedding architecture)::SciBERT (768-d)::LR"
+    scibert_rho = rho_a.get(scibert_key, float("nan"))
     val = f"{scibert_rho:.2f}" if not np.isnan(scibert_rho) else "--"
-    mlp_key = "Encoder (embedding architecture)::MPNet (768-d)::MLP (adj.)"
-    mlp_rho = rho_by_col.get(mlp_key, float("nan"))
+    mlp_key = "Encoder (embedding architecture)::MPNet (768-d)::MLP"
+    mlp_rho = rho_a.get(mlp_key, float("nan"))
     mlp_val = f"{mlp_rho:.2f}" if not np.isnan(mlp_rho) else "--"
     zs_key = "Encoder (embedding architecture)::MPNet (768-d)::ZS"
-    zs_rho = rho_by_col.get(zs_key, float("nan"))
+    zs_rho = rho_a.get(zs_key, float("nan"))
     zs_val = f"{zs_rho:.2f}" if not np.isnan(zs_rho) else "--"
-    minilm_key = "Encoder (embedding architecture)::MiniLM (384-d)::LR (adj.)"
-    minilm_rho = rho_by_col.get(minilm_key, float("nan"))
+    minilm_key = "Encoder (embedding architecture)::MiniLM (384-d)::LR"
+    minilm_rho = rho_a.get(minilm_key, float("nan"))
     minilm_val = f"{minilm_rho:.2f}" if not np.isnan(minilm_rho) else "--"
     lines = [
         "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
@@ -773,16 +785,12 @@ def write_cross_sensitivity():
         adj_group.append(("Retrieval", adj_concept_cols))
 
     # --- Raw (naive baseline) group --------------------------------------
-    # Mirrors the adjusted group's nested structure so it renders under a
-    # single "Raw (naive baseline)" parent title in the header.
-    col_groups = []
-    if adj_group:
-        col_groups.append(("Adj. gap (canonical)", adj_group))
-
+    # Mirrors the adjusted group's structure so the two panels share an
+    # identical column layout (Canon / Policy source / Segment cap / Retrieval).
     raw_group = []
     if canon_gaps:
         raw_group.append(("", [("Canon", compute_ranks(canon_gaps),
-                                "Canonical MPNet-LR ranking (raw, naive baseline)")]))
+                                 "Canonical MPNet-LR ranking (raw, naive baseline)")]))
     pcols = []
     for key, label in family_labels.items():
         if key in policy_families:
@@ -809,17 +817,20 @@ def write_cross_sensitivity():
                                  "MLP centroids (concept-based AI/ML retrieval, raw)"))
     if concept_sub_cols:
         raw_group.append(("Retrieval", concept_sub_cols))
-    if raw_group:
-        col_groups.append(("Raw (naive baseline)", raw_group))
 
-    if not col_groups:
+    if not adj_group and not raw_group:
         print("WARNING: no data available for cross-sensitivity table, skipping")
         return
 
-    rho_by_col = assemble_table(col_groups, OUT_MAIN / "tab_cross_sensitivity_robustness.tex",
-                                SEMANTIC_CAPTION, SEMANTIC_NOTES, "tab:cross-sensitivity-robustness")
+    rho_a, rho_b = assemble_paneled(
+        adj_groups=adj_group, raw_groups=raw_group,
+        out_path=OUT_MAIN / "tab_cross_sensitivity_robustness.tex",
+        caption=SEMANTIC_CAPTION, notes=SEMANTIC_NOTES, label="tab:cross-sensitivity-robustness",
+        panel_a_note="Adjusted (register-removed, canonical).",
+        panel_b_note="Raw (naive baseline, un-adjusted).",
+    )
 
-    concept_rho_val = rho_by_col.get("Retrieval::LR", float("nan"))
+    concept_rho_val = rho_b.get("Retrieval::LR", float("nan"))
     concept_sem_rho = f"{concept_rho_val:.2f}" if not np.isnan(concept_rho_val) else "--"
     (OUT_MAIN / "num_concept_semantic.tex").write_text(
         "\n".join([
@@ -831,28 +842,38 @@ def write_cross_sensitivity():
     print(f"Written num_concept_semantic.tex  concept_sem_rho={concept_sem_rho}")
 
 
-def assemble_table(col_groups, out_path, caption, notes, label):
-    # --- group helpers (support nested encoder subgroups) --------------
-    def is_nested(g):
-        _, body = g
-        return bool(body) and isinstance(body[0], tuple) and len(body[0]) == 2 \
-            and isinstance(body[0][1], list)
+def is_nested(g):
+    """A col_group is nested when its body is a list of (sublabel, cols) tuples."""
+    _, body = g
+    return bool(body) and isinstance(body[0], tuple) and len(body[0]) == 2 \
+        and isinstance(body[0][1], list)
 
-    def group_total(g):
-        _, body = g
-        if is_nested(g):
-            return sum(len(cols) for _, cols in body)
-        return len(body)
 
-    def flat_cols(g):
-        _, body = g
-        if is_nested(g):
-            out = []
-            for _, cols in body:
-                out.extend(cols)
-            return out
-        return list(body)
+def group_total(g):
+    _, body = g
+    if is_nested(g):
+        return sum(len(cols) for _, cols in body)
+    return len(body)
 
+
+def flat_cols(g):
+    _, body = g
+    if is_nested(g):
+        out = []
+        for _, cols in body:
+            out.extend(cols)
+        return out
+    return list(body)
+
+
+def build_tabular(col_groups):
+    """Build a single (resizebox-wrapped) tabular block for the given col_groups.
+
+    Returns (tabular_lines, rho_by_col). The block includes the
+    ``\\resizebox`` wrapper and the ``\\begin{tabular}``/``\\end{tabular}``
+    pair but NOT the surrounding ``\\begin{table}``/``\\end{table}`` so that
+    callers may compose several panels into one float.
+    """
     all_cols = []
     all_col_keys = []
     for glabel, body in col_groups:
@@ -907,12 +928,6 @@ def assemble_table(col_groups, out_path, caption, notes, label):
         rowC = None
 
     tex = [
-        "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
-        r"\begin{table}[ht]",
-        r"\centering",
-        r"\footnotesize",
-        rf"\caption{{{caption}}}",
-        rf"\label{{{label}}}",
         r"\resizebox{\textwidth}{!}{%",
         rf"\begin{{tabular}}{{l{'c' * n_cols}}}",
         r"\toprule",
@@ -993,12 +1008,58 @@ def assemble_table(col_groups, out_path, caption, notes, label):
     tex.append(r"\bottomrule")
     tex.append(r"\end{tabular}")
     tex.append(r"}")
+    return tex, rho_by_col
+
+
+def assemble_table(col_groups, out_path, caption, notes, label):
+    tabular, rho_by_col = build_tabular(col_groups)
+    tex = [
+        "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+        r"\begin{table}[ht]",
+        r"\centering",
+        r"\footnotesize",
+        rf"\caption{{{caption}}}",
+        rf"\label{{{label}}}",
+    ]
+    tex.extend(tabular)
     tex.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes + r"\par")
     tex.append(r"\end{table}")
-
     out_path.write_text("\n".join(tex) + "\n")
-    print(f"Written {out_path}  columns={n_cols}")
+    print(f"Written {out_path}  columns={sum(group_total(g) for g in col_groups)}")
     return rho_by_col
+
+
+def assemble_paneled(adj_groups, raw_groups, out_path, caption, notes, label,
+                    panel_a_note, panel_b_note):
+    """Write one table split into two panels: (a) adjusted, (b) raw.
+
+    ``adj_groups`` / ``raw_groups`` are col_groups lists in the same format
+    accepted by :func:`build_tabular`. Each panel keeps the canonical
+    (Encoder -> Method or Policy source -> Segment cap -> Retrieval) nesting;
+    the raw/adjusted split is promoted to the panel level so the two
+    robustness tables share one presentation order.
+    """
+    tex = [
+        "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
+        r"\begin{table}[ht]",
+        r"\centering",
+        r"\footnotesize",
+        rf"\caption{{{caption}}}",
+        rf"\label{{{label}}}",
+    ]
+    tab_a, rho_a = build_tabular(adj_groups)
+    tex.extend(tab_a)
+    tex.append(r"\par\smallskip\footnotesize\emph{Panel (a):} " + panel_a_note + r"\par")
+    tab_b, rho_b = build_tabular(raw_groups)
+    tex.extend(tab_b)
+    tex.append(r"\par\smallskip\footnotesize\emph{Panel (b):} " + panel_b_note + r"\par")
+    tex.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes + r"\par")
+    tex.append(r"\end{table}")
+    out_path.write_text("\n".join(tex) + "\n")
+    n_a = sum(group_total(g) for g in adj_groups)
+    n_b = sum(group_total(g) for g in raw_groups)
+    print(f"Written {out_path}  adj_columns={n_a} raw_columns={n_b}")
+    return rho_a, rho_b
 
 
 def write_coverage_table():
@@ -1146,7 +1207,7 @@ def run(args: argparse.Namespace) -> None:
         lr_per_sdg[sdg_num] = v
     lr_macro = retrain["test_results"]["macro_f1"]
 
-    SCRIPT_VERSION = "1"
+    SCRIPT_VERSION = "2"
     PRIMARY = OUT_MAIN / "tab_cross_sensitivity_robustness.tex"
     OUTPUTS = [
         OUT_MAIN / "num_validation.tex",
