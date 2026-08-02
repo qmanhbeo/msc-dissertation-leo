@@ -1078,6 +1078,11 @@ def run(args: argparse.Namespace) -> None:
     fp_paths.append(
         output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json"
     )
+    # Concept LR raw gaps also feed \ConceptSemanticGapRho (load_concept_lr_gaps) —
+    # include so the table re-derives when they change.
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json"
+    )
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         print(f"Skipping {PRIMARY} \u2014 inputs unchanged")

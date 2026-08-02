@@ -273,6 +273,13 @@ def run(args):
             output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json",
             output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json",
         ]
+    # Concept-retrieval track (MPNet only) feeds the appendix cross-method table.
+    concept_root = output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept"
+    fp_paths += [
+        concept_root / "4_2_coverage_document_weighted.json",
+        concept_root / "4_3_semantic_gap_distances.json",
+        concept_root / "adjusted" / "4_3_semantic_gap_distances.json",
+    ]
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         print(f"Skipping {PRIMARY} \u2014 inputs unchanged")

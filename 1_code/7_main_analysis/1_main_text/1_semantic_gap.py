@@ -188,7 +188,7 @@ def run(args: argparse.Namespace) -> None:
     sem_sens_name = "4_3_mlp_semantic_gap_robustness_caps.json" if is_mlp else "4_3_semantic_gap_robustness_caps.json"
     if is_adjusted:
         if args.out_data_dir:
-            adj_data_dir = Path(args.out_data_dir)
+            adj_data_dir = Path(args.out_data_dir) / "adjusted"
         else:
             adj_data_dir = layout.data_dir / "adjusted"
         adj_data_dir.mkdir(parents=True, exist_ok=True)

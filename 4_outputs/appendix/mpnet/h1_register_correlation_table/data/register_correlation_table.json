@@ -142,16 +142,16 @@
       "corpus": "concept",
       "n_valid": 17,
       "rho_cov_raw": {
-        "rho": 0.252451,
-        "p": 0.328294
+        "rho": 0.019608,
+        "p": 0.940458
       },
       "rho_cov_adj": {
         "rho": 0.252451,
         "p": 0.328294
       },
       "rho_cov_register": {
-        "rho": NaN,
-        "p": NaN
+        "rho": -0.129902,
+        "p": 0.619247
       }
     },
     {
