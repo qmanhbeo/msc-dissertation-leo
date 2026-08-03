@@ -169,7 +169,13 @@ def parse_args() -> argparse.Namespace:
         help=argparse.SUPPRESS,
     )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
-    p.add_argument("--batch-size", type=int, default=64, help="Batch size for all embedding stages (ref+policy+research).")
+    p.add_argument("--batch-size", type=int, default=None,
+                   help="Batch size for ALL embedding stages (global fallback). Overridden per "
+                        "group by --embed-batch-size-policy-and-reference / --embed-batch-size-research.")
+    p.add_argument("--embed-batch-size-policy-and-reference", type=int, default=None,
+                   help="Batch size for reference + policy embedding (overrides --batch-size).")
+    p.add_argument("--embed-batch-size-research", type=int, default=None,
+                   help="Batch size for research + research_concept embedding (overrides --batch-size).")
     p.add_argument("--precision", choices=["fp32", "fp16"], default="fp16",
                    help="Compute precision for embedding (fp16 ≈ 2x faster on Ampere GPUs).")
     p.add_argument(
@@ -435,19 +441,34 @@ def _segment_steps(corpus: str, overwrite: bool, *, segment_workers: int = 0) ->
     return steps
 
 
-def _embed_model_steps(model: str, *, overwrite: bool, batch_size: int, device: str, precision: str) -> list[tuple[str, list[str]]]:
+def _embed_model_steps(
+    model: str,
+    *,
+    overwrite: bool,
+    batch_size: int | None,
+    embed_batch_size_policy_and_reference: int | None,
+    embed_batch_size_research: int | None,
+    device: str,
+    precision: str,
+) -> list[tuple[str, list[str]]]:
     ow = _overwrite_flag(overwrite)
     model_args = ["--embed-model", model]
+    # Per-group batch sizes; --batch-size is the global fallback. Defaults
+    # preserve current behaviour (policy/reference=64, research=128) so nothing
+    # is silently changed for a fresh clone.
+    pol_ref_bs = embed_batch_size_policy_and_reference or batch_size or 64
+    research_bs = embed_batch_size_research or batch_size or 128
     steps: list[tuple[str, list[str]]] = []
     for corpus in ALL_EMBED_CORPORA:
         steps.append((f"embed {corpus} ({model})", [
             sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
-            "--corpus", corpus, "--batch-size", str(batch_size),
+            "--corpus", corpus, "--batch-size", str(pol_ref_bs),
             "--local-files-only", "--precision", precision, "--normalize-embeddings",
         ] + model_args + ow))
     embed_cmd = [
         sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
-        "--device", device, "--local-files-only", "--precision", precision, "--normalize-embeddings",
+        "--device", device, "--local-files-only", "--precision", precision,
+        "--normalize-embeddings", "--batch-size", str(research_bs),
     ] + model_args + ow
     if model != CANONICAL_SEGMENT_MODEL:
         embed_cmd += ["--corpus", "research_subset"]
@@ -457,7 +478,7 @@ def _embed_model_steps(model: str, *, overwrite: bool, batch_size: int, device: 
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
             "--corpus", "research_concept", "--device", device,
             "--local-files-only", "--precision", precision, "--normalize-embeddings",
-            "--embed-model", model,
+            "--batch-size", str(research_bs), "--embed-model", model,
         ] + ow))
     return steps
 
@@ -817,7 +838,10 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         print(f"  Encoder track: [{model}]", file=sys.stderr)
         print(sep, file=sys.stderr)
         for label, cmd in _embed_model_steps(model, overwrite=args.overwrite,
-                                             batch_size=args.batch_size, device=args.device,
+                                             batch_size=args.batch_size,
+                                             embed_batch_size_policy_and_reference=args.embed_batch_size_policy_and_reference,
+                                             embed_batch_size_research=args.embed_batch_size_research,
+                                             device=args.device,
                                              precision=args.precision):
             run_step(label, cmd)
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
@@ -941,7 +965,10 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         # model != CANONICAL_SEGMENT_MODEL check).
         for embed_model in COLD_REPLAY_MODELS:
             for label, cmd in _embed_model_steps(embed_model, overwrite=args.overwrite,
-                                                 batch_size=args.batch_size, device=args.device,
+                                                 batch_size=args.batch_size,
+                                                 embed_batch_size_policy_and_reference=args.embed_batch_size_policy_and_reference,
+                                                 embed_batch_size_research=args.embed_batch_size_research,
+                                                 device=args.device,
                                                  precision=args.precision):
                 run_step(label, cmd)
 

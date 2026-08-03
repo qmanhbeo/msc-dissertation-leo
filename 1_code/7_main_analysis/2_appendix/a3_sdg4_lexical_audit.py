@@ -15,6 +15,7 @@ import argparse
 import csv
 import json
 import logging
+import os
 import random
 import re
 import sys
@@ -208,7 +209,10 @@ def audit_subsets(
 
     counters = {subset: Counter() for subset in subset_refs}
     completed = 0
-    with Pool() as pool:
+    # Respectful worker cap so the audit doesn't saturate all cores (cf. the
+    # segmentation worker cap). Uses half the machine's cores, bounded by 8.
+    n_audit_workers = max(1, min(int((os.cpu_count() or 1) / 2), 8))
+    with Pool(processes=n_audit_workers) as pool:
         for partial in pool.imap_unordered(_audit_single_shard, jobs):
             completed += 1
             for subset, c in partial.items():
