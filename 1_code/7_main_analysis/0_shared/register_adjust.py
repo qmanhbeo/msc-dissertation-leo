@@ -40,9 +40,9 @@ Fingerprints are CONTENT-based (sha256 over manifest files / arrays), NOT
 mtime-based — 2_data/ re-hydration resets mtimes and must not force a re-run.
 
 Outputs (gitignored 2_data/, never 4_outputs/):
-    2_data/3_embedded/{slug}/register/{track}/G.npy
-    2_data/3_embedded/{slug}/register/{track}/checkpoint.json
-    2_data/3_embedded/{slug}/register/{track}/status/
+    2_data/3b_register/{slug}/{track}/G.npy
+    2_data/3b_register/{slug}/{track}/checkpoint.json
+    2_data/3b_register/{slug}/{track}/status/
 
 Run from project root:
     python 1_code/7_main_analysis/0_shared/register_adjust.py --embed-model mpnet
@@ -75,6 +75,7 @@ from model_utils import (
     N_SDG,
     embed_dir_for_model,
     embed_research_dir_for_model,
+    register_dir_for_model as register_root_dir_for_model,
     resolve_model_alias,
     scored_dir_for_model,
 )
@@ -148,7 +149,7 @@ def track_for_model(model: str) -> str:
 
 
 def register_dir_for_model(model: str, track: str) -> Path:
-    return embed_dir_for_model(model) / "register" / track
+    return register_root_dir_for_model(model) / track
 
 
 # --------------------------------------------------------------------------- #

@@ -144,6 +144,11 @@ def embed_dir_for_model(model: str) -> Path:
     return DATA_ROOT / "3_embedded" / model_slug(model)
 
 
+def register_dir_for_model(model: str) -> Path:
+    _validate_model(model)
+    return DATA_ROOT / "3b_register" / model_slug(model)
+
+
 def model_results_dir_for_model(model: str) -> Path:
     _validate_model(model)
     return DATA_ROOT / "4_supervised_model_results" / model_slug(model)

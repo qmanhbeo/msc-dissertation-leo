@@ -16,8 +16,8 @@ Inputs (part 1):
   4_outputs/{model}/data/4_2_coverage_document_weighted.json       (coverage gaps)
 
 Inputs (part 2):
-  2_data/3_embedded/{slug}/register/{track}/G.npy                  (INLP G)
-  2_data/3_embedded/{slug}/register/{track}/checkpoint.json        (iteration data)
+  2_data/3b_register/{slug}/{track}/G.npy                          (INLP G)
+  2_data/3b_register/{slug}/{track}/checkpoint.json                (iteration data)
   + policy emb, scores, IDs, research centroids, centroid meta
 
 Outputs:

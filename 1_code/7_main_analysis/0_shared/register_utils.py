@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, embed_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, register_dir_for_model
 from semantic_gap_shared import (
     SEGMENT_CAP_PRIMARY,
     build_sub_centroid,
@@ -46,10 +46,10 @@ def track_for_model(model: str) -> str:
 
 
 def register_dir(model: str, track: str | None = None) -> Path:
-    """Path to 2_data/3_embedded/{slug}/register/{track}/."""
+    """Path to 2_data/3b_register/{slug}/{track}/."""
     if track is None:
         track = track_for_model(model)
-    return embed_dir_for_model(model) / "register" / track
+    return register_dir_for_model(model) / track
 
 
 def load_G(model: str, track: str | None = None) -> np.ndarray:
