@@ -598,7 +598,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     model_args = ["--embed-model", model]
 
     # ==== STAGE 5: CLASSIFY / SCORE ==========================================
-    run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args, step_id="0", model=model)
+    run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args + _overwrite_flag(overwrite), step_id="0", model=model)
     # Model-selection grid search (MPNet-only) — produces lr_cv_results.json +
     # grid_search_log.json consumed by Appendix D.1, before the appendix battery
     # (D1) runs in STAGE 10. No-op for MiniLM/SciBERT tracks.

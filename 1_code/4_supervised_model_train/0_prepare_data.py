@@ -77,9 +77,26 @@ def main() -> None:
                         help="Fraction of document-groups assigned to the train pool; the rest go to test (default: %(default)s)")
     parser.add_argument("--split-seed", type=int, default=RANDOM_SEED,
                         help="Random seed for the stratified document-group train/test split (default: %(default)s)")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Overwrite existing outputs")
     args = parser.parse_args()
     embed_root = Path(args.embed_root) if args.embed_root else embed_dir_for_model(args.embed_model)
     output_dir = Path(args.output_root) if args.output_root else model_results_dir_for_model(args.embed_model)
+
+    # ── Existence-skip (cheap stage convention) ──
+    required_outputs = [
+        output_dir / "embeddings.npy",
+        output_dir / "labels.npy",
+        output_dir / "sources.npy",
+        output_dir / "source_docs.npy",
+        output_dir / "indices" / "train.npy",
+        output_dir / "indices" / "test.npy",
+        output_dir / "split_report.txt",
+    ]
+    if not args.overwrite and all(p.exists() for p in required_outputs):
+        log.info("Skipping — outputs present at %s (use --overwrite to regenerate)", output_dir)
+        return
+
     log.info("Embed root: %s  Output: %s  Model: %s", embed_root, output_dir, args.embed_model)
 
     emb_path = embed_root / "reference.npy"
@@ -108,6 +125,7 @@ def main() -> None:
     ordered_sources = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"]
 
     embs_list, labels_list, sources_list, source_docs_list = [], [], [], []
+    source_summary: dict[str, int] = {}  # name -> kept text count
 
     for name in ordered_sources:
         indices = source_to_indices.get(name, [])
@@ -151,10 +169,7 @@ def main() -> None:
         sources_list.extend([name] * len(kept_sub_indices))
         source_docs_list.extend(source_docs_corpus)
 
-        log.info(
-            "  %s: %d texts (dropped %d multi-label)",
-            name, len(kept_sub_indices), dropped_multi,
-        )
+        source_summary[name] = len(kept_sub_indices)
 
     if not embs_list:
         log.error("No corpora loaded — nothing to do.")
@@ -211,9 +226,8 @@ def main() -> None:
         n_train = sum(len(doc_groups[gi]) for gi in train_doc_groups)
         n_test = sum(len(doc_groups[gi]) for gi in test_doc_groups)
         log.info(
-            "  %s: %d train (%d docs) + %d test (%d docs) (%.1f%%)",
-            src, n_train, len(train_doc_groups), n_test, len(test_doc_groups),
-            100 * n_test / (n_train + n_test),
+            "  %s: %d texts → %d train / %d test",
+            src, source_summary.get(src, n_train + n_test), n_train, n_test,
         )
 
     train_pool_idx = np.array(train_pool_idx, dtype=np.int64)
@@ -269,9 +283,7 @@ def main() -> None:
     report_path = output_dir / "split_report.txt"
     report_path.write_text("\n".join(lines))
     log.info("Saved split report → %s", report_path)
-
-    print("\n".join(lines[-10:]))
-    print(f"\nDone. Train: {len(train_pool_idx)}  Test: {len(test_idx)}")
+    log.info("Done. Train: %d  Test: %d", len(train_pool_idx), len(test_idx))
 
 
 if __name__ == "__main__":
