@@ -297,9 +297,6 @@ def main() -> None:
             args.id_field = "id"
 
     mslug = model_slug(args.embed_model)
-
-    log.info("Loading tokenizer: %s", args.embed_model)
-    tok = load_segment_tokenizer(args.embed_model)
     max_seq_length = CANONICAL_MAX_SEQ_LENGTH
 
     if args.sharded:
@@ -315,6 +312,14 @@ def main() -> None:
              args.text_field, args.id_field, args.prefix, args.overwrite)
             for shard_idx, in_path in enumerate(input_paths, start=1)
         ]
+        # Skip spawning workers (and their per-process tokenizer loads) when
+        # every shard is already segmented. Mirrors the existence-based guard
+        # used by the --all path, so semantics are unchanged.
+        pending = [t for t in tasks if not (Path(t[2]).exists() and not t[6])]
+        if not pending:
+            log.info("All %d shards already segmented — nothing to do", len(tasks))
+            return
+
         n_workers = args.workers if args.workers > 0 else max(
             1, min(int((os.cpu_count() or 1) / 2), RESPECTFUL_WORKER_CAP, len(tasks))
         )
@@ -366,6 +371,8 @@ def main() -> None:
             log.info("Skip %s — already exists", output_path.name)
             return
 
+        log.info("Loading tokenizer: %s", args.embed_model)
+        tok = load_segment_tokenizer(args.embed_model)
         log.info("Loading: %s", input_path)
         records = _load_records(input_path)
         segments = segment_records(records, tok, max_seq_length, args.text_field, args.id_field, args.prefix, args.min_words)
