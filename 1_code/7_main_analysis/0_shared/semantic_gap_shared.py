@@ -352,22 +352,6 @@ def compute_sdg_semantic_gaps(
             }
         )
 
-        level = logging.WARNING if unreliable else logging.INFO
-        log.log(
-            level,
-            "SDG %2d | n_papers=%4d | n_segments=%5d→%4d (cap=%d) | "
-            "n_docs=%4d | sim=%.4f | gap=%.4f%s",
-            sdg,
-            n_papers,
-            n_segments,
-            n_segments_capped,
-            segment_cap,
-            len(policy_docs_capped),
-            sim,
-            gap,
-            " [UNRELIABLE]" if unreliable else "",
-        )
-
     return results, policy_centroids_out
 
 
