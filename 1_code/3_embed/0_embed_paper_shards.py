@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import shutil
 import sys
 import time
@@ -115,6 +116,9 @@ def generate_ids(data_path: Path, ids_out: Path) -> None:
 
 def main() -> None:
     args = parse_args()
+    # Respectful CPU-thread cap so the (long) embed pass doesn't silently
+    # saturate every core on the user's machine (cf. segmentation worker cap).
+    torch.set_num_threads(max(1, min(int((os.cpu_count() or 1) / 2), 8)))
     precision = args.precision or default_precision(args.embed_model)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 

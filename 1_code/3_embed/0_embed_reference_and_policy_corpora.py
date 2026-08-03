@@ -17,9 +17,12 @@ Outputs per corpus:
 import argparse
 import json
 import logging
+import os
 import shutil
 import sys
 from pathlib import Path
+
+import torch
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -234,9 +237,16 @@ def embed_corpus(
 
 def main() -> None:
     args = parse_args()
+    # Respectful CPU-thread cap so the (long) embed pass doesn't silently
+    # saturate every core on the user's machine (cf. segmentation worker cap).
+    torch.set_num_threads(max(1, min(int((os.cpu_count() or 1) / 2), 8)))
     precision = args.precision or default_precision(args.embed_model)
     output_dir = embed_dir_for_model(args.embed_model)
     config = CORPUS_CONFIG[args.corpus]
+
+    device = args.device if args.device != "auto" else ("cuda" if torch.cuda.is_available() else "cpu")
+    if precision == "fp16" and device == "cpu":
+        raise RuntimeError("fp16 precision requires a CUDA device.")
 
     log.info("Loading model: %s", args.embed_model)
     model = load_embedder(args.embed_model, device=args.device, local_files_only=args.local_files_only)

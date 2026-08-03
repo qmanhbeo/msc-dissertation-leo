@@ -463,6 +463,7 @@ def _embed_model_steps(
         steps.append((f"embed {corpus} ({model})", [
             sys.executable, "1_code/3_embed/0_embed_reference_and_policy_corpora.py",
             "--corpus", corpus, "--batch-size", str(pol_ref_bs),
+            "--device", device,
             "--local-files-only", "--precision", precision, "--normalize-embeddings",
         ] + model_args + ow))
     embed_cmd = [
