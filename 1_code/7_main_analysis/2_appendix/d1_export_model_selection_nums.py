@@ -2,7 +2,7 @@
 Export grid-search CV macro-F1 values from training outputs to a num_*.tex
 macro file for use in Appendix D prose.
 
-Reads lr_cv_results.json and grid_search_log.json from
+Reads lr_cv_results.json and mlp_grid_search_log.json from
 2_data/4_supervised_model_results/{model}/model/ and writes
 num_model_selection.tex into 4_outputs/main/{model}/tables/.
 """
@@ -32,12 +32,12 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
     # --- LR ---
     lr_path = model_dir / "lr_cv_results.json"
     if not lr_path.exists():
-        print(f"LR CV results not found at {lr_path}. Run 1_train_models_LR.py first.", file=sys.stderr)
+        print(f"LR CV results not found at {lr_path}. Run 2_grid_search.py first.", file=sys.stderr)
         sys.exit(1)
 
-    gs_path = model_dir / "grid_search_log.json"
+    gs_path = model_dir / "mlp_grid_search_log.json"
     if not gs_path.exists():
-        print(f"Grid search log not found at {gs_path}. Run 1_train_models_MLP.py first.", file=sys.stderr)
+        print(f"Grid search log not found at {gs_path}. Run 2_grid_search.py first.", file=sys.stderr)
         sys.exit(1)
 
     SCRIPT_VERSION = "1"

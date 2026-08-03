@@ -10,8 +10,8 @@ Run from project root:
 
 PROVENANCE GUARD (do not archive/delete on "orphan" grounds):
     Not called by main.py or any orchestrator -- intentionally kept. This is the
-    diagnostic counterpart to the grid-search train scripts (1_train_models_LR.py /
-    1_train_models_MLP.py), whose CV numbers are hand-transcribed into
+    diagnostic counterpart to the grid-search orchestrator (2_grid_search.py /
+    train_models_utils.py), whose CV numbers are hand-transcribed into
     dissertation.tex Appendix D. No live code path consumes its output; retained for
     reproducibility of the Appendix D figures. Do not remove without first confirming
     Appendix D is otherwise sourced.

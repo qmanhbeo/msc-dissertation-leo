@@ -130,7 +130,7 @@ Invariant: research-corpus text = `"{title}. {abstract}"` (set in `0_preprocess_
 - MLP grid search (GroupKFold(5) CV on the train pool: depth/width/lr), champion selected by CV macro-F1
 - results saved durably; NOT invoked by main.py (provenance-guarded); consumed by `d1_export_model_selection_nums.py` → Appendix D; no re-run in replays
 
-  Script `1_code/4_supervised_model_train/1_train_models_LR.py` + `1_train_models_MLP.py` --> Output: `2_data/4_supervised_model_results/[model]/model/{lr_cv_results.json, mlp_cv_results.json, grid_search_log.json}`
+  Script `1_code/4_supervised_model_train/2_grid_search.py` --> Output: `2_data/4_supervised_model_results/[model]/model/{lr_cv_results.json, mlp_cv_results.json, lr_grid_search_log.json, mlp_grid_search_log.json}` (shared logic in `train_models_utils.py`)
 
 - retrain LR champion on full train pool (C=10/l2/lbfgs; single-use held-out test evaluation) → `sdg_classifier_retrained.joblib` · test macro-F1 0.8231 → `sdg_retrain_results.json`
 - retrain MLP champion on full train pool (`--classifier-type mlp`) → `mlp_retrained.joblib` · `mlp_retrain_results.json`

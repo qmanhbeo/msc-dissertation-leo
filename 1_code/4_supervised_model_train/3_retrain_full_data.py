@@ -44,9 +44,13 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
+TRAIN_DIR = CODE_ROOT / "4_supervised_model_train"
+if str(TRAIN_DIR) not in sys.path:
+    sys.path.insert(0, str(TRAIN_DIR))
 
 from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, RANDOM_SEED, model_results_dir_for_model, output_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import atomic_write_joblib
+from train_models_utils import MultiLabelMLP, _NetWrapper, train_mlp_fold
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -58,7 +62,7 @@ LR_SOLVER = "lbfgs"
 LR_MAX_ITER = 1000
 
 # Champion MLP hyperparameters as selected by the manual grid-search CV
-# (grid_search_log.json, 2026-07-25): 4 layers / 384 hidden / lr=3e-4 / wd=0 /
+# (mlp_grid_search_log.json, 2026-07-25): 4 layers / 384 hidden / lr=3e-4 / wd=0 /
 # dropout=0.3, CV macro-F1 0.8243. The argparse defaults below derive from this
 # champion so the retrained MLP artifact (mlp_retrained.joblib +
 # model_config.json) matches the dissertation text, which cites lr=3e-4.
@@ -73,37 +77,9 @@ MLP_CHAMPION_CONFIG = {
 CV_N_SPLITS = 5
 
 
-class MultiLabelMLP(nn.Module):
-    def __init__(self, input_dim: int, n_layers: int = 4, hidden_size: int = 384,
-                 dropout: float = 0.3):
-        super().__init__()
-        layers = []
-        for i in range(n_layers):
-            in_dim = input_dim if i == 0 else hidden_size
-            layers.append(nn.Linear(in_dim, hidden_size))
-            layers.append(nn.BatchNorm1d(hidden_size))
-            layers.append(nn.ReLU())
-            layers.append(nn.Dropout(dropout))
-        layers.append(nn.Linear(hidden_size, N_SDG))
-        self.net = nn.Sequential(*layers)
-
-    def forward(self, x):
-        return self.net(x)
-
-
-class _NetWrapper:
-    """Pickle-friendly wrapper for the retrained PyTorch model."""
-    def __init__(self, net, input_dim):
-        self.net = net
-        self.input_dim = input_dim
-    def predict_proba(self, X):
-        self.net.eval()
-        X_t = torch.from_numpy(X.astype(np.float32))
-        with torch.no_grad():
-            probs = torch.sigmoid(self.net(X_t))
-        return probs.cpu().numpy()
-    def predict(self, X):
-        return self.predict_proba(X).argmax(axis=1).astype(np.float32)
+# MultiLabelMLP, _NetWrapper, and train_mlp_fold are imported from
+# 1_train_models_utils (shared with the grid-search orchestrator 2_grid_search.py)
+# so there is a single source of truth for the MLP architecture and training loop.
 
 
 def _cv_mlp_fold(
@@ -113,89 +89,11 @@ def _cv_mlp_fold(
     Y_val: np.ndarray,
     cfg: dict,
 ) -> tuple[float, list[float], float, int]:
-    """Train an MLP on the fold-train portion with an internal 90/10 early-stop
-    split, then evaluate the best-epoch state on the fold's held-out portion.
-
-    Mirrors the canonical MLP training loop (stage 1 only) so the canonical
-    retrain path is not refactored. Returns
-    (macro_f1, per_sdg_f1, best_internal_val_f1, best_epoch).
+    """Train an MLP fold with internal 90/10 early-stop split via the shared
+    train_mlp_fold helper. Returns (macro_f1, per_sdg_f1, best_internal_val_f1, best_epoch).
     """
-    import torch.optim as optim
-    from torch.utils.data import DataLoader, TensorDataset
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    torch.manual_seed(RANDOM_SEED)
-    torch.backends.cudnn.deterministic = True
-    torch.use_deterministic_algorithms(True)
-
-    input_dim = X_tr.shape[1]
-    net = MultiLabelMLP(input_dim, cfg["n_layers"], cfg["hidden_size"], cfg["dropout"]).to(device)
-    criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.AdamW(net.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"])
-
-    X_t = torch.from_numpy(X_tr.astype(np.float32))
-    Y_t = torch.from_numpy(Y_tr.astype(np.float32))
-
-    n_val = max(1, int(len(X_t) * 0.1))
-    perm = torch.randperm(len(X_t), generator=torch.Generator().manual_seed(RANDOM_SEED))
-    val_idx = perm[:n_val]
-    tr_idx = perm[n_val:]
-
-    train_ds = TensorDataset(X_t[tr_idx].to(device), Y_t[tr_idx].to(device))
-    val_ds = TensorDataset(X_t[val_idx].to(device), Y_t[val_idx].to(device))
-    _seed_loader = torch.Generator().manual_seed(RANDOM_SEED)
-    train_loader = DataLoader(train_ds, batch_size=256, shuffle=True, generator=_seed_loader)
-    val_loader = DataLoader(val_ds, batch_size=512)
-
-    best_val_f1 = -1.0
-    patience_counter = 0
-    best_epoch = 0
-    best_state = None
-
-    for epoch in range(100):
-        net.train()
-        for batch_X, batch_y in train_loader:
-            optimizer.zero_grad()
-            loss = criterion(net(batch_X), batch_y)
-            loss.backward()
-            optimizer.step()
-
-        net.eval()
-        all_preds, all_true = [], []
-        with torch.no_grad():
-            for batch_X, batch_y in val_loader:
-                all_preds.append(torch.sigmoid(net(batch_X)).cpu().numpy())
-                all_true.append(batch_y.cpu().numpy())
-
-        val_preds = np.vstack(all_preds)
-        val_true = np.vstack(all_true)
-        val_pred_int = val_preds.argmax(axis=1)
-        val_pred_bin = np.zeros_like(val_preds)
-        val_pred_bin[np.arange(len(val_pred_int)), val_pred_int] = 1.0
-        val_f1 = f1_score(val_true, val_pred_bin, average="macro", zero_division=0)
-
-        if val_f1 > best_val_f1:
-            best_val_f1 = val_f1
-            best_epoch = epoch + 1
-            patience_counter = 0
-            best_state = {k: v.cpu().clone() for k, v in net.state_dict().items()}
-        else:
-            patience_counter += 1
-            if patience_counter >= 7:
-                break
-
-    net.load_state_dict(best_state)
-    net.eval()
-    X_val_t = torch.from_numpy(X_val.astype(np.float32)).to(device)
-    with torch.no_grad():
-        val_probs = torch.sigmoid(net(X_val_t)).cpu().numpy()
-    val_pred_int = val_probs.argmax(axis=1)
-    val_preds = np.zeros_like(val_probs)
-    val_preds[np.arange(len(val_pred_int)), val_pred_int] = 1.0
-
-    macro = float(f1_score(Y_val, val_preds, average="macro", zero_division=0))
-    per_sdg = f1_score(Y_val, val_preds, average=None, zero_division=0).tolist()
-    return macro, per_sdg, float(best_val_f1), best_epoch
+    return train_mlp_fold(X_tr, Y_tr, X_val, Y_val, cfg, device)
 
 
 def run_cv_full_data(data_dir: Path, classifier_type: str) -> None:

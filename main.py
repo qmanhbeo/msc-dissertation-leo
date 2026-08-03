@@ -413,35 +413,32 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
 
 
 def run_model_selection_cv(model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
-    """LR + MLP grid-search CV -> lr_cv_results.json + grid_search_log.json.
+    """LR + MLP grid-search CV -> lr_cv_results.json + mlp_cv_results.json.
 
-    Model-selection is MPNet-only (Appendix D.1 scope). These two scripts carry
-    a PROVENANCE GUARD excluding them from main.py, so warm replay must produce
-    their outputs (consumed by 2_appendix/d1_export_model_selection_nums.py);
+    Model-selection is MPNet-only (Appendix D.1 scope). 2_grid_search.py carries
+    a PROVENANCE GUARD excluding it from direct invocation; warm replay must
+    produce its outputs (consumed by 2_appendix/d1_export_model_selection_nums.py);
     without this step a clean replay aborts at D1.
 
-    Both scripts accept only --embed-model and write into
-    2_data/4_supervised_model_results/{model}/model/. grid_search_log.json is the
-    only append-accumulating artifact; under --overwrite we clear it so the run
-    regenerates deterministically (the *_cv_results.json / *_classifier.joblib
-    files are overwritten by the scripts themselves).
+    2_grid_search.py accepts only --embed-model (and --n-jobs) and writes into
+    2_data/4_supervised_model_results/{model}/model/. lr_grid_search_log.json and
+    mlp_grid_search_log.json are the append-accumulating artifacts; under
+    --overwrite we clear them so the run regenerates deterministically (the
+    *_cv_results.json / *_classifier.joblib files are overwritten by the script).
     """
     if model != DEFAULT_EMBED_MODEL:
         return
     model_dir = model_results_dir_for_model(model) / "model"
     if overwrite:
-        gs = model_dir / "grid_search_log.json"
-        if gs.exists():
-            gs.unlink()
-    for script in (
-        "4_supervised_model_train/1_train_models_LR.py",
-        "4_supervised_model_train/1_train_models_MLP.py",
-    ):
-        run_step(
-            "model-selection grid search",
-            [sys.executable, f"1_code/{script}", "--embed-model", model],
-            model=model,
-        )
+        for gs in ("lr_grid_search_log.json", "mlp_grid_search_log.json"):
+            p = model_dir / gs
+            if p.exists():
+                p.unlink()
+    run_step(
+        "model-selection grid search",
+        [sys.executable, "1_code/4_supervised_model_train/2_grid_search.py", "--embed-model", model],
+        model=model,
+    )
 
 
 def _preprocess_steps(overwrite: bool) -> list[tuple[str, list[str]]]:
@@ -600,7 +597,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     # ==== STAGE 5: CLASSIFY / SCORE ==========================================
     run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py"] + model_args + _overwrite_flag(overwrite), step_id="0", model=model)
     # Model-selection grid search (MPNet-only) — produces lr_cv_results.json +
-    # grid_search_log.json consumed by Appendix D.1, before the appendix battery
+    # mlp_grid_search_log.json consumed by Appendix D.1, before the appendix battery
     # (D1) runs in STAGE 10. No-op for MiniLM/SciBERT tracks.
     run_model_selection_cv(model, overwrite=overwrite)
     run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args + _overwrite_flag(overwrite), step_id="1", model=model)
