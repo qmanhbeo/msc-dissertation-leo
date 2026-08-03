@@ -159,6 +159,15 @@ def parse_args() -> argparse.Namespace:
             "Defaults to embedded; 'both' runs raw then embedded."
         ),
     )
+    p.add_argument(
+        "--fetch-encoder-models",
+        action="store_true",
+        help=(
+            "Warm the HuggingFace encoder models (MPNet + MiniLM + SciBERT) into the "
+            "local cache. One-time; skips if already cached. Run before --cold-replay / "
+            "--warm-replay so those stages stay offline."
+        ),
+    )
     p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
@@ -216,6 +225,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.appendix_all,
             args.fetch_data_snapshot,
             args.backup_data_snapshot,
+            args.fetch_encoder_models,
             args.build_pdf,
         ]
         + [getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS]
@@ -791,8 +801,8 @@ def run_warm_replay(
     # correlation values (the adjusted columns depend on each model's own G).
     # --embed-model is intentionally ignored here (as in --cold-replay): warm
     # replay always rebuilds every track.
-    run_step("fetch encoder models",
-             [sys.executable, "1_code/0_fetch/fetch_encoder_models.py"])
+    # NOTE: the encoder models are assumed already warmed into the HF cache via
+    # `python main.py --fetch-encoder-models` (run once, before replay).
     ordered = [m for m in COLD_REPLAY_MODELS if m != DEFAULT_EMBED_MODEL] + [DEFAULT_EMBED_MODEL]
     for model in ordered:
         sep = "=" * 70
@@ -822,9 +832,9 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     # Auto-fetch the raw snapshot if missing (matches warm replay's auto-fetch behaviour).
     ensure_cold_replay_inputs(args)
 
+    # NOTE: encoder models are assumed already warmed into the HF cache via
+    # `python main.py --fetch-encoder-models` (run once, before replay).
     pre_steps = []
-    pre_steps += [("fetch encoder models",
-                   [sys.executable, "1_code/0_fetch/fetch_encoder_models.py"])]
     pre_steps += _preprocess_steps(args.overwrite)
     pre_steps += _segment_steps("all", args.overwrite, segment_workers=args.segment_workers)
     for label, cmd in pre_steps:
@@ -1055,6 +1065,8 @@ def main() -> None:
     elif args.backup_data_snapshot:
         for profile_name in selected_backup_profiles(args.backup_data_snapshot):
             run_backup_data_snapshot(profile_name=profile_name)
+    elif args.fetch_encoder_models:
+        run_step("fetch encoder models", [sys.executable, "1_code/0_fetch/fetch_encoder_models.py"])
     elif args.cold_replay:
         run_cold_replay(output_dir, args)
     elif args.appendix_all:

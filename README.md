@@ -35,6 +35,9 @@ conda activate dissertation
 # optional: if you have an NVIDIA GPU with CUDA 12.1:
 # pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 
+# One-time: warm the HuggingFace encoder models (MPNet + MiniLM + SciBERT) into the local cache.
+python main.py --fetch-encoder-models
+
 python main.py --warm-replay-without-appendix --overwrite
 ```
 
@@ -46,6 +49,9 @@ If the snapshot download fails, run `python main.py --fetch-data-snapshot embedd
 then retry.
 
 ```bash
+# One-time: warm the HuggingFace encoder models (MPNet + MiniLM + SciBERT) into the local cache.
+python main.py --fetch-encoder-models
+
 # Or if you want to rebuild from the raw data snapshot (cold replay):
 python main.py --cold-replay --overwrite
 ```

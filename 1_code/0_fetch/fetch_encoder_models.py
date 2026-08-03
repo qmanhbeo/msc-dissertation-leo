@@ -38,65 +38,55 @@ ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
 
-from model_utils import COLD_REPLAY_MODELS, RAW_BERT_MODELS  # noqa: E402
+from model_utils import COLD_REPLAY_MODELS  # noqa: E402
 
 
-def _is_cached_sentence_transformer(model_name: str) -> bool:
-    """Return True if the sentence-transformers checkpoint is already cached."""
-    from sentence_transformers import SentenceTransformer
+def _hf_repo_id(model_name: str) -> str:
+    """Resolve a model name to its HuggingFace repo id.
+
+    Bare sentence-transformers names (e.g. ``all-mpnet-base-v2``) live under the
+    ``sentence-transformers/`` namespace; repo ids that already contain a
+    namespace (e.g. ``allenai/scibert_scivocab_uncased``) are used as-is. This
+    lets us probe/download the cache via ``huggingface_hub.snapshot_download``
+    without ever constructing a torch model — which would otherwise load the
+    weights into memory just to answer "is this cached?".
+    """
+    if "/" in model_name:
+        return model_name
+    return "sentence-transformers/" + model_name
+
+
+def _is_cached(model_name: str) -> bool:
+    """Return True if the model's HF repo is already present in the local cache."""
+    from huggingface_hub import snapshot_download
 
     try:
-        SentenceTransformer(model_name, local_files_only=True)
+        snapshot_download(_hf_repo_id(model_name), local_files_only=True)
         return True
     except Exception:
         return False
 
 
-def _is_cached_raw_bert(repo_id: str) -> bool:
-    """Return True if a raw (non-sentence-transformers) BERT repo is cached."""
+def _fetch(model_name: str, *, force: bool = False) -> None:
+    """Download (and verify) a model repo into the HF cache.
+
+    Uses ``snapshot_download`` so the weights are fetched to disk but never
+    loaded into a torch model — the downstream ``SentenceTransformer(...,
+    local_files_only=True)`` reads them back offline later.
+    """
     from huggingface_hub import snapshot_download
 
-    try:
-        snapshot_download(repo_id, local_files_only=True)
-        return True
-    except Exception:
-        return False
-
-
-def _fetch_sentence_transformer(model_name: str) -> None:
-    """Download (and verify) a sentence-transformers checkpoint into the cache."""
-    from sentence_transformers import SentenceTransformer
-
-    log.info("Downloading sentence-transformers model: %s", model_name)
-    SentenceTransformer(model_name)
-    log.info("Cached sentence-transformers model: %s", model_name)
-
-
-def _fetch_raw_bert(repo_id: str) -> None:
-    """Download a raw BERT repo (weights + tokenizer) into the cache."""
-    from huggingface_hub import snapshot_download
-
-    log.info("Downloading raw BERT model: %s", repo_id)
-    snapshot_download(repo_id)
-    log.info("Cached raw BERT model: %s", repo_id)
+    log.info("Downloading model: %s", model_name)
+    snapshot_download(_hf_repo_id(model_name), force_download=force)
+    log.info("Cached model: %s", model_name)
 
 
 def ensure_model_cached(model_name: str, *, force: bool = False) -> None:
     """Warm the HF cache for ``model_name`` if absent (or if ``force``)."""
-    is_raw = model_name in RAW_BERT_MODELS
-    if not force:
-        cached = (
-            _is_cached_raw_bert(model_name)
-            if is_raw
-            else _is_cached_sentence_transformer(model_name)
-        )
-        if cached:
-            log.info("Skip %s — already in HF cache", model_name)
-            return
-    if is_raw:
-        _fetch_raw_bert(model_name)
-    else:
-        _fetch_sentence_transformer(model_name)
+    if not force and _is_cached(model_name):
+        log.info("Skip %s — already in HF cache", model_name)
+        return
+    _fetch(model_name, force=force)
 
 
 def _nltk_data_present() -> bool:
