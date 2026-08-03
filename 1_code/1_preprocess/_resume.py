@@ -51,7 +51,7 @@ SCHEMA_VERSION = 1
 def _append_records(out_path: Path, records: list[dict], dumps: Callable[[dict], str]) -> int:
     """Append json lines to ``out_path``; return the number of bytes written."""
     bytes_written = 0
-    with out_path.open("a", encoding="utf-8") as f:
+    with out_path.open("a", encoding="utf-8", newline="") as f:
         for r in records:
             line = dumps(r) + "\n"
             f.write(line)

@@ -174,7 +174,7 @@ def load_ids(path: Path) -> list[dict[str, Any]]:
 
 def write_ids(path: Path, rows: list[dict[str, Any]]) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
+    with tmp.open("w", encoding="utf-8", newline="") as f:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
     tmp.replace(path)
@@ -182,7 +182,7 @@ def write_ids(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def write_json(path: Path, data: list[dict]) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
+    with tmp.open("w", encoding="utf-8", newline="") as f:
         json.dump(data, f, indent=None, separators=(",", ":"), ensure_ascii=False)
     tmp.replace(path)
 

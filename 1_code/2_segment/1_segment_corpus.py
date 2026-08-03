@@ -95,7 +95,7 @@ def _segment_shard_worker(task):
 
     tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_path.open("w", encoding="utf-8") as f:
+    with tmp_path.open("w", encoding="utf-8", newline="") as f:
         for s in segments:
             f.write(json.dumps(s, ensure_ascii=False) + "\n")
     tmp_path.replace(out_path)
@@ -233,7 +233,7 @@ def main() -> None:
             records = _load_records(input_path)
             segments = segment_records(records, tok, max_seq_length, "text", id_field, prefix)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with output_path.open("w", encoding="utf-8") as f:
+            with output_path.open("w", encoding="utf-8", newline="") as f:
                 for s in segments:
                     f.write(json.dumps(s, ensure_ascii=False) + "\n")
             log.info("  wrote %d segments -> %s", len(segments), output_path.name)
@@ -350,7 +350,7 @@ def main() -> None:
         # Atomic write: stage to a .tmp sibling, then replace, so an interrupted
         # run never leaves a torn file that a later exists-skip would accept.
         tmp_path = output_path.with_suffix(output_path.suffix + ".tmp")
-        with tmp_path.open("w", encoding="utf-8") as f:
+        with tmp_path.open("w", encoding="utf-8", newline="") as f:
             for s in segments:
                 f.write(json.dumps(s, ensure_ascii=False) + "\n")
         os.replace(tmp_path, output_path)

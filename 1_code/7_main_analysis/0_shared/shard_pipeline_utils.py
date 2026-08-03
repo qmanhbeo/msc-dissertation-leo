@@ -47,7 +47,7 @@ def sha256_file(path: Path, block_size: int = 1024 * 1024) -> str:
 def atomic_write_json(path: Path, payload: Any) -> None:
     ensure_dir(path.parent)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
+    with tmp.open("w", encoding="utf-8", newline="") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
     os.replace(tmp, path)
 

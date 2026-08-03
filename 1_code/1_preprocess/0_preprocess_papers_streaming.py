@@ -141,7 +141,7 @@ def truncate_file(path: Path) -> None:
 
 
 def append_pending(path: Path, row: dict[str, Any]) -> None:
-    with path.open("a", encoding="utf-8") as f:
+    with path.open("a", encoding="utf-8", newline="") as f:
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
@@ -166,7 +166,7 @@ def write_shard(
     per_year: dict[str, int] = {}
     max_offset = 0
 
-    with shard_tmp.open("w", encoding="utf-8") as f_data, ids_tmp.open("w", encoding="utf-8") as f_ids:
+    with shard_tmp.open("w", encoding="utf-8", newline="") as f_data, ids_tmp.open("w", encoding="utf-8", newline="") as f_ids:
         for i, row in enumerate(pending_rows):
             rec = row["record"]
             year = rec.get("publication_year")

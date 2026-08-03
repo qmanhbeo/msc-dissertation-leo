@@ -134,7 +134,7 @@ def main() -> None:
         total_raw, total_deduped, total_removed,
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as f:
+    with output_path.open("w", encoding="utf-8", newline="") as f:
         for rec in deduped:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     log.info("%d rows written to %s", total_deduped, output_path)

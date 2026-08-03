@@ -98,7 +98,7 @@ def load_texts(path: Path) -> list[str]:
 
 def generate_ids(data_path: Path, ids_out: Path) -> None:
     tmp = ids_out.with_suffix(ids_out.suffix + ".tmp")
-    with data_path.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8") as dst:
+    with data_path.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8", newline="") as dst:
         for row_in_shard, line in enumerate(src):
             if not line.strip():
                 continue

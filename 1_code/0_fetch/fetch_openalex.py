@@ -339,7 +339,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
         # Flush buffer periodically
         if len(buffer) >= SAVE_EVERY:
-            with out_path.open("a") as f:
+            with out_path.open("a", encoding="utf-8", newline="") as f:
                 for r in buffer:
                     f.write(json.dumps(r) + "\n")
             buffer = []
@@ -367,7 +367,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
     # Flush remaining
     if buffer:
-        with out_path.open("a") as f:
+        with out_path.open("a", encoding="utf-8", newline="") as f:
             for r in buffer:
                 f.write(json.dumps(r) + "\n")
         save_seen_ids(seen_ids)
