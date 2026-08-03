@@ -35,6 +35,14 @@ MIN_CENTROID_NORM = 0.5
 # difference.
 CANONICAL_SEGMENT_MODEL = "all-mpnet-base-v2"
 CANONICAL_MAX_SEQ_LENGTH = 384
+# Encoder tracks rebuilt by --cold-replay / --warm-replay. The canonical
+# (MPNet) segment model comes first so its cross-sensitivity tables read the
+# freshly regenerated MiniLM / SciBERT coverage / semantic / correlation values.
+COLD_REPLAY_MODELS = (
+    CANONICAL_SEGMENT_MODEL,
+    "all-MiniLM-L6-v2",
+    "allenai/scibert_scivocab_uncased",
+)
 # Shared, deterministic 50k-paper representative research subset drawn (seed 42)
 # from the canonical segments. Consumed by every non-primary (sensitivity)
 # encoder so the architecture comparison is on identical papers.

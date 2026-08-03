@@ -56,6 +56,23 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 
+def load_segment_tokenizer(model_name: str) -> "AutoTokenizer":
+    """Load the canonical segment tokenizer, auto-downloading if not cached.
+
+    Cold replay (and the embed steps) run fully offline via ``--local-files-only``
+    after the encoder models have been warmed into the HF cache by
+    ``1_code/0_fetch/fetch_encoder_models.py``. To keep standalone segment
+    invocations robust on a fresh clone, we first try the offline cache and fall
+    back to a one-time download only when the weights are genuinely absent.
+    """
+    repo = "sentence-transformers/" + model_name
+    try:
+        return AutoTokenizer.from_pretrained(repo, local_files_only=True)
+    except Exception:
+        log.info("Tokenizer %s not in HF cache — downloading once", repo)
+        return AutoTokenizer.from_pretrained(repo)
+
+
 _WTOK = None
 _WMAXLEN = None
 
@@ -63,9 +80,7 @@ _WMAXLEN = None
 def _worker_init(model_name: str, max_len: int) -> None:
     """Load a lightweight tokenizer per worker (no full model weights)."""
     global _WTOK, _WMAXLEN
-    _WTOK = AutoTokenizer.from_pretrained(
-        "sentence-transformers/" + model_name, local_files_only=True
-    )
+    _WTOK = load_segment_tokenizer(model_name)
     _WMAXLEN = max_len
     _ensure_nltk_data()
 
@@ -219,9 +234,7 @@ def main() -> None:
         if not any_work:
             log.info("All corpora already exist — nothing to do")
             return
-        tok = AutoTokenizer.from_pretrained(
-            "sentence-transformers/" + args.embed_model, local_files_only=True
-        )
+        tok = load_segment_tokenizer(args.embed_model)
         max_seq_length = CANONICAL_MAX_SEQ_LENGTH
         for corpus_name, input_str, id_field, prefix in corpora:
             input_path = Path(input_str)
@@ -275,9 +288,7 @@ def main() -> None:
     mslug = model_slug(args.embed_model)
 
     log.info("Loading tokenizer: %s", args.embed_model)
-    tok = AutoTokenizer.from_pretrained(
-        "sentence-transformers/" + args.embed_model, local_files_only=True
-    )
+    tok = load_segment_tokenizer(args.embed_model)
     max_seq_length = CANONICAL_MAX_SEQ_LENGTH
 
     if args.sharded:

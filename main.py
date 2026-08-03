@@ -74,6 +74,7 @@ from shared_utils import (
 )
 from model_utils import (
     CANONICAL_SEGMENT_MODEL,
+    COLD_REPLAY_MODELS,
     DEFAULT_EMBED_MODEL,
     embed_dir_for_model,
     embed_research_dir_for_model,
@@ -92,12 +93,6 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = ROOT / "4_outputs"
 
 ALL_EMBED_CORPORA = ["reference", "policy"]
-
-COLD_REPLAY_MODELS = (
-    CANONICAL_SEGMENT_MODEL,
-    "all-MiniLM-L6-v2",
-    "allenai/scibert_scivocab_uncased",
-)
 
 
 def base_warm_replay_requirements(model: str = "") -> list[Path]:
@@ -770,6 +765,8 @@ def run_warm_replay(
     # correlation values (the adjusted columns depend on each model's own G).
     # --embed-model is intentionally ignored here (as in --cold-replay): warm
     # replay always rebuilds every track.
+    run_step("fetch encoder models",
+             [sys.executable, "1_code/0_fetch/fetch_encoder_models.py"])
     ordered = [m for m in COLD_REPLAY_MODELS if m != DEFAULT_EMBED_MODEL] + [DEFAULT_EMBED_MODEL]
     for model in ordered:
         sep = "=" * 70
@@ -800,6 +797,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     ensure_cold_replay_inputs(args)
 
     pre_steps = []
+    pre_steps += [("fetch encoder models",
+                   [sys.executable, "1_code/0_fetch/fetch_encoder_models.py"])]
     pre_steps += _preprocess_steps(args.overwrite)
     pre_steps += _segment_steps("all", args.overwrite)
     for label, cmd in pre_steps:
