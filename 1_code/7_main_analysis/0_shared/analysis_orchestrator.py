@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from model_utils import DEFAULT_EMBED_MODEL
 
@@ -183,7 +183,26 @@ def _load_module(rel_path: str):
     return mod
 
 
+def _friendly_name(rel_path: str) -> str:
+    """Human-readable step title from a script path, e.g.
+    '2_appendix/a2_policy_source_family_sensitivity.py' ->
+    'A2 Policy Source Family Sensitivity'."""
+    stem = PurePosixPath(rel_path).stem
+    acronyms = {"a2", "a3", "b2", "c0", "c1", "d1", "h1", "i1"}
+    return " ".join(w.upper() if w in acronyms else w.capitalize() for w in stem.split("_"))
+
+
+def print_step_header(title: str) -> None:
+    """Print a '===' box separator (to stderr) matching main.py's run_step style,
+    so in-process analyses are visually separated in the console log."""
+    sep = "=" * 70
+    print(sep, file=sys.stderr)
+    print(f"  {title}", file=sys.stderr)
+    print(sep, file=sys.stderr)
+
+
 def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False, embeddings: str = "raw", classifier: str = "lr") -> None:
+    print_step_header(f"[{model}] {_friendly_name(rel_path)}")
     mod = _load_module(rel_path)
     argv = [str(ANALYSIS_ROOT / rel_path), "--embed-model", model, "--output-dir", str(output_dir)]
     if overwrite:
