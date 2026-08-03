@@ -94,7 +94,7 @@ Segments are canonical and shared by every encoder (always `--embed-model all-mp
 
   Script `1_code/2_segment/1_segment_corpus.py` --> Output: `2_data/2_segmented/{research, research_concept}/part-*.jsonl`
 
-- build research 50k subset (used by MiniLM/SciBERT to keep embedding feasible)
+- build research 100k subset (used by MiniLM/SciBERT to keep embedding feasible)
 
   Script `1_code/2_segment/2_sample_segments.py` --> Output: `2_data/2_segmented/research_subset/part-00001.jsonl`
 

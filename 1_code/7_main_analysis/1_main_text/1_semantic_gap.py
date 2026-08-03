@@ -44,7 +44,7 @@ Minimum cluster size:
    The lowest-coverage SDGs (SDG 1 and SDG 17 are the two smallest research clusters by
    proportion; SDG 10 is also low) are precisely the SDGs that appear "neglected" in coverage
    gap analysis. In absolute terms they are not empty: SDG 1 has ~18.3k papers in the full
-   corpus (~170-260 in the 50k research subset) and SDG 10 ~38.4k, all well above
+    corpus (~340-520 in the 100k research subset) and SDG 10 ~38.4k, all well above
    MIN_CLUSTER_SIZE, so their semantic-gap estimates are not cluster-size limited. Residual
    noise is acknowledged in Assumption A-SPARSE.
 

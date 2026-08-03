@@ -11,7 +11,7 @@ consumers project raw embeddings on the fly via ``register_utils``.
 
 Tracks are derived from ``--embed-model`` (no ``--track`` flag):
     all-mpnet-base-v2            -> canon   (full research shards)
-    all-MiniLM-L6-v2 / scibert   -> subset  (research_subset, 50k papers)
+    all-MiniLM-L6-v2 / scibert   -> subset  (research_subset, 100k papers)
 
 Each iteration k uses its OWN deterministic RNG
 ``default_rng(POLICY_SEGMENT_CAP_SEED + k)`` for BOTH the stratified sampling

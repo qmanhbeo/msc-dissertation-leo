@@ -437,12 +437,12 @@ def _segment_steps(corpus: str, overwrite: bool, *, segment_workers: int = 0) ->
             ("segment reference & policy", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
             ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
             ("segment concept research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
-            ("build research 50k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
+            ("build research 100k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
         ]
     elif corpus == "research":
         steps = [
             ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
-            ("build research 50k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
+            ("build research 100k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
         ]
     else:
         steps = [
@@ -842,7 +842,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
 
     # Per-model embed + analysis. Segments are canonical (shared); only the
     # encoder (and its native context window) varies. MiniLM/SciBERT embed the
-    # shared 50k subset via --input-manifest; MPNet embeds the full corpus.
+    # shared 100k subset via --input-manifest; MPNet embeds the full corpus.
     for model in COLD_REPLAY_MODELS:
         sep = "=" * 70
         print(f"\n{sep}", file=sys.stderr)
@@ -971,7 +971,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
     elif stage == "embed":
         # Embed ALL three encoders (MPNet -> MiniLM -> SciBERT). Segments are
         # canonical/shared; only the encoder varies. MPNet embeds the full
-        # research corpus (27 shards); MiniLM/SciBERT embed the shared 50k
+        # research corpus (27 shards); MiniLM/SciBERT embed the shared 100k
         # subset via --corpus research_subset (handled below by the
         # model != CANONICAL_SEGMENT_MODEL check).
         for embed_model in COLD_REPLAY_MODELS:

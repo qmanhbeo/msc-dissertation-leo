@@ -43,11 +43,11 @@ COLD_REPLAY_MODELS = (
     "all-MiniLM-L6-v2",
     "allenai/scibert_scivocab_uncased",
 )
-# Shared, deterministic 50k-paper representative research subset drawn (seed 42)
+# Shared, deterministic 100k-paper representative research subset drawn (seed 42)
 # from the canonical segments. Consumed by every non-primary (sensitivity)
 # encoder so the architecture comparison is on identical papers.
 RESEARCH_SUBSET_SEED = 42
-RESEARCH_SUBSET_SIZE = 50_000
+RESEARCH_SUBSET_SIZE = 100_000
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 DATA_ROOT = Path("2_data")
@@ -175,7 +175,7 @@ def canonical_research_segment_dir() -> Path:
 
 
 def research_subset_dir() -> Path:
-    """Shared 50k-paper subset of the canonical research segments.
+    """Shared 100k-paper subset of the canonical research segments.
 
     Sensitivity encoders (MiniLM, SciBERT) embed these identical texts rather
     than the full corpus, so the architecture comparison is on identical papers.

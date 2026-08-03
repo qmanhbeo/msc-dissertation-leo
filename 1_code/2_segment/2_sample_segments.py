@@ -1,11 +1,11 @@
 """
-Build the shared 50k representative research subset from the CANONICAL segmented
+Build the shared 100k representative research subset from the CANONICAL segmented
 research corpus, for every non-primary (sensitivity) encoder to embed.
 
 The canonical research corpus is segmented ONCE (at CANONICAL_MAX_SEQ_LENGTH,
 all-mpnet-base-v2) and every encoder — including MiniLM and SciBERT — embeds the
 SAME canonical segments, so the only varying factor in the architecture
-comparison is the encoder itself. The 50k subset is a deterministic seed-42
+comparison is the encoder itself. The 100k subset is a deterministic seed-42
 uniform sample of global segment indices over the canonical corpus; it is
 decoupled from the appendix sample-stability stage (no forward dependency) and
 is consumed by MiniLM and SciBERT instead of the full 3.1M-row corpus.
@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def build_canonical_research_subset(overwrite: bool) -> Path:
-    """Build the shared 50k representative research subset (a deterministic
+    """Build the shared 100k representative research subset (a deterministic
     seed-42 uniform sample of global segment indices over the canonical
     research corpus) for sensitivity encoders to embed. Returns the path to the
     shared subset input manifest.
@@ -94,7 +94,7 @@ def build_canonical_research_subset(overwrite: bool) -> Path:
         rng.choice(total, size=RESEARCH_SUBSET_SIZE, replace=False).astype(np.int64)
     )
     log.info(
-        "Selected %d research rows (seed=%d) for shared 50k subset",
+        "Selected %d research rows (seed=%d) for shared 100k subset",
         len(indices),
         RESEARCH_SUBSET_SEED,
     )
@@ -109,7 +109,7 @@ def build_canonical_research_subset(overwrite: bool) -> Path:
             _expect = int(_meta.get("totals", {}).get("rows", -1))
             _have = sum(1 for _ in subset_jsonl.open(encoding="utf-8"))
             if _have == _expect:
-                log.info("Shared 50k subset already built (%d rows); reusing.", _have)
+                log.info("Shared 100k subset already built (%d rows); reusing.", _have)
                 return subset_manifest
             log.warning("Subset present but row count %d != %d; rebuilding", _have, _expect)
         except Exception as exc:
