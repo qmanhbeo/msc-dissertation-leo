@@ -7,8 +7,8 @@
     "embeddings": "raw",
     "research_score_manifest": {
       "path": "2_data/5_supervised_scored/mpnet/paper_scores_shards/metadata/manifest.json",
-      "input_embedding_manifest": "2_data/3_embedded/all-mpnet-base-v2/research_shards/metadata/manifest.json",
-      "model_path": "2_data/4_supervised_model_results/all-mpnet-base-v2/model/sdg_classifier_retrained.joblib",
+      "input_embedding_manifest": "2_data/3_embedded/mpnet/research_shards/metadata/manifest.json",
+      "model_path": "2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib",
       "shard_sha256": [
         "9796509db683291cc7bd9061dbfecc8a8fb9d2851822aabc1f23f0d6d0d94457",
         "306050367adb03acabbdd7b08abaea4dc5852d4a8e56d59ee83e2296c7de5600",

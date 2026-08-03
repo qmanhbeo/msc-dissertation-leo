@@ -1,0 +1,20 @@
+{
+  "created_at_utc": "2026-08-02T21:58:58.859260Z",
+  "description": "Raw fetched data only (0_raw/). For cold-replay rebuilds.",
+  "excluded_data_paths": [],
+  "expected_repo_paths": [
+    "0_raw"
+  ],
+  "included_root": "2_data/",
+  "manual_policy_documents": [],
+  "profile": "raw",
+  "reproducibility_warnings": [
+    "Warm replay from the frozen snapshot is the primary reproducibility target.",
+    "A live-source full-pipeline rerun is not guaranteed to match the frozen snapshot exactly.",
+    "OpenAlex changes over time, scraper links may drift, and the manual policy supplement is not fully automatable from stable URLs."
+  ],
+  "snapshot_version": "dissertation-data-snapshot-raw-2026-08-02-225858",
+  "source_commit": "5f520d2d161a6d593f32bc774316e020ea18cf89",
+  "source_dir": "/home/manh/dissertation/2_data",
+  "workspace_root": "/home/manh/dissertation"
+}

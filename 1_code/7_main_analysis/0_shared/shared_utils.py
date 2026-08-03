@@ -33,7 +33,7 @@ def fingerprint_of(*paths: Path) -> str:
 
 
 def _meta_path(primary: Path) -> Path:
-    return Path(str(primary) + ".opencode_fp.json")
+    return primary.with_name(primary.stem + ".fingerprint.json")
 
 
 def should_skip(output_paths: list[Path], fp: str, overwrite: bool, primary: Path) -> bool:

@@ -7,8 +7,8 @@
     "embeddings": "adjusted",
     "research_score_manifest": {
       "path": "2_data/5_supervised_scored/mpnet/paper_scores_shards/metadata/manifest.json",
-      "input_embedding_manifest": "2_data/3_embedded/all-mpnet-base-v2/research_shards/metadata/manifest.json",
-      "model_path": "2_data/4_supervised_model_results/all-mpnet-base-v2/model/sdg_classifier_retrained.joblib",
+      "input_embedding_manifest": "2_data/3_embedded/mpnet/research_shards/metadata/manifest.json",
+      "model_path": "2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib",
       "shard_sha256": [
         "9796509db683291cc7bd9061dbfecc8a8fb9d2851822aabc1f23f0d6d0d94457",
         "306050367adb03acabbdd7b08abaea4dc5852d4a8e56d59ee83e2296c7de5600",
@@ -46,7 +46,7 @@
     "policy_embedding_sha256": "d6ed332a800b51a22cd7bcf597cbaaad0c07e26630204b11b5e889f01cccf008",
     "research_embedding_manifest": "2_data/3_embedded/mpnet/research_shards/metadata/manifest.json",
     "register": {
-      "g_path": "2_data/3_embedded/mpnet/register/canon/G.npy",
+      "g_path": "2_data/3b_register/mpnet/canon/G.npy",
       "track": "canon",
       "g_sha256": "505bf54906d3147eb495610f5516e286a1246d48ddfbc1890b93f95a229e1bf8",
       "script_version": "2",
