@@ -267,11 +267,6 @@ def run(args: argparse.Namespace) -> None:
         log.info("Projecting policy embeddings through G...")
         policy_emb = register_utils.project(policy_emb, G)
 
-    log.info("Paper cluster sizes by SDG:")
-    for sdg_idx in range(N_SDG):
-        n = int(research_counts[sdg_idx])
-        log.info("  SDG %2d: %d papers", sdg_idx + 1, n)
-
     # ---- Provenance fingerprint (fail-closed guard) ----
     # Records the exact score-shard / embedding manifest / classifier artifact /
     # G checkpoint that produced these gaps, so a cross-epoch re-score (different
@@ -330,11 +325,6 @@ def run(args: argparse.Namespace) -> None:
             reg["n_target"] = cfg.get("n_target")
         provenance["register"] = reg
 
-    log.info("Policy cluster sizes by SDG (raw segments):")
-    for sdg_idx in range(N_SDG):
-        n = int((policy_assignments == sdg_idx).sum())
-        log.info("  SDG %2d: %d segments", sdg_idx + 1, n)
-
     # ---- Primary analysis (SEGMENT_CAP = 50) ----
     log.info("")
     log.info("=" * 60)
@@ -347,14 +337,13 @@ def run(args: argparse.Namespace) -> None:
         policy_ids, args.segment_cap, rng_primary
     )
 
-    # Summary: sort by semantic gap (largest first).
+    # Summary: top gap + mean for console; full table saved to JSON/TeX.
     reliable = [r for r in primary_results if not r["unreliable"] and r["semantic_gap"] is not None]
-    log.info("")
-    log.info("Sorted by semantic gap (reliable SDGs only, cap=%d):", args.segment_cap)
-    for r in sorted(reliable, key=lambda x: x["semantic_gap"], reverse=True):
-        log.info("  SDG %2d | gap=%.4f | sim=%.4f | n_papers=%4d | n_policy_docs=%4d",
-                 r["sdg"], r["semantic_gap"], r["semantic_similarity"],
-                 r["n_papers"], r["n_policy_docs_capped"])
+    if reliable:
+        top = max(reliable, key=lambda x: x["semantic_gap"])
+        mean_gap = np.mean([r["semantic_gap"] for r in reliable])
+        log.info("Semantic gap (cap=%d): top=SDG %d (%.4f)  mean=%.4f  n_reliable=%d",
+                 args.segment_cap, top["sdg"], top["semantic_gap"], mean_gap, len(reliable))
 
     # ---- Sensitivity analyses (LR and MLP use the same computation) ----
     log.info("")
@@ -380,20 +369,14 @@ def run(args: argparse.Namespace) -> None:
 
     # Check sensitivity: do rankings change substantially across caps?
     # A finding is robust if its gap rank is stable across caps.
-    log.info("")
-    log.info("SENSITIVITY CHECK — gap rank stability across segment caps:")
-    log.info("  %-6s  %-12s  %-12s  %-12s", "SDG", "cap20", "cap50", "none")
-    log.info("  " + "-" * 48)
+    rank_changes = []
     for i in range(N_SDG):
-        sdg = i + 1
-        g20   = sens_lo[i]["semantic_gap"]
-        g50   = primary_results[i]["semantic_gap"]
-        gnone = sens_none[i]["semantic_gap"]
-        vals = [g20, g50, gnone]
-        if any(v is None for v in vals):
-            log.info("  SDG %2d  %-12s  %-12s  %-12s", sdg, *(["N/A"] * 3))
-        else:
-            log.info("  SDG %2d  %.4f       %.4f       %.4f", sdg, g20, g50, gnone)
+        gaps = [sens_lo[i]["semantic_gap"], primary_results[i]["semantic_gap"], sens_none[i]["semantic_gap"]]
+        if all(g is not None for g in gaps):
+            ranks = np.argsort(np.argsort([-g for g in gaps]))
+            rank_changes.append(int(np.max(np.abs(ranks - ranks[1]))))
+    max_rank_change = max(rank_changes) if rank_changes else 0
+    log.info("Sensitivity: max rank change across caps=%d  n_reliable=%d", max_rank_change, len(rank_changes))
 
     # ---- Build output JSON ----
     primary_out = {

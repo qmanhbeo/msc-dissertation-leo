@@ -256,10 +256,6 @@ def run(args: argparse.Namespace) -> None:
     res_hard = research["hard_profile"].astype(np.float64)
     res_soft = research["soft_profile"].astype(np.float64)
 
-    log.info("  Research hard-assignment profile (proportion per SDG):")
-    for i, v in enumerate(res_hard):
-        log.info("    SDG %2d: %.4f", i + 1, v)
-
     # ---- Policy coverage profiles — RAW (segment-level) ----
     # Segment-level profile: each of 47,005 segments contributes equally.
     # This is biased by SDSN/SDGi document length — saved as a diagnostic only.
@@ -276,32 +272,11 @@ def run(args: argparse.Namespace) -> None:
         policy_scores, policy_ids
     )
 
-    log.info("  Document-weighted hard-assignment profile (proportion per SDG):")
-    for i, v in enumerate(pol_dw_hard):
-        log.info("    SDG %2d: %.4f", i + 1, v)
-
     # ---- Coverage gaps ----
     gap_dw   = compute_coverage_gap(res_hard, pol_dw_hard)    # canonical
     gap_raw  = compute_coverage_gap(res_hard, pol_raw_hard)   # diagnostic
 
-    log.info("")
-    log.info("=" * 70)
-    log.info("COVERAGE GAP (document-weighted policy vs research, hard assignment)")
-    log.info("=" * 70)
-    log.info("  %-6s  %-12s  %-12s  %-12s  %-12s", "SDG", "Research%", "Policy%", "Gap", "Direction")
-    log.info("  " + "-" * 65)
-    for i in range(N_SDG):
-        sdg = i + 1
-        r = res_hard[i]
-        p = pol_dw_hard[i]
-        g = gap_dw[i]
-        direction = "RESEARCH>" if r > p else "POLICY>  "
-        log.info("  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %s",
-                 sdg, r * 100, p * 100, g, direction)
-
-    log.info("")
-    log.info("Total coverage gap (sum of absolute differences): %.4f", gap_dw.sum())
-    log.info("Mean coverage gap per SDG:                        %.4f", gap_dw.mean())
+    log.info("Coverage gap: mean=%.4f  total=%.4f", gap_dw.mean(), gap_dw.sum())
 
     # ---- Build output dicts ----
     sdg_labels = [f"SDG{i+1}" for i in range(N_SDG)]

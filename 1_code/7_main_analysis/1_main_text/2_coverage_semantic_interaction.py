@@ -383,22 +383,6 @@ def run(args: argparse.Namespace) -> None:
         log.warning("Excluded from correlation due to missing semantic gap: %s", missing_sdgs)
     log.info("Reliable SDGs for correlation: %s  (n=%d)", reliable_sdgs, len(reliable_sdgs))
 
-    # ---- Build per-SDG table ----
-    log.info("")
-    log.info("Per-SDG data table:")
-    log.info("  %-6s %-12s %-12s %-12s %-12s %-10s", "SDG", "res%", "pol%", "cov_gap", "sem_gap", "reliable")
-    for i in range(N_SDG):
-        sem_gap_display = "N/A" if not np.isfinite(sem_gap[i]) else f"{sem_gap[i]:.4f}"
-        log.info(
-            "  SDG %2d  %10.2f%%  %10.2f%%  %10.4f  %10s  %s",
-            i + 1,
-            res_hard[i] * 100,
-            pol_dw_hard[i] * 100,
-            cov_gap_abs[i],
-            sem_gap_display,
-            "✓" if reliable_mask[i] else "✗",
-        )
-
     # ---- Correlation tests ----
     # Use all SDGs with finite semantic gaps first, then re-check with only reliable ones.
     log.info("")
