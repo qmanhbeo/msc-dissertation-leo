@@ -16,12 +16,29 @@ _nltk_ready = False
 
 
 def _ensure_nltk_data() -> None:
-    """Download NLTK tokenizer data on first use, not at import time."""
+    """Ensure NLTK tokenizer data is available (download once if missing).
+
+    Ideally the data is warmed into ``~/nltk_data`` by
+    ``1_code/0_fetch/fetch_encoder_models.py`` before cold replay runs. This
+    function is a tolerant fallback: if the download fails (e.g. offline and
+    the data was somehow not warmed), it logs a clear warning instead of
+    crashing the whole pipeline.
+    """
     global _nltk_ready
-    if not _nltk_ready:
+    if _nltk_ready:
+        return
+    try:
         nltk.download("punkt_tab", quiet=True)
         nltk.download("punkt", quiet=True)
-        _nltk_ready = True
+    except Exception as exc:  # pragma: no cover - depends on network/NLTK server
+        log.warning(
+            "NLTK punkt data could not be downloaded (%s). If sentence "
+            "segmentation fails, run `python -c \"import nltk; "
+            "nltk.download('punkt_tab'); nltk.download('punkt')\"` on a "
+            "networked machine, or warm it via fetch_encoder_models.py.",
+            exc,
+        )
+    _nltk_ready = True
 
 
 log = logging.getLogger(__name__)

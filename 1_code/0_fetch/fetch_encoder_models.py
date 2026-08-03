@@ -9,7 +9,8 @@ three encoder models are already present in ``~/.cache/huggingface/hub``.
 
 This script is the single, explicit network dependency: it warms the cache for
 every encoder track (MPNet + MiniLM + SciBERT) and the canonical segment
-tokenizer. It is idempotent — models already in the cache are skipped.
+tokenizer, plus the NLTK ``punkt`` / ``punkt_tab`` tokenizer data used by
+segmentation. It is idempotent — resources already in the cache are skipped.
 
 Usage (run from the project root):
     python 1_code/0_fetch/fetch_encoder_models.py
@@ -98,6 +99,31 @@ def ensure_model_cached(model_name: str, *, force: bool = False) -> None:
         _fetch_sentence_transformer(model_name)
 
 
+def _nltk_data_present() -> bool:
+    """Return True if NLTK punkt / punkt_tab are already available offline."""
+    try:
+        from nltk.data import find
+
+        find("tokenizers/punkt_tab")
+        find("tokenizers/punkt")
+        return True
+    except Exception:
+        return False
+
+
+def ensure_nltk_data() -> None:
+    """Warm NLTK tokenizer data into ~/nltk_data (idempotent, offline-safe)."""
+    if _nltk_data_present():
+        log.info("Skip NLTK punkt — already present")
+        return
+    import nltk
+
+    log.info("Downloading NLTK punkt / punkt_tab tokenizer data")
+    nltk.download("punkt_tab", quiet=True)
+    nltk.download("punkt", quiet=True)
+    log.info("Cached NLTK tokenizer data")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -116,7 +142,8 @@ def main() -> None:
     log.info("Ensuring encoder models are present in the HF cache")
     for model in args.models:
         ensure_model_cached(model, force=args.force)
-    log.info("Done — encoder models ready.")
+    ensure_nltk_data()
+    log.info("Done — encoder models and NLTK data ready.")
 
 
 if __name__ == "__main__":
