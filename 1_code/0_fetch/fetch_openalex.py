@@ -121,33 +121,43 @@ AI_TERMS = [
 # papers tagged with the "artificial intelligence" OR "machine learning"
 # concept (NOT deep learning / neural network, which OECD.AI treats only as
 # subfields), with no SDG filter -- the LR assigns SDGs at scoring time.
-# MAX_PAPERS_PER_CONCEPT bounds the fetch to ~25k per concept (~50k total,
-# deduped) so the run is feasible; OpenAlex returns results in a fixed order,
-# so this is a deterministic-but-order-dependent sample (documented in output).
+# Concept retrieval uses a single OpenAlex filter that ORs the two field-of-study
+# concept IDs (artificial intelligence OR machine learning), with no SDG filter --
+# the LR assigns SDGs at scoring time. MAX_PAPERS_CONCEPT_CORPUS bounds the total
+# fetched union (AI | ML) to ~100k so the run is feasible; OpenAlex returns
+# results in a fixed order, so this is a deterministic-but-order-dependent sample
+# (documented in output).
 CONCEPT_IDS = {
     "artificial intelligence": "C154945302",
     "machine learning": "C119857082",
 }
-MAX_PAPERS_PER_CONCEPT = 25000
+MAX_PAPERS_CONCEPT_CORPUS = 100000
 
 
 def build_queries(retrieval: str) -> list[dict]:
     """Build the list of fetch queries for the chosen retrieval strategy.
 
     keyword : the canonical 4 AI terms x 17 SDGs (unchanged behaviour).
-    concept: two concept-ID queries (AI, ML), no SDG filter, no free-text search.
+    concept: a single concept-ID query ORing artificial intelligence | machine
+             learning (OECD.AI-style field-of-study method), no SDG filter, no
+             free-text search.
     """
     if retrieval == "concept":
-        queries: list[dict] = []
-        for name, cid in CONCEPT_IDS.items():
-            queries.append({
-                "mode": "concept",
-                "term": name,
-                "sdg": None,
-                "filter_parts": [f"concepts.id:{cid}", "publication_year:>2017", "has_abstract:true"],
-                "key": f"concept_{cid}",
-                "description": f"Concept {name} ({cid})",
-            })
+        # Single OR query over the two field-of-study concept IDs: papers tagged
+        # with artificial intelligence OR machine learning.
+        ai_cid, ml_cid = CONCEPT_IDS["artificial intelligence"], CONCEPT_IDS["machine learning"]
+        queries = [{
+            "mode": "concept",
+            "term": "ai_or_ml",
+            "sdg": None,
+            "filter_parts": [
+                f"concepts.id:{ai_cid}|{ml_cid}",
+                "publication_year:>2017",
+                "has_abstract:true",
+            ],
+            "key": "concept_ai_or_ml",
+            "description": f"Concept artificial intelligence OR machine learning ({ai_cid}|{ml_cid})",
+        }]
         return queries
 
     # keyword (default)
@@ -251,7 +261,7 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
     key = q["key"]
     desc = q["description"]
     out_path = papers_file_for_query(q)
-    cap = MAX_PAPERS_PER_CONCEPT if q.get("mode") == "concept" else None
+    cap = MAX_PAPERS_CONCEPT_CORPUS if q.get("mode") == "concept" else None
     existing = load_existing_count(out_path)
     remaining = (cap - existing) if cap is not None else None
 
@@ -377,13 +387,13 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
 
 def main() -> None:
     import argparse
-    global OUTPUT_DIR, ARTIFACT_DIR, METADATA_FILE, SEEN_IDS_FILE, PROGRESS_FILE, MAX_PAPERS_PER_CONCEPT
+    global OUTPUT_DIR, ARTIFACT_DIR, METADATA_FILE, SEEN_IDS_FILE, PROGRESS_FILE, MAX_PAPERS_CONCEPT_CORPUS
     ap = argparse.ArgumentParser(description="Fetch OpenAlex papers (keyword or concept retrieval).")
     ap.add_argument("--retrieval", choices=["keyword", "concept"], default="keyword",
                     help="Retrieval strategy: 'keyword' (canonical 4-term x 17-SDG) or "
                          "'concept' (AI+ML field-of-study via concepts.id, no SDG filter).")
-    ap.add_argument("--max-papers-per-concept", type=int, default=MAX_PAPERS_PER_CONCEPT,
-                    help="Cap on papers fetched per concept in 'concept' mode (default: %(default)s).")
+    ap.add_argument("--max-papers-concept-corpus", type=int, default=MAX_PAPERS_CONCEPT_CORPUS,
+                    help="Cap on total papers fetched for the concept (AI|ML) corpus (default: %(default)s).")
     ap.add_argument("--overwrite", action="store_true",
                     help="Ignore existing progress/seen-ids and re-fetch from scratch "
                          "(clears this retrieval's artifact dir only).")
@@ -394,7 +404,7 @@ def main() -> None:
     METADATA_FILE = ARTIFACT_DIR / "metadata.json"
     SEEN_IDS_FILE = ARTIFACT_DIR / "seen_ids.json"
     PROGRESS_FILE = ARTIFACT_DIR / "progress.json"
-    MAX_PAPERS_PER_CONCEPT = args.max_papers_per_concept
+    MAX_PAPERS_CONCEPT_CORPUS = args.max_papers_concept_corpus
 
     ensure_api_keys()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -466,7 +476,7 @@ def main() -> None:
 
     if args.retrieval == "concept":
         per_source = {q["key"]: load_existing_count(papers_file_for_query(q)) for q in QUERIES}
-        source_label = "papers_per_concept"
+        source_label = "papers_per_concept_query"
     else:
         per_source = {str(q["sdg"]): load_existing_count(papers_file_for_query(q)) for q in QUERIES}
         source_label = "papers_per_sdg"
