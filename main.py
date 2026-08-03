@@ -843,10 +843,13 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     # Per-model embed + analysis. Segments are canonical (shared); only the
     # encoder (and its native context window) varies. MiniLM/SciBERT embed the
     # shared 100k subset via --input-manifest; MPNet embeds the full corpus.
+    # PHASE 1 — embed every encoder track before any analysis runs, so a single
+    # embed failure surfaces before hours of analysis, and the GPU embedder is
+    # loaded/freed per model up front rather than interleaved with analysis.
     for model in COLD_REPLAY_MODELS:
         sep = "=" * 70
         print(f"\n{sep}", file=sys.stderr)
-        print(f"  Encoder track: [{model}]", file=sys.stderr)
+        print(f"  Embed phase — Encoder track: [{model}]", file=sys.stderr)
         print(sep, file=sys.stderr)
         for label, cmd in _embed_model_steps(model, overwrite=args.overwrite,
                                              batch_size=args.batch_size,
@@ -855,10 +858,17 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
                                              device=args.device,
                                              precision=args.precision):
             run_step(label, cmd)
+
+    # PHASE 2 — analyze every encoder track (all embeddings now present).
+    for model in COLD_REPLAY_MODELS:
+        sep = "=" * 70
+        print(f"\n{sep}", file=sys.stderr)
+        print(f"  Analysis phase — Encoder track: [{model}]", file=sys.stderr)
+        print(sep, file=sys.stderr)
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
                                  include_appendix=(model == CANONICAL_SEGMENT_MODEL))
     # Cross-sensitivity table + figures (MPNet-only, needs all 3 encoders' data)
-    # are produced once now that every encoder pass has completed.
+    # are produced once now that every encoder analysis pass has completed.
     _run_analysis_poststeps(output_dir, CANONICAL_SEGMENT_MODEL, overwrite=args.overwrite)
     print(
         "Cold replay complete. To build the dissertation PDF, run:\n"
