@@ -1,19 +1,19 @@
 """Dissertation reproducibility pipeline — single entrypoint.
 
-Architecture — three method axes sharing a unified preprocess→segment→embed stage:
+Architecture — three method axes sharing a unified preprocess->segment->embed stage:
 
   Axis A — Supervised LR (PRIMARY result):
-    prepare_data → retrain LR → score_supervised --lr --research
-    → supervised research_centroids.npy → 1_semantic_gap, 0_coverage_gap
+    prepare_data -> retrain LR -> score_supervised --lr --research
+    -> supervised research_centroids.npy -> 1_semantic_gap, 0_coverage_gap
 
   Axis B — Supervised MLP (sensitivity):
-    retrain MLP → score_supervised --mlp
-    → mlp_research_centroids.npy → cross-sensitivity table
+    retrain MLP -> score_supervised --mlp
+    -> mlp_research_centroids.npy -> cross-sensitivity table
 
   Axis C — Zeroshot nearest-centroid (sensitivity):
-    build_sdg_reference_centroids → sdg_centroids.npy
-    → score_zeroshot → research_centroids.npy, policy_centroids.npy
-    → cross-sensitivity table
+    build_sdg_reference_centroids -> sdg_centroids.npy
+    -> score_zeroshot -> research_centroids.npy, policy_centroids.npy
+    -> cross-sensitivity table
 
 Labeled corpora: osdg, benchmark, sdg_knowledge_hub, sdgi, aurora
   (consolidated into reference corpus at preprocess time).
@@ -177,7 +177,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--embed-batch-size-research", type=int, default=None,
                    help="Batch size for research + research_concept embedding (overrides --batch-size).")
     p.add_argument("--precision", choices=["fp32", "fp16"], default="fp16",
-                   help="Compute precision for embedding (fp16 ≈ 2x faster on Ampere GPUs).")
+                   help="Compute precision for embedding (fp16 = 2x faster on Ampere GPUs).")
     p.add_argument(
         "--embed-model",
         default=DEFAULT_EMBED_MODEL,
@@ -958,7 +958,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
             run_step(label, cmd)
 
     elif stage == "embed":
-        # Embed ALL three encoders (MPNet → MiniLM → SciBERT). Segments are
+        # Embed ALL three encoders (MPNet -> MiniLM -> SciBERT). Segments are
         # canonical/shared; only the encoder varies. MPNet embeds the full
         # research corpus (27 shards); MiniLM/SciBERT embed the shared 50k
         # subset via --corpus research_subset (handled below by the
