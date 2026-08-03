@@ -244,9 +244,6 @@ def run_research_lr(args) -> None:
 
     emb_manifest = read_json(embed_manifest_path)
     input_dim = emb_manifest.get("embedding_dim", 768)
-    log.info("Loading model: %s (classifier_type=lr, input_dim=%d)", model_path, input_dim)
-    model = _load_model(model_root, "lr", input_dim)
-    log.info("Model loaded (dims=%d)", input_dim)
     if not emb_manifest or "shards" not in emb_manifest:
         raise RuntimeError(f"Invalid embedding manifest: {embed_manifest_path}")
 
@@ -287,6 +284,9 @@ def run_research_lr(args) -> None:
     assert d == input_dim, f"Manifest dim {d} != model input_dim {input_dim}"
     sums = np.zeros((N_SDG, d), dtype=np.float64)
     counts = np.zeros(N_SDG, dtype=np.int64)
+    # Loaded lazily on first shard that actually needs scoring (see else branch);
+    # a fully-cached replay never deserializes the classifier.
+    model = None
 
     for shard in shards:
         shard_id = int(shard["shard_id"])
@@ -306,6 +306,10 @@ def run_research_lr(args) -> None:
             scored_ids = load_ids(ids_out)
             assigned = np.array([int(r["assigned_sdg"]) - 1 for r in scored_ids], dtype=np.int64)
         else:
+            if model is None:
+                log.info("Loading model: %s (classifier_type=lr, input_dim=%d)", model_path, input_dim)
+                model = _load_model(model_root, "lr", input_dim)
+                log.info("Model loaded (dims=%d)", input_dim)
             log.info("Scoring shard %s  shape=%s", shard_name, emb.shape)
             scores = model.predict_proba(emb).astype(np.float32)
             tmp_score = score_path.with_suffix(".npy.tmp")
