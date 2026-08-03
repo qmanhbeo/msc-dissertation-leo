@@ -55,6 +55,11 @@ from shard_pipeline_utils import atomic_write_json, ensure_dir, now_iso, sha256_
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
+# Respectful upper bound on sharded-segmentation worker processes. The default
+# uses half the machine's cores (capped here) so cold replay doesn't saturate
+# the user's machine; pass --workers / --segment-workers to override.
+RESPECTFUL_WORKER_CAP = 8
+
 
 def load_segment_tokenizer(model_name: str) -> "AutoTokenizer":
     """Load the canonical segment tokenizer, auto-downloading if not cached.
@@ -67,10 +72,15 @@ def load_segment_tokenizer(model_name: str) -> "AutoTokenizer":
     """
     repo = "sentence-transformers/" + model_name
     try:
-        return AutoTokenizer.from_pretrained(repo, local_files_only=True)
+        tok = AutoTokenizer.from_pretrained(repo, local_files_only=True)
     except Exception:
         log.info("Tokenizer %s not in HF cache — downloading once", repo)
-        return AutoTokenizer.from_pretrained(repo)
+        tok = AutoTokenizer.from_pretrained(repo)
+    # We do our own token-count-aware chunking at CANONICAL_MAX_SEQ_LENGTH and
+    # never rely on the tokenizer's built-in truncation, so raise its limit to
+    # silence the spurious "sequence length > 512" warnings for long sentences.
+    tok.model_max_length = 10**9
+    return tok
 
 
 _WTOK = None
@@ -217,7 +227,8 @@ def main() -> None:
     parser.add_argument("--overwrite", action="store_true",
                         help="Re-segment existing shards even if already complete")
     parser.add_argument("--workers", type=int, default=0,
-                        help="Number of worker processes for sharded mode (default: os.cpu_count())")
+                        help="Number of worker processes for sharded mode "
+                             "(default: min(half of CPU count, 8, #shards); pass a value to override)")
     parser.add_argument("--all", action="store_true", dest="all_corpora",
                         help="Segment all non-research corpora in one model load.")
     args = parser.parse_args()
@@ -304,7 +315,9 @@ def main() -> None:
              args.text_field, args.id_field, args.prefix, args.overwrite)
             for shard_idx, in_path in enumerate(input_paths, start=1)
         ]
-        n_workers = args.workers if args.workers > 0 else max(1, min(os.cpu_count() or 2, len(tasks)))
+        n_workers = args.workers if args.workers > 0 else max(
+            1, min(int((os.cpu_count() or 1) / 2), RESPECTFUL_WORKER_CAP, len(tasks))
+        )
         mp_ctx = multiprocessing.get_context("spawn")
         manifest_entries: list[dict] = []
         total_segments = 0

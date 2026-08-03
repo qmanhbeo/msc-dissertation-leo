@@ -186,6 +186,9 @@ def parse_args() -> argparse.Namespace:
                    choices=["all", "reference", "policy", "research", "research_concept"],
                    default="all",
                    help="Corpus to segment (default: all; only used with --stage segment).")
+    p.add_argument("--segment-workers", type=int, default=0,
+                   help="Worker processes for sharded segmentation (default: respectful cap; "
+                        "passed through to 1_code/2_segment/1_segment_corpus.py --workers).")
     return p.parse_args()
 
 
@@ -410,23 +413,24 @@ def _preprocess_steps(overwrite: bool) -> list[tuple[str, list[str]]]:
     ]
 
 
-def _segment_steps(corpus: str, overwrite: bool) -> list[tuple[str, list[str]]]:
+def _segment_steps(corpus: str, overwrite: bool, *, segment_workers: int = 0) -> list[tuple[str, list[str]]]:
     ow = _overwrite_flag(overwrite)
+    worker_args = ["--workers", str(segment_workers)] if segment_workers and segment_workers > 0 else []
     if corpus == "all":
         steps = [
-            ("segment reference & policy", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
-            ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
-            ("segment concept research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            ("segment reference & policy", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--all", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
+            ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
+            ("segment concept research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research_concept", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
             ("build research 50k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
         ]
     elif corpus == "research":
         steps = [
-            ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            ("segment research corpus", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", "research", "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
             ("build research 50k subset", [sys.executable, "1_code/2_segment/2_sample_segments.py"] + ow),
         ]
     else:
         steps = [
-            (f"segment {corpus}", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", corpus, "--embed-model", CANONICAL_SEGMENT_MODEL] + ow),
+            (f"segment {corpus}", [sys.executable, "1_code/2_segment/1_segment_corpus.py", "--corpus", corpus, "--embed-model", CANONICAL_SEGMENT_MODEL] + worker_args + ow),
         ]
     return steps
 
@@ -800,7 +804,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     pre_steps += [("fetch encoder models",
                    [sys.executable, "1_code/0_fetch/fetch_encoder_models.py"])]
     pre_steps += _preprocess_steps(args.overwrite)
-    pre_steps += _segment_steps("all", args.overwrite)
+    pre_steps += _segment_steps("all", args.overwrite, segment_workers=args.segment_workers)
     for label, cmd in pre_steps:
         run_step(label, cmd)
 
@@ -926,7 +930,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "segment":
         corpus = args.corpus
-        for label, cmd in _segment_steps(corpus, args.overwrite):
+        for label, cmd in _segment_steps(corpus, args.overwrite, segment_workers=args.segment_workers):
             run_step(label, cmd)
 
     elif stage == "embed":
