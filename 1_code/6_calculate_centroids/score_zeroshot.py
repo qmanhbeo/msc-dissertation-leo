@@ -5,7 +5,7 @@ Computes per-SDG semantic gaps under zero-shot nearest-centroid assignment
 using the same post-fix reference centroids (sdg_centroids.npy) that the
 LR classifier uses as its class means.
 
-Outputs: {data_dir}/semantic_gap_distances.json  (per-SDG gaps, default {output_dir}/{model}/data/)
+Outputs: {data_dir}/semantic_gap_distances_zeroshot.json  (per-SDG gaps, default {output_dir}/{model}/data/)
           {out_dir}/research_centroids.npy       (per-SDG mean of zs-assigned papers, default 2_data/.../zeroshot/)
           {out_dir}/policy_centroids.npy         (per-SDG mean of zs-assigned segments, default 2_data/.../zeroshot/)
 """
@@ -73,7 +73,7 @@ def parse_args() -> argparse.Namespace:
                         "2_data/5_supervised_scored/{model}/zeroshot/). "
                         "Concept variant writes to .../zeroshot_concept/.")
     p.add_argument("--data-dir", default=None,
-                   help="Override semantic_gap_distances.json output dir (default: "
+                   help="Override semantic_gap_distances_zeroshot.json output dir (default: "
                         "canonical 4_outputs/{model}/data/). "
                         "Concept variant writes to .../data/concept/.")
     p.add_argument("--embeddings", choices=["raw", "adjusted"], default="raw",
@@ -89,7 +89,7 @@ def run(args: argparse.Namespace) -> None:
     npy_root = Path(args.out_dir) if args.out_dir else scored_dir_for_model(model) / "zeroshot"
     npy_root.mkdir(parents=True, exist_ok=True)
 
-    # semantic_gap_distances.json → 4_outputs/{model}/data/ (or custom)
+    # semantic_gap_distances_zeroshot.json → 4_outputs/{model}/data/ (or custom)
     data_root = Path(args.data_dir) if args.data_dir else output_dir_for_model(model, root=output_root) / "data"
     data_root.mkdir(parents=True, exist_ok=True)
 
@@ -98,9 +98,9 @@ def run(args: argparse.Namespace) -> None:
 
     if not args.overwrite:
         expected_json = (
-            data_root / "adjusted" / "semantic_gap_distances.json"
+            data_root / "adjusted" / "semantic_gap_distances_zeroshot.json"
             if is_adjusted
-            else data_root / "semantic_gap_distances.json"
+            else data_root / "semantic_gap_distances_zeroshot.json"
         )
         expected = [
             npy_root / "research_centroids.npy",
@@ -249,9 +249,9 @@ def run(args: argparse.Namespace) -> None:
     if is_adjusted:
         gap_dir = data_root / "adjusted"
         gap_dir.mkdir(parents=True, exist_ok=True)
-        gap_path = gap_dir / "semantic_gap_distances.json"
+        gap_path = gap_dir / "semantic_gap_distances_zeroshot.json"
     else:
-        gap_path = data_root / "semantic_gap_distances.json"
+        gap_path = data_root / "semantic_gap_distances_zeroshot.json"
     atomic_write_json(gap_path, out_data)
     log.info("Saved: %s", gap_path)
     log.info("Zero-shot scoring complete.")

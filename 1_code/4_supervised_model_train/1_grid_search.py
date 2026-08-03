@@ -18,7 +18,7 @@ Run from project root:
 PROVENANCE GUARD:
     Not called directly; invoked by main.py run_model_selection_cv(). Its
     outputs (lr_cv_results.json, mlp_cv_results.json) are consumed by
-    2_appendix/d1_export_model_selection_nums.py -> num_model_selection.tex.
+    2_appendix/d1_export_model_selection_nums.py -> num16_model_selection.tex.
     Do not remove without verifying the export script still has its inputs.
 """
 

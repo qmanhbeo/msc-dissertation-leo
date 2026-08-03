@@ -6,10 +6,10 @@ ALL new num_*.tex macros.  Run LAST after all JSONs exist.
 
 Inputs:
   4_outputs/{model}/data/register_decomposition.json
-  4_outputs/{model}/data/4_4_interaction_extended.json
+  4_outputs/{model}/data/interaction_extended.json
 
 Outputs:
-  4_outputs/{model}/tables/num_register_topic_decomposition.tex  (consolidated macros)
+  4_outputs/{model}/tables/num5_register_decomposition.tex  (consolidated macros)
 
 Run from project root:
   python 1_code/7_main_analysis/0_shared/generate_tex_macros.py --embed-model mpnet
@@ -53,8 +53,8 @@ def run(args: argparse.Namespace) -> None:
     tables_dir = layout.tables_dir
 
     decomp_path = data_dir / "register_decomposition.json"
-    interaction_path = data_dir / "4_4_interaction_extended.json"
-    out_tex = tables_dir / "num_register_topic_decomposition.tex"
+    interaction_path = data_dir / "interaction_extended.json"
+    out_tex = tables_dir / "num5_register_decomposition.tex"
 
     if not decomp_path.exists() or not interaction_path.exists():
         log.warning("Required JSONs not found — skipping macro generation.")

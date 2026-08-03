@@ -18,10 +18,10 @@ Fitting logic:
      panel's own PCA space.
 
 Outputs:
-  4_outputs/{model}/figures/fig2_pca_register_before_after.pdf
-  4_outputs/{model}/figures/fig2_pca_register_before_after.png
+  4_outputs/{model}/figures/fig3_pca_register_before_after.pdf
+  4_outputs/{model}/figures/fig3_pca_register_before_after.png
   4_outputs/{model}/data/pca_register_before_after_metadata.json
-  4_outputs/{model}/tables/num_pca_register_before_after.tex
+  4_outputs/{model}/tables/num15_pca_register_before_after.tex
 
 Run from project root:
     python 1_code/7_main_analysis/1_main_text/0_pca_register_before_after.py
@@ -86,8 +86,8 @@ from semantic_gap_shared import (
 
 SCRIPT_VERSION = "2"
 METADATA_JSON = "pca_register_before_after_metadata.json"
-NUM_TEX = "num_pca_register_before_after.tex"
-FIG_NAME = "fig2_pca_register_before_after"
+NUM_TEX = "num15_pca_register_before_after.tex"
+FIG_NAME = "fig3_pca_register_before_after"
 
 RESEARCH_COLOR = "#2166AC"
 POLICY_COLOR = "#D6604D"

@@ -66,7 +66,7 @@ APPENDIX_SPECS = [
         "run_label": "lexical illustration of the semantic gap",
         "step_id": "B2",
         "in_all": True,
-        "requires": ["4_3_semantic_gap_distances.json"],
+        "requires": ["semantic_gap_distances_lr.json"],
     },
     {
         "flag": "appendix-c-sample-stability",
@@ -78,9 +78,9 @@ APPENDIX_SPECS = [
         "step_id": "C",
         "in_all": True,
         "requires": [
-            "4_2_coverage_document_weighted.json",
-            "4_3_semantic_gap_distances.json",
-            "4_4_interaction_correlation_asymmetry.json",
+            "coverage_document_weighted.json",
+            "semantic_gap_distances_lr.json",
+            "interaction_h25.json",
         ],
     },
     {
@@ -147,7 +147,7 @@ APPENDIX_SPECS = [
         "run_label": "distributional semantic-gap metrics",
         "step_id": "G",
         "in_all": False,
-        "requires": ["4_3_semantic_gap_distances.json"],
+        "requires": ["semantic_gap_distances_lr.json"],
     },
 ]
 

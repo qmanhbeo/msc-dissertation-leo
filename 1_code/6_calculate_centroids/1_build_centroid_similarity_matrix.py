@@ -5,7 +5,7 @@ Computes pairwise cosine similarity between all 17 SDG reference centroids
 and exports the resulting 17x17 matrix as a CSV for manuscript consumption.
 
 Output:
-  {output_dir}/main/data/4_1_centroid_similarity_matrix.csv
+  {output_dir}/main/data/centroid_similarity_matrix.csv
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     if not output_dir.is_absolute():
         output_dir = (Path.cwd() / output_dir).resolve()
-    out_path = output_dir_for_model(args.embed_model, root=output_dir) / "data" / "4_1_centroid_similarity_matrix.csv"
+    out_path = output_dir_for_model(args.embed_model, root=output_dir) / "data" / "centroid_similarity_matrix.csv"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     if out_path.exists() and not args.overwrite:

@@ -620,7 +620,7 @@ def run_mlp(args) -> None:
     # -- Save summary JSON --
     # NOTE: MLP semantic gaps are no longer computed here. The single, capped
     # source of truth is 1_semantic_gap.py --classifier mlp (writes
-    # 4_3_mlp_semantic_gap_distances.json); the uncapped in-process value below
+    # semantic_gap_distances_mlp.json); the uncapped in-process value below
     # was a divergent duplicate and has been removed.
     summary = {
         "model": "MLP",

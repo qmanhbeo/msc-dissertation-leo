@@ -13,8 +13,8 @@ Outputs:
   4_outputs/appendix/c_sample_stability/data/c_sample_stability_draws.jsonl
   4_outputs/appendix/c_sample_stability/data/c_sample_stability_per_sdg.json
   4_outputs/appendix/c_sample_stability/data/c_sample_stability_table.csv
-  4_outputs/appendix/c_sample_stability/tables/num_sample_stability.tex
-  4_outputs/appendix/c_sample_stability/tables/tab_sample_stability.tex
+  4_outputs/appendix/c_sample_stability/tables/num_c_sample_stability.tex
+  4_outputs/appendix/c_sample_stability/tables/tab_c_sample_stability.tex
 """
 
 from __future__ import annotations
@@ -57,9 +57,9 @@ from semantic_gap_shared import (
     latex_int,
 )
 from shard_pipeline_utils import load_json
-CANONICAL_COVERAGE_JSON = "4_2_coverage_document_weighted.json"
-CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
-CANONICAL_INTERACTION_JSON = "4_4_interaction_correlation_asymmetry.json"
+CANONICAL_COVERAGE_JSON = "coverage_document_weighted.json"
+CANONICAL_SEMANTIC_JSON = "semantic_gap_distances_lr.json"
+CANONICAL_INTERACTION_JSON = "interaction_h25.json"
 DRAW_SEEDS = tuple(range(42, 142))
 DRAWS_PER_TIER = len(DRAW_SEEDS)
 TIER_SPECS: list[tuple[str, int]] = [
@@ -767,7 +767,7 @@ def write_outputs(
                 num_lines.append(
                     rf"\newcommand{{\SamplePolicyBiasTwoHundredK}}{{{row['mean_a15_calibration_bias']:.3f}}}"
                 )
-        (tables_dir / "num_sample_stability.tex").write_text(
+        (tables_dir / "num_c_sample_stability.tex").write_text(
             "\n".join(num_lines) + "\n", encoding="utf-8"
         )
 
@@ -796,7 +796,7 @@ def write_outputs(
                 + r" \\"
             )
         tab_lines.extend([r"\bottomrule", r"\end{tabular}"])
-        (tables_dir / "tab_sample_stability.tex").write_text(
+        (tables_dir / "tab_c_sample_stability.tex").write_text(
             "\n".join(tab_lines) + "\n", encoding="utf-8"
         )
 
@@ -826,8 +826,8 @@ def run(args: argparse.Namespace) -> None:
                layout.data_dir / "c_sample_stability_table.csv"]
     if not is_adjusted:
         OUTPUTS += [
-            layout.tables_dir / "num_sample_stability.tex",
-            layout.tables_dir / "tab_sample_stability.tex",
+            layout.tables_dir / "num_c_sample_stability.tex",
+            layout.tables_dir / "tab_c_sample_stability.tex",
         ]
     fp = fingerprint_of(
         scored_dir / "paper_scores_shards" / "metadata" / "manifest.json",

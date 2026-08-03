@@ -2,10 +2,10 @@
 Generate main-text tables for the supervised LR classifier.
 
 Outputs:
-  tab_validation.tex                     — single-column LR test F1 (canonical)
-  tab_cross_sensitivity_robustness.tex   — 3-axis gap-rank sensitivity table
-  num_cross_sensitivity.tex             — segment-cap stability macro
-  num_validation.tex                    — per-SDG F1 macros for use in text
+  tab1_classifier_performance.tex                     — single-column LR test F1 (canonical)
+  tab6_cross_sensitivity.tex   — 3-axis gap-rank sensitivity table
+  num6_cross_sensitivity.tex             — segment-cap stability macro
+  num1_classifier_performance.tex                    — per-SDG F1 macros for use in text
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ def parse_args() -> argparse.Namespace:
 #    serves both the canonical encoder and the encoder-sensitivity partner.
 # ---------------------------------------------------------------------------
 def load_lr_gaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -61,7 +61,7 @@ def load_lr_gaps(m):
 
 
 def load_zs_gaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -72,7 +72,7 @@ def load_zs_gaps(m):
 def load_mlp_gaps(m):
     # Capped, single-source MLP gap (mirrors load_lr_gaps). Replaces the
     # uncapped mlp_summary.json["semantic_gaps"] value, which was divergent.
-    p = output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_mlp.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -81,7 +81,7 @@ def load_mlp_gaps(m):
 
 
 def load_concept_mlp_gaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_mlp.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -102,27 +102,27 @@ def _load_gap_json(path):
 
 
 def load_lr_gaps_adj(m):
-    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "adjusted" / "4_3_semantic_gap_distances.json")
+    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_lr.json")
 
 
 def load_mlp_gaps_adj(m):
-    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "adjusted" / "4_3_mlp_semantic_gap_distances.json")
+    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_mlp.json")
 
 
 def load_zs_gaps_adj(m):
-    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances.json")
+    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_zeroshot.json")
 
 
 def load_concept_lr_gaps_adj(m):
-    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "4_3_semantic_gap_distances.json")
+    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_lr.json")
 
 
 def load_concept_mlp_gaps_adj(m):
-    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "4_3_mlp_semantic_gap_distances.json")
+    return _load_gap_json(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_mlp.json")
 
 
 def load_cap_gaps_adj():
-    p = output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "adjusted" / "4_3_semantic_gap_robustness_caps.json"
+    p = output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "adjusted" / "semantic_gap_robustness_caps_lr.json"
     if not p.exists():
         return None, None
     with open(p) as f:
@@ -301,7 +301,7 @@ def load_mean_gap_and_cohesion(m):
     returns (mean_gap, mean_cos, mean_research_cohesion, mean_policy_cohesion).
     Returns None if the artifact is missing.
     """
-    p = output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -359,7 +359,7 @@ def write_encoder_axis_semantic():
     rho_a, rho_b = assemble_paneled(
         adj_groups=[("Encoder (embedding architecture)", enc_subgroups_adj)],
         raw_groups=[("Encoder (embedding architecture)", enc_subgroups_raw)],
-        out_path=OUT_MAIN / "tab_encoder_sensitivity_semantic.tex",
+        out_path=OUT_MAIN / "tab7_encoder_sensitivity.tex",
         caption=ENC_AXIS_SEMANTIC_CAPTION, notes=ENC_AXIS_SEMANTIC_NOTES, label="tab:encoder-sensitivity-semantic",
         panel_a_note="Adjusted (register-removed, canonical).",
         panel_b_note="Raw (naive baseline, un-adjusted).",
@@ -401,9 +401,9 @@ def write_encoder_axis_semantic():
             lines.append(rf"\newcommand{{\MPNetResCohesion}}{{{mrc:.2f}}}")
         if mpc is not None:
             lines.append(rf"\newcommand{{\MPNetPolCohesion}}{{{mpc:.2f}}}")
-    (OUT_MAIN / "num_encoder_sensitivity_semantic.tex").write_text(
+    (OUT_MAIN / "num7_encoder_sensitivity.tex").write_text(
         "\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Written num_encoder_sensitivity_semantic.tex  scibert_lr_rho={val} mlp_rho={mlp_val} zs_rho={zs_val} minilm_rho={minilm_val}")
+    print(f"Written num7_encoder_sensitivity.tex  scibert_lr_rho={val} mlp_rho={mlp_val} zs_rho={zs_val} minilm_rho={minilm_val}")
 
 
 def write_encoder_axis_coverage():
@@ -429,22 +429,22 @@ def write_encoder_axis_coverage():
         return
     col_groups = [("Encoder (embedding architecture)", enc_subgroups)]
     rho_by_col = assemble_table(
-        col_groups, OUT_MAIN / "tab_encoder_sensitivity_coverage.tex",
+        col_groups, OUT_MAIN / "tab9_encoder_sensitivity_coverage.tex",
         ENC_AXIS_COVERAGE_CAPTION, ENC_AXIS_COVERAGE_NOTES, "tab:encoder-sensitivity-coverage",
     )
     scibert_key = "Encoder (embedding architecture)::SciBERT (768-d)::LR"
     scibert_rho = rho_by_col.get(scibert_key, float("nan"))
     val = f"{scibert_rho:.2f}" if not np.isnan(scibert_rho) else "--"
-    (OUT_MAIN / "num_encoder_sensitivity_coverage.tex").write_text(
+    (OUT_MAIN / "num9_encoder_sensitivity_coverage.tex").write_text(
         "\n".join([
             "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
             rf"\newcommand{{\SciBERTCoverageRho}}{{{val}}}",
         ]) + "\n", encoding="utf-8")
-    print(f"Written num_encoder_sensitivity_coverage.tex  scibert_lr_rho={val}")
+    print(f"Written num9_encoder_sensitivity_coverage.tex  scibert_lr_rho={val}")
 
 
 def load_lr_covgaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(m, root=root) / "data" / "coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -460,7 +460,7 @@ def load_mlp_covgaps(m):
 
     Research counts from mlp_summary.json (already doc-level: 1 paper = 1 doc).
     Policy profile uses the shared A19 document-weighting (single source of truth),
-    preferring the persisted mlp_coverage_document_weighted.json when available.
+    preferring the persisted coverage_document_weighted_mlp.json when available.
 
     Returns {sdg: |res% - pol%|} or None if data missing.
     """
@@ -498,12 +498,12 @@ def load_mlp_covgaps(m):
 def load_zs_covgaps(m, concept: bool = False):
     """Document-weighted coverage gap for zero-shot nearest-centroid assignment.
 
-    Research counts from ZS semantic_gap_distances.json (already doc-level).
+    Research counts from ZS semantic_gap_distances_zeroshot.json (already doc-level).
     Policy profile uses the shared A19 document-weighting (single source of truth),
-    preferring the persisted zs_coverage_document_weighted.json when available.
+    preferring the persisted coverage_document_weighted_zeroshot.json when available.
 
     When `concept=True`, loads the concept-retrieved variant
-    (data/concept/semantic_gap_distances.json + zeroshot_concept/research_centroids.npy)
+    (data/concept/semantic_gap_distances_zeroshot.json + zeroshot_concept/research_centroids.npy)
     instead of the canonical keyword route.
 
     Returns {sdg: |res% - pol%|} or None if data missing.
@@ -513,9 +513,9 @@ def load_zs_covgaps(m, concept: bool = False):
         return cached
 
     gap_path = (
-        output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances.json"
+        output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_zeroshot.json"
         if concept
-        else output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+        else output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     )
     if not gap_path.exists():
         return None
@@ -590,7 +590,7 @@ def load_concept_zs_covgaps(m):
 
 
 def load_concept_lr_gaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_lr.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -599,7 +599,7 @@ def load_concept_lr_gaps(m):
 
 
 def load_concept_covgaps(m):
-    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -611,7 +611,7 @@ def load_concept_covgaps(m):
 
 
 def load_canonical_research_profile():
-    p = output_dir_for_model(model, root=root) / "data" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(model, root=root) / "data" / "coverage_document_weighted.json"
     with open(p) as f:
         data = json.load(f)
     return {int(k[3:]): v for k, v in data["research_profile_hard"].items()}
@@ -694,7 +694,7 @@ def macro_f1(values_dict):
     return sum(vals) / len(vals) if vals else 0.0
 
 # ---------------------------------------------------------------------------
-# Write num_validation.tex (LR F1 macros)
+# Write num1_classifier_performance.tex (LR F1 macros)
 # ---------------------------------------------------------------------------
 def write_num_validation():
     lines = [
@@ -716,12 +716,12 @@ def write_num_validation():
             mlp_data = json.load(f)
         mlp_macro = mlp_data["test_results"]["macro_f1"]
         lines.append(rf"\newcommand{{\MlpMacroFOne}}{{{mlp_macro:.3f}}}")
-    path = OUT_MAIN / "num_validation.tex"
+    path = OUT_MAIN / "num1_classifier_performance.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
 
 # ---------------------------------------------------------------------------
-# Write tab_validation.tex (single LR F1 column)
+# Write tab1_classifier_performance.tex (single LR F1 column)
 # ---------------------------------------------------------------------------
 def write_validation_table():
     lines = [
@@ -737,12 +737,12 @@ def write_validation_table():
     lines.append(r"\midrule")
     lines.append(f"Macro-F1 (SDGs 1--17) & \\textbf{{{lr_macro:.3f}}} \\\\")
     lines.extend([r"\bottomrule", r"\end{tabular}"])
-    path = OUT_MAIN / "tab_validation.tex"
+    path = OUT_MAIN / "tab1_classifier_performance.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
 
 # ---------------------------------------------------------------------------
-# Write tab_cross_sensitivity_robustness.tex
+# Write tab6_cross_sensitivity.tex
 # ---------------------------------------------------------------------------
 def write_cross_sensitivity():
     cap_20, cap_none = load_cap_gaps()
@@ -824,7 +824,7 @@ def write_cross_sensitivity():
 
     rho_a, rho_b = assemble_paneled(
         adj_groups=adj_group, raw_groups=raw_group,
-        out_path=OUT_MAIN / "tab_cross_sensitivity_robustness.tex",
+        out_path=OUT_MAIN / "tab6_cross_sensitivity.tex",
         caption=SEMANTIC_CAPTION, notes=SEMANTIC_NOTES, label="tab:cross-sensitivity-robustness",
         panel_a_note="Adjusted (register-removed, canonical).",
         panel_b_note="Raw (naive baseline, un-adjusted).",
@@ -832,14 +832,14 @@ def write_cross_sensitivity():
 
     concept_rho_val = rho_b.get("Retrieval::LR", float("nan"))
     concept_sem_rho = f"{concept_rho_val:.2f}" if not np.isnan(concept_rho_val) else "--"
-    (OUT_MAIN / "num_concept_semantic.tex").write_text(
+    (OUT_MAIN / "num11_concept_semantic.tex").write_text(
         "\n".join([
             "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
             rf"\newcommand{{\ConceptSemanticGapRho}}{{{concept_sem_rho}}}",
         ]) + "\n",
         encoding="utf-8",
     )
-    print(f"Written num_concept_semantic.tex  concept_sem_rho={concept_sem_rho}")
+    print(f"Written num11_concept_semantic.tex  concept_sem_rho={concept_sem_rho}")
 
 
 def is_nested(g):
@@ -1065,7 +1065,7 @@ def assemble_paneled(adj_groups, raw_groups, out_path, caption, notes, label,
 def write_coverage_table():
     # Load the canonical coverage JSON once and reuse for both the Canon
     # column (coverage_gap_hard) and the policy-source profile (research_profile_hard).
-    canon_cov_path = output_dir_for_model(model, root=root) / "data" / "4_2_coverage_document_weighted.json"
+    canon_cov_path = output_dir_for_model(model, root=root) / "data" / "coverage_document_weighted.json"
     with open(canon_cov_path) as f:
         _canon = json.load(f)
     mpnet_lr = {int(k[3:]): v for k, v in _canon["coverage_gap_hard"].items()} if _canon.get("coverage_gap_hard") else None
@@ -1103,7 +1103,7 @@ def write_coverage_table():
         print("WARNING: no data available for coverage cross-sensitivity table, skipping")
         return
 
-    rho_by_col = assemble_table(col_groups, OUT_MAIN / "tab_cross_sensitivity_coverage.tex",
+    rho_by_col = assemble_table(col_groups, OUT_MAIN / "tab8_coverage_sensitivity.tex",
                                 COVERAGE_CAPTION, COVERAGE_NOTES, "tab:cross-sensitivity-coverage")
 
     concept_rho_val = rho_by_col.get("Retrieval::LR", float("nan"))
@@ -1112,13 +1112,13 @@ def write_coverage_table():
         f"% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
         rf"\newcommand{{\ConceptCoverageGapRho}}{{{concept_rho}}}",
     ]
-    (OUT_MAIN / "num_cross_sensitivity_coverage.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Written num_cross_sensitivity_coverage.tex  concept_rho={concept_rho}")
+    (OUT_MAIN / "num8_coverage_sensitivity.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"Written num8_coverage_sensitivity.tex  concept_rho={concept_rho}")
 
 
 def write_concept_coverage():
-    canon_p = output_dir_for_model(model, root=root) / "data" / "4_2_coverage_document_weighted.json"
-    concept_p = output_dir_for_model(model, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json"
+    canon_p = output_dir_for_model(model, root=root) / "data" / "coverage_document_weighted.json"
+    concept_p = output_dir_for_model(model, root=root) / "data" / "concept" / "coverage_document_weighted.json"
     if not (canon_p.exists() and concept_p.exists()):
         print("WARNING: concept coverage json missing, skipping concept coverage table")
         return
@@ -1152,8 +1152,8 @@ def write_concept_coverage():
         r"\bottomrule",
         r"\end{tabular}",
     ])
-    (OUT_MAIN / "tab_concept_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
-    print(f"Written tab_concept_coverage.tex  rho={rho:.3f} tau={tau:.3f}")
+    (OUT_MAIN / "tab10_concept_coverage.tex").write_text("\n".join(tab_lines) + "\n", encoding="utf-8")
+    print(f"Written tab10_concept_coverage.tex  rho={rho:.3f} tau={tau:.3f}")
 
     num_lines = [
         "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
@@ -1161,11 +1161,11 @@ def write_concept_coverage():
         rf"\newcommand{{\ConceptCoverageKendall}}{{{tau:.3f}}}",
         rf"\newcommand{{\ConceptCoverageMaxAbsDelta}}{{{max_abs_delta*100:.1f}}}",
     ]
-    (OUT_MAIN / "num_concept_coverage.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    print(f"Written num_concept_coverage.tex")
+    (OUT_MAIN / "num10_concept_coverage.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
+    print(f"Written num10_concept_coverage.tex")
 
 # ---------------------------------------------------------------------------
-# Write num_cross_sensitivity.tex
+# Write num6_cross_sensitivity.tex
 # ---------------------------------------------------------------------------
 def write_num_cross_sensitivity():
     cap_20, cap_none = load_cap_gaps()
@@ -1180,7 +1180,7 @@ def write_num_cross_sensitivity():
         f"% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
         rf"\newcommand{{\CapStabilityRho}}{{{rho_val}}}",
     ]
-    path = OUT_MAIN / "num_cross_sensitivity.tex"
+    path = OUT_MAIN / "num6_cross_sensitivity.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}  rho={rho_val}")
 
@@ -1208,52 +1208,52 @@ def run(args: argparse.Namespace) -> None:
     lr_macro = retrain["test_results"]["macro_f1"]
 
     SCRIPT_VERSION = "2"
-    PRIMARY = OUT_MAIN / "tab_cross_sensitivity_robustness.tex"
+    PRIMARY = OUT_MAIN / "tab6_cross_sensitivity.tex"
     OUTPUTS = [
-        OUT_MAIN / "num_validation.tex",
-        OUT_MAIN / "tab_validation.tex",
+        OUT_MAIN / "num1_classifier_performance.tex",
+        OUT_MAIN / "tab1_classifier_performance.tex",
         PRIMARY,
-        OUT_MAIN / "tab_cross_sensitivity_coverage.tex",
-        OUT_MAIN / "tab_concept_coverage.tex",
-        OUT_MAIN / "num_cross_sensitivity.tex",
-        OUT_MAIN / "num_concept_semantic.tex",
-        OUT_MAIN / "num_concept_coverage.tex",
-        OUT_MAIN / "num_cross_sensitivity_coverage.tex",
-        OUT_MAIN / "num_encoder_sensitivity_semantic.tex",
-        OUT_MAIN / "num_encoder_sensitivity_coverage.tex",
+        OUT_MAIN / "tab8_coverage_sensitivity.tex",
+        OUT_MAIN / "tab10_concept_coverage.tex",
+        OUT_MAIN / "num6_cross_sensitivity.tex",
+        OUT_MAIN / "num11_concept_semantic.tex",
+        OUT_MAIN / "num10_concept_coverage.tex",
+        OUT_MAIN / "num8_coverage_sensitivity.tex",
+        OUT_MAIN / "num7_encoder_sensitivity.tex",
+        OUT_MAIN / "num9_encoder_sensitivity_coverage.tex",
     ]
     fp_paths = [RETRAIN_JSON]
     for m, _ in ENC_AXIS_ENCODERS:
         fp_paths += [
-            output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
-            output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_robustness_caps.json",
-            output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json",
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_robustness_caps_lr.json",
+            output_dir_for_model(m, root=root) / "data" / "coverage_document_weighted.json",
         ]
     # Zero-shot gaps are a direct input to the ZS column (canonical encoder only).
     fp_paths.append(
-        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "semantic_gap_distances.json"
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     )
     # MLP capped raw gaps (per encoder) + concept (MPNet only) — single source.
     for m, _ in ENC_AXIS_ENCODERS:
         fp_paths.append(
-            output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_mlp.json"
         )
     fp_paths.append(
-        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json"
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "semantic_gap_distances_mlp.json"
     )
     # Concept LR raw gaps also feed \ConceptSemanticGapRho (load_concept_lr_gaps) —
     # include so the table re-derives when they change.
     fp_paths.append(
-        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json"
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "semantic_gap_distances_lr.json"
     )
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         print(f"Skipping {PRIMARY} \u2014 inputs unchanged")
         return
 
-    LR_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "4_3_semantic_gap_distances.json"
-    ZS_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances.json"
-    CAP_PATH = output_dir_for_model(model, root=root) / "data" / "4_3_semantic_gap_robustness_caps.json"
+    LR_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_lr.json"
+    ZS_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
+    CAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_robustness_caps_lr.json"
     POLICY_SOURCE_FAMILY_TEX = root / "appendix" / model_slug(model) / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_combined.tex"
 
     write_num_validation()

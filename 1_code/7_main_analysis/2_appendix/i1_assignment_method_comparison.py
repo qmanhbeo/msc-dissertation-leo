@@ -32,8 +32,8 @@ Inputs (canonical MPNet artifacts):
   2_data/5_supervised_scored/{model}/paper_scores_shards/part-NNNN.npy
   2_data/5_supervised_scored/{model}/policy_scores.npy
   2_data/5_supervised_scored/{model}/mlp_scores/mlp_policy_scores.npy
-  4_outputs/{model}/data/4_3_semantic_gap_distances.json
-  4_outputs/{model}/data/semantic_gap_distances.json
+  4_outputs/{model}/data/semantic_gap_distances_lr.json
+  4_outputs/{model}/data/semantic_gap_distances_zeroshot.json
 
 Outputs:
   4_outputs/appendix/{model}/i1_assignment_method_comparison/data/assignment_method_comparison.json
@@ -129,7 +129,7 @@ def doc_level_assignment(score_matrix: np.ndarray, policy_ids: list[dict]) -> np
 
 
 def gap_ranks(path: Path) -> dict[int, int]:
-    """Per-SDG semantic-gap ranks from a semantic_gap_distances.json (1 = largest)."""
+    """Per-SDG semantic-gap ranks from a semantic_gap_distances_zeroshot.json (1 = largest)."""
     with open(path) as f:
         data = json.load(f)
     items = [(r["sdg"], r["semantic_gap"]) for r in data["per_sdg"] if r.get("semantic_gap") is not None]
@@ -214,8 +214,8 @@ def run(args: argparse.Namespace) -> None:
     data_root = output_dir_for_model(model, root=root) / "data"
 
     manifest_path = embed_root / "research_shards" / "metadata" / "manifest.json"
-    lr_gap_path = data_root / "4_3_semantic_gap_distances.json"
-    zs_gap_path = data_root / "semantic_gap_distances.json"
+    lr_gap_path = data_root / "semantic_gap_distances_lr.json"
+    zs_gap_path = data_root / "semantic_gap_distances_zeroshot.json"
 
     fp_paths = [
         manifest_path,

@@ -164,8 +164,8 @@ def load_route_coverage_gap(model: str, route: str) -> dict[int, float] | None:
     computation in the caller via `document_weighted_policy_profile`.
     """
     suffix = {
-        "mlp": "mlp_coverage_document_weighted.json",
-        "zs": "zs_coverage_document_weighted.json",
+        "mlp": "coverage_document_weighted_mlp.json",
+        "zs": "coverage_document_weighted_zeroshot.json",
     }.get(route)
     if suffix is None:
         return None

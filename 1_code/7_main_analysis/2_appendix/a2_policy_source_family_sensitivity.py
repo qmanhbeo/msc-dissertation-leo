@@ -67,7 +67,7 @@ H25_CSV = "policy_source_family_h25.csv"
 H25_JSON = "policy_source_family_h25.json"
 H25_TEX = "tab_a2_policy_source_family_h25.tex"
 
-CANONICAL_COVERAGE_FILE = "4_2_coverage_document_weighted.json"
+CANONICAL_COVERAGE_FILE = "coverage_document_weighted.json"
 
 
 FAMILY_ORDER = [

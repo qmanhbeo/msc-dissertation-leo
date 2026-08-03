@@ -5,19 +5,19 @@ Per config x {rho(cov,raw), rho(cov,adj), rho(cov,register)}.
 Reads per-config coverage + raw/adj semantic-gap JSONs.
 
 Inputs (per encoder):
-  4_outputs/{slug}/data/4_2_coverage_document_weighted.json       (LR coverage)
-  4_outputs/{slug}/data/4_3_semantic_gap_distances.json           (LR raw gaps)
-  4_outputs/{slug}/data/adjusted/4_3_semantic_gap_distances.json  (LR adj gaps)
-  4_outputs/{slug}/data/semantic_gap_distances.json               (ZS raw gaps)
-  4_outputs/{slug}/data/adjusted/semantic_gap_distances.json      (ZS adj gaps, MPNet only)
-  4_outputs/{slug}/data/4_3_mlp_semantic_gap_distances.json       (MLP raw gaps)
-  4_outputs/{slug}/data/adjusted/4_3_mlp_semantic_gap_distances.json (MLP adj gaps)
-  4_outputs/mpnet/data/concept/4_2_coverage_document_weighted.json (concept coverage)
-  4_outputs/mpnet/data/concept/4_3_semantic_gap_distances.json    (concept raw gaps)
+  4_outputs/{slug}/data/coverage_document_weighted.json       (LR coverage)
+  4_outputs/{slug}/data/semantic_gap_distances_lr.json           (LR raw gaps)
+  4_outputs/{slug}/data/adjusted/semantic_gap_distances_lr.json  (LR adj gaps)
+  4_outputs/{slug}/data/semantic_gap_distances_zeroshot.json               (ZS raw gaps)
+  4_outputs/{slug}/data/adjusted/semantic_gap_distances_zeroshot.json      (ZS adj gaps, MPNet only)
+  4_outputs/{slug}/data/semantic_gap_distances_mlp.json       (MLP raw gaps)
+  4_outputs/{slug}/data/adjusted/semantic_gap_distances_mlp.json (MLP adj gaps)
+  4_outputs/mpnet/data/concept/coverage_document_weighted.json (concept coverage)
+  4_outputs/mpnet/data/concept/semantic_gap_distances_lr.json    (concept raw gaps)
 
 Outputs:
   4_outputs/appendix/{model}/h1_register_correlation_table/data/register_correlation_table.json
-  4_outputs/appendix/{model}/h1_register_correlation_table/tables/tab_register_correlation.tex
+  4_outputs/appendix/{model}/h1_register_correlation_table/tables/tab_h1_register_correlation.tex
 
 Run from project root:
   python 1_code/7_main_analysis/0_shared/h1_register_correlation_table.py --embed-model mpnet
@@ -95,9 +95,9 @@ def _load_json(path: Path) -> dict | None:
 def _coverage_gaps(root: Path, model: str, corpus: str) -> dict[int, float] | None:
     """Load coverage_gap_hard keyed by SDG number."""
     if corpus == "concept":
-        p = output_dir_for_model(model, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json"
+        p = output_dir_for_model(model, root=root) / "data" / "concept" / "coverage_document_weighted.json"
     else:
-        p = output_dir_for_model(model, root=root) / "data" / "4_2_coverage_document_weighted.json"
+        p = output_dir_for_model(model, root=root) / "data" / "coverage_document_weighted.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -108,7 +108,7 @@ def _coverage_gaps(root: Path, model: str, corpus: str) -> dict[int, float] | No
 
 
 def _lr_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
-    p = output_dir_for_model(model, root=root) / "data" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_lr.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -116,7 +116,7 @@ def _lr_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
 
 
 def _lr_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
-    p = output_dir_for_model(model, root=root) / "data" / "adjusted" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(model, root=root) / "data" / "adjusted" / "semantic_gap_distances_lr.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -124,7 +124,7 @@ def _lr_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
 
 
 def _zs_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
-    p = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances.json"
+    p = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -132,7 +132,7 @@ def _zs_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
 
 
 def _zs_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
-    p = output_dir_for_model(model, root=root) / "data" / "adjusted" / "semantic_gap_distances.json"
+    p = output_dir_for_model(model, root=root) / "data" / "adjusted" / "semantic_gap_distances_zeroshot.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -140,8 +140,8 @@ def _zs_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
 
 
 def _mlp_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
-    """Load MLP raw gaps from the new 4_3_mlp_semantic_gap_distances.json."""
-    p = output_dir_for_model(model, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
+    """Load MLP raw gaps from the new semantic_gap_distances_mlp.json."""
+    p = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_mlp.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -149,8 +149,8 @@ def _mlp_raw_gaps(root: Path, model: str) -> dict[int, float] | None:
 
 
 def _mlp_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
-    """Load MLP adjusted gaps from adjusted/4_3_mlp_semantic_gap_distances.json."""
-    p = output_dir_for_model(model, root=root) / "data" / "adjusted" / "4_3_mlp_semantic_gap_distances.json"
+    """Load MLP adjusted gaps from adjusted/semantic_gap_distances_mlp.json."""
+    p = output_dir_for_model(model, root=root) / "data" / "adjusted" / "semantic_gap_distances_mlp.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -158,7 +158,7 @@ def _mlp_adj_gaps(root: Path, model: str) -> dict[int, float] | None:
 
 
 def _concept_raw_gaps(root: Path) -> dict[int, float] | None:
-    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "semantic_gap_distances_lr.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -166,7 +166,7 @@ def _concept_raw_gaps(root: Path) -> dict[int, float] | None:
 
 
 def _concept_adj_gaps(root: Path) -> dict[int, float] | None:
-    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "adjusted" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_lr.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -174,7 +174,7 @@ def _concept_adj_gaps(root: Path) -> dict[int, float] | None:
 
 
 def _concept_mlp_raw_gaps(root: Path) -> dict[int, float] | None:
-    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json"
+    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "semantic_gap_distances_mlp.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -182,7 +182,7 @@ def _concept_mlp_raw_gaps(root: Path) -> dict[int, float] | None:
 
 
 def _concept_mlp_adj_gaps(root: Path) -> dict[int, float] | None:
-    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "adjusted" / "4_3_mlp_semantic_gap_distances.json"
+    p = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_mlp.json"
     data = _load_json(p)
     if data is None:
         return None
@@ -340,31 +340,31 @@ def run(args: argparse.Namespace) -> None:
         root, subdir="appendix/h1_register_correlation_table", model=model,
     )
     out_json = layout.data_dir / "register_correlation_table.json"
-    out_tex = layout.tables_dir / "tab_register_correlation.tex"
+    out_tex = layout.tables_dir / "tab_h1_register_correlation.tex"
     outputs = [out_json, out_tex]
 
     # Fingerprint all input files
     fp_paths: list[Path] = []
     for _, m, method, corpus, _ in CONFIGS:
         if corpus == "concept":
-            fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json")
+            fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "coverage_document_weighted.json")
             if method == "LR":
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json")
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "4_3_semantic_gap_distances.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_lr.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_lr.json")
             elif method == "MLP":
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_mlp_semantic_gap_distances.json")
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "4_3_mlp_semantic_gap_distances.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_mlp.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_mlp.json")
         else:
-            fp_paths.append(output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json")
+            fp_paths.append(output_dir_for_model(m, root=root) / "data" / "coverage_document_weighted.json")
             if method == "LR":
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json")
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "adjusted" / "4_3_semantic_gap_distances.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_lr.json")
             elif method == "ZS":
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json")
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_zeroshot.json")
             elif method == "MLP":
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json")
-                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "adjusted" / "4_3_mlp_semantic_gap_distances.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_mlp.json")
+                fp_paths.append(output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_mlp.json")
                 # Also include legacy path for fingerprint stability
                 fp_paths.append(scored_dir_for_model(m) / "mlp_scores" / "mlp_summary.json")
 

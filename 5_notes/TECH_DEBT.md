@@ -10,7 +10,7 @@ debt they describe.
 - **Status**: the `f_register_adjustment.py` appendix script that this entry
   tracked was folded into the canon flow (`g_register_decomposition.py`) and
   deleted. Its iterative diagnostic now emits to `4_outputs/{model}/tables/`
-  (`num_iterative_register_check.tex` + `tab_iterative_register_check.tex`), and
+  (`num12_register_check.tex` + `tab12_register_check.tex`), and
   the per-SDG `\RegIterGapSdg*` macros are produced there directly. The
   hand-synced `4_outputs/appendix/mpnet/f_register_adjustment/` tree no longer
   exists and is not referenced. This debt is retired.
@@ -37,5 +37,5 @@ debt they describe.
 
 - **Status**: superseded by entry 1's retirement. The `\RegIterGapSdg*` macros
   are now emitted by `g_register_decomposition.py` (canon) to
-  `4_outputs/{model}/tables/num_iterative_register_check.tex`, exercised on every
+  `4_outputs/{model}/tables/num12_register_check.tex`, exercised on every
   replay. No separate `f_register_adjustment.py` emission path remains. Retired.

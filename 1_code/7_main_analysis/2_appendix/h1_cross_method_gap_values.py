@@ -32,7 +32,7 @@ from semantic_gap_shared import document_weighted_policy_profile, load_route_cov
 # ---------------------------------------------------------------------------
 
 def _lr_covgaps(root, m):
-    p = output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(m, root=root) / "data" / "coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -77,9 +77,9 @@ def _mlp_covgaps(m):
 
 def _zs_covgaps(root, m, concept: bool = False):
     gap_path = (
-        output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances.json"
+        output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_zeroshot.json"
         if concept
-        else output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+        else output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     )
     if not gap_path.exists():
         return None
@@ -120,7 +120,7 @@ def _zs_covgaps(root, m, concept: bool = False):
 # ---------------------------------------------------------------------------
 
 def _lr_gaps(root, m):
-    p = output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -131,7 +131,7 @@ def _lr_gaps(root, m):
 def _mlp_gaps(root, m):
     # Capped, single-source MLP gap (mirrors _lr_gaps). Replaces the uncapped
     # mlp_summary.json["semantic_gaps"] value, which was divergent.
-    p = output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_mlp.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -140,7 +140,7 @@ def _mlp_gaps(root, m):
 
 
 def _zs_gaps(root, m):
-    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -149,7 +149,7 @@ def _zs_gaps(root, m):
 
 
 def _concept_covgaps(root, m):
-    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_2_coverage_document_weighted.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "coverage_document_weighted.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -161,7 +161,7 @@ def _concept_covgaps(root, m):
 
 
 def _concept_gaps(root, m):
-    p = output_dir_for_model(m, root=root) / "data" / "concept" / "4_3_semantic_gap_distances.json"
+    p = output_dir_for_model(m, root=root) / "data" / "concept" / "semantic_gap_distances_lr.json"
     if not p.exists():
         return None
     with open(p) as f:
@@ -268,17 +268,17 @@ def run(args):
     fp_paths = []
     for _, m, _ in ENCODERS:
         fp_paths += [
-            output_dir_for_model(m, root=root) / "data" / "4_2_coverage_document_weighted.json",
-            output_dir_for_model(m, root=root) / "data" / "4_3_semantic_gap_distances.json",
-            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances.json",
-            output_dir_for_model(m, root=root) / "data" / "4_3_mlp_semantic_gap_distances.json",
+            output_dir_for_model(m, root=root) / "data" / "coverage_document_weighted.json",
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json",
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json",
+            output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_mlp.json",
         ]
     # Concept-retrieval track (MPNet only) feeds the appendix cross-method table.
     concept_root = output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept"
     fp_paths += [
-        concept_root / "4_2_coverage_document_weighted.json",
-        concept_root / "4_3_semantic_gap_distances.json",
-        concept_root / "adjusted" / "4_3_semantic_gap_distances.json",
+        concept_root / "coverage_document_weighted.json",
+        concept_root / "semantic_gap_distances_lr.json",
+        concept_root / "adjusted" / "semantic_gap_distances_lr.json",
     ]
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):

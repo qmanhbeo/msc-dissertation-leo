@@ -7,12 +7,12 @@ computes the register component (raw - adjusted), and produces an extended
 interaction JSON with all three correlation sets.
 
 Inputs:
-  4_outputs/{model}/data/4_3_semantic_gap_distances.json           (raw gaps)
-  4_outputs/{model}/data/adjusted/4_3_semantic_gap_distances.json  (adjusted gaps)
-  4_outputs/{model}/data/4_2_coverage_document_weighted.json       (coverage gaps)
+  4_outputs/{model}/data/semantic_gap_distances_lr.json           (raw gaps)
+  4_outputs/{model}/data/adjusted/semantic_gap_distances_lr.json  (adjusted gaps)
+  4_outputs/{model}/data/coverage_document_weighted.json       (coverage gaps)
 
 Outputs:
-  4_outputs/{model}/data/4_4_interaction_extended.json  (raw + adj + register correlations)
+  4_outputs/{model}/data/interaction_extended.json  (raw + adj + register correlations)
 
 Run from project root:
   python 1_code/7_main_analysis/0_shared/g_interaction_extended.py --embed-model mpnet
@@ -69,10 +69,10 @@ def run(args: argparse.Namespace) -> None:
     data_dir = layout.data_dir
     adj_data_dir = data_dir / "adjusted"
 
-    raw_path = data_dir / "4_3_semantic_gap_distances.json"
-    adj_path = adj_data_dir / "4_3_semantic_gap_distances.json"
-    cov_path = data_dir / "4_2_coverage_document_weighted.json"
-    out_json = data_dir / "4_4_interaction_extended.json"
+    raw_path = data_dir / "semantic_gap_distances_lr.json"
+    adj_path = adj_data_dir / "semantic_gap_distances_lr.json"
+    cov_path = data_dir / "coverage_document_weighted.json"
+    out_json = data_dir / "interaction_extended.json"
 
     if not adj_path.exists():
         log.warning("Adjusted semantic gap not found at %s — skipping.", adj_path)

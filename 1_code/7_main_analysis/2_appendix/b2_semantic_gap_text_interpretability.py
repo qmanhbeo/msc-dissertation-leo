@@ -388,7 +388,7 @@ def write_table(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def semantic_gap_map(canonical_data_dir: Path) -> dict[int, float]:
-    payload = load_json(canonical_data_dir / "4_3_semantic_gap_distances.json")
+    payload = load_json(canonical_data_dir / "semantic_gap_distances_lr.json")
     return {int(row["sdg"]): float(row["semantic_gap"]) for row in payload["per_sdg"]}
 
 

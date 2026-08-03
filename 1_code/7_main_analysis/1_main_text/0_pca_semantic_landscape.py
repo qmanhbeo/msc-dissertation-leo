@@ -14,10 +14,10 @@ Fitting logic:
      full-corpus research/policy SDG centroids.
 
 Outputs:
-  4_outputs/main/figures/fig1_pca_semantic_landscape.pdf
-  4_outputs/main/figures/fig1_pca_semantic_landscape.png
+  4_outputs/main/figures/fig7_pca_semantic_landscape.pdf
+  4_outputs/main/figures/fig7_pca_semantic_landscape.png
   4_outputs/main/data/pca_landscape_metadata.json
-  4_outputs/main/tables/num_pca_landscape.tex
+  4_outputs/main/tables/num14_pca_landscape.tex
 
 Run from project root:
     python 1_code/7_main_analysis/1_main_text/0_pca_semantic_landscape.py
@@ -70,7 +70,7 @@ from semantic_gap_shared import (
     load_json,
 )
 PCA_METADATA_JSON = "pca_landscape_metadata.json"
-PCA_NUM_TEX = "num_pca_landscape.tex"
+PCA_NUM_TEX = "num14_pca_landscape.tex"
 
 RESEARCH_COLOR = "#2166AC"
 POLICY_COLOR = "#D6604D"
@@ -193,8 +193,8 @@ def run(args: argparse.Namespace) -> None:
 
     SCRIPT_VERSION = "1"
     PRIMARY = data_dir / PCA_METADATA_JSON
-    OUTPUTS = [PRIMARY, figures_dir / "fig1_pca_semantic_landscape.pdf",
-               figures_dir / "fig1_pca_semantic_landscape.png",
+    OUTPUTS = [PRIMARY, figures_dir / "fig7_pca_semantic_landscape.pdf",
+               figures_dir / "fig7_pca_semantic_landscape.png",
                tables_dir / PCA_NUM_TEX]
     fp = fingerprint_of(_POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
                         _RESEARCH_CENTROIDS, _RESEARCH_CENTROID_META,
@@ -421,8 +421,8 @@ def run(args: argparse.Namespace) -> None:
 
     fig.tight_layout(rect=(0, 0, 1, 1))
 
-    pdf_path = figures_dir / "fig1_pca_semantic_landscape.pdf"
-    png_path = figures_dir / "fig1_pca_semantic_landscape.png"
+    pdf_path = figures_dir / "fig7_pca_semantic_landscape.pdf"
+    png_path = figures_dir / "fig7_pca_semantic_landscape.png"
     fig.savefig(pdf_path, bbox_inches="tight")
     fig.savefig(png_path, bbox_inches="tight", dpi=150)
     plt.close(fig)

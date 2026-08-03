@@ -11,7 +11,7 @@
 ## 0. Empirical gate (resolved, read-only)
 
 Computed from committed artifacts (`register_decomposition.json`,
-`num_iterative_register_check.tex`, `num_register_adjustment.tex`). The raw H1a
+`num12_register_check.tex`, `num_register_adjustment.tex`). The raw H1a
 null (rho=-0.08, p=0.77) is a **cancellation** of two real, opposite effects:
 
 | Test | rho | p |
@@ -304,7 +304,7 @@ do not invent ad-hoc flags:
 
 ### 6.4 Re-run matrix (semantic gaps only; coverage reused per §6.3)
 Adjusted semantic-gap JSONs written under an `adjusted/` mirror of the raw layout
-(e.g. `4_outputs/{model}/data/adjusted/4_3_semantic_gap_distances.json`,
+(e.g. `4_outputs/{model}/data/adjusted/semantic_gap_distances_lr.json`,
 `.../data/concept/adjusted/...`).
 
 | Config | Raw sem (methods) | Adj sem (methods) |
@@ -319,7 +319,7 @@ Adjusted semantic-gap JSONs written under an `adjusted/` mirror of the raw layou
 ### 6.5 New generators (all JSON-out; macros centralised per §6.0)
 1. **Decomposition table** (canon, main text): per-SDG raw / adj / register /
    coverage. Inputs: `num_register_adjustment.tex` source values (or its JSON) +
-   `4_2_coverage_document_weighted.json`. New script
+   `coverage_document_weighted.json`. New script
    `0_shared/g_register_decomposition.py` -> JSON.
 2. **Interaction extension** (canon centrepiece, main text): the existing
    correlation script only computes rho using the RAW semantic gap. Extend it to

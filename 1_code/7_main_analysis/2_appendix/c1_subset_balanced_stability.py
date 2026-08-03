@@ -9,7 +9,7 @@ existing sample-stability draws (Appendix C, c_sample_stability.py) — each dra
 is a random 50k-paper research subset whose per-SDG semantic gaps were computed
 against the fixed canonical policy centroids — and correlate each draw's
 within-SDG semantic-gap ranking with the full-corpus ranking from
-4_3_semantic_gap_distances.json.
+semantic_gap_distances_lr.json.
 
 A high Spearman rho at the ~50k tier (comparable to the policy corpus size)
 shows the ranking of which SDGs have large vs small semantic gaps is not an
@@ -18,7 +18,7 @@ and re-scores nothing.
 
 Outputs:
   4_outputs/appendix/{model}/c1_subset_balanced_stability/data/c1_subset_balanced_stability.json
-  4_outputs/appendix/{model}/c1_subset_balanced_stability/tables/num_subset_stability.tex
+  4_outputs/appendix/{model}/c1_subset_balanced_stability/tables/num_c1_subset_stability.tex
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ from shared_utils import ensure_dissertation_outputs
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
+CANONICAL_SEMANTIC_JSON = "semantic_gap_distances_lr.json"
 DRAWS_JSONL = "c_sample_stability_draws.jsonl"
 MIN_VALID_SDGS = 3
 SCRIPT_VERSION = "1"
@@ -146,7 +146,7 @@ def write_outputs(layout: Any, rows: list[dict[str, Any]], full_mean_gap: float 
         "method": "subset_balanced_rank_stability",
         "note": (
             "Spearman rho between each sample-stability draw's within-SDG semantic-gap "
-            "ranking and the full-corpus ranking (4_3_semantic_gap_distances.json). "
+            "ranking and the full-corpus ranking (semantic_gap_distances_lr.json). "
             "The 50k tier is comparable to the 40,597-segment policy corpus."
         ),
         "full_corpus_mean_semantic_gap": full_mean_gap,
@@ -178,7 +178,7 @@ def write_outputs(layout: Any, rows: list[dict[str, Any]], full_mean_gap: float 
             num_lines.append(
                 rf"\newcommand{{\SubsetGapSdgsUsed}}{{{int(round(row['n_sdgs_used_median']))}}}"
             )
-    num_path = layout.tables_dir / "num_subset_stability.tex"
+    num_path = layout.tables_dir / "num_c1_subset_stability.tex"
     num_path.write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     return json_path
 
@@ -205,7 +205,7 @@ def run(args: argparse.Namespace) -> None:
     primary = layout.data_dir / "c1_subset_balanced_stability.json"
     outputs = [
         primary,
-        layout.tables_dir / "num_subset_stability.tex",
+        layout.tables_dir / "num_c1_subset_stability.tex",
     ]
     fp = fingerprint_of(full_gap_path, draws_path) + SCRIPT_VERSION
     if should_skip(outputs, fp, args.overwrite, primary):

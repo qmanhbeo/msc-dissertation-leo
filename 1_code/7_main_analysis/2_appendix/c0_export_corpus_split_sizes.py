@@ -4,7 +4,7 @@ file for use in the main text and Appendix D prose.
 
 Reads sdg_retrain_results.json from
 2_data/4_supervised_model_results/{model}/model/ and writes
-num_reference_split.tex into 4_outputs/main/{model}/tables/.
+num17_reference_split.tex into 4_outputs/main/{model}/tables/.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
         sys.exit(1)
 
     SCRIPT_VERSION = "1"
-    PRIMARY = outs.tables_dir / "num_reference_split.tex"
+    PRIMARY = outs.tables_dir / "num17_reference_split.tex"
     OUTPUTS = [PRIMARY]
     fp = fingerprint_of(retrain_path) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, overwrite, PRIMARY):
@@ -67,7 +67,7 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
         rf"\newcommand{{\NTestPool}}{{{latex_int(n_test)}}}",
     ]
 
-    path = outs.tables_dir / "num_reference_split.tex"
+    path = outs.tables_dir / "num17_reference_split.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
     record_fingerprint(OUTPUTS, fp, PRIMARY)

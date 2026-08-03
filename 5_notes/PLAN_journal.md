@@ -30,7 +30,7 @@ measurement-protocol article. Authoritative companion to `AGENTS.md`.
 - **P3** Fisher-z 95% CIs for all four H1 predictors plus a minimal detectable
   effect (`\HPrimaryMinDetectableR` = 0.63 at 80% power, alpha=0.05, n=17) added
   to `1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py`;
-  `num_interaction.tex` regenerated; CIs and the power caveat reported in
+  `num4_interaction_h25.tex` regenerated; CIs and the power caveat reported in
   Abstract, Results, and Discussion.
 - **P4** Keywords + Data and Code Availability (GitHub; private until grade
   release) + competing-interests statement.
@@ -53,14 +53,14 @@ appendix stage reuses the existing draws:
 - New script `1_code/7_main_analysis/2_appendix/c1_subset_balanced_stability.py`
   (new stage **C.1**): for each sampled tier it computes the Spearman rank
   correlation between each draw's within-SDG semantic-gap ranking and the
-  full-corpus ranking from `4_3_semantic_gap_distances.json`. Cheap, reads no
+  full-corpus ranking from `semantic_gap_distances_lr.json`. Cheap, reads no
   embeddings, fingerprint-gated like other Tier B scripts.
 - Result at the balanced ~50k tier (vs ~40,597 policy segments):
   **ρ = 0.983 ± 0.009** over 100 draws (17 SDGs), already 0.951 at 10k and
   converging to 1.000 at the 2M full corpus. Macros:
   `\SubsetGapRhoFiftyK` / `\SubsetGapRhoStdFiftyK` /
   `\SubsetGapRhoFiftyKN` (+ per-tier `\SubsetGapRho*`),
-  emitted to `4_outputs/appendix/mpnet/c1_subset_balanced_stability/tables/num_subset_stability.tex`.
+  emitted to `4_outputs/appendix/mpnet/c1_subset_balanced_stability/tables/num_c1_subset_stability.tex`.
 - Wiring: added to `analysis_orchestrator.py::APPENDIX_STEPS` (after
   c_sample_stability), `main.py` flag `--appendix-c1-balanced-subset` +
   `--appendix-all`, and `shared_utils.py` manifest lists.

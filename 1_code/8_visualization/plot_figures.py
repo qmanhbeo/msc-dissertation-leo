@@ -9,13 +9,13 @@ Produces four publication-quality figures for the dissertation:
     Figure 4 — Coverage vs semantic gap scatter (diagnostic map)
 
 Inputs:
-      4_outputs/mpnet/data/4_1_centroid_similarity_matrix.csv     — 17x17 pairwise centroid cosine similarity
-      4_outputs/mpnet/data/4_4_interaction_scatter_data.csv       — per-SDG metrics table from coverage_semantic_interaction.py
-      4_outputs/mpnet/data/4_2_coverage_document_weighted.json   — corpus-level n counts for legend labels
+      4_outputs/mpnet/data/centroid_similarity_matrix.csv     — 17x17 pairwise centroid cosine similarity
+      4_outputs/mpnet/data/interaction_scatter_data.csv       — per-SDG metrics table from coverage_semantic_interaction.py
+      4_outputs/mpnet/data/coverage_document_weighted.json   — corpus-level n counts for legend labels
 
 Outputs:
-      4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig_a4_centroid_similarity_heatmap.pdf
-      4_outputs/mpnet/figures/fig3_coverage_profiles.pdf
+      4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.pdf
+      4_outputs/mpnet/figures/fig2_coverage_profiles.pdf
       4_outputs/mpnet/figures/fig4_semantic_gap.pdf
       4_outputs/mpnet/figures/fig5_coverage_semantic_scatter.pdf
 
@@ -103,7 +103,7 @@ SDG_SHORT = {
 
 def plot_centroid_similarity_heatmap(layout, model: str) -> None:
     """Render an annotated 17x17 heatmap of pairwise canonical SDG-centroid cosine similarity."""
-    csv_path = layout.data_dir / "4_1_centroid_similarity_matrix.csv"
+    csv_path = layout.data_dir / "centroid_similarity_matrix.csv"
     mat = pd.read_csv(csv_path, index_col=0).apply(pd.to_numeric, errors="coerce")
     M = mat.to_numpy(dtype=float)
     n = M.shape[0]
@@ -136,18 +136,18 @@ def plot_centroid_similarity_heatmap(layout, model: str) -> None:
     fig.tight_layout()
     out_dir = layout.root.parent / "appendix" / model_slug(model) / "a4_centroid_similarity" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.pdf", bbox_inches="tight")
-    fig.savefig(out_dir / "fig_a4_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
+    fig.savefig(out_dir / "fig8_centroid_similarity_heatmap.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / "fig8_centroid_similarity_heatmap.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
-    print("Saved: fig_a4_centroid_similarity_heatmap.pdf")
+    print("Saved: fig8_centroid_similarity_heatmap.pdf")
 
 
 def load_gap_maps(layout) -> tuple[dict[int, float], dict[int, float]]:
     """Load per-SDG semantic gaps. Adjusted = after INLP register removal (canonical);
     raw = the naive baseline. Falls back to empty maps if files are absent so the
     script never crashes (raw-only rendering is used when no adjusted data exists)."""
-    adj_path = layout.data_dir / "adjusted" / "4_3_semantic_gap_distances.json"
-    raw_path = layout.data_dir / "4_3_semantic_gap_distances.json"
+    adj_path = layout.data_dir / "adjusted" / "semantic_gap_distances_lr.json"
+    raw_path = layout.data_dir / "semantic_gap_distances_lr.json"
     adj_map: dict[int, float] = {}
     raw_map: dict[int, float] = {}
     if adj_path.exists():
@@ -164,14 +164,14 @@ def load_gap_maps(layout) -> tuple[dict[int, float], dict[int, float]]:
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
-    require_output_files(layout.data_dir, ["4_4_interaction_scatter_data.csv", "4_2_coverage_document_weighted.json"])
+    require_output_files(layout.data_dir, ["interaction_scatter_data.csv", "coverage_document_weighted.json"])
     figures_dir = layout.figures_dir
 
     print(f"Canonical output dir: {layout.data_dir}")
 
     if not args.overwrite:
         expected = [
-            figures_dir / "fig3_coverage_profiles.pdf",
+            figures_dir / "fig2_coverage_profiles.pdf",
             figures_dir / "fig4_semantic_gap.pdf",
             figures_dir / "fig5_coverage_semantic_scatter.pdf",
         ]
@@ -182,7 +182,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     # Load data
     # -----------------------------------------------------------------------
-    df = pd.read_csv(layout.data_dir / "4_4_interaction_scatter_data.csv")
+    df = pd.read_csv(layout.data_dir / "interaction_scatter_data.csv")
     df = df.sort_values("sdg").reset_index(drop=True)
     df["semantic_gap"] = pd.to_numeric(df["semantic_gap"], errors="coerce")
     df["semantic_similarity"] = pd.to_numeric(df["semantic_similarity"], errors="coerce")
@@ -197,7 +197,7 @@ def main() -> None:
     mean_semantic_gap = df_sem_valid["semantic_gap"].mean()
 
     # Load corpus-level counts for legend labels
-    with open(layout.data_dir / "4_2_coverage_document_weighted.json") as f:
+    with open(layout.data_dir / "coverage_document_weighted.json") as f:
         _cov_counts = json.load(f)
     N_RESEARCH_PAPERS = _cov_counts["n_research_papers"]
     N_POLICY_DOCS = _cov_counts["n_policy_documents"]
@@ -265,10 +265,10 @@ def main() -> None:
     ax1.invert_yaxis()
 
     fig1.tight_layout()
-    fig1.savefig(figures_dir / "fig3_coverage_profiles.pdf", bbox_inches="tight")
-    fig1.savefig(figures_dir / "fig3_coverage_profiles.png", bbox_inches="tight", dpi=300)
+    fig1.savefig(figures_dir / "fig2_coverage_profiles.pdf", bbox_inches="tight")
+    fig1.savefig(figures_dir / "fig2_coverage_profiles.png", bbox_inches="tight", dpi=300)
     plt.close(fig1)
-    print("Saved: fig3_coverage_profiles.pdf")
+    print("Saved: fig2_coverage_profiles.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 2 — Semantic gap by SDG (adjusted canonical, raw baseline)

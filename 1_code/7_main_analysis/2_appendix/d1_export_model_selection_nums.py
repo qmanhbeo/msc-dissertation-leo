@@ -4,7 +4,7 @@ macro file for use in Appendix D prose.
 
 Reads lr_cv_results.json and mlp_grid_search_log.json from
 2_data/4_supervised_model_results/{model}/model/ and writes
-num_model_selection.tex into 4_outputs/main/{model}/tables/.
+num16_model_selection.tex into 4_outputs/main/{model}/tables/.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
         sys.exit(1)
 
     SCRIPT_VERSION = "1"
-    PRIMARY = outs.tables_dir / "num_model_selection.tex"
+    PRIMARY = outs.tables_dir / "num16_model_selection.tex"
     OUTPUTS = [PRIMARY]
     fp = fingerprint_of(lr_path, gs_path) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, overwrite, PRIMARY):
@@ -118,7 +118,7 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
         rf"\newcommand{{\MlpCvRangeEightLSixteenL}}{{{range_8l_16l}}}",
     ]
 
-    path = outs.tables_dir / "num_model_selection.tex"
+    path = outs.tables_dir / "num16_model_selection.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
     record_fingerprint(OUTPUTS, fp, PRIMARY)

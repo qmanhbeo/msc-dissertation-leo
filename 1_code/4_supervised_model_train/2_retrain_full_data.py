@@ -15,7 +15,7 @@ Outputs:
   {data_dir}/model/sdg_classifier_retrained.joblib   (used by scoring pipeline)
   {data_dir}/model/sdg_classifier.joblib              (canonical model for 2_evaluate-equivalent diagnostics)
   {data_dir}/model/sdg_retrain_results.json           (per-SDG F1, macro-F1)
-  4_outputs/main/data/4_1_confusion_matrix.csv        (LR only: ROWS=pred, COLS=true)
+  4_outputs/main/data/confusion_matrix_lr.csv        (LR only: ROWS=pred, COLS=true)
 
 Run from project root:
     python 1_code/4_supervised_model_train/2_retrain_full_data.py --model all-mpnet-base-v2
@@ -422,7 +422,7 @@ def main() -> None:
         for i in range(N_SDG):
             cm_rows.append(f"SDG {i+1}," + ",".join(str(int(cm[i, j])) for j in range(N_SDG)))
 
-        cm_path = cm_dir / "4_1_confusion_matrix.csv"
+        cm_path = cm_dir / "confusion_matrix_lr.csv"
         cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")
         log.info("Saved confusion matrix CSV (ROWS=pred, COLS=true): %s", cm_path)
     elif args.classifier_type == "mlp":
@@ -438,7 +438,7 @@ def main() -> None:
             prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
             rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
             cm_rows.append(f"SDG {k+1},{tn},{fp},{fn},{tp},{prec:.4f},{rec:.4f}")
-        cm_path = cm_dir / "4_1_confusion_matrix_mlp.csv"
+        cm_path = cm_dir / "confusion_matrix_mlp.csv"
         cm_path.write_text("\n".join(cm_rows) + "\n", encoding="utf-8")
         log.info("Saved MLP per-SDG confusion matrix (threshold=%.2f): %s",
                  MLP_CONFUSION_THRESHOLD, cm_path)

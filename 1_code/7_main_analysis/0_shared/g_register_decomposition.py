@@ -11,9 +11,9 @@ Part 2 — Iterative register check (Appendix E diagnostic):
   produced by register_adjust.py.
 
 Inputs (part 1):
-  4_outputs/{model}/data/4_3_semantic_gap_distances.json           (raw gaps)
-  4_outputs/{model}/data/adjusted/4_3_semantic_gap_distances.json  (adjusted gaps)
-  4_outputs/{model}/data/4_2_coverage_document_weighted.json       (coverage gaps)
+  4_outputs/{model}/data/semantic_gap_distances_lr.json           (raw gaps)
+  4_outputs/{model}/data/adjusted/semantic_gap_distances_lr.json  (adjusted gaps)
+  4_outputs/{model}/data/coverage_document_weighted.json       (coverage gaps)
 
 Inputs (part 2):
   2_data/3b_register/{slug}/{track}/G.npy                          (INLP G)
@@ -22,9 +22,9 @@ Inputs (part 2):
 
 Outputs:
   4_outputs/{model}/data/register_decomposition.json               (JSON)
-  4_outputs/{model}/tables/tab_register_decomposition.tex          (decomposition table)
-  4_outputs/{model}/tables/tab_iterative_register_check.tex        (convergence table)
-  4_outputs/{model}/tables/num_iterative_register_check.tex        (convergence macros)
+  4_outputs/{model}/tables/tab5_register_decomposition.tex          (decomposition table)
+  4_outputs/{model}/tables/tab12_register_check.tex        (convergence table)
+  4_outputs/{model}/tables/num12_register_check.tex        (convergence macros)
 
 Run from project root:
   python 1_code/7_main_analysis/0_shared/g_register_decomposition.py --embed-model mpnet
@@ -86,11 +86,11 @@ def _generate_decomposition(
     adj_data_dir = data_dir / "adjusted"
     tables_dir = layout.tables_dir
 
-    raw_path = data_dir / "4_3_semantic_gap_distances.json"
-    adj_path = adj_data_dir / "4_3_semantic_gap_distances.json"
-    cov_path = data_dir / "4_2_coverage_document_weighted.json"
+    raw_path = data_dir / "semantic_gap_distances_lr.json"
+    adj_path = adj_data_dir / "semantic_gap_distances_lr.json"
+    cov_path = data_dir / "coverage_document_weighted.json"
     out_json = data_dir / "register_decomposition.json"
-    out_tex = tables_dir / "tab_register_decomposition.tex"
+    out_tex = tables_dir / "tab5_register_decomposition.tex"
 
     if not adj_path.exists():
         log.warning("Adjusted semantic gap not found at %s — skipping decomposition.", adj_path)
@@ -214,8 +214,8 @@ def _generate_iterative_diagnostic(
     from scipy.stats import spearmanr
 
     tables_dir = layout.tables_dir
-    out_tex = tables_dir / "tab_iterative_register_check.tex"
-    out_num = tables_dir / "num_iterative_register_check.tex"
+    out_tex = tables_dir / "tab12_register_check.tex"
+    out_num = tables_dir / "num12_register_check.tex"
 
     g_path = register_dir(model) / "G.npy"
     ckpt_path = register_dir(model) / "checkpoint.json"

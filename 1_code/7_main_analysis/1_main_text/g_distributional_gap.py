@@ -31,7 +31,7 @@ RNG inventory (NO undocumented randomness; every generator below is seeded by
 a named constant and echoed into the output config):
   1. Policy per-document segment cap: np.random.default_rng(RANDOM_SEED), SDGs
      iterated 0..16 in order -- byte-identical consumption to the canonical run
-     (verified by GATE 1 against 4_3_semantic_gap_distances.json).
+     (verified by GATE 1 against semantic_gap_distances_lr.json).
   2. Research row sampling: np.random.default_rng([seed, sdg, STREAM_SAMPLE])
      for seed in SAMPLE_SEEDS.
   3. EMD equal-size subsample: np.random.default_rng([seed, sdg, STREAM_EMD]).
@@ -49,8 +49,8 @@ Fail-closed gates (the script halts rather than emit wrong-but-plausible output)
 Outputs (4_outputs/main/{model}/ ; tables in tables/, data in data/):
   data/g_distributional_gap_records.jsonl   incremental, resume-safe records
   data/g_distributional_gap_summary.json    method -> SDG -> gap (+diagnostics)
-  tables/num_distributional_gap.tex         LaTeX numeric macros
-  tables/tab_distributional_gap.tex         per-SDG comparison table (Part 1 + Part 2)
+  tables/num13_distributional_gap.tex         LaTeX numeric macros
+  tables/tab13_distributional_gap.tex         per-SDG comparison table (Part 1 + Part 2)
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ from shard_pipeline_utils import load_json
 from shared_utils import ensure_dissertation_outputs, require_output_files
 
 SCHEMA_VERSION = 1
-CANONICAL_SEMANTIC_JSON = "4_3_semantic_gap_distances.json"
+CANONICAL_SEMANTIC_JSON = "semantic_gap_distances_lr.json"
 
 # Research sample size for the quadratic/assignment metric family. 50k is the
 # Appendix C tier where the sampled centroid gap (0.3582 +/- 0.0032) sits within
@@ -1175,7 +1175,7 @@ def write_tables(tables_dir: Path, summary: dict[str, Any]) -> None:
         num_lines.append(
             rf"\newcommand{{\DistGapMaxSeedDelta}}{{{max_delta:.3f}}}"
         )
-    (tables_dir / "num_distributional_gap.tex").write_text(
+    (tables_dir / "num13_distributional_gap.tex").write_text(
         "\n".join(num_lines) + "\n", encoding="utf-8"
     )
 
@@ -1195,7 +1195,7 @@ def write_tables(tables_dir: Path, summary: dict[str, Any]) -> None:
         "Table~\\ref{tab:distributional-gap}). EMD = exact 1-Wasserstein; MMD$^2$ = "
         "squared RBF-MMD; Centroid (samp.) = sampled centroid-gap control column.",
     )
-    (tables_dir / "tab_distributional_gap.tex").write_text(
+    (tables_dir / "tab13_distributional_gap.tex").write_text(
         "\n".join(part1 + [""] + part2) + "\n", encoding="utf-8"
     )
 
@@ -1246,8 +1246,8 @@ def run(args: argparse.Namespace) -> None:
     PRIMARY = summary_path
     OUTPUTS = [PRIMARY, records_path]
     OUTPUTS += [
-        layout.tables_dir / "num_distributional_gap.tex",
-        layout.tables_dir / "tab_distributional_gap.tex",
+        layout.tables_dir / "num13_distributional_gap.tex",
+        layout.tables_dir / "tab13_distributional_gap.tex",
     ]
     fp = fingerprint_of(
         manifest_path,
