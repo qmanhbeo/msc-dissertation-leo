@@ -13,13 +13,13 @@ Inputs:
 
 Outputs:
   {data_dir}/model/sdg_classifier_retrained.joblib   (used by scoring pipeline)
-  {data_dir}/model/sdg_classifier.joblib              (used by 2_evaluate.py)
+  {data_dir}/model/sdg_classifier.joblib              (canonical model for 2_evaluate-equivalent diagnostics)
   {data_dir}/model/sdg_retrain_results.json           (per-SDG F1, macro-F1)
   4_outputs/main/data/4_1_confusion_matrix.csv        (LR only: ROWS=pred, COLS=true)
 
 Run from project root:
-    python 1_code/4_supervised_model_train/3_retrain_full_data.py --model all-mpnet-base-v2
-    python 1_code/4_supervised_model_train/3_retrain_full_data.py --model all-mpnet-base-v2 --classifier-type lr
+    python 1_code/4_supervised_model_train/2_retrain_full_data.py --model all-mpnet-base-v2
+    python 1_code/4_supervised_model_train/2_retrain_full_data.py --model all-mpnet-base-v2 --classifier-type lr
 """
 
 import argparse
@@ -78,7 +78,7 @@ CV_N_SPLITS = 5
 
 
 # MultiLabelMLP, _NetWrapper, and train_mlp_fold are imported from
-# 1_train_models_utils (shared with the grid-search orchestrator 2_grid_search.py)
+# train_models_utils (shared with the grid-search orchestrator 1_grid_search.py)
 # so there is a single source of truth for the MLP architecture and training loop.
 
 
@@ -508,7 +508,7 @@ def main() -> None:
     atomic_write_joblib(model_path, wrapper)
 
     if args.classifier_type != "mlp":
-        # Also update sdg_classifier.joblib (used by 2_evaluate.py)
+        # Also update sdg_classifier.joblib (canonical model for diagnostics)
         canonical_path = output_dir / "sdg_classifier.joblib"
         atomic_write_joblib(canonical_path, wrapper)
         log.info("Saved canonical model → %s", canonical_path)

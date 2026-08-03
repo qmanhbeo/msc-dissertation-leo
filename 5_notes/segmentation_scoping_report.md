@@ -156,7 +156,7 @@ Currently reads whole-text embeddings + JSONL for 5 corpora (OSDG, Benchmark, KH
 
 | Corpus | In training? | In evaluation split? | Notes |
 |---|---|---|---|
-| Knowledge Hub | **Yes** — 0_prepare_data.py, stratified 85/15 per-source | Test set (15%) used by the MLP grid search (`2_grid_search.py` / `train_models_utils.py`) as hidden eval (not loaded — only train indices loaded) | **Sibling leakage risk** if segments from the same parent document cross the 85/15 split boundary |
+| Knowledge Hub | **Yes** — 0_prepare_data.py, stratified 85/15 per-source | Test set (15%) used by the MLP grid search (`1_grid_search.py` / `train_models_utils.py`) as hidden eval (not loaded — only train indices loaded) | **Sibling leakage risk** if segments from the same parent document cross the 85/15 split boundary |
 | SDGi-reference | **Yes** — same as above | Same | **Sibling leakage risk** |
 | Aurora | **Yes** — same as above | Same | **Sibling leakage risk** |
 | Research papers | **No** — never in training, only in scoring + centroid building | No split — all papers used for centroid | **No leakage risk** — research only affects centroids, not training |
@@ -178,7 +178,7 @@ for src in np.unique(sources):
 
 The split is at the **row index level** with stratification by argmax SDG label. There is no grouping or awareness that multiple rows might belong to the same parent document.
 
-In `train_models_utils.py` (`train_mlp_fold`, used by `2_grid_search.py`), validation split within training:
+In `train_models_utils.py` (`train_mlp_fold`, used by `1_grid_search.py`), validation split within training:
 ```python
 n_val = max(1, int(len(X) * 0.1))
 perm = torch.randperm(len(X_t), ...)

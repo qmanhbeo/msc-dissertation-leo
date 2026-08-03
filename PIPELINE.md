@@ -130,15 +130,15 @@ Invariant: research-corpus text = `"{title}. {abstract}"` (set in `0_preprocess_
 - MLP grid search (GroupKFold(5) CV on the train pool: depth/width/lr), champion selected by CV macro-F1
 - results saved durably; NOT invoked by main.py (provenance-guarded); consumed by `d1_export_model_selection_nums.py` → Appendix D; no re-run in replays
 
-  Script `1_code/4_supervised_model_train/2_grid_search.py` --> Output: `2_data/4_supervised_model_results/[model]/model/{lr_cv_results.json, mlp_cv_results.json, lr_grid_search_log.json, mlp_grid_search_log.json}` (shared logic in `train_models_utils.py`)
+  Script `1_code/4_supervised_model_train/1_grid_search.py` --> Output: `2_data/4_supervised_model_results/[model]/model/{lr_cv_results.json, mlp_cv_results.json, lr_grid_search_log.json, mlp_grid_search_log.json}` (shared logic in `train_models_utils.py`)
 
 - retrain LR champion on full train pool (C=10/l2/lbfgs; single-use held-out test evaluation) → `sdg_classifier_retrained.joblib` · test macro-F1 0.8231 → `sdg_retrain_results.json`
 - retrain MLP champion on full train pool (`--classifier-type mlp`) → `mlp_retrained.joblib` · `mlp_retrain_results.json`
 - test set NOT reabsorbed: the model is the measurement instrument; reported metrics describe the exact scoring artifact
 
-  Script `1_code/4_supervised_model_train/3_retrain_full_data.py` --> Output: `2_data/4_supervised_model_results/[model]/model/*.joblib` · `*_results.json` · `4_outputs/[model]/data/4_1_confusion_matrix.csv` (LR)
+  Script `1_code/4_supervised_model_train/2_retrain_full_data.py` --> Output: `2_data/4_supervised_model_results/[model]/model/*.joblib` · `*_results.json` · `4_outputs/[model]/data/4_1_confusion_matrix.csv` (LR)
 
-Exploratory (not adopted): `3_retrain_full_data.py --cv-full-data` — manual GroupKFold CV on 100% of labelled data with champion hyperparameters; writes `cv_full_data_results.json`, touches no artifacts. Measured +0.002 CV mean (0.8107 → 0.8127) for absorbing the test set — negligible, so the held-out test (0.8231) remains the headline. See Open items.
+Exploratory (not adopted): `2_retrain_full_data.py --cv-full-data` — manual GroupKFold CV on 100% of labelled data with champion hyperparameters; writes `cv_full_data_results.json`, touches no artifacts. Measured +0.002 CV mean (0.8107 → 0.8127) for absorbing the test set — negligible, so the held-out test (0.8231) remains the headline. See Open items.
 
 ### 6. SCORE — split across `--stage centroids` + `--stage infer`
 
@@ -236,4 +236,4 @@ There is no standalone `--stage figures`. `plot_figures.py` runs inside `--stage
 ## Open items
 
 - **MLP champion config discrepancy:** grid search + dissertation text cite lr=3e-4, but the retrained artifact (`mlp_retrained.joblib` / `model_config.json`) and the script's argparse default use lr=1e-3. A replay reproduces the artifact, not the cited champion. Decide: change the script default to 3e-4 or update the text.
-- **`--cv-full-data` exploratory route:** exists in `3_retrain_full_data.py` (documented as exploratory, not invoked by main.py). Decision: not adopted — measured +0.002 CV mean for absorbing the test set; held-out test retained as headline.
+- **`--cv-full-data` exploratory route:** exists in `2_retrain_full_data.py` (documented as exploratory, not invoked by main.py). Decision: not adopted — measured +0.002 CV mean for absorbing the test set; held-out test retained as headline.

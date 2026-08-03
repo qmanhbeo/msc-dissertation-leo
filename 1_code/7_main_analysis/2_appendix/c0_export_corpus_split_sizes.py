@@ -39,7 +39,7 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
     if not retrain_path.exists():
         print(
             f"sdg_retrain_results.json not found at {retrain_path}. "
-            "Run 3_retrain_full_data.py first.",
+            "Run 2_retrain_full_data.py first.",
             file=sys.stderr,
         )
         sys.exit(1)

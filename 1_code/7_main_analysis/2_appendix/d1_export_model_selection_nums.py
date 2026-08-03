@@ -32,12 +32,12 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
     # --- LR ---
     lr_path = model_dir / "lr_cv_results.json"
     if not lr_path.exists():
-        print(f"LR CV results not found at {lr_path}. Run 2_grid_search.py first.", file=sys.stderr)
+        print(f"LR CV results not found at {lr_path}. Run 1_grid_search.py first.", file=sys.stderr)
         sys.exit(1)
 
     gs_path = model_dir / "mlp_grid_search_log.json"
     if not gs_path.exists():
-        print(f"Grid search log not found at {gs_path}. Run 2_grid_search.py first.", file=sys.stderr)
+        print(f"Grid search log not found at {gs_path}. Run 1_grid_search.py first.", file=sys.stderr)
         sys.exit(1)
 
     SCRIPT_VERSION = "1"

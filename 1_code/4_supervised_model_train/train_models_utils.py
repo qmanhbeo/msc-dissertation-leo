@@ -10,8 +10,8 @@ Provides:
   - compute_fold_metrics() — f1 scoring helper
 
 Used by:
-  2_grid_search.py (orchestrator called by main.py)
-  3_retrain_full_data.py (champion retrain)
+  1_grid_search.py (orchestrator called by main.py)
+  2_retrain_full_data.py (champion retrain)
 """
 
 import json

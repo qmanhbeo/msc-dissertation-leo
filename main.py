@@ -415,12 +415,12 @@ def run_build_centroid_similarity_matrix(output_dir: Path, model: str = DEFAULT_
 def run_model_selection_cv(model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
     """LR + MLP grid-search CV -> lr_cv_results.json + mlp_cv_results.json.
 
-    Model-selection is MPNet-only (Appendix D.1 scope). 2_grid_search.py carries
+    Model-selection is MPNet-only (Appendix D.1 scope). 1_grid_search.py carries
     a PROVENANCE GUARD excluding it from direct invocation; warm replay must
     produce its outputs (consumed by 2_appendix/d1_export_model_selection_nums.py);
     without this step a clean replay aborts at D1.
 
-    2_grid_search.py accepts only --embed-model (and --n-jobs) and writes into
+    1_grid_search.py accepts only --embed-model (and --n-jobs) and writes into
     2_data/4_supervised_model_results/{model}/model/. lr_grid_search_log.json and
     mlp_grid_search_log.json are the append-accumulating artifacts; under
     --overwrite we clear them so the run regenerates deterministically (the
@@ -436,7 +436,7 @@ def run_model_selection_cv(model: str = DEFAULT_EMBED_MODEL, overwrite: bool = F
                 p.unlink()
     run_step(
         "model-selection grid search",
-        [sys.executable, "1_code/4_supervised_model_train/2_grid_search.py", "--embed-model", model],
+        [sys.executable, "1_code/4_supervised_model_train/1_grid_search.py", "--embed-model", model],
         model=model,
     )
 
@@ -600,13 +600,13 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     # mlp_grid_search_log.json consumed by Appendix D.1, before the appendix battery
     # (D1) runs in STAGE 10. No-op for MiniLM/SciBERT tracks.
     run_model_selection_cv(model, overwrite=overwrite)
-    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py"] + model_args + _overwrite_flag(overwrite), step_id="1", model=model)
+    run_step("retrain full data", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py"] + model_args + _overwrite_flag(overwrite), step_id="1", model=model)
     run_build_sdg_reference_centroids(model, overwrite=overwrite)
     run_step("score research shards", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "research"] + _overwrite_flag(overwrite), step_id="2", model=model)
     run_step("score policy corpus", [sys.executable, "1_code/5_supervised_model_infer/score_supervised.py"] + model_args + ["--classifier", "lr", "--corpus", "policy"] + _overwrite_flag(overwrite), step_id="3", model=model)
     run_step(
         "retrain MLP",
-        [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py",
+        [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py",
          "--embed-model", model, "--classifier-type", "mlp"] + _overwrite_flag(overwrite),
         step_id="3b",
         model=model,
@@ -1029,8 +1029,8 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
 
     elif stage == "train":
         run_step("prepare training data", [sys.executable, "1_code/4_supervised_model_train/0_prepare_data.py", "--embed-model", model])
-        run_step("retrain full data (LR)", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
-        run_step("retrain full data (MLP)", [sys.executable, "1_code/4_supervised_model_train/3_retrain_full_data.py", "--embed-model", model, "--classifier-type", "mlp"] + _overwrite_flag(args.overwrite))
+        run_step("retrain full data (LR)", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py", "--embed-model", model] + _overwrite_flag(args.overwrite))
+        run_step("retrain full data (MLP)", [sys.executable, "1_code/4_supervised_model_train/2_retrain_full_data.py", "--embed-model", model, "--classifier-type", "mlp"] + _overwrite_flag(args.overwrite))
 
     elif stage == "infer":
         # Score both supervised assignment methods (LR + MLP) for the encoder,

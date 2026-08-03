@@ -120,12 +120,12 @@ flowchart TD
     end
 
     subgraph LR[Axis A: Supervised LR — PRIMARY]
-        R1["3_retrain_full_data LR<br>→ sdg_classifier.joblib"]
+        R1["2_retrain_full_data LR<br>→ sdg_classifier.joblib"]
         S1["score_supervised --lr --research<br>→ 5_supervised_scored/{model}/<br>research_centroids.npy<br>score_supervised --lr --policy<br>→ policy_scores.npy"]
     end
 
     subgraph MLP[Axis B: Supervised MLP — sensitivity]
-        R2["3_retrain_full_data MLP<br>→ mlp_retrained.joblib"]
+        R2["2_retrain_full_data MLP<br>→ mlp_retrained.joblib"]
         S2["score_supervised --mlp<br>→ mlp_research_centroids.npy"]
     end
 
@@ -163,7 +163,7 @@ flowchart TD
 ```
 
 **Order constraint:** `0_prepare_data.py` MUST run before both
-`0_build_sdg_reference_centroids.py` and `3_retrain_full_data.py`, because both
+`0_build_sdg_reference_centroids.py` and `2_retrain_full_data.py`, because both
 read the `embeddings.npy` / `labels.npy` files that `0_prepare_data.py` writes
 to `2_data/4_supervised_model_results/{model}/`.
 
