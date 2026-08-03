@@ -244,6 +244,16 @@ def main() -> None:
     output_dir = embed_dir_for_model(args.embed_model)
     config = CORPUS_CONFIG[args.corpus]
 
+    # Skip-check BEFORE loading the model: a completed corpus (no --overwrite)
+    # must not pay the (expensive) embedder load. Mirrors embed_corpus's own
+    # skip at L120 so behavior is identical for direct callers.
+    emb_path = output_dir / f"{args.corpus}.npy"
+    if emb_path.exists() and not args.overwrite:
+        log.info("Skipping %s — %s already exists", args.corpus, emb_path)
+        shape = np.load(emb_path).shape
+        print(f"\nDone: {args.corpus}  {shape}  → {emb_path}")
+        return
+
     device = args.device if args.device != "auto" else ("cuda" if torch.cuda.is_available() else "cpu")
     if precision == "fp16" and device == "cpu":
         raise RuntimeError("fp16 precision requires a CUDA device.")

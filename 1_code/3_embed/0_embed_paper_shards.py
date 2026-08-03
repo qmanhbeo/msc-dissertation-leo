@@ -149,17 +149,6 @@ def main() -> None:
         raise RuntimeError(f"Invalid or missing input manifest: {input_manifest}")
 
     device = resolve_device(args.device)
-    try:
-        model = load_embedder(args.embed_model, device=device, local_files_only=args.local_files_only)
-    except Exception as exc:
-        hint = "Model load failed. If the environment has no internet, ensure model cache exists and use --local-files-only."
-        raise RuntimeError(f"{hint} Original error: {exc}") from exc
-    if precision == "fp16":
-        if device == "cpu":
-            raise RuntimeError("fp16 precision requires a CUDA device.")
-        model = model.half()
-    emb_dim = int(model.get_sentence_embedding_dimension())
-    log.info("Model=%s device=%s dim=%d", args.embed_model, device, emb_dim)
 
     out_manifest_path = metadata_dir / "manifest.json"
     out_manifest = read_json(out_manifest_path, default=None)
@@ -170,7 +159,7 @@ def main() -> None:
             "created_at_utc": now_iso(),
             "model": args.embed_model,
             "device": device,
-            "embedding_dim": emb_dim,
+            "embedding_dim": None,
             "normalize_embeddings": args.normalize_embeddings,
             "input_manifest": str(input_manifest),
             "shards": [],
@@ -185,6 +174,43 @@ def main() -> None:
         out_manifest["totals"]["shards"] = 0
         out_manifest["created_at_utc"] = now_iso()
     shards = data["shards"][: args.limit_shards] if args.limit_shards > 0 else data["shards"]
+
+    # Skip the (expensive) model load when every requested shard is already
+    # embedded. Mirrors the per-shard skip at L207 so resume/overwrite semantics
+    # are unchanged.
+    pending = []
+    for shard in shards:
+        shard_id = int(shard["shard_id"])
+        shard_name = shard["name"]
+        out_emb = out_dir / f"{shard_name}.npy"
+        out_ids = metadata_dir / f"{shard_name}_ids.jsonl"
+        if not args.overwrite and shard_id in completed and out_emb.exists() and out_ids.exists():
+            continue
+        pending.append(shard)
+
+    if not pending:
+        log.info("All %d shards already embedded — skipping model load", len(shards))
+        update_stage_status(
+            status_dir,
+            STATUS_STAGE,
+            "completed",
+            {"manifest_path": str(out_manifest_path), "rows_done": out_manifest["totals"]["rows"]},
+        )
+        log.info("Embedding complete (cached). manifest=%s rows=%s", out_manifest_path, out_manifest["totals"]["rows"])
+        return
+
+    try:
+        model = load_embedder(args.embed_model, device=device, local_files_only=args.local_files_only)
+    except Exception as exc:
+        hint = "Model load failed. If the environment has no internet, ensure model cache exists and use --local-files-only."
+        raise RuntimeError(f"{hint} Original error: {exc}") from exc
+    if precision == "fp16":
+        if device == "cpu":
+            raise RuntimeError("fp16 precision requires a CUDA device.")
+        model = model.half()
+    emb_dim = int(model.get_sentence_embedding_dimension())
+    out_manifest["embedding_dim"] = emb_dim
+    log.info("Model=%s device=%s dim=%d", args.embed_model, device, emb_dim)
 
     update_stage_status(
         status_dir,
