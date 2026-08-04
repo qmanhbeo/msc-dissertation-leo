@@ -3,155 +3,155 @@
   "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
   "correlations": {
     "coverage_vs_adjusted": {
-      "rho": 0.1618,
-      "p": 0.5351
+      "rho": 0.1691,
+      "p": 0.5164
     },
     "coverage_vs_register": {
-      "rho": -0.2941,
-      "p": 0.2518
+      "rho": -0.1642,
+      "p": 0.5288
     }
   },
   "summary": {
-    "mean_raw_gap": 0.0451,
-    "mean_adjusted_gap": 0.0571,
-    "mean_register_component": -0.0121,
-    "mean_coverage_gap": 0.0593
+    "mean_raw_gap": 0.0433,
+    "mean_adjusted_gap": 0.051,
+    "mean_register_component": -0.0077,
+    "mean_coverage_gap": 0.0613
   },
   "per_sdg": [
     {
       "sdg": 1,
-      "raw_gap": 0.040093,
-      "adjusted_gap": 0.045465,
-      "register_component": -0.005372,
-      "coverage_gap": 0.051087,
+      "raw_gap": 0.035411,
+      "adjusted_gap": 0.056474,
+      "register_component": -0.021063,
+      "coverage_gap": 0.050675,
       "name": "No Poverty"
     },
     {
       "sdg": 2,
-      "raw_gap": 0.045239,
-      "adjusted_gap": 0.080428,
-      "register_component": -0.035189,
-      "coverage_gap": 0.023386,
+      "raw_gap": 0.040793,
+      "adjusted_gap": 0.042841,
+      "register_component": -0.002048,
+      "coverage_gap": 0.024125,
       "name": "Zero Hunger"
     },
     {
       "sdg": 3,
-      "raw_gap": 0.055126,
-      "adjusted_gap": 0.049911,
-      "register_component": 0.005215,
-      "coverage_gap": 0.232136,
+      "raw_gap": 0.054479,
+      "adjusted_gap": 0.044904,
+      "register_component": 0.009575,
+      "coverage_gap": 0.241217,
       "name": "Good Health and Well-Being"
     },
     {
       "sdg": 4,
-      "raw_gap": 0.043332,
-      "adjusted_gap": 0.048396,
-      "register_component": -0.005064,
-      "coverage_gap": 0.123833,
+      "raw_gap": 0.043156,
+      "adjusted_gap": 0.045121,
+      "register_component": -0.001965,
+      "coverage_gap": 0.122297,
       "name": "Quality Education"
     },
     {
       "sdg": 5,
-      "raw_gap": 0.058687,
-      "adjusted_gap": 0.169784,
-      "register_component": -0.111097,
-      "coverage_gap": 0.031921,
+      "raw_gap": 0.046378,
+      "adjusted_gap": 0.088601,
+      "register_component": -0.042223,
+      "coverage_gap": 0.035777,
       "name": "Gender Equality"
     },
     {
       "sdg": 6,
-      "raw_gap": 0.04261,
-      "adjusted_gap": 0.026089,
-      "register_component": 0.016521,
-      "coverage_gap": 0.02502,
+      "raw_gap": 0.043485,
+      "adjusted_gap": 0.025401,
+      "register_component": 0.018084,
+      "coverage_gap": 0.024131,
       "name": "Clean Water and Sanitation"
     },
     {
       "sdg": 7,
-      "raw_gap": 0.050854,
-      "adjusted_gap": 0.039,
-      "register_component": 0.011854,
-      "coverage_gap": 0.011504,
+      "raw_gap": 0.051694,
+      "adjusted_gap": 0.04266,
+      "register_component": 0.009034,
+      "coverage_gap": 0.008798,
       "name": "Affordable and Clean Energy"
     },
     {
       "sdg": 8,
-      "raw_gap": 0.03495,
-      "adjusted_gap": 0.029207,
-      "register_component": 0.005743,
-      "coverage_gap": 0.033885,
+      "raw_gap": 0.03158,
+      "adjusted_gap": 0.027628,
+      "register_component": 0.003952,
+      "coverage_gap": 0.037669,
       "name": "Decent Work and Economic Growth"
     },
     {
       "sdg": 9,
-      "raw_gap": 0.042806,
-      "adjusted_gap": 0.032814,
-      "register_component": 0.009992,
-      "coverage_gap": 0.147881,
+      "raw_gap": 0.043663,
+      "adjusted_gap": 0.034137,
+      "register_component": 0.009526,
+      "coverage_gap": 0.157384,
       "name": "Industry, Innovation and Infrastructure"
     },
     {
       "sdg": 10,
-      "raw_gap": 0.050524,
-      "adjusted_gap": 0.058415,
-      "register_component": -0.007891,
-      "coverage_gap": 0.013291,
+      "raw_gap": 0.053657,
+      "adjusted_gap": 0.094577,
+      "register_component": -0.04092,
+      "coverage_gap": 0.014764,
       "name": "Reduced Inequalities"
     },
     {
       "sdg": 11,
-      "raw_gap": 0.053484,
-      "adjusted_gap": 0.053935,
-      "register_component": -0.000451,
-      "coverage_gap": 0.011664,
+      "raw_gap": 0.051718,
+      "adjusted_gap": 0.051112,
+      "register_component": 0.000606,
+      "coverage_gap": 0.020064,
       "name": "Sustainable Cities and Communities"
     },
     {
       "sdg": 12,
-      "raw_gap": 0.038171,
-      "adjusted_gap": 0.027584,
-      "register_component": 0.010587,
-      "coverage_gap": 0.023948,
+      "raw_gap": 0.039194,
+      "adjusted_gap": 0.036077,
+      "register_component": 0.003117,
+      "coverage_gap": 0.024771,
       "name": "Responsible Consumption and Production"
     },
     {
       "sdg": 13,
-      "raw_gap": 0.052328,
-      "adjusted_gap": 0.066121,
-      "register_component": -0.013793,
-      "coverage_gap": 0.046386,
+      "raw_gap": 0.052498,
+      "adjusted_gap": 0.066002,
+      "register_component": -0.013504,
+      "coverage_gap": 0.056549,
       "name": "Climate Action"
     },
     {
       "sdg": 14,
-      "raw_gap": 0.043472,
-      "adjusted_gap": 0.043154,
-      "register_component": 0.000318,
-      "coverage_gap": 0.027616,
+      "raw_gap": 0.043154,
+      "adjusted_gap": 0.043011,
+      "register_component": 0.000143,
+      "coverage_gap": 0.027473,
       "name": "Life Below Water"
     },
     {
       "sdg": 15,
-      "raw_gap": 0.044044,
-      "adjusted_gap": 0.033614,
-      "register_component": 0.01043,
-      "coverage_gap": 0.004593,
+      "raw_gap": 0.042745,
+      "adjusted_gap": 0.032871,
+      "register_component": 0.009874,
+      "coverage_gap": 0.009263,
       "name": "Life on Land"
     },
     {
       "sdg": 16,
-      "raw_gap": 0.041371,
-      "adjusted_gap": 0.097909,
-      "register_component": -0.056538,
-      "coverage_gap": 0.090174,
+      "raw_gap": 0.040138,
+      "adjusted_gap": 0.084683,
+      "register_component": -0.044545,
+      "coverage_gap": 0.096195,
       "name": "Peace, Justice and Strong Institutions"
     },
     {
       "sdg": 17,
-      "raw_gap": 0.029082,
-      "adjusted_gap": 0.069514,
-      "register_component": -0.040432,
-      "coverage_gap": 0.109374,
+      "raw_gap": 0.022204,
+      "adjusted_gap": 0.050607,
+      "register_component": -0.028403,
+      "coverage_gap": 0.090644,
       "name": "Partnerships for the Goals"
     }
   ]

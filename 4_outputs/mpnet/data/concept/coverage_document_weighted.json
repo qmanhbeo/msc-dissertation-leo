@@ -4,194 +4,194 @@
   "n_research_papers": 111541,
   "n_policy_segments": 40597,
   "n_policy_documents": 6367,
-  "a15_note": "A15 FLAG: policy top scores exceed paper top scores by 0.174 (threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. Policy proportions may be inflated relative to research. Coverage gap results valid but directional comparison should be framed carefully.",
+  "a15_note": "A15 FLAG: policy top scores exceed paper top scores by 0.199 (threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. Policy proportions may be inflated relative to research. Coverage gap results valid but directional comparison should be framed carefully.",
   "research_profile_hard": {
-    "SDG1": 0.009342,
-    "SDG2": 0.017922,
-    "SDG3": 0.246636,
-    "SDG4": 0.072538,
-    "SDG5": 0.02114,
-    "SDG6": 0.008472,
-    "SDG7": 0.042415,
-    "SDG8": 0.029164,
-    "SDG9": 0.245515,
-    "SDG10": 0.011251,
-    "SDG11": 0.084175,
-    "SDG12": 0.042935,
-    "SDG13": 0.045992,
-    "SDG14": 0.016227,
-    "SDG15": 0.022593,
-    "SDG16": 0.079908,
-    "SDG17": 0.003774
+    "SDG1": 0.006688,
+    "SDG2": 0.019195,
+    "SDG3": 0.272519,
+    "SDG4": 0.081862,
+    "SDG5": 0.016971,
+    "SDG6": 0.008714,
+    "SDG7": 0.045104,
+    "SDG8": 0.022404,
+    "SDG9": 0.249693,
+    "SDG10": 0.007845,
+    "SDG11": 0.076465,
+    "SDG12": 0.025721,
+    "SDG13": 0.044558,
+    "SDG14": 0.013053,
+    "SDG15": 0.023444,
+    "SDG16": 0.083593,
+    "SDG17": 0.00217
   },
   "research_profile_soft": {
-    "SDG1": 0.015854,
-    "SDG2": 0.02332,
-    "SDG3": 0.209118,
-    "SDG4": 0.079439,
-    "SDG5": 0.028863,
-    "SDG6": 0.014481,
-    "SDG7": 0.045553,
-    "SDG8": 0.039518,
-    "SDG9": 0.205163,
-    "SDG10": 0.019,
-    "SDG11": 0.080419,
-    "SDG12": 0.046183,
-    "SDG13": 0.051946,
-    "SDG14": 0.023384,
-    "SDG15": 0.027213,
-    "SDG16": 0.081952,
-    "SDG17": 0.008563
+    "SDG1": 0.014765,
+    "SDG2": 0.026025,
+    "SDG3": 0.216514,
+    "SDG4": 0.089761,
+    "SDG5": 0.028276,
+    "SDG6": 0.016852,
+    "SDG7": 0.048586,
+    "SDG8": 0.037785,
+    "SDG9": 0.195257,
+    "SDG10": 0.019064,
+    "SDG11": 0.073146,
+    "SDG12": 0.036268,
+    "SDG13": 0.052463,
+    "SDG14": 0.021193,
+    "SDG15": 0.030807,
+    "SDG16": 0.085396,
+    "SDG17": 0.00783
   },
   "policy_profile_hard_docweighted": {
-    "SDG1": 0.047432,
-    "SDG2": 0.042563,
-    "SDG3": 0.046961,
-    "SDG4": 0.047275,
-    "SDG5": 0.051359,
+    "SDG1": 0.045233,
+    "SDG2": 0.043034,
+    "SDG3": 0.046804,
+    "SDG4": 0.047903,
+    "SDG5": 0.050887,
     "SDG6": 0.03738,
-    "SDG7": 0.042092,
-    "SDG8": 0.043977,
-    "SDG9": 0.043191,
-    "SDG10": 0.029684,
-    "SDG11": 0.05183,
-    "SDG12": 0.035967,
-    "SDG13": 0.112926,
-    "SDG14": 0.037223,
-    "SDG15": 0.040993,
-    "SDG16": 0.174808,
-    "SDG17": 0.11434
+    "SDG7": 0.042877,
+    "SDG8": 0.043349,
+    "SDG9": 0.043034,
+    "SDG10": 0.028585,
+    "SDG11": 0.053086,
+    "SDG12": 0.035496,
+    "SDG13": 0.112769,
+    "SDG14": 0.037851,
+    "SDG15": 0.041778,
+    "SDG16": 0.172766,
+    "SDG17": 0.117167
   },
   "policy_profile_soft_docweighted": {
-    "SDG1": 0.054626,
-    "SDG2": 0.042883,
-    "SDG3": 0.050506,
-    "SDG4": 0.050967,
-    "SDG5": 0.057428,
-    "SDG6": 0.038935,
-    "SDG7": 0.045266,
-    "SDG8": 0.045966,
-    "SDG9": 0.042931,
-    "SDG10": 0.039448,
-    "SDG11": 0.051672,
-    "SDG12": 0.036966,
-    "SDG13": 0.104335,
-    "SDG14": 0.038465,
-    "SDG15": 0.045111,
-    "SDG16": 0.144112,
-    "SDG17": 0.110383
+    "SDG1": 0.054017,
+    "SDG2": 0.043037,
+    "SDG3": 0.050373,
+    "SDG4": 0.051571,
+    "SDG5": 0.057411,
+    "SDG6": 0.039493,
+    "SDG7": 0.045933,
+    "SDG8": 0.046102,
+    "SDG9": 0.042864,
+    "SDG10": 0.038111,
+    "SDG11": 0.053112,
+    "SDG12": 0.037195,
+    "SDG13": 0.103613,
+    "SDG14": 0.038763,
+    "SDG15": 0.04529,
+    "SDG16": 0.14074,
+    "SDG17": 0.112373
   },
   "coverage_gap_hard": {
-    "SDG1": 0.03809,
-    "SDG2": 0.024642,
-    "SDG3": 0.199675,
-    "SDG4": 0.025263,
-    "SDG5": 0.030218,
-    "SDG6": 0.028908,
-    "SDG7": 0.000323,
-    "SDG8": 0.014813,
-    "SDG9": 0.202324,
-    "SDG10": 0.018433,
-    "SDG11": 0.032346,
-    "SDG12": 0.006968,
-    "SDG13": 0.066934,
-    "SDG14": 0.020996,
-    "SDG15": 0.0184,
-    "SDG16": 0.0949,
-    "SDG17": 0.110565
+    "SDG1": 0.038545,
+    "SDG2": 0.02384,
+    "SDG3": 0.225715,
+    "SDG4": 0.033959,
+    "SDG5": 0.033916,
+    "SDG6": 0.028666,
+    "SDG7": 0.002227,
+    "SDG8": 0.020944,
+    "SDG9": 0.206659,
+    "SDG10": 0.02074,
+    "SDG11": 0.023379,
+    "SDG12": 0.009774,
+    "SDG13": 0.068211,
+    "SDG14": 0.024798,
+    "SDG15": 0.018334,
+    "SDG16": 0.089173,
+    "SDG17": 0.114997
   },
-  "coverage_gap_total": 0.933797,
-  "coverage_gap_mean": 0.054929,
+  "coverage_gap_total": 0.983877,
+  "coverage_gap_mean": 0.057875,
   "per_sdg_top_score_gap": {
-    "SDG1": 0.301198,
-    "SDG2": 0.28885,
-    "SDG3": 0.182707,
-    "SDG4": 0.189078,
-    "SDG5": 0.337604,
-    "SDG6": 0.347252,
-    "SDG7": 0.265426,
-    "SDG8": 0.285223,
-    "SDG9": 0.090062,
-    "SDG10": 0.177446,
-    "SDG11": 0.228329,
-    "SDG12": 0.252368,
-    "SDG13": 0.214873,
-    "SDG14": 0.226338,
-    "SDG15": 0.224783,
-    "SDG16": 0.185918,
-    "SDG17": 0.258463
+    "SDG1": 0.375937,
+    "SDG2": 0.262421,
+    "SDG3": 0.216266,
+    "SDG4": 0.245087,
+    "SDG5": 0.372739,
+    "SDG6": 0.345074,
+    "SDG7": 0.269479,
+    "SDG8": 0.315147,
+    "SDG9": 0.117027,
+    "SDG10": 0.203742,
+    "SDG11": 0.268166,
+    "SDG12": 0.296977,
+    "SDG13": 0.246984,
+    "SDG14": 0.226018,
+    "SDG15": 0.212533,
+    "SDG16": 0.22248,
+    "SDG17": 0.259426
   },
   "per_sdg_top_score_gap_stats": {
-    "min": 0.09006233527526575,
-    "max": 0.3472515608013712,
-    "std": 0.06263465406774993,
-    "mean": 0.23858334041848012,
+    "min": 0.11702705187821272,
+    "max": 0.3759374771557044,
+    "std": 0.06352983033053618,
+    "mean": 0.26208837348079034,
     "n_valid": 17
   },
   "top5_largest_gaps": [
     [
-      "SDG9",
-      0.202324
+      "SDG3",
+      0.225715
     ],
     [
-      "SDG3",
-      0.199675
+      "SDG9",
+      0.206659
     ],
     [
       "SDG17",
-      0.110565
+      0.114997
     ],
     [
       "SDG16",
-      0.0949
+      0.089173
     ],
     [
       "SDG13",
-      0.066934
+      0.068211
     ]
   ],
   "top5_research_dominant": [
     [
-      "SDG9",
-      0.202324
-    ],
-    [
       "SDG3",
-      0.199675
+      0.225715
     ],
     [
-      "SDG11",
-      0.032346
+      "SDG9",
+      0.206659
     ],
     [
       "SDG4",
-      0.025263
+      0.033959
     ],
     [
-      "SDG12",
-      0.006968
+      "SDG11",
+      0.023379
+    ],
+    [
+      "SDG7",
+      0.002227
     ]
   ],
   "top5_policy_dominant": [
     [
       "SDG17",
-      0.110565
+      0.114997
     ],
     [
       "SDG16",
-      0.0949
+      0.089173
     ],
     [
       "SDG13",
-      0.066934
+      0.068211
     ],
     [
       "SDG1",
-      0.03809
+      0.038545
     ],
     [
       "SDG5",
-      0.030218
+      0.033916
     ]
   ],
   "per_document_assignments": {
@@ -209,7 +209,7 @@
     },
     "pol_policy_scrape_EU_AI_Ethics_Guidelines_HLEG": {
       "n_segments": 84,
-      "sdg_assignment": 9
+      "sdg_assignment": 16
     },
     "pol_policy_scrape_Germany_AI_Strategy_2020_Update": {
       "n_segments": 47,
@@ -249,7 +249,7 @@
     },
     "pol_policy_scrape_SDSN_Sustainable_Development_Report_2024": {
       "n_segments": 2469,
-      "sdg_assignment": 14
+      "sdg_assignment": 7
     },
     "pol_policy_scrape_SDSN_Sustainable_Development_Report_2025": {
       "n_segments": 1786,
@@ -277,7 +277,7 @@
     },
     "pol_policy_scrape_UN_AI_Strategy_Resource_Guide": {
       "n_segments": 164,
-      "sdg_assignment": 9
+      "sdg_assignment": 16
     },
     "pol_policy_scrape_UN_SDG_Progress_Report_2017": {
       "n_segments": 133,
@@ -365,11 +365,11 @@
     },
     "pol_policy_manual_G7_2023_G7_Leaders_Statement_on_the_Hiroshima_AI_Process": {
       "n_segments": 2,
-      "sdg_assignment": 9
+      "sdg_assignment": 16
     },
     "pol_policy_manual_G7_2023_Hiroshima_AI_Process_G7_Digital_and_Tech_Ministers_Statement": {
       "n_segments": 9,
-      "sdg_assignment": 9
+      "sdg_assignment": 16
     },
     "pol_policy_manual_G7_2023_Hiroshima_Process_International_Code_of_Conduct_for_Organizations_Developing_Advanced_AI_Systems": {
       "n_segments": 9,
@@ -577,7 +577,7 @@
     },
     "pol_ungdc_sdg_AGO_70_2015": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_ALB_70_2015": {
       "n_segments": 1,
@@ -605,7 +605,7 @@
     },
     "pol_ungdc_sdg_AUS_70_2015": {
       "n_segments": 2,
-      "sdg_assignment": 5
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_AZE_70_2015": {
       "n_segments": 1,
@@ -621,7 +621,7 @@
     },
     "pol_ungdc_sdg_BEN_70_2015": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_BFA_70_2015": {
       "n_segments": 1,
@@ -641,7 +641,7 @@
     },
     "pol_ungdc_sdg_BHS_70_2015": {
       "n_segments": 3,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_BIH_70_2015": {
       "n_segments": 2,
@@ -657,7 +657,7 @@
     },
     "pol_ungdc_sdg_BOL_70_2015": {
       "n_segments": 1,
-      "sdg_assignment": 12
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_BRA_70_2015": {
       "n_segments": 3,
@@ -669,7 +669,7 @@
     },
     "pol_ungdc_sdg_BRN_70_2015": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_BTN_70_2015": {
       "n_segments": 5,
@@ -769,7 +769,7 @@
     },
     "pol_ungdc_sdg_ERI_70_2015": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 9
     },
     "pol_ungdc_sdg_ESP_70_2015": {
       "n_segments": 1,
@@ -869,7 +869,7 @@
     },
     "pol_ungdc_sdg_IND_70_2015": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_IRL_70_2015": {
       "n_segments": 3,
@@ -881,7 +881,7 @@
     },
     "pol_ungdc_sdg_IRQ_70_2015": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_ISL_70_2015": {
       "n_segments": 3,
@@ -985,7 +985,7 @@
     },
     "pol_ungdc_sdg_MDG_70_2015": {
       "n_segments": 5,
-      "sdg_assignment": 1
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_MDV_70_2015": {
       "n_segments": 2,
@@ -1013,7 +1013,7 @@
     },
     "pol_ungdc_sdg_MMR_70_2015": {
       "n_segments": 2,
-      "sdg_assignment": 1
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_MNE_70_2015": {
       "n_segments": 2,
@@ -1081,7 +1081,7 @@
     },
     "pol_ungdc_sdg_OMN_70_2015": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_PAK_70_2015": {
       "n_segments": 1,
@@ -1165,7 +1165,7 @@
     },
     "pol_ungdc_sdg_SMR_70_2015": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SOM_70_2015": {
       "n_segments": 1,
@@ -1325,7 +1325,7 @@
     },
     "pol_ungdc_sdg_ARG_71_2016": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 5
     },
     "pol_ungdc_sdg_ARM_71_2016": {
       "n_segments": 1,
@@ -1341,7 +1341,7 @@
     },
     "pol_ungdc_sdg_AUT_71_2016": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_AZE_71_2016": {
       "n_segments": 2,
@@ -1449,7 +1449,7 @@
     },
     "pol_ungdc_sdg_COL_71_2016": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 15
     },
     "pol_ungdc_sdg_COM_71_2016": {
       "n_segments": 3,
@@ -1513,7 +1513,7 @@
     },
     "pol_ungdc_sdg_ETH_71_2016": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_EU_71_2016": {
       "n_segments": 1,
@@ -1553,7 +1553,7 @@
     },
     "pol_ungdc_sdg_GIN_71_2016": {
       "n_segments": 3,
-      "sdg_assignment": 1
+      "sdg_assignment": 7
     },
     "pol_ungdc_sdg_GMB_71_2016": {
       "n_segments": 2,
@@ -1573,7 +1573,7 @@
     },
     "pol_ungdc_sdg_GRD_71_2016": {
       "n_segments": 6,
-      "sdg_assignment": 1
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_GTM_71_2016": {
       "n_segments": 2,
@@ -1613,7 +1613,7 @@
     },
     "pol_ungdc_sdg_IRQ_71_2016": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 5
     },
     "pol_ungdc_sdg_ISL_71_2016": {
       "n_segments": 2,
@@ -1713,7 +1713,7 @@
     },
     "pol_ungdc_sdg_MAR_71_2016": {
       "n_segments": 3,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_MCO_71_2016": {
       "n_segments": 4,
@@ -1781,11 +1781,11 @@
     },
     "pol_ungdc_sdg_MYS_71_2016": {
       "n_segments": 3,
-      "sdg_assignment": 8
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_NAM_71_2016": {
       "n_segments": 3,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_NER_71_2016": {
       "n_segments": 4,
@@ -1869,7 +1869,7 @@
     },
     "pol_ungdc_sdg_RWA_71_2016": {
       "n_segments": 2,
-      "sdg_assignment": 9
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SAU_71_2016": {
       "n_segments": 1,
@@ -1877,7 +1877,7 @@
     },
     "pol_ungdc_sdg_SDN_71_2016": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 2
     },
     "pol_ungdc_sdg_SEN_71_2016": {
       "n_segments": 1,
@@ -1997,7 +1997,7 @@
     },
     "pol_ungdc_sdg_UKR_71_2016": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_URY_71_2016": {
       "n_segments": 1,
@@ -2033,7 +2033,7 @@
     },
     "pol_ungdc_sdg_WSM_71_2016": {
       "n_segments": 6,
-      "sdg_assignment": 14
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_YEM_71_2016": {
       "n_segments": 1,
@@ -2133,7 +2133,7 @@
     },
     "pol_ungdc_sdg_BLR_72_2017": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_BLZ_72_2017": {
       "n_segments": 5,
@@ -2189,7 +2189,7 @@
     },
     "pol_ungdc_sdg_CMR_72_2017": {
       "n_segments": 2,
-      "sdg_assignment": 15
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_COD_72_2017": {
       "n_segments": 1,
@@ -2209,7 +2209,7 @@
     },
     "pol_ungdc_sdg_CPV_72_2017": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_CRI_72_2017": {
       "n_segments": 8,
@@ -2305,7 +2305,7 @@
     },
     "pol_ungdc_sdg_GHA_72_2017": {
       "n_segments": 2,
-      "sdg_assignment": 4
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_GIN_72_2017": {
       "n_segments": 3,
@@ -2385,7 +2385,7 @@
     },
     "pol_ungdc_sdg_JOR_72_2017": {
       "n_segments": 1,
-      "sdg_assignment": 10
+      "sdg_assignment": 9
     },
     "pol_ungdc_sdg_JPN_72_2017": {
       "n_segments": 1,
@@ -2429,7 +2429,7 @@
     },
     "pol_ungdc_sdg_LBR_72_2017": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_LBY_72_2017": {
       "n_segments": 2,
@@ -2497,7 +2497,7 @@
     },
     "pol_ungdc_sdg_MLT_72_2017": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_MMR_72_2017": {
       "n_segments": 1,
@@ -2521,11 +2521,11 @@
     },
     "pol_ungdc_sdg_MUS_72_2017": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_MWI_72_2017": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_MYS_72_2017": {
       "n_segments": 1,
@@ -2561,7 +2561,7 @@
     },
     "pol_ungdc_sdg_NRU_72_2017": {
       "n_segments": 3,
-      "sdg_assignment": 14
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_NZL_72_2017": {
       "n_segments": 2,
@@ -2625,7 +2625,7 @@
     },
     "pol_ungdc_sdg_RWA_72_2017": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_SAU_72_2017": {
       "n_segments": 1,
@@ -2641,7 +2641,7 @@
     },
     "pol_ungdc_sdg_SGP_72_2017": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SLB_72_2017": {
       "n_segments": 4,
@@ -2649,7 +2649,7 @@
     },
     "pol_ungdc_sdg_SLE_72_2017": {
       "n_segments": 4,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SLV_72_2017": {
       "n_segments": 4,
@@ -2777,7 +2777,7 @@
     },
     "pol_ungdc_sdg_VNM_72_2017": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_VUT_72_2017": {
       "n_segments": 4,
@@ -2873,7 +2873,7 @@
     },
     "pol_ungdc_sdg_BHS_73_2018": {
       "n_segments": 3,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_BIH_73_2018": {
       "n_segments": 3,
@@ -2881,7 +2881,7 @@
     },
     "pol_ungdc_sdg_BLR_73_2018": {
       "n_segments": 3,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_BLZ_73_2018": {
       "n_segments": 3,
@@ -3105,7 +3105,7 @@
     },
     "pol_ungdc_sdg_IDN_73_2018": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_IND_73_2018": {
       "n_segments": 2,
@@ -3129,7 +3129,7 @@
     },
     "pol_ungdc_sdg_ITA_73_2018": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_JAM_73_2018": {
       "n_segments": 3,
@@ -3297,7 +3297,7 @@
     },
     "pol_ungdc_sdg_NGA_73_2018": {
       "n_segments": 1,
-      "sdg_assignment": 5
+      "sdg_assignment": 10
     },
     "pol_ungdc_sdg_NIC_73_2018": {
       "n_segments": 2,
@@ -3305,7 +3305,7 @@
     },
     "pol_ungdc_sdg_NLD_73_2018": {
       "n_segments": 3,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_NOR_73_2018": {
       "n_segments": 4,
@@ -3361,7 +3361,7 @@
     },
     "pol_ungdc_sdg_PSE_73_2018": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_QAT_73_2018": {
       "n_segments": 1,
@@ -3381,11 +3381,11 @@
     },
     "pol_ungdc_sdg_SDN_73_2018": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_SEN_73_2018": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 6
     },
     "pol_ungdc_sdg_SGP_73_2018": {
       "n_segments": 4,
@@ -3569,7 +3569,7 @@
     },
     "pol_ungdc_sdg_ARG_74_2019": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_ARM_74_2019": {
       "n_segments": 2,
@@ -3581,7 +3581,7 @@
     },
     "pol_ungdc_sdg_AUS_74_2019": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_AUT_74_2019": {
       "n_segments": 3,
@@ -3601,7 +3601,7 @@
     },
     "pol_ungdc_sdg_BEN_74_2019": {
       "n_segments": 5,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_BFA_74_2019": {
       "n_segments": 4,
@@ -3741,7 +3741,7 @@
     },
     "pol_ungdc_sdg_DOM_74_2019": {
       "n_segments": 3,
-      "sdg_assignment": 1
+      "sdg_assignment": 9
     },
     "pol_ungdc_sdg_DZA_74_2019": {
       "n_segments": 2,
@@ -3749,7 +3749,7 @@
     },
     "pol_ungdc_sdg_ECU_74_2019": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_EGY_74_2019": {
       "n_segments": 1,
@@ -3817,7 +3817,7 @@
     },
     "pol_ungdc_sdg_GNB_74_2019": {
       "n_segments": 3,
-      "sdg_assignment": 5
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_GNQ_74_2019": {
       "n_segments": 2,
@@ -3849,7 +3849,7 @@
     },
     "pol_ungdc_sdg_HTI_74_2019": {
       "n_segments": 3,
-      "sdg_assignment": 1
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_IDN_74_2019": {
       "n_segments": 2,
@@ -3985,7 +3985,7 @@
     },
     "pol_ungdc_sdg_MEX_74_2019": {
       "n_segments": 2,
-      "sdg_assignment": 5
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_MHL_74_2019": {
       "n_segments": 3,
@@ -4021,11 +4021,11 @@
     },
     "pol_ungdc_sdg_MRT_74_2019": {
       "n_segments": 3,
-      "sdg_assignment": 7
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_MUS_74_2019": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_MWI_74_2019": {
       "n_segments": 4,
@@ -4129,7 +4129,7 @@
     },
     "pol_ungdc_sdg_RWA_74_2019": {
       "n_segments": 2,
-      "sdg_assignment": 3
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_SAU_74_2019": {
       "n_segments": 1,
@@ -4313,7 +4313,7 @@
     },
     "pol_ungdc_sdg_AND_75_2020": {
       "n_segments": 5,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_ARE_75_2020": {
       "n_segments": 1,
@@ -4357,7 +4357,7 @@
     },
     "pol_ungdc_sdg_BFA_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_BGD_75_2020": {
       "n_segments": 2,
@@ -4445,7 +4445,7 @@
     },
     "pol_ungdc_sdg_COM_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_CPV_75_2020": {
       "n_segments": 2,
@@ -4533,7 +4533,7 @@
     },
     "pol_ungdc_sdg_GAB_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_GBR_75_2020": {
       "n_segments": 1,
@@ -4665,7 +4665,7 @@
     },
     "pol_ungdc_sdg_LBN_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_LBR_75_2020": {
       "n_segments": 1,
@@ -4693,7 +4693,7 @@
     },
     "pol_ungdc_sdg_LTU_75_2020": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 7
     },
     "pol_ungdc_sdg_LUX_75_2020": {
       "n_segments": 2,
@@ -4849,7 +4849,7 @@
     },
     "pol_ungdc_sdg_PRY_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_PSE_75_2020": {
       "n_segments": 1,
@@ -4893,7 +4893,7 @@
     },
     "pol_ungdc_sdg_SLE_75_2020": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SLV_75_2020": {
       "n_segments": 1,
@@ -4929,11 +4929,11 @@
     },
     "pol_ungdc_sdg_SWE_75_2020": {
       "n_segments": 2,
-      "sdg_assignment": 8
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SWZ_75_2020": {
       "n_segments": 4,
-      "sdg_assignment": 5
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SYC_75_2020": {
       "n_segments": 3,
@@ -4977,11 +4977,11 @@
     },
     "pol_ungdc_sdg_TUN_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_TUR_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_TUV_75_2020": {
       "n_segments": 3,
@@ -4997,7 +4997,7 @@
     },
     "pol_ungdc_sdg_UKR_75_2020": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_URY_75_2020": {
       "n_segments": 2,
@@ -5089,7 +5089,7 @@
     },
     "pol_ungdc_sdg_BDI_76_2021": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 1
     },
     "pol_ungdc_sdg_BEL_76_2021": {
       "n_segments": 3,
@@ -5193,7 +5193,7 @@
     },
     "pol_ungdc_sdg_COL_76_2021": {
       "n_segments": 5,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_COM_76_2021": {
       "n_segments": 2,
@@ -5265,7 +5265,7 @@
     },
     "pol_ungdc_sdg_ETH_76_2021": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 7
     },
     "pol_ungdc_sdg_EU_76_2021": {
       "n_segments": 2,
@@ -5277,7 +5277,7 @@
     },
     "pol_ungdc_sdg_FJI_76_2021": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_FRA_76_2021": {
       "n_segments": 2,
@@ -5313,7 +5313,7 @@
     },
     "pol_ungdc_sdg_GNB_76_2021": {
       "n_segments": 1,
-      "sdg_assignment": 3
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_GRC_76_2021": {
       "n_segments": 2,
@@ -5353,7 +5353,7 @@
     },
     "pol_ungdc_sdg_IRL_76_2021": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_IRQ_76_2021": {
       "n_segments": 2,
@@ -5429,7 +5429,7 @@
     },
     "pol_ungdc_sdg_LKA_76_2021": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 2
     },
     "pol_ungdc_sdg_LSO_76_2021": {
       "n_segments": 3,
@@ -5585,7 +5585,7 @@
     },
     "pol_ungdc_sdg_PRK_76_2021": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_PRT_76_2021": {
       "n_segments": 3,
@@ -5633,11 +5633,11 @@
     },
     "pol_ungdc_sdg_SLB_76_2021": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_SLE_76_2021": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_SLV_76_2021": {
       "n_segments": 1,
@@ -5761,11 +5761,11 @@
     },
     "pol_ungdc_sdg_VAT_76_2021": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_VCT_76_2021": {
       "n_segments": 3,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_VEN_76_2021": {
       "n_segments": 1,
@@ -6157,7 +6157,7 @@
     },
     "pol_ungdc_sdg_KIR_77_2022": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_KNA_77_2022": {
       "n_segments": 3,
@@ -6249,7 +6249,7 @@
     },
     "pol_ungdc_sdg_MLT_77_2022": {
       "n_segments": 4,
-      "sdg_assignment": 17
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_MNE_77_2022": {
       "n_segments": 1,
@@ -6257,11 +6257,11 @@
     },
     "pol_ungdc_sdg_MNG_77_2022": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 15
     },
     "pol_ungdc_sdg_MOZ_77_2022": {
       "n_segments": 4,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_MRT_77_2022": {
       "n_segments": 2,
@@ -6281,7 +6281,7 @@
     },
     "pol_ungdc_sdg_NAM_77_2022": {
       "n_segments": 3,
-      "sdg_assignment": 4
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_NER_77_2022": {
       "n_segments": 3,
@@ -6353,7 +6353,7 @@
     },
     "pol_ungdc_sdg_PRT_77_2022": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_PRY_77_2022": {
       "n_segments": 1,
@@ -6469,7 +6469,7 @@
     },
     "pol_ungdc_sdg_TON_77_2022": {
       "n_segments": 5,
-      "sdg_assignment": 17
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_TTO_77_2022": {
       "n_segments": 3,
@@ -6545,7 +6545,7 @@
     },
     "pol_ungdc_sdg_ZMB_77_2022": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_ZWE_77_2022": {
       "n_segments": 5,
@@ -6589,7 +6589,7 @@
     },
     "pol_ungdc_sdg_AZE_78_2023": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_BDI_78_2023": {
       "n_segments": 3,
@@ -6617,7 +6617,7 @@
     },
     "pol_ungdc_sdg_BHR_78_2023": {
       "n_segments": 5,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_BHS_78_2023": {
       "n_segments": 2,
@@ -6645,7 +6645,7 @@
     },
     "pol_ungdc_sdg_BRB_78_2023": {
       "n_segments": 4,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_BRN_78_2023": {
       "n_segments": 2,
@@ -6669,7 +6669,7 @@
     },
     "pol_ungdc_sdg_CHE_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 5
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_CHL_78_2023": {
       "n_segments": 4,
@@ -6777,7 +6777,7 @@
     },
     "pol_ungdc_sdg_FIN_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_FJI_78_2023": {
       "n_segments": 3,
@@ -6889,7 +6889,7 @@
     },
     "pol_ungdc_sdg_JOR_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_JPN_78_2023": {
       "n_segments": 4,
@@ -6921,7 +6921,7 @@
     },
     "pol_ungdc_sdg_KOR_78_2023": {
       "n_segments": 3,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_KWT_78_2023": {
       "n_segments": 2,
@@ -6933,7 +6933,7 @@
     },
     "pol_ungdc_sdg_LBN_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_LBR_78_2023": {
       "n_segments": 2,
@@ -6997,11 +6997,11 @@
     },
     "pol_ungdc_sdg_MLI_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_MLT_78_2023": {
       "n_segments": 5,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_MNE_78_2023": {
       "n_segments": 2,
@@ -7021,7 +7021,7 @@
     },
     "pol_ungdc_sdg_MUS_78_2023": {
       "n_segments": 4,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_MWI_78_2023": {
       "n_segments": 4,
@@ -7065,7 +7065,7 @@
     },
     "pol_ungdc_sdg_OMN_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_PAK_78_2023": {
       "n_segments": 2,
@@ -7085,7 +7085,7 @@
     },
     "pol_ungdc_sdg_PLW_78_2023": {
       "n_segments": 3,
-      "sdg_assignment": 13
+      "sdg_assignment": 14
     },
     "pol_ungdc_sdg_PNG_78_2023": {
       "n_segments": 11,
@@ -7157,7 +7157,7 @@
     },
     "pol_ungdc_sdg_SRB_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_SSD_78_2023": {
       "n_segments": 2,
@@ -7165,11 +7165,11 @@
     },
     "pol_ungdc_sdg_STP_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SUR_78_2023": {
       "n_segments": 4,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_SVK_78_2023": {
       "n_segments": 3,
@@ -7221,7 +7221,7 @@
     },
     "pol_ungdc_sdg_TON_78_2023": {
       "n_segments": 8,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_TTO_78_2023": {
       "n_segments": 6,
@@ -7241,7 +7241,7 @@
     },
     "pol_ungdc_sdg_TZA_78_2023": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_UGA_78_2023": {
       "n_segments": 4,
@@ -7249,11 +7249,11 @@
     },
     "pol_ungdc_sdg_UKR_78_2023": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_URY_78_2023": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 4
     },
     "pol_ungdc_sdg_USA_78_2023": {
       "n_segments": 4,
@@ -7333,7 +7333,7 @@
     },
     "pol_ungdc_sdg_AUT_79_2024": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_AZE_79_2024": {
       "n_segments": 3,
@@ -7357,7 +7357,7 @@
     },
     "pol_ungdc_sdg_BGD_79_2024": {
       "n_segments": 3,
-      "sdg_assignment": 8
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_BGR_79_2024": {
       "n_segments": 2,
@@ -7389,7 +7389,7 @@
     },
     "pol_ungdc_sdg_BRA_79_2024": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_BRB_79_2024": {
       "n_segments": 1,
@@ -7413,7 +7413,7 @@
     },
     "pol_ungdc_sdg_CHE_79_2024": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_CHL_79_2024": {
       "n_segments": 1,
@@ -7441,7 +7441,7 @@
     },
     "pol_ungdc_sdg_COL_79_2024": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_COM_79_2024": {
       "n_segments": 2,
@@ -7497,7 +7497,7 @@
     },
     "pol_ungdc_sdg_ESP_79_2024": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_EST_79_2024": {
       "n_segments": 1,
@@ -7509,7 +7509,7 @@
     },
     "pol_ungdc_sdg_EU_79_2024": {
       "n_segments": 3,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_FIN_79_2024": {
       "n_segments": 1,
@@ -7637,7 +7637,7 @@
     },
     "pol_ungdc_sdg_KGZ_79_2024": {
       "n_segments": 4,
-      "sdg_assignment": 13
+      "sdg_assignment": 15
     },
     "pol_ungdc_sdg_KHM_79_2024": {
       "n_segments": 3,
@@ -7769,7 +7769,7 @@
     },
     "pol_ungdc_sdg_NAM_79_2024": {
       "n_segments": 2,
-      "sdg_assignment": 13
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_NGA_79_2024": {
       "n_segments": 5,
@@ -7809,7 +7809,7 @@
     },
     "pol_ungdc_sdg_PAN_79_2024": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_PER_79_2024": {
       "n_segments": 3,
@@ -7889,7 +7889,7 @@
     },
     "pol_ungdc_sdg_SMR_79_2024": {
       "n_segments": 3,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_SOM_79_2024": {
       "n_segments": 2,
@@ -8101,7 +8101,7 @@
     },
     "pol_ungdc_sdg_BHS_80_2025": {
       "n_segments": 6,
-      "sdg_assignment": 16
+      "sdg_assignment": 13
     },
     "pol_ungdc_sdg_BIH_80_2025": {
       "n_segments": 11,
@@ -8373,7 +8373,7 @@
     },
     "pol_ungdc_sdg_KIR_80_2025": {
       "n_segments": 6,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_ungdc_sdg_KNA_80_2025": {
       "n_segments": 11,
@@ -8629,7 +8629,7 @@
     },
     "pol_ungdc_sdg_SSD_80_2025": {
       "n_segments": 11,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_STP_80_2025": {
       "n_segments": 9,
@@ -8685,7 +8685,7 @@
     },
     "pol_ungdc_sdg_TON_80_2025": {
       "n_segments": 8,
-      "sdg_assignment": 17
+      "sdg_assignment": 16
     },
     "pol_ungdc_sdg_TTO_80_2025": {
       "n_segments": 8,
@@ -8805,7 +8805,7 @@
     },
     "pol_sdgi_sdgi_00023": {
       "n_segments": 4,
-      "sdg_assignment": 1
+      "sdg_assignment": 15
     },
     "pol_sdgi_sdgi_00025": {
       "n_segments": 2,
@@ -9213,7 +9213,7 @@
     },
     "pol_sdgi_sdgi_00180": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 16
     },
     "pol_sdgi_sdgi_00181": {
       "n_segments": 7,
@@ -15497,7 +15497,7 @@
     },
     "pol_sdgi_sdgi_02360": {
       "n_segments": 1,
-      "sdg_assignment": 12
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_02361": {
       "n_segments": 1,
@@ -16449,7 +16449,7 @@
     },
     "pol_sdgi_sdgi_02697": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 7
     },
     "pol_sdgi_sdgi_02698": {
       "n_segments": 2,
@@ -17125,7 +17125,7 @@
     },
     "pol_sdgi_sdgi_02941": {
       "n_segments": 3,
-      "sdg_assignment": 10
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_02942": {
       "n_segments": 4,
@@ -17197,7 +17197,7 @@
     },
     "pol_sdgi_sdgi_02964": {
       "n_segments": 5,
-      "sdg_assignment": 3
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_02965": {
       "n_segments": 3,
@@ -17241,7 +17241,7 @@
     },
     "pol_sdgi_sdgi_02977": {
       "n_segments": 4,
-      "sdg_assignment": 10
+      "sdg_assignment": 4
     },
     "pol_sdgi_sdgi_02979": {
       "n_segments": 1,
@@ -17449,7 +17449,7 @@
     },
     "pol_sdgi_sdgi_03061": {
       "n_segments": 2,
-      "sdg_assignment": 10
+      "sdg_assignment": 1
     },
     "pol_sdgi_sdgi_03062": {
       "n_segments": 2,
@@ -17689,7 +17689,7 @@
     },
     "pol_sdgi_sdgi_03138": {
       "n_segments": 23,
-      "sdg_assignment": 10
+      "sdg_assignment": 8
     },
     "pol_sdgi_sdgi_03139": {
       "n_segments": 12,
@@ -17709,7 +17709,7 @@
     },
     "pol_sdgi_sdgi_03143": {
       "n_segments": 3,
-      "sdg_assignment": 10
+      "sdg_assignment": 16
     },
     "pol_sdgi_sdgi_03144": {
       "n_segments": 9,
@@ -19185,7 +19185,7 @@
     },
     "pol_sdgi_sdgi_03666": {
       "n_segments": 1,
-      "sdg_assignment": 12
+      "sdg_assignment": 14
     },
     "pol_sdgi_sdgi_03667": {
       "n_segments": 2,
@@ -20073,7 +20073,7 @@
     },
     "pol_sdgi_sdgi_03973": {
       "n_segments": 1,
-      "sdg_assignment": 13
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_03974": {
       "n_segments": 2,
@@ -20565,7 +20565,7 @@
     },
     "pol_sdgi_sdgi_04136": {
       "n_segments": 1,
-      "sdg_assignment": 14
+      "sdg_assignment": 15
     },
     "pol_sdgi_sdgi_04139": {
       "n_segments": 4,
@@ -22397,7 +22397,7 @@
     },
     "pol_sdgi_sdgi_04783": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 5
     },
     "pol_sdgi_sdgi_04784": {
       "n_segments": 10,
@@ -22601,7 +22601,7 @@
     },
     "pol_sdgi_sdgi_04848": {
       "n_segments": 4,
-      "sdg_assignment": 16
+      "sdg_assignment": 3
     },
     "pol_sdgi_sdgi_04849": {
       "n_segments": 10,
@@ -22833,7 +22833,7 @@
     },
     "pol_sdgi_sdgi_04929": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 17
     },
     "pol_sdgi_sdgi_04930": {
       "n_segments": 2,
@@ -22849,7 +22849,7 @@
     },
     "pol_sdgi_sdgi_04934": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_sdgi_sdgi_04935": {
       "n_segments": 5,
@@ -23069,7 +23069,7 @@
     },
     "pol_sdgi_sdgi_05002": {
       "n_segments": 4,
-      "sdg_assignment": 8
+      "sdg_assignment": 17
     },
     "pol_sdgi_sdgi_05003": {
       "n_segments": 1,
@@ -23081,7 +23081,7 @@
     },
     "pol_sdgi_sdgi_05006": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 13
     },
     "pol_sdgi_sdgi_05007": {
       "n_segments": 8,
@@ -23737,7 +23737,7 @@
     },
     "pol_sdgi_sdgi_05257": {
       "n_segments": 1,
-      "sdg_assignment": 9
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05258": {
       "n_segments": 1,
@@ -23789,7 +23789,7 @@
     },
     "pol_sdgi_sdgi_05270": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05271": {
       "n_segments": 1,
@@ -23801,11 +23801,11 @@
     },
     "pol_sdgi_sdgi_05273": {
       "n_segments": 1,
-      "sdg_assignment": 9
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05274": {
       "n_segments": 1,
-      "sdg_assignment": 17
+      "sdg_assignment": 9
     },
     "pol_sdgi_sdgi_05275": {
       "n_segments": 1,
@@ -23885,7 +23885,7 @@
     },
     "pol_sdgi_sdgi_05317": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 2
     },
     "pol_sdgi_sdgi_05318": {
       "n_segments": 1,
@@ -23957,7 +23957,7 @@
     },
     "pol_sdgi_sdgi_05335": {
       "n_segments": 1,
-      "sdg_assignment": 10
+      "sdg_assignment": 3
     },
     "pol_sdgi_sdgi_05336": {
       "n_segments": 1,
@@ -24001,7 +24001,7 @@
     },
     "pol_sdgi_sdgi_05346": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05347": {
       "n_segments": 1,
@@ -24065,7 +24065,7 @@
     },
     "pol_sdgi_sdgi_05414": {
       "n_segments": 2,
-      "sdg_assignment": 1
+      "sdg_assignment": 16
     },
     "pol_sdgi_sdgi_05415": {
       "n_segments": 3,
@@ -24077,7 +24077,7 @@
     },
     "pol_sdgi_sdgi_05417": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 7
     },
     "pol_sdgi_sdgi_05418": {
       "n_segments": 1,
@@ -24301,7 +24301,7 @@
     },
     "pol_sdgi_sdgi_05473": {
       "n_segments": 2,
-      "sdg_assignment": 16
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05474": {
       "n_segments": 2,
@@ -24569,7 +24569,7 @@
     },
     "pol_sdgi_sdgi_05540": {
       "n_segments": 2,
-      "sdg_assignment": 17
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05541": {
       "n_segments": 1,
@@ -24613,7 +24613,7 @@
     },
     "pol_sdgi_sdgi_05551": {
       "n_segments": 1,
-      "sdg_assignment": 10
+      "sdg_assignment": 8
     },
     "pol_sdgi_sdgi_05552": {
       "n_segments": 2,
@@ -24625,7 +24625,7 @@
     },
     "pol_sdgi_sdgi_05582": {
       "n_segments": 2,
-      "sdg_assignment": 12
+      "sdg_assignment": 4
     },
     "pol_sdgi_sdgi_05583": {
       "n_segments": 3,
@@ -24657,7 +24657,7 @@
     },
     "pol_sdgi_sdgi_05590": {
       "n_segments": 3,
-      "sdg_assignment": 11
+      "sdg_assignment": 4
     },
     "pol_sdgi_sdgi_05591": {
       "n_segments": 2,
@@ -24689,7 +24689,7 @@
     },
     "pol_sdgi_sdgi_05598": {
       "n_segments": 2,
-      "sdg_assignment": 9
+      "sdg_assignment": 4
     },
     "pol_sdgi_sdgi_05599": {
       "n_segments": 2,
@@ -24709,7 +24709,7 @@
     },
     "pol_sdgi_sdgi_05603": {
       "n_segments": 3,
-      "sdg_assignment": 8
+      "sdg_assignment": 9
     },
     "pol_sdgi_sdgi_05604": {
       "n_segments": 1,
@@ -24721,7 +24721,7 @@
     },
     "pol_sdgi_sdgi_05606": {
       "n_segments": 2,
-      "sdg_assignment": 11
+      "sdg_assignment": 9
     },
     "pol_sdgi_sdgi_05607": {
       "n_segments": 2,
@@ -24789,7 +24789,7 @@
     },
     "pol_sdgi_sdgi_05623": {
       "n_segments": 2,
-      "sdg_assignment": 11
+      "sdg_assignment": 4
     },
     "pol_sdgi_sdgi_05624": {
       "n_segments": 5,
@@ -25093,7 +25093,7 @@
     },
     "pol_sdgi_sdgi_05699": {
       "n_segments": 1,
-      "sdg_assignment": 11
+      "sdg_assignment": 15
     },
     "pol_sdgi_sdgi_05700": {
       "n_segments": 1,
@@ -25133,7 +25133,7 @@
     },
     "pol_sdgi_sdgi_05709": {
       "n_segments": 1,
-      "sdg_assignment": 6
+      "sdg_assignment": 15
     },
     "pol_sdgi_sdgi_05710": {
       "n_segments": 1,
@@ -25185,7 +25185,7 @@
     },
     "pol_sdgi_sdgi_05722": {
       "n_segments": 1,
-      "sdg_assignment": 15
+      "sdg_assignment": 12
     },
     "pol_sdgi_sdgi_05723": {
       "n_segments": 1,
@@ -25265,7 +25265,7 @@
     },
     "pol_sdgi_sdgi_05742": {
       "n_segments": 1,
-      "sdg_assignment": 8
+      "sdg_assignment": 9
     },
     "pol_sdgi_sdgi_05743": {
       "n_segments": 1,
@@ -25421,7 +25421,7 @@
     },
     "pol_sdgi_sdgi_05812": {
       "n_segments": 1,
-      "sdg_assignment": 16
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05813": {
       "n_segments": 1,
@@ -25589,7 +25589,7 @@
     },
     "pol_sdgi_sdgi_05854": {
       "n_segments": 1,
-      "sdg_assignment": 1
+      "sdg_assignment": 11
     },
     "pol_sdgi_sdgi_05855": {
       "n_segments": 1,

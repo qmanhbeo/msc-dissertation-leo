@@ -1,7 +1,7 @@
 {
   "method": "subset_balanced_rank_stability",
   "note": "Spearman rho between each sample-stability draw's within-SDG semantic-gap ranking and the full-corpus ranking (semantic_gap_distances_lr.json). The 50k tier is comparable to the 40,597-segment policy corpus.",
-  "full_corpus_mean_semantic_gap": 0.35242935294117644,
+  "full_corpus_mean_semantic_gap": 0.3257980588235294,
   "tiers": [
     {
       "tier_label": "1k",
@@ -9,10 +9,10 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.6497254901960784,
-      "std_rho": 0.12902661641372953,
-      "min_rho": 0.3137254901960785,
-      "max_rho": 0.8897058823529412
+      "mean_rho": 0.5198628119910251,
+      "std_rho": 0.15371994793472243,
+      "min_rho": 0.06862745098039216,
+      "max_rho": 0.8799019607843139
     },
     {
       "tier_label": "2k",
@@ -20,10 +20,10 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.8026960784313725,
-      "std_rho": 0.09473380063877886,
-      "min_rho": 0.44852941176470595,
-      "max_rho": 0.9509803921568628
+      "mean_rho": 0.7087990196078431,
+      "std_rho": 0.12307812006992216,
+      "min_rho": 0.42892156862745107,
+      "max_rho": 0.9240196078431374
     },
     {
       "tier_label": "5k",
@@ -31,10 +31,10 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9112990196078432,
-      "std_rho": 0.04121102512541681,
-      "min_rho": 0.7696078431372549,
-      "max_rho": 0.9730392156862747
+      "mean_rho": 0.8803729984792568,
+      "std_rho": 0.059928372297606815,
+      "min_rho": 0.6911764705882353,
+      "max_rho": 0.9779411764705883
     },
     {
       "tier_label": "10k",
@@ -42,10 +42,10 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9506862745098041,
-      "std_rho": 0.027200979950459194,
-      "min_rho": 0.8112745098039217,
-      "max_rho": 0.9901960784313727
+      "mean_rho": 0.9360784313725492,
+      "std_rho": 0.04089639811402099,
+      "min_rho": 0.7573529411764707,
+      "max_rho": 0.9877450980392157
     },
     {
       "tier_label": "20k",
@@ -53,10 +53,10 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9683088235294118,
-      "std_rho": 0.014029609588772581,
-      "min_rho": 0.931372549019608,
-      "max_rho": 0.9926470588235295
+      "mean_rho": 0.9622549019607842,
+      "std_rho": 0.02276642847006495,
+      "min_rho": 0.8897058823529412,
+      "max_rho": 0.9975490196078433
     },
     {
       "tier_label": "50k",
@@ -64,9 +64,9 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9828431372549022,
-      "std_rho": 0.009473602004944938,
-      "min_rho": 0.9509803921568628,
+      "mean_rho": 0.9833088235294121,
+      "std_rho": 0.011965680249976386,
+      "min_rho": 0.9264705882352943,
       "max_rho": 1.0
     },
     {
@@ -75,9 +75,9 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9888480392156864,
-      "std_rho": 0.006534287983709921,
-      "min_rho": 0.9632352941176472,
+      "mean_rho": 0.9890441176470588,
+      "std_rho": 0.006589947475344309,
+      "min_rho": 0.9681372549019608,
       "max_rho": 1.0
     },
     {
@@ -86,9 +86,9 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9943627450980395,
-      "std_rho": 0.004604974075503875,
-      "min_rho": 0.9779411764705883,
+      "mean_rho": 0.9919362745098042,
+      "std_rho": 0.00503847890776172,
+      "min_rho": 0.9730392156862747,
       "max_rho": 1.0
     },
     {
@@ -97,9 +97,9 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9980882352941179,
-      "std_rho": 0.0019478741653240425,
-      "min_rho": 0.9926470588235295,
+      "mean_rho": 0.993651960784314,
+      "std_rho": 0.004344462131388936,
+      "min_rho": 0.9803921568627453,
       "max_rho": 1.0
     },
     {
@@ -108,9 +108,9 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9993137254901961,
-      "std_rho": 0.0012535992012298065,
-      "min_rho": 0.9950980392156863,
+      "mean_rho": 0.9951470588235296,
+      "std_rho": 0.0037967260628884673,
+      "min_rho": 0.9877450980392157,
       "max_rho": 1.0
     },
     {
@@ -119,9 +119,9 @@
       "n_draws": 100,
       "n_usable_draws": 100,
       "n_sdgs_used_median": 17.0,
-      "mean_rho": 0.9999264705882354,
-      "std_rho": 0.00041810593404978304,
-      "min_rho": 0.9975490196078433,
+      "mean_rho": 0.9960232674032119,
+      "std_rho": 0.0036953060111390846,
+      "min_rho": 0.9877450980392157,
       "max_rho": 1.0
     }
   ]
