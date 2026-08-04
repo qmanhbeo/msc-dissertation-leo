@@ -21,7 +21,7 @@
     "policy_embedding_sha256": "ca7fa2bc4ad5493ab0321d70b0e9854469f5c897a5f64a73028cf686489017d7",
     "research_embedding_manifest": "2_data/3_embedded/minilm/research_shards/metadata/manifest.json"
   },
-  "note": "Sensitivity analysis: same computation as 4_3_semantic_gap_distances.json but with an alternative per-document segment cap (20) and an uncapped (none) run. Use to verify finding robustness. Rankings should be broadly stable if findings are robust.",
+  "note": "Sensitivity analysis: same computation as semantic_gap_distances_lr.json but with an alternative per-document segment cap (20) and an uncapped (none) run. Use to verify finding robustness. Rankings should be broadly stable if findings are robust.",
   "cap_20": [
     {
       "sdg": 1,

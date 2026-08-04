@@ -18,9 +18,10 @@ H25 (headline hypothesis):
   The hypothesis labels this a "negative correlation" between coverage and semantic
   *similarity* — equivalent to a positive correlation with semantic *gap*.
 
-  All four predictors are reported, each with a canonical result (all observed SDGs), a
-  sensitivity test excluding SDG 4, and replications under MPNet and four reference-source
-  centroids. The primary test for H25 is (a).
+   All four predictors are reported, each with a canonical result (all observed SDGs),
+   a leave-one-out sensitivity test excluding SDG 4 (reported on BOTH the raw gap and the
+   register-adjusted topic gap, and wired into the interaction section), plus replications
+   across encoders and assignment methods via the H1 config grid. The primary test for H25 is (a).
 
 Statistics:
   Pearson r (parametric, assumes linear relationship) and Spearman ρ (rank correlation,
@@ -33,9 +34,10 @@ Statistics:
   non-significant result does not rule out a real pattern; the direction and magnitude of
   the correlation are the primary evidence, not the p-value.
 
-  ASSUMPTION (A-SDG4): SDG 4's 22% research proportion may be inflated due to ML "learning"
-  terminology aligning with the Education centroid (not genuine SDG 4 research engagement).
-  Correlation results are reported with and without SDG 4 to test sensitivity.
+   ASSUMPTION (A-SDG4): SDG 4's research proportion may be inflated due to ML "learning"
+   terminology aligning with the Education centroid (not genuine SDG 4 research engagement).
+   A leave-one-out correlation check (SDG 4 removed) is reported on the raw gap (null
+   hypothesis) and on the register-adjusted topic gap, and is cited in the interaction section.
 
 Inputs:
    4_outputs/main/data/coverage_document_weighted.json            per-SDG research + policy profiles (doc-weighted)
@@ -322,10 +324,11 @@ def run(args: argparse.Namespace) -> None:
     paper_scores_manifest = scored_dir / "paper_scores_shards" / "metadata" / "manifest.json"
 
     layout = ensure_canonical_outputs(Path(args.output_dir), model=model)
-    require_output_files(layout.data_dir, ["coverage_document_weighted.json", "semantic_gap_distances_lr.json"])
+    require_output_files(layout.data_dir, ["coverage_document_weighted.json", "semantic_gap_distances_lr.json", "adjusted/semantic_gap_distances_lr.json"])
 
     coverage_gap_path = layout.data_dir / "coverage_document_weighted.json"
     semantic_gap_path = layout.data_dir / "semantic_gap_distances_lr.json"
+    adj_gap_path = layout.data_dir / "adjusted" / "semantic_gap_distances_lr.json"
     out_corr = layout.data_dir / "interaction_h25.json"
     out_scatter = layout.data_dir / "interaction_scatter_data.csv"
     tables_dir = layout.tables_dir
@@ -334,7 +337,7 @@ def run(args: argparse.Namespace) -> None:
     SCRIPT_VERSION = "2"
     PRIMARY = out_corr
     OUTPUTS = [out_corr, out_scatter, tables_dir / "tab4_interaction_h25.tex"]
-    fp = fingerprint_of(coverage_gap_path, semantic_gap_path) + SCRIPT_VERSION
+    fp = fingerprint_of(coverage_gap_path, semantic_gap_path, adj_gap_path) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
@@ -383,6 +386,36 @@ def run(args: argparse.Namespace) -> None:
         log.warning("Excluded from correlation due to missing semantic gap: %s", missing_sdgs)
     log.info("Reliable SDGs for correlation: %s  (n=%d)", reliable_sdgs, len(reliable_sdgs))
 
+    # ---- Load register-adjusted (topic) semantic gap (mirror of raw above) ----
+    log.info("Loading adjusted (register-removed) semantic gap: %s", adj_gap_path)
+    sem_data_adj = load_json(adj_gap_path)
+    per_sdg_adj = {r["sdg"]: r for r in sem_data_adj["per_sdg"]}
+    sem_gap_adj = np.array(
+        [
+            np.nan if per_sdg_adj[i].get("semantic_gap") is None else float(per_sdg_adj[i]["semantic_gap"])
+            for i in range(1, N_SDG + 1)
+        ],
+        dtype=float,
+    )
+    sem_sim_adj = np.array(
+        [
+            np.nan if per_sdg_adj[i].get("semantic_similarity") is None else float(per_sdg_adj[i]["semantic_similarity"])
+            for i in range(1, N_SDG + 1)
+        ],
+        dtype=float,
+    )
+    unreliable_adj = np.array(
+        [bool(per_sdg_adj[i].get("unreliable", False)) for i in range(1, N_SDG + 1)],
+        dtype=bool,
+    )
+    available_mask_adj = np.isfinite(sem_gap_adj) & np.isfinite(sem_sim_adj)
+    reliable_mask_adj = available_mask_adj & ~unreliable_adj
+    log.info(
+        "Adjusted-gap SDGs available for correlation: %s  (n=%d)",
+        [i + 1 for i, keep in enumerate(available_mask_adj) if keep],
+        int(available_mask_adj.sum()),
+    )
+
     # ---- Correlation tests ----
     # Use all SDGs with finite semantic gaps first, then re-check with only reliable ones.
     log.info("")
@@ -401,23 +434,22 @@ def run(args: argparse.Namespace) -> None:
     else:
         tests_reliable = None
 
-    # Sensitivity: exclude SDG 4 (suspected ML terminology artefact in research SDG 4 = 22%).
-    # If SDG 4's high research proportion is genuine → correlation should be robust to exclusion.
-    # If SDG 4 is an artefact inflating the research proportion → excluding it tests robustness.
+    # Sensitivity: exclude SDG 4 (suspected ML terminology artefact). Reported on BOTH the raw
+    # gap (null hypothesis) and the register-adjusted (topic) gap, so the reader can see the
+    # SDG 4 artefact does not drive either the raw null or the adjusted positive topic signal.
+    # SDG 17 was retired as a leave-one-out: its method sensitivity is instead covered by the
+    # encoder / assignment-method sensitivity tables.
     excl4_mask = available_mask.copy()
     excl4_mask[3] = False   # SDG 4 is index 3
     log.info("")
-    log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact):")
+    log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact), RAW GAP:")
     tests_excl4 = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, excl4_mask)
 
-    # Sensitivity: exclude SDG 17 (largest within-SDG gap; flagged source-sensitive in the
-    # cross-sensitivity check). Tests whether the correlation pattern depends on the single
-    # most divergent SDG.
-    excl17_mask = available_mask.copy()
-    excl17_mask[16] = False   # SDG 17 is index 16
+    excl4_mask_adj = available_mask_adj.copy()
+    excl4_mask_adj[3] = False
     log.info("")
-    log.info("SENSITIVITY — EXCLUDING SDG 17 (largest gap, source-sensitive):")
-    tests_excl17 = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap, excl17_mask)
+    log.info("SENSITIVITY — EXCLUDING SDG 4 (suspected ML 'learning' terminology artefact), ADJUSTED (TOPIC) GAP:")
+    tests_excl4_adj = compute_four_tests(res_hard, pol_dw_hard, cov_gap_abs, res_dominance, sem_gap_adj, excl4_mask_adj)
 
     # ---- Correlation interpretation ----
     # Primary headline test: research coverage vs semantic gap (predictor "research").
@@ -506,8 +538,7 @@ def run(args: argparse.Namespace) -> None:
             "missing_semantic_gap_sdgs": missing_sdgs,
             "correlations_primary_observed": tests_primary,
             "correlations_reliable_only": tests_reliable,
-            "correlations_excl_sdg4": tests_excl4,
-            "correlations_excl_sdg17": tests_excl17,
+            "correlations_excl_sdg4": {"raw": tests_excl4, "adjusted": tests_excl4_adj},
         },
         "per_sdg_table": [
             {
@@ -634,10 +665,16 @@ def run(args: argparse.Namespace) -> None:
     num_lines += _macro("HPrimaryPolicy", tests_primary, "policy")
     num_lines += _macro("HPrimaryCovgap", tests_primary, "covgap")
     num_lines += _macro("HPrimaryDominance", tests_primary, "dominance")
-    num_lines += _macro("HExclSdgFour", tests_excl4, "research")
-    num_lines += _macro("HExclSdgFourPolicy", tests_excl4, "policy")
-    num_lines += _macro("HExclSdgFourCovgap", tests_excl4, "covgap")
-    num_lines += _macro("HExclSdgFourDominance", tests_excl4, "dominance")
+    # SDG 4 leave-one-out sensitivity (raw gap): wired into the interaction section.
+    num_lines += _macro("HExclFourResearch", tests_excl4, "research")
+    num_lines += _macro("HExclFourPolicy", tests_excl4, "policy")
+    num_lines += _macro("HExclFourCovgap", tests_excl4, "covgap")
+    num_lines += _macro("HExclFourDominance", tests_excl4, "dominance")
+    # SDG 4 leave-one-out sensitivity (register-adjusted topic gap).
+    num_lines += _macro("HExclFourResearchAdj", tests_excl4_adj, "research")
+    num_lines += _macro("HExclFourPolicyAdj", tests_excl4_adj, "policy")
+    num_lines += _macro("HExclFourCovgapAdj", tests_excl4_adj, "covgap")
+    num_lines += _macro("HExclFourDominanceAdj", tests_excl4_adj, "dominance")
     num_lines += [
         rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.2f}}}",
     ]

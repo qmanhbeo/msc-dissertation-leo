@@ -113,7 +113,7 @@ APPENDIX_SPECS = [
         "warn": "Model-selection macro export (Appendix D.1)",
         "run_label": "model-selection macro export",
         "step_id": "D1",
-        "in_all": True,
+        "in_all": False,
         "requires": None,
     },
     {

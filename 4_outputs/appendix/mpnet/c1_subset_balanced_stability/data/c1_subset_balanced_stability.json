@@ -1,6 +1,6 @@
 {
   "method": "subset_balanced_rank_stability",
-  "note": "Spearman rho between each sample-stability draw's within-SDG semantic-gap ranking and the full-corpus ranking (4_3_semantic_gap_distances.json). The 50k tier is comparable to the 40,597-segment policy corpus.",
+  "note": "Spearman rho between each sample-stability draw's within-SDG semantic-gap ranking and the full-corpus ranking (semantic_gap_distances_lr.json). The 50k tier is comparable to the 40,597-segment policy corpus.",
   "full_corpus_mean_semantic_gap": 0.35242935294117644,
   "tiers": [
     {

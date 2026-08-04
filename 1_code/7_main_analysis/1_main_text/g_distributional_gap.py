@@ -46,9 +46,11 @@ Fail-closed gates (the script halts rather than emit wrong-but-plausible output)
   GATE 3: streamed research means reproduce committed research_centroids.npy.
   GATE 4: full-corpus centroid gap reproduces the canonical semantic gap.
 
-Outputs (4_outputs/main/{model}/ ; tables in tables/, data in data/):
-  data/g_distributional_gap_records.jsonl   incremental, resume-safe records
-  data/g_distributional_gap_summary.json    method -> SDG -> gap (+diagnostics)
+Outputs (tables in 4_outputs/{model}/tables/ ; raw data parked under
+4_outputs/not_in_replay/distributional/{model}/ so it stays out of the replay
+namespace):
+  not_in_replay/distributional/{model}/g_distributional_gap_records.jsonl   incremental, resume-safe records
+  not_in_replay/distributional/{model}/g_distributional_gap_summary.json    method -> SDG -> gap (+diagnostics)
   tables/num13_distributional_gap.tex         LaTeX numeric macros
   tables/tab13_distributional_gap.tex         per-SDG comparison table (Part 1 + Part 2)
 """
@@ -93,6 +95,7 @@ from model_utils import (
     N_SDG,
     embed_dir_for_model,
     embed_research_dir_for_model,
+    model_slug,
     output_dir_for_model,
     scored_dir_for_model,
     resolve_model_alias,
@@ -1229,16 +1232,18 @@ def run(args: argparse.Namespace) -> None:
         import dataclasses
         adj_root = layout.root / "adjusted"
         adj_root.mkdir(parents=True, exist_ok=True)
-        adj_data = adj_root / "data"
         adj_tables = adj_root / "tables"
-        adj_data.mkdir(parents=True, exist_ok=True)
         adj_tables.mkdir(parents=True, exist_ok=True)
-        layout = dataclasses.replace(
-            layout,
-            root=adj_root,
-            data_dir=adj_data,
-            tables_dir=adj_tables,
-        )
+        layout = dataclasses.replace(layout, tables_dir=adj_tables)
+    # Raw/distributional data is a parked one-off: keep it out of the replay
+    # namespace (under 4_outputs/not_in_replay) but leave the .tex tables in the
+    # canonical 4_outputs/{slug}/tables/ location.
+    import dataclasses
+    nir_data = Path("4_outputs") / "not_in_replay" / "distributional" / model_slug(model)
+    if is_adjusted:
+        nir_data = nir_data / "adjusted"
+    nir_data.mkdir(parents=True, exist_ok=True)
+    layout = dataclasses.replace(layout, data_dir=nir_data)
     records_path = layout.data_dir / "g_distributional_gap_records.jsonl"
     summary_path = layout.data_dir / "g_distributional_gap_summary.json"
 

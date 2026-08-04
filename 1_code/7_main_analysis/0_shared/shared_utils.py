@@ -119,8 +119,6 @@ MANUSCRIPT_EXTRA_FILES = [
     "appendix/c_sample_stability/data/c_sample_stability_per_sdg.json",
     "appendix/c_sample_stability/data/c_sample_stability_table.csv",
     "appendix/c1_subset_balanced_stability/data/c1_subset_balanced_stability.json",
-    "main/data/g_distributional_gap_summary.json",
-    "main/data/g_distributional_gap_records.jsonl",
 ]
 
 MANUSCRIPT_TABLE_FILES = [

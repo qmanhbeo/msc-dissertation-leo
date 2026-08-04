@@ -1,6 +1,6 @@
 {
   "method": "segment_level_raw",
-  "note": "Each policy segment weighted equally \u2014 BIASED by document length. SDGi VNR/VLR (31,941 segments) and SDSN (5,591 segments) dominate. Use 4_2_coverage_document_weighted.json (document-weighted) for primary analysis.",
+  "note": "Each policy segment weighted equally \u2014 BIASED by document length. SDGi VNR/VLR (31,941 segments) and SDSN (5,591 segments) dominate. Use coverage_document_weighted.json (document-weighted) for primary analysis.",
   "n_research_papers": 3105144,
   "n_policy_segments": 40597,
   "research_profile_hard": {
