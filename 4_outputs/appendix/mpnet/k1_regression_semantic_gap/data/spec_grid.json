@@ -1,0 +1,1806 @@
+[
+  {
+    "spec_id": "adj_covgap",
+    "panel": "A",
+    "label": "Adj. gap ~ covgap",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.727405,
+    "adj_r2": 0.721241,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 306.288805,
+        "se": 122.769326,
+        "p": 0.023922
+      },
+      "polcov": {
+        "b": 489.422765,
+        "se": 151.45958,
+        "p": 0.005222
+      },
+      "i_minilm": {
+        "b": -37.764195,
+        "se": 12.82161,
+        "p": 0.009502
+      },
+      "i_scibert": {
+        "b": -199.987807,
+        "se": 16.805032,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 84.567419,
+        "se": 9.023533,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      }
+    }
+  },
+  {
+    "spec_id": "adj_dominance",
+    "panel": "A",
+    "label": "Adj. gap ~ dominance",
+    "gap_type": "adjusted",
+    "predictor": "dominance",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.713334,
+    "adj_r2": 0.706852,
+    "var_names": [
+      "intercept",
+      "dominance",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "dominance": {
+        "b": 147.527405,
+        "se": 128.317541,
+        "p": 0.267161
+      },
+      "polcov": {
+        "b": 730.735155,
+        "se": 248.388861,
+        "p": 0.00957
+      },
+      "i_minilm": {
+        "b": -38.924413,
+        "se": 12.479284,
+        "p": 0.00661
+      },
+      "i_scibert": {
+        "b": -198.386598,
+        "se": 16.804889,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 85.125117,
+        "se": 8.675839,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      }
+    }
+  },
+  {
+    "spec_id": "raw_covgap",
+    "panel": "A",
+    "label": "Raw gap ~ covgap",
+    "gap_type": "raw",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.695312,
+    "adj_r2": 0.688422,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 108.415885,
+        "se": 221.477626,
+        "p": 0.631123
+      },
+      "polcov": {
+        "b": -60.085801,
+        "se": 250.811854,
+        "p": 0.813709
+      },
+      "i_minilm": {
+        "b": 6.234206,
+        "se": 17.482107,
+        "p": 0.726047
+      },
+      "i_scibert": {
+        "b": -184.659213,
+        "se": 15.230795,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 106.360017,
+        "se": 10.811631,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.344538,
+        "se": 1.655723,
+        "p": 0.018421
+      },
+      "i_cap_none": {
+        "b": 1.588235,
+        "se": 2.028233,
+        "p": 0.445026
+      },
+      "i_mlp": {
+        "b": 15.27451,
+        "se": 5.340342,
+        "p": 0.011339
+      },
+      "i_zs": {
+        "b": 7.507003,
+        "se": 16.727408,
+        "p": 0.659606
+      }
+    }
+  },
+  {
+    "spec_id": "raw_dominance",
+    "panel": "A",
+    "label": "Raw gap ~ dominance",
+    "gap_type": "raw",
+    "predictor": "dominance",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.70466,
+    "adj_r2": 0.697982,
+    "var_names": [
+      "intercept",
+      "dominance",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "dominance": {
+        "b": 171.681198,
+        "se": 135.935927,
+        "p": 0.2247
+      },
+      "polcov": {
+        "b": 126.259359,
+        "se": 226.035095,
+        "p": 0.58418
+      },
+      "i_minilm": {
+        "b": 5.823522,
+        "se": 17.188179,
+        "p": 0.739159
+      },
+      "i_scibert": {
+        "b": -184.092444,
+        "se": 14.841597,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 106.557423,
+        "se": 11.161027,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.344538,
+        "se": 1.655723,
+        "p": 0.018421
+      },
+      "i_cap_none": {
+        "b": 1.588235,
+        "se": 2.028233,
+        "p": 0.445026
+      },
+      "i_mlp": {
+        "b": 15.27451,
+        "se": 5.340342,
+        "p": 0.011339
+      },
+      "i_zs": {
+        "b": 7.507003,
+        "se": 16.727408,
+        "p": 0.659606
+      }
+    }
+  },
+  {
+    "spec_id": "reg_covgap",
+    "panel": "A",
+    "label": "Reg. gap ~ covgap",
+    "gap_type": "register",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.59016,
+    "adj_r2": 0.580892,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": -200.620728,
+        "se": 200.993453,
+        "p": 0.333066
+      },
+      "polcov": {
+        "b": -405.217343,
+        "se": 305.375341,
+        "p": 0.203152
+      },
+      "i_minilm": {
+        "b": 38.626639,
+        "se": 16.472186,
+        "p": 0.032256
+      },
+      "i_scibert": {
+        "b": -160.421755,
+        "se": 20.583034,
+        "p": 1e-06
+      },
+      "i_concept": {
+        "b": 59.356892,
+        "se": 14.444391,
+        "p": 0.00082
+      },
+      "i_cap20": {
+        "b": -0.042017,
+        "se": 2.639946,
+        "p": 0.987498
+      },
+      "i_cap_none": {
+        "b": -0.806723,
+        "se": 1.941674,
+        "p": 0.683311
+      },
+      "i_mlp": {
+        "b": -0.830065,
+        "se": 4.338453,
+        "p": 0.850676
+      },
+      "i_zs": {
+        "b": 5.344538,
+        "se": 14.26051,
+        "p": 0.712746
+      }
+    }
+  },
+  {
+    "spec_id": "reg_dominance",
+    "panel": "A",
+    "label": "Reg. gap ~ dominance",
+    "gap_type": "register",
+    "predictor": "dominance",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.580546,
+    "adj_r2": 0.57106,
+    "var_names": [
+      "intercept",
+      "dominance",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "dominance": {
+        "b": 26.967295,
+        "se": 108.614445,
+        "p": 0.807073
+      },
+      "polcov": {
+        "b": -458.854243,
+        "se": 286.306535,
+        "p": 0.128564
+      },
+      "i_minilm": {
+        "b": 39.386582,
+        "se": 16.608504,
+        "p": 0.030606
+      },
+      "i_scibert": {
+        "b": -161.470561,
+        "se": 20.727378,
+        "p": 1e-06
+      },
+      "i_concept": {
+        "b": 58.991597,
+        "se": 14.645798,
+        "p": 0.000973
+      },
+      "i_cap20": {
+        "b": -0.042017,
+        "se": 2.639946,
+        "p": 0.987498
+      },
+      "i_cap_none": {
+        "b": -0.806723,
+        "se": 1.941674,
+        "p": 0.683311
+      },
+      "i_mlp": {
+        "b": -0.830065,
+        "se": 4.338453,
+        "p": 0.850676
+      },
+      "i_zs": {
+        "b": 5.344538,
+        "se": 14.26051,
+        "p": 0.712746
+      }
+    }
+  },
+  {
+    "spec_id": "adj_noclf",
+    "panel": "B",
+    "label": "No classifier ind.",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": false,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.723402,
+    "adj_r2": 0.718561,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 306.288805,
+        "se": 122.769326,
+        "p": 0.023922
+      },
+      "polcov": {
+        "b": 489.422765,
+        "se": 151.45958,
+        "p": 0.005222
+      },
+      "i_minilm": {
+        "b": -37.764195,
+        "se": 12.82161,
+        "p": 0.009502
+      },
+      "i_scibert": {
+        "b": -199.987807,
+        "se": 16.805032,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 76.787391,
+        "se": 8.270874,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 5.943794,
+        "se": 2.659904,
+        "p": 0.04006
+      },
+      "i_cap_none": {
+        "b": 3.456399,
+        "se": 3.620185,
+        "p": 0.353904
+      }
+    }
+  },
+  {
+    "spec_id": "adj_sdgfe",
+    "panel": "B",
+    "label": "+ SDG FE",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": true,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.873324,
+    "adj_r2": 0.865034,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs",
+      "sdg1",
+      "sdg2",
+      "sdg3",
+      "sdg4",
+      "sdg5",
+      "sdg6",
+      "sdg7",
+      "sdg8",
+      "sdg9",
+      "sdg10",
+      "sdg11",
+      "sdg12",
+      "sdg13",
+      "sdg14",
+      "sdg15",
+      "sdg16"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 52.016651,
+        "se": 329.575916,
+        "p": 0.876566
+      },
+      "polcov": {
+        "b": 1190.456816,
+        "se": 1069.230132,
+        "p": 0.281994
+      },
+      "i_minilm": {
+        "b": -38.727404,
+        "se": 12.067557,
+        "p": 0.005471
+      },
+      "i_scibert": {
+        "b": -198.658559,
+        "se": 17.521585,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 85.030404,
+        "se": 8.959346,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      },
+      "sdg1": {
+        "b": 75.146776,
+        "se": 58.331934,
+        "p": 0.215974
+      },
+      "sdg2": {
+        "b": -74.593234,
+        "se": 63.686,
+        "p": 0.25864
+      },
+      "sdg3": {
+        "b": 74.26426,
+        "se": 83.889085,
+        "p": 0.389123
+      },
+      "sdg4": {
+        "b": -0.05406,
+        "se": 58.441907,
+        "p": 0.999273
+      },
+      "sdg5": {
+        "b": 45.655562,
+        "se": 54.304209,
+        "p": 0.412884
+      },
+      "sdg6": {
+        "b": -35.51361,
+        "se": 68.962472,
+        "p": 0.613615
+      },
+      "sdg7": {
+        "b": 1.199608,
+        "se": 64.30836,
+        "p": 0.985348
+      },
+      "sdg8": {
+        "b": 9.928172,
+        "se": 62.340761,
+        "p": 0.87546
+      },
+      "sdg9": {
+        "b": 1.775743,
+        "se": 71.704903,
+        "p": 0.980549
+      },
+      "sdg10": {
+        "b": 117.30549,
+        "se": 78.727626,
+        "p": 0.155668
+      },
+      "sdg11": {
+        "b": 5.208008,
+        "se": 52.097097,
+        "p": 0.921612
+      },
+      "sdg12": {
+        "b": 32.593322,
+        "se": 70.691087,
+        "p": 0.650956
+      },
+      "sdg13": {
+        "b": -21.419646,
+        "se": 14.186735,
+        "p": 0.15058
+      },
+      "sdg14": {
+        "b": -9.810256,
+        "se": 68.737697,
+        "p": 0.888293
+      },
+      "sdg15": {
+        "b": -68.588265,
+        "se": 64.841287,
+        "p": 0.305862
+      },
+      "sdg16": {
+        "b": -88.069699,
+        "se": 93.564149,
+        "p": 0.360559
+      }
+    }
+  },
+  {
+    "spec_id": "adj_supervised",
+    "panel": "B",
+    "label": "Supervised only",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "supervised",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 21,
+    "n_sdgs": 17,
+    "n": 357,
+    "n_clusters": 17,
+    "r2": 0.730133,
+    "adj_r2": 0.72393,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 293.122764,
+        "se": 105.12766,
+        "p": 0.013156
+      },
+      "polcov": {
+        "b": 405.340122,
+        "se": 130.28141,
+        "p": 0.006719
+      },
+      "i_minilm": {
+        "b": -33.370084,
+        "se": 12.306289,
+        "p": 0.015401
+      },
+      "i_scibert": {
+        "b": -173.042222,
+        "se": 15.958597,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 74.985883,
+        "se": 8.065976,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.067227,
+        "se": 1.312305,
+        "p": 0.00689
+      },
+      "i_cap_none": {
+        "b": 1.579832,
+        "se": 2.636589,
+        "p": 0.557432
+      },
+      "i_mlp": {
+        "b": 14.588235,
+        "se": 4.943175,
+        "p": 0.009387
+      }
+    }
+  },
+  {
+    "spec_id": "adj_keyword",
+    "panel": "B",
+    "label": "Keyword only",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "keyword",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 21,
+    "n_sdgs": 17,
+    "n": 357,
+    "n_clusters": 17,
+    "r2": 0.699521,
+    "adj_r2": 0.692614,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 255.866386,
+        "se": 120.186583,
+        "p": 0.049144
+      },
+      "polcov": {
+        "b": 473.363063,
+        "se": 140.269874,
+        "p": 0.003861
+      },
+      "i_minilm": {
+        "b": -33.198888,
+        "se": 11.520379,
+        "p": 0.010844
+      },
+      "i_scibert": {
+        "b": -188.741014,
+        "se": 14.969102,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.338235,
+        "se": 1.358026,
+        "p": 0.005642
+      },
+      "i_cap_none": {
+        "b": 1.54902,
+        "se": 2.992596,
+        "p": 0.611808
+      },
+      "i_mlp": {
+        "b": 15.248366,
+        "se": 5.14288,
+        "p": 0.009122
+      },
+      "i_zs": {
+        "b": 2.472222,
+        "se": 8.312671,
+        "p": 0.769985
+      }
+    }
+  },
+  {
+    "spec_id": "adj_mpnet",
+    "panel": "B",
+    "label": "MPNet only",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "mpnet",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 10,
+    "n_sdgs": 17,
+    "n": 170,
+    "n_clusters": 17,
+    "r2": 0.47412,
+    "adj_r2": 0.451397,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 297.557981,
+        "se": 83.424869,
+        "p": 0.002574
+      },
+      "polcov": {
+        "b": 352.463962,
+        "se": 134.721577,
+        "p": 0.018713
+      },
+      "i_concept": {
+        "b": 55.36016,
+        "se": 7.215758,
+        "p": 1e-06
+      },
+      "i_cap20": {
+        "b": 1.264706,
+        "se": 0.933454,
+        "p": 0.194282
+      },
+      "i_cap_none": {
+        "b": -0.235294,
+        "se": 2.033174,
+        "p": 0.909309
+      },
+      "i_mlp": {
+        "b": 18.509804,
+        "se": 5.224308,
+        "p": 0.002706
+      },
+      "i_zs": {
+        "b": 0.931373,
+        "se": 8.006514,
+        "p": 0.908841
+      }
+    }
+  },
+  {
+    "spec_id": "adj_noclf_sdgfe",
+    "panel": "B",
+    "label": "No clf + SDG FE",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": true,
+    "classifier_ind": false,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.86932,
+    "adj_r2": 0.861493,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "sdg1",
+      "sdg2",
+      "sdg3",
+      "sdg4",
+      "sdg5",
+      "sdg6",
+      "sdg7",
+      "sdg8",
+      "sdg9",
+      "sdg10",
+      "sdg11",
+      "sdg12",
+      "sdg13",
+      "sdg14",
+      "sdg15",
+      "sdg16"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 52.016651,
+        "se": 329.575916,
+        "p": 0.876566
+      },
+      "polcov": {
+        "b": 1190.456816,
+        "se": 1069.230132,
+        "p": 0.281994
+      },
+      "i_minilm": {
+        "b": -38.727404,
+        "se": 12.067557,
+        "p": 0.005471
+      },
+      "i_scibert": {
+        "b": -198.658559,
+        "se": 17.521585,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 77.250376,
+        "se": 8.273724,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 5.943794,
+        "se": 2.659904,
+        "p": 0.04006
+      },
+      "i_cap_none": {
+        "b": 3.456399,
+        "se": 3.620185,
+        "p": 0.353904
+      },
+      "sdg1": {
+        "b": 75.146776,
+        "se": 58.331934,
+        "p": 0.215974
+      },
+      "sdg2": {
+        "b": -74.593234,
+        "se": 63.686,
+        "p": 0.25864
+      },
+      "sdg3": {
+        "b": 74.26426,
+        "se": 83.889085,
+        "p": 0.389123
+      },
+      "sdg4": {
+        "b": -0.05406,
+        "se": 58.441907,
+        "p": 0.999273
+      },
+      "sdg5": {
+        "b": 45.655562,
+        "se": 54.304209,
+        "p": 0.412884
+      },
+      "sdg6": {
+        "b": -35.51361,
+        "se": 68.962472,
+        "p": 0.613615
+      },
+      "sdg7": {
+        "b": 1.199608,
+        "se": 64.30836,
+        "p": 0.985348
+      },
+      "sdg8": {
+        "b": 9.928172,
+        "se": 62.340761,
+        "p": 0.87546
+      },
+      "sdg9": {
+        "b": 1.775743,
+        "se": 71.704903,
+        "p": 0.980549
+      },
+      "sdg10": {
+        "b": 117.30549,
+        "se": 78.727626,
+        "p": 0.155668
+      },
+      "sdg11": {
+        "b": 5.208008,
+        "se": 52.097097,
+        "p": 0.921612
+      },
+      "sdg12": {
+        "b": 32.593322,
+        "se": 70.691087,
+        "p": 0.650956
+      },
+      "sdg13": {
+        "b": -21.419646,
+        "se": 14.186735,
+        "p": 0.15058
+      },
+      "sdg14": {
+        "b": -9.810256,
+        "se": 68.737697,
+        "p": 0.888293
+      },
+      "sdg15": {
+        "b": -68.588265,
+        "se": 64.841287,
+        "p": 0.305862
+      },
+      "sdg16": {
+        "b": -88.069699,
+        "se": 93.564149,
+        "p": 0.360559
+      }
+    }
+  },
+  {
+    "spec_id": "adj_int_enc",
+    "panel": "C",
+    "label": "+ covgap$\\times$enc",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "encoder",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.750364,
+    "adj_r2": 0.743429,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs",
+      "covgap×i_minilm",
+      "covgap×i_scibert"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 510.483745,
+        "se": 149.372417,
+        "p": 0.003527
+      },
+      "polcov": {
+        "b": 477.162553,
+        "se": 143.562052,
+        "p": 0.004299
+      },
+      "i_minilm": {
+        "b": -35.761559,
+        "se": 17.96451,
+        "p": 0.06388
+      },
+      "i_scibert": {
+        "b": -160.873067,
+        "se": 17.505412,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 84.195616,
+        "se": 9.38337,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      },
+      "covgap×i_minilm": {
+        "b": -23.517163,
+        "se": 140.288004,
+        "p": 0.868971
+      },
+      "covgap×i_scibert": {
+        "b": -655.692663,
+        "se": 132.729269,
+        "p": 0.000148
+      }
+    }
+  },
+  {
+    "spec_id": "adj_int_ret",
+    "panel": "C",
+    "label": "+ covgap$\\times$ret",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "retrieval",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.727443,
+    "adj_r2": 0.720578,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs",
+      "covgap×i_concept"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 301.378238,
+        "se": 130.263034,
+        "p": 0.034314
+      },
+      "polcov": {
+        "b": 489.622321,
+        "se": 151.583271,
+        "p": 0.005236
+      },
+      "i_minilm": {
+        "b": -37.782796,
+        "se": 12.791492,
+        "p": 0.009337
+      },
+      "i_scibert": {
+        "b": -199.962136,
+        "se": 16.844694,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 82.583649,
+        "se": 11.877958,
+        "p": 3e-06
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      },
+      "covgap×i_concept": {
+        "b": 34.431226,
+        "se": 108.419881,
+        "p": 0.754916
+      }
+    }
+  },
+  {
+    "spec_id": "adj_int_mth",
+    "panel": "C",
+    "label": "+ covgap$\\times$mth",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "method",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.72885,
+    "adj_r2": 0.721318,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs",
+      "covgap×i_mlp",
+      "covgap×i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 369.212047,
+        "se": 111.356598,
+        "p": 0.004373
+      },
+      "polcov": {
+        "b": 489.848119,
+        "se": 151.602084,
+        "p": 0.005224
+      },
+      "i_minilm": {
+        "b": -37.803842,
+        "se": 12.818116,
+        "p": 0.009425
+      },
+      "i_scibert": {
+        "b": -199.933088,
+        "se": 16.80361,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 84.488071,
+        "se": 9.127478,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 22.351515,
+        "se": 7.699955,
+        "p": 0.01038
+      },
+      "i_zs": {
+        "b": 15.377263,
+        "se": 10.284078,
+        "p": 0.154311
+      },
+      "covgap×i_mlp": {
+        "b": -98.012391,
+        "se": 54.633967,
+        "p": 0.091734
+      },
+      "covgap×i_zs": {
+        "b": -219.693583,
+        "se": 108.647961,
+        "p": 0.060219
+      }
+    }
+  },
+  {
+    "spec_id": "adj_int_all",
+    "panel": "C",
+    "label": "+ all interactions",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "all",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.753509,
+    "adj_r2": 0.744728,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs",
+      "covgap×i_minilm",
+      "covgap×i_scibert",
+      "covgap×i_concept",
+      "covgap×i_mlp",
+      "covgap×i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 679.522155,
+        "se": 155.748518,
+        "p": 0.000483
+      },
+      "polcov": {
+        "b": 477.845519,
+        "se": 142.141457,
+        "p": 0.003968
+      },
+      "i_minilm": {
+        "b": -30.802916,
+        "se": 17.890616,
+        "p": 0.10439
+      },
+      "i_scibert": {
+        "b": -155.916838,
+        "se": 17.366454,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 103.719572,
+        "se": 8.30224,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 23.07678,
+        "se": 8.141404,
+        "p": 0.011958
+      },
+      "i_zs": {
+        "b": 16.102528,
+        "se": 10.291267,
+        "p": 0.13722
+      },
+      "covgap×i_minilm": {
+        "b": -111.989017,
+        "se": 156.029663,
+        "p": 0.483265
+      },
+      "covgap×i_scibert": {
+        "b": -744.102425,
+        "se": 149.564227,
+        "p": 0.000138
+      },
+      "covgap×i_concept": {
+        "b": -341.995018,
+        "se": 98.762058,
+        "p": 0.003206
+      },
+      "covgap×i_mlp": {
+        "b": -110.841162,
+        "se": 56.266449,
+        "p": 0.066408
+      },
+      "covgap×i_zs": {
+        "b": -232.522355,
+        "se": 97.807387,
+        "p": 0.030251
+      }
+    }
+  },
+  {
+    "spec_id": "adj_raw_dv",
+    "panel": "D",
+    "label": "Raw DV (not ranked)",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "raw",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.68428,
+    "adj_r2": 0.67714,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 0.32986,
+        "se": 0.105833,
+        "p": 0.006642
+      },
+      "polcov": {
+        "b": 0.391493,
+        "se": 0.169817,
+        "p": 0.034874
+      },
+      "i_minilm": {
+        "b": -0.034586,
+        "se": 0.011471,
+        "p": 0.008217
+      },
+      "i_scibert": {
+        "b": -0.146153,
+        "se": 0.015522,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 0.10725,
+        "se": 0.013786,
+        "p": 1e-06
+      },
+      "i_cap20": {
+        "b": 0.003319,
+        "se": 0.001397,
+        "p": 0.030386
+      },
+      "i_cap_none": {
+        "b": 0.001355,
+        "se": 0.002547,
+        "p": 0.602094
+      },
+      "i_mlp": {
+        "b": 0.012175,
+        "se": 0.004459,
+        "p": 0.014811
+      },
+      "i_zs": {
+        "b": 0.002989,
+        "se": 0.007674,
+        "p": 0.702076
+      }
+    }
+  },
+  {
+    "spec_id": "adj_log_dv",
+    "panel": "D",
+    "label": "Log DV",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "log",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.700958,
+    "adj_r2": 0.694195,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 0.264294,
+        "se": 0.087609,
+        "p": 0.008189
+      },
+      "polcov": {
+        "b": 0.331732,
+        "se": 0.133319,
+        "p": 0.02424
+      },
+      "i_minilm": {
+        "b": -0.028784,
+        "se": 0.009396,
+        "p": 0.007427
+      },
+      "i_scibert": {
+        "b": -0.128183,
+        "se": 0.012787,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 0.084501,
+        "se": 0.00998,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 0.002756,
+        "se": 0.001125,
+        "p": 0.026205
+      },
+      "i_cap_none": {
+        "b": 0.001145,
+        "se": 0.002076,
+        "p": 0.58869
+      },
+      "i_mlp": {
+        "b": 0.010457,
+        "se": 0.003764,
+        "p": 0.013428
+      },
+      "i_zs": {
+        "b": 0.002573,
+        "se": 0.006423,
+        "p": 0.694015
+      }
+    }
+  },
+  {
+    "spec_id": "adj_wls",
+    "panel": "D",
+    "label": "WLS",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "wls",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.639118,
+    "adj_r2": 0.630957,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 611.811977,
+        "se": 125.644142,
+        "p": 0.00017
+      },
+      "polcov": {
+        "b": 670.041587,
+        "se": 141.18227,
+        "p": 0.000219
+      },
+      "i_minilm": {
+        "b": -36.685941,
+        "se": 13.893831,
+        "p": 0.017813
+      },
+      "i_scibert": {
+        "b": -247.402127,
+        "se": 28.656274,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 71.61016,
+        "se": 19.955313,
+        "p": 0.002458
+      },
+      "i_cap20": {
+        "b": 2.471114,
+        "se": 4.065534,
+        "p": 0.551837
+      },
+      "i_cap_none": {
+        "b": -4.591679,
+        "se": 5.656767,
+        "p": 0.428867
+      },
+      "i_mlp": {
+        "b": 17.69162,
+        "se": 8.234016,
+        "p": 0.047319
+      },
+      "i_zs": {
+        "b": -8.567438,
+        "se": 16.983541,
+        "p": 0.620817
+      }
+    }
+  },
+  {
+    "spec_id": "adj_covgap_boot",
+    "panel": "D",
+    "label": "Rank + bootstrap",
+    "gap_type": "adjusted",
+    "predictor": "covgap",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.727405,
+    "adj_r2": 0.721241,
+    "var_names": [
+      "intercept",
+      "covgap",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "covgap": {
+        "b": 306.288805,
+        "se": 122.769326,
+        "p": 0.023922
+      },
+      "polcov": {
+        "b": 489.422765,
+        "se": 151.45958,
+        "p": 0.005222
+      },
+      "i_minilm": {
+        "b": -37.764195,
+        "se": 12.82161,
+        "p": 0.009502
+      },
+      "i_scibert": {
+        "b": -199.987807,
+        "se": 16.805032,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 84.567419,
+        "se": 9.023533,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      }
+    },
+    "bootstrap": {
+      "n_boot": 500,
+      "seed": 42,
+      "coef_ci": {
+        "covgap": {
+          "b": 306.288805,
+          "se_boot": 210.20386,
+          "ci_lo": -58.633543,
+          "ci_hi": 696.116651
+        },
+        "polcov": {
+          "b": 489.422765,
+          "se_boot": 586.364618,
+          "ci_lo": -436.981361,
+          "ci_hi": 1154.181912
+        },
+        "i_minilm": {
+          "b": -37.764195,
+          "se_boot": 10.086574,
+          "ci_lo": -58.13803,
+          "ci_hi": -18.681481
+        },
+        "i_scibert": {
+          "b": -199.987807,
+          "se_boot": 12.695814,
+          "ci_lo": -225.611932,
+          "ci_hi": -177.069202
+        },
+        "i_concept": {
+          "b": 84.567419,
+          "se_boot": 7.119673,
+          "ci_lo": 70.180413,
+          "ci_hi": 97.636308
+        },
+        "i_cap20": {
+          "b": 4.336134,
+          "se_boot": 1.135102,
+          "ci_lo": 2.175982,
+          "ci_hi": 6.526548
+        },
+        "i_cap_none": {
+          "b": 1.848739,
+          "se_boot": 2.277948,
+          "ci_lo": -2.591964,
+          "ci_hi": 5.877565
+        },
+        "i_mlp": {
+          "b": 16.810458,
+          "se_boot": 4.217988,
+          "ci_lo": 8.054209,
+          "ci_hi": 24.50564
+        },
+        "i_zs": {
+          "b": 2.957049,
+          "se_boot": 6.58795,
+          "ci_lo": -9.465851,
+          "ci_hi": 16.200607
+        }
+      }
+    }
+  }
+]

@@ -149,6 +149,17 @@ APPENDIX_SPECS = [
         "in_all": False,
         "requires": ["semantic_gap_distances_lr.json"],
     },
+    {
+        "flag": "appendix-k1-regression",
+        "aliases": ["regression-semantic-gap"],
+        "script": "2_appendix/k1_regression_semantic_gap.py",
+        "help": "Run K.1 OLS regression: semantic gap ~ coverage + configuration indicators.",
+        "warn": "OLS regression (Appendix K.1)",
+        "run_label": "OLS regression semantic gap",
+        "step_id": "K1",
+        "in_all": True,
+        "requires": None,
+    },
 ]
 
 APPENDIX_STEPS = [(spec["script"], False) for spec in APPENDIX_SPECS if spec["in_all"]]

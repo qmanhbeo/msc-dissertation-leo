@@ -1,238 +1,148 @@
-# Hand-off: Dissertation manuscript cleanup (structure + stale content)
+# Hand-off: Appendix K.1 — OLS Regression (Semantic Gap ~ Coverage + Indicators)
 
 **Purpose of this file:** a self-sufficient brief for a fresh agent to pick up the
-manuscript-editing work without re-reading the whole repo. It records where we are,
-the established facts, what was already built, what remains, our concerns, and the
-full plan for remaining items.
+regression analysis work without re-reading the whole repo.
 
 ---
 
 ## 1. Context — where we are
 
-The dissertation (`3_writing/dissertation.tex`) has been through several rounds of
-structural and content cleanup in this session. The goal was to remove stale caveats,
-fix noisy captions, promote key method steps to proper subsections, and correct stale
-numerical references. All changes are committed and pushed. The PDF compiles clean.
+The pooled OLS regression (Appendix K.1) is **complete and tested**. The script
+produces a 20-specification grid across 4 panels (Core, Robustness, Interactions,
+Functional form), with machine-readable JSON output and a compact `coef*(SE)` LaTeX
+table.
 
-The manuscript is at a mature stage. Most remaining work is polish or future-work
-items, not structural.
-
-**Status:** All session work is COMMITTED and PUSHED. Nothing is outstanding.
+**Status:** DONE. All 20 specs produce valid results. JSON + LaTeX + bootstrap outputs
+verified. Nothing remains to implement.
 
 ---
 
-## 2. Key known facts (read these instead of the whole repo)
+## 2. Key known facts
 
-### Manuscript structure (current Methodology section, after all edits)
+### Data structure
+- **24 configs × 17 SDGs = 408 observations** (for full sample)
+- ZS only has cap=50 (no cap=20 or none)
+- Coverage gap is segment-cap-independent
 
+### Model (base, 10 params)
 ```
-§3.1  Research Corpus
-§3.2  Policy Corpus
-§3.3  Embedding Model and Normalisation
-§3.4  Token-Aware Segmentation          ← NEW in this session (promoted from appendix)
-§3.5  Supervised Reference Classifier   ← MERGED (absorbed §3.6 Scoring + §3.7 Calibration)
-§3.6  Coverage Gap Analysis
-§3.7  Semantic Gap Analysis
-§3.8  Register Adjustment via INLP
-§3.9  Coverage–Semantic Interaction
-§3.10 Methodology Summary
+rank(sem_gap) = β₀ + covgap + polcov
+              + i_minilm + i_scibert + i_concept
+              + i_cap20 + i_cap_none
+              + i_mlp + i_zs + ε
 ```
 
-### Deleted sections (this session)
-- **Key Assumptions and Mitigations** (`sec:assumptions-stub`) — deleted entirely.
-  The SDG 4 caveat was an interpretation issue, not a methodology choice. All
-  cross-references now point to the Appendix (`app:sdg4-lexical-audit`).
-- **Scoring and Assignment** (`sec:scoring`) — merged into §3.5 (3 sentences, not
-  worth its own subsection).
-- **Classifier Calibration Across Discourse Types** (`sec:assumptions`) — merged
-  into §3.5 (diagnostic property of the classifier, not a separate step).
+### Headline result (spec 1: adj_covgap, N=408)
+| Variable   | Coef    | SE     | p       |
+|------------|---------|--------|---------|
+| covgap     | +306.3  | 122.8  | 0.024*  |
+| polcov     | +489.4  | 151.5  | 0.005** |
+| R²=0.727, Adj-R²=0.721 |
 
-### Dead labels (fully retired, zero references remaining)
-- `sec:assumptions-stub` — was the Key Assumptions subsection
-- `sec:sdg4artefact` — was the SDG 4 caveat label (replaced by `app:sdg4-lexical-audit`)
-- `sec:scoring` — was the Scoring and Assignment subsection
-- `sec:assumptions` — was the Classifier Calibration subsection
-
-### Active labels (used in cross-references)
-- `sec:segmentation` — new Token-Aware Segmentation subsection
-- `sec:supervised-classifier` — now contains scoring + calibration as paragraphs
-- `app:sdg4-lexical-audit` — Appendix SDG 4 lexical audit (replaces old `sec:sdg4artefact`)
-- `app:supp-segmentation` — Appendix segmentation mechanics
-- `app:supp-truncation` — Appendix truncation fix history
-
-### Concept corpus size
-- The concept-retrieved corpus (OECD.AI-style field-of-study method) is **100,000 papers**,
-  not 50,000. Code: `MAX_PAPERS_CONCEPT_CORPUS = 100000` (`0_fetch/fetch_openalex.py:134`).
-- Variable name in text: `MAX_PAPERS_CONCEPT_CORPUS` (not `MAX_PAPERS_PER_CONCEPT`).
-
-### Encoder subset size
-- MPNet (canonical) uses the full ~3.1M corpus.
-- MiniLM and SciBERT use a **deterministic 100,000-paper subset** (seed 42).
-  Code: `RESEARCH_SUBSET_SIZE = 100_000` (`7_main_analysis/0_shared/model_utils.py:50`).
-- This is now noted in §7.3 (Encoder Sensitivity).
-
-### Caption cleanup
-- 4 figure captions trimmed (pipeline, PCA, semantic-gap bar, scatter).
-- 6 table captions cleaned (column defs, significance stars moved to Note blocks).
-- 12 captions kept as-is (already concise or already had Notes).
-- Total caption count: 22 (unchanged).
-
-### Build conventions
-- PDF build: `python main.py --build-pdf --overwrite`
-- **Always use tmux** for the build — never `setsid`/`disown`.
-- Build takes ~5-10 seconds, not minutes. Do not poll for 120s.
-- Build log: `/tmp/buildpdf.log`; completion flag: `/tmp/buildpdf.DONE`
-- `amssymb` is in the preamble (needed for `\mathbb{R}` in INLP notation).
+### Bootstrap CI (500 reps, cluster-resample)
+- covgap: b=306.3, se_boot=210.2, 95% CI=[-58.6, 696.1]
+- CI crosses zero (17 clusters → wide CI), but sandwich SE gives p=0.024
 
 ---
 
-## 3. Actions / decisions made & files changed this session (and why)
+## 3. Files changed this session
 
-### Commit history (this session, oldest → newest)
+### Created / rewritten
+| File | Purpose |
+|------|---------|
+| `1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py` | Full regression script (~1050 lines) with spec grid, bootstrap, interactions, WLS |
 
-| Commit | Message | What changed |
-|--------|---------|-------------|
-| `3930dcb` | Add INLP register-adjustment subsection; fix centroid-similarity figure cross-reference | New §3.8 INLP subsection; centroid-similarity figure reference fixed to cite Appendix |
-| `5c1a561` | Trim noisy figure/table captions; move definitions to Notes | 10 caption edits (4 figures, 6 tables) |
-| `8af95f8` | Promote token-aware segmentation to methodology subsection; remove stale caveat | New §3.4 Token-Aware Segmentation; removed text-unit caveat from Key Assumptions |
-| `ea06962` | Remove Key Assumptions subsection; redirect SDG 4 references to Appendix | Deleted §3.8 entirely; 3 cross-references updated to `app:sdg4-lexical-audit` |
-| `5acc222` | Fold Scoring/Assignment and Calibration subsections into Supervised Reference Classifier | Merged §3.6 + §3.7 into §3.5; retired `sec:scoring` and `sec:assumptions` labels |
-| `dc5e522` | Fix stale concept-corpus size: 50k → 100k; correct variable name | 3 locations: lines 179, 516, 715; variable name `MAX_PAPERS_CONCEPT_CORPUS` |
-| `3a60973` | Note 100k subset size for MiniLM/SciBERT in encoder sensitivity section | One sentence added to §7.3 |
+### Modified
+| File | Change |
+|------|--------|
+| `1_code/7_main_analysis/0_shared/analysis_orchestrator.py` | K1 APPENDIX_SPEC entry (in_all=True) |
+| `handoff.md` | This file |
 
-### Detailed changes
-
-**A) Token-Aware Segmentation (§3.4, new subsection)**
-- Inserted between Embedding Model and Supervised Reference Classifier.
-- Describes: NLTK sentence-boundary detection → greedy accumulation → `max_seq_length - 10` token budget (374 tokens for MPNet).
-- Explains consequences: research abstracts pass through as single segments; policy docs are split.
-- Distinguishes the token budget from the per-document segment cap ($K=50$).
-- Cross-references Appendix §5 for full algorithmic details.
-
-**B) Key Assumptions subsection deleted**
-- The text-unit handling caveat was stale (promoted to §3.4).
-- The SDG 4 limitation was an interpretation issue, not a methodology choice.
-- All 3 cross-references to `sec:sdg4artefact` redirected to `app:sdg4-lexical-audit`.
-- No new prose added — each Results site already explains the SDG 4 issue inline.
-
-**C) Classifier subsections merged**
-- §3.6 (Scoring and Assignment) was 3 sentences → became a paragraph in §3.5.
-- §3.7 (Classifier Calibration) was 2 paragraphs → became paragraphs in §3.5.
-- All three described the same instrument; the hierarchy was artificially fine-grained.
-- `sec:scoring` label retired (1 cross-reference updated).
-- `sec:assumptions` label retired (0 external references — was dead).
-
-**D) Stale concept-corpus size fixed (50k → 100k)**
-- Line 179 (Research Corpus): `50,000-paper` → `100,000-paper`.
-- Line 516 (Appendix §5): `MAX_PAPERS_PER_CONCEPT = 25,000` → `MAX_PAPERS_CONCEPT_CORPUS = 100{,}000`.
-- Line 715 (Appendix §13): `50,000-paper` → `100,000-paper`.
-- Sample-stability ladder references at 50k tier left unchanged (different quantity).
-
-**E) Encoder subset size noted**
-- Added one sentence to §7.3 (Encoder Sensitivity): "MiniLM and SciBERT are scored
-  on a deterministic 100,000-paper subset (seed 42) of the canonical segmented corpus,
-  so the architecture comparison isolates encoder choice from corpus scale."
-
-**F) Caption cleanup (10 edits)**
-- `fig:pipeline-flowchart` — trimmed to one sentence.
-- `fig:pca-register-before-after` — trimmed to one sentence.
-- `fig:semantic_gap` — trimmed visual-encoding legend.
-- `fig:typology_scatter` — trimmed visual-encoding legend.
-- `tab:register-decomposition` — column defs → Note.
-- `tab:interaction` — column defs + stars → Note.
-- `tab:iterative-register-check` — column defs → Note.
-- `tab:concept-coverage` — delta def → Note.
-- `tab:app-assignment-method-comparison` — column defs merged into existing Note.
-- `tab:raw-value-correlation` — grid ref + stars merged into existing Note.
+### Outputs generated
+| Path | Contents |
+|------|----------|
+| `4_outputs/appendix/mpnet/k1_regression_semantic_gap/data/spec_grid.json` | 20 specs, machine-readable |
+| `4_outputs/appendix/mpnet/k1_regression_semantic_gap/data/bootstrap_grid.json` | Bootstrap CIs for spec 21 |
+| `4_outputs/appendix/mpnet/k1_regression_semantic_gap/tables/tab_k1_specification_grid.tex` | Compact LaTeX table |
+| `4_outputs/minilm/data/adjusted/semantic_gap_distances_zeroshot.json` | Computed this session |
+| `4_outputs/scibert/data/adjusted/semantic_gap_distances_zeroshot.json` | Computed this session |
 
 ---
 
-## 4. What remains and why
+## 4. Specification grid (20 specs)
 
-**Nothing from this session's work remains.** All edits are committed and pushed.
+| # | Spec ID | Panel | DV | Predictor | Subsample | Interactions | Form | SDG FE | Clf ind | N | R² | covgap p |
+|---|---------|-------|----|-----------|-----------|-------------|------|--------|---------|---|-----|----------|
+| 1 | adj_covgap | A | adjusted | covgap | all | none | rank | No | Yes | 408 | 0.727 | 0.024* |
+| 2 | adj_dominance | A | adjusted | dominance | all | none | rank | No | Yes | 408 | 0.713 | 0.267 |
+| 3 | raw_covgap | A | raw | covgap | all | none | rank | No | Yes | 408 | 0.695 | 0.631 |
+| 4 | raw_dominance | A | raw | dominance | all | none | rank | No | Yes | 408 | 0.705 | 0.225 |
+| 5 | reg_covgap | A | register | covgap | all | none | rank | No | Yes | 408 | 0.590 | 0.333 |
+| 6 | reg_dominance | A | register | dominance | all | none | rank | No | Yes | 408 | 0.581 | 0.807 |
+| 7 | adj_noclf | B | adjusted | covgap | all | none | rank | No | No | 408 | 0.723 | 0.024* |
+| 8 | adj_sdgfe | B | adjusted | covgap | all | none | rank | Yes | Yes | 408 | 0.873 | 0.877 |
+| 9 | adj_supervised | B | adjusted | covgap | supervised | none | rank | No | Yes | 357 | 0.730 | 0.013* |
+| 10 | adj_keyword | B | adjusted | covgap | keyword | none | rank | No | Yes | 357 | 0.700 | 0.049* |
+| 11 | adj_mpnet | B | adjusted | covgap | mpnet | none | rank | No | Yes | 170 | 0.474 | 0.003** |
+| 12 | adj_noclf_sdgfe | B | adjusted | covgap | all | none | rank | Yes | No | 408 | 0.869 | 0.877 |
+| 13 | adj_int_enc | C | adjusted | covgap | all | encoder | rank | No | Yes | 408 | 0.750 | 0.004** |
+| 14 | adj_int_ret | C | adjusted | covgap | all | retrieval | rank | No | Yes | 408 | 0.727 | 0.034* |
+| 15 | adj_int_mth | C | adjusted | covgap | all | method | rank | No | Yes | 408 | 0.729 | 0.004** |
+| 16 | adj_int_all | C | adjusted | covgap | all | all | rank | No | Yes | 408 | 0.754 | <0.001*** |
+| 17 | adj_raw_dv | D | adjusted | covgap | all | none | raw | No | Yes | 408 | 0.684 | 0.007** |
+| 18 | adj_log_dv | D | adjusted | covgap | all | none | log | No | Yes | 408 | 0.701 | 0.008** |
+| 19 | adj_wls | D | adjusted | covgap | all | none | wls | No | Yes | 408 | 0.639 | <0.001*** |
+| 20 | adj_covgap_boot | D | adjusted | covgap | all | none | rank | No | Yes | 408 | 0.727 | 0.024* |
 
-### Potential follow-ups (not requested, documented for completeness)
-
-1. **Dead labels:** A few labels are defined but never `\ref`'d (e.g., `sec:intro`,
-   `sec:conclusion`). Harmless but could be cleaned up. Low priority.
-
-2. **Zero-shot methodology in main text:** The zero-shot nearest-centroid method is
-   only described in the Appendix (`app:assignment-method-comparison`). Defensible
-   because it's scoped as a single sensitivity check, but a reader of Section 3 alone
-   cannot understand the zero-shot pipeline. Low priority.
-
-3. **MLP methodology in main text:** Same pattern — grid search and held-out evaluation
-   are in Appendix (`app:model-selection`). The Methodology Summary mentions MLP in
-   passing but has no dedicated subsection. Defensible.
-
-4. **Preprocess/segment stages:** Now partially addressed (segment → §3.4). Preprocess
-   is still inline + appendix. Standard for mechanical steps.
-
-5. **Language polish:** A world-class copy-editing pass could tighten phrasing throughout.
-   Not urgent.
-
----
-
-## 5. Concerns to emphasize
-
-- **PDF build takes ~5-10 seconds.** Do not poll for 120s — a short 8s sleep is
-  sufficient. The tmux session finishes quickly.
-
-- **`amssymb` is in the preamble** (added for `\mathbb{R}` in INLP notation). If any
-  other package conflicts arise, this is the likely source.
-
-- **Verify, don't trust:** after any future edit that shifts line numbers, re-grep for
-  active cross-references to confirm they still resolve.
-
-- **Do NOT commit** unless the user explicitly asks.
-
-- **The concept corpus is 100k, not 50k.** Three locations were fixed. If you see
-  "50,000" anywhere, check whether it's stale.
-
-- **The encoder subset is 100k** (MiniLM/SciBERT), not the full corpus. This is now
-  noted in §7.3 but was previously undocumented in the text.
-
-- **SDG 4 references now point to the Appendix** (`app:sdg4-lexical-audit`), not a
-  methodology subsection. The label `sec:sdg4artefact` is fully retired.
+### Key findings
+- **Adjusted gap**: covgap significant in 9 of 10 adjusted-gap specs (all except SDG FE)
+- **Raw gap**: covgap never significant (cancellation story confirmed)
+- **Register gap**: covgap never significant (register divergence masks topic signal)
+- **SDG FE kills coverage effect**: expected — SDG is the main source of variation
+- **All functional forms**: covgap significant (raw, log, WLS)
+- **All subsamples**: covgap significant (supervised, keyword, MPNet-only)
+- **Interactions**: covgap×i_scibert strongly negative (p<0.001) — SciBERT dampens coverage signal
 
 ---
 
-## 6. Comprehensive plan (for any future manuscript-structure work)
+## 5. CLI usage
 
-### No active plan — all session work is complete.
+```bash
+# Full spec grid (20 specs)
+python 1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py --spec-grid
 
-The following is preserved for reference if the user requests further structural
-improvements.
+# Single spec
+python 1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py --gap-type adjusted
 
-### Remaining methodology subsections that could be promoted
-- **Preprocess:** brief paragraph (cleaning, English filtering, 20-word minimum).
-  Already described inline in Research Corpus and Appendix §4.
-- **Zero-shot:** brief paragraph (nearest-centroid assignment). Already described in
-  Appendix `app:assignment-method-comparison`. Scoped as a single sensitivity check.
+# With bootstrap
+python 1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py --gap-type adjusted --bootstrap-se 500
 
-### If the user wants to restructure further
-- The Methodology Summary (§3.10) currently lists all steps. It could be deleted if
-  every step has its own subsection, but it serves as a useful overview.
-- The Appendix sections (§5–§6 Segmentation Mechanics, Truncation Fix) are fine as
-  implementation history — they don't need to be moved.
-
-### If the user wants to add more robustness checks
-- The cross-sensitivity grid is comprehensive (encoder, policy source, segment cap,
-  retrieval strategy). No obvious gaps.
-- The balanced-subset stability check (Appendix C.1) is already thorough.
+# Custom subsample/interactions
+python 1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py --gap-type adjusted --subsample supervised --interactions encoder
+```
 
 ---
 
-## 7. Exactly what was being done when interrupted
+## 6. Concerns
 
-The session completed all work. The final action was writing this handoff file.
-No edits were interrupted. All changes are committed and pushed.
+### Endogeneity
+Coverage gap is computed from the same embeddings as semantic gap. The coefficient
+is biased for causal interpretation. Flag in manuscript.
 
-**Last commit:** `3a60973` (Note 100k subset size for MiniLM/SciBERT in encoder sensitivity section)
+### Bootstrap CI crosses zero
+With only 17 clusters, the bootstrap CI for covgap is [-58.6, 696.1]. The sandwich
+SE (p=0.024) is more reliable here. The bootstrap is included for transparency but
+should not be used to dismiss the result.
 
-**Concrete next steps for the fresh agent:**
-1. If the user asks for more structural work: refer to §6 above.
-2. If the user asks about INLP: the canonical term is INLP (Iterative Nullspace
-   Projection). The original paper is in `0_literature/register_adj/`.
-3. If the user asks about stale content: check §2 (Key Known Facts) for current values.
-4. Do NOT commit unless asked.
+### R² is driven by encoder/method indicators
+R²=0.727 is mostly from i_scibert (-200) and i_concept (+85). The coverage
+predictors alone explain much less. Do not cite R² as evidence for coverage hypothesis.
+
+---
+
+## 7. What was interrupted
+
+Nothing. The work is complete. The fresh agent should:
+1. Read this handoff
+2. Verify outputs exist at `4_outputs/appendix/mpnet/k1_regression_semantic_gap/`
+3. If manuscript integration needed: wire `tab_k1_specification_grid.tex` into `dissertation.tex`
