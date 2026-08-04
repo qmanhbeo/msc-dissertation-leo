@@ -194,6 +194,15 @@ def parse_args() -> argparse.Namespace:
         help="Sentence-transformer model name (default: %(default)s). Override for model sensitivity.",
     )
     p.add_argument(
+        "--embeddings",
+        choices=["raw", "adjusted"],
+        default="raw",
+        help="Use raw or register-adjusted embeddings. Forwarded to stages that accept it "
+        "(currently only --appendix-g-distributional). The distributional robustness table "
+        "must be built with --embeddings adjusted to land in 4_outputs/{model}/adjusted/tables, "
+        "which is where dissertation.tex reads it from.",
+    )
+    p.add_argument(
         "--stage",
         choices=["fetch", "preprocess", "segment", "embed", "train", "infer", "centroids", "register_adjust", "analysis"],
         help="Run a single pipeline stage (assumes upstream outputs exist).",
@@ -321,7 +330,7 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     )
 
 
-def run_appendix_spec(spec: dict, output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False) -> None:
+def run_appendix_spec(spec: dict, output_dir: Path, model: str = DEFAULT_EMBED_MODEL, overwrite: bool = False, embeddings: str = "raw") -> None:
     """Run a single appendix script from APPENDIX_SPECS.
 
     Registry-driven replacement for the 10 previously hand-written `run_*`
@@ -337,6 +346,10 @@ def run_appendix_spec(spec: dict, output_dir: Path, model: str = DEFAULT_EMBED_M
     cmd = [sys.executable, "1_code/7_main_analysis/" + spec["script"], "--output-dir", str(output_dir)]
     if model != DEFAULT_EMBED_MODEL:
         cmd += ["--embed-model", model]
+    # Only the distributional stage accepts --embeddings; the thesis reads its
+    # adjusted tables, so forward non-default embeddings there.
+    if embeddings != "raw" and spec["flag"] == "appendix-g-distributional":
+        cmd += ["--embeddings", embeddings]
     cmd += _overwrite_flag(overwrite)
     run_step(spec["run_label"], cmd, step_id=spec["step_id"])
 
@@ -1095,7 +1108,7 @@ def main() -> None:
         model = args.embed_model
         for spec in APPENDIX_SPECS:
             if getattr(args, spec["flag"].replace("-", "_")):
-                run_appendix_spec(spec, output_dir, model=model, overwrite=args.overwrite)
+                run_appendix_spec(spec, output_dir, model=model, overwrite=args.overwrite, embeddings=args.embeddings)
                 if args.build_pdf:
                     build_pdf(output_dir, model=args.embed_model)
                 break
