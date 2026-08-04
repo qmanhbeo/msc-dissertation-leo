@@ -61,6 +61,13 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
+# MLP champion artifacts (mlp_retrained.joblib) pickle MultiLabelMLP/_NetWrapper,
+# whose class lives in train_models_utils (1_code/4_supervised_model_train). It must
+# be importable for joblib to unpickle the model. Regression guard for the c25d52a
+# refactor that folded LR/MLP into train_models_utils without updating this path.
+TRAIN_DIR = CODE_ROOT / "4_supervised_model_train"
+if str(TRAIN_DIR) not in sys.path:
+    sys.path.insert(0, str(TRAIN_DIR))
 
 from alignment_core import verify_unit_norms
 from model_utils import (
