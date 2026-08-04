@@ -162,7 +162,7 @@ SPEC_GRID = [
 
 # Variable label map (LaTeX)
 VAR_LABELS = {
-    "covgap":     r"Coverage gap ($\vert$research\% $-$ policy\%\vert)",
+    "covgap":     r"Coverage gap ($|\text{research}\% - \text{policy}\%|)$",
     "dominance":  r"Domination (research\% $-$ policy\%)",
     "rescov":     r"Research coverage (\%)",
     "polcov":     "Policy coverage",
@@ -173,6 +173,13 @@ VAR_LABELS = {
     "i_cap_none": r"No cap (vs.\ 50)",
     "i_mlp":      r"MLP (vs.\ LR)",
     "i_zs":       r"ZS (vs.\ LR)",
+    # Interaction-term variable labels (Panel C) -- wrapped in math mode so the
+    # subscript underscore and the \times symbol are valid LaTeX.
+    "covgap×i_minilm":  r"covgap$\times i_{\text{minilm}}$",
+    "covgap×i_scibert": r"covgap$\times i_{\text{scibert}}$",
+    "covgap×i_concept": r"covgap$\times i_{\text{concept}}$",
+    "covgap×i_mlp":     r"covgap$\times i_{\text{mlp}}$",
+    "covgap×i_zs":      r"covgap$\times i_{\text{zs}}$",
 }
 
 # Canonical variable ordering for the table
@@ -371,7 +378,11 @@ def build_panel(root: Path, gap_type: str) -> list[dict]:
 
         enc_short = _encoder_label(model)
         for sdg in common:
-            dominance = cov[sdg]["research"] - cov[sdg]["polcov"]
+            # Scale to percentage points (0-100) for interpretability
+            covgap_pct = cov[sdg]["covgap"] * 100.0
+            polcov_pct = cov[sdg]["polcov"] * 100.0
+            research_pct = cov[sdg]["research"] * 100.0
+            dominance_pct = research_pct - polcov_pct
             rows.append({
                 "sdg": sdg,
                 "encoder": enc_short,
@@ -380,10 +391,10 @@ def build_panel(root: Path, gap_type: str) -> list[dict]:
                 "cap": cap if cap > 0 else "none",
                 "sem_gap": sem[sdg]["gap"],
                 "n_papers": sem[sdg]["n_papers"],
-                "covgap": cov[sdg]["covgap"],
-                "polcov": cov[sdg]["polcov"],
-                "research": cov[sdg]["research"],
-                "dominance": dominance,
+                "covgap": covgap_pct,
+                "polcov": polcov_pct,
+                "research": research_pct,
+                "dominance": dominance_pct,
             })
     return rows
 
@@ -415,7 +426,16 @@ def _build_design(
 
     # DV transformation (wls uses rank DV with weighted OLS)
     if form in ("rank", "wls"):
-        Y = rankdata(sem_vals, method="average")
+        # Rank WITHIN each config (1-17 per config), not pooled (1-N).
+        # Each config has 17 SDGs; rank them by semantic gap.
+        Y = np.empty(n, dtype=float)
+        config_keys = {}
+        for idx, r in enumerate(panel):
+            key = (r["encoder"], r["method"], r["retrieval"], r["cap"])
+            config_keys.setdefault(key, []).append(idx)
+        for key, indices in config_keys.items():
+            vals = sem_vals[indices]
+            Y[indices] = rankdata(vals, method="average")
     elif form == "raw":
         Y = sem_vals
     elif form == "log":

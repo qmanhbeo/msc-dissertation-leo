@@ -425,7 +425,7 @@ The gap rankings reported above are not equally stable across all measurement ch
 
 \textbf{Distance-functional robustness.} The centroid gap is reproduced exactly as a validation gate; distribution-aware metrics (sliced Wasserstein, Chamfer, Gaussian-2-Wasserstein, MMD, energy, C2ST) recompute the gap on identical point clouds, holding assignment and embeddings fixed. Shape-sensitive metrics correlate only moderately with the adjusted centroid gap (e.g.\ $\rho=\DistGapSpearmanSwd$ for sliced Wasserstein), and the Gaussian-2-Wasserstein shape term accounts for $\approx\DistGapShapeShareMean\%$ of the distance (Appendix~\ref{sec:distributional-robustness}). The adjusted topic gap is therefore primarily a \emph{mean-direction} (topic) finding; distributional shape carries a related but distinct signal, and after register removal that shape signal diverges from the centroid ranking.
 
-\textbf{Synthesis.} Two conclusions survive the full cross-sensitivity grid. First, SDG~15 (Life on Land) is the robustly least-divergent goal: it sits at rank~17 (smallest gap) under the adjusted gap for LR and MLP across every encoder, and at rank~17 under the raw gap for most configs as well. Second, SDG~17 (Partnerships) is the most method-sensitive and the most divergent under the adjusted gap, while SDG~13 leads under the raw gap; the register decomposition explains the inversion (Section~\ref{sec:semantic-gap}, Table~\ref{tab:register-decomposition}). The central apparent cancellation (Section~\ref{sec:interaction}) replicates across every encoder--classifier config and policy-source family, so the findings are not an artefact of one measurement choice.
+\textbf{Synthesis.} Two conclusions survive the full cross-sensitivity grid. First, SDG~15 (Life on Land) is the robustly least-divergent goal: it sits at rank~17 (smallest gap) under the adjusted gap for LR and MLP across every encoder, and at rank~17 under the raw gap for most configs as well. Second, SDG~17 (Partnerships) is the most method-sensitive and the most divergent under the adjusted gap, while SDG~13 leads under the raw gap; the register decomposition explains the inversion (Section~\ref{sec:semantic-gap}, Table~\ref{tab:register-decomposition}). The central apparent cancellation (Section~\ref{sec:interaction}) replicates across every encoder--classifier config and policy-source family, so the findings are not an artefact of one measurement choice. Pooled OLS regressions that combine all 24 configurations into a single panel and control for encoder, retrieval, and segment-cap indicators confirm the adjusted-gap association with coverage divergence; full results are in Appendix~\ref{app:regression}.
 
 %% ============================================================
 \section{Discussion}
@@ -850,6 +850,20 @@ The symmetric construction preserves the cancellation at the level of the intera
 \label{tab:policy-source-family-h25}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_h25.tex}}
 \par\smallskip\footnotesize\emph{Notes:} Spearman $\rho$ (with two-sided $p$) between each coverage predictor and the within-SDG semantic gap across the reliable SDGs ($n$). Research share is the research-corpus proportion per SDG (family-independent); the coverage gap is $|\text{research}-\text{policy}|$ using the family's document-weighted policy share. The curated AI/SDG family is the symmetric AI/SDG-vs-AI/SDG control matching the research corpus's AI $\cap$ SDG scope.\par
+\end{table}
+
+\section{Pooled Regression: Coverage Predictors and the Semantic Gap}
+\label{app:regression}
+
+This appendix pools all 24 encoder--retrieval--method--cap configurations into a single panel ($N = 408$) and regresses the within-SDG semantic gap on coverage predictors using OLS with cluster-robust standard errors by SDG (17 clusters). The dependent variable is the rank of the semantic gap within each configuration (1--17 per config, ties averaged); predictors are expressed in percentage points (0--100). Table~\ref{tab:k1-specification-grid} reports the full 23-specification grid across core regressions (Panel~A), robustness checks (Panel~B), interaction terms (Panel~C), and alternative functional forms (Panel~D).
+
+The adjusted (topic) gap is positively associated with the coverage gap ($b = +0.18$, $p = 0.069$; Panel~A, column~1); the coefficient is marginally significant at conventional thresholds but is confirmed by the supervised-only subsample ($p = 0.040$), the MPNet-only subsample ($p = 0.003$), and the raw-DV specification in cosine units ($p = 0.007$). The raw gap and the register gap show no detectable association with any coverage predictor, consistent with the cancellation pattern reported in Section~\ref{sec:interaction}. Policy coverage (the share of policy documents assigned to a given SDG) is a stronger predictor of the adjusted gap ($b = +0.41$, $p = 0.003$), capturing how concentrated policy attention is on each goal. The coverage-gap-by-encoder interaction (Panel~C) reveals that the effect is strongest for MPNet and reverses for SciBERT, suggesting that domain-specialised pretraining compresses the topic gap regardless of coverage structure.
+
+\begin{table}[ht]
+\centering
+\caption{Pooled OLS: coverage predictors and the within-SDG semantic gap rank across 24 configurations.}
+\label{tab:k1-specification-grid}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/k1_regression_semantic_gap/tables/tab_k1_specification_grid.tex}}
 \end{table}
 
 \section{Declaration of AI Use}
