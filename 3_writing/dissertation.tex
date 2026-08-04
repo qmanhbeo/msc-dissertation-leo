@@ -192,11 +192,17 @@ The policy corpus contains \NPolicySegments{} text segments from three collectio
   \item \textbf{UN General Debate Corpus} \parencite{UNGDC2024} (6,128 segments, 2,048 documents): SDG-relevant passages from General Debate speeches, sessions 70--80 (2015--2024). Its creators analyse SDG coverage directly and report climate action (SDG~13), peace and governance (SDG~16), and partnerships (SDG~17) among the most prominent themes, an orientation the analysis below also observes.
 \end{enumerate}
 
-After cross-source deduplication by exact text match (SDGi retained first), \NPolicySegments{} unique segments remained. The three collections differ in genre and scope: the curated subset is AI-governance-focused, while SDGi and UNGDC reflect broader institutional SDG discourse, so the full-corpus distribution should be read accordingly; the curated sub-corpus (94 documents) is the more relevant reference for AI-governance-specific interpretation. Appendix~\ref{app:policy-source-data} reports a source-family sensitivity check. Segmentation is token-aware and detailed in the Supplementary Methodology (Appendix~\ref{app:supp-methodology}).
+After cross-source deduplication by exact text match (SDGi retained first), \NPolicySegments{} unique segments remained. The three collections differ in genre and scope: the curated subset is AI-governance-focused, while SDGi and UNGDC reflect broader institutional SDG discourse, so the full-corpus distribution should be read accordingly; the curated sub-corpus (94 documents) is the more relevant reference for AI-governance-specific interpretation. Appendix~\ref{app:policy-source-data} reports a source-family sensitivity check. Segmentation is token-aware (Section~\ref{sec:segmentation}); full algorithmic details are in Appendix~\ref{app:supp-segmentation}.
 
 \subsection{Embedding Model and Normalisation}\label{sec:embedding-choice}
 
-All texts were encoded with \texttt{all-mpnet-base-v2} \parencite{all-mpnet-base-v2, Reimers2019} from the sentence-transformers library, producing 768-dimensional dense vectors. This pre-trained model requires no fine-tuning on the data under analysis, so the embedding space is a stable, pre-existing coordinate system; Section~\ref{sec:encoder-sensitivity} tests sensitivity to this choice against a domain-specialised scientific encoder of the same dimensionality. Embeddings were L2-normalised to unit vectors so that cosine similarity equals their dot product. A truncation issue discovered during development was corrected by enforcing the token budget at segmentation time (Appendix~\ref{app:supp-methodology}).
+All texts were encoded with \texttt{all-mpnet-base-v2} \parencite{all-mpnet-base-v2, Reimers2019} from the sentence-transformers library, producing 768-dimensional dense vectors. This pre-trained model requires no fine-tuning on the data under analysis, so the embedding space is a stable, pre-existing coordinate system; Section~\ref{sec:encoder-sensitivity} tests sensitivity to this choice against a domain-specialised scientific encoder of the same dimensionality. Embeddings were L2-normalised to unit vectors so that cosine similarity equals their dot product.
+
+\subsection{Token-Aware Segmentation}\label{sec:segmentation}
+
+All source documents are segmented at sentence boundaries using the embedding model's own tokenizer to enforce a hard token budget, guaranteeing that every segment fits within the encoder's context window. The procedure applies identically to research abstracts, policy documents, and reference corpora: NLTK sentence-boundary detection is followed by greedy accumulation of sentences up to a token budget of \texttt{max\_seq\_length} $- 10$ (for the canonical MPNet encoder, 384 $-$ 10 = 374 tokens). The 10-token safety margin was verified empirically to reduce post-embedding truncation to near zero (Appendix~\ref{app:supp-truncation}). Segments falling below 20 words are discarded; a single sentence exceeding the token budget is kept whole because mid-sentence splitting is not permissible. Cross-source deduplication by exact text match (SDGi retained first) is applied after segmentation.
+
+This design has two consequences. First, research abstracts (mean $\sim$200 words, well below the 374-token budget) pass through as single segments, so the research-side text unit is the full abstract. Second, policy documents of variable length are split into multiple segments of comparable size to research abstracts, making the two corpora directly comparable in embedding space. The per-document segment cap of $K=50$ applied when computing semantic-gap centroids (Section~\ref{sec:semantic-gap-method}) is a separate, additional restraint on document-level dominance within a single SDG cluster; it does not affect the segmentation itself. Full algorithmic details are in Appendix~\ref{app:supp-segmentation}.
 
 \subsection{Supervised Reference Classifier}\label{sec:supervised-classifier}
 
@@ -287,9 +293,7 @@ The first hypothesis (H1) decomposes into four sub-hypotheses, each correlating 
 
 \subsection{Key Assumptions and Mitigations}\label{sec:assumptions-stub}
 
-Two design-level choices shape the comparison before any measurement takes place; both are methodological decisions rather than empirical findings.
-
-\textbf{Text-unit handling is a design choice, not a result.} Research papers are single abstract-length texts (mean $\sim$200 words); policy items are 150--300-word segments from documents of highly variable length. Document-weighting and per-document segment caps are adopted up front to keep the two corpora comparable; they are fixed procedures, not findings derived from the data.
+One design-level choice shapes the comparison before any measurement takes place; it is a methodological decision rather than an empirical finding.
 
 \textbf{Labelled-data limitation on SDG 4.}
 \label{sec:sdg4artefact}
@@ -297,7 +301,7 @@ The research coverage assigns \ResearchPctSdgFour\% of papers to SDG 4 (Quality 
 
 \subsection{Methodology Summary}\label{sec:pipeline-summary}
 
-Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology. All three tracks share preprocessing (cleaning, English filtering, 20-word minimum) and token-aware segmentation (margin 10, min 20 words). The reference track pools \NReferencePool{} single-label texts (\NTrainPool{} train, \NTestPool{} test) to train the LR classifier ($C=3.0$, L2, macro-$F_1$ = \MacroFOne{}); the research and policy tracks segment \NResearchPapers{} abstracts and \NPolicySegments{} policy segments respectively. All tracks are embedded with \texttt{all-mpnet-base-v2} (768-D, L2-normalised) and scored via argmax over 17 SDG classes.
+Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology. All three tracks share preprocessing (cleaning, English filtering, 20-word minimum) and token-aware segmentation to the encoder's token budget (Section~\ref{sec:segmentation}). The reference track pools \NReferencePool{} single-label texts (\NTrainPool{} train, \NTestPool{} test) to train the LR classifier ($C=3.0$, L2, macro-$F_1$ = \MacroFOne{}); the research and policy tracks segment \NResearchPapers{} abstracts and \NPolicySegments{} policy segments respectively. All tracks are embedded with \texttt{all-mpnet-base-v2} (768-D, L2-normalised) and scored via argmax over 17 SDG classes.
 
 \begin{figure}[htbp]
   \centering
