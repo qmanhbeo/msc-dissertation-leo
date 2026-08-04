@@ -1,0 +1,253 @@
+"""
+Appendix J: Raw-value (Pearson) correlation companion to the main H1
+register-correlation grid (Table~\\ref{tab:interaction}).
+
+This is a deliberate copy-and-swap of 1_main_text/2_coverage_semantic_interaction.py:
+the same coverage predictors and semantic-gap vectors are correlated, but with
+Pearson r on the raw magnitudes instead of Spearman rho on ranks. It isolates how
+the correlation metric (rank vs magnitude) affects the H1a--H1d conclusions, and is
+the durable record of the one-time raw-value experiment.
+
+Inputs: identical to 2_coverage_semantic_interaction.py (per-config coverage JSON
+plus raw/adjusted semantic-gap JSONs for LR/MLP/ZS).
+
+Outputs (MPNet canonical; ZS MPNet-only, matching manuscript scope):
+  4_outputs/appendix/{model}/j1_raw_value_correlation/data/raw_value_correlation.json
+  4_outputs/appendix/{model}/j1_raw_value_correlation/tables/tab_j1_raw_value_correlation.tex
+
+Run from project root:
+  python 1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py --embed-model mpnet
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import logging
+import sys
+from pathlib import Path
+
+import numpy as np
+from scipy import stats
+
+ROOT = Path(__file__).resolve().parents[3]
+CODE_ROOT = ROOT / "1_code"
+ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
+MAIN_TEXT = ANALYSIS_ROOT / "1_main_text"
+SHARED_DIR = ANALYSIS_ROOT / "0_shared"
+for path in (CODE_ROOT, MAIN_TEXT, SHARED_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from model_utils import (
+    DEFAULT_EMBED_MODEL,
+    DEFAULT_OUTPUT_ROOT,
+    output_dir_for_model,
+    resolve_model_alias,
+)
+from shared_utils import (
+    ensure_dissertation_outputs,
+    fingerprint_of,
+    record_fingerprint,
+    should_skip,
+)
+from shard_pipeline_utils import load_json
+
+# Reuse the exact data loaders and table-writer from the main-text generator so
+# the only difference is the correlation function (Spearman -> Pearson). The
+# main-text module has a numeric prefix, so load it via importlib.
+_cov_inter_spec = importlib.util.spec_from_file_location(
+    "cov_inter_main", MAIN_TEXT / "2_coverage_semantic_interaction.py"
+)
+cov_inter = importlib.util.module_from_spec(_cov_inter_spec)
+_cov_inter_spec.loader.exec_module(cov_inter)
+
+_H1_CONFIGS = cov_inter._H1_CONFIGS
+_H1_GROUPS = cov_inter._H1_GROUPS
+_load_coverage_predictors = cov_inter._load_coverage_predictors
+_raw_gaps_for = cov_inter._raw_gaps_for
+_adj_gaps_for = cov_inter._adj_gaps_for
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
+log = logging.getLogger(__name__)
+
+GAP_SUFFIX = {"LR": "lr", "MLP": "mlp", "ZS": "zeroshot"}
+
+
+# ---------------------------------------------------------------------------
+# Copy-and-swap: Pearson r on raw magnitudes instead of Spearman rho on ranks.
+# ---------------------------------------------------------------------------
+def _pearson_dict(x: np.ndarray, y: np.ndarray) -> dict | None:
+    if x.size < 3 or y.size < 3:
+        return None
+    r, p = stats.pearsonr(x, y)
+    return {"r": round(float(r), 6), "p": round(float(p), 6)}
+
+
+def _sig_stars(p: float) -> str:
+    if p < 0.001:
+        return "$^{***}$"
+    if p < 0.01:
+        return "$^{**}$"
+    if p < 0.05:
+        return "$^{*}$"
+    if p < 0.10:
+        return "$^{\\dagger}$"
+    return ""
+
+
+def _fmt_r(x: dict | None) -> str:
+    if x is None:
+        return "--"
+    return f"{x['r']:+.3f}{_sig_stars(x['p'])}"
+
+
+def _config_row(label: str, model: str, method: str, corpus: str, root: Path) -> dict | None:
+    """Mirror of coverage_semantic_interaction._h1_config_row, with Pearson."""
+    cov = _load_coverage_predictors(root, model, corpus)
+    if cov is None:
+        return None
+    raw = _raw_gaps_for(method, root, model)
+    if raw is None:
+        return None
+    adj = _adj_gaps_for(method, root, model)
+    out = {"label": label, "predictors": {}}
+    for pname in ("covgap", "dominance", "research", "policy"):
+        pred = cov[pname]
+        common = sorted(set(pred) & set(raw) & set(adj)) if adj is not None else sorted(set(pred) & set(raw))
+        if len(common) < 3:
+            out["predictors"][pname] = None
+            continue
+        x = np.array([pred[s] for s in common], dtype=float)
+        raw_arr = np.array([raw[s] for s in common], dtype=float)
+        r_raw = _pearson_dict(x, raw_arr)
+        r_adj = r_reg = None
+        if adj is not None:
+            adj_arr = np.array([adj[s] for s in common], dtype=float)
+            reg_arr = raw_arr - adj_arr
+            r_adj = _pearson_dict(x, adj_arr)
+            r_reg = _pearson_dict(x, reg_arr)
+        out["predictors"][pname] = {"raw": r_raw, "adj": r_adj, "reg": r_reg}
+    return out
+
+
+def write_tex(path: Path, rows: list[dict]) -> None:
+    """Same tabular format as tab4_interaction_h25.tex, cells = Pearson r."""
+    lines = [
+        "% Auto-generated by 1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py — do not edit manually",
+        r"\begin{tabular}{lccc}",
+        r"\toprule",
+        r" & Raw gap & Adj.\ gap & Register \\",
+        r"\midrule",
+    ]
+    for title, key in _H1_GROUPS:
+        lines.append(rf"\multicolumn{{4}}{{l}}{{\textbf{{{title}}}}} \\")
+        for r in rows:
+            pr = r["predictors"].get(key)
+            cells = [
+                _fmt_r(pr["raw"] if pr else None),
+                _fmt_r(pr["adj"] if pr else None),
+                _fmt_r(pr["reg"] if pr else None),
+            ]
+            lines.append(f"{r['label']} & " + " & ".join(cells) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}"])
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Args / run
+# ---------------------------------------------------------------------------
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Raw-value (Pearson) companion to the H1 register-correlation grid.")
+    p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
+    p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
+    return p.parse_args()
+
+
+def run(args: argparse.Namespace) -> None:
+    root = Path(args.output_dir)
+    model = args.embed_model
+    layout = ensure_dissertation_outputs(root, subdir="appendix/j1_raw_value_correlation", model=model)
+    out_json = layout.data_dir / "raw_value_correlation.json"
+    out_tex = layout.tables_dir / "tab_j1_raw_value_correlation.tex"
+    outputs = [out_json, out_tex]
+
+    # Fingerprint all input files (coverage + raw/adjusted gap per config).
+    fp_paths: list[Path] = []
+    for _, m, method, corpus in _H1_CONFIGS:
+        suffix = GAP_SUFFIX[method]
+        if corpus == "concept":
+            base = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept"
+        else:
+            base = output_dir_for_model(m, root=root) / "data"
+        fp_paths.append(base / "coverage_document_weighted.json")
+        fp_paths.append(base / f"semantic_gap_distances_{suffix}.json")
+        fp_paths.append(base / "adjusted" / f"semantic_gap_distances_{suffix}.json")
+
+    fp = fingerprint_of(*fp_paths) + "j1_raw_v1"
+    if should_skip(outputs, fp, args.overwrite, out_json):
+        log.info("Skipping %s -- inputs unchanged", out_json)
+        return
+
+    rows = []
+    for label, m, method, corpus in _H1_CONFIGS:
+        row = _config_row(label, m, method, corpus, root)
+        if row is not None:
+            rows.append(row)
+        else:
+            log.warning("WARNING: missing data for %s -- skipping row", label)
+
+    if not rows:
+        log.error("No config rows produced -- all inputs missing?")
+        return
+
+    # JSON: full per-config per-predictor Pearson r / p.
+    payload = {
+        "embedding_model": model,
+        "note": "Pearson r on raw magnitudes (copy-and-swap of Spearman rho on ranks in tab4_interaction_h25.tex).",
+        "n_configs": len(rows),
+        "configs": [
+            {
+                "label": r["label"],
+                "predictors": {
+                    pname: (
+                        None
+                        if r["predictors"].get(pname) is None
+                        else {
+                            "raw": r["predictors"][pname]["raw"],
+                            "adj": r["predictors"][pname]["adj"],
+                            "reg": r["predictors"][pname]["reg"],
+                        }
+                    )
+                    for pname in ("covgap", "dominance", "research", "policy")
+                },
+            }
+            for r in rows
+        ],
+    }
+    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    log.info("Saved: %s", out_json)
+
+    write_tex(out_tex, rows)
+    log.info("Saved: %s", out_tex)
+
+    record_fingerprint(outputs, fp, out_json)
+
+    # Console summary.
+    print(f"\nRaw-value (Pearson) correlation grid: {len(rows)} configs")
+    for c in rows:
+        raw = c["predictors"]["covgap"]["raw"]
+        adj = c["predictors"]["covgap"]["adj"]
+        rv = raw["r"] if raw else float("nan")
+        av = adj["r"] if adj else float("nan")
+        print(f"  {c['label']:15s}  covgap raw={rv:+.4f}  adj={av:+.4f}")
+
+
+def main() -> None:
+    run(parse_args())
+
+
+if __name__ == "__main__":
+    main()

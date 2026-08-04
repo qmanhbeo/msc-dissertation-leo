@@ -265,7 +265,7 @@ The geometric effect of INLP register removal is shown in Results (Figure~\ref{f
 
 \subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
 
-The first hypothesis (H1) decomposes into four sub-hypotheses, each correlating a distinct coverage predictor with the within-SDG semantic gap across the 17 SDGs: H1a, coverage gap $\leftrightarrow$ semantic gap; H1b, research--policy dominance $\leftrightarrow$ semantic gap; H1c, research coverage $\leftrightarrow$ semantic gap; and H1d, policy coverage $\leftrightarrow$ semantic gap. H1a is the primary, motivating hypothesis. I compute Pearson $r$ and Spearman $\rho$ between each predictor and semantic-gap scores; SDG~4 is treated as artefact-affected and examined separately (Section~\ref{sec:sdg4artefact}). Given $n = 17$, the tests have limited power to detect anything but a large linear effect; this is a scope condition.
+The first hypothesis (H1) decomposes into four sub-hypotheses, each correlating a distinct coverage predictor with the within-SDG semantic gap across the 17 SDGs: H1a, coverage gap $\leftrightarrow$ semantic gap; H1b, research--policy dominance $\leftrightarrow$ semantic gap; H1c, research coverage $\leftrightarrow$ semantic gap; and H1d, policy coverage $\leftrightarrow$ semantic gap. H1a is the motivating hypothesis; H1b--H1d examine complementary coverage-structure predictions. I compute Pearson $r$ and Spearman $\rho$ between each predictor and semantic-gap scores; SDG~4 is treated as artefact-affected and examined separately (Section~\ref{sec:sdg4artefact}). Given $n = 17$, the tests have limited power to detect anything but a large linear effect; this is a scope condition.
 
 \subsection{Key Assumptions and Mitigations}\label{sec:assumptions-stub}
 
@@ -377,12 +377,18 @@ The four predictors are research coverage, policy coverage, the absolute researc
 \begin{table}[htbp]
 \centering
 \small
-\caption{H1a–H1d coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier configs. Raw gap = main semantic-gap estimate. Adj.\ gap = after INLP register removal (primary, unvalidated). Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.}
+\caption{H1a–H1d coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier configs. Raw gap = main semantic-gap estimate. Adj.\ gap = after INLP register removal (main reported estimate, unvalidated). Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.}
 \label{tab:interaction}
 \input{../4_outputs/mpnet/tables/tab4_interaction_h25.tex}
 \end{table}
 
 The evidence does not support H1a on the raw gap: across the 17 SDGs, coverage divergence and the raw semantic gap show no detectable association ($\rho = \SpearmanCovRaw$, $p = 0.765$; Table~\ref{tab:interaction}, MPNet LR row). With only 17 SDG-level observations the design is powered to detect only very large correlations ($|\HPrimaryMinDetectableR|$ or larger at 80\% power, $\alpha = 0.05$); this is evidence against a strong monotonic relationship, not proof of independence. The raw gap masks a register--topic decomposition: the raw correlation is near-zero because the register component ($\rho = \RhoCovRegister$) appears to cancel the topic signal ($\rho = \RhoCovTopic$; Table~\ref{tab:register-decomposition}). Table~\ref{tab:interaction} shows this apparent cancellation replicates across every encoder--classifier config. Under the raw gap all four H1 hypotheses are null; after register removal the adjusted topic gap is positively associated with coverage divergence (H1a: MPNet LR $\rho = \RhoCovTopic$, $p = 0.054$; positive across all nine configs, e.g.\ Concept LR $+0.451^{\dagger}$) and with policy coverage (H1d: positive in 8/9 configs, significant for MPNet MLP and both SciBERT configs). H1b (signed dominance) and H1c (research coverage) do not show a consistent adjusted-direction signal. Coverage and framing are therefore potentially linked through topic, not independent.
+
+A metric-sensitivity check repeats this grid with Pearson $r$ on the raw magnitudes
+instead of Spearman $\rho$ (Appendix~\ref{app:raw-value-correlation}); the adjusted-gap
+association is unchanged for the supervised tracks across all four H1 hypotheses, and the
+only reversals are the already-flagged lower-trust SciBERT configs, confirming the
+rank-based reporting is not driving the result.
 
 The SDG 4 lexical artefact (Section~\ref{sec:sdg4artefact}) does not drive this result. A leave-one-out check with SDG 4 removed leaves the raw research--gap correlation null ($\rho = \HExclFourResearchSpearmanRho$, $p = \HExclFourResearchSpearmanP$) and preserves the positive register-adjusted coverage-divergence association ($\rho = \HExclFourCovgapAdjSpearmanRho$, $p = \HExclFourCovgapAdjSpearmanP$), so the artefact props up neither the raw null nor the adjusted association.
 
@@ -393,7 +399,7 @@ Figure~\ref{fig:typology_scatter} shows each SDG's adjusted semantic gap against
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig5_coverage_semantic_scatter.pdf}
-\caption{Coverage gap vs semantic gap, one point per SDG. Solid blue points show the adjusted (primary, unvalidated) gap after register removal; open grey points show the raw gap (naive baseline).}
+\caption{Coverage gap vs semantic gap, one point per SDG. Solid blue points show the adjusted (main reported estimate, unvalidated) gap after register removal; open grey points show the raw gap (naive baseline).}
 \label{fig:typology_scatter}
 \end{figure}
 
@@ -415,7 +421,7 @@ The gap rankings reported above are not equally stable across all measurement ch
 \section{Discussion}
 \label{sec:discussion}
 
-The headline result is a possible cancellation: the raw coverage-vs-semantic-gap correlation is near-zero ($\rho = \SpearmanCovRaw$, $p = 0.765$) because two opposing signals appear to cancel: topic divergence rises with coverage divergence ($\rho = \RhoCovTopic = 0.48$, $p = 0.054$) while register divergence falls with it ($\rho = \RhoCovRegister = -0.49$, $p = 0.045$), and the two would sum to near-zero if both components are real. The primary test (H1a) finds no detectable raw association in the canonical specification (Section~\ref{sec:results}; Table~\ref{tab:interaction}): with only $n = \HPrimaryN$ SDG-level observations the design is powered only to detect very large correlations ($|\HPrimaryMinDetectableR|$ at 80\% power), so the wide interval is consistent with either no effect or a moderate one and is evidence against a strong monotonic relationship, not proof of exact independence. All four hypotheses (H1a--H1d) are null on the raw gap across every encoder--classifier config (Table~\ref{tab:interaction}); after register removal the adjusted topic gap is positively associated with coverage divergence, so coverage and framing would be linked through topic if the register removal is valid.
+The headline result is a possible cancellation: the raw coverage-vs-semantic-gap correlation is near-zero ($\rho = \SpearmanCovRaw$, $p = 0.765$) because two opposing signals appear to cancel: topic divergence rises with coverage divergence ($\rho = \RhoCovTopic = 0.48$, $p = 0.054$) while register divergence falls with it ($\rho = \RhoCovRegister = -0.49$, $p = 0.045$), and the two would sum to near-zero if both components are real. The H1a test finds no detectable raw association in the canonical specification (Section~\ref{sec:results}; Table~\ref{tab:interaction}): with only $n = \HPrimaryN$ SDG-level observations the design is powered only to detect very large correlations ($|\HPrimaryMinDetectableR|$ at 80\% power), so the wide interval is consistent with either no effect or a moderate one and is evidence against a strong monotonic relationship, not proof of exact independence. All four hypotheses (H1a--H1d) are null on the raw gap across every encoder--classifier config (Table~\ref{tab:interaction}); after register removal the adjusted topic gap is positively associated with coverage divergence, so coverage and framing would be linked through topic if the register removal is valid.
 
 This apparent cancellation is not a design confound. The supervised LR classifier (\S\ref{sec:supervised-classifier}) is a labelling instrument with a transparent 768-coefficient boundary; the frozen Sentence-BERT space (\S\ref{sec:embedding-choice}) is a separate measurement surface. Because classification and measurement use different procedures, the apparent cancellation would describe the corpora's discourse structure. The encoder-sensitivity check confirms it: coverage ranks are nearly invariant across general-purpose and domain-specialised encoders ($\rho = \SciBERTCoverageRho$), while semantic-gap magnitude tracks whether the encoder separates research from policy registers.
 
@@ -763,6 +769,52 @@ The zero-shot nearest-centroid method is used in this study for one purpose only
 \end{table}
 
 The comparison confirms that the two methods agree on the majority of assignments: the overall LR-versus-zero-shot agreement rate is 62.3\% over the 3.1M research papers and 79.7\% over policy segments (80.4\% at document level; Table~\ref{tab:app-assignment-method-comparison}). Agreement is not uniform across SDGs, and the disagreements are concentrated where the reference centroids are least separated, in line with the centroid-similarity diagnostics (Appendix~\ref{app:centroid-similarity}). SDG~17, whose reference centroid is the flattest and most isolated in that analysis, is also the most method-sensitive goal here: it shows the largest rank delta between the two semantic-gap rankings ($|\Delta| = 10$) and one of the lowest per-SDG assignment agreement rates on the research side (16.8\%, second only to SDG~10 at 15.9\%). SDG~8, whose supervised rank is also heavily method-dependent (rank~6 under LR, rank~15 under zero-shot), shows the second-largest rank delta ($|\Delta| = 9$). The zero-shot rule, having no supervised decision boundary, anchors partnership and inequality discourse less sharply than the LR classifier. The MLP robustness check agrees with the zero-shot rule at 76.8\% of policy segments (78.1\% at document level), close to the LR-versus-zero-shot rate; research-level MLP agreement is not reported because MLP per-paper scores are not persisted, and the research LR-versus-MLP gap-rank correlation (Section~\ref{sec:encoder-sensitivity}) proxies it.
+
+\subsection{Raw-Value Correlation: Metric-Sensitivity Companion}
+\label{app:raw-value-correlation}
+
+Table~\ref{tab:raw-value-correlation} repeats the H1a--H1d grid of Table~\ref{tab:interaction}
+with one change: cells report Pearson $r$ on the raw coverage and gap magnitudes instead of
+Spearman $\rho$ on their ranks; the grid, predictors, and columns are identical. The four
+H1 hypotheses are co-equal and each probes a distinct coverage-structure prediction. Under
+both metrics the adjusted-gap association is stable across the supervised tracks for H1a
+and H1d (the hypotheses with a detectable signal: positive in 7/9 and 9/9 configs
+respectively under Pearson) and remains null for H1b and H1c (no consistent signal under
+either metric -- itself informative: coverage divergence tracks the gap and policy share,
+not dominance or raw research share). The only reversals are the two SciBERT configs; the
+zero-shot config, already scoped as an uncertainty bound, is stable on the adjusted gap.
+SciBERT is designated a lower-trust robustness encoder (its scientific pretraining
+compresses gap magnitudes, $\SciBERTMeanGap{}$ against $\MPNetMeanGap{}$,
+Section~\ref{sec:encoder-sensitivity}).
+
+\emph{Possible causes of the SciBERT divergence.} (A) At $n=17$ the minimal detectable
+Pearson $r$ is large ($\approx0.6$ at 80\% power); both SciBERT adjusted-gap values sit
+below it and are indistinguishable from zero, so the rank/magnitude sign flip is within
+estimation error. (B) Pearson weights absolute distances, Spearman weights ranks;
+SciBERT's $\sim$8$\times$ smaller gap magnitudes make Pearson disproportionately
+sensitive to its few larger gaps. (C) SciBERT has the lowest assignment fidelity of the
+three encoders, giving noisier per-SDG gaps. (D) The flip is in the \emph{adjusted} gap,
+and INLP removal is already documented as encoder-dependent. (E) Pearson is leveraged by
+individual outliers (e.g.\ SDG~3). None of A--E is established; A and E are the most
+directly testable. All are consistent with the divergence being uninformative for the
+conclusion, which rests on the supervised tracks where the signal is large ($+0.70$) and
+stable across metrics. The raw-value specification therefore confirms, rather than
+threatens, the rank-based result.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\caption{Pearson $r$ on the raw coverage and semantic-gap magnitudes, in the same
+H1a--H1d grid and column layout as Table~\ref{tab:interaction}. Significance stars use
+the Pearson $p$-value ($^{***}\,p<0.001$, $^{**}\,p<0.01$, $^{*}\,p<0.05$,
+$^{\dagger}\,p<0.10$).}
+\label{tab:raw-value-correlation}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/j1_raw_value_correlation/tables/tab_j1_raw_value_correlation.tex}}
+\par\smallskip\footnotesize\emph{Notes:} Identical inputs and configuration grid to
+Table~\ref{tab:interaction}; only the correlation function changes from Spearman
+$\rho$ (ranks) to Pearson $r$ (raw magnitudes). ZS is MPNet-only per manuscript
+scope.\par
+\end{table}
 
 \subsection{Detailed Policy Profiles by Source Family}
 \label{app:policy-source-data}
