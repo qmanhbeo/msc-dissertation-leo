@@ -120,6 +120,13 @@ SPEC_GRID = [
      "gap_type": "register",  "predictor": "covgap",     "subsample": "all", "interactions": "none", "form": "rank", "sdg_fe": False, "classifier_ind": True},
     {"spec_id": "reg_dominance",  "panel": "A", "label": "Reg. gap ~ dominance",
      "gap_type": "register",  "predictor": "dominance",  "subsample": "all", "interactions": "none", "form": "rank", "sdg_fe": False, "classifier_ind": True},
+    # Panel A: Predictor decomposition (rescov)
+    {"spec_id": "adj_rescov",     "panel": "A", "label": "Adj. gap ~ rescov",
+     "gap_type": "adjusted",  "predictor": "rescov",     "subsample": "all", "interactions": "none", "form": "rank", "sdg_fe": False, "classifier_ind": True},
+    {"spec_id": "raw_rescov",     "panel": "A", "label": "Raw gap ~ rescov",
+     "gap_type": "raw",       "predictor": "rescov",     "subsample": "all", "interactions": "none", "form": "rank", "sdg_fe": False, "classifier_ind": True},
+    {"spec_id": "reg_rescov",     "panel": "A", "label": "Reg. gap ~ rescov",
+     "gap_type": "register",  "predictor": "rescov",     "subsample": "all", "interactions": "none", "form": "rank", "sdg_fe": False, "classifier_ind": True},
     # Panel B: Robustness (all adjusted + covgap)
     {"spec_id": "adj_noclf",      "panel": "B", "label": "No classifier ind.",
      "gap_type": "adjusted",  "predictor": "covgap",     "subsample": "all", "interactions": "none", "form": "rank", "sdg_fe": False, "classifier_ind": False},
@@ -157,6 +164,7 @@ SPEC_GRID = [
 VAR_LABELS = {
     "covgap":     r"Coverage gap ($\vert$research\% $-$ policy\%\vert)",
     "dominance":  r"Domination (research\% $-$ policy\%)",
+    "rescov":     r"Research coverage (\%)",
     "polcov":     "Policy coverage",
     "i_minilm":   r"MiniLM (vs.\ MPNet)",
     "i_scibert":  r"SciBERT (vs.\ MPNet)",
@@ -374,6 +382,7 @@ def build_panel(root: Path, gap_type: str) -> list[dict]:
                 "n_papers": sem[sdg]["n_papers"],
                 "covgap": cov[sdg]["covgap"],
                 "polcov": cov[sdg]["polcov"],
+                "research": cov[sdg]["research"],
                 "dominance": dominance,
             })
     return rows
@@ -420,7 +429,7 @@ def _build_design(
     cols = [np.ones(n)]
 
     # Continuous predictor
-    pred_key = predictor  # "covgap" or "dominance"
+    pred_key = {"covgap": "covgap", "dominance": "dominance", "rescov": "research"}[predictor]
     cols.append(np.array([r[pred_key] for r in panel], dtype=float))
     var_names.append(predictor)
 
@@ -828,7 +837,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="OLS regression: semantic gap ~ coverage + indicators.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_ROOT))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
-    p.add_argument("--predictor", choices=["covgap", "dominance"], default="covgap")
+    p.add_argument("--predictor", choices=["covgap", "dominance", "rescov"], default="covgap")
     p.add_argument("--gap-type", choices=["raw", "adjusted", "register"], default="raw")
     p.add_argument("--with-sdg-fe", action="store_true")
     p.add_argument("--no-classifier-indicator", action="store_true")

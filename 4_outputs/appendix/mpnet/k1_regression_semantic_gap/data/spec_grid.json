@@ -462,6 +462,237 @@
     }
   },
   {
+    "spec_id": "adj_rescov",
+    "panel": "A",
+    "label": "Adj. gap ~ rescov",
+    "gap_type": "adjusted",
+    "predictor": "rescov",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.713334,
+    "adj_r2": 0.706852,
+    "var_names": [
+      "intercept",
+      "rescov",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "rescov": {
+        "b": 147.527405,
+        "se": 128.317541,
+        "p": 0.267161
+      },
+      "polcov": {
+        "b": 583.20775,
+        "se": 191.083374,
+        "p": 0.007605
+      },
+      "i_minilm": {
+        "b": -38.924413,
+        "se": 12.479284,
+        "p": 0.00661
+      },
+      "i_scibert": {
+        "b": -198.386598,
+        "se": 16.804889,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 85.125117,
+        "se": 8.675839,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.336134,
+        "se": 1.454115,
+        "p": 0.008804
+      },
+      "i_cap_none": {
+        "b": 1.848739,
+        "se": 2.952492,
+        "p": 0.540039
+      },
+      "i_mlp": {
+        "b": 16.810458,
+        "se": 5.636403,
+        "p": 0.008795
+      },
+      "i_zs": {
+        "b": 2.957049,
+        "se": 9.06171,
+        "p": 0.748409
+      }
+    }
+  },
+  {
+    "spec_id": "raw_rescov",
+    "panel": "A",
+    "label": "Raw gap ~ rescov",
+    "gap_type": "raw",
+    "predictor": "rescov",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.70466,
+    "adj_r2": 0.697982,
+    "var_names": [
+      "intercept",
+      "rescov",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "rescov": {
+        "b": 171.681198,
+        "se": 135.935927,
+        "p": 0.2247
+      },
+      "polcov": {
+        "b": -45.42184,
+        "se": 239.965284,
+        "p": 0.85225
+      },
+      "i_minilm": {
+        "b": 5.823522,
+        "se": 17.188179,
+        "p": 0.739159
+      },
+      "i_scibert": {
+        "b": -184.092444,
+        "se": 14.841597,
+        "p": 0.0
+      },
+      "i_concept": {
+        "b": 106.557423,
+        "se": 11.161027,
+        "p": 0.0
+      },
+      "i_cap20": {
+        "b": 4.344538,
+        "se": 1.655723,
+        "p": 0.018421
+      },
+      "i_cap_none": {
+        "b": 1.588235,
+        "se": 2.028233,
+        "p": 0.445026
+      },
+      "i_mlp": {
+        "b": 15.27451,
+        "se": 5.340342,
+        "p": 0.011339
+      },
+      "i_zs": {
+        "b": 7.507003,
+        "se": 16.727408,
+        "p": 0.659606
+      }
+    }
+  },
+  {
+    "spec_id": "reg_rescov",
+    "panel": "A",
+    "label": "Reg. gap ~ rescov",
+    "gap_type": "register",
+    "predictor": "rescov",
+    "subsample": "all",
+    "interactions": "none",
+    "form": "rank",
+    "sdg_fe": false,
+    "classifier_ind": true,
+    "n_configs": 24,
+    "n_sdgs": 17,
+    "n": 408,
+    "n_clusters": 17,
+    "r2": 0.580546,
+    "adj_r2": 0.57106,
+    "var_names": [
+      "intercept",
+      "rescov",
+      "polcov",
+      "i_minilm",
+      "i_scibert",
+      "i_concept",
+      "i_cap20",
+      "i_cap_none",
+      "i_mlp",
+      "i_zs"
+    ],
+    "coef": {
+      "rescov": {
+        "b": 26.967295,
+        "se": 108.614445,
+        "p": 0.807073
+      },
+      "polcov": {
+        "b": -485.821539,
+        "se": 321.594222,
+        "p": 0.15037
+      },
+      "i_minilm": {
+        "b": 39.386582,
+        "se": 16.608504,
+        "p": 0.030606
+      },
+      "i_scibert": {
+        "b": -161.470561,
+        "se": 20.727378,
+        "p": 1e-06
+      },
+      "i_concept": {
+        "b": 58.991597,
+        "se": 14.645798,
+        "p": 0.000973
+      },
+      "i_cap20": {
+        "b": -0.042017,
+        "se": 2.639946,
+        "p": 0.987498
+      },
+      "i_cap_none": {
+        "b": -0.806723,
+        "se": 1.941674,
+        "p": 0.683311
+      },
+      "i_mlp": {
+        "b": -0.830065,
+        "se": 4.338453,
+        "p": 0.850676
+      },
+      "i_zs": {
+        "b": 5.344538,
+        "se": 14.26051,
+        "p": 0.712746
+      }
+    }
+  },
+  {
     "spec_id": "adj_noclf",
     "panel": "B",
     "label": "No classifier ind.",
