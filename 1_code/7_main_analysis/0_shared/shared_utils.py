@@ -222,12 +222,24 @@ def require_output_files(output_dir: Path, required_files: list[str]) -> Path:
     return output_dir
 
 
+# The distributional-gap tables (Appendix G) are written by g_distributional_gap.py
+# into 4_outputs/{model}/adjusted/tables/ (the adjusted embedding track), which is
+# also where dissertation.tex reads them from. The guard below accepts either
+# location so build-pdf does not require a duplicate copy under tables/.
+DISTRIBUTIONAL_TABLES = {"num13_distributional_gap.tex", "tab13_distributional_gap.tex"}
+
+
 def require_pdf_inputs(output_dir: Path, model: str | None = None) -> Path:
     root = Path(output_dir)
     missing = []
     for name in MANUSCRIPT_TABLE_FILES:
         path = output_dir_for_model(model, root=root) / "tables" / name
         if not path.exists():
+            # distributional tables live under adjusted/tables
+            if name in DISTRIBUTIONAL_TABLES and (
+                output_dir_for_model(model, root=root) / "adjusted" / "tables" / name
+            ).exists():
+                continue
             missing.append(str(path.relative_to(root)))
     for name in MANUSCRIPT_FIGURE_FILES:
         path = output_dir_for_model(model, root=root) / "figures" / name
