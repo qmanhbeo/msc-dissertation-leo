@@ -302,7 +302,7 @@ Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology. All t
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{fig6_pipeline_flowchart.pdf}
-  \caption{End-to-end methodology pipeline in three parallel data tracks. All tracks pass through preprocessing and token-aware segmentation; OSDG and Benchmark in Track~1 bypass segmentation (short single-label texts). Policy segments four sources then merges (\NPolicySegments{}). Research segments all abstracts (\NResearchPapers{}). The trained LR classifier scores both Research and Policy embeddings for downstream gap analysis.}
+  \caption{End-to-end methodology pipeline in three parallel data tracks.}
   \label{fig:pipeline-flowchart}
 \end{figure}
 
@@ -359,7 +359,7 @@ Figure~\ref{fig:pca-register-before-after} shows the geometric effect of INLP re
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{fig3_pca_register_before_after.pdf}
-\caption{PCA before/after INLP register removal (MPNet). (a)~Raw embeddings: research and policy clouds are separated. (b)~Adjusted embeddings (register removed via INLP): the clouds merge, confirming that the raw separation is driven by register rather than topic. Each panel fits PCA on its respective data; panels have independent axes. Descriptive projection only; all reported distances remain in the original embedding space.}
+\caption{PCA before/after INLP register removal (MPNet).}
 \label{fig:pca-register-before-after}
 \end{figure}
 
@@ -368,7 +368,7 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs,
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.85\textwidth]{fig4_semantic_gap.pdf}
-\caption{Within-SDG semantic gap by SDG, sorted by the adjusted (topic) gap after register removal. Solid bars show the adjusted (primary, unvalidated) gap; grey diamonds show the raw gap (naive baseline). Dashed line = adjusted median; dotted line = adjusted mean. Dark bars exceed the median; light bars fall below it.}
+\caption{Within-SDG semantic gap by SDG, sorted by the adjusted (topic) gap after register removal.}
 \label{fig:semantic_gap}
 \end{figure}
 
@@ -377,9 +377,10 @@ Figure~\ref{fig:semantic_gap} shows the within-SDG semantic gap for all 17 SDGs,
 \begin{table}[ht]
 \centering
 \small
-\caption{Register-topic decomposition of the semantic gap. Raw gap = the reference semantic-gap estimate. Adjusted gap = after iterative nullspace projection (INLP) register removal (primary, unvalidated). Register component = raw $-$ adjusted. Coverage correlations are Spearman $\rho$ across 17 SDGs.}
+\caption{Register-topic decomposition of the semantic gap.}
 \label{tab:register-decomposition}
 \input{../4_outputs/mpnet/tables/tab5_register_decomposition.tex}
+\par\smallskip\footnotesize\emph{Notes:} Raw gap is the reference semantic-gap estimate; Adjusted gap is after INLP register removal (primary, unvalidated); Register component = raw $-$ adjusted. Coverage correlations are Spearman $\rho$ across 17 SDGs.\par
 \end{table}
 
 \textbf{Smallest semantic gaps (adjusted, primary).} SDG~15 (Life on Land, \AdjGapSdgFifteen), SDG~2 (Zero Hunger, \AdjGapSdgTwo), SDG~6 (Clean Water, \AdjGapSdgSix), SDG~14 (Life Below Water, \AdjGapSdgFourteen), and SDG~4 (Quality Education, \AdjGapSdgFour) show the narrowest adjusted gaps, meaning research and policy frame these goals in similar terms after register removal. A narrow gap does not mean balanced attention: SDG~9 is still research-dominant, and SDG~4 carries the learning-vocabulary concern (Appendix~\ref{app:sdg4-lexical-audit}). Appendix~\ref{app:semantic-gap-text-interpretability} shows example texts for high- and low-gap cases.
@@ -395,9 +396,10 @@ The four predictors are research coverage, policy coverage, the absolute researc
 \begin{table}[htbp]
 \centering
 \small
-\caption{H1a–H1d coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier configs. Raw gap = main semantic-gap estimate. Adj.\ gap = after INLP register removal (main reported estimate, unvalidated). Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.}
+\caption{H1a–H1d coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier configs.}
 \label{tab:interaction}
 \input{../4_outputs/mpnet/tables/tab4_interaction_h25.tex}
+\par\smallskip\footnotesize\emph{Notes:} Raw gap = main semantic-gap estimate; Adj.\ gap = after INLP register removal (main reported estimate, unvalidated); Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.\par
 \end{table}
 
 The evidence does not support H1a on the raw gap: across the 17 SDGs, coverage divergence and the raw semantic gap show no detectable association ($\rho = \SpearmanCovRaw$, $p = 0.765$; Table~\ref{tab:interaction}, MPNet LR row). With only 17 SDG-level observations the design is powered to detect only very large correlations ($|\HPrimaryMinDetectableR|$ or larger at 80\% power, $\alpha = 0.05$); this is evidence against a strong monotonic relationship, not proof of independence. The raw gap masks a register--topic decomposition: the raw correlation is near-zero because the register component ($\rho = \RhoCovRegister$) appears to cancel the topic signal ($\rho = \RhoCovTopic$; Table~\ref{tab:register-decomposition}). Table~\ref{tab:interaction} shows this apparent cancellation replicates across every encoder--classifier config. Under the raw gap all four H1 hypotheses are null; after register removal the adjusted topic gap is positively associated with coverage divergence (H1a: MPNet LR $\rho = \RhoCovTopic$, $p = 0.054$; positive across all nine configs, e.g.\ Concept LR $+0.451^{\dagger}$) and with policy coverage (H1d: positive in 8/9 configs, significant for MPNet MLP and both SciBERT configs). H1b (signed dominance) and H1c (research coverage) do not show a consistent adjusted-direction signal. Coverage and framing are therefore potentially linked through topic, not independent.
@@ -417,7 +419,7 @@ Figure~\ref{fig:typology_scatter} shows each SDG's adjusted semantic gap against
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{fig5_coverage_semantic_scatter.pdf}
-\caption{Coverage gap vs semantic gap, one point per SDG. Solid blue points show the adjusted (main reported estimate, unvalidated) gap after register removal; open grey points show the raw gap (naive baseline).}
+\caption{Coverage gap vs semantic gap, one point per SDG.}
 \label{fig:typology_scatter}
 \end{figure}
 
@@ -711,9 +713,10 @@ Table~\ref{tab:iterative-register-check} shows the per-iteration diagnostic: hel
 \begin{table}[ht]
 \centering
 \small
-\caption{Stratified iterative register-removal diagnostic. Test acc.\ = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Mean gap = average within-SDG semantic gap after $k$ removals. Spearman $\rho$ = rank correlation of the gap vector at iteration~$k$ versus iteration~1.}
+\caption{Stratified iterative register-removal diagnostic.}
 \label{tab:iterative-register-check}
 \input{../4_outputs/mpnet/tables/tab12_register_check.tex}
+\par\smallskip\footnotesize\emph{Notes:} Test acc.\ = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Mean gap = average within-SDG semantic gap after $k$ removals. Spearman $\rho$ = rank correlation of the gap vector at iteration~$k$ versus iteration~1.\par
 \end{table}
 \clearpage
 \section{Concept-Retrieval Sensitivity}
@@ -725,9 +728,10 @@ Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword
 
 \begin{table}[ht]
 \centering
-\caption{SDG coverage-share comparison: keyword-retrieved versus concept-retrieved (AI/ML field-of-study) research corpus. $\Delta$ is concept minus keyword share in percentage points.}
+\caption{SDG coverage-share comparison: keyword-retrieved versus concept-retrieved (AI/ML field-of-study) research corpus.}
 \label{tab:concept-coverage}
 \input{../4_outputs/mpnet/tables/tab10_concept_coverage.tex}
+\par\smallskip\footnotesize\emph{Notes:} $\Delta$ is concept minus keyword share in percentage points.\par
 \end{table}
 
 \section{Supplementary Cross-Method Data}
@@ -780,10 +784,10 @@ The zero-shot nearest-centroid method is used in this study for one purpose only
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{Assignment agreement between the supervised LR classifier and the zero-shot nearest-centroid rule, by SDG and overall, under the canonical MPNet encoder and keyword retrieval. Agree \% is the share of LR-assigned texts that the zero-shot rule also assigns to the same SDG. Semantic-gap ranks are $1 = \text{largest gap}$; $|\Delta|$ is the absolute rank difference between the two methods.}
+\caption{Assignment agreement between the supervised LR classifier and the zero-shot nearest-centroid rule, by SDG and overall, under the canonical MPNet encoder and keyword retrieval.}
 \label{tab:app-assignment-method-comparison}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/i1_assignment_method_comparison/tables/tab_app_assignment_method_comparison.tex}}
-\par\smallskip\footnotesize\emph{Notes:} Assignment agreement is computed over all texts (research: each paper; policy: each segment), without the 50-segment-per-document cap, which applies only to centroid building. The zero-shot rule assigns each text to the SDG with the highest cosine similarity to the train-split reference centroids ($\mathbf{s}_k$); the LR rule uses the trained classifier's argmax. MLP agreement against zero-shot is computed for the policy corpus only, because MLP research per-paper scores are not persisted (the research LR-vs-MLP gap-rank correlation is reported in Section~\ref{sec:encoder-sensitivity}).\par
+\par\smallskip\footnotesize\emph{Notes:} Agree \% is the share of LR-assigned texts that the zero-shot rule also assigns to the same SDG. Semantic-gap ranks are $1 = \text{largest gap}$; $|\Delta|$ is the absolute rank difference between the two methods. Assignment agreement is computed over all texts (research: each paper; policy: each segment), without the 50-segment-per-document cap, which applies only to centroid building. The zero-shot rule assigns each text to the SDG with the highest cosine similarity to the train-split reference centroids ($\mathbf{s}_k$); the LR rule uses the trained classifier's argmax. MLP agreement against zero-shot is computed for the policy corpus only, because MLP research per-paper scores are not persisted (the research LR-vs-MLP gap-rank correlation is reported in Section~\ref{sec:encoder-sensitivity}).\par
 \end{table}
 
 The comparison confirms that the two methods agree on the majority of assignments: the overall LR-versus-zero-shot agreement rate is 62.3\% over the 3.1M research papers and 79.7\% over policy segments (80.4\% at document level; Table~\ref{tab:app-assignment-method-comparison}). Agreement is not uniform across SDGs, and the disagreements are concentrated where the reference centroids are least separated, in line with the centroid-similarity diagnostics (Appendix~\ref{app:centroid-similarity}). SDG~17, whose reference centroid is the flattest and most isolated in that analysis, is also the most method-sensitive goal here: it shows the largest rank delta between the two semantic-gap rankings ($|\Delta| = 10$) and one of the lowest per-SDG assignment agreement rates on the research side (16.8\%, second only to SDG~10 at 15.9\%). SDG~8, whose supervised rank is also heavily method-dependent (rank~6 under LR, rank~15 under zero-shot), shows the second-largest rank delta ($|\Delta| = 9$). The zero-shot rule, having no supervised decision boundary, anchors partnership and inequality discourse less sharply than the LR classifier. The MLP robustness check agrees with the zero-shot rule at 76.8\% of policy segments (78.1\% at document level), close to the LR-versus-zero-shot rate; research-level MLP agreement is not reported because MLP per-paper scores are not persisted, and the research LR-versus-MLP gap-rank correlation (Section~\ref{sec:encoder-sensitivity}) proxies it.
@@ -822,13 +826,10 @@ threatens, the rank-based result.
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{Pearson $r$ on the raw coverage and semantic-gap magnitudes, in the same
-H1a--H1d grid and column layout as Table~\ref{tab:interaction}. Significance stars use
-the Pearson $p$-value ($^{***}\,p<0.001$, $^{**}\,p<0.01$, $^{*}\,p<0.05$,
-$^{\dagger}\,p<0.10$).}
+\caption{Pearson $r$ on the raw coverage and semantic-gap magnitudes.}
 \label{tab:raw-value-correlation}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/j1_raw_value_correlation/tables/tab_j1_raw_value_correlation.tex}}
-\par\smallskip\footnotesize\emph{Notes:} Identical inputs and configuration grid to
+\par\smallskip\footnotesize\emph{Notes:} Same H1a--H1d grid and column layout as Table~\ref{tab:interaction}; significance stars use the Pearson $p$-value ($^{***}\,p<0.001$, $^{**}\,p<0.01$, $^{*}\,p<0.05$, $^{\dagger}\,p<0.10$). Identical inputs and configuration grid to
 Table~\ref{tab:interaction}; only the correlation function changes from Spearman
 $\rho$ (ranks) to Pearson $r$ (raw magnitudes). ZS is MPNet-only per manuscript
 scope.\par
