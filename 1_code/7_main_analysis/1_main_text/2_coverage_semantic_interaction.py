@@ -83,6 +83,7 @@ from h1_register_correlation_table import (
     _zs_raw_gaps, _zs_adj_gaps,
     _mlp_raw_gaps, _mlp_adj_gaps,
     _concept_raw_gaps, _concept_adj_gaps,
+    _concept_mlp_raw_gaps, _concept_mlp_adj_gaps,
 )
 
 # ---------------------------------------------------------------------------
@@ -186,6 +187,37 @@ _H1_GROUPS = [
 ]
 
 
+_H1_GAP_SUFFIX = {"LR": "lr", "MLP": "mlp", "ZS": "zeroshot"}
+
+
+def h1_grid_input_paths(root: Path) -> list[Path]:
+    """Every file the H1 config grid reads, derived from _H1_CONFIGS itself.
+
+    The canonical fingerprint in run() covers only the MPNet keyword inputs, so
+    without this the grid would not re-derive when a per-config coverage or gap
+    input changes -- in particular the data/concept/ inputs behind the Concept
+    rows. Shared with j1_raw_value_correlation.py so both grids fingerprint the
+    same set.
+    """
+    paths: list[Path] = []
+    for _label, model, method, corpus in _H1_CONFIGS:
+        base = output_dir_for_model(model, root=root) / "data"
+        if corpus == "concept":
+            base = base / "concept"
+        suffix = _H1_GAP_SUFFIX[method]
+        paths.append(base / "coverage_document_weighted.json")
+        paths.append(base / f"semantic_gap_distances_{suffix}.json")
+        paths.append(base / "adjusted" / f"semantic_gap_distances_{suffix}.json")
+    # De-duplicate, preserving _H1_CONFIGS order so the fingerprint is stable.
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for p in paths:
+        if p not in seen:
+            seen.add(p)
+            unique.append(p)
+    return unique
+
+
 def _spearman_dict(x: np.ndarray, y: np.ndarray) -> dict | None:
     if x.size < 3 or y.size < 3:
         return None
@@ -213,23 +245,32 @@ def _load_coverage_predictors(root: Path, model: str, corpus: str) -> dict | Non
     return {"research": research, "policy": policy, "covgap": covgap, "dominance": dominance}
 
 
-def _raw_gaps_for(method: str, root: Path, model: str) -> dict | None:
+def _raw_gaps_for(method: str, root: Path, model: str, corpus: str) -> dict | None:
+    """Raw within-SDG gap vector for one config.
+
+    `corpus` MUST be honoured: the concept rows retrieve a different research
+    corpus (AI/ML field-of-study instead of keyword), so both their coverage
+    predictors AND their semantic gaps come from data/concept/. Falling back to
+    the keyword gaps here correlates a predictor built on one corpus against an
+    outcome built on another. There is no concept ZS row in _H1_CONFIGS.
+    """
     if method == "LR":
-        return _lr_raw_gaps(root, model)
+        return _concept_raw_gaps(root) if corpus == "concept" else _lr_raw_gaps(root, model)
     if method == "ZS":
         return _zs_raw_gaps(root, model)
     if method == "MLP":
-        return _mlp_raw_gaps(root, model)
+        return _concept_mlp_raw_gaps(root) if corpus == "concept" else _mlp_raw_gaps(root, model)
     return None
 
 
-def _adj_gaps_for(method: str, root: Path, model: str) -> dict | None:
+def _adj_gaps_for(method: str, root: Path, model: str, corpus: str) -> dict | None:
+    """Register-adjusted (topic) gap vector for one config. See _raw_gaps_for on `corpus`."""
     if method == "LR":
-        return _lr_adj_gaps(root, model)
+        return _concept_adj_gaps(root) if corpus == "concept" else _lr_adj_gaps(root, model)
     if method == "ZS":
         return _zs_adj_gaps(root, model)
     if method == "MLP":
-        return _mlp_adj_gaps(root, model)
+        return _concept_mlp_adj_gaps(root) if corpus == "concept" else _mlp_adj_gaps(root, model)
     return None
 
 
@@ -237,10 +278,10 @@ def _h1_config_row(label: str, model: str, method: str, corpus: str, root: Path)
     cov = _load_coverage_predictors(root, model, corpus)
     if cov is None:
         return None
-    raw = _raw_gaps_for(method, root, model)
+    raw = _raw_gaps_for(method, root, model, corpus)
     if raw is None:
         return None
-    adj = _adj_gaps_for(method, root, model)
+    adj = _adj_gaps_for(method, root, model, corpus)
     out = {"label": label, "predictors": {}}
     for pname in ("covgap", "dominance", "research", "policy"):
         pred = cov[pname]
@@ -280,6 +321,38 @@ def _fmt_rho(v: dict | None) -> str:
     if v is None:
         return "--"
     return f"{v['rho']:+.3f}{_sig_stars(v['p'])}"
+
+
+# Grid cells the interaction section quotes inline. Exported as macros so prose
+# and Table tab:interaction cannot disagree: (macro stem, row label, predictor).
+_H1_QUOTED_CELLS = [
+    ("ConceptLRCovgapAdj", "Concept LR", "covgap"),
+]
+
+# Blocks whose "positive in N/9 configs" count the prose reports.
+_H1_POSITIVE_COUNTS = [
+    ("HOneACovgapAdjPositiveCount", "covgap"),
+    ("HOneDPolicyAdjPositiveCount", "policy"),
+]
+
+
+def _h1_grid_macros(rows: list[dict]) -> list[str]:
+    """Export the grid cells and config counts that the interaction prose cites."""
+    by_label = {r["label"]: r for r in rows}
+    lines: list[str] = []
+    for stem, label, predictor in _H1_QUOTED_CELLS:
+        pred = by_label.get(label, {}).get("predictors", {}).get(predictor)
+        cell = pred["adj"] if pred else None
+        lines.append(rf"\newcommand{{\{stem}Rho}}{{{_fmt_rho(cell)}}}")
+    for stem, predictor in _H1_POSITIVE_COUNTS:
+        adj = [
+            r["predictors"].get(predictor, {}).get("adj") if r["predictors"].get(predictor) else None
+            for r in rows
+        ]
+        n_pos = sum(1 for v in adj if v is not None and v["rho"] > 0)
+        lines.append(rf"\newcommand{{\{stem}}}{{{n_pos}}}")
+        lines.append(rf"\newcommand{{\{stem}Total}}{{{len(rows)}}}")
+    return lines
 
 
 def write_h1_grid_tex(path: Path, rows: list[dict]) -> None:
@@ -334,10 +407,15 @@ def run(args: argparse.Namespace) -> None:
     tables_dir = layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
-    SCRIPT_VERSION = "2"
+    # Bumped to "3": the H1 grid's Concept rows previously read the MPNet keyword
+    # gaps instead of the concept-corpus gaps, so every committed tab4 is stale.
+    SCRIPT_VERSION = "3"
     PRIMARY = out_corr
     OUTPUTS = [out_corr, out_scatter, tables_dir / "tab4_interaction_h25.tex"]
-    fp = fingerprint_of(coverage_gap_path, semantic_gap_path, adj_gap_path) + SCRIPT_VERSION
+    fp = fingerprint_of(
+        coverage_gap_path, semantic_gap_path, adj_gap_path,
+        *h1_grid_input_paths(Path(args.output_dir)),
+    ) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
@@ -678,9 +756,11 @@ def run(args: argparse.Namespace) -> None:
     num_lines += [
         rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.2f}}}",
     ]
-    (gen_dir / "num4_interaction_h25.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
-    log.info("Saved: %s", gen_dir / "num4_interaction_h25.tex")
+
     # ---- H1 x config register-correlation grid (replaces the stale exclude-SDG rows) ----
+    # Computed before num4 is written so the grid can also export the cells the
+    # prose quotes -- the interaction section previously hard-coded them, and the
+    # literals silently went stale when the grid was regenerated.
     h1_grid: list[dict] = []
     for _label, _m, _method, _corpus in _H1_CONFIGS:
         _row = _h1_config_row(_label, _m, _method, _corpus, Path(args.output_dir))
@@ -688,6 +768,10 @@ def run(args: argparse.Namespace) -> None:
             h1_grid.append(_row)
         else:
             log.warning("WARNING: missing data for %s -- skipping row", _label)
+
+    num_lines += _h1_grid_macros(h1_grid)
+    (gen_dir / "num4_interaction_h25.tex").write_text("\n".join(num_lines) + "\n", encoding="utf-8")
+    log.info("Saved: %s", gen_dir / "num4_interaction_h25.tex")
 
     write_h1_grid_tex(gen_dir / "tab4_interaction_h25.tex", h1_grid)
     log.info("Saved: %s", gen_dir / "tab4_interaction_h25.tex")

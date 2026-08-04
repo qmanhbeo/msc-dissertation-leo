@@ -173,6 +173,7 @@ MANUSCRIPT_APPENDIX_TABLE_FILES = [
     "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_covgap.tex",
     "appendix/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex",
     "appendix/i1_assignment_method_comparison/tables/tab_app_assignment_method_comparison.tex",
+    "appendix/j1_raw_value_correlation/tables/tab_j1_raw_value_correlation.tex",
     "main/tables/num16_model_selection.tex",
     "main/tables/num17_reference_split.tex",
 ]

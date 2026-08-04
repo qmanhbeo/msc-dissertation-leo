@@ -43,7 +43,6 @@ for path in (CODE_ROOT, MAIN_TEXT, SHARED_DIR):
 from model_utils import (
     DEFAULT_EMBED_MODEL,
     DEFAULT_OUTPUT_ROOT,
-    output_dir_for_model,
     resolve_model_alias,
 )
 from shared_utils import (
@@ -68,11 +67,10 @@ _H1_GROUPS = cov_inter._H1_GROUPS
 _load_coverage_predictors = cov_inter._load_coverage_predictors
 _raw_gaps_for = cov_inter._raw_gaps_for
 _adj_gaps_for = cov_inter._adj_gaps_for
+h1_grid_input_paths = cov_inter.h1_grid_input_paths
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-GAP_SUFFIX = {"LR": "lr", "MLP": "mlp", "ZS": "zeroshot"}
 
 
 # ---------------------------------------------------------------------------
@@ -108,10 +106,10 @@ def _config_row(label: str, model: str, method: str, corpus: str, root: Path) ->
     cov = _load_coverage_predictors(root, model, corpus)
     if cov is None:
         return None
-    raw = _raw_gaps_for(method, root, model)
+    raw = _raw_gaps_for(method, root, model, corpus)
     if raw is None:
         return None
-    adj = _adj_gaps_for(method, root, model)
+    adj = _adj_gaps_for(method, root, model, corpus)
     out = {"label": label, "predictors": {}}
     for pname in ("covgap", "dominance", "research", "policy"):
         pred = cov[pname]
@@ -174,19 +172,10 @@ def run(args: argparse.Namespace) -> None:
     out_tex = layout.tables_dir / "tab_j1_raw_value_correlation.tex"
     outputs = [out_json, out_tex]
 
-    # Fingerprint all input files (coverage + raw/adjusted gap per config).
-    fp_paths: list[Path] = []
-    for _, m, method, corpus in _H1_CONFIGS:
-        suffix = GAP_SUFFIX[method]
-        if corpus == "concept":
-            base = output_dir_for_model("all-mpnet-base-v2", root=root) / "data" / "concept"
-        else:
-            base = output_dir_for_model(m, root=root) / "data"
-        fp_paths.append(base / "coverage_document_weighted.json")
-        fp_paths.append(base / f"semantic_gap_distances_{suffix}.json")
-        fp_paths.append(base / "adjusted" / f"semantic_gap_distances_{suffix}.json")
-
-    fp = fingerprint_of(*fp_paths) + "j1_raw_v1"
+    # Fingerprint all input files (coverage + raw/adjusted gap per config), using
+    # the same derivation as the Spearman grid so the two cannot drift apart.
+    # Bumped to v2: the Concept rows previously read the MPNet keyword gaps.
+    fp = fingerprint_of(*h1_grid_input_paths(root)) + "j1_raw_v2"
     if should_skip(outputs, fp, args.overwrite, out_json):
         log.info("Skipping %s -- inputs unchanged", out_json)
         return

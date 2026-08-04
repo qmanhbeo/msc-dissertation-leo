@@ -32,8 +32,8 @@ MAIN_STEPS = [
 ]
 
 # Single source of truth for every appendix identity. Canonical order:
-# A2, A3, B2, C, C1, C0, D1, H1, I1, G(opt-in). `in_all` flags whether the
-# script participates in `--appendix-all` (G is opt-in only).
+# A2, A3, B2, C, C1, C0, D1, H1, I1, G(opt-in), J1, K1. `in_all` flags whether
+# the script participates in `--appendix-all` (G is opt-in only).
 APPENDIX_SPECS = [
     {
         "flag": "appendix-a2-family",
@@ -148,6 +148,17 @@ APPENDIX_SPECS = [
         "step_id": "G",
         "in_all": False,
         "requires": ["semantic_gap_distances_lr.json"],
+    },
+    {
+        "flag": "appendix-j1-raw-value",
+        "aliases": ["raw-value-correlation"],
+        "script": "2_appendix/j1_raw_value_correlation.py",
+        "help": "Run J.1 Raw-Value (Pearson) Correlation companion to the H1a--H1d grid.",
+        "warn": "Raw-value correlation (Appendix J.1)",
+        "run_label": "raw-value correlation",
+        "step_id": "J1",
+        "in_all": True,
+        "requires": ["coverage_document_weighted.json", "semantic_gap_distances_lr.json"],
     },
     {
         "flag": "appendix-k1-regression",
