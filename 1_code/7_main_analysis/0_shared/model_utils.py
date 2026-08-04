@@ -278,6 +278,9 @@ def append_grid_log(
     cv_metrics: dict,
     n_train: int,
     input_dim: int,
+    random_seed: int | None = None,
+    search_name: str | None = None,
+    device_info: dict | None = None,
 ) -> None:
     """Append one config entry to the durable grid-search log (dedup-aware).
 
@@ -314,6 +317,9 @@ def append_grid_log(
         "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "n_train": n_train,
         "input_dim": input_dim,
+        "random_seed": random_seed,
+        "search_name": search_name,
+        "device_info": device_info,
     }
     grid_log["log"].append(entry)
 

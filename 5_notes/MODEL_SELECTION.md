@@ -129,7 +129,7 @@ Learning rate had negligible impact — all combinations within ~0.003 of the be
 
 The gap between LR and MLP is 0.0136 macro-F1 (~1.5 pooled σ). This is a modest difference — not sufficient to justify the complexity trade-off.
 
-- MLP requires: 4 hidden layers, AdamW, learning rate tuning, early stopping, dropout selection. The grid swept 36 configurations.
+- MLP requires: 4 hidden layers, AdamW, learning rate tuning, early stopping, dropout selection. The grid swept 8 configurations (n_layers ∈ {2,4} × hidden_size ∈ {256,384} × lr ∈ {3e-4,1e-3}).
 - LR requires: one free parameter (C). No hidden layers, no dropout, no early stopping, no random seed sensitivity.
 
 For this study's purpose — building an interpretable supervised reference to compare corpora — LR is the right choice:

@@ -2,8 +2,8 @@
 Retrain the champion classifier on the FULL train pool (indices/train.npy),
 then evaluate on the held-out test set (indices/test.npy).
 
-Champion (final, LR): C=10.0, penalty=l2, class_weight=None, solver=lbfgs
-Champion (prior, MLP): n_layers=4, hidden_size=384, lr=1e-3, wd=0, dropout=0.3
+Champion (LR): C=3.0, penalty=l2, class_weight=None, solver=lbfgs
+Champion (MLP): n_layers=3, hidden_size=256, lr=3e-4, wd=0, dropout=0.3
 
 Inputs:
   {data_dir}/embeddings.npy
@@ -56,19 +56,19 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 # Champion LR hyperparameters (see module docstring for provenance).
-LR_C = 10.0
+LR_C = 3.0
 LR_PENALTY = "l2"
 LR_SOLVER = "lbfgs"
 LR_MAX_ITER = 1000
 
-# Champion MLP hyperparameters as selected by the manual grid-search CV
-# (mlp_grid_search_log.json, 2026-07-25): 4 layers / 384 hidden / lr=3e-4 / wd=0 /
-# dropout=0.3, CV macro-F1 0.8243. The argparse defaults below derive from this
+# Champion MLP hyperparameters as selected by the expanded grid-search CV
+# (mlp_grid_search_log.json, 2026-08-03): 3 layers / 256 hidden / lr=3e-4 / wd=0 /
+# dropout=0.3, CV macro-F1 0.8192. The argparse defaults below derive from this
 # champion so the retrained MLP artifact (mlp_retrained.joblib +
 # model_config.json) matches the dissertation text, which cites lr=3e-4.
 MLP_CHAMPION_CONFIG = {
-    "n_layers": 4,
-    "hidden_size": 384,
+    "n_layers": 3,
+    "hidden_size": 256,
     "lr": 3e-4,
     "weight_decay": 0.0,
     "dropout": 0.3,
@@ -205,12 +205,13 @@ def main() -> None:
                         help="Override data dir (derived from --model if omitted)")
     parser.add_argument("--classifier-type", default="lr", choices=["mlp", "lr"],
                         help="Classifier family (default: lr)")
-    # MLP-specific args
-    parser.add_argument("--n-layers", type=int, default=4)
-    parser.add_argument("--hidden-size", type=int, default=384)
+    # MLP-specific args (defaults derive from MLP_CHAMPION_CONFIG so the
+    # retrain always matches the grid-selected champion)
+    parser.add_argument("--n-layers", type=int, default=MLP_CHAMPION_CONFIG["n_layers"])
+    parser.add_argument("--hidden-size", type=int, default=MLP_CHAMPION_CONFIG["hidden_size"])
     parser.add_argument("--lr", type=float, default=MLP_CHAMPION_CONFIG["lr"])
-    parser.add_argument("--weight-decay", type=float, default=0.0)
-    parser.add_argument("--dropout", type=float, default=0.3)
+    parser.add_argument("--weight-decay", type=float, default=MLP_CHAMPION_CONFIG["weight_decay"])
+    parser.add_argument("--dropout", type=float, default=MLP_CHAMPION_CONFIG["dropout"])
     parser.add_argument("--max-epochs", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--patience", type=int, default=7)
@@ -231,8 +232,8 @@ def main() -> None:
                         help="Force retrain even if a previously trained model exists.")
     parser.add_argument("--cv-full-data", action="store_true",
                         help="EXPLORATORY (manual only): run GroupKFold CV on 100%% of labelled data "
-                             "with the grid-search champion hyperparameters (LR: C=10/l2/lbfgs; "
-                             "MLP: 4/384/lr=3e-4). Writes cv_full_data_results.json and exits — does "
+                             "with the grid-search champion hyperparameters (LR: C=3.0/l2/lbfgs; "
+                             "MLP: 3/256/lr=3e-4). Writes cv_full_data_results.json and exits — does "
                              "NOT retrain, save, or overwrite any model artifact. Not part of the "
                              "main pipeline; not invoked by main.py.")
     args = parser.parse_args()
@@ -365,7 +366,8 @@ def main() -> None:
         log.info("Training done: %.1fs  best val macro-F1=%.4f  full-retrain epochs=%d", train_time, best_val_f1, best_epoch)
 
     else:
-        log.info("Config: C=10.0 penalty=l2 class_weight=None solver=lbfgs")
+        log.info("Config: C=%s penalty=%s class_weight=%s solver=%s",
+                 args.C, args.penalty, args.class_weight, args.solver)
 
         y_int_train = Y_train.argmax(axis=1)
         clf = LogisticRegression(
@@ -465,10 +467,10 @@ def main() -> None:
     else:
         config = {
             "classifier_type": "lr",
-            "C": 10.0,
-            "penalty": "l2",
-            "solver": "lbfgs",
-            "class_weight": None,
+            "C": args.C,
+            "penalty": args.penalty,
+            "solver": args.solver,
+            "class_weight": args.class_weight,
         }
         training_info = {
             "train_seconds": round(train_time, 1),
