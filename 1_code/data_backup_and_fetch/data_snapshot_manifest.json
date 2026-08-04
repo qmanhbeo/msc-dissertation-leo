@@ -1,22 +1,23 @@
 {
-  "current_version": "2026-08-02",
+  "current_version": "2026-08-04",
   "profiles": {
     "raw": {
-      "version": "2026-08-02-230243",
-      "url": "https://drive.usercontent.google.com/download?id=1hauGPKfFkYXcXKfIgrDgKbmEyp2rQIqk&export=download",
-      "sha256": "6ff8ee2258989d60957cf06305e6875261b2cb61f6c13f52dbb511b278d0a6dc",
+      "version": "2026-08-04-102413",
+      "url": "https://drive.usercontent.google.com/download?id=1WkOEUV_zZU42eAu3hqoxe2DYguV7vvvO&export=download",
+      "sha256": "df92131e773765dfb3a772cd895d52583291e7b0fc1b28a103220732bbffb798",
       "expected_repo_paths": [
         "2_data/0_raw"
       ],
       "notes": [
         "Raw fetched data only (0_raw/). For cold-replay rebuilds.",
-        "Excludes 1_preprocessed, 2_segmented, and all downstream stages."
+        "Excludes 1_preprocessed, 2_segmented, and all downstream stages.",
+        "Regenerated 2026-08-04 after the model-selection grid + warm replay."
       ]
     },
     "embedded": {
-      "version": "2026-08-02-230243",
-      "url": "https://drive.usercontent.google.com/download?id=1QUowj3edd6XTNBGehscCzETEbSwo8EwA&export=download",
-      "sha256": "09a8da1e04a9c09689a68fcd4d073aa3160680ce2eea341b6939dc568f44bf5b",
+      "version": "2026-08-04-103417",
+      "url": "https://drive.usercontent.google.com/download?id=148hzzuD82n2YOnl1nLeiMZs1inTM00at&export=download",
+      "sha256": "7fcce346e211d3ec2777cb1efc36d4000ad8c14104b48f683af9242ab92988b6",
       "expected_repo_paths": [
         "2_data/3_embedded",
         "2_data/3a_warm_replay_texts"
@@ -24,7 +25,8 @@
       "notes": [
         "Embedded checkpoint (3_embedded/) plus gzipped warm-replay appendix text (3a_warm_replay_texts/: research shards + policy.jsonl for the default model all-mpnet-base-v2), built by build_warm_replay_texts.py during backup.",
         "Excludes 0_raw, 1_preprocessed, 2_segmented, and all downstream stages.",
-        "Both embedded models (all-mpnet-base-v2, all-minilm-l6-v2): ids files in 3_embedded/{model}/metadata and research_shards/metadata are ID/label-only. Canonical plain-text segment files live in 2_segmented/ (producer-side cold-replay artifact, not shipped); appendix readers (a3, b2) resolve 2_segmented/ first and fall back to the gzipped 3a_warm_replay_texts/ copy."
+        "Both embedded models (all-mpnet-base-v2, all-minilm-l6-v2): ids files in 3_embedded/{model}/metadata and research_shards/metadata are ID/label-only. Canonical plain-text segment files live in 2_segmented/ (producer-side cold-replay artifact, not shipped); appendix readers (a3, b2) resolve 2_segmented/ first and fall back to the gzipped 3a_warm_replay_texts/ copy.",
+        "Regenerated 2026-08-04 after the model-selection grid + warm replay."
       ]
     }
   }
