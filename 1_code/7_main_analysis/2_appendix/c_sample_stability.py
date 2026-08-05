@@ -4,9 +4,13 @@ Measure sample-size stability for the research-side downstream analysis.
 This stage reuses existing score shards and embedding shards. It does not re-embed
 research papers and does not overwrite any canonical scored artifacts.
 
-For each sampled research tier, we draw multiple random subsets without replacement,
-recompute the research-side coverage profile, rebuild sampled research SDG centroids,
-and compare those sampled results against the fixed canonical policy-side quantities.
+For each sampled research tier, we draw multiple random subsets of papers without
+replacement, recompute the research-side coverage profile, rebuild sampled research
+SDG centroids, and compare those sampled results against the fixed canonical
+policy-side quantities. All tier metrics are paper-weighted (each sampled abstract
+collapses to one L2-renormalised unit vector, mirroring the canonical research
+centroids in score_supervised.py), so the ladder converges to the paper-weighted
+full-corpus anchor row in the same table.
 
 Outputs:
   4_outputs/appendix/c_sample_stability/data/c_sample_stability_summary.json
@@ -47,7 +51,13 @@ import semantic_gap_shared
 import register_utils
 from shared_utils import ensure_dissertation_outputs, require_output_files
 from research_embedding_shards import ResearchShard, build_research_shards
-from research_score_shards import aggregate_research_scores
+from research_score_shards import (
+    aggregate_research_scores,
+    group_rows_by_paper,
+    paper_run_starts,
+    paper_units_from_shard,
+    read_shard_paper_ids,
+)
 from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
     RANDOM_SEED as POLICY_SEGMENT_CAP_SEED,
@@ -60,6 +70,7 @@ from shard_pipeline_utils import load_json
 CANONICAL_COVERAGE_JSON = "coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "semantic_gap_distances_lr.json"
 CANONICAL_INTERACTION_JSON = "interaction_h25.json"
+CACHE_SCHEMA_VERSION = 3
 DRAW_SEEDS = tuple(range(42, 142))
 DRAWS_PER_TIER = len(DRAW_SEEDS)
 TIER_SPECS: list[tuple[str, int]] = [
@@ -280,7 +291,7 @@ def write_cache_manifest(cache_root: Path, total_rows: int, cache_signature: str
     cache_root.mkdir(parents=True, exist_ok=True)
     manifest_path = cache_root / "manifest.json"
     payload = {
-        "schema_version": 2,
+        "schema_version": CACHE_SCHEMA_VERSION,
         "cache_signature": cache_signature,
         "draw_seed_start": DRAW_SEEDS[0],
         "draw_seed_end": DRAW_SEEDS[-1],
@@ -400,10 +411,19 @@ def write_draw_caches(cache_root: Path, draws: list[DrawAccumulator]) -> None:
 
 def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator], model: str, G: np.ndarray | None = None) -> None:
     # Load each research shard's embedding/score arrays directly (shard-native).
-    # shard.start:shard.stop reflect the global concatenation order, so this is
-    # byte-identical to the former consolidated-array slice.
+    # Each draw's sampled documents are collapsed to paper (abstract) units
+    # before accumulating, so hard counts, centroid sums and top scores are all
+    # paper-weighted — matching the canonical research centroids built by
+    # score_supervised.py (mean of segment vectors, L2-renormalised; assignment
+    # = argmax of the mean segment score vector).
+    prev_last_paper_id: str | None = None
     for shard in shards:
         log.info("Processing research shard %s (%d rows)", shard.name, shard.rows)
+        if shard.ids_path is None or not shard.ids_path.exists():
+            raise RuntimeError(
+                f"Shard {shard.name} has no ids file; paper-weighted accumulation "
+                "cannot group its rows into abstracts."
+            )
         score = np.load(shard.score_path).astype(np.float32)
         emb = np.load(shard.emb_path).astype(np.float32)
         if G is not None and G.shape[0] > 0:
@@ -413,31 +433,47 @@ def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator], 
                 f"Score/embedding row mismatch for shard {shard.name}: "
                 f"score={score.shape[0]} emb={emb.shape[0]}"
             )
-        assignments = score.argmax(axis=1)
-        top_vals = score[np.arange(score.shape[0]), assignments]
+        paper_ids = read_shard_paper_ids(shard.ids_path)
+        if len(paper_ids) != score.shape[0]:
+            raise RuntimeError(
+                f"Shard {shard.name}: {score.shape[0]} score rows but "
+                f"{len(paper_ids)} id rows."
+            )
+        paper_emb, paper_assigned, _, last = paper_units_from_shard(
+            emb, score, paper_ids, shard.name, prev_last_paper_id=prev_last_paper_id
+        )
+        prev_last_paper_id = last
+        starts = paper_run_starts(paper_ids)
+        row_to_paper = (
+            np.searchsorted(starts, np.arange(score.shape[0]), side="right") - 1
+        )
+        paper_scores, _ = group_rows_by_paper(score, starts)
+        paper_top = paper_scores.max(axis=1)
 
         for draw in draws:
             left = int(np.searchsorted(draw.global_indices, shard.start, side="left"))
             right = int(np.searchsorted(draw.global_indices, shard.stop, side="left"))
             if left >= right:
                 continue
-            local = draw.global_indices[left:right].astype(np.int64) - shard.start
-            local_assignments = assignments[local]
-            draw.rows_seen += int(local.shape[0])
-            draw.hard_counts += np.bincount(local_assignments, minlength=N_SDG)
-            draw.top_sum_osdg += float(top_vals[local].sum())
-            for sdg_idx in np.unique(local_assignments):
-                mask = local_assignments == sdg_idx
-                draw.vector_sums[sdg_idx] += emb[local[mask]].sum(axis=0)
+            local_rows = draw.global_indices[left:right].astype(np.int64) - shard.start
+            papers = np.unique(row_to_paper[local_rows])
+            draw.rows_seen += int(papers.shape[0])
+            draw.hard_counts += np.bincount(paper_assigned[papers], minlength=N_SDG)
+            draw.top_sum_osdg += float(paper_top[papers].sum())
+            for sdg_idx in np.unique(paper_assigned[papers]):
+                mask = paper_assigned[papers] == sdg_idx
+                draw.vector_sums[sdg_idx] += paper_emb[papers[mask]].sum(axis=0)
 
         del score
         del emb
+        del paper_emb
+        del paper_scores
 
     for draw in draws:
-        if draw.global_indices.size > 0 and draw.rows_seen != len(draw.global_indices):
+        if draw.rows_seen != draw.sample_size:
             raise RuntimeError(
                 f"Sample size mismatch for {draw.tier_label} draw {draw.draw_index}: "
-                f"expected {len(draw.global_indices)}, saw {draw.rows_seen}"
+                f"expected {draw.sample_size} papers, saw {draw.rows_seen}"
             )
 
 
@@ -819,7 +855,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
-    SCRIPT_VERSION = "1"
+    SCRIPT_VERSION = "2"
     PRIMARY = layout.data_dir / "c_sample_stability_summary.json"
     OUTPUTS = [PRIMARY, layout.data_dir / "c_sample_stability_draws.jsonl",
                layout.data_dir / "c_sample_stability_per_sdg.json",
@@ -849,11 +885,15 @@ def run(args: argparse.Namespace) -> None:
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         cached_sig = manifest.get("cache_signature")
+        cached_schema = manifest.get("schema_version")
     except (FileNotFoundError, json.JSONDecodeError):
         cached_sig = None
-    if cached_sig != expected_sig:
+        cached_schema = None
+    if cached_sig != expected_sig or cached_schema != CACHE_SCHEMA_VERSION:
         if cache_root.exists():
-            log.info("Input data changed — clearing sample-stability cache")
+            log.info(
+                "Input data or cache schema changed — clearing sample-stability cache"
+            )
             shutil.rmtree(cache_root)
         log.info("Cache signature: %s", expected_sig)
 
