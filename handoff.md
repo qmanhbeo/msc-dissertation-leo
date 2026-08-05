@@ -1,499 +1,404 @@
-# Hand-off: H1a–H1d Concept-row gap-dispatch bug (Table `tab:interaction` + Appendix J.1)
+# Hand-off: Register-validation follow-up (Concept provenance, clustering, Step-2c dig) — INTERRUPTED mid-compute
 
-**Last updated:** 2026-08-04
-**Status:** Code FIXED; outputs REGENERATED + verified; **prose EDITED (line 396 now uses `\ConceptLRCovgapAdjRho` + positive-count macros); line 794 confirmed unchanged.** **PDF build BLOCKED by pre-existing, out-of-scope K.1/figure issues — not this fix. Nothing committed.**
-**Interrupted:** No task was mid-flight. Work was stopped cleanly at the end of the verification phase, before the prose edit. See §7.
+**Last updated:** 2026-08-05 (updated after report written)
+**Status:** Item 1 (Concept provenance) **COMPLETE — verdict: NOT a bug, valid operation, evidence verified empirically.** Item 2 (clustering) **COMPLETE for both samples — substantive result: the original 2b/2c findings do NOT survive one-per-parent sampling.** Item 3 (Step-2c decomposition) **COMPLETE** (tmux job finished at ~09:25; results harvested in §2.5). Deliverable `5_notes/scratch/register_validation_followup.md` **WRITTEN** (190 lines, covers all 3 items + verdict). Human review pending.
 
-> **IMPORTANT — this file replaced a previous hand-off.** The prior `handoff.md`
-> documented Appendix K.1 (pooled OLS regression) and had **uncommitted** edits.
-> It was preserved verbatim at **`5_notes/handoff_k1_regression_2026-08-04.md`**.
-> That K.1 work is still in the working tree and is **not mine — do not commit it
-> with this fix.** See §3.4.
+> **This file replaces the previous `handoff.md`** (the register-validation go/no-go
+> handoff from the prior session, which is preserved verbatim at
+> `5_notes/handoff_register_validation_2026-08-05.md`). The H1a–H1d Concept-row bug
+> handoff was already preserved at `5_notes/handoff_h1_concept_rows_2026-08-04.md`
+> (that work is complete and committed in earlier history: `0f96a3f` + `bb9df3b`).
 
 ---
 
 ## 1. Context — where we are
 
-The user (acting as PI) flagged a data-integrity problem in the H1d block of
-Table~`tab:interaction` (the H1a–H1d coverage-predictor × semantic-gap grid):
+We are validating the dissertation's INLP "register" interpretation (removed
+subspace of sentence embeddings = academic-vs-policy register, not topic). The
+first diagnostic pass (n=408, MPNet canon, seed 42) is complete and committed
+(`0f96a3f`; report `5_notes/register_validation_report.md`). Its verdict was
+**GO** for a full validation appendix, with two caveats: (a) residual register-like
+structure survives within SDGs after adjustment (Step 2c red flag), (b) the 6-feature
+score operationalization changes the answer.
 
-> "the Concept LR row (+0.194, +0.613**, -0.058) and Concept MLP row (+0.148,
-> +0.471+, -0.090) are identical to the MPNet LR and MPNet MLP rows directly
-> above them... This looks like a copy-paste or indexing bug."
+The task now in flight is the **follow-up diagnostic** with three mandated items —
+do NOT write appendix text, do NOT touch the dissertation PDF/LaTeX or any
+existing analysis script/table. All writes stay in `5_notes/scratch/`. Deliverable:
+`5_notes/scratch/register_validation_followup.md` (not the first report — do not
+overwrite `register_validation_report.md`).
 
-**The flag was correct.** It is a real bug — a wrong-array load in the gap
-dispatch, not a copy-paste in the table writer. It was investigated, root-caused,
-fixed, and all affected outputs were regenerated and verified. What remains is
-the manuscript prose update and the commits.
-
-**No headline conclusion is overturned by the fix.** Details in §2.6.
+**Headline result so far:** the follow-up has (1) cleared the Concept-row integrity
+question — it is NOT a bug (same vector space, empirically proven), and (2) produced
+a material correction to the first report: **when the sample is capped at one
+segment per source document, the Step-2b within-corpus correlations collapse to
+null and the Step-2c red flag (register↔centroid-distance growing after
+adjustment) reverses sign — i.e., the first report's two key cautionary/positive
+patterns were substantially driven by clustered policy mega-documents (SDSN/UNDP
+reports), not by genuine per-segment register structure.** Item 3 is computing the
+per-SDG / per-feature / own-vs-other-corpus / renormalization breakdowns that will
+tell us whether the one-per-parent view is stable and what mechanism explains the
+original 2c pattern.
 
 ---
 
 ## 2. Key known facts (read this instead of re-deriving)
 
-### 2.1 Root cause
+### 2.1 Working environment / repo rules (from AGENTS.md — non-negotiable)
 
-`1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py`
+- Python: `/home/manh/miniforge3/envs/dissertation/bin/python` (conda env
+  `dissertation`; `source activate dissertation` is BROKEN on this box — the
+  Windows miniconda activate gets picked up; use the absolute python path).
+- **Long jobs MUST run under `tmux`** (harness kills the process group at ~120 s).
+  Pattern: `tmux new-session -d -s <name> "<cmd> > log 2>&1; touch log.DONE"` then
+  poll `tail -F log` / `ls log.DONE` — NEVER poll the PID.
+- **Scratch-only:** checks write ONLY to `5_notes/scratch/` (gitignored) or `/tmp`;
+  never `2_data/` or `4_outputs/`. Reuse the trained LR
+  (`2_data/4_supervised_model_results/mpnet/model/sdg_classifier_retrained.joblib`);
+  never retrain.
+- Deterministic seed **42** everywhere; record seed + sample sizes in every output.
+- No test/lint suite; no repo code was modified this session (scratch scripts only).
+- Git: branch `main`, remote `https://github.com/qmanhbeo/dissertation-bham.git`.
+  Working tree has uncommitted items ONLY: `handoff.md` (this file) and
+  `5_notes/handoff_h1_concept_rows_2026-08-04.md` (untracked, preserved). Nothing
+  from this session is committed; nothing should be committed without an explicit ask.
 
-`_raw_gaps_for` / `_adj_gaps_for` took `(method, root, model)` and **ignored the
-`corpus` argument**. `_h1_config_row` honoured `corpus` for the *coverage
-predictors* but discarded it for the *gap vectors*. Result: the two Concept rows
-paired **concept-retrieval coverage** with **MPNet keyword-retrieval semantic
-gaps** — a predictor built on one corpus correlated against an outcome built on
-another.
+### 2.2 Pipeline / data facts (verified in the first diagnostic)
 
-Corroborating evidence found during investigation:
-- `_concept_raw_gaps` / `_concept_adj_gaps` were **imported but never called**
-  (dead imports proving the intent).
-- `j1_raw_value_correlation.py` imports those same dispatchers, so it inherited
-  the identical bug.
-- The bug is **long-standing**, not newly introduced: commit `381cc34`'s
-  committed table already shows the H1d duplication.
+- Units are **segments** (~384-token chunks), not papers/docs. Research `assigned_sdg`
+  is per-segment. All alignments positional by row index.
+- Adjusted embeddings are **never materialised** — project on the fly via
+  `register_utils.load_G(model)` / `register_utils.project(emb, G)` (orthonormal G,
+  `x' = P x` with per-row L2 renormalisation).
+- G matrices: MPNet canon (62, 768) at `2_data/3b_register/mpnet/canon/G.npy`;
+  MiniLM subset (29, 384); SciBERT subset (71, 768). MPNet G was fit by
+  `register_adjust.py` on **canonical keyword-retrieved research + policy**
+  embeddings only (its `_input_files` at `register_adjust.py:310-319` — the concept
+  corpus is NOT among G's training inputs); n_target=1123/SDG/corpus, seed 42,
+  62 iterations, final test acc 0.4984 (checkpoint `2_data/3b_register/mpnet/canon/checkpoint.json`).
+- "Concept" = `research_concept/`, a **corpus track** (OpenAlex AI/ML field-of-study
+  retrieval, 111,541 segments / 99,836 papers) embedded with **MPNet**, NOT an
+  independent encoder. No G under `3b_register` for it (by design — see Item 1).
+- Both concept and canonical embeddings were produced by the same script
+  `1_code/3_embed/0_embed_paper_shards.py` (`--corpus research_concept` vs
+  `research`): same `load_embedder(all-mpnet-base-v2)`, same
+  `model.encode(..., normalize_embeddings=True)`, fp16, dim 768. Both manifests
+  record `"model": "all-mpnet-base-v2", "normalize_embeddings": true`
+  (`2_data/3_embedded/mpnet/{research_shards,research_concept}/metadata/manifest.json`).
 
-### 2.2 Why H1d specifically showed an *exact* three-decimal match
+### 2.3 Item 1 — Concept provenance in Table 3 (COMPLETE)
 
-`policy_profile_hard_docweighted` is **byte-identical** between
-`4_outputs/mpnet/data/coverage_document_weighted.json` and
-`.../data/concept/coverage_document_weighted.json`. That is **legitimate and
-expected**: concept retrieval re-assigns only the *research* corpus (OpenAlex
-AI/ML field-of-study), while the policy corpus and its LR assignment are
-unchanged.
+**Code path producing the "Concept LR/MLP" adjusted-gap and register numbers in
+Table `tab:interaction` (the H1a–H1d grid):**
 
-So for H1d the *predictor* is identical by design; the bug then made the *gap*
-identical too, collapsing the correlation to an exact match. **All four blocks
-(H1a–H1d) were wrong for the two Concept rows** — H1d is merely where it was
-visible to the eye. This is the single most important fact for understanding the
-bug: the user's instinct ("different encoders never match to 3 d.p.") was right,
-but the mechanism is subtler than a copy-paste.
+1. Table rows built by `1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py`:
+   `_H1_CONFIGS` (`:170-180`) declares Concept rows with `corpus="concept"`;
+   `_h1_config_row` (`:277-305`) → `_adj_gaps_for` (`:266-274`) routes concept →
+   `_concept_adj_gaps` / `_concept_mlp_adj_gaps`, imported from
+   `1_code/7_main_analysis/0_shared/h1_register_correlation_table.py`
+   (`:168-189`) — these are pure readers of
+   `4_outputs/mpnet/data/concept/adjusted/semantic_gap_distances_{lr,mlp}.json`.
+   Register column = Spearman(coverage predictor, raw_gap − adj_gap) per SDG
+   (`2_coverage_semantic_interaction.py:301-303`).
+2. Those concept gap JSONs are produced by `main.py:714-732` ("semantic gap
+   (concept corpus, adjusted)" LR and MLP) → `1_code/7_main_analysis/1_main_text/1_semantic_gap.py`
+   with `--embeddings adjusted --research-centroids <concept centroids> --out-data-dir
+   4_outputs/mpnet/data/concept`. In adjusted mode (`1_semantic_gap.py:263-268`):
+   `G = register_utils.load_G(args.embed_model)` → **`2_data/3b_register/mpnet/canon/G.npy`**
+   (MPNet canon), then projects the concept research centroids AND the canonical
+   `policy.npy` through G, and computes gap = 1 − cosine(projected centroids).
+3. Concept research centroids: `2_data/5_supervised_scored/mpnet/research_concept_centroids.npy`
+   (LR) and `mlp_scores_concept/mlp_research_centroids.npy` (MLP), built by
+   `score_supervised.py` scoring the concept embeddings with the canonical retrained
+   LR/MLP (`main.py:635-655`; provenance in the JSONs records
+   `sdg_classifier_retrained.joblib`).
+4. The JSONs' own provenance field confirms
+   `"register": {"g_path": "2_data/3b_register/mpnet/canon/G.npy", "track": "canon",
+   "g_sha256": "10955e...", "script_version": "2", "n_target": 1123}` for BOTH
+   Concept LR and Concept MLP adjusted outputs (read directly from the files).
 
-### 2.3 Blast radius (exhaustively verified)
+**Is applying MPNet's G to Concept embeddings valid? YES — verified two ways:**
+- Formally: same embedder, same checkpoint, same pooling, same L2 normalisation
+  (both manifests), so concept vectors provably live on the same 768-dim unit
+  sphere G was learned on; G's rows span a subspace of that space and projection is
+  a well-defined linear operation on any vector in it.
+- Empirically (new check this session): `5_notes/scratch/check_concept_same_space.py`
+  — for 40 seed-42-shared papers (44 segment pairs with **byte-identical text** in
+  both corpora), the concept-run embedding and the canonical-run embedding are
+  identical to float32 roundoff: **max elementwise |diff| = 0.000183, min cosine =
+  0.99999952**.
 
-| Output | Status |
-|---|---|
-| `4_outputs/{mpnet,minilm,scibert}/tables/tab4_interaction_h25.tex` → Table `tab:interaction` (`dissertation.tex:392`) | **WAS WRONG — now fixed** |
-| `4_outputs/appendix/mpnet/j1_raw_value_correlation/{tables,data}` → Table `tab:raw-value-correlation` (`dissertation.tex:822`) | **WAS WRONG — now fixed** |
-| `0_shared/h1_register_correlation_table.py` | Not affected (see §2.5) |
-| `2_appendix/k1_regression_semantic_gap.py` | Not affected — correct concept dispatch at its lines 299-304 |
-| `1_main_text/3_generate_cross_sensitivity_table.py` | Not affected — own `load_concept_*` loaders |
-| `2_appendix/h1_cross_method_gap_values.py` | Not affected — own `_concept_*` loaders |
-| `4_outputs/*/data/interaction_h25.json` | **Byte-identical before/after** — the canonical (non-grid) statistics never touched the buggy path |
+**What the Concept rows therefore actually represent:** the semantic gap between the
+concept-retrieved research corpus and the policy corpus, with **MPNet's canonical
+register directions** removed from both sides. The policy side is byte-identical to
+the MPNet adjusted run (same `policy.npy`, same G); only the research side differs.
+This is the intended robustness design (retrieval-axis variation under MPNet), NOT a
+bug, and NOT a silent mismatch.
 
-Verified by exhaustive grep: `_raw_gaps_for` / `_adj_gaps_for` have exactly two
-call sites, both now fixed.
+**Caveats to state (not bugs):** G was *learned* on the keyword-retrieved research
++ policy corpus; transferring it to the concept corpus assumes the register
+directions are corpus-generic within MPNet space — geometrically valid, but the
+"register" interpretation of what was removed from concept text inherits the same
+open validation question the whole program is testing. Also, current Table 3 Concept
+cells (H1a LR +0.150/+0.439†/−0.142 etc.) match the corrected values from the H1
+handoff — no stale duplication remains.
 
-### 2.4 Secondary defects found and fixed alongside
+### 2.4 Item 2 — clustering in the n=408 sample (COMPLETE)
 
-1. **Fingerprint hole.** `2_coverage_semantic_interaction.py`'s fingerprint
-   covered only the three canonical MPNet inputs — never the `data/concept/`
-   inputs the grid reads. A non-`--overwrite` run (e.g. `--stage analysis`) would
-   not re-derive when concept gaps changed. *(Note: this was NOT a blocker for
-   the fix, because `should_skip` short-circuits on `overwrite=True` and replay
-   always passes `--overwrite`. An earlier draft of the plan overstated this.)*
-2. **Stale namespaced copies.** `tab4_interaction_h25.tex` is a
-   model-independent table written into all three model namespaces;
-   `minilm`/`scibert` were frozen at pre-`39c1eb1` values while `mpnet` had been
-   refreshed. All three are now byte-identical (verified by md5).
-3. **`j1_raw_value_correlation.py` was orphaned from the runner.** It was in
-   **no** registry: absent from `APPENDIX_SPECS` (so no CLI flag; never run by
-   `--appendix-all` or `--warm-replay-with-appendix`) and absent from
-   `MANUSCRIPT_APPENDIX_TABLE_FILES` (so `require_pdf_inputs` would not flag it
-   missing) — **yet `dissertation.tex:822` `\input`s its output.** This is why
-   its copy of the bug could sit committed indefinitely. Now registered.
-4. **Hardcoded prose literal.** `dissertation.tex:396` hardcodes
-   `Concept LR $+0.451^{\dagger}$`. That literal came from commit `381cc34`'s
-   table and matched *neither* the pre-fix value (+0.701**) *nor* the corrected
-   one (+0.439†). It had already gone stale once. Now exportable as a macro.
+Original sampling (both in `register_validation_check.py` and reproduced exactly in
+the follow-up script, seed 42) dedupes **within** SDG only, so a paper/doc can appear
+in multiple SDGs.
 
-### 2.5 `h1_register_correlation_table.py` — do not trust it as an oracle
+| Sample | Distinct parents | Parents with >1 unit | Units sharing a parent | Max |
+|---|---|---|---|---|
+| Original all 408 | 390 | 7 | 25 (6.1%) | 6 |
+| Original research 204 | **204** | **0** | **0 (0.0%)** | 1 |
+| Original policy 204 | **186** | **7** | **25 (12.3%)** | **6** |
 
-An earlier draft of the plan called this module "the reference implementation
-that gets it right." **That was wrong and was corrected.** Facts:
+All clustering is in the **policy** corpus, driven by mega-documents:
+SDSN Sustainable Development Report 2024 and 2025 (6 segments each), UNDP Human
+Development Report 2021/2022 (5), WHO Ethics & Governance of AI for Health (2),
+UN SDG Progress Report 2020 (2). Research segments are perfectly de-clustered
+(0.0%). Policy clustering **12.3% > the ~10% threshold** → one-per-parent rerun
+was required (done).
 
-- It has **never executed**. Absent from `MAIN_STEPS`, `APPENDIX_SPECS`, and
-  `POST_ADJUSTED_STEPS` in `0_shared/analysis_orchestrator.py`; nothing else in
-  the repo invokes it. Its output dir
-  `4_outputs/appendix/{model}/h1_register_correlation_table/` **does not exist**.
-- It is the abandoned §6.5.3 of `5_notes/PLAN_register_topic_decomposition.md`
-  ("the ONE table"). Commit `763b446` instead folded the grid into
-  `2_coverage_semantic_interaction.py` and imported its loaders — **and the
-  concept branch was lost in that port.** That is the origin of the bug.
-- Its `_coverage_gaps` (line 95-107) returns only `coverage_gap_hard`, so it
-  covers **H1a only**, not all four predictors. It is not a drop-in reference.
+**One-per-parent rerun (Item 2B; sample still n=408 = 204+204, exactly 12/SDG/corpus,
+global dedup across SDGs, seed 42) vs original (Item 2A):**
 
-It is used here **only as a library of path-resolving gap loaders** (`_lr_*`,
-`_mlp_*`, `_zs_*`, `_concept_*`), which are pure file readers and are fine.
-Treat its `run()` / `_build_config_row` as dead code of unverified correctness.
-
-### 2.6 Substantive impact — no headline conclusion overturned
-
-- **H1a** adjusted-gap signal: still positive in **9/9** configs. Concept LR
-  moves +0.701** → **+0.439†**.
-- **H1d** adjusted-gap signal: still positive in **9/9** configs.
-- **The "apparent cancellation replicates across every config" claim SURVIVES.**
-  Post-fix H1a register column is negative in 9/9 configs. *(An earlier draft of
-  the plan flagged this sentence as needing narrowing — that was wrong; it is
-  verified true and needs no change.)*
-- What *does* change: Concept-row magnitudes, and H1d's significance set.
-
-### 2.7 Corrected values (verified against regenerated files)
-
-Table `tab:interaction` (Spearman), Concept rows only — raw / adjusted / register:
-
-| Block | Published (wrong) | Corrected (now in repo) |
+| Stat | Original sample (2A) | One-per-parent (2B) |
 |---|---|---|
-| H1a Concept LR | +0.130 / +0.701** / -0.292 | **+0.150 / +0.439† / -0.142** |
-| H1a Concept MLP | -0.093 / +0.444† / -0.404 | **+0.034 / +0.206 / -0.096** |
-| H1b Concept LR | +0.230 / -0.154 / +0.154 | **+0.015 / -0.074 / -0.252** |
-| H1b Concept MLP | +0.120 / -0.203 / +0.154 | **-0.196 / +0.025 / -0.191** |
-| H1c Concept LR | +0.475† / +0.203 / +0.174 | **+0.213 / +0.061 / -0.059** |
-| H1c Concept MLP | +0.294 / +0.037 / +0.152 | **-0.086 / +0.022 / -0.115** |
-| H1d Concept LR | +0.194 / +0.613** / -0.058 | **+0.369 / +0.535* / +0.180** |
-| H1d Concept MLP | +0.148 / +0.471† / -0.090 | **+0.256 / +0.260 / +0.082** |
+| 2b reg~‖x−x′‖ pooled ρ (p) | 0.102 (0.040) | 0.092 (0.063, ns) |
+| 2b within-research ρ (p) | **0.212 (0.002)** | **−0.043 (0.545, ns)** |
+| 2b within-policy ρ (p) | **0.191 (0.006)** | **−0.036 (0.606, ns)** |
+| 2c RAW ρ (p) | 0.126 (0.011) | **−0.212 (1.6e-05)** |
+| 2c ADJ ρ (p) | 0.247 (4e-07) | **−0.197 (6.1e-05)** |
+| 2c partial-corpus RAW / ADJ | 0.130 / 0.253 | −0.155 / −0.159 |
+| 2d corpus acc reg-only / raw / adj | 0.456 / 0.909 / 0.505 | 0.544 / 0.944 / 0.603 |
 
-Appendix J.1 (Pearson), Concept rows only:
+**Interpretation (draft, to be checked against Item 3):** the Step-2b within-corpus
+correlations and the Step-2c "red flag" (register↔centroid-distance rising after
+adjustment) **do not survive** one-per-parent sampling. The 2c sign flips negative
+in BOTH raw and adjusted space. Likely mechanism: the clustered SDSN/UNDP policy
+segments are simultaneously deontic/long-sentence-heavy (high register score) and
+spread across many SDGs (far from any single SDG centroid) — they manufactured the
+positive 2c correlation. Removing them kills 2b's within-corpus signal and flips 2c.
+Caveat: the PC1 register score is recomputed per sample, so part of the change may
+reflect a shifted feature-composition anchor; Item 3's per-feature and per-SDG
+breakdowns (running) should resolve this. Note also 2d: adj accuracy is no longer
+≈chance under one-per-parent (0.603 vs raw 0.944) — the "INLP destroys corpus
+signal" story weakens somewhat on the cleaner sample.
 
-| Block | Published (wrong) | Corrected (now in repo) |
-|---|---|---|
-| H1a Concept LR | +0.202 / +0.695** / -0.329 | **+0.048 / +0.449† / -0.336** |
-| H1a Concept MLP | +0.031 / +0.495* / -0.348 | **-0.078 / +0.201 / -0.303** |
-| H1b Concept LR | +0.363 / +0.161 / +0.186 | **+0.115 / +0.094 / +0.040** |
-| H1b Concept MLP | +0.183 / +0.083 / +0.118 | **-0.057 / +0.031 / -0.101** |
-| H1c Concept LR | +0.409 / +0.422† / +0.038 | **+0.143 / +0.246 / -0.061** |
-| H1c Concept MLP | +0.189 / +0.298 / -0.041 | **-0.062 / +0.108 / -0.188** |
-| H1d Concept LR | +0.016 / +0.514* / -0.354 | **+0.033 / +0.300 / -0.222** |
-| H1d Concept MLP | -0.027 / +0.436† / -0.360 | **+0.001 / +0.156 / -0.160** |
+### 2.5 Item 3 — Step-2c decomposition (COMPLETE — log harvested 2026-08-05 ~09:25)
+
+Computed on the **one-per-parent** sample (identical composition to Item 2B;
+N=12/SDG → n=24 per SDG for 3a). Full log: `5_notes/scratch/regcheck_followup.log`;
+arrays: `5_notes/scratch/regcheck_followup_arrays.npz`.
+
+**3a per-SDG** (reg_score ~ centroid-distance, n=24/SDG — LOW POWER, treat as
+directional): mixed signs, 9/17 SDGs "worse" (ADJ ρ > RAW ρ), but mean per-SDG ρ
+≈ 0 in both spaces (RAW −0.031, ADJ −0.033); partial controlling SDG: RAW −0.094,
+ADJ −0.074. Largest positive pairs: SDG 3 (+0.337→+0.500), SDG 16 (+0.478→+0.588),
+SDG 17 (+0.418→+0.519); largest negative: SDG 12 (−0.339→−0.470), SDG 5 (−0.379),
+SDG 2 (−0.428). **No systematic "gets worse after adjustment" pattern — the first
+report's red flag does not reproduce per-SDG.**
+
+**3b per-feature** (pooled; controlling SDG nearly identical): the features that
+correlate with centroid distance at all do so NEGATIVELY (high register → CLOSER to
+centroid) and that association **weakens after adjustment** (positive deltas):
+mean_sent_len RAW −0.293→ADJ −0.172 (Δ+0.121), deontic −0.276→−0.199 (Δ+0.077),
+nominal −0.145→−0.098, passive +0.075→+0.002 (Δ−0.073), hedge +0.091→+0.064,
+first_person +0.095→+0.154 (Δ+0.059). **No feature drives an adjusted-space
+increase of the kind the first report flagged.**
+
+**3c own-vs-other corpus centroid pull:** reg ~ own-dist ADJ: research −0.033,
+policy −0.060; reg ~ other-dist ADJ: research +0.003, **policy −0.197**; bias
+(other−own) ADJ: overall −0.024, within-policy −0.111. Small residual effect:
+high-register **policy** segments sit slightly closer to their own SDG centroid
+and farther from the research centroid in adjusted space — a minor within-SDG
+corpus pull on the policy side only.
+
+**3d renormalization artifact check — NOT an artifact in the feared direction:**
+pooled ρ: raw −0.088 → adjusted(renormalized) −0.074 → adjusted(UNrenormalized
+residual) −0.058; within-SDG: −0.094/−0.074/−0.057. The near-zero negative
+correlation is not inflated by L2 renormalisation (if anything renorm adds ~0.016).
+reg_score ~ renorm-scale 1/‖resid‖: +0.030 (ns); dist_adj ~ 1/‖resid‖: −0.312
+(mechanical renorm effect, but it does not translate into a reg-score correlation).
+So the first report's 2c red flag was NOT a renormalisation artifact either — it
+was driven by the clustered mega-docs (see 2.4).
+
+**Synthesis:** on the one-per-parent sample the original 2c red flag disappears
+(pooled ρ ≈ −0.07..−0.09, per-SDG mixed noise, per-feature negative and shrinking
+after adjustment). The only surviving within-SDG register trace is the small
+policy-side own-centroid pull (3c, ρ≈−0.11..−0.20). Combined with Item 2B, the
+follow-up's verdict basis is: **the first report's cautionary residual-register
+finding was a clustering artifact; its positive evidence (2b within-corpus
+correlations, adj≈chance) also weakened on the clean sample.** Caveats: n=24/SDG
+per-SDG correlations are low-power; the REGCHECK_N=60 run (n=120/SDG) is
+recommended before per-SDG confirmatory claims; Item 3 was run only on the
+one-per-parent sample (a 2A-composition Item-3 run would directly localise the old
+red flag to the mega-doc SDGs — optional).
 
 ---
 
-## 3. Actions taken this session
+## 3. Actions taken this session, and why
 
-### 3.1 Code changes (4 files, all uncommitted)
+- **Item 1 trace:** read `2_coverage_semantic_interaction.py`,
+  `h1_register_correlation_table.py`, `1_semantic_gap.py`, `main.py` (concept steps),
+  `register_adjust.py`, `register_utils.py`, embedder + manifests; read the concept
+  gap JSONs' provenance. Established the full chain and that MPNet canon G is used.
+- **Item 1 empirical check (new script):** `5_notes/scratch/check_concept_same_space.py`
+  — overlap scan (30,545 shared papers of 99,836 concept papers), sampled 40 papers,
+  matched 44 byte-identical segment texts across corpora, compared embeddings
+  (max |diff| 0.00018, min cosine 0.99999952). → Concept embeddings are in the same
+  space as G's training data. Verdict: **NOT a bug; operation valid**; Table 3
+  Concept rows need no fix (their labels should read "MPNet register directions
+  applied to the concept-retrieved research corpus", but that is a writing-phase
+  matter, not this diagnostic).
+- **Item 2+3 script (new):** `5_notes/scratch/register_validation_followup.py`
+  (deterministic; reuses the first script's sampling/feature/score code; adds
+  clustering stats, one-per-parent sampling with global dedup, Item 3
+  decomposition). First run crashed on a trivial bug (`multi.most_common(5)` on a
+  plain dict — fixed with `Counter`), then re-launched.
+- **Compute launched under tmux** (`regcheck` session, 2026-08-05 09:19:40Z) —
+  log `5_notes/scratch/regcheck_followup.log` (unbuffered `-u`), completion marker
+  `5_notes/scratch/regcheck_followup.DONE`, artifact
+  `5_notes/scratch/regcheck_followup_arrays.npz` (reg, dist_raw, dist_adj,
+  dist_noren, corr, sdg, F, resid_norm).
+- **Preserved prior handoff:** `handoff.md` (register go/no-go) → `5_notes/handoff_register_validation_2026-08-05.md`.
+- **No repo code, no manuscript, no `2_data/`, no `4_outputs/` touched. Nothing committed.**
 
-**`1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py`** — the bug
-- Added `_concept_mlp_raw_gaps`, `_concept_mlp_adj_gaps` to the import block.
-- `_raw_gaps_for` / `_adj_gaps_for` now take `corpus` and route LR + MLP to the
-  concept loaders when `corpus == "concept"`. ZS stays model-based (there is no
-  Concept ZS row in `_H1_CONFIGS`). Added docstrings explaining *why* `corpus`
-  must be honoured, so the branch is not "simplified away" again.
-- Passed `corpus` at the two call sites in `_h1_config_row`.
-- **New `h1_grid_input_paths(root)`** — derives the grid's full input set from
-  `_H1_CONFIGS` itself (coverage + raw/adjusted gaps per config, concept
-  included), de-duplicated in stable order. Closes the fingerprint hole and is
-  shared with j1 so the two grids cannot drift apart.
-- Fingerprint now includes `*h1_grid_input_paths(...)`; `SCRIPT_VERSION` `"2"→"3"`.
-- **Reordered `run()`**: the H1 grid is now computed *before* `num4` is written,
-  so the grid can export the cells the prose quotes.
-- **New `_h1_grid_macros()`** driven by two small tables (`_H1_QUOTED_CELLS`,
-  `_H1_POSITIVE_COUNTS`) — emits `\ConceptLRCovgapAdjRho`,
-  `\HOneACovgapAdjPositiveCount(+Total)`, `\HOneDPolicyAdjPositiveCount(+Total)`.
-
-**`1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py`**
-- Passed `corpus` at its two `_raw_gaps_for` / `_adj_gaps_for` call sites.
-- Replaced its duplicated fingerprint path list with the shared
-  `h1_grid_input_paths`; tag `"j1_raw_v1"→"j1_raw_v2"`.
-- Removed the now-unused `output_dir_for_model` import and `GAP_SUFFIX` constant.
-
-**`1_code/7_main_analysis/0_shared/analysis_orchestrator.py`**
-- Registered J.1 in `APPENDIX_SPECS` (`flag: appendix-j1-raw-value`,
-  `step_id: "J1"`, `in_all: True`, alias `raw-value-correlation`), so
-  `--appendix-all` and `--warm-replay-with-appendix` now run it.
-- Updated the canonical-order comment to include J1, K1.
-
-**`1_code/7_main_analysis/0_shared/shared_utils.py`**
-- Added the J.1 table to `MANUSCRIPT_APPENDIX_TABLE_FILES` so
-  `require_pdf_inputs` guards it.
-
-### 3.2 Outputs regenerated (10 files, all uncommitted)
-
-```
-python 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py --embed-model mpnet   --overwrite
-python 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py --embed-model minilm  --overwrite
-python 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py --embed-model scibert --overwrite
-python 1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py --embed-model mpnet --overwrite
-```
-Touched: `4_outputs/{mpnet,minilm,scibert}/tables/{tab4,num4}_interaction_h25.tex`,
-the three `interaction_h25.fingerprint.json`, and the three J.1 files
-(`tab_j1_raw_value_correlation.tex`, `raw_value_correlation.json`, `.fingerprint.json`).
-
-### 3.3 Verification performed (all PASSED)
-
-1. **Pre-flight oracle.** Before editing, the *real* module was loaded and its
-   own `_h1_config_row` run with the proposed dispatch patched in memory. It
-   predicted: exactly 8 blocks change, all in the two Concept rows; 28 blocks
-   bit-identical; zero duplicate rows remaining. The committed regeneration then
-   matched that prediction **cell for cell**.
-2. **Surgical-diff gate.** `git diff` on `tab4` = `8 insertions, 8 deletions`;
-   count of changed lines not containing "Concept" = **0**.
-3. **No-duplicates gate.** No Concept row equals its MPNet counterpart in any
-   block, in either table.
-4. **Canonical stats untouched.** `interaction_h25.json` byte-identical in all
-   three namespaces — proves the fix did not disturb the non-grid statistics.
-5. **Namespace convergence.** All three `tab4` files now share md5
-   `39629c08da990d5440fd05f40fa352d5`.
-6. **Fingerprint regression test.** Re-run without `--overwrite` → correctly
-   SKIPS. `touch` a `data/concept/` gap file → correctly RE-DERIVES. Verified for
-   both the interaction script and J.1. (This behaviour did not exist before.)
-7. **CLI wiring.** `python main.py --help` shows `--appendix-j1-raw-value`;
-   `_insert_model_in_rel` resolves the new guard path to the real file.
-8. **Appendix count claim re-checked.** `dissertation.tex:794` ("positive in 7/9
-   and 9/9 configs respectively under Pearson") **still holds** post-fix — H1a
-   adj is positive in 7/9 (SciBERT LR/MLP negative), H1d adj in 9/9.
-
-### 3.4 Pre-existing work NOT mine — do not conflate
-
-The working tree already contained an in-flight **Appendix K.1 (pooled OLS
-regression)** session:
-- `1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py` (rank-within-config + pct-point rescale)
-- `4_outputs/appendix/mpnet/k1_regression_semantic_gap/**` (4 files)
-- `3_writing/dissertation.tex` — K.1 additions at **lines ~53, ~428, ~853+**
-- `handoff.md` (now preserved at `5_notes/handoff_k1_regression_2026-08-04.md`)
-- untracked `0_literature/register_adj/RavfogelS_etal_2020_INSP`
-
-**My `dissertation.tex` edit will be at line 396 only — no overlap with the K.1
-hunks.** They must be staged separately. Note the preserved K.1 handoff claims
-"Manuscript write-up NOT started", but K.1 prose *is* present in the working
-tree — that handoff is stale on that point. Confirm with the user before
-committing anything K.1.
+Files created this session (all gitignored scratch): `check_concept_same_space.py`,
+`register_validation_followup.py`, `regcheck_followup.log`, (pending)
+`regcheck_followup_arrays.npz`, `regcheck_followup.DONE`.
 
 ---
 
 ## 4. What remains, and why
 
-### 4.1 Manuscript prose — `3_writing/dissertation.tex:396` (REQUIRED)
-
-Three defects on that line. Only the first is caused by this bug; the other two
-are pre-existing staleness surfaced by the audit.
-
-Current text (excerpt):
-> `...positive across all nine configs, e.g.\ Concept LR $+0.451^{\dagger}$) and with policy coverage (H1d: positive in 8/9 configs, significant for MPNet MLP and both SciBERT configs).`
-
-Required edits:
-1. `Concept LR $+0.451^{\dagger}$` → `Concept LR $\ConceptLRCovgapAdjRho$`
-   (macro now emitted; renders `+0.439$^{\dagger}$`). **The literal is wrong by
-   two generations — do not simply retype the new number.**
-2. `positive across all nine configs` → optionally macro-ise as
-   `\HOneACovgapAdjPositiveCount/\HOneACovgapAdjPositiveCountTotal` (= 9/9).
-   Factually correct as-is.
-3. `H1d: positive in 8/9 configs, significant for MPNet MLP and both SciBERT
-   configs` → **factually wrong.** Correct post-fix: **positive in 9/9**;
-   significant at p<0.05 for **MPNet LR (\*\*), SciBERT LR (\*), Concept LR (\*)**;
-   MPNet MLP is marginal (†); **SciBERT MLP is not significant.**
-
-**Do NOT change** the sentence "Table~\ref{tab:interaction} shows this apparent
-cancellation replicates across every encoder--classifier config" — re-verified
-true post-fix (H1a register negative in 9/9).
-
-**No change needed at line 794** (verified in §3.3.8) — but re-confirm after any
-regeneration.
-
-### 4.2 Rebuild the PDF
-```
-python main.py --build-pdf --overwrite     # needs bash/WSL
-```
-Confirm Table `tab:interaction` and Table `tab:raw-value-correlation` render the
-corrected Concept rows. **This takes seconds — do not blind-poll 120s.**
-
-### 4.3 Commits (nothing is committed yet)
-
-Intended split, staging **only** the files listed in §3.1/§3.2 (never the K.1
-files from §3.4):
-- **Commit 1 (code):** the 4 files in §3.1.
-  Suggested message: `Fix Concept-row gap dispatch in H1a-H1d grid; register J.1 in appendix runner`
-- **Commit 2 (outputs + prose):** the 10 files in §3.2 plus the line-396 edit.
-
-`3_writing/dissertation.tex` contains **both** my hunk and the K.1 hunks, so it
-cannot be staged wholesale. Use `git add -p`, or write my hunk to a patch and
-`git apply --cached` it.
-
-### 4.4 Optional follow-ups (deliberately NOT done)
-
-- **Dead module.** `0_shared/h1_register_correlation_table.py` has a `run()` that
-  has never executed and writes to a directory that has never existed. Either
-  wire it in or demote it to a clearly-named loaders module. Left alone to keep
-  this change surgical.
-- **Design smell.** A model-independent table is still written into three model
-  namespaces. Now consistent, but will drift again if any namespace is
-  regenerated alone. Consider emitting it once.
-- **Audit the other 3 hardcoded-literal risks.** This audit found one prose
-  literal that had silently gone stale. There may be more; a sweep for numeric
-  literals in prose that duplicate generated table cells would be prudent.
+1. **Report written.** `5_notes/scratch/register_validation_followup.md` (190 lines)
+   covers all 3 items with concrete numbers, file/line references, and an updated
+   verdict. Verify with `ls -la 5_notes/scratch/register_validation_followup.md`.
+2. **Human review** of the follow-up report; only then decide on the full validation
+   appendix (Phase 2+ below). Do NOT start appendix text or the full-corpus job.
+3. **Optional (recommended):** re-run `REGCHECK_N=60 ... register_validation_followup.py`
+   for stable per-SDG correlations (n=120/SDG; ~2,040/corpus; several more minutes
+   under tmux) before finalising per-SDG claims — N=12/SDG correlations (n≈24/SDG)
+   are low-power; be honest about that.
+4. Commit/push handoffs only when asked.
 
 ---
 
 ## 5. Concerns to emphasise
 
-1. **The bug class, not just the instance.** The failure was a function that
-   *received* a discriminating argument and silently dropped it, while the
-   correct loaders sat imported-but-unused. Nothing failed loudly; the output was
-   plausible. The only reason it was caught is that one block produced an exact
-   duplicate. **The other three blocks (H1a/H1b/H1c) were equally wrong and
-   showed no visible tell for ~2 commits.** Worth asking where else a `corpus` /
-   `model` / `method` selector is accepted but unused.
-2. **Two of the three defects I fixed were invisible to the pipeline's own
-   guards.** J.1 was `\input` by the manuscript while being in no runner registry
-   and no PDF-input guard. A table can therefore be manuscript-facing, committed,
-   and permanently stale. Recommend auditing every `\input{../4_outputs/...}` in
-   `dissertation.tex` against `APPENDIX_SPECS` + `MANUSCRIPT_*_FILES`.
-3. **I did not verify the concept pipeline upstream of these tables.** I verified
-   that `data/concept/semantic_gap_distances_*.json` exist, differ substantially
-   from canonical, and are produced by `main.py`. I did **not** audit whether the
-   concept centroids/scores themselves are correct. The fix makes the grid *use
-   the intended inputs*; it does not certify those inputs.
-4. **`_file_fp` uses mtime**, so `2_data`/`4_outputs` re-hydration changes
-   fingerprints and forces Tier-B re-runs. Expected per `AGENTS.md`, but it means
-   my fingerprint-regression test (`touch` → re-derive) is partly an mtime
-   effect. The *content* path is still covered (first 64KB + size).
-5. **Uncommitted K.1 work is entangled in `dissertation.tex`.** Highest practical
-   risk right now is someone running `git add -A` and fusing two unrelated
-   concerns.
+1. **The first report's headline cautions were partly artifacts of policy
+   mega-document clustering.** SDSN 2024/2025 + UNDP HDR + WHO AI reports produced
+   the 12.3% policy clustering AND plausibly the positive 2b-within-policy and
+   2c correlations. One-per-parent sampling flips 2c negative and nulls 2b. Anyone
+   (including a future reviewer) re-deriving the n=408 numbers must use the
+   one-per-parent variant or explicitly justify segment clustering.
+2. **Don't overcorrect either.** The one-per-parent 2c ρ≈−0.07..−0.09 (register
+   score → slightly CLOSER to SDG centroid) is a new, different pattern that itself
+   needs explanation (3b per-feature + 3c own-vs-other help; the negative
+   per-feature associations are driven by deontic/sentence-length, which weaken
+   post-adjustment). And the PC1 score is re-fit per sample, so sign/composition
+   shifts partly reflect the score's anchor changing — do not read the flip as a
+   pure sampling effect without the per-feature breakdown.
+3. **Item 1 is closed, but keep the semantics straight:** "Concept" is a retrieval
+   axis under MPNet with MPNet's G — not an independent encoder, and not an invalid
+   application (same-space proven). Any prose that implies otherwise (either
+   direction) is wrong. The H1 bug (previous handoff) is a different, already-fixed
+   issue — do not conflate.
+4. **Adjusted ≈ chance claim weakened on the clean sample** (0.505 → 0.603).
+   The "INLP destroys all linear corpus signal" reading of the first report needs
+   restating with the one-per-parent number; register-only accuracy also rose
+   (0.456 → 0.544). The register-interpretation evidence base shifts: less
+   "removed = my 6 features" (2b null) but also less "residual register inside
+   SDGs" (2c negative).
+5. **Reproducibility:** everything deterministic (seed 42); scripts live only in
+   gitignored scratch — if the follow-up report is cited anywhere, promote/copy the
+   scripts and commit (as was done for the first report at `5_notes/register_validation_report.md`).
+6. **tmux hygiene:** session `regcheck` is DONE (marker exists) — do not relaunch
+   the script without clearing `regcheck_followup.log`/`.npz`/`.DONE` first, and
+   never run two copies concurrently. Use the absolute python path
+   (`/home/manh/miniforge3/envs/dissertation/bin/python -u ...`).
+7. **Scope discipline:** this is diagnostic-only; stop after
+   `register_validation_followup.md` for human review. No manuscript, no analysis
+   scripts, no `2_data/4_outputs` writes (AGENTS.md). Don't fix Table 3 or any table.
+8. **Power honesty:** per-SDG correlations at N=12/SDG (n=24) are low-power; the
+   REGCHECK_N=60 run (n=120/SDG) is needed before any per-SDG claim in the report.
 
 ---
 
-## 6. The comprehensive plan (status per step)
+## 6. The comprehensive plan
 
-| # | Step | Status |
-|---|---|---|
-| 1 | Fix `corpus` dispatch in `_raw_gaps_for`/`_adj_gaps_for` + both call sites | **DONE** |
-| 2 | Fix j1's two call sites (inherits via import) | **DONE** |
-| 3 | Register J.1 in `APPENDIX_SPECS` + `MANUSCRIPT_APPENDIX_TABLE_FILES` | **DONE** |
-| 4 | Add concept paths to fingerprint (`h1_grid_input_paths`); bump `SCRIPT_VERSION`→"3", j1 tag→v2 | **DONE** |
-| 5 | Emit `\ConceptLRCovgapAdjRho` + positive-count macros; reorder `run()` | **DONE** |
-| 6 | Regenerate tab4 ×3 namespaces + J.1 with `--overwrite` | **DONE** |
-| 7 | Verify: surgical diff, no duplicates, canonical JSON untouched, md5 convergence, fingerprint skip/re-derive, CLI wiring | **DONE** |
-| 8 | **Update `dissertation.tex:396`** (macro + H1d count/significance) | **TODO** — §4.1 |
-| 9 | **Re-confirm line 794** (expected: no change) | **TODO** |
-| 10 | **Rebuild PDF** and eyeball both tables | **TODO** |
-| 11 | **Commit 1 (code, 4 files)** | **TODO** |
-| 12 | **Commit 2 (outputs 10 files + prose hunk)** | **TODO** |
+**Phase 0 — finish this diagnostic (immediate):**
+1. Harvest tmux `regcheck` output (Item 3a–3d) once `.DONE` exists.
+2. (Recommended) `REGCHECK_N=60` run for per-SDG power; also consider re-running
+   Item 3 on the **original (2A-composition)** sample to directly explain the old
+   2c red flag vs the one-per-parent view.
+3. Write `5_notes/scratch/register_validation_followup.md` (3 items + verdict with
+   numbers, file/line refs, seeds, n's).
+4. Human review; updated GO/qualified/NO-GO decision.
 
----
+**Phase 1 — design freeze for the full validation appendix (only after GO):**
+5. Pre-register the register operationalization: Biber (1988) MD-style battery;
+   report per-dimension correlations; keep PC1 and a-priori institutional score as
+   explicit alternatives (first report showed operationalization flips answers).
+6. Unit of analysis: segments (pipeline unit) with **one-segment-per-parent
+   sampling as the primary design** (Item 2 shows it matters), or paper-level
+   aggregation — decide and justify.
+7. Encoders: extend to MiniLM + SciBERT (their own Gs exist); note subset track.
+8. Sample size: scale to ~1–2k/corpus, 12+ per SDG per corpus, deterministic seed.
 
-## 7. What was interrupted
+**Phase 2 — data work:**
+9. Pre-clean policy text (PDF banner junk inflates mean_sentence_length) or drop
+   the feature; document SDSN/UNDP mega-doc treatment (cap, dedupe, or exclude).
+10. Compute the richer feature battery; verify per-corpus distributions.
+11. Always project via `register_utils.project()` (never materialise adjusted
+    arrays); record ‖x−x′‖.
 
-**Nothing was mid-execution.** The user asked to stop at the end of the
-verification phase (step 7). The last commands run were the fingerprint
-regression tests; all passed and the tree is in a consistent, verified state.
+**Phase 3 — analysis the appendix must contain:**
+12. Repeat 2b/2c/2d/3 on the one-per-parent sample at scale (the new baseline).
+13. **Confront Step 2c head-on:** per-SDG, per-feature, own-vs-other-corpus
+    centroid pull, and the un-renormalised-distance check (3a–3d already compute
+    these); test whether residual corpus-per-SDG offset after INLP is register
+    (per-feature) and whether per-SDG INLP directions would remove it; state
+    plainly whether the residual is register, topic, or renormalization artifact.
+14. Encoder-robustness: corpus-classifier collapse and topic preservation on
+    MiniLM/SciBERT.
+15. If feasible: feature-space ablation — does the INLP corpus classifier's
+    decision boundary align with the feature battery?
 
-One cosmetic artefact worth knowing so it is not misread as a failure:
+**Phase 4 — writing (only after Phase 3 passes review):**
+16. Appendix per repo conventions (JSON-out, macros, fingerprint-gated, registered
+    in `APPENDIX_SPECS`).
+17. Update `dissertation.tex` "left to future work"/"unvalidated" sentences
+    (:279, :373, :392, :477) to cite the validation; macro-driven; then
+    `python main.py --build-pdf --overwrite` (bash/WSL, short job — poll short
+    first); verify tables.
 
-- While testing J.1's fingerprint, I ran a chained command
-  `... | grep -ci "skip" && touch ... && ...`. The `grep -c` returned `0`
-  (exit status 1), which **short-circuited the `&&` chain**, so the second half
-  never ran and the output looked like a failed test.
-- **Cause was my test sequencing, not the code:** the immediately preceding
-  command had already `touch`ed `4_outputs/mpnet/data/concept/semantic_gap_distances_lr.json`,
-  which is in J.1's fingerprint set, so J.1 correctly re-derived instead of
-  skipping. That *is* the re-derive test passing.
-- I then re-ran the skip test cleanly and it printed
-  `Skipping ... raw_value_correlation.json -- inputs unchanged`. **Both halves of
-  the J.1 fingerprint test are verified.**
-
-Side effects of that testing: the mtimes of
-`4_outputs/mpnet/data/concept/semantic_gap_distances_{lr,mlp}.json` were bumped
-by `touch`. **Contents are unchanged and git shows no diff for them.** They are
-inputs, not outputs; no action needed.
-
-### Immediate next action for a fresh agent
-
-Start at **§4.1** — edit `3_writing/dissertation.tex:396`. Everything needed is
-in this file; no re-investigation required. Re-verify current state first with:
-
-```bash
-git status --short
-grep "Concept" 4_outputs/mpnet/tables/tab4_interaction_h25.tex     # expect the §2.7 corrected values
-grep -E "ConceptLR|PositiveCount" 4_outputs/mpnet/tables/num4_interaction_h25.tex
-md5sum 4_outputs/{mpnet,minilm,scibert}/tables/tab4_interaction_h25.tex   # expect 3× identical
-```
+**Phase 5 — commits (one concern per commit, only when asked):**
+18. (a) appendix code+registration; (b) outputs; (c) manuscript prose+macros;
+    (d) rebuilt PDF. Also commit the preserved handoffs.
 
 ---
 
-## 8. Session 2 (2026-08-04) — prose done; PDF build BLOCKED (stop & report)
+## 7. Exactly what was interrupted
 
-Picked up from §4.1. **Prose edit completed; PDF rebuild blocked by pre-existing
-issues unrelated to this fix. Stopped at the blocker rather than silently
-touching the entangled K.1 work.**
+**The follow-up compute was mid-flight when the user asked to stop, but finished
+shortly after. The deliverable was written in the next session.** Sequence:
 
-### 8.1 What got done
-- **`3_writing/dissertation.tex:396` edited** (the only change I made to the
-  manuscript this session). Three defects fixed per §4.1:
-  1. `Concept LR $+0.451^{\dagger}$` → `Concept LR \ConceptLRCovgapAdjRho`
-     (macro now emitted by `num4`; renders `+0.439$^{\dagger}$`). **The macro
-     already contains its `$...$`, so it is used unadorned — do NOT re-wrap in
-     `$...$` (would nest math mode and break the build).**
-  2. `positive across all nine configs` → `positive in
-     \HOneACovgapAdjPositiveCount/\HOneACovgapAdjPositiveCountTotal\ configs`
-     (renders `9/9`).
-  3. `H1d: positive in 8/9 configs, significant for MPNet MLP and both SciBERT
-     configs` → `positive in
-     \HOneDPolicyAdjPositiveCount/\HOneDPolicyAdjPositiveCountTotal\ configs,
-     significant for MPNet LR and the Concept and SciBERT LR configs at
-     $p<0.05$, with MPNet MLP marginal at $p<0.10$`. (Post-fix H1d adjusted is
-     positive in **9/9**; significant at p<0.05 for MPNet LR \*\*, SciBERT LR \*,
-     Concept LR \*; MPNet MLP is marginal †; SciBERT MLP / MiniLM not significant.)
-- **Line 794 re-confirmed unchanged.** Verified against the regenerated J.1
-  (Pearson) table: H1a adjusted positive in 7/9 (SciBERT LR/MLP negative),
-  H1d adjusted in 9/9. The "positive in 7/9 and 9/9 configs respectively under
-  Pearson" claim still holds. **No edit needed.**
-- `num4_interaction_h25.tex` is `\input`ed at `dissertation.tex:39`, i.e.
-  **before** line 396, so the macros are defined at point of use. Confirmed.
+1. Item 1 fully completed (trace + empirical same-space check + verdict) — no
+   interruption there.
+2. Item 2 script written; first launch crashed (dict `.most_common` bug — fixed);
+3. Re-launched under tmux (`regcheck`, started 2026-08-05 09:19:40Z,
+   `/home/manh/miniforge3/envs/dissertation/bin/python -u 5_notes/scratch/register_validation_followup.py`).
+4. At the moment of the stop request, the job had **completed Item 2A and Item 2B**
+   (numbers in §2.4) and was **inside Item 3**. The tmux session was left running;
+   it finished at ~09:25 (`.DONE` marker present; results harvested into §2.5).
+5. **Report written** (`5_notes/scratch/register_validation_followup.md`, 190 lines,
+   Items 1–3 + verdict). All three mandated diagnostic items are complete.
 
-### 8.2 PDF build is BLOCKED — and the blocker is NOT this fix
-Ran `python main.py --build-pdf --overwrite` (via tmux, clean `3_writing/artifact`).
-It fails with a fatal `pdflatex` error. Root-caused to **two independent,
-pre-existing problems in the uncommitted K.1 work / figure assets**:
-
-1. **Missing figure PDFs.** `fig1_conceptual_framework.pdf` and
-   `fig6_pipeline_flowchart.pdf` are `\include`d at `dissertation.tex:142` and
-   `:294` but **do not exist in the current `4_outputs/`** — they survive only in
-   `4_outputs_backup_before_model_namespace/main/figures/`. Source `.tex`/`fig_pipeline_flowchart.pdf`
-   exist under `1_code/8_visualization/`. This is a namespace-refactor fallout,
-   unrelated to H1.
-2. **K.1 table is malformed LaTeX.** `4_outputs/appendix/mpnet/k1_regression_semantic_gap/tables/tab_k1_specification_grid.tex`
-   contains unescaped `×` and `%` outside math mode (`covgap×i_minilm`,
-   `covgap×i_scibert`, `covgap×i_concept`, `gap ($\vert$research\% ...`). These
-   raise `Missing $ inserted`. The `×`/`%` come from the **K.1 Python generator**
-   (`k1_regression_semantic_gap.py`) — editing the `.tex` is futile (regenerated
-   on re-run). Fixing it means editing the generator, i.e. doing K.1's work.
-
-Also noted: `dissertation.tex:56` had a redundant
-`\InputIfFileExists{...tab_k1_specification_grid.tex}` **in the preamble** (before
-`\begin{document}` at :80) — a `tabular` input there is a hard LaTeX error. The
-same table is correctly `\input`ed in the body at `:867`. I **temporarily removed
-line 56 to test the build, then REVERTED it** to keep my diff isolated to the H1
-prose. The line-56 removal is a correct fix but lives in K.1's region; leave it to
-the K.1 author (or apply separately) rather than fuse it with the H1 commit.
-
-**My line-396 edit contributes zero build errors** — all fatal errors are the
-figure/K.1 issues above. The H1 fix is therefore verified at the data/table/prose
-level; only the full-PDF render is blocked by out-of-scope work.
-
-### 8.3 Corrected H1d significance wording (for the prose, already written)
-The old prose claimed "significant for MPNet MLP and both SciBERT configs" —
-**wrong on both counts**: MPNet MLP is only marginal (†), and SciBERT MLP is not
-significant. The corrected sentence (now in the manuscript) names the three
-p<0.05 configs (MPNet LR, Concept LR, SciBERT LR) and flags MPNet MLP as marginal.
-
-### 8.4 Recommended next steps (judgment needed — did NOT auto-proceed)
-1. **Decide on the K.1 entanglement.** Either (a) the K.1 author fixes their
-   generator's `×`/`%` escaping and restores `fig1`/`fig6`, or (b) we temporarily
-   exclude K.1 from the build to verify the H1 fix renders. I did not do either
-   without your say-so.
-2. **Once the build is unblocked**, re-run `python main.py --build-pdf --overwrite`,
-   eyeball Table `tab:interaction` (Concept rows = §2.7) and Table
-   `tab:raw-value-correlation`.
-3. **Commits (per §4.3) are NOT yet made** — the build is unverified and K.1 files
-   are in the tree. My `dissertation.tex` change is now a single isolated hunk
-   (line 396 only); `git add -p` will stage it cleanly without the K.1 hunks.
-   Stage: commit-1 code (4 files, §3.1), commit-2 outputs+prose (10 files §3.2 +
-   the line-396 hunk).
-
-### 8.5 What remains from the original plan
-| Step | Status |
-|---|---|
-| 8 (prose edit line 396) | **DONE** |
-| 9 (re-confirm line 794) | **DONE — no change** |
-| 10 (rebuild PDF) | **BLOCKED** by K.1/figures (§8.2) |
-| 11 (commit 1: code) | **TODO — blocked on build verify** |
-| 12 (commit 2: outputs+prose) | **TODO — blocked on build verify** |
-
+**Current state (for a fresh agent):**
+1. All compute is done (DONE marker exists at `regcheck_followup.DONE`).
+2. The deliverable report is written at `5_notes/scratch/register_validation_followup.md`.
+3. Awaiting human review; no commits needed unless explicitly asked.
