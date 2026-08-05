@@ -2,46 +2,50 @@
   "method": "document_weighted",
   "note": "Policy profile uses document-weighted assignment (each source_doc weighted equally). Research profile uses hard assignment (each paper weighted equally). Coverage gap = |research_proportion - policy_proportion| per SDG. See Assumption A19 for document-weighting rationale.",
   "n_research_papers": 100000,
+  "n_research_abstracts": 100000,
+  "n_research_segments": 122472,
+  "n_research_preprocessed": 2543698,
+  "n_research_dropped_at_segmentation": 2443698,
   "n_policy_segments": 40597,
   "n_policy_documents": 6367,
-  "a15_note": "A15 FLAG: policy top scores exceed paper top scores by 0.006 (threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. Policy proportions may be inflated relative to research. Coverage gap results valid but directional comparison should be framed carefully.",
+  "a15_note": "A15 FLAG: policy top scores exceed paper top scores by 0.010 (threshold 0.10). OSDG centroids may be calibrated to policy vocabulary. Policy proportions may be inflated relative to research. Coverage gap results valid but directional comparison should be framed carefully.",
   "research_profile_hard": {
-    "SDG1": 0.00194,
-    "SDG2": 0.01514,
-    "SDG3": 0.28912,
-    "SDG4": 0.1713,
-    "SDG5": 0.01778,
-    "SDG6": 0.01215,
-    "SDG7": 0.03298,
-    "SDG8": 0.00725,
-    "SDG9": 0.19555,
-    "SDG10": 0.00958,
-    "SDG11": 0.03899,
-    "SDG12": 0.01041,
-    "SDG13": 0.04287,
-    "SDG14": 0.00975,
-    "SDG15": 0.03173,
-    "SDG16": 0.11081,
-    "SDG17": 0.00265
+    "SDG1": 0.00145,
+    "SDG2": 0.01305,
+    "SDG3": 0.27042,
+    "SDG4": 0.17737,
+    "SDG5": 0.01503,
+    "SDG6": 0.01114,
+    "SDG7": 0.03531,
+    "SDG8": 0.0075,
+    "SDG9": 0.21402,
+    "SDG10": 0.00804,
+    "SDG11": 0.04068,
+    "SDG12": 0.01055,
+    "SDG13": 0.0404,
+    "SDG14": 0.00943,
+    "SDG15": 0.02774,
+    "SDG16": 0.11589,
+    "SDG17": 0.00198
   },
   "research_profile_soft": {
-    "SDG1": 0.008388,
-    "SDG2": 0.021297,
-    "SDG3": 0.240166,
-    "SDG4": 0.150694,
-    "SDG5": 0.026645,
-    "SDG6": 0.019282,
-    "SDG7": 0.036252,
-    "SDG8": 0.016087,
-    "SDG9": 0.155172,
-    "SDG10": 0.023149,
-    "SDG11": 0.050917,
-    "SDG12": 0.022698,
-    "SDG13": 0.053167,
-    "SDG14": 0.016965,
-    "SDG15": 0.041922,
-    "SDG16": 0.105031,
-    "SDG17": 0.012154
+    "SDG1": 0.008084,
+    "SDG2": 0.018844,
+    "SDG3": 0.225988,
+    "SDG4": 0.156703,
+    "SDG5": 0.024138,
+    "SDG6": 0.018131,
+    "SDG7": 0.037322,
+    "SDG8": 0.016785,
+    "SDG9": 0.167444,
+    "SDG10": 0.022361,
+    "SDG11": 0.052871,
+    "SDG12": 0.022578,
+    "SDG13": 0.051516,
+    "SDG14": 0.016179,
+    "SDG15": 0.038743,
+    "SDG16": 0.110882,
+    "SDG17": 0.011432
   },
   "policy_profile_hard_docweighted": {
     "SDG1": 0.052615,
@@ -82,108 +86,108 @@
     "SDG17": 0.088647
   },
   "coverage_gap_hard": {
-    "SDG1": 0.050675,
-    "SDG2": 0.024125,
-    "SDG3": 0.241217,
-    "SDG4": 0.122297,
-    "SDG5": 0.035777,
-    "SDG6": 0.024131,
-    "SDG7": 0.008798,
-    "SDG8": 0.037669,
-    "SDG9": 0.157384,
-    "SDG10": 0.014764,
-    "SDG11": 0.020064,
-    "SDG12": 0.024771,
-    "SDG13": 0.056549,
-    "SDG14": 0.027473,
-    "SDG15": 0.009263,
-    "SDG16": 0.096195,
-    "SDG17": 0.090644
+    "SDG1": 0.051165,
+    "SDG2": 0.026215,
+    "SDG3": 0.222517,
+    "SDG4": 0.128367,
+    "SDG5": 0.038527,
+    "SDG6": 0.025141,
+    "SDG7": 0.006468,
+    "SDG8": 0.037419,
+    "SDG9": 0.175854,
+    "SDG10": 0.016304,
+    "SDG11": 0.018374,
+    "SDG12": 0.024631,
+    "SDG13": 0.059019,
+    "SDG14": 0.027793,
+    "SDG15": 0.013253,
+    "SDG16": 0.091115,
+    "SDG17": 0.091314
   },
-  "coverage_gap_total": 1.041797,
-  "coverage_gap_mean": 0.061282,
+  "coverage_gap_total": 1.053477,
+  "coverage_gap_mean": 0.061969,
   "per_sdg_top_score_gap": {
-    "SDG1": 0.182961,
-    "SDG2": 0.185487,
-    "SDG3": 0.034355,
-    "SDG4": 0.091026,
-    "SDG5": 0.171078,
-    "SDG6": -0.014641,
-    "SDG7": 0.117323,
-    "SDG8": 0.177189,
-    "SDG9": 0.030032,
-    "SDG10": 0.088245,
-    "SDG11": 0.150566,
-    "SDG12": 0.139675,
-    "SDG13": 0.11704,
-    "SDG14": 0.143257,
-    "SDG15": 0.067355,
-    "SDG16": 0.030016,
-    "SDG17": 0.17324
+    "SDG1": 0.198339,
+    "SDG2": 0.174537,
+    "SDG3": 0.041632,
+    "SDG4": 0.082981,
+    "SDG5": 0.183843,
+    "SDG6": -0.00207,
+    "SDG7": 0.121217,
+    "SDG8": 0.177882,
+    "SDG9": 0.029512,
+    "SDG10": 0.090267,
+    "SDG11": 0.149313,
+    "SDG12": 0.141561,
+    "SDG13": 0.12891,
+    "SDG14": 0.152814,
+    "SDG15": 0.085651,
+    "SDG16": 0.029435,
+    "SDG17": 0.17706
   },
   "per_sdg_top_score_gap_stats": {
-    "min": -0.014640662500955526,
-    "max": 0.1854870668707399,
-    "std": 0.061208898100317315,
-    "mean": 0.11083554464273886,
+    "min": -0.0020697945502126114,
+    "max": 0.19833902533370706,
+    "std": 0.0607754885960754,
+    "mean": 0.11546374884081698,
     "n_valid": 17
   },
   "top5_largest_gaps": [
     [
       "SDG3",
-      0.241217
+      0.222517
     ],
     [
       "SDG9",
-      0.157384
+      0.175854
     ],
     [
       "SDG4",
-      0.122297
-    ],
-    [
-      "SDG16",
-      0.096195
+      0.128367
     ],
     [
       "SDG17",
-      0.090644
+      0.091314
+    ],
+    [
+      "SDG16",
+      0.091115
     ]
   ],
   "top5_research_dominant": [
     [
       "SDG3",
-      0.241217
+      0.222517
     ],
     [
       "SDG9",
-      0.157384
+      0.175854
     ],
     [
       "SDG4",
-      0.122297
+      0.128367
     ]
   ],
   "top5_policy_dominant": [
     [
-      "SDG16",
-      0.096195
+      "SDG17",
+      0.091314
     ],
     [
-      "SDG17",
-      0.090644
+      "SDG16",
+      0.091115
     ],
     [
       "SDG13",
-      0.056549
+      0.059019
     ],
     [
       "SDG1",
-      0.050675
+      0.051165
     ],
     [
-      "SDG8",
-      0.037669
+      "SDG5",
+      0.038527
     ]
   ],
   "per_document_assignments": {
