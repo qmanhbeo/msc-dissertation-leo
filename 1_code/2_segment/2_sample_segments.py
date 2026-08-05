@@ -161,18 +161,26 @@ def build_canonical_research_subset(overwrite: bool) -> Path:
             in_path = canonical_seg / f"{shard['name']}.jsonl"
             if not in_path.exists():
                 raise FileNotFoundError(f"Canonical research shard missing: {in_path}")
-            lines = in_path.read_text(encoding="utf-8").splitlines()
-            ids = [(_json.loads(ln).get("openalex_id") if ln.strip() else None) for ln in lines]
-            starts = paper_run_starts(ids)
-            assert_papers_contiguous(ids, starts, shard["name"])
-            seg_counts = np.diff(np.append(starts, len(lines))).astype(np.int64)
+            # Read line-by-line (NOT read_text().splitlines()) so control
+            # characters inside a JSON string field do not fragment a record.
+            paper_ids_run: list[str] = []
+            line_buf: list[str] = []
+            with in_path.open(encoding="utf-8") as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    pid = _json.loads(line).get("openalex_id")
+                    paper_ids_run.append(pid)
+                    line_buf.append(line if line.endswith("\n") else line + "\n")
+            starts = paper_run_starts(paper_ids_run)
+            assert_papers_contiguous(paper_ids_run, starts, shard["name"])
+            seg_counts = np.diff(np.append(starts, len(line_buf))).astype(np.int64)
             for j, start in enumerate(starts):
                 ordinal = run_cursor + j
                 if ordinal in drawnset:
                     stop = start + int(seg_counts[j])
                     for k in range(start, stop):
-                        out.write(lines[k])
-                        out.write("\n")
+                        out.write(line_buf[k])
                         written += 1
             run_cursor += len(starts)
     tmp_jsonl.replace(subset_jsonl)  # atomic publish
