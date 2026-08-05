@@ -373,3 +373,33 @@ Update `AGENTS.md` (weighting unit + the new subset semantics) and delete this `
 **Committed:** code + regenerated `4_outputs/mpnet` (coverage + LR/MLP semantic gaps). Snapshot of pre-change outputs at `/tmp/opencode/4_outputs_pre_paperweighting`.
 
 **NEXT (back to plan):** Step 6 downstream label/unit fixes (c_sample_stability `full_corpus_rows`, a2 keys, plot_figures legend, fig_pipeline_flowchart `\input`, i1 header, etc.); then Step 7/9 S1 delete+refill MiniLM/SciBERT + re-snapshot; Step 10 full 3-encoder replay; Step 11 prose; Step 12 commit+notes.
+
+---
+
+### 2026-08-05 (continued) — distributional-gap paper-level refactor + label fixes
+
+- `g_distributional_gap.py`: **critical pipeline-breaker fixed.** The research cloud was
+  segment-weighted (GATE 2 compared `rows` to the renamed `n_papers_assigned` key → crash).
+  Refactored to a **PAPER-level research cloud**, symmetric with the document-weighted policy
+  cloud, per Plan C:
+  - `build_paper_level_research()` collapses each shard's segments→unit-normalised paper
+    vectors (reuses `paper_units_from_shard`); written to **per-shard memmaps** (RAM-bounded —
+    a single 7.7 GB memmap OOM-killed the 11 GB box, so per-shard files under
+    `2_data/5_supervised_scored/{model}/research_paper_embs/` are used and deleted at end of run).
+  - `build_sdg_paper_index` (GATE 2 vs canonical `n_papers`), `gather_paper_embs`,
+    `iter_paper_chunks`, `stream_moments_and_chamfer` (shard-major), `compute_swd_full`,
+    `sample_research_cloud` all rewritten to index paper embeddings.
+  - Verified under `--overwrite` for MPNet: **GATE 1 (policy caps), GATE 2 (paper counts),
+    GATE 3 (research means reproduce paper-level centroids), GATE 4 (full-corpus centroid gap
+    = canonical semantic gap) all PASS.** Full-corpus records regenerated. Sampled family
+    (EMD/MMD/C2ST × 17 SDG × 2 seeds) was still running at commit time — verify completion
+    and commit `4_outputs/not_in_replay/distributional/mpnet/` after it finishes.
+- Label/unit fixes: `register_adjust.py` docstring (Q3: G stays segment-level by design;
+  subset = 100k papers, ~122k rows), `c1_subset_balanced_stability.py` docstring (segments not
+  papers), `fig_pipeline_flowchart.tex` (corrected "2,543,698 preprocessed abstracts",
+  "3,105,144 segments (from 2,536,771 abstracts)", "3,105,144 segments" / "segment assignments").
+  `plot_figures.py` needed no change (`n_research_papers` key retained = abstract count).
+  **Deferred:** `fig_pipeline_flowchart.tex` `\input` of the generated num file (label fix
+  removes the false claim; \input refactor is polish — see plan Step 6/11). Remaining Step 6
+  consumers (2_coverage_semantic_interaction, a3, b2, h1, j1, k1, a2 keys, i1 header,
+  c_sample_stability `full_corpus_rows`) still pending label pass.

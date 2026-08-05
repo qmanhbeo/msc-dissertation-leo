@@ -3,8 +3,9 @@ Measure whether the within-SDG semantic-gap ranking survives when the research
 side is subsampled to sizes comparable to the policy corpus.
 
 This stage addresses the corpus-asymmetry robustness check for the unit-count
-imbalance (3,105,144 research papers vs 40,597 policy segments): the full-corpus
-research centroids over-represent the research side by ~76x. We reuse the
+imbalance (3,105,144 research segments from 2,536,771 papers vs 40,597 policy
+segments, a ~76x segment-unit ratio): the full-corpus research centroids
+over-represent the research side by ~76x at the segment level. We reuse the
 existing sample-stability draws (Appendix C, c_sample_stability.py) — each draw
 is a random 50k-paper research subset whose per-SDG semantic gaps were computed
 against the fixed canonical policy centroids — and correlate each draw's

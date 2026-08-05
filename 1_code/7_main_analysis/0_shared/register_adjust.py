@@ -11,7 +11,14 @@ consumers project raw embeddings on the fly via ``register_utils``.
 
 Tracks are derived from ``--embed-model`` (no ``--track`` flag):
     all-mpnet-base-v2            -> canon   (full research shards)
-    all-MiniLM-L6-v2 / scibert   -> subset  (research_subset, 100k papers)
+    all-MiniLM-L6-v2 / scibert   -> subset  (research_subset, 100k papers — every
+                                        segment of each drawn paper, ~122k rows;
+                                        see 2_sample_segments.py S1)
+    NOTE: the INLP register direction G is learned at SEGMENT level (each segment
+    embedding is one training row) by design — INLP_RESEARCH_UNIT = "segment" in
+    model_utils. Only the supervised SDG centroids were moved to paper level (Plan C);
+    the binary register classifier sample is SDG-balanced, so segment-level G is the
+    intended, documented unit and is NOT changed by Plan C.
 
 Each iteration k uses its OWN deterministic RNG
 ``default_rng(POLICY_SEGMENT_CAP_SEED + k)`` for BOTH the stratified sampling

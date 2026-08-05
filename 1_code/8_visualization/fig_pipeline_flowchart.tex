@@ -26,7 +26,7 @@
 
 %% ====================  ROW 1: FETCH / SOURCES  ====================
 
-\node[t2] (r_src) {\textbf{OpenAlex}\\68 Boolean Queries\\2018--2025\\(2,543,698 papers)};
+\node[t2] (r_src) {\textbf{OpenAlex}\\68 Boolean Queries\\2018--2025\\(2,543,698 preprocessed abstracts)};
 \node[t3, right=of r_src] (p_src) {\textbf{4 Policy Sources}\\Scrape (84) / Manual (10)\\UNGDC / SDGi};
 \node[t1, right=of p_src] (ref_src) {\textbf{5 Reference Corpora}\\OSDG / Benchmark / KH\\SDGi-labels / Aurora};
 
@@ -38,20 +38,20 @@
 
 %% ====================  ROW 3: SEGMENT  ====================
 
-\node[t2, below=of r_prep] (r_seg) {\textbf{Segment}\\token-aware segmenter\\(3,105,144)};
+\node[t2, below=of r_prep] (r_seg) {\textbf{Segment}\\token-aware segmenter\\(3,105,144 segments\\from 2,536,771 abstracts)};
 \node[t3, below=of p_prep] (p_seg) {\textbf{Segment + Merge}\\4 sources $\rightarrow$ segment\_text\\dedup $\rightarrow$ 40,597};
 \node[t1, below=of ref_prep] (ref_seg) {\textbf{Segment + Bypass}\\3 seg (KH, SDGi, Aurora);\\2 bypass (OSDG, Benchmark)\\(62,173 total)};
 
 %% ====================  ROW 4: EMBED  ====================
 
 \node[shared, below=1.2cm of p_seg] (embed)
-  {\textbf{Embedding}\\all-mpnet-base-v2 (768d, L2-normalised)\\
-   \textnormal{Research 3,105,144 $\mid$ Policy 40,597 $\mid$ Reference 62,173 $\mid$ Total 3,207,914}};
+   {\textbf{Embedding}\\all-mpnet-base-v2 (768d, L2-normalised)\\
+    \textnormal{Research 3,105,144 segments $\mid$ Policy 40,597 $\mid$ Reference 62,173 $\mid$ Total 3,207,914}};
 
 %% ====================  ROW 5: TRAIN + SCORE  ====================
 
 \node[t2, below=0.7cm of embed.south -| r_seg.south] (score_res)
-  {\textbf{Score Research}\\LR argmax over 17 SDGs\\(3,105,144 assignments)};
+  {\textbf{Score Research}\\LR argmax over 17 SDGs\\(3,105,144 segment assignments)};
 
 \node[t3, right=0.3cm of score_res] (score_pol)
   {\textbf{Score Policy}\\LR argmax over 17 SDGs\\(40,597 assignments)};

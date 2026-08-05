@@ -42,7 +42,7 @@ a named constant and echoed into the output config):
 
 Fail-closed gates (the script halts rather than emit wrong-but-plausible output):
   GATE 1: capped policy cluster sizes == canonical n_policy_segments_capped.
-  GATE 2: per-SDG research assignment counts == canonical n_papers.
+  GATE 2: per-SDG research (paper) assignment counts == canonical n_papers_assigned.
   GATE 3: streamed research means reproduce committed research_centroids.npy.
   GATE 4: full-corpus centroid gap reproduces the canonical semantic gap.
 
@@ -62,6 +62,7 @@ import hashlib
 import json
 import logging
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -102,9 +103,7 @@ from model_utils import (
 )
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from research_embedding_shards import (
-    ResearchShard,
     build_research_shards,
-    load_sampled_research_embeddings,
 )
 from semantic_gap_shared import (
     MIN_CLUSTER_SIZE,
@@ -113,6 +112,7 @@ from semantic_gap_shared import (
     build_sub_centroid,
     cap_policy_indices_per_doc,
 )
+from research_score_shards import paper_units_from_shard
 from shard_pipeline_utils import load_json
 from shared_utils import ensure_dissertation_outputs, require_output_files
 
@@ -276,32 +276,83 @@ def load_policy_side(model: str, canonical: dict[int, dict[str, Any]]) -> dict[s
     return {"clouds": clouds, "capped_counts": capped_counts, "dim": int(policy_emb.shape[1])}
 
 
-def build_sdg_row_index(
-    shards: list[ResearchShard], canonical: dict[int, dict[str, Any]]
-) -> list[np.ndarray]:
-    """One pass over the 27 score shards -> sorted global row indices per SDG.
+def _load_openalex_ids(path: Path) -> list[str]:
+    """Per-row openalex_id of an ids jsonl (embedding or score shard)."""
+    out: list[str] = []
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                out.append(str(json.loads(line)["openalex_id"]))
+    return out
 
-    GATE 2: per-SDG counts must equal the canonical n_papers exactly.
+
+def build_paper_level_research(
+    scored_dir: Path, embed_dir: Path
+) -> tuple[list[np.memmap], list[np.ndarray], np.ndarray, int, int, Path]:
+    """Collapse the SEGMENTED research corpus to PAPER-level embeddings.
+
+    Mirrors ``score_supervised.py``: each paper -> mean of its segment embeddings,
+    L2-renormalised to unit length. Returns ``(shard_paper_embs, shard_paper_sdg,
+    shard_paper_start, n_papers, dim, paper_dir)`` where each shard's paper
+    embeddings live in their own disk-backed memmap (so the full 2.5M x d cloud is
+    never resident at once) and ``shard_paper_start`` maps a global paper index to
+    its shard. The research cloud is thus document-weighted, symmetric with the
+    document-weighted policy cloud.
     """
-    per_sdg: list[list[np.ndarray]] = [[] for _ in range(N_SDG)]
-    for shard in shards:
+    shards, _ = build_research_shards(embed_dir, scored_dir)
+    prev_last: str | None = None
+    shard_paper_embs: list[np.memmap] = []
+    shard_paper_sdg: list[np.ndarray] = []
+    shard_paper_start = [0]
+    dim = 0
+    paper_dir = scored_dir / "research_paper_embs"
+    if paper_dir.exists():
+        shutil.rmtree(paper_dir)
+    paper_dir.mkdir(parents=True, exist_ok=True)
+    for i, shard in enumerate(shards):
+        emb = np.load(shard.emb_path, mmap_mode="r")
         scores = np.load(shard.score_path)
-        if scores.shape[0] != shard.rows:
-            raise RuntimeError(
-                f"Score shard {shard.name}: rows {scores.shape[0]} != manifest {shard.rows}"
-            )
-        assignments = scores.argmax(axis=1)
-        for sdg_idx in range(N_SDG):
-            local = np.flatnonzero(assignments == sdg_idx)
-            if local.size:
-                per_sdg[sdg_idx].append(local.astype(np.int64) + shard.start)
+        if shard.ids_path is None:
+            raise RuntimeError(f"Shard {shard.name} has no ids_path")
+        paper_ids = _load_openalex_ids(shard.ids_path)
+        pe, pa, _sc, last = paper_units_from_shard(
+            emb, scores, paper_ids, shard.name, prev_last_paper_id=prev_last
+        )
+        prev_last = last
+        dim = int(emb.shape[1])
+        p = paper_dir / f"shard_{i:05d}.npy"
+        mm = np.memmap(p, dtype=np.float32, mode="w+", shape=pe.shape)
+        mm[:] = pe
+        mm.flush()
+        shard_paper_embs.append(np.memmap(p, dtype=np.float32, mode="r", shape=pe.shape))
+        shard_paper_sdg.append(pa)
+        shard_paper_start.append(shard_paper_start[-1] + pe.shape[0])
+        del emb
+    total_papers = int(shard_paper_start[-1])
+    return (
+        shard_paper_embs,
+        shard_paper_sdg,
+        np.asarray(shard_paper_start, dtype=np.int64),
+        total_papers,
+        dim,
+        paper_dir,
+    )
+
+
+def build_sdg_paper_index(
+    shard_paper_sdg: list[np.ndarray],
+    shard_paper_start: np.ndarray,
+    canonical: dict[int, dict[str, Any]],
+) -> list[np.ndarray]:
+    """Global PAPER indices per SDG. GATE 2: counts must equal canonical n_papers_assigned."""
     sdg_rows: list[np.ndarray] = []
     for sdg_idx in range(N_SDG):
-        rows = (
-            np.concatenate(per_sdg[sdg_idx])
-            if per_sdg[sdg_idx]
-            else np.empty(0, dtype=np.int64)
-        )
+        parts: list[np.ndarray] = []
+        for s in range(len(shard_paper_sdg)):
+            local = np.flatnonzero(shard_paper_sdg[s] == sdg_idx)
+            if local.size:
+                parts.append(shard_paper_start[s] + local)
+        rows = np.concatenate(parts).astype(np.int64) if parts else np.empty(0, dtype=np.int64)
         rows.sort()
         expected = int(canonical[sdg_idx + 1]["n_papers"])
         if rows.size != expected:
@@ -310,28 +361,55 @@ def build_sdg_row_index(
                 f"canonical run had {expected}. Assignment definition has drifted."
             )
         sdg_rows.append(rows)
-    log.info("GATE 2 passed: all 17 research assignment counts match the canonical run")
+    log.info("GATE 2 passed: all 17 research (paper) assignment counts match the canonical run")
     return sdg_rows
 
 
-def iter_sdg_chunks(
-    shards: list[ResearchShard], rows: np.ndarray, chunk_rows: int,
+def gather_paper_embs(
+    shard_paper_embs: list[np.memmap],
+    shard_paper_start: np.ndarray,
+    global_rows: np.ndarray,
+) -> np.ndarray:
+    """Gather paper embeddings for sorted global indices, touching only the shards that own them."""
+    if global_rows.size == 0:
+        return np.empty((0, shard_paper_embs[0].shape[1]), dtype=np.float32)
+    d = int(shard_paper_embs[0].shape[1])
+    out = np.empty((global_rows.size, d), dtype=np.float32)
+    sidx = np.searchsorted(shard_paper_start, global_rows, side="right") - 1
+    order = np.argsort(sidx, kind="stable")
+    sorted_sidx = sidx[order]
+    sorted_rows = global_rows[order]
+    pos = 0
+    n = sorted_rows.size
+    for s in range(len(shard_paper_embs)):
+        if pos >= n:
+            break
+        # advance to first row belonging to shard s
+        lo = np.searchsorted(sorted_sidx, s, side="left")
+        if lo >= n or sorted_sidx[lo] != s:
+            continue
+        j = lo
+        while j < n and sorted_sidx[j] == s:
+            j += 1
+        local = sorted_rows[lo:j] - shard_paper_start[s]
+        out[order[lo:j]] = np.asarray(shard_paper_embs[s][local], dtype=np.float32)
+        pos = j
+    return out
+
+
+def iter_paper_chunks(
+    shard_paper_embs: list[np.memmap],
+    shard_paper_start: np.ndarray,
+    rows: np.ndarray,
+    chunk_rows: int,
     G: np.ndarray | None = None,
 ) -> Iterator[np.ndarray]:
-    """Yield float32 embedding chunks for the given sorted global row indices."""
-    for shard in shards:
-        left = int(np.searchsorted(rows, shard.start, side="left"))
-        right = int(np.searchsorted(rows, shard.stop, side="left"))
-        if right <= left:
-            continue
-        local = rows[left:right] - shard.start
-        emb = np.load(shard.emb_path, mmap_mode="r")
-        for lo in range(0, local.size, chunk_rows):
-            sel = local[lo : lo + chunk_rows]
-            chunk = np.asarray(emb[sel], dtype=np.float32)
-            if G is not None and G.shape[0] > 0:
-                chunk = register_utils.project(chunk, G)
-            yield chunk
+    """Yield float32 paper-embedding chunks for the given sorted global paper indices."""
+    for lo in range(0, rows.size, chunk_rows):
+        chunk = gather_paper_embs(shard_paper_embs, shard_paper_start, rows[lo : lo + chunk_rows])
+        if G is not None and G.shape[0] > 0:
+            chunk = register_utils.project(chunk, G)
+        yield chunk
 
 
 def normalize(vec: np.ndarray) -> np.ndarray:
@@ -342,14 +420,15 @@ def normalize(vec: np.ndarray) -> np.ndarray:
 
 
 def stream_moments_and_chamfer(
-    shards: list[ResearchShard],
+    shard_paper_embs: list[np.memmap],
+    shard_paper_sdg: list[np.ndarray],
     sdg_rows: list[np.ndarray],
     policy_clouds: list[np.ndarray],
     active_sdgs: list[int],
     dim: int,
     G: np.ndarray | None = None,
 ) -> dict[int, dict[str, Any]]:
-    """Single shard-major pass over ALL research rows of the active SDGs.
+    """Single shard-major pass over ALL research PAPER embeddings of the active SDGs.
 
     Accumulates, per SDG:
       - first moment (sum_x) and second moment (sum_xxT), float64
@@ -363,40 +442,39 @@ def stream_moments_and_chamfer(
             "sum_x": np.zeros(dim, dtype=np.float64),
             "sum_xxT": np.zeros((dim, dim), dtype=np.float64),
             "n": 0,
-            "sum_min_rp": 0.0,   # sum over research rows of min_j d(r, p_j)
-            "max_min_rp": 0.0,   # directed Hausdorff research->policy
+            "sum_min_rp": 0.0,
+            "max_min_rp": 0.0,
             "policy_max_sim": np.full(m, -np.inf, dtype=np.float32),
         }
 
-    for shard in shards:
-        emb = None
+    for s, emb in enumerate(shard_paper_embs):
+        pa = shard_paper_sdg[s]
         for sdg_idx in active_sdgs:
-            rows = sdg_rows[sdg_idx]
-            left = int(np.searchsorted(rows, shard.start, side="left"))
-            right = int(np.searchsorted(rows, shard.stop, side="left"))
-            if right <= left:
+            local = np.flatnonzero(pa == sdg_idx)
+            if local.size == 0:
                 continue
-            if emb is None:
-                emb = np.load(shard.emb_path, mmap_mode="r")
-            local = rows[left:right] - shard.start
             a = acc[sdg_idx]
             pol = policy_clouds[sdg_idx]
-            for lo in range(0, local.size, STREAM_CHUNK_ROWS):
-                chunk32 = np.asarray(emb[local[lo : lo + STREAM_CHUNK_ROWS]], dtype=np.float32)
-                if G is not None and G.shape[0] > 0:
-                    chunk32 = register_utils.project(chunk32, G)
-                chunk64 = chunk32.astype(np.float64)
-                a["sum_x"] += chunk64.sum(axis=0)
-                a["sum_xxT"] += chunk64.T @ chunk64
-                a["n"] += chunk32.shape[0]
-                sims = chunk32 @ pol.T
-                row_max = sims.max(axis=1)
-                min_rp = 1.0 - row_max.astype(np.float64)
-                a["sum_min_rp"] += float(min_rp.sum())
-                a["max_min_rp"] = max(a["max_min_rp"], float(min_rp.max()))
-                np.maximum(a["policy_max_sim"], sims.max(axis=0), out=a["policy_max_sim"])
-        del emb
-        log.info("moments/chamfer: finished shard %s", shard.name)
+            chunk32 = np.asarray(emb[local], dtype=np.float32)
+            if G is not None and G.shape[0] > 0:
+                chunk32 = register_utils.project(chunk32, G)
+            chunk64 = chunk32.astype(np.float64)
+            a["sum_x"] += chunk64.sum(axis=0)
+            a["sum_xxT"] += chunk64.T @ chunk64
+            a["n"] += chunk32.shape[0]
+            sims = chunk32 @ pol.T
+            row_max = sims.max(axis=1)
+            min_rp = 1.0 - row_max.astype(np.float64)
+            a["sum_min_rp"] += float(min_rp.sum())
+            a["max_min_rp"] = max(a["max_min_rp"], float(min_rp.max()))
+            np.maximum(a["policy_max_sim"], sims.max(axis=0), out=a["policy_max_sim"])
+        log.info("moments/chamfer: finished shard %d", s)
+    for sdg_idx in active_sdgs:
+        if acc[sdg_idx]["n"] != sdg_rows[sdg_idx].size:
+            raise RuntimeError(
+                f"SDG {sdg_idx + 1}: streamed {acc[sdg_idx]['n']} papers, "
+                f"expected {sdg_rows[sdg_idx].size}"
+            )
 
     out: dict[int, dict[str, Any]] = {}
     for sdg_idx in active_sdgs:
@@ -446,7 +524,8 @@ def swd_direction_matrix(dim: int) -> np.ndarray:
 
 
 def compute_swd_full(
-    shards: list[ResearchShard],
+    shard_paper_embs: list[np.memmap],
+    shard_paper_start: np.ndarray,
     rows: np.ndarray,
     policy_cloud: np.ndarray,
     directions: np.ndarray,
@@ -455,11 +534,11 @@ def compute_swd_full(
     """Sliced Wasserstein over the COMPLETE research cloud vs capped policy cloud.
 
     Exact per projection (scipy handles unequal sample sizes); no subsampling.
-    Peak memory is the projection buffer: n_rows x 512 float32 (SDG 3: ~1.6 GB).
+    Peak memory is the projection buffer: n_papers x 512 float32 (SDG 3: ~1.3 GB).
     """
     proj = np.empty((rows.size, N_SWD_PROJECTIONS), dtype=np.float32)
     cursor = 0
-    for chunk in iter_sdg_chunks(shards, rows, STREAM_CHUNK_ROWS, G=G):
+    for chunk in iter_paper_chunks(shard_paper_embs, shard_paper_start, rows, STREAM_CHUNK_ROWS, G=G):
         proj[cursor : cursor + chunk.shape[0]] = chunk @ directions
         cursor += chunk.shape[0]
     if cursor != rows.size:
@@ -598,14 +677,14 @@ def centroid_gap_and_gate4(
 
 
 def sample_research_cloud(
-    manifest_path: Path,
-    embed_dir: Path,
+    shard_paper_embs: list[np.memmap],
+    shard_paper_start: np.ndarray,
     rows: np.ndarray,
     sdg_idx: int,
     seed: int,
     G: np.ndarray | None = None,
 ) -> tuple[np.ndarray, bool]:
-    """Seeded research sample (documented stream: [seed, sdg, STREAM_SAMPLE]).
+    """Seeded research PAPER sample (documented stream: [seed, sdg, STREAM_SAMPLE]).
 
     Returns (cloud, exhaustive). Exhaustive = the SDG has <= RESEARCH_SAMPLE_SIZE
     papers, so the COMPLETE population is used and no rng is consumed.
@@ -617,7 +696,7 @@ def sample_research_cloud(
         rng = np.random.default_rng([seed, sdg_idx, STREAM_SAMPLE])
         picked = np.sort(rng.choice(rows, size=RESEARCH_SAMPLE_SIZE, replace=False))
         exhaustive = False
-    cloud = load_sampled_research_embeddings(manifest_path, picked, embed_dir)
+    cloud = gather_paper_embs(shard_paper_embs, shard_paper_start, picked)
     if G is not None and G.shape[0] > 0:
         cloud = register_utils.project(cloud, G)
     return cloud, exhaustive
@@ -1280,7 +1359,7 @@ def run(args: argparse.Namespace) -> None:
     # the distribution-aware metrics track the register component; comparing them to
     # the raw gap would conflate topic and register. So we substitute the adjusted
     # semantic_gap as the reference ranking. (Other canonical fields used by GATE 1/2
-    # — n_policy_segments_capped, n_papers — are assignment counts and stay raw.)
+    # — n_policy_segments_capped, n_papers_assigned — are assignment counts and stay raw.)
     if is_adjusted:
         adj_canonical_path = output_dir_for_model(model) / "data" / "adjusted" / CANONICAL_SEMANTIC_JSON
         if adj_canonical_path.exists():
@@ -1303,9 +1382,11 @@ def run(args: argparse.Namespace) -> None:
                 policy_state["clouds"][sdg_idx].astype(np.float32), G
             ).astype(np.float64)
 
-    shards, total_rows = build_research_shards(embed_dir, scored_dir)
-    log.info("Research corpus: %d rows across %d shards", total_rows, len(shards))
-    sdg_rows = build_sdg_row_index(shards, canonical)
+    shard_paper_embs, shard_paper_sdg, shard_paper_start, total_papers, _dim, paper_dir = (
+        build_paper_level_research(scored_dir, embed_dir)
+    )
+    log.info("Research corpus: %d papers across %d shards", total_papers, len(shard_paper_sdg))
+    sdg_rows = build_sdg_paper_index(shard_paper_sdg, shard_paper_start, canonical)
 
     records = load_existing_records(records_path, cfg_hash)
 
@@ -1314,8 +1395,8 @@ def run(args: argparse.Namespace) -> None:
     if missing_full:
         log.info("Full-corpus pass for %d SDGs: %s", len(missing_full), [s + 1 for s in missing_full])
         stream_out = stream_moments_and_chamfer(
-            shards, sdg_rows, policy_state["clouds"], missing_full, policy_state["dim"],
-            G=G,
+            shard_paper_embs, shard_paper_sdg, sdg_rows, policy_state["clouds"],
+            missing_full, policy_state["dim"], G=G,
         )
         check_research_centroid_gate(
             {s: stream_out[s]["mu"] for s in missing_full}, model, missing_full,
@@ -1325,7 +1406,8 @@ def run(args: argparse.Namespace) -> None:
         for s in missing_full:
             t0 = time.time()
             swd_out = compute_swd_full(
-                shards, sdg_rows[s], policy_state["clouds"][s], directions, G=G
+                shard_paper_embs, shard_paper_start, sdg_rows[s],
+                policy_state["clouds"][s], directions, G=G
             )
             record = build_full_record(
                 s, cfg_hash, stream_out[s], swd_out, policy_state["clouds"][s], canonical[s + 1],
@@ -1355,7 +1437,7 @@ def run(args: argparse.Namespace) -> None:
             if seed != SAMPLE_SEEDS[0] and sdg_rows[s].size <= RESEARCH_SAMPLE_SIZE:
                 continue  # exhaustive: replicate draw would be identical
             cloud, exhaustive = sample_research_cloud(
-                manifest_path, embed_dir, sdg_rows[s], s, seed, G=G
+                shard_paper_embs, shard_paper_start, sdg_rows[s], s, seed, G=G
             )
             record = build_sampled_record(
                 s, seed, cfg_hash, cloud, exhaustive, policy_state["clouds"][s]
@@ -1381,6 +1463,15 @@ def run(args: argparse.Namespace) -> None:
     write_tables(layout.tables_dir, summary)
     log.info("Saved distributional-gap outputs into %s", layout.root)
     record_fingerprint(OUTPUTS, fp, PRIMARY)
+
+    # Clean up the on-disk per-shard paper-embedding memmaps (recomputed each run;
+    # the records above are the durable, resume-safe artifacts).
+    try:
+        del shard_paper_embs
+        if paper_dir.exists():
+            shutil.rmtree(paper_dir, ignore_errors=True)
+    except Exception as exc:  # pragma: no cover - cleanup must never mask real errors
+        log.warning("Could not remove paper_embs dir: %s", exc)
 
 
 def main() -> None:
