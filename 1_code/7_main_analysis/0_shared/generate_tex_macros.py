@@ -89,14 +89,21 @@ def run(args: argparse.Namespace) -> None:
     corr = decomp["correlations"]
     if corr["coverage_vs_adjusted"]["rho"] is not None:
         lines.append(rf"\newcommand{{\RhoCovTopic}}{{{corr['coverage_vs_adjusted']['rho']:.3f}}}")
+        if corr["coverage_vs_adjusted"].get("p") is not None:
+            lines.append(rf"\newcommand{{\RhoCovTopicP}}{{{corr['coverage_vs_adjusted']['p']:.3f}}}")
     if corr["coverage_vs_register"]["rho"] is not None:
         lines.append(rf"\newcommand{{\RhoCovRegister}}{{{corr['coverage_vs_register']['rho']:.3f}}}")
+        if corr["coverage_vs_register"].get("p") is not None:
+            lines.append(rf"\newcommand{{\RhoCovRegisterP}}{{{corr['coverage_vs_register']['p']:.3f}}}")
 
     # Interaction headline (Spearman)
     h = interaction["headline"]
     lines.append(rf"\newcommand{{\SpearmanCovRaw}}{{{h['coverage_vs_raw_gap']['spearman_rho']:.3f}}}")
+    lines.append(rf"\newcommand{{\SpearmanCovRawP}}{{{h['coverage_vs_raw_gap']['spearman_p']:.3f}}}")
     lines.append(rf"\newcommand{{\SpearmanCovAdj}}{{{h['coverage_vs_adjusted_gap']['spearman_rho']:.3f}}}")
+    lines.append(rf"\newcommand{{\SpearmanCovAdjP}}{{{h['coverage_vs_adjusted_gap']['spearman_p']:.3f}}}")
     lines.append(rf"\newcommand{{\SpearmanCovReg}}{{{h['coverage_vs_register_component']['spearman_rho']:.3f}}}")
+    lines.append(rf"\newcommand{{\SpearmanCovRegP}}{{{h['coverage_vs_register_component']['spearman_p']:.3f}}}")
 
     # Per-SDG decomposition values
     for r in decomp["per_sdg"]:
