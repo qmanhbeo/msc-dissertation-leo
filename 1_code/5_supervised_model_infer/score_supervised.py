@@ -91,6 +91,7 @@ from shard_pipeline_utils import (
     sha256_file,
     update_stage_status,
 )
+from research_score_shards import paper_units_from_shard
 
 log = logging.getLogger(__name__)
 STATUS_STAGE = "supervised_sdg_scores"
@@ -291,9 +292,11 @@ def run_research_lr(args) -> None:
     assert d == input_dim, f"Manifest dim {d} != model input_dim {input_dim}"
     sums = np.zeros((N_SDG, d), dtype=np.float64)
     counts = np.zeros(N_SDG, dtype=np.int64)
+    seg_sums = np.zeros(N_SDG, dtype=np.int64)
     # Loaded lazily on first shard that actually needs scoring (see else branch);
     # a fully-cached replay never deserializes the classifier.
     model = None
+    prev_last_paper_id: str | None = None
 
     for shard in shards:
         shard_id = int(shard["shard_id"])
@@ -312,6 +315,9 @@ def run_research_lr(args) -> None:
             log.info("Skip scoring shard %s (already complete)", shard_name)
             scored_ids = load_ids(ids_out)
             assigned = np.array([int(r["assigned_sdg"]) - 1 for r in scored_ids], dtype=np.int64)
+            # Per-segment scores are needed for paper-level assignment; the
+            # classifier is NOT loaded on a fully-cached replay.
+            scores = np.load(score_path).astype(np.float32)
         else:
             if model is None:
                 log.info("Loading model: %s (classifier_type=lr, input_dim=%d)", model_path, input_dim)
@@ -355,12 +361,21 @@ def run_research_lr(args) -> None:
             out_manifest["totals"]["shards"] = int(len(out_manifest["shards"]))
             atomic_write_json(out_manifest_path, out_manifest)
 
+        # Collapse segments to papers (document-weighted research unit). The
+        # centroid now sums one unit-normalised vector per paper, so a 33-segment
+        # abstract and a single-segment abstract both contribute exactly one unit.
+        paper_ids = [r["openalex_id"] for r in ids_rows]
+        paper_emb, paper_assigned, seg_counts, prev_last_paper_id = paper_units_from_shard(
+            emb, scores, paper_ids, shard_name, prev_last_paper_id=prev_last_paper_id
+        )
+
         for sdg_idx in range(N_SDG):
-            mask = assigned == sdg_idx
+            mask = paper_assigned == sdg_idx
             if not np.any(mask):
                 continue
             counts[sdg_idx] += int(mask.sum())
-            sums[sdg_idx] += emb[mask].sum(axis=0)
+            sums[sdg_idx] += paper_emb[mask].sum(axis=0)
+            seg_sums[sdg_idx] += int(seg_counts[mask].sum())
 
         update_stage_status(
             status_dir,
@@ -393,6 +408,7 @@ def run_research_lr(args) -> None:
             {
                 "sdg": sdg,
                 "n_papers_assigned": n,
+                "n_segments_assigned": int(seg_sums[sdg_idx]),
                 "raw_centroid_norm": round(norm, 6),
                 "mean_cos_to_centroid": round(norm, 6),
                 "zero_flag": bool(norm < ZERO_NORM_EPS),
@@ -560,6 +576,7 @@ def run_mlp(args) -> None:
     assert emb_dim == d, f"manifest dim {emb_dim} != MLP input dim {d}"
     sums = np.zeros((N_SDG, d), dtype=np.float64)
     counts = np.zeros(N_SDG, dtype=np.int64)
+    prev_last_paper_id: str | None = None
 
     # Persist per-shard MLP research scores so downstream consumers (e.g. i1)
     # can report research-level MLP-vs-ZS agreement directly, instead of
@@ -570,8 +587,10 @@ def run_mlp(args) -> None:
 
     for shard in manifest["shards"]:
         emb_path = resolve_manifest_path(shard["embedding_path"], allowed_dirs=(embed_root,))
+        ids_in = resolve_manifest_path(shard["ids_path"], allowed_dirs=(embed_root,))
 
         emb = np.load(emb_path).astype(np.float32)
+        ids_rows = load_ids(ids_in)
         log.info("  Scoring shard %s  shape=%s", shard["name"], emb.shape)
         scores = model.predict_proba(emb).astype(np.float32)
         assigned = scores.argmax(axis=1).astype(np.int64)
@@ -582,12 +601,18 @@ def run_mlp(args) -> None:
             np.save(f, scores)
         tmp.replace(mlp_shard_path)
 
+        # Document-weighted research unit: one unit-normalised vector per paper.
+        paper_ids = [r["openalex_id"] for r in ids_rows]
+        paper_emb, paper_assigned, _seg_counts, prev_last_paper_id = paper_units_from_shard(
+            emb, scores, paper_ids, shard["name"], prev_last_paper_id=prev_last_paper_id
+        )
+
         for sdg_idx in range(N_SDG):
-            mask = assigned == sdg_idx
+            mask = paper_assigned == sdg_idx
             if not np.any(mask):
                 continue
             counts[sdg_idx] += int(mask.sum())
-            sums[sdg_idx] += emb[mask].sum(axis=0)
+            sums[sdg_idx] += paper_emb[mask].sum(axis=0)
 
     # Research centroids
     mlp_research_centroids = np.zeros((N_SDG, d), dtype=np.float32)

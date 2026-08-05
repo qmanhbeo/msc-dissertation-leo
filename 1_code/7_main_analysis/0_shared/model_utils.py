@@ -46,8 +46,46 @@ COLD_REPLAY_MODELS = (
 # Shared, deterministic 100k-paper representative research subset drawn (seed 42)
 # from the canonical segments. Consumed by every non-primary (sensitivity)
 # encoder so the architecture comparison is on identical papers.
+#
+# The draw is over PAPERS (unique openalex_id), not over segment rows: every
+# segment of a drawn paper is included, so the subset contains whole papers and
+# paper-level aggregation over it is unbiased. Sampling segment rows (the
+# pre-2026-08 behaviour) produced partial papers whose means were biased.
 RESEARCH_SUBSET_SEED = 42
-RESEARCH_SUBSET_SIZE = 100_000
+RESEARCH_SUBSET_PAPERS = 100_000
+
+# ---------------------------------------------------------------------------
+# Research-corpus weighting unit
+# ---------------------------------------------------------------------------
+# The research corpus is segmented with the same token-aware segmenter as the
+# policy corpus (see 1_code/2_segment/), so an abstract that exceeds the
+# encoder's token budget yields more than one segment. Measured on the
+# canonical MPNet corpus: 3,105,144 segments from 2,536,771 abstracts
+# (1.224 segments/abstract); 17.18% of abstracts yield more than one segment
+# and the longest yields 33.
+#
+# RESEARCH_WEIGHTING_UNIT = "document" makes the research side count one unit
+# per ABSTRACT (mean of its segment vectors, then argmax), exactly mirroring the
+# document-weighted policy profile (Assumption A19, see
+# semantic_gap_shared.document_weighted_policy_profile). With "segment", the
+# longest abstract would carry 33x the weight of a short one and the two
+# corpora would be weighted on different units.
+RESEARCH_WEIGHTING_UNIT = "document"
+
+# When aggregating a paper's segment embeddings into a single paper vector, the
+# mean of unit-norm segment vectors has norm < 1 (strictly < 1 whenever the
+# segments are not identical). Renormalising to unit length makes every paper
+# contribute exactly one unit of mass to its SDG centroid, which is what
+# document weighting means; it also preserves the identity
+# raw_centroid_norm == mean_cos_to_centroid used in the centroid metadata.
+RENORMALISE_DOC_VECTORS = True
+
+# The INLP register direction (G) is deliberately learned at SEGMENT level, not
+# paper level: it is a binary research-vs-policy register classifier whose
+# sample is already balanced across the 17 SDGs, and segments are the unit the
+# encoder actually sees. Recorded in each run's provenance so the choice is
+# auditable from the output rather than only from this source file.
+INLP_RESEARCH_UNIT = "segment"
 DEFAULT_OUTPUT_ROOT = Path("4_outputs")
 
 DATA_ROOT = Path("2_data")
