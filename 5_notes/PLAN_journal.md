@@ -40,8 +40,9 @@ measurement-protocol article. Authoritative companion to `AGENTS.md`.
 
 ## Item 2 — balanced research-subset stability check (DONE, 2026-07-31)
 
-**Concern raised by reviewer pass.** The research corpus (3,105,144 abstracts)
-dwarfs the policy corpus (40,597 segments), so the within-SDG semantic gap
+**Concern raised by reviewer pass.** The research corpus (3,105,144 segments from
+2,536,771 abstracts) dwarfs the policy corpus (40,597 segments), so the within-SDG
+semantic gap
 partly reflects estimation precision on the policy side; the existing
 sample-stability ladder subsamples the research corpus only.
 

@@ -304,9 +304,9 @@
       "n_draws": 1,
       "deterministic": true,
       "macro_coverage_variance": null,
-      "mean_semantic_gap": 0.325798,
+      "mean_semantic_gap": 0.339543,
       "std_semantic_gap": null,
-      "mean_a15_calibration_bias": 0.113233,
+      "mean_a15_calibration_bias": 0.121904,
       "std_a15_calibration_bias": null,
       "mean_observed_semantic_sdgs": null,
       "mean_reliable_semantic_sdgs": null

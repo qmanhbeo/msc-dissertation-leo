@@ -1188,9 +1188,9 @@
       "research_mlp_agree_rate": 0.598055,
       "policy_n_lr": 1723,
       "policy_agree_rate": 0.940801,
-      "gap_rank_lr": 11,
+      "gap_rank_lr": 10,
       "gap_rank_zs": 10,
-      "gap_rank_delta": 1
+      "gap_rank_delta": 0
     },
     {
       "sdg": 3,
@@ -1210,7 +1210,7 @@
       "research_mlp_agree_rate": 0.826318,
       "policy_n_lr": 2055,
       "policy_agree_rate": 0.912895,
-      "gap_rank_lr": 13,
+      "gap_rank_lr": 15,
       "gap_rank_zs": 14,
       "gap_rank_delta": 1
     },
@@ -1221,9 +1221,9 @@
       "research_mlp_agree_rate": 0.37004,
       "policy_n_lr": 2026,
       "policy_agree_rate": 0.885489,
-      "gap_rank_lr": 15,
+      "gap_rank_lr": 13,
       "gap_rank_zs": 16,
-      "gap_rank_delta": 1
+      "gap_rank_delta": 3
     },
     {
       "sdg": 6,
@@ -1298,9 +1298,9 @@
       "research_mlp_agree_rate": 0.38535,
       "policy_n_lr": 1187,
       "policy_agree_rate": 0.918281,
-      "gap_rank_lr": 10,
+      "gap_rank_lr": 11,
       "gap_rank_zs": 9,
-      "gap_rank_delta": 1
+      "gap_rank_delta": 2
     },
     {
       "sdg": 13,

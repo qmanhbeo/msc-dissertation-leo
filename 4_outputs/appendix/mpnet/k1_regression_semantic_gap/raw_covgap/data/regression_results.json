@@ -1,0 +1,77 @@
+{
+  "spec_id": "raw_covgap",
+  "panel": "X",
+  "label": "raw_covgap",
+  "gap_type": "raw",
+  "predictor": "covgap",
+  "subsample": "all",
+  "interactions": "none",
+  "form": "rank",
+  "sdg_fe": false,
+  "classifier_ind": true,
+  "n_configs": 24,
+  "n_sdgs": 17,
+  "n": 408,
+  "n_clusters": 17,
+  "r2": 0.007654,
+  "adj_r2": -0.014786,
+  "var_names": [
+    "intercept",
+    "covgap",
+    "polcov",
+    "i_minilm",
+    "i_scibert",
+    "i_concept",
+    "i_cap20",
+    "i_cap_none",
+    "i_mlp",
+    "i_zs"
+  ],
+  "coef": {
+    "covgap": {
+      "b": 0.055108,
+      "se": 0.184893,
+      "p": 0.769499
+    },
+    "polcov": {
+      "b": -0.094299,
+      "se": 0.188163,
+      "p": 0.623085
+    },
+    "i_minilm": {
+      "b": 0.021245,
+      "se": 1.149552,
+      "p": 0.985484
+    },
+    "i_scibert": {
+      "b": -0.032617,
+      "se": 0.959437,
+      "p": 0.973301
+    },
+    "i_concept": {
+      "b": -0.010418,
+      "se": 0.7542,
+      "p": 0.98915
+    },
+    "i_cap20": {
+      "b": -0.0,
+      "se": 0.08487,
+      "p": 1.0
+    },
+    "i_cap_none": {
+      "b": 0.0,
+      "se": 0.159719,
+      "p": 1.0
+    },
+    "i_mlp": {
+      "b": -0.0,
+      "se": 0.529023,
+      "p": 1.0
+    },
+    "i_zs": {
+      "b": -0.0,
+      "se": 1.2429,
+      "p": 1.0
+    }
+  }
+}
