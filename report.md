@@ -1,521 +1,340 @@
-# Verification Report: INLP "Register Removal" Validation Diagnostic
+# Independent Scientific Audit — Appendix G
 
-**Date of audit:** 2026-08-05
-**Auditor:** opencode verification pass (read-only; no code/data/manuscript touched)
-**Repo:** `/home/manh/dissertation`, branch `main`, HEAD `1a2f97a` (== `origin/main`)
+**Title:** Register Removal: Validation Against Independent Linguistic Register Markers
 
-This report is ground truth for the promotion of the register-validation diagnostic
-into a durable appendix stage. It inventories what exists, fixes which numbers are
-final, verifies reproducibility from disk, quotes the current manuscript wording,
-documents the appendix-registration pattern, and states git status precisely.
+**Role:** independent reviewer, not a coauthor defending the work.
+**Date:** 2026-08-05
+**Repo:** `/home/manh/dissertation`, branch `main`, HEAD `010a237`
+
+## Scope and stance
+
+This is an independent scientific audit of Appendix G (`dissertation.tex:718–764`).
+The validation numbers are fixed and are not re-analysed or changed. The audit
+verifies that (1) the reported evidence supports the stated conclusions, (2) the
+conclusions are neither overstated nor unnecessarily conservative, (3) the appendix
+tells a coherent scientific story, and (4) the main manuscript references the
+appendix appropriately.
+
+Authoritative sources read in full: `3_writing/dissertation.tex`; Appendix G;
+the verification report (former `report.md` §§1–7); the implementation report
+(former §8); the three register-validation reports
+(`5_notes/register_validation_report.md`, `register_validation_followup.md`,
+`register_validation_followup2.md`); the promoted appendix script
+(`1_code/7_main_analysis/2_appendix/a1_register_validation.py`); and the appendix
+outputs (`4_outputs/appendix/mpnet/a1_register_validation/{data,tables}/`).
+The verification report remains the authoritative record of what analyses exist;
+this document supersedes its prose sections.
+
+No numerical result is changed. This document replaces the previous contents of
+`report.md`.
 
 ---
 
-## 1. Inventory of artifacts (register validation / INLP / regcheck)
+## Phase 1 — Independent scientific assessment
 
-### 1.1 Committed (tracked in git)
+### 1.1 Scientific narrative
 
-| Artifact | Commit | Date | What it is |
+**What question Appendix G answers.** The dissertation's central move is an INLP
+adjustment that removes a "register" subspace from the embeddings (the corpus-level
+research-vs-policy contrast), so that the remaining adjusted gap is claimed to be a
+*topic* gap. The justification in the main text was purely structural: the
+SDG-stratified training guarantees that what remains linearly decodable is corpus
+identity, which is then *interpreted* as register. Appendix G asks an empirical
+version of the same question: **does what INLP removes actually behave like register
+in the text, and is anything non-register (topic) being destroyed?** It answers with
+an independent, surface-linguistic register score (Biber-style features: hedge,
+deontic modality, passive voice, sentence length, first person, nominalisation)
+computed from the segment texts themselves.
+
+**Evidence collected.** On two sample constructions of 408 segments each (12 per SDG
+per corpus, seed 42, MPNet canon):
+1. Corpus-feature means showing the corpora differ in deontic modality, sentence
+   length, hedging, and passivisation.
+2. A mega-document audit showing 25 segments from 7 flagship documents (SDSN, UNDP,
+   WHO, EU AI Act, UN progress reports) are register outliers and create spurious
+   pooled correlations; a one-per-parent rebuild.
+3. Corpus-discrimination accuracy (5-fold LR) before/after removal: raw 0.909→adjusted
+   0.505 (original), raw 0.944→adjusted 0.603 (one-per-parent), with Wilson CIs,
+   binomial tests, and a bootstrap on the 0.505→0.603 difference.
+4. Two "residual-register" diagnostics (removed-magnitude ~ register score; register
+   score ~ distance to SDG centroid) that look positive on the original sample and
+   disappear/reverse on the clean sample.
+5. A 17-way SDG selectivity check (LR + kNN) showing topic decodability is preserved
+   after removal.
+6. A draw-stability check (seeds 43–45) showing the one surviving within-SDG trace
+   (−0.197) is noise.
+
+**Conclusions justified.** (i) INLP removes a large corpus-separable linear component
+(0.94→0.60 on the clean sample); (ii) removal is not complete — adjusted accuracy is
+significantly above chance; (iii) there is no robust evidence that topic is
+systematically removed (selectivity essentially unchanged); (iv) the apparent
+within-SDG residual-register traces are attributable to document clustering or draw
+noise, not to residual register.
+
+**Conclusions not justified.** The claim that the removed subspace is **empirically**
+register — i.e., that it matches the surface-linguistic register features. The direct
+evidence for this is weak: the removed-magnitude↔register-score correlations collapse
+to null on the clean sample, and the register features alone classify corpus identity
+at only ~0.54 (barely above chance), meaning they capture a small slice of what INLP
+removed. What the evidence actually supports is: the removed component is
+corpus-separable (by construction of INLP), is *not* topic, is *consistent* with a
+register reading, and leaves no detectable residual register. The load-bearing step
+from "corpus-separable linear signal" to "register" still rests on the structural
+identification argument, which this appendix corroborates but does not independently
+confirm.
+
+### 1.2 Evidence audit (every major claim)
+
+| # | Claim (Appendix G) | Verdict | Evidence |
 |---|---|---|---|
-| `5_notes/register_validation_report.md` | `0f96a3f` | 2026-08-05 08:57 | **Report 1** — go/no-go check of the INLP register interpretation (MPNet canon, n=408, seed 42). Steps 2b/2c/2d + Step 3 (17-way SDG selectivity). Verdict: GO with caveats (2c "red flag", 6-feature operationalization). 123 lines. |
-| `5_notes/register_validation_followup.md` | `c2773a9` | 2026-08-05 09:39 | **Follow-up 1** — Items 1–3: (1) Concept-row provenance = NOT a bug (same embedder/space), (2) original 2b/2c signals = clustering artifacts (SDSN/UNDP mega-docs), one-per-parent rerun, (3) Step-2c decomposition (3a per-SDG, 3b per-feature, 3c own/other-dist, 3d renorm check). Verdict: GO with qualification. 190 lines. |
-| `5_notes/register_validation_followup2.md` | `1a2f97a` | 2026-08-05 10:34 | **Follow-up 2 — FINAL / most-corrected.** Item 1 sample-construction audit (REBUILD, not subset); Item 2 accuracy CIs (Wilson + binomial + prediction bootstrap; mega-doc exclusion test); Item 3 per-SDG / mega-exclusion / draw-stability of policy other-dist −0.197 → downgraded to noise. Verdict: GO stands with framing change. 175 lines. |
-| `5_notes/handoff_register_validation_2026-08-05.md` | `26455a5` | 2026-08-05 09:35 | Handoff for Report 1 + comprehensive plan (Phases 0–5). |
-| `5_notes/handoff_register_validation_followup2_2026-08-05.md` | `1a2f97a` | 2026-08-05 10:34 | Handoff for Follow-up 2; documents the RNG fix and acceptance gate. |
-| `handoff.md` (repo root) | `1a2f97a` (rewritten) | 2026-08-05 | Working handoff file; content == followup-2 handoff. |
+| 1 | "The features discriminate the two corpora in the direction expected of register: policy more deontic, markedly longer sentences; research more hedge and more passive" (`dissertation.tex:725`) | **Partially supported / overstated** | On the original sample: deontic 3.130 vs 0.780 ✓; hedge 1.427 vs 0.854 ✓; passive 10.303 vs 8.453 ✓. But "markedly longer sentences" (63.803 vs 37.035) is mega-doc-driven: excluding the 25 mega-policy segments, policy mean sentence length falls to ≈34.0 — **below** research's 37.0. The direction reverses on the clean sample. Verified by arithmetic on `register_validation.json` `corpus_mean_features` + `mega_vs_nonmega_features`. |
+| 2 | "7 source documents … contribute 25 segments across 15 of 17 SDGs … register outliers (sentence length 276.9 vs 35.6; passive 3.3 vs 9.8; first person 19.0 vs 5.9; nominal 20.0 vs 38.8)" (`:728`) | **Fully supported** | Matches JSON `item1_sample_construction` and `mega_vs_nonmega_features` exactly. |
+| 3 | "Corpus accuracy falls from 0.909→0.505 (original) and 0.944→0.603 (one-per-parent)" (`:731`) | **Fully supported** | Table `tab_a1_register_validation.tex`; JSON `step2d_accuracy`. |
+| 4 | "One-per-parent value significantly above chance (p=1.9e-05, CI [0.555,0.649]); original 0.505 n.s. (p=0.441); 'collapse to chance' corrected" (`:731`) | **Fully supported, well handled** | JSON `step2d_accuracy.opp.adj` / `orig.adj`; matches follow-up 2 and the verification report §2.2. |
+| 5 | "Mega-policy exclusion raises original adjusted accuracy to 0.574 (p=0.002); +0.098 difference largely attributable to clustering" (`:731`) | **Fully supported** | JSON `step2d_accuracy.mega_policy_exclusion` = 0.574 (220/383, p=0.002); `bootstrap_diff` +0.098 CI [0.025,0.169]. "Largely attributable" (≈0.070/0.098) is a fair reading. |
+| 6 | "Two residual-register signals (removed-norm ρ=+0.102 p=0.040; centroid-distance ρ 0.126→0.247) disappear/reverse on the clean sample (+0.092 n.s.; −0.212/−0.197)" (`:743`) | **Fully supported as reported** | JSON `step2b_removed_norm`, `step2c_centroid_dist`. But see §1.3 C1/C2: the *positive* 2b evidence dies with the red flag, and this loss is not discussed. |
+| 7 | "17-way SDG selectivity essentially unchanged (LR 0.691→0.672; kNN 0.554→0.578; chance 0.059)" (`:746`) | **Supported, with an omission** | JSON `step3_selectivity`; computed on the **original (draw-1)** sample only, which the prose does not state. |
+| 8 | "The −0.197 trace 'reproduced exactly on an independent sample' and survived mega-document exclusion (−0.213, p=0.003)" (`:758`) | **Misleading as worded** | The reproduction was an independent *re-run of the same draw-3 sample* (follow-up 1 vs follow-up 2), not a fresh draw — and the appendix's own draw-stability check immediately contradicts the "independent sample" reading. Mega-exclusion is reported only for draw 3; draws 1 and 2 give **+0.127 and −0.138** (sign flips). See §1.3 C3/C8. |
+| 9 | "Draw-unstable: −0.130, −0.004, +0.126 across seeds 43–45; 0/17 per-SDG significant (14 neg / 3 pos); treated as noise" (`:758`) | **Fully supported** | JSON `item3.draw_stability`, `item3.per_sdg`; matches follow-up 2. |
+| 10 | Conclusion: "register interpretation is therefore empirically supported for the dominant corpus-level component of the removed subspace" (`:761`) | **Overstated** | The evidence establishes the removed component is corpus-separable and not topic, and is *consistent* with register; it does not directly establish it *is* register (see §1.1). The main text (`:478`) is more accurate: "partial, not complete, empirical support." |
+| 11 | Limitations (operationalisation, n=408/per-SDG n=12, draw-stability scope, rebuild-not-subset, MPNet-only, two −0.197s) (`:764`) | **Fully supported, honest** | All items traceable to the verification report §2.4 / follow-up 2. |
 
-The three report files in `5_notes/` are **byte-identical** to the copies in
-`5_notes/scratch/` (verified with `diff` on all three; see §1.2).
+Additional observations:
+- The **register-only classifier rows** (0.456 orig / 0.544 opp, Table 1) are never
+  discussed in prose. They are the honest quantification of how much of the corpus
+  difference the six features capture — directly relevant to claim #10, both
+  supporting (0.544, p=0.042) and bounding it.
+- The table note "(no leakage)" (`:739`) is inaccurate for the original sample, where
+  mega-document segments straddle folds; follow-up 2 itself documents this.
+- The register score's **PC1 variance share (22%) and loadings** are not reported,
+  and the score is fit on the pooled (both-corpus) sample, making the "features
+  discriminate the corpora" claim partly self-referential.
 
-### 1.2 Gitignored / untracked (all under `5_notes/scratch/`, ignored by `.gitignore:90`)
+### 1.3 Examiner stress test
 
-Scripts:
+| # | Challenge | Why | Severity | Does the current appendix answer it? |
+|---|---|---|---|---|
+| C1 | "Your clean-sample 2b correlations collapsed to null and your register-only classifier is ~0.54. Where is the direct evidence that what INLP removed is *your* register features?" | 2b was the only direct link between removed magnitude and the surface features; it dies on the clean sample. The 6 features barely distinguish the corpora (0.544). | **High** | No — it is the central weakness. The appendix reports the 2b collapse but frames it only as refuting "residual register," not as removing the positive evidence; the register-only rows are never interpreted. |
+| C2 | "Your 'markedly longer sentences' corpus difference reverses once the 7 flagship documents are excluded, and the 276.9-word figure is PDF-junk. Isn't sentence length your weakest feature, yet you orient the whole register score on it?" | Arithmetic on the appendix's own JSON shows clean-sample policy ≈34.0 vs research 37.0. The score's sign convention is anchored to a junk-inflated, reversal-prone feature. | **Medium-high** | No. The mega-doc contrast is reported, but the clean-sample *reversal* and the PDF-artifact origin are not; the sentence-length-based orientation is asserted as "more formal register." |
+| C3 | "'Reproduced exactly on an independent sample' — but your own draw-stability check shows the statistic is noise. What is 'independent'?" | The reproduction was a re-run of the same draw-3 sample, not a fresh draw; "independent sample" invites a reproducibility reading that the next sentence refutes. | **Medium** | Partially — the draw-stability section immediately undercuts it, but the wording should be corrected, not left to the reader to reconcile. |
+| C4 | "Why is adjusted accuracy 0.603 when INLP's stopping rule guarantees held-out accuracy ≤ 0.5?" | Seeming contradiction between the methodology (stop at chance) and the validation (above chance). | **Medium** | Implicitly (removal "substantial but not complete"), but the reason — INLP converges on its own training distribution, not on fresh samples — is never stated. |
+| C5 | "Your selectivity check is on the contaminated original sample; does it hold on the one-per-parent sample?" | The appendix's own thesis is that sample composition matters; the selectivity check silently uses draw 1. | **Medium** | No — the sample is not stated. (It was not re-run on the clean sample.) |
+| C6 | "Your Table 1 says 'no leakage,' but 25 mega-doc segments straddle folds in the original sample." | Grouped leakage via document twins. | **Low-medium** | No — the "(no leakage)" parenthetical is unqualified. |
+| C7 | "The register score is the first PC of the *pooled* features; isn't the corpus-discrimination claim circular? Report loadings and variance." | A data-driven axis fit on both corpora will partly track corpus; nothing is reported about what PC1 weighs (Report 1 said 22% variance). | **Medium** | No — not addressed in the appendix. |
+| C8 | "You cite only the draw-3 mega-exclusion value (−0.213). Draws 1 and 2 give +0.127 and −0.138." | Selective reporting of a three-draw result. | **Low-medium** | No — only the favourable draw is quoted. |
+| C9 | "No multiple-comparison correction across the per-SDG and per-feature correlation tables." | 17 SDGs × several features at n=12. | **Low** | Partially — the appendix treats per-SDG results as low-power/noise, which is the right posture, but doesn't say so explicitly at the point of use. |
+| C10 | "The residual 0.603 signal is uncharacterised — could it be non-register (topic-adjacent, formatting, extraction junk)?" | The appendix removes candidates one by one but never characterises what survives. | **Medium** | Partially — the draw-unstable other-dist was the only candidate and is noise; the appendix is honest that residual signal remains. |
+| C11 | "MPNet only, n=408 — single encoder, small sample." | G exists for MiniLM/SciBERT; the register interpretation is claimed corpus-wide. | **Medium** | Yes — Limitations items 2 and 5. |
+| C12 | "Your appendix conclusion says 'empirically supported'; the main text says 'partial, not complete, empirical support.' Which is it?" | Internal calibration mismatch. | **Low-medium** | No — the two should be aligned (the main text's is the more defensible). |
 
-| Artifact | Date | What it is |
-|---|---|---|
-| `register_validation_check.py` (18.9 KB) | 2026-08-05 00:35 | Original go/no-go script (Report 1). Runs in ~2–3 min; writes `regcheck_*.npy/npz`. |
-| `register_validation_followup.py` (19.7 KB) | 2026-08-05 09:19 | Follow-up-1 script (Items 2–3). Writes `regcheck_followup_arrays.npz`. |
-| `register_validation_followup2.py` (24.4 KB) | 2026-08-05 10:16 | Follow-up-2 script, **RNG-fixed** (single module-level `_rng`, three successive draws; fresh draws at seeds 43/44/45). This is the current/final version (see §3). |
-| `followup2_replacements.py` (6.6 KB) | 2026-08-05 10:27 | Item-1 replacement-source audit (cheap, no embeddings). Prints to stdout. |
-| `check_concept_same_space.py` (3.8 KB) | 2026-08-05 09:11 | Item-1 same-space proof (Follow-up 1). **Hardcodes `ROOT = Path('/home/manh/dissertation')` at line 11.** |
+### 1.4 Remaining scientific risks (interpretation/inference only)
 
-Logs / data artifacts:
-
-| Artifact | Date | What it is |
-|---|---|---|
-| `regcheck_full.log` | 2026-08-05 00:39 | Ground-truth log of Report 1 (complete run). |
-| `regcheck_arrays.npz` | 2026-08-05 00:39 | Report-1 saved arrays (F, dist_raw/adj, reg_score, etc.). |
-| `regcheck_X_adj.npy` / `regcheck_removed_norm.npy` / `regcheck_reg_score.npy` | 2026-08-05 00:39 | Report-1 per-unit vectors. |
-| `regcheck_followup.log` | 2026-08-05 09:24 | **Ground-truth log of Follow-up 1** (the "acceptance gate" target). |
-| `regcheck_followup_arrays.npz` | 2026-08-05 09:24 | Follow-up-1 arrays (reg, dist_raw/adj/noren, corr, sdg, F, resid_norm). |
-| `regcheck_followup.DONE` | 2026-08-05 09:24 | tmux completion marker. |
-| `followup2.log` | 2026-08-05 10:24 | Follow-up-2 acceptance-gated log (see §3 — verified to be from the current script). |
-| `followup2.DONE` | 2026-08-05 10:24 | tmux completion marker. |
-| `followup2_replacements.txt` | 2026-08-05 10:27 | Replacement-source audit output (reproduced; see §3). |
-| `register_validation_report.md` / `register_validation_followup.md` / `register_validation_followup2.md` | 00:42 / 09:30 / 10:31 | Scratch copies of the reports — identical to the committed `5_notes/` versions. |
-| `__pycache__/` | — | Compiled bytecode. |
-
-Unrelated scratch (not part of this work, do not confuse): `build_3a.log`,
-`verify_a3_canonical.log`, `verify_a3_fallback.log`, `verify_b2_fallback.log`,
-`embed_stage.log`, `baseline_cmdlists.py/.txt`.
-
-**Git history context (pipeline/manuscript, NOT the diagnostic line):** the
-manuscript's INLP register-adjustment stage lives in `1_code/7_main_analysis/0_shared/register_adjust.py`
-(+ `register_utils.py`, `g_register_decomposition.py`) and was developed in
-commits such as `82a269e`, `3930dcb`, `203395f`, etc. Those are the register
-*adjustment* engine the diagnostic validates; the diagnostic scripts themselves
-are entirely in scratch.
-
----
-
-## 2. Source of truth — final numbers per result
-
-### 2.1 Which file is the FINAL, most-corrected version
-
-| Stage | Final file | Superseded by |
-|---|---|---|
-| Go/no-go (Report 1) | `5_notes/register_validation_report.md` (`0f96a3f`) | Partially superseded by Follow-up 1 (2c red flag) and Follow-up 2 ("adj≈chance"). |
-| Follow-up 1 (Items 1–3) | `5_notes/register_validation_followup.md` (`c2773a9`) | Item-3 "surviving trace" reading superseded by Follow-up 2 (downgraded to noise). |
-| Follow-up 2 (sample audit, CIs, other-dist) | **`5_notes/register_validation_followup2.md` (`1a2f97a`)** — THE final, most-corrected state of the whole line | — |
-
-The scratch copies are byte-identical to the committed reports (verified).
-There is **no other candidate "final" file** — the intermediate RNG-bug draft of
-`followup2.md` is **not on disk** (it was overwritten by the rewrite at 10:31 and
-is only referenced in the RNG-fix note, `followup2.md:7`).
-
-### 2.2 Reconciled table of final correct numbers
-
-All numbers verified against `regcheck_followup.log` / `followup2.log` / `regcheck_full.log`
-and — for the whole Follow-up-2 set — against a fresh end-to-end re-run (see §3).
-
-| Result | Final number | Source (report:line) |
-|---|---|---|
-| **2b** original 2A, reg~‖x−x′‖: pooled / within-res / within-pol | 0.102 (p=0.040) / 0.212 (p=0.002) / 0.191 (p=0.006) | Report1 §2b; Followup1 2A table (log line 30–32) |
-| **2b** one-per-parent 2B: pooled / within-res / within-pol | 0.092 (p=0.063, ns) / −0.043 (p=0.545) / −0.036 (p=0.606) | Followup1 2B table (log line 38–40) |
-| **2c** original 2A: RAW→ADJ | 0.126 (p=0.011) → 0.247 (p=4.4e-07); partial 0.130→0.253 | Report1 §2c; Followup1 2A table |
-| **2c** one-per-parent 2B: RAW→ADJ | −0.212 (p=1.6e-05) → −0.197 (p=6.1e-05); partial −0.155→−0.159 | Followup1 2B table (log line 41–42) |
-| **2c/3d** Item-3 draw-3 pooled: RAW / ADJ | −0.088 (p=0.075) / −0.074 (p=0.134) | Followup1 §3d; Followup2 repro gate (log line 85) |
-| **2d** original 2A CV acc: register-only / raw / adj | 0.456 (CI [0.408,0.504], p=0.967) / 0.909 (CI [0.878,0.934]) / **0.505 (CI [0.457,0.553], p=0.441, ns)** | Followup2 Item 2 table (log line 42–44) |
-| **2d** one-per-parent 2B: register-only / raw / adj | 0.544 (CI [0.496,0.592], p=0.042) / 0.944 (CI [0.917,0.962]) / **0.603 (CI [0.555,0.649], p=1.9e-05, sig)** | Followup2 Item 2 table (log line 48–50) |
-| **2d** adj-accuracy rise 0.505→0.603 | diff **+0.098**, 95% CI [+0.024, +0.169], p(diff>0)=0.994 | Followup2 Item 2 (log line 54) |
-| **2d** mega-policy exclusion on original (drop 25 units) | adj acc 0.505 → **0.574** (220/383, CI [0.524,0.623], p=0.002) — +0.070 of the +0.098 rise | Followup2 Item 2 (log line 75–77) |
-| **Item 3** policy reg~other-dist ADJ pooled (Item-3 draw 3) | **−0.197 (p=0.0047)** — reproduces exactly | Followup1 §3c (`regcheck_followup.log:96`); Followup2 repro gate (log line 86) |
-| **Item 3** per-SDG (n=12 policy each) | **0/17** significant; 14 neg / 3 pos (SDG 3, 7, 10) | Followup2 Item 3 (log line 88–108) |
-| **Item 3** mega-doc exclusion (drop ALL mega-policy segs): draw1 / draw2 / draw3 | +0.127 (p=0.091) / −0.138 (p=0.053) / **−0.213 (p=0.003)** | Followup2 Item 3 (log line 111–119) |
-| **Item 3** draw stability (fresh draws) | seed 42 −0.197 (p=0.005) / 43 −0.130 (p=0.063) / 44 −0.004 (p=0.949) / **45 +0.126 (p=0.072)** → sign flips, mean ≈ −0.05 | Followup2 Item 3 (log line 122–124) |
-| **Item 1** (Followup-1) concept same-space | 30,545 shared papers; 40 sampled; **44 byte-identical pairs; max \|diff\| 0.000183; min cos 0.99999952** → NOT a bug | Followup1 Item 1 (reproduced this audit, §3) |
-| **Item 1** (Followup-2) sample construction | 2A n=408, 390 distinct parents, 25 multi-parent units (6.1%), policy 186 docs; 2B n=408, 408 distinct parents, 0 multi-parent, 12/SDG/corpus → **rebuild with refill, not subset** | Followup2 Item 1 (log line 5–31) |
-| **Item 1** replacement sources | mega-docs 7 docs (SDSN×2, UNDP, WHO, EU, UN×2), 25 segs in 15/17 SDGs; replacements overwhelmingly `pol_sdgi_*` (~4,225 docs) + `pol_ungdc_*` (~2,048 docs); mean_sent_len 57.8 vs 30.8 vs 25.2 | Followup2 Item 1 + `followup2_replacements.txt` |
-| **Step 3** (Report 1, not re-run in followups) | raw LR 0.691 / kNN 0.554 → adj LR 0.672 / kNN 0.578 (chance 0.059) | Report1 §3 (`regcheck_full.log:62–63`) |
-
-### 2.3 Superseded / corrected numbers (old → new)
-
-| Claim | Old value/statement (report) | Final value/statement (report) |
-|---|---|---|
-| "Adjusted-space corpus accuracy ≈ chance" | 0.505 ≈ chance (Report1 §2d/verdict; also Followup1 §2d "collapse large but not to chance" was about one-per-parent) | **0.505 holds only for the mega-contaminated original (p=0.44, ns). Primary one-per-parent sample: 0.603 (p=1.9e-05), significantly above chance.** General "≈chance" characterization REVISED (Followup2 Item 2 + verdict). |
-| Step-2c "red flag" (register→farther from centroid, rises 0.126→0.247) | Real residual-register red flag (Report1 §2c) | **Clustering artifact** from SDSN/UNDP mega-docs; flips negative on the clean one-per-parent sample (−0.212 RAW / −0.197 ADJ on 2B; −0.088/−0.074 pooled on Item-3) (Followup1 Item 2; Followup2 confirms reproduction). |
-| Policy other-dist −0.197 | "The only surviving within-SDG register trace … not a cross-corpus red flag" (Followup1 §3c:146) | **Downgraded to noise / sample-specific**: reproduces and survives mega-exclusion (−0.213) but sign-flips across fresh draws 43/44/45; mean ≈ −0.05 (Followup2 Item 3). Do not carry to the appendix. |
-| Replacement sources | "non-systematic" (attributed to prior follow-up in Followup2's table; see §2.4 flag 3) | Systematically national `pol_sdgi_*`/`pol_ungdc_*` monitoring reports (short-sentence) vs global flagship mega-docs (Followup2 Item 1). |
-| CI method (Followup-2 early draft) | Resample-then-CV bootstrap (leaked train/test via duplicate rows → inflated CIs) | Replaced by pooled 5-fold predictions + Wilson CI + one-sided binomial + prediction-level bootstrap diff (Followup2 Item 2, handoff §3.3). |
-| 2B/Item-3 sample numbers (Followup-2 early draft) | Wrong samples due to per-call `_rng` re-seeding (RNG bug) | Single module-level seed-42 stream; acceptance gate reproduced exactly (Followup2 line 7, handoff §3.2). **The intermediate draft's wrong numbers are not on disk and cannot be tabulated.** |
-
-### 2.4 Unresolved / flagged items (do NOT resolve here — human decision)
-
-1. **Register-score operationalization is still undecided.** Report1 caveat #5
-   (`register_validation_report.md:112`) states an a-priori "institutional" z-sum
-   gives null 2b (ρ=0.007) and reversed 2c (−0.24), vs PC1 used throughout.
-   Follow-up 1 and 2 both kept PC1 and never re-tested or reconciled the z-sum
-   variant. If the appendix claims a specific operationalization, this needs a
-   decision first (pre-registration concern, also raised in handoff concern #3).
-2. **Two different statistics both round to −0.197 in Follow-up 1** — potential
-   confusion source, not a contradiction:
-   - `regcheck_followup.log:41`: **2B pooled** reg~pooled-SDG-centroid **ADJ ρ=−0.197 (p=6.1e-05)** (draw-2 sample);
-   - `regcheck_followup.log:96`: **Item-3 policy** reg~other-dist **ADJ ρ=−0.197 (p=0.0047)** (draw-3 sample).
-   They are different quantities that coincide at 3 decimals. Follow-up 2's "matches
-   prior report" refers to the **second** (Item-3 policy other-dist). The 2B pooled
-   2c value is **not** re-printed by `register_validation_followup2.py` (the script
-   only prints the Item-3 gate), so its reproduction is implicit (same deterministic
-   stream), not explicitly logged by the followup-2 run.
-3. **Attribution oddity in Followup2's reconciliation table.** `register_validation_followup2.md:159`
-   lists a prior claim "Replacement sources are non-systematic" as REVISED, but no
-   literal sentence in `register_validation_followup.md` or `register_validation_report.md`
-   makes that claim; Followup1 only said replacements are "drawn from the remainder
-   of each SDG's policy pool." Minor, but the "prior claim" appears to be an
-   assumption rather than a documented finding.
-4. **The RNG-bug intermediate draft is unrecoverable.** No old→new tabulation of
-   its numbers is possible; only the fact of the bug and its fix is recorded
-   (Followup2 line 7; handoff §3.2). This is by design (draft overwritten), not a risk.
-
-No other contradictions were found: Report1 ↔ Followup1 ↔ Followup2 numbers agree
-once the three supersessions in §2.3 (2c artifact, "adj≈chance", other-dist noise)
-are applied. Every number in §2.2 was cross-checked against at least one on-disk log.
+1. **The removed subspace is never directly shown to equal the surface register
+   features.** The clean-sample 2b correlations are null and the register-only
+   classifier is near-chance; the register reading of the removed component rests on
+   the structural argument + absence of counter-evidence. This is the single largest
+   residual risk and the one the main text's "partial support" phrasing already
+   concedes.
+2. **The register-score operationalization is unresolved** (PC1 vs the a-priori
+   "institutional" z-sum, which gave null/reversed results on the initial screen and
+   was never re-run on the clean samples). Since the score's *sign* is arbitrary and
+   two different conventions gave opposite 2c signs, the correlation results are
+   operationalization-sensitive even where they are robust in magnitude.
+3. **The sentence-length feature is junk-inflated and its corpus direction reverses on
+   the clean sample**, yet it anchors the score's orientation. The "policy = longer
+   sentences = more formal" framing is not supported by the clean data.
+4. **The residual corpus-linear signal (adjusted accuracy 0.603) is
+   content-unidentified.** The only candidate interpretation (policy-side register
+   pull) failed draw-stability; what the residual actually is remains open.
+5. **Single encoder, small n.** The register interpretation is used for
+   MPNet/MiniLM/SciBERT-adjusted tables in the main text, but Appendix G validates
+   only MPNet at n=408.
+6. **Two-sample composition change.** The one-per-parent rebuild systematically swaps
+   global flagship prose for national-monitoring reports; the two-sample accuracy
+   comparison (0.505 vs 0.603) is partly compositional, as the appendix honestly notes
+   but cannot fully disentangle.
 
 ---
 
-## 3. Reproducibility verification (from what is on disk NOW)
+## Phase 2 — Writing audit
 
-### 3.1 Environment
+**Logical flow.** The arc is sound: motivate → instrument → sample-integrity →
+headline result → residual checks → topic check → honesty episode → conclusion →
+limitations. This is a defensible dissertation-appendix structure and is markedly more
+honest than the norm (reporting a signal that died). But there are four structural
+problems:
 
-- Python 3.11.15 at `/home/manh/miniforge3/envs/dissertation/bin/python` (conda env
-  `dissertation`; `source activate` is broken on this box — use the absolute path).
-- `numpy`, `scipy`, `sklearn`, `nltk` all import OK in that env.
-- nltk data present: `tokenizers/punkt` and `taggers/averaged_perceptron_tagger_eng`.
-  **A clean env rebuild will NOT have the POS tagger** (`averaged_perceptron_tagger_eng`)
-  — it was installed ad hoc this session (handoff §2.5). `punkt` was already present.
-  A promoted appendix must add the tagger to `environment.yml` or the run fails on the
-  passive-voice feature.
-- All data dependencies exist on disk: `2_data/3b_register/mpnet/canon/G.npy`,
-  `2_data/2_segmented/research/part-*.jsonl`, `2_data/3_embedded/mpnet/research_shards/part-*.npy`,
-  `2_data/5_supervised_scored/mpnet/paper_scores_shards/metadata/part-*_ids.jsonl`,
-  `2_data/2_segmented/policy.jsonl`, `2_data/3_embedded/mpnet/policy.npy`,
-  `2_data/5_supervised_scored/mpnet/policy_scores.npy`,
-  `2_data/3_embedded/mpnet/metadata/policy_ids.json`, and the `research_concept` track
-  files used by `check_concept_same_space.py`.
+1. **The mega-doc disclosure comes one paragraph too late.** The reader is first told
+   policy has "markedly longer sentences" (line 725) and only then that the sample is
+   contaminated (line 728). Every claim in the feature paragraph is retroactively
+   suspect. The contamination must precede or be integrated with the feature evidence.
+2. **The most important bounding evidence is buried in a table.** The register-only
+   classifier rows (0.456/0.544) are the honest answer to "how much of the corpus
+   difference is captured by your register features," and they are never mentioned in
+   prose. They should be a named result, not a silent table row.
+3. **The 2b collapse is framed one-sidedly.** "An apparent residual-register signal was
+   traced to clustering" (line 743) correctly kills the red flag, but the same finding
+   also kills the *positive* evidence (removed magnitude tracks register). The
+   paragraph should acknowledge both consequences, or an examiner will.
+4. **The strongest honesty content is well placed; the strongest positive evidence is
+   not.** The draw-stability paragraph (line 758) is excellent and correctly placed
+   near the end. The corpus-feature discrimination — the only direct surface-linguistic
+   evidence — is placed *before* the contamination caveat and is the overclaimed item.
 
-### 3.2 Syntax / import status (all 5 scripts)
+**Redundancy.** The accuracy numbers are given in the prose (line 731), in Table 1,
+and again in the Conclusion (line 761). Acceptable in a dissertation, but the
+Conclusion should not *repeat* the table as evidence (i) — it should reference it.
 
-`py_compile` passes on all of: `register_validation_check.py`,
-`register_validation_followup.py`, `register_validation_followup2.py`,
-`followup2_replacements.py`, `check_concept_same_space.py`. `register_utils` imports
-correctly via the scripts' `sys.path` insert.
+**Paragraph ordering recommendation.** Merge/reorder to: (1) motivation;
+(2) sample construction and integrity (mega-docs *first*); (3) register
+operationalisation *with* the pooled-PC caveat and the register-only classification
+result; (4) corpus discrimination before/after; (5) topic selectivity (with sample
+stated); (6) residual-signal history (2b/2c + draw-stability, both directions of the
+2b collapse); (7) bounded conclusion; (8) limitations.
 
-### 3.3 Full runs actually executed this audit
+**Caveat timing.** The two-sample rebuild caveat is currently in Limitations (line 764,
+fourth item) but is *design-critical* and should appear where the samples are
+introduced. The "two −0.197s" caution, by contrast, is correctly placed late (it is a
+bookkeeping note).
 
-- **`register_validation_followup2.py` — RAN END-TO-END (fresh, under tmux, ~9 min).**
-  Output is **byte-identical to `5_notes/scratch/followup2.log`** after trailing
-  whitespace normalization. Every acceptance-gate number reproduced exactly:
-  2A 0.456/0.909/0.505, 2B 0.544/0.944/0.603, Item-3 pooled −0.088/−0.074, policy
-  other-dist −0.197 (p=0.00468), per-SDG table, mega-exclusion rows (−0.213),
-  draw-stability seeds 43/44/45, mega-feature table, bootstrap diff +0.098, Wilson CIs.
-  **This confirms the seed-42 numbers in the final report are reproducible from the
-  CURRENT (RNG-fixed) script on disk.** It also confirms `followup2.log` was produced
-  by the current script: script mtime 10:16 < log mtime 10:24, no edits since, and the
-  fresh run is identical.
-- **`followup2_replacements.py` — RAN.** Matches `followup2_replacements.txt`
-  except a cosmetic listing-order difference of two equal-count (2×) mega-docs in the
-  "Mega-doc sources" block (Python set-iteration/hash order is process-randomised;
-  counts and all per-SDG replacement lists identical). Deterministic content.
-- **`check_concept_same_space.py` — RAN.** Reproduces exactly: 30,545 shared papers,
-  44 identical-text pairs, max elementwise |diff| = 0.000183, min cosine = 0.99999952.
-  **Caveat: line 11 hardcodes `ROOT = Path('/home/manh/dissertation')`** — machine-specific;
-  will not run on a fresh checkout at a different path without editing.
-
-### 3.4 Not re-run (relied on on-disk ground-truth logs + code reading)
-
-- **`register_validation_followup.py`** (~2–4 min) and **`register_validation_check.py`**
-  (~2–3 min): not re-run; their ground-truth logs (`regcheck_followup.log`,
-  `regcheck_full.log`) are on disk and every number in Reports 1/Followup-1 was
-  checked against them. Their RNG logic was verified by code reading:
-  `register_validation_followup.py:47` defines one module-level `rng`; the re-seeds
-  inside `main()` (lines 309/319/345) are **dead locals** because `sample_research`/
-  `sample_policy`/`build_with_text` read the module-global `rng` — confirming the
-  "three successive draws of one continuous seed-42 stream" behaviour that the
-  followup-2 script reproduces (and which the byte-identical re-run empirically confirms).
-
-### 3.5 Scratch-only intermediate dependencies
-
-- **No script READS any scratch-only intermediate file.** All read `2_data/` +
-  `register_utils` from `1_code/` only. Scratch writes are each script's own outputs
-  (`.npz`/`.npy`/`.log`/`.txt`).
-- The real reproducibility risk is the reverse: **the scripts themselves are
-  gitignored scratch.** A fresh checkout (or `git clean -fdX`) loses every script and
-  every ground-truth log; only the three `.md` reports survive. Promoting the appendix
-  therefore requires committing the script(s) (e.g., under
-  `1_code/7_main_analysis/2_appendix/`) and either committing the ground-truth logs or
-  re-running. Also required for a clean run: the embedded `2_data` snapshot, the nltk
-  POS tagger, and de-hardcoding `ROOT` in `check_concept_same_space.py`.
+**Overall:** the current text is already good and honest; the defects are (a) one
+overstated feature-direction claim, (b) a too-strong final sentence, (c) three wording
+inaccuracies ("independent sample", "no leakage", selectivity sample), and (d)
+structural timing of the mega-doc disclosure and the register-only evidence.
 
 ---
 
-## 4. Current manuscript state (exact, unmodified)
+## Phase 3 — Main manuscript consistency
 
-All quotes from `3_writing/dissertation.tex` (895 lines; line numbers are current as of
-HEAD `1a2f97a`).
+The rewiring (`:280, :374, :393, :478, :489`) is **accurate and, if anything, more
+conservative than Appendix G's own conclusion**. No sentence contradicts the appendix.
+Specific findings:
 
-- **Line 279** (Methodology, `\subsection{Register Adjustment via Iterative Nullspace
-  Projection (INLP)}` starts at line 256, `\label{sec:register-adjustment-inlp}`;
-  paragraph "Identification argument." begins at line 276):
+- **Line 280** (Methodology): "substantial reduction of the corpus-level signal … but
+  not its complete elimination, and no robust evidence that topic is being
+  systematically removed" — **accurate**, matches Appendix G.
+- **Lines 283 & 348**: "the adjusted space merges them, **confirming** that the
+  separation is driven by register rather than topic." **Mild overclaim** — the
+  appendix shows partial confirmation with residual signal; "consistent with" is the
+  defensible word. The PCA figure is a 2-component visualisation; the 768-D result
+  leaves adjusted accuracy above chance.
+- **Lines 374 & 393** (table notes): "(primary estimate; evaluated in Appendix G)" —
+  **accurate**.
+- **Line 478** (Limitations, Register effects): "substantially reduces … does not
+  eliminate … no robust evidence topic removed … rests on **partial, not complete,
+  empirical support**" — **accurate and well-calibrated**; slightly *stronger* as a
+  hedge than the appendix's own conclusion, creating the C12 tension.
+- **Line 489** (Conclusion): "register interpretation is evaluated against independent
+  linguistic register markers" — **accurate**.
+- **Lines 695 & 702** (Appendix D): "no further linear register separation was
+  detectable" / "the first 15 orthogonal directions capture the bulk of the **register
+  signal**" — pre-existing; "register signal" is now slightly ahead of Appendix G's
+  evidence. Low priority but worth a one-word tightening to "corpus signal."
 
-  > "This identification argument is structural, not empirical: the stratification design \emph{ensures} that no linear direction can simultaneously encode SDG topic and corpus identity, because every SDG is balanced across the two corpora at every iteration. What remains linearly decodable is therefore the corpus-level register difference. The removed subspace is interpreted as register in the sense of \textcite{biberConrad2009register}: a variety associated with a particular situation of use, including communicative purpose, audience, and production circumstances. It is not validated against independent linguistic markers (e.g.\ hedge-word density, passive-voice frequency, mean sentence length), which would be the natural next step; this study treats the register interpretation as plausible on design grounds and reports the adjusted gap as a main but unvalidated estimate. Independent validation against Biber-style linguistic features \parencite{biber1988variation} would strengthen the register claim and is left to future work."
+No remaining "unvalidated"/"left to future work" wording survives (`grep` confirms);
+the four original line numbers cited in the verification report (§4) were all rewired
+correctly.
 
-- **Line 373** (table note under Table `tab:register-decomposition`, caption at 370
-  "Register-topic decomposition of the semantic gap."; `\input{...tab5_register_decomposition.tex}` at 372):
-
-  > "Notes: Raw gap is the reference semantic-gap estimate; Adjusted gap is after INLP register removal (primary, unvalidated); Register component = raw $-$ adjusted. Coverage correlations are Spearman $\rho$ across 17 SDGs."
-
-- **Line 392** (table note under Table `tab:interaction`, caption at 389 "H1a–H1d
-  coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier
-  configs."; `\input{...tab4_interaction_h25.tex}` at 391):
-
-  > "Notes: Raw gap = main semantic-gap estimate; Adj.\ gap = after INLP register removal (main reported estimate, unvalidated); Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$."
-
-- **Line 477** (Limitations, `\label{sec:limitations}` at 461; bold lead "Register effects."):
-
-  > "**Register effects.** The gap may capture register, not topic. A register decomposition using Iterative Nullspace Projection (INLP) separates the raw centroid distance into a topic component (adjusted gap, mean \MeanAdjustedGap{}) and a register component (mean \MeanRegisterComponent{}; Appendix~\ref{app:register-robustness}). After register removal, the adjusted topic gap is the primary comparison (pending independent validation of the INLP removal): it shows a positive association with coverage divergence (Spearman $\rho = \RhoCovTopic$, $p = 0.054$), while the raw gap is near-zero ($\rho = \SpearmanCovRaw$, $p = 0.765$) because the register component ($\rho = \RhoCovRegister$, $p = 0.045$) appears to cancel the topic signal. For all SDGs except SDG~17, the register component is positive (range: \RegCompSdgFifteen{} to \RegCompSdgThirteen{}), confirming that register uniformly inflates the raw gap. The raw gap is retained as a reference measure because it directly corresponds to the observed framing difference, while the adjusted topic gap is the primary but unvalidated estimate. The removed subspace is interpreted as register; in principle, some substantive framing differences between corpora within an SDG could also be linearly decodable from corpus identity and removed alongside register. Independently validating the removed subspace against established linguistic register markers (e.g.\ hedge-word rate, passive-voice frequency, mean sentence length) would strengthen the register interpretation and is left to future work."
-
-- **Related unvalidated mentions:** line 488 (Conclusion, `\section{Conclusion}` at 484):
-  "The primary result is the register-adjusted (INLP) topic gap, though the INLP removal
-  is unvalidated (Section~\ref{sec:limitations})…"; also line 303 (Results preamble,
-  "the adjusted (register-removed) ranking…").
-
-Prior handoffs referenced "lines 279/477" for the "left to future work" language and
-"lines 373/392" for "primary but unvalidated" — all four line numbers are still exact.
-
----
-
-## 5. Appendix-registration mechanics (the pattern to mirror)
-
-### 5.1 The registry
-
-- Single source of truth: **`APPENDIX_SPECS`** in
-  `1_code/7_main_analysis/0_shared/analysis_orchestrator.py:37–174`. Each entry:
-  `flag`, `aliases`, `script`, `help`, `warn`, `run_label`, `step_id`, `in_all`,
-  `requires`. `in_all=True` → runs under `--appendix-all` (`APPENDIX_STEPS`, line 176).
-- `main.py:342–363` `run_appendix_spec()` executes each spec as a subprocess:
-  `python 1_code/7_main_analysis/<script> --output-dir 4_outputs [--embed-model ...] [--overwrite]`,
-  after checking `requires` files exist in `output_dir/{model}/data/`.
-- Appendix scripts live under `1_code/7_main_analysis/2_appendix/`.
-
-### 5.2 Fingerprint / `--overwrite` conventions (Tier B)
-
-Pattern in every appendix script (concrete example `a2_policy_source_family_sensitivity.py:426–435,688`):
-1. `fp = fingerprint_of(*direct_input_files) + "<script_version>"` (plus a G/`adjusted` component when `--embeddings adjusted`).
-2. `if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY): return` — skips iff outputs
-   exist, the sidecar fingerprint matches, and `--overwrite` is not set.
-3. Write outputs, then `record_fingerprint(OUTPUTS, fp, PRIMARY)` — writes
-   `<primary>.fingerprint.json` next to the primary output.
-
-Implementations: `shared_utils.py` (`fingerprint_of` :27, `should_skip` :39,
-`record_fingerprint` :54). Fingerprints are **mtime+size+first-64KB content-based**
-(SHA-256) — consistent with the AGENTS.md "do not add mtime-based fingerprinting to the
-expensive frontier stages" rule; these appendix stages are cheap Tier-B.
-
-### 5.3 Output layout
-
-- Data/JSON/CSV → `4_outputs/appendix/{model}/{slug}/data/`
-- Tables/macros (.tex) → `4_outputs/appendix/{model}/{slug}/tables/`
-- Model namespacing via `shared_utils._insert_model_in_rel` (:68) /
-  `ensure_dissertation_outputs` (:187); e.g. MPNet → `4_outputs/appendix/mpnet/...`.
-- For `--build-pdf` to pass, new appendix outputs must also be listed in
-  `shared_utils.py`: `MANUSCRIPT_EXTRA_FILES` (:105, JSON/CSV) and/or
-  `MANUSCRIPT_APPENDIX_TABLE_FILES` (:161, .tex). `require_pdf_inputs` (:233) checks them.
-
-### 5.4 Macro generation
-
-- Appendix scripts generate their **own** `num_*.tex` / `tab_*.tex` (e.g.
-  `a2`: `write_table_h25`/`write_h25_macros` → `num_a2_policy_source_family_h25.tex`).
-- Main-text macros are consolidated by `1_code/7_main_analysis/0_shared/generate_tex_macros.py`
-  (reads `register_decomposition.json` + `interaction_extended.json` →
-  `4_outputs/{model}/tables/num5_register_decomposition.tex`).
-- The `.tex` consumes them via `\input{../4_outputs/...}` — see §5.5.
-
-### 5.5 Concrete example (Appendix A2 — mirror this exactly)
-
-| Piece | Path |
-|---|---|
-| Registration | `analysis_orchestrator.py:38–48` (`flag=appendix-a2-family`, `step_id=A2`, `in_all=True`, `requires=None`) |
-| Code | `1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py` |
-| Output data | `4_outputs/appendix/mpnet/a2_source_family_sensitivity/data/{policy_source_family_summary.csv, policy_source_family_coverage.csv, policy_source_family_semantic_gaps.csv, policy_source_family_h25.csv, policy_source_family_h25.json}` (+ `policy_source_family_summary.csv.fingerprint.json` sidecar) |
-| Output tables/macros | `4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/{tab_a2_policy_source_family_combined.tex, tab_a2_policy_source_family_h25.tex, num_a2_policy_source_family_h25.tex}` |
-| `.tex` inclusion | `3_writing/dissertation.tex:841` (`tab_a2_policy_source_family_combined.tex`) and `:851` (`tab_a2_policy_source_family_h25.tex`), both `\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/...}}` |
-| Registered for build-pdf | `shared_utils.py:162–164` (in `MANUSCRIPT_APPENDIX_TABLE_FILES`); JSONs at `:106–110` (in `MANUSCRIPT_EXTRA_FILES`) |
-
-Second example (K.1, most recent): registered `analysis_orchestrator.py:164–173`;
-outputs `4_outputs/appendix/mpnet/k1_regression_semantic_gap/data/{spec_grid.json,
-spec_grid.fingerprint.json, bootstrap_grid.json}` + `tables/tab_k1_specification_grid.tex`;
-`\input{...tab_k1_specification_grid.tex}` at `dissertation.tex:866`.
-
-**Environment note for the promotion step:** a register-validation appendix will
-need (a) the nltk `averaged_perceptron_tagger_eng` data added to `environment.yml`
-(§3.1), (b) `check_concept_same_space.py`'s hardcoded `ROOT` de-hardcoded if that
-proof is re-run, and (c) the `2_data` embedded snapshot hydrated. It should follow
-the §5.1–§5.4 pattern rather than inventing a new one.
+**Verdict:** the main text is consistent and appropriately hedged. One softening
+("confirming" → "consistent with") is recommended at lines 283/348; the appendix
+conclusion should be brought down to the main text's level rather than vice versa.
 
 ---
 
-## 6. Git status precisely
+## Phase 4 — Writing plan for Appendix G (no rewriting performed)
 
-- **HEAD:** `1a2f97a` (`register validation follow-up 2: sample construction, accuracy
-  CIs, policy other-dist pull`), branch `main`.
-- **`origin/main` == HEAD** — everything committed is pushed.
-- **`git status` is clean:** nothing staged, nothing modified-but-uncommitted
-  (verified `git status --short` empty; `2_data/`, `4_outputs/`, `1_code/`,
-  `3_writing/` all untouched by this audit).
-- **Committed register-validation work:** 3 reports (`0f96a3f`, `c2773a9`, `1a2f97a`),
-  2 handoffs (`26455a5`, `1a2f97a`), plus `handoff.md` (`1a2f97a`).
-- **Untracked (ignored):** everything in `5_notes/scratch/` — all 5 scripts, all logs
-  (`regcheck_full.log`, `regcheck_followup.log`, `followup2.log`, `followup2.DONE`,
-  `regcheck_followup.DONE`), all `.npz`/`.npy` artifacts, `followup2_replacements.txt`,
-  the three scratch report copies (identical to committed), `__pycache__/`.
+**Overall calibration target:** make the appendix's final claim match the main text's
+"partial, not complete, empirical support," and make every sample-dependent number
+carry its sample label.
 
-**Risk of losing work:**
-- A `git reset --hard` (or `git checkout -- .`) **would not lose anything** — the
-  tree is clean; scratch is untracked and untouched by reset.
-- The **real loss vectors** are (a) `git clean -fdX` (removes ignored files → deletes
-  **the entire scratch dir including all scripts and ground-truth logs**), or
-  (b) deleting/not-having `5_notes/scratch/` (a fresh clone never has it). In either
-  case only the three committed `.md` reports and two handoffs survive; the scripts
-  and logs are gone. If the diagnostic is to remain re-runnable, the scripts (and
-  ideally the ground-truth logs) must be promoted out of scratch as part of the
-  appendix work.
-- No uncommitted edits to any tracked file exist right now.
+### Proposed section structure
+
+1. **Purpose and scope** (1 paragraph)
+   - Key message: the structural argument guarantees *what* is removed (corpus-separable
+     linear signal) but not *that it is register*; this appendix tests the
+     interpretation against independent surface-linguistic markers, with honest limits
+     (MPNet, n=408, single operationalisation). State the two things it can establish
+     and the one it cannot (it cannot prove the removed subspace *is* the surface
+     register).
+
+2. **Register score and samples** (2 paragraphs + the mega-doc audit moved here)
+   - **Move the "Two sample constructions" content up** so the mega-doc contamination
+     precedes any feature claim.
+   - Key messages: (a) six Biber-style features, PC1 pooled score (report variance
+     share 22% and, if available, the loadings or at least note the orientation
+     convention explicitly as a convention, not as "formality"); (b) the original
+     per-SDG-dedup sample is contaminated by 7 flagship documents (25 segments, 15/17
+     SDGs) which are register outliers and cluster in embedding space; (c) the
+     one-per-parent rebuild is the primary design — and *say it is a rebuild whose
+     replacements are systematically national-monitoring reports* (composition shift
+     caveat here, not only in Limitations).
+   - **Reword the feature-direction claim**: report deontic/hedge/passive as robust
+     across samples, and either drop or explicitly qualify the sentence-length
+     direction (it reverses on the clean sample; the 276.9-word figure is extraction
+     junk).
+
+3. **Corpus discrimination before and after removal** (Table 1 + 2–3 sentences)
+   - Key messages: raw ~0.94 → adjusted ~0.60 (one-per-parent; significantly above
+     chance, CI given), the "collapse to chance" reading is corrected (holds only for
+     the mega-contaminated sample; mega-exclusion reproduces most of the 0.505→0.603
+     rise).
+   - **Add prose on the register-only rows** (0.456/0.544): the six features alone
+     barely distinguish the corpora — this both corroborates that the corpora differ
+     in register-like ways and bounds the claim (the removed subspace is far richer
+     than six surface proxies).
+   - **Fix the table note**: "no leakage" holds for the one-per-parent sample; qualify
+     for the original sample (document twins straddle folds).
+
+4. **Topic is not measurably removed** (Table 2 + 1–2 sentences)
+   - Key message: LR/kNN selectivity essentially unchanged; **state the sample used
+     (original/draw-1)** and note it was not re-run on the one-per-parent sample.
+
+5. **The apparent residual-register signals did not survive controlled samples**
+   (the honest history)
+   - Report 2b and 2c on both samples (numbers unchanged). **Acknowledge both
+     consequences** of the clean-sample collapse: the original "residual register" red
+     flag was a clustering artefact, *and* the positive link between removed magnitude
+     and the surface features also disappeared — so the direct surface-linguistic
+     corroboration of the removed subspace is weaker than the original sample
+     suggested.
+   - Report the draw-stability results and the −0.197 trace, **correcting "independent
+     sample" to "independent re-run of the same sample"** and noting the mega-exclusion
+     outcome is draw-specific (draws 1/2 give +0.127/−0.138; draw 3 gives −0.213).
+     State plainly why INLP's chance-level stopping rule is compatible with 0.603 on
+     fresh samples (convergence is on the training distribution).
+
+6. **What this validation supports** (short synthesis, replaces the current
+   "Conclusion")
+   - Four numbered claims, kept at the evidence level: (i) substantial corpus-separable
+     signal removed; (ii) removal incomplete; (iii) no robust evidence of topic
+     removal; (iv) apparent residual traces attributable to clustering/draw noise.
+     **Final sentence calibrated to the main text**: the register interpretation is
+     *consistent with* the evidence and *partially* supported, with the residual corpus
+     signal and the operationalisation limits explicitly bounding it. Remove "empirically
+     supported for the dominant corpus-level component."
+
+7. **Limitations** (as now, lightly tightened)
+   - Keep all six items; add the clean-sample sentence-length reversal and the
+     residual-signal-unidentified point; keep the "two −0.197s" bookkeeping note.
+
+**Where the strongest evidence lives:** corpus discrimination (sec. 3), selectivity
+(sec. 4), and the honest failure history (sec. 5) are the load-bearing results.
+**Where the overclaim is removed:** sec. 2 (sentence-length direction) and sec. 6
+(final sentence). **Where the conclusion ends:** with the bounded sentence in sec. 6,
+immediately before Limitations — no new numbers after the synthesis.
 
 ---
 
-## 7. Confidence notes (things I did not verify at 100%)
+## Bottom line
 
-- I re-ran only the Follow-up-2 line end-to-end plus the two cheap scripts. Follow-up-1
-  and Report-1 runs were verified by code-reading + their on-disk ground-truth logs,
-  not by a fresh re-run. The byte-identical Follow-up-2 re-run transitively validates
-  the shared sampling stream (the acceptance gate), but the per-SDG 3a/3b/3d tables of
-  Follow-up-1 rest on `regcheck_followup.log` alone.
-- The claim that `followup2.log` came from the current script rests on script-mtime
-  ordering (10:16 < 10:24) + the fresh run being byte-identical — strong but not a
-  git-attested record.
-- The nltk POS-tagger dependency is confirmed present in the current env, but I cannot
-  attest that a clean conda rebuild lacks it; that claim comes from AGENTS.md §2.5 /
-  the handoff.
-- The two distinct −0.197 values (§2.4 flag 2) were confirmed from
-  `regcheck_followup.log:41` vs `:96` (different p-values 6.1e-05 vs 0.0047), but the
-  followup-2 script does not print the 2B pooled 2c value, so that one number is
-  implicitly — not explicitly — re-verified by the Follow-up-2 run.
-
----
-
-# Implementation Report — INLP Register-Validation Appendix (step F2 / `a1_register_validation`)
-
-**Date:** 2026-08-05 (implementation phase; complete)
-**Repo:** `/home/manh/dissertation`, branch `main`
-**Scope:** promotion of the verified register-validation diagnostic (Sections 1–4 of this
-report) into a durable dissertation appendix stage, per Section 5's conventions. The
-verification report above remains ground truth for all numbers; this section records the
-promotion.
-
-## 8. Deliverable summary
-
-### 8.1 Files added
-
-- `1_code/7_main_analysis/2_appendix/a1_register_validation.py` — consolidated A3-shaped
-  appendix script. Canonical-MPNet-only gate (mirrors the zero-shot precedent); `--seed` pinned
-  to 42 (raises on any other value); nltk fail-closed runtime guard (`punkt` +
-  `averaged_perceptron_tagger_eng`) with an actionable download message (conservatively NOT
-  added to `environment.yml` — conda-forge `nltk_data` compatibility with nltk 3.10 unverified;
-  documented in docstring + README). Fingerprint-gated skip via
-  `shared_utils.should_skip` / `record_fingerprint` over (score manifest, research-embed
-  manifest, `G.npy`, `SCRIPT_VERSION("1")`). Ports the verified scratch logic verbatim
-  (single module-level seed-42 `_rng` stream, research-then-policy per draw, draws 1/2/3 +
-  fresh seeds 43/44/45; do not refactor the sampling). Contains a **61-check acceptance-gate
-  block** that raises `RuntimeError` on any mismatch with report.md §2.2; all 61 gates pass in
-  4 independent runs (determinism confirmed).
-- `4_outputs/appendix/mpnet/a1_register_validation/`
-  - `data/register_validation.json` — nested machine-readable record of every number, including
-    the `register_score_operationalization` honesty note.
-  - `data/register_validation.csv` — 8 corpus-discrimination rows.
-  - `data/register_validation.fingerprint.json` — fingerprint sidecar.
-  - `tables/tab_a1_register_validation.tex`, `tables/tab_a1_register_validation_selectivity.tex`
-    — the two appendix tables.
-  - `tables/num_a1_register_validation.tex` — 88 `\RegVal*` macros. **TeX control-word names
-    cannot contain digits** — the script emits spelled-out names (`\RegValDrawFortyThree` etc.),
-    namespace distinct from `Register*` / `RegIter*`.
-
-### 8.2 Files modified
-
-- `1_code/7_main_analysis/0_shared/analysis_orchestrator.py` — `APPENDIX_SPECS` entry
-  (`flag=--appendix-a1-register-validation`, alias `--register-validation`, `step_id=F2`,
-  `in_all=True`, `requires=None`); canonical-order docstring updated to `..., H1, I1, F2,
-  G(opt-in), J1, K1`.
-- `1_code/7_main_analysis/0_shared/shared_utils.py` — outputs added to
-  `MANUSCRIPT_EXTRA_FILES` (JSON/CSV) and `MANUSCRIPT_APPENDIX_TABLE_FILES` (the 3 tex files),
-  required by `require_pdf_inputs` for `--build-pdf`.
-- `main.py` — `--appendix-all` help now "(A2, A3, B2, C, C1, C0, D1, H1, I1, F2, J1, K1)".
-- `README.md` — new appendix command row + nltk-data bullet in Environment notes.
-- `PIPELINE.md` — appendix table row for `a1_register_validation.py`.
-- `AGENTS.md` — Tier-B counts 15 → 16 (two places); checkpoint-inventory row comment updated.
-- `3_writing/dissertation.tex` — see §8.4.
-- `4_outputs/dissertation.pdf` — rebuilt; Appendix G renders (see §8.5).
-- `handoff.md` — status updated to complete.
-- `report.md` — this section.
-
-### 8.3 Appendix identifier
-
-- step_id **F2**; slug **`a1_register_validation`**; flag `--appendix-a1-register-validation`
-  (alias `--register-validation`); `in_all=True`; `requires=None`. Runs under
-  `--appendix-all`, honors `--overwrite`, supports fingerprints, writes to
-  `4_outputs/appendix/{model}/a1_register_validation/` (canonical MPNet only).
-
-### 8.4 Manuscript (dissertation.tex)
-
-- New appendix section, label `app:register-validation`, title "Register Removal: Validation
-  Against Independent Linguistic Register Markers"; becomes **Appendix G** (Concept-Retrieval
-  → H, Cross-Method → I, Pooled Regression → J, AI Declaration → K; all refs label-based).
-  Contains: Motivation; Register score and samples; Two sample constructions;
-  Corpus-discrimination accuracy (Table `tab:register-validation-accuracy`);
-  "An apparent residual-register signal was traced to clustering"; "No robust evidence that
-  topic is being systematically removed" (Table `tab:register-validation-selectivity`);
-  "One apparently surviving signal failed the draw-stability check" (honest history: mega-doc
-  clustering traced, −0.197 downgraded to noise); Conclusion (only report.md §2.2 reconciled
-  values; "substantial reduction, not complete elimination, no robust evidence of topic
-  removal"); Limitations (PC1-vs-z-sum operationalization flagged + unresolved, n=408 /
-  per-SDG n=12 power, draw-stability applied only to within-SDG trace, one-per-parent is a
-  rebuild not subset, MPNet-only, the two −0.197 statistics caution).
-- Preamble: `\InputIfFileExists{...num_a1_register_validation.tex}{}{}` after the
-  `num17_reference_split.tex` line (input once, not again in the section).
-- Rewires of "unvalidated / left to future work" wording: Methodology identification-argument
-  (~line 279) now says the interpretation is evaluated in the appendix, finds substantial
-  reduction but not complete elimination, no robust evidence of topic removal; Table notes at
-  ~373 and ~392 now "(primary estimate; evaluated in Appendix~\ref{app:register-validation})";
-  Limitations "Register effects" (~477) and Conclusion (~488) rewired to the appendix. Stale
-  header comments ("Appendix D/E") fixed. Line-471 corpus-scope "left to future work" is
-  unrelated and untouched.
-
-### 8.5 Verification performed
-
-- **Acceptance gates 61/61**, deterministic across 4 runs (scratch/registry paths).
-- **`--build-pdf --overwrite` succeeds.** A LaTeX structural bug found during the build — the
-  first insertion displaced the register-check table's `\end{table}`, placing the entire new
-  section inside a `table` environment ("Not in outer par mode", 707pt float cascade) — was
-  fixed by restoring the `\end{table}` after the `tab:iterative-register-check` notes line and
-  removing the stray closing before `\section{Concept-Retrieval Sensitivity}`. After the fix
-  the F..G region has balanced 3 begin / 3 end table environments. Rebuild verified: 72 pp, no
-  fatal errors, 0 "Not in outer par mode", 0 "Missing \begin{document}", 0 undefined control
-  sequences; Appendix G renders with both tables and all `\RegVal*` macros resolve to the
-  report.md §2.2 values; rewired Methodology/Limitations/Conclusion sentences read correctly in
-  the PDF; no orphaned register-related "unvalidated"/"left to future work" wording remains.
-  Remaining `Float too large` warnings (lines 71/76/593/881) are pre-existing floats, not from
-  the new section. The PDF was not image-inspected (model cannot view images); geometry was
-  checked via absence of overfull-vbox errors on the G pages.
-- **gz fallback path exercised** (previously untested for this script): with
-  `2_segmented/{research,policy.jsonl}` temporarily hidden, `resolve_research_text_path`
-  (`all-mpnet-base-v2`, `part-{sid:05d}`) and `resolve_policy_text_path` resolve to
-  `3a_warm_replay_texts/mpnet/*.jsonl.gz` and `open_text` reads them; canonical dirs restored
-  intact. The script passes the full model name and `part-{sid:05d}` shard names, which match
-  the fallback layout (all 26 shards present in both score metadata and fallback dirs).
-- **Cleanup:** all `3_writing/min_test*.{tex,aux,log,out,pdf,bcf,run.xml,toc,bbl,blg}`
-  bisection junk deleted; `5_notes/scratch/` untouched (provenance).
-
-### 8.6 Unresolved issues intentionally left (require human scientific judgment)
-
-Per report.md §2.4, none were resolved here:
-
-1. **Register-score operationalization** (PC1 vs. the a-priori "institutional" z-sum, which gave
-   null/reversed 2b/2c on the initial screen) — flagged in the appendix Limitations and in the
-   output JSON as an open limitation.
-2. **The two distinct −0.197 statistics** (2B pooled centroid-distance vs. Item-3 policy
-   other-dist) — documented as a non-contradiction caution in the appendix.
-3. **n=408 / per-SDG n=12 power** and the n=120/SDG scaling question — noted as limitations,
-   not resolved.
-4. **Commits** (see §8.7) and the Phase-5 decisions (retire/keep scratch; commit ground-truth
-   logs under `5_notes/` per report.md §3.5) remain user decisions.
-
-### 8.7 Git state
-
-Committed in three one-concern commits (per AGENTS.md), then pushed:
-
-- (a) script + registration + docs: `1_code/7_main_analysis/2_appendix/a1_register_validation.py`,
-  `analysis_orchestrator.py`, `shared_utils.py`, `main.py`, `README.md`, `PIPELINE.md`,
-  `AGENTS.md`, `report.md`, `handoff.md`.
-- (b) manuscript: `3_writing/dissertation.tex`.
-- (c) outputs + PDF: `4_outputs/appendix/mpnet/a1_register_validation/`,
-  `4_outputs/dissertation.pdf`.
-
-Working tree is clean after the push.
+The validation work is scientifically sound and exceptionally honest — Report 1 →
+Follow-up 1 → Follow-up 2 is a model of self-correction, and the verification work
+(61 acceptance gates, byte-identical re-runs) makes the numbers trustworthy. Appendix G
+as written is good but slightly overstates its central claim in two places (the
+"markedly longer sentences" corpus direction and the final "empirically supported"
+sentence), contains three wording inaccuracies an examiner could exploit ("independent
+sample", "no leakage", unstated selectivity sample), and buries its most important
+bounding evidence (the register-only classifier) in a table. The main text is
+consistent with the evidence and if anything more conservative than the appendix. The
+Phase-4 plan above preserves every number while recalibrating the claims to what the
+evidence actually supports.
