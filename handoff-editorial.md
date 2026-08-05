@@ -1,6 +1,7 @@
 # Handoff — Editorial pass: abstract / methods prose correctness + sample-stability ladder estimator fix
 
-Date: 2026-08-05 (updated). Repo root: `/home/manh/dissertation`. Read `AGENTS.md` first; it is authoritative.
+Date: 2026-08-05 (updated after the ladder + zero-shot paper-weighting fixes landed).
+Repo root: `/home/manh/dissertation`. Read `AGENTS.md` first; it is authoritative.
 
 ---
 
@@ -20,17 +21,29 @@ Timeline of the pass:
 - **Sibling audit (S1–S6)** — ran, verified, planned, approved (S4, S5 explicitly via
   the Question tool) but NOT yet applied. A first handoff (`handoff-editorial.md`) was
   written; `handoff.md` was later removed by the repo owner (commit `dbafc56`).
-- **NEW (this session): sample-stability ladder investigation.** The user asked to check
-  whether the sample-stability ladder code/output is current, asserting "it can't be that
-  far (>0.002) off". **The check proved the user right and found a real bug** (see §2.4):
-  the ladder mixes two different estimators — segment-weighted tiers vs paper-weighted
-  anchor — so the apparent 0.014 "non-convergence" is an artifact of the paper-weighting
-  refactor, not real instability. The user approved **Option A: paper-weight the tiers**
-  (code fix + re-run) and the sequencing "ladder fix first, then handoff fixes" (two
-  commits). **Nothing has been edited yet.**
+- **Sample-stability ladder investigation.** The user asked to check whether the ladder
+  code/output is current, asserting "it can't be that far (>0.002) off". The check proved
+  the user right and found a real bug (see §2.4): the ladder mixed two different
+  estimators — segment-weighted tiers vs paper-weighted anchor. Option A approved:
+  **paper-weight the tiers** (code fix + re-run). **DONE and pushed as `aff6c28`** —
+  tiers now converge to the anchor (2m tier gap 0.33951 vs anchor 0.339543; bias 0.121894
+  vs 0.121904); c1 re-derived. Commit-1 Step D prose (§6 Commit-1 Step D: tex lines
+  519/619/631 unit labels) was intentionally left out of `aff6c28` and is **still pending**
+  (§4).
+- **Zero-shot (ZS) research-weighting sibling bug (handoff-research-weight.md).** Audit
+  found `score_zeroshot.py` still accumulated research counts/centroids/cohesion per
+  segment row (n_papers summed to 3,105,144 = segments) while LR/MLP rows in the same
+  tables are paper-weighted (2,536,771). Approved: paper-weight the ZS producer. **DONE
+  and pushed as `4ec340d`** — all 6 ZS routes re-run (MPNet 2,536,771; MiniLM/SciBERT
+  100,000; concept 99,836), downstream tables regenerated. **This changed the I.1 rank
+  deltas that Commit-2 Step C said to "keep"** — SDG17 Δ=10→**9** (ZS rank 7→8), SDG8
+  Δ=9→**8** (ZS rank 15→14); `\ZeroShotSemanticRho` 0.63→0.60. Rank claims in
+  `dissertation.tex` were updated in `4ec340d`; agreement rates are unchanged
+  (67.3/59.5/81.5/81.4/76.3/79.9). `handoff-research-weight.md` has since been removed
+  (its §4.2 cross-referenced this file's Commit-2 items, which remain here).
 
-Current `git status`: clean except untracked `handoff-editorial.md` (this file).
-HEAD = `dbafc56`. No code, output, or prose changes have been made for the ladder fix.
+Current `git status`: clean. HEAD = `4ec340d`. The only outstanding editorial work is
+Commit-1 Step D prose + Commit 2 (both §6 below).
 
 Workflow conventions observed: plan-then-approve; one concern per commit; never commit
 unless asked; leave unrelated dirty files unstaged.
@@ -75,25 +88,28 @@ the classifier is applied at inference to score segments.
   `tanh((z_{0.975}+z_{0.80})/√(n−3)) = tanh(2.802/3.742)`, Pearson test n=17
   (`1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py:713-716`).
 
-### 2.4 ★ THE SAMPLE-STABILITY LADDER FINDING (this session's main deliverable)
+### 2.4 ★ THE SAMPLE-STABILITY LADDER FINDING (RESOLVED — code+outputs in `aff6c28`)
 
 **Question asked:** is the ladder (`4_outputs/appendix/mpnet/c_sample_stability/`) current?
 "It can't be that far (>0.002) off."
 
-**Answer: the output IS fingerprint-current but internally inconsistent — the tiers and
-the anchor row compute DIFFERENT quantities.** The user's intuition was exactly right: at
-consistent units the ladder converges within 0.00003; the 0.014 gap is an estimator
-mismatch introduced by the paper-weighting refactor.
+**Answer: the output WAS fingerprint-current but internally inconsistent — the tiers and
+the anchor row computed DIFFERENT quantities.** The user's intuition was exactly right: at
+consistent units the ladder converges within 0.00003; the 0.014 gap was an estimator
+mismatch introduced by the paper-weighting refactor. This is now FIXED (`aff6c28`).
 
-Committed ladder values (`c_sample_stability_summary.json`):
+**Post-fix committed ladder values (`c_sample_stability_table.csv`; anchor row unchanged):**
 | Tier | mean semantic gap | policy-text calibration bias |
 |---|---|---|
-| 50k | 0.327891 | 0.113122 |
-| 200k | 0.326426 | 0.113391 |
-| 2m | 0.325768 | 0.113221 |
+| 50k | 0.34163 | 0.121794 |
+| 200k | 0.340233 | 0.1221 |
+| 2m | 0.33951 | 0.121894 |
 | **full corpus (anchor)** | **0.339543** | **0.121904** |
 
-Root cause:
+Tiers now converge upward into the anchor within ~0.001–0.002; c1 `\SubsetGapRho*` now
+0.527 (1k) → 1.000 (2m). **Commit-1 Step D prose (tex 519/619/631) is still pending.**
+
+Root cause (historical, for context):
 1. **Tier rows** (`1_code/7_main_analysis/2_appendix/c_sample_stability.py`,
    `accumulate_draws` lines 401–441) are **segment-weighted**. They sample *documents*
    (`_sample_by_document`, lines 295–308) but then accumulate **per ROW**:
@@ -142,13 +158,17 @@ ladder automatically changes c1's inputs; c1 must be re-run and its macros re-ve
   (n_rows = 3,105,144 → per-segment), `research_mlp_vs_zs` overall = **0.5949**.
 - Table `tab_app_assignment_method_comparison.tex` Overall row:
   `Overall & 3,105,144 & 67.3 & 59.5 & 40,597 & 81.5`.
-  Per-SDG research agree: SDG 17 = 26.1%, SDG 10 = 23.6% (SDG 17 rank LR=17/ZS=7, Δ=10;
-  SDG 8 rank 6/15, Δ=9).
+  Per-SDG research agree: SDG 17 = 26.1%, SDG 10 = 23.6%.
+- **Rank deltas (UPDATED by the ZS fix `4ec340d`; old values in parens):** SDG 17 rank
+  LR=17/ZS=**8** (was 7), Δ=**9** (was 10); SDG 8 rank 6/ZS=**14** (was 15), Δ=**8**
+  (was 9). `\ZeroShotSemanticRho` = 0.60 (was 0.63). Prose at `dissertation.tex:868`
+  already reflects the new ranks (updated in `4ec340d`) — do NOT revert to Δ=10/Δ=9.
 - **Recomputed read-only** from committed npys via `doc_level_assignments`
   (`1_code/7_main_analysis/0_shared/semantic_gap_shared.py`): policy doc-level LR-vs-ZS =
   **81.4%** (n_docs 6,367); policy segment MLP-vs-ZS = **76.3%**; policy doc-level MLP-vs-ZS
   = **79.9%**. These three are NOT persisted in any committed json — re-run the i1 script
-  to reconfirm before writing prose (§6 Step D).
+  to reconfirm before writing prose (§6 Commit-2 Step B). Agreement rates are unchanged
+  by the ZS fix (they are per-segment computations); only `gap_rank_*` changed.
 
 ### 2.6 Git archaeology explaining I.1 prose staleness (unchanged from prior handoff)
 - Appendix I.1 table was regenerated 2026-08-05 in commit `8718d02` — **after** the prose
@@ -184,73 +204,77 @@ ladder automatically changes c1's inputs; c1 must be re-run and its macros re-ve
    - **Sequencing approved:** ladder fix first (commit 1), then the independent handoff
      fixes (S3/S4/S5 + remaining S1 unit labels) as commit 2.
 
-**Files changed this session:** none (investigation only). Working tree clean vs HEAD
-except this handoff. `2_data/` untouched; no long-running stages run.
+### After the original handoff (landed while the repo was on `dbafc56`)
+| Commit | What | Notes |
+|---|---|---|
+| `aff6c28` | **Ladder paper-weighting fix** (Commit-1 Steps A–C): `c_sample_stability.py` `accumulate_draws` paper-weighted via `paper_units_from_shard`, draw-cache schema v3, `SCRIPT_VERSION` 1→2; ladder + c1 re-run. | Prose Step D (tex 519/619/631) intentionally left out — still pending (§4). |
+| `4ec340d` | **ZS research-weighting fix** (from `handoff-research-weight.md`): `score_zeroshot.py` paper-weighted (collapses each shard to paper units); 6 ZS routes re-run; fp fixes in `0_coverage_gap.py` + `h1_cross_method_gap_values.py`; stale docstring fixed; downstream tables (cross-sensitivity, h1, j1, k1, i1) regenerated; `dissertation.tex` rank claims updated; PDF rebuilt. | Changed I.1 rank deltas (SDG17 Δ=10→9, SDG8 Δ=9→8) and `\ZeroShotSemanticRho` 0.63→0.60 — see §2.5. |
+
+**Files changed to date in this pass:** `c_sample_stability.py`, `score_zeroshot.py`,
+`0_coverage_gap.py`, `h1_cross_method_gap_values.py`,
+`3_generate_cross_sensitivity_table.py`, `dissertation.tex` (rank claims only), and the
+regenerated `4_outputs/` tables/data. Working tree clean vs HEAD.
 
 ---
 
 ## 4) What remains and why
 
-All remaining work is: (a) the **ladder paper-weighting fix** (code + re-run + prose
-verification), and (b) the **I.1/`macro-F1` fixes** from the sibling audit. Nothing is
-blocked; execution paused at the "write handoff" gate per the user's request.
+The remaining work is (a) the **Commit-1 Step D ladder prose** (unit labels at tex
+519/619/631 — deliberately excluded from `aff6c28`), and (b) the **Commit-2 I.1/`macro-F1`
+fixes** from the sibling audit. Both code fixes (ladder `aff6c28`, ZS `4ec340d`) are done;
+the prose that quotes their numbers is not. Nothing is blocked.
 
 Summary:
-1. Fix `c_sample_stability.py` to accumulate **paper-level units** per draw (mirroring
-   `score_supervised.py` / `paper_units_from_shard`), invalidate the stale draw cache,
-   bump script/cache versions.
-2. Re-run the ladder (long job → tmux) and re-run c1; verify tiers converge to
-   ~0.3395/~0.1219 within ~0.001–0.002.
-3. Prose fixes in `dissertation.tex`: S1 unit labels (519/619/631), S3 stale I.1 numbers
-   (865/868), S4 I.1 header + generator (i1 script, line ~352 + docstring ~10), S5
-   `macro-F1` → `macro-$F_1$`. S2 (relabel "fully converged") is now **mostly obsolete** —
-   the estimator fix makes the original convergence claims numerically true; re-verify the
-   macro values instead.
-4. Rebuild PDF, verify with `pdftotext`, commit in two commits, push.
+1. Prose in `dissertation.tex`: S1 unit labels (519/619/631; verify the "within 0.002 at
+   50k" claim against the new macros — raw 50k-vs-2m diff is 0.00212 > 0.002, so check the
+   wording), S3 stale I.1 numbers (865/868), S4 I.1 header + generator (i1 script, line
+   ~352 + docstring ~10), S5 `macro-F1` → `macro-$F_1$`. S2 (relabel "fully converged") is
+   **mostly obsolete** — the estimator fix makes the original convergence claims
+   numerically true; re-verify the macro values instead.
+2. Rebuild PDF, verify with `pdftotext`, commit in two commits (Commit-1 Step D prose;
+   then Commit 2), push.
 
-Why these remain: the user asked for a handoff before execution so a fresh agent can take
-over with full context; the ladder finding upgrades S2 from a prose issue to a code fix.
+Why these remain: `aff6c28` was scoped to code + outputs so the estimator fix could be
+verified before touching prose; the ZS fix `4ec340d` landed between, updating the rank
+claims but not the stale agreement-rate numbers at 865/868.
 
 ---
 
 ## 5) Concerns to emphasize
 
-1. **The ladder fix changes many numbers.** After paper-weighting, ALL tier rows change
-   (semantic gap tiers converge to ~0.339–0.340; calibration bias to ~0.122), plus c1's
-   `\SubsetGapRho*` values. Prose at `dissertation.tex:359, 519, 619, 631, 633` quotes
-   these macros — do not hand-edit the numbers; rebuild and re-read the new macros, then
-   check the *claims* ("within 0.002/0.001 of the full-corpus estimate") against the new
-   values. If a tier (e.g. 50k) is no longer within the claimed bound, adjust the wording.
-2. **Cache invalidation is mandatory and easy to miss.** The draw cache
-   (`2_data/5_supervised_scored/mpnet/paper_sample_seed_42_141/`, `schema_version: 2`)
-   stores SEGMENT-weighted aggregates. `run()` only clears the cache when
-   `cache_signature` (manifest hashes) differs — that will NOT change after a code edit.
-   You MUST bump `schema_version` to 3 AND fold it into `_compute_cache_signature`
-   (c_sample_stability.py:107-113) (or add an explicit schema check) so the stale `.npz`
-   aggregates are rejected. Bump `SCRIPT_VERSION` "1"→"2" (line 822) so the fingerprint
-   gate records the change.
+1. **The ladder fix changed many numbers (already landed in `aff6c28`).** ALL tier rows
+   now converge to ~0.339–0.340 (bias ~0.122); c1 `\SubsetGapRho*` = 0.527→1.000. Prose at
+   `dissertation.tex:359, 519, 619, 631, 633` quotes these macros — do not hand-edit the
+   numbers; rebuild and re-read the new macros, then check the *claims* against the new
+   values. **Specific trap at line 519:** the claim "at 50,000 papers … mean semantic gap
+   … within 0.002 of the full-corpus estimate" — raw 50k-vs-2m is now **0.00212 > 0.002**
+   (50k 0.34163 vs 2m 0.33951), i.e. marginally outside the claimed bound. Either cite
+   the 200k tier (0.340233, within 0.002) or reword to "≈0.002 / within ~0.002".
+2. **Cache invalidation (DONE in `aff6c28`) — do not re-trigger.** The draw cache
+   (`2_data/5_supervised_scored/mpnet/paper_sample_seed_42_141/`) was invalidated to
+   schema v3 and rebuilt with paper-weighted aggregates. `SCRIPT_VERSION` is "2". Only
+   touch this if the ladder needs another re-run.
 3. **Papers must not span shard boundaries.** `paper_units_from_shard` raises if a paper
    crosses a shard boundary (`prev_last_paper_id` threading,
-   `1_code/7_main_analysis/0_shared/research_score_shards.py:108-159`). Thread
-   `prev_last_paper_id` across the shard loop in `accumulate_draws` and fail closed, as
-   `score_supervised.py` does. Do not silently fall back to row-level accumulation.
+   `1_code/7_main_analysis/0_shared/research_score_shards.py:108-159`). This was handled
+   in `aff6c28`; keep the threading if the ladder is ever re-run.
 4. **Match the canonical recipe exactly.** Canonical centroids = normalized mean of
    *paper-level unit vectors* (`score_supervised.py:364-378`); paper assignment = argmax
    of the mean segment score vector (`paper_units_from_shard`); paper top score = max of
    the mean score vector (`group_rows_by_paper(scores, starts)[0].max(1)`). Coverage must
    be paper counts (`hard_counts` over papers), `rows_seen` = paper count, `top_sum_osdg`
-   = sum of paper top scores. If any of these stays segment-level, the tiers will not
-   converge and the whole exercise is wasted.
-5. **Re-run is a long job → tmux (AGENTS.md HARD RULE).** 26 shards × 1100 draws
-   (11 tiers × 100) of accumulation. Launch with
+   = sum of paper top scores. (Verified correct in `aff6c28`; reference only.)
+5. **Re-running the ladder is a long job → tmux (AGENTS.md HARD RULE).** 26 shards × 1100
+   draws (11 tiers × 100) of accumulation. Launch with
    `tmux new-session -d -s ladder "python main.py --appendix-c-sample-stability --overwrite > /tmp/ladder.log 2>&1; touch /tmp/ladder.log.DONE"`,
    poll `tmux capture-pane` / `tail` / `ls /tmp/ladder.log.DONE`. Never `setsid`/`disown`.
-   The script is resume-safe per-draw, but killing mid-accumulation loses the pass.
+   (Only needed if the ladder must be regenerated — it is current as of `aff6c28`.)
 6. **Verify, don't trust — especially the three non-persisted I.1 figures** (policy
    doc-level LR-vs-ZS ≈ 81.4%, policy MLP segment ≈ 76.3%, doc-level ≈ 79.9%). They are
-   not in any committed json; re-run the i1 script (Step D) and use freshly-generated
-   values in prose. Committed-table values (67.3/59.5/81.5; SDG17 26.1; SDG10 23.6) are
-   safe to cite directly.
+   not in any committed json; re-run the i1 script (Commit-2 Step B) and use freshly-
+   generated values in prose. Committed-table values (67.3/59.5/81.5; SDG17 26.1; SDG10
+   23.6) are safe to cite directly. Agreement rates are unchanged by the ZS fix — only
+   the `gap_rank_*` columns changed (to Δ=9/Δ=8, ranks 8/14; already reflected in tex).
 7. **Do NOT "fix" the appendix by changing research agreement to paper-level.** Research
    rows in the scored corpus are per-segment (3,105,144); the I.1 header must become
    "Research (segments)", not the numbers changed to paper counts. Coverage *profiles* in
@@ -266,10 +290,12 @@ over with full context; the ladder finding upgrades S2 from a prose issue to a c
 10. **Unrelated dirty files must stay unstaged** when committing: this handoff,
     `4_outputs/not_in_replay/distributional/mpnet/adjusted/g_distributional_gap_records.jsonl`,
     `4_outputs/conceptual_figs/fig6_pipeline_flowchart.pdf` (regenerated each `--build-pdf`).
-    (At the time of writing, `git status` is clean except this file — confirm before
-    committing.)
-11. After regenerating the i1 table, `git diff` it and confirm it shows ONLY the header
-    change (plus legitimately new numbers). If numbers change for unknown reasons, STOP.
+    (At the time of writing, `git status` is clean — confirm before committing.)
+11. After regenerating the i1 table, `git diff` it and confirm the ONLY changes are the
+    header relabel ("Research (papers)" → "Research (segments)") plus the three freshly
+    reconfirmed non-persisted policy figures if they differ from 81.4/76.3/79.9. The
+    `gap_rank_*` columns are already at their post-ZS-fix values (Δ=9/Δ=8) and should NOT
+    change again. If numbers change for unknown reasons, STOP.
 12. Do not run `--cold-replay` or other long pipeline stages; all required artifacts exist.
 13. `c1` re-run depends on the regenerated draws JSONL; its fingerprint gate
     (`fingerprint_of(full_gap_path, draws_path) + SCRIPT_VERSION`) will re-run it once the
@@ -279,95 +305,55 @@ over with full context; the ladder finding upgrades S2 from a prose issue to a c
 
 ## 6) The whole comprehensive plan
 
-Two commits, executed in order: **(1) ladder paper-weighting fix**, **(2) I.1 + macro-F1
-handoff fixes**. After each, verify before moving on.
+Commit-1's code+outputs landed as `aff6c28`; its Step D prose is still pending. Two more
+steps remain, executed in order: **(1) Commit-1 Step D/E (ladder prose)**, **(2) Commit-2
+I.1 + macro-F1 fixes**. After each, verify before moving on.
 
-### Commit 1 — Ladder paper-weighting fix (Option A)
+### Commit 1 — Ladder paper-weighting fix (Option A) — **Steps A–C DONE (`aff6c28`); only Step D (prose) + Step E (commit) remain**
 
-**Step A — Edit `1_code/7_main_analysis/2_appendix/c_sample_stability.py`:**
-- Imports: add `read_shard_paper_ids`, `paper_run_starts`, `group_rows_by_paper`,
-  `paper_units_from_shard` from `research_score_shards` (already imported:
-  `ResearchShard`, `build_research_shards`, `aggregate_research_scores`).
-- Rewrite `accumulate_draws` (lines 401–441) to per-shard **paper-level** accumulation:
-  - Per shard: `paper_ids = read_shard_paper_ids(shard.ids_path)`; verify
-    `len(paper_ids) == score.shape[0]`; `starts = paper_run_starts(paper_ids)`;
-    `paper_emb, paper_assigned, seg_counts, last = paper_units_from_shard(emb, score,
-    paper_ids, shard.name, prev_last_paper_id=prev_last)`; `prev_last = last`;
-    `paper_scores, _ = group_rows_by_paper(score, starts)`; `paper_top = paper_scores.max(1)`;
-    build `row_to_paper = np.searchsorted(starts, np.arange(score.shape[0]), side='right') - 1`.
-  - Per draw: `local = draw.global_indices[left:right] - shard.start`;
-    `papers = np.unique(row_to_paper[local])`; accumulate
-    `draw.hard_counts += np.bincount(paper_assigned[papers], minlength=N_SDG)`,
-    `draw.top_sum_osdg += float(paper_top[papers].sum())`, and per-SDG
-    `draw.vector_sums[sdg] += paper_emb[papers[mask]].sum(axis=0)` where
-    `mask = paper_assigned[papers] == sdg`; `draw.rows_seen += len(papers)`.
-  - Keep the post-loop sanity check: `rows_seen == number of sampled papers`.
-- **Cache invalidation:** bump `write_cache_manifest` `schema_version` to 3 and include
-  the version in `_compute_cache_signature` (e.g. `hasher.update(b"schema_v3")`), so the
-  committed segment-level `.npz` aggregates are rejected and rebuilt. (Verify by checking
-  the run log shows cache clearing or a new signature.)
-- Bump `SCRIPT_VERSION` "1" → "2" (line 822).
-- Update the module docstring / `DrawAccumulator` comments to state tiers are
-  paper-weighted (matching `RESEARCH_WEIGHTING_UNIT = "document"`).
+**Step A — Edit `1_code/7_main_analysis/2_appendix/c_sample_stability.py`:** DONE in
+`aff6c28` (paper-level `accumulate_draws`, cache schema v3, `SCRIPT_VERSION` 1→2,
+docstring updated). Keep as-is.
 
-**Step B — Re-run the ladder (long job, tmux):**
-```
-python main.py --appendix-c-sample-stability --overwrite
-```
-Poll to completion. Then re-run c1 (fast):
-```
-python main.py --appendix-c1-balanced-subset --overwrite
-```
+**Step B — Re-run the ladder (long job, tmux) + c1:** DONE in `aff6c28`.
 
-**Step C — Verify (before touching prose):**
-- `4_outputs/appendix/mpnet/c_sample_stability/data/c_sample_stability_summary.json`:
-  tier plateau should now sit at ~0.3395 (gap) / ~0.1219 (bias), within ~0.001–0.002 of
-  the full-corpus anchor row (0.339543/0.121904). 50k tier is the loosest (std was 0.0028
-  segment-weighted); check whether "within 0.002 at 50k" still holds — if not, adjust the
-  claim/wording at line 519.
-- `tab_c_sample_stability.tex`: Full corpus row `0.340 / 0.122`; tiers converge upward.
-- `num_c_sample_stability.tex`: new `\SampleMeanSemanticGap*`, `\SamplePolicyBias*`,
-  `\SampleMacroVariance*` values. Record them for the prose check.
-- `c1_subset_balanced_stability.json` + `num_c1_subset_stability.tex`: new
-  `\SubsetGapRho*` values; compare against prose at lines 359 and 633 (claims like
-  "already ρ = X at 10k", "converging to ρ = Y at the full corpus").
-- `git diff` the ladder/c1 outputs: expect ALL tier rows + c1 rows to change; anchor row
-  unchanged (0.339543/0.121904).
+**Step C — Verify:** DONE. Post-fix values (§2.4): tiers converge into the anchor — 50k
+0.34163, 200k 0.340233, 2m 0.33951, anchor 0.339543 (bias 0.121794/0.1221/0.121894/
+0.121904); c1 `\SubsetGapRho*` 0.527 (1k) → 1.000 (2m). `num_c_sample_stability.tex` and
+`num_c1_subset_stability.tex` hold the new macros. **The 50k "within 0.002" claim at line
+519 needs a wording check in Step D (raw 50k-vs-2m = 0.00212 > 0.002).**
 
-**Step D — Prose fixes in `3_writing/dissertation.tex` (commit-1 scope: ladder prose):**
+**Step D — Prose fixes in `3_writing/dissertation.tex` (STILL PENDING — commit-1 scope:
+ladder prose):**
 - Line 519 (concept-retrieval): unit label —
   `while remaining far smaller than the full 3.1-million-paper corpus` →
   `while remaining far smaller than the full \NResearchSegments{}-segment research corpus`.
-  Keep the "within 0.002 of the full-corpus estimate of \SampleMeanSemanticGapTwoM{}"
-  claim ONLY if the re-run confirms it; otherwise tighten to the 2M-tier estimate
-  (this is now expected to hold since tiers ≈ 0.3395 ≈ anchor).
+  **"within 0.002 of the full-corpus estimate of \SampleMeanSemanticGapTwoM{}" is now
+  MARGINALLY FALSE** (50k 0.34163 vs 2m 0.33951 → 0.00212). Fix by citing the 200k tier
+  (0.340233, diff 0.00069) or rewording to "within ≈0.002 / within ~0.002". Note
+  `\SampleMeanSemanticGapFiftyK` = 0.342 and `\SampleMeanSemanticGapTwoM` = 0.340 (3dp
+  macros), so the claim "0.002" is also borderline at macro precision.
 - Line 619: `The full \SampleStabilityFullCorpusN{}-paper analysis` →
   `\SampleStabilityFullCorpusN{}-segment analysis`.
 - Line 631: `The full \SampleStabilityFullCorpusN{}-paper result` →
   `\SampleStabilityFullCorpusN{}-segment result`. The "already stabilise to within 0.001
-  of their full-corpus values" claim should now be TRUE — keep, after verifying against
-  the new macros. Do NOT relabel to "fully converged" (that was the obsolete S2 patch).
-- Re-check any other spot quoting `\Sample*` macros for unit/claim consistency.
+  of their full-corpus values" claim should now be TRUE (200k 0.340233 vs anchor 0.339543
+  → 0.00069 < 0.001) — keep, after verifying against the new macros. Do NOT relabel to
+  "fully converged" (that was the obsolete S2 patch).
+- Re-check any other spot quoting `\Sample*` macros for unit/claim consistency (359, 633).
 
-**Step E — Build + verify + commit 1:**
+**Step E — Build + verify + commit:** now a smaller commit (prose + PDF only — the
+ladder/c1 code+outputs are already committed in `aff6c28`).
 ```
 python main.py --build-pdf --overwrite
-pdftotext 4_outputs/dissertation.pdf - | grep -c '0.326'   # expect fewer/none in ladder prose
+pdftotext 4_outputs/dissertation.pdf - | grep -c '3.1-million-paper'   # expect 0
 ```
-Assert: no `3.1-million-paper`; ladder prose numbers match the new macros; `segments`
-labels present. Commit (only: `c_sample_stability.py`,
-`4_outputs/appendix/mpnet/c_sample_stability/**`, `4_outputs/appendix/mpnet/c1_subset_balanced_stability/**`,
-`3_writing/dissertation.tex`, `4_outputs/dissertation.pdf`). Suggested message:
+Assert: no `3.1-million-paper`, no `-paper analysis/result` in ladder prose; line-519
+claim no longer overstates 50k precision; `segments` labels present. Commit only
+`3_writing/dissertation.tex` + `4_outputs/dissertation.pdf` (and this handoff if wanted).
+Suggested message:
 ```
-fix(appendix): paper-weight the sample-stability tiers to match the canonical anchor
-
-Tiers accumulated segment-level centroids/counts while the full-corpus anchor row
-pulled the paper-weighted canonical semantic gap (0.3395) — a mixed-estimator table
-introduced by the paper-weighting refactor (5261d31/cf80809/8718d02). Collapse each
-draw's sampled segments to paper units (paper_units_from_shard) for hard counts,
-centroid sums and top scores; bump draw-cache schema (v3) + SCRIPT_VERSION (2) so the
-stale segment-level aggregates are rebuilt. Tiers now converge to the anchor within
-~0.001-0.002; c1 balanced-subset ranks re-derived on the paper-weighted draws.
+fix(writing): correct sample-stability ladder unit labels + 50k precision claim (Commit-1 Step D)
 ```
 
 ### Commit 2 — I.1 fixes + macro-F1 normalization (sibling audit S3/S4/S5)
@@ -396,7 +382,10 @@ python main.py --appendix-i1-assignment-method --overwrite
   segments`; `79.7%` → `81.5%`; `80.4% at document level` → `81.4%` (reconfirmed);
   `16.8% ... 15.9%` → `26.1% ... 23.6%`; `76.8% ... 78.1%` → `76.3% ... 79.9%`
   (reconfirmed); replace the "research MLP not reported" clause with the 59.5% figure.
-  Rank claims (SDG 17 Δ=10; SDG 8 ranks 6/15 Δ=9) verified correct — keep.
+  **Rank claims are ALREADY at their post-ZS-fix values in tex (`4ec340d`)**: SDG 17 Δ=9
+  (ZS rank 8), SDG 8 ranks 6/14 Δ=8 — do NOT change them and do NOT revert to the old
+  Δ=10/Δ=9 (that pairing is obsolete). Only the agreement-rate percentages above are
+  still stale.
 - S5: `replaceAll` literal `macro-F1` → `macro-$F_1$` across the file (lines
   310/323/342/655/659/666/677/681). Optional: line 342 `1/17` → `$1/17$`.
 
@@ -427,18 +416,21 @@ Then `git push`.
 
 ## 7) Exactly what was interrupted
 
-The user asked me to STOP before executing, so a fresh agent receives this handoff.
+The repo has moved past the original handoff's "investigation only" state. Both code
+fixes have landed and been pushed:
 
-- **Done before the stop:** resumed the prior handoff; audited the sample-stability ladder
-  per the user's request ("first check if the sample stability ladder code/output is
-  current"); proved the user's intuition correct and found the estimator mismatch (§2.4);
-  presented findings + options via the Question tool; user approved **Option A**
-  (paper-weight the tiers) and the sequencing "ladder fix first, then handoff fixes"
-  (two commits). This handoff written immediately after — **no edits, regen, build, or
-  commit has been made this session.** `git status`: clean except this file.
-- **Interrupted before it could run:** §6 Commit-1 Step A (editing `c_sample_stability.py`)
-  onward. Nothing of the plan has been applied.
-- **To resume:** start at §6 Commit-1 Step A. Do not re-run the audit — the ladder finding
-  is verified and recorded here; the sibling-audit findings (S1–S6) are unchanged and
-  still valid except S2, which is superseded by the Option-A fix (the "fully converged"
-  relabel is obsolete; re-verify the now-true convergence claims instead).
+- **Ladder paper-weighting fix (`aff6c28`)** — Commit-1 Steps A–C (code, ladder re-run,
+  c1 re-run, verification) are DONE. **Commit-1 Step D (prose: tex 519/619/631 unit
+  labels + the 50k precision claim) and Step E (commit of that prose + PDF) remain.**
+- **ZS research-weighting fix (`4ec340d`)** — from `handoff-research-weight.md` (now
+  removed). DONE: producer + fp fixes + all downstream regenerations + rank-claim prose
+  + PDF. It changed the I.1 rank deltas (Δ=10→9, Δ=9→8) and `\ZeroShotSemanticRho`
+  (0.63→0.60), which the original Commit-2 Step C had called "verified correct — keep".
+- **Commit 2 (I.1 header/`macro-F1` fixes)** — NOT started. This is the remaining
+  substantive work, plus the Commit-1 Step D prose.
+
+**To resume:** run Commit-1 Step D prose first (§6 Commit-1 Step D/E), then Commit 2
+(§6 Commit-2). Do not re-run the audits or any pipeline stages; the ladder and ZS fixes
+are verified and current. Sibling-audit findings S1–S6 are unchanged except S2, which is
+superseded by the Option-A fix (the "fully converged" relabel is obsolete; re-verify the
+now-true convergence claims instead).
