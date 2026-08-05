@@ -1,340 +1,312 @@
-# Independent Scientific Audit — Appendix G
+# Independent Editorial Architecture Audit — Dissertation Structure
 
-**Title:** Register Removal: Validation Against Independent Linguistic Register Markers
-
-**Role:** independent reviewer, not a coauthor defending the work.
+**Title examined:** *Measuring the Gap: Semantic Alignment Between AI-for-Sustainability Research and SDG Policy Frameworks*
+**Role:** independent senior-researcher / journal-editor reviewer. Not a coauthor.
+**Materials read in full:** `3_writing/dissertation.tex` (978 lines, all chapters, subsections, appendices), abstract, table/figure inventory, references to generated outputs.
 **Date:** 2026-08-05
-**Repo:** `/home/manh/dissertation`, branch `main`, HEAD `010a237`
+**Repo:** `/home/manh/dissertation`
 
-## Scope and stance
-
-This is an independent scientific audit of Appendix G (`dissertation.tex:718–764`).
-The validation numbers are fixed and are not re-analysed or changed. The audit
-verifies that (1) the reported evidence supports the stated conclusions, (2) the
-conclusions are neither overstated nor unnecessarily conservative, (3) the appendix
-tells a coherent scientific story, and (4) the main manuscript references the
-appendix appropriately.
-
-Authoritative sources read in full: `3_writing/dissertation.tex`; Appendix G;
-the verification report (former `report.md` §§1–7); the implementation report
-(former §8); the three register-validation reports
-(`5_notes/register_validation_report.md`, `register_validation_followup.md`,
-`register_validation_followup2.md`); the promoted appendix script
-(`1_code/7_main_analysis/2_appendix/a1_register_validation.py`); and the appendix
-outputs (`4_outputs/appendix/mpnet/a1_register_validation/{data,tables}/`).
-The verification report remains the authoritative record of what analyses exist;
-this document supersedes its prose sections.
-
-No numerical result is changed. This document replaces the previous contents of
-`report.md`.
+Scope: numerical correctness and scientific validity are only considered where they affect structure. This document is not a proof-edit; it is a verdict on whether the dissertation reads as one designed argument or as accumulated development history. It replaces the previous contents of `report.md`.
 
 ---
 
-## Phase 1 — Independent scientific assessment
+# Phase 1 — First-impression reader test
 
-### 1.1 Scientific narrative
+Simulated reader: an external examiner with only the title, abstract, ToC, and headings.
 
-**What question Appendix G answers.** The dissertation's central move is an INLP
-adjustment that removes a "register" subspace from the embeddings (the corpus-level
-research-vs-policy contrast), so that the remaining adjusted gap is claimed to be a
-*topic* gap. The justification in the main text was purely structural: the
-SDG-stratified training guarantees that what remains linearly decodable is corpus
-identity, which is then *interpreted* as register. Appendix G asks an empirical
-version of the same question: **does what INLP removes actually behave like register
-in the text, and is anything non-register (topic) being destroyed?** It answers with
-an independent, surface-linguistic register score (Biber-style features: hedge,
-deontic modality, passive voice, sentence length, first person, nominalisation)
-computed from the segment texts themselves.
+## 1. What appears to be the central research contribution?
 
-**Evidence collected.** On two sample constructions of 408 segments each (12 per SDG
-per corpus, seed 42, MPNet canon):
-1. Corpus-feature means showing the corpora differ in deontic modality, sentence
-   length, hedging, and passivisation.
-2. A mega-document audit showing 25 segments from 7 flagship documents (SDSN, UNDP,
-   WHO, EU AI Act, UN progress reports) are register outliers and create spurious
-   pooled correlations; a one-per-parent rebuild.
-3. Corpus-discrimination accuracy (5-fold LR) before/after removal: raw 0.909→adjusted
-   0.505 (original), raw 0.944→adjusted 0.603 (one-per-parent), with Wilson CIs,
-   binomial tests, and a bootstrap on the 0.505→0.603 difference.
-4. Two "residual-register" diagnostics (removed-magnitude ~ register score; register
-   score ~ distance to SDG centroid) that look positive on the original sample and
-   disappear/reverse on the clean sample.
-5. A 17-way SDG selectivity check (LR + kNN) showing topic decodability is preserved
-   after removal.
-6. A draw-stability check (seeds 43–45) showing the one surviving within-SDG trace
-   (−0.197) is noise.
+Two contributions of unequal weight are claimed, and the reader cannot tell from the ToC which is the load-bearing one:
 
-**Conclusions justified.** (i) INLP removes a large corpus-separable linear component
-(0.94→0.60 on the clean sample); (ii) removal is not complete — adjusted accuracy is
-significantly above chance; (iii) there is no robust evidence that topic is
-systematically removed (selectivity essentially unchanged); (iv) the apparent
-within-SDG residual-register traces are attributable to document clustering or draw
-noise, not to residual register.
+1. **A measurement framework** that separates research–policy divergence into two axes (coverage vs. within-SDG semantic framing) and decomposes the semantic gap into topic vs. register via INLP (Iterative Nullspace Projection).
+2. **An empirical finding** about the AI–SDG interface: an apparent "cancellation" (raw coverage–semantic correlation ≈ 0 because topic and register components offset) and SDG-specific divergence rankings (SDG 17 most divergent under the adjusted gap, SDG 13 under the raw).
 
-**Conclusions not justified.** The claim that the removed subspace is **empirically**
-register — i.e., that it matches the surface-linguistic register features. The direct
-evidence for this is weak: the removed-magnitude↔register-score correlations collapse
-to null on the clean sample, and the register features alone classify corpus identity
-at only ~0.54 (barely above chance), meaning they capture a small slice of what INLP
-removed. What the evidence actually supports is: the removed component is
-corpus-separable (by construction of INLP), is *not* topic, is *consistent* with a
-register reading, and leaves no detectable residual register. The load-bearing step
-from "corpus-separable linear signal" to "register" still rests on the structural
-identification argument, which this appendix corroborates but does not independently
-confirm.
+The abstract announces both. But the ToC's chapter titles ("Literature Review", "Methodology", "Results", "Discussion") never say what the paper is *about*. The contribution is a measurement protocol whose headline is a statistical decomposition — a mismatch that only becomes clear on a second read.
 
-### 1.2 Evidence audit (every major claim)
+## 2. What is the logical sequence of the argument?
 
-| # | Claim (Appendix G) | Verdict | Evidence |
-|---|---|---|---|
-| 1 | "The features discriminate the two corpora in the direction expected of register: policy more deontic, markedly longer sentences; research more hedge and more passive" (`dissertation.tex:725`) | **Partially supported / overstated** | On the original sample: deontic 3.130 vs 0.780 ✓; hedge 1.427 vs 0.854 ✓; passive 10.303 vs 8.453 ✓. But "markedly longer sentences" (63.803 vs 37.035) is mega-doc-driven: excluding the 25 mega-policy segments, policy mean sentence length falls to ≈34.0 — **below** research's 37.0. The direction reverses on the clean sample. Verified by arithmetic on `register_validation.json` `corpus_mean_features` + `mega_vs_nonmega_features`. |
-| 2 | "7 source documents … contribute 25 segments across 15 of 17 SDGs … register outliers (sentence length 276.9 vs 35.6; passive 3.3 vs 9.8; first person 19.0 vs 5.9; nominal 20.0 vs 38.8)" (`:728`) | **Fully supported** | Matches JSON `item1_sample_construction` and `mega_vs_nonmega_features` exactly. |
-| 3 | "Corpus accuracy falls from 0.909→0.505 (original) and 0.944→0.603 (one-per-parent)" (`:731`) | **Fully supported** | Table `tab_a1_register_validation.tex`; JSON `step2d_accuracy`. |
-| 4 | "One-per-parent value significantly above chance (p=1.9e-05, CI [0.555,0.649]); original 0.505 n.s. (p=0.441); 'collapse to chance' corrected" (`:731`) | **Fully supported, well handled** | JSON `step2d_accuracy.opp.adj` / `orig.adj`; matches follow-up 2 and the verification report §2.2. |
-| 5 | "Mega-policy exclusion raises original adjusted accuracy to 0.574 (p=0.002); +0.098 difference largely attributable to clustering" (`:731`) | **Fully supported** | JSON `step2d_accuracy.mega_policy_exclusion` = 0.574 (220/383, p=0.002); `bootstrap_diff` +0.098 CI [0.025,0.169]. "Largely attributable" (≈0.070/0.098) is a fair reading. |
-| 6 | "Two residual-register signals (removed-norm ρ=+0.102 p=0.040; centroid-distance ρ 0.126→0.247) disappear/reverse on the clean sample (+0.092 n.s.; −0.212/−0.197)" (`:743`) | **Fully supported as reported** | JSON `step2b_removed_norm`, `step2c_centroid_dist`. But see §1.3 C1/C2: the *positive* 2b evidence dies with the red flag, and this loss is not discussed. |
-| 7 | "17-way SDG selectivity essentially unchanged (LR 0.691→0.672; kNN 0.554→0.578; chance 0.059)" (`:746`) | **Supported, with an omission** | JSON `step3_selectivity`; computed on the **original (draw-1)** sample only, which the prose does not state. |
-| 8 | "The −0.197 trace 'reproduced exactly on an independent sample' and survived mega-document exclusion (−0.213, p=0.003)" (`:758`) | **Misleading as worded** | The reproduction was an independent *re-run of the same draw-3 sample* (follow-up 1 vs follow-up 2), not a fresh draw — and the appendix's own draw-stability check immediately contradicts the "independent sample" reading. Mega-exclusion is reported only for draw 3; draws 1 and 2 give **+0.127 and −0.138** (sign flips). See §1.3 C3/C8. |
-| 9 | "Draw-unstable: −0.130, −0.004, +0.126 across seeds 43–45; 0/17 per-SDG significant (14 neg / 3 pos); treated as noise" (`:758`) | **Fully supported** | JSON `item3.draw_stability`, `item3.per_sdg`; matches follow-up 2. |
-| 10 | Conclusion: "register interpretation is therefore empirically supported for the dominant corpus-level component of the removed subspace" (`:761`) | **Overstated** | The evidence establishes the removed component is corpus-separable and not topic, and is *consistent* with register; it does not directly establish it *is* register (see §1.1). The main text (`:478`) is more accurate: "partial, not complete, empirical support." |
-| 11 | Limitations (operationalisation, n=408/per-SDG n=12, draw-stability scope, rebuild-not-subset, MPNet-only, two −0.197s) (`:764`) | **Fully supported, honest** | All items traceable to the verification report §2.4 / follow-up 2. |
+From the headings alone:
 
-Additional observations:
-- The **register-only classifier rows** (0.456 orig / 0.544 opp, Table 1) are never
-  discussed in prose. They are the honest quantification of how much of the corpus
-  difference the six features capture — directly relevant to claim #10, both
-  supporting (0.544, p=0.042) and bounding it.
-- The table note "(no leakage)" (`:739`) is inaccurate for the original sample, where
-  mega-document segments straddle folds; follow-up 2 itself documents this.
-- The register score's **PC1 variance share (22%) and loadings** are not reported,
-  and the score is fit on the pooled (both-corpus) sample, making the "features
-  discriminate the corpora" claim partly self-referential.
+1. Introduction (RQ, two-dimension claim, *results previewed with p-values*)
+2. Literature Review (bibliometrics → three-level framework → theory of divergence → semantic-method cautions → research gap)
+3. Methodology (corpora → embedding → segmentation → classifier → coverage gap → semantic gap → **INLP register adjustment** → **coverage–semantic interaction/hypotheses** → pipeline summary)
+4. Results (classifier validation + coverage → semantic gap *after register removal* → cancellation → robustness)
+5. Discussion → Conclusion → 11 appendices
 
-### 1.3 Examiner stress test
+The skeleton is standard. But the argument's spine is *coverage → semantic gap → register decomposition → cancellation*, and the decomposition is not visible in the ToC as the central apparatus. The reader only discovers that the whole paper turns on INLP in Methodology §3.8.
 
-| # | Challenge | Why | Severity | Does the current appendix answer it? |
-|---|---|---|---|---|
-| C1 | "Your clean-sample 2b correlations collapsed to null and your register-only classifier is ~0.54. Where is the direct evidence that what INLP removed is *your* register features?" | 2b was the only direct link between removed magnitude and the surface features; it dies on the clean sample. The 6 features barely distinguish the corpora (0.544). | **High** | No — it is the central weakness. The appendix reports the 2b collapse but frames it only as refuting "residual register," not as removing the positive evidence; the register-only rows are never interpreted. |
-| C2 | "Your 'markedly longer sentences' corpus difference reverses once the 7 flagship documents are excluded, and the 276.9-word figure is PDF-junk. Isn't sentence length your weakest feature, yet you orient the whole register score on it?" | Arithmetic on the appendix's own JSON shows clean-sample policy ≈34.0 vs research 37.0. The score's sign convention is anchored to a junk-inflated, reversal-prone feature. | **Medium-high** | No. The mega-doc contrast is reported, but the clean-sample *reversal* and the PDF-artifact origin are not; the sentence-length-based orientation is asserted as "more formal register." |
-| C3 | "'Reproduced exactly on an independent sample' — but your own draw-stability check shows the statistic is noise. What is 'independent'?" | The reproduction was a re-run of the same draw-3 sample, not a fresh draw; "independent sample" invites a reproducibility reading that the next sentence refutes. | **Medium** | Partially — the draw-stability section immediately undercuts it, but the wording should be corrected, not left to the reader to reconcile. |
-| C4 | "Why is adjusted accuracy 0.603 when INLP's stopping rule guarantees held-out accuracy ≤ 0.5?" | Seeming contradiction between the methodology (stop at chance) and the validation (above chance). | **Medium** | Implicitly (removal "substantial but not complete"), but the reason — INLP converges on its own training distribution, not on fresh samples — is never stated. |
-| C5 | "Your selectivity check is on the contaminated original sample; does it hold on the one-per-parent sample?" | The appendix's own thesis is that sample composition matters; the selectivity check silently uses draw 1. | **Medium** | No — the sample is not stated. (It was not re-run on the clean sample.) |
-| C6 | "Your Table 1 says 'no leakage,' but 25 mega-doc segments straddle folds in the original sample." | Grouped leakage via document twins. | **Low-medium** | No — the "(no leakage)" parenthetical is unqualified. |
-| C7 | "The register score is the first PC of the *pooled* features; isn't the corpus-discrimination claim circular? Report loadings and variance." | A data-driven axis fit on both corpora will partly track corpus; nothing is reported about what PC1 weighs (Report 1 said 22% variance). | **Medium** | No — not addressed in the appendix. |
-| C8 | "You cite only the draw-3 mega-exclusion value (−0.213). Draws 1 and 2 give +0.127 and −0.138." | Selective reporting of a three-draw result. | **Low-medium** | No — only the favourable draw is quoted. |
-| C9 | "No multiple-comparison correction across the per-SDG and per-feature correlation tables." | 17 SDGs × several features at n=12. | **Low** | Partially — the appendix treats per-SDG results as low-power/noise, which is the right posture, but doesn't say so explicitly at the point of use. |
-| C10 | "The residual 0.603 signal is uncharacterised — could it be non-register (topic-adjacent, formatting, extraction junk)?" | The appendix removes candidates one by one but never characterises what survives. | **Medium** | Partially — the draw-unstable other-dist was the only candidate and is noise; the appendix is honest that residual signal remains. |
-| C11 | "MPNet only, n=408 — single encoder, small sample." | G exists for MiniLM/SciBERT; the register interpretation is claimed corpus-wide. | **Medium** | Yes — Limitations items 2 and 5. |
-| C12 | "Your appendix conclusion says 'empirically supported'; the main text says 'partial, not complete, empirical support.' Which is it?" | Internal calibration mismatch. | **Low-medium** | No — the two should be aligned (the main text's is the more defensible). |
+## 3. Planned research design or evolving project?
 
-### 1.4 Remaining scientific risks (interpretation/inference only)
+**Evolving project.** The fingerprints are unambiguous:
 
-1. **The removed subspace is never directly shown to equal the surface register
-   features.** The clean-sample 2b correlations are null and the register-only
-   classifier is near-chance; the register reading of the removed component rests on
-   the structural argument + absence of counter-evidence. This is the single largest
-   residual risk and the one the main text's "partial support" phrasing already
-   concedes.
-2. **The register-score operationalization is unresolved** (PC1 vs the a-priori
-   "institutional" z-sum, which gave null/reversed results on the initial screen and
-   was never re-run on the clean samples). Since the score's *sign* is arbitrary and
-   two different conventions gave opposite 2c signs, the correlation results are
-   operationalization-sensitive even where they are robust in magnitude.
-3. **The sentence-length feature is junk-inflated and its corpus direction reverses on
-   the clean sample**, yet it anchors the score's orientation. The "policy = longer
-   sentences = more formal" framing is not supported by the clean data.
-4. **The residual corpus-linear signal (adjusted accuracy 0.603) is
-   content-unidentified.** The only candidate interpretation (policy-side register
-   pull) failed draw-stability; what the residual actually is remains open.
-5. **Single encoder, small n.** The register interpretation is used for
-   MPNet/MiniLM/SciBERT-adjusted tables in the main text, but Appendix G validates
-   only MPNet at n=408.
-6. **Two-sample composition change.** The one-per-parent rebuild systematically swaps
-   global flagship prose for national-monitoring reports; the two-sample accuracy
-   comparison (0.505 vs 0.603) is partly compositional, as the appendix honestly notes
-   but cannot fully disentangle.
+- The paper's stated innovation — separating topic from register so the "adjusted (topic) gap" can be the primary estimate — is introduced mid-Methodology (§3.8), validated only in Appendix G, and its headline numbers are repeated **six times** (abstract, intro, results, discussion, conclusion, Appendix F). Repetition at that density is the signature of sections written at different times, each restating the full summary.
+- The original metric is retroactively demoted by *naming*: the raw gap is repeatedly called the **"raw gap (naive baseline)"** (lines 366, 804). A "naive baseline" is a label applied after a better method exists, not at design time.
+- Hypotheses H1a–H1d appear for the first time at the *end* of Methodology (§3.9), never derived in the literature review or intro. A designed study states its hypotheses where the reader is deciding what to believe, not after the instruments are built.
+- Appendix H begins: **"Advisor review flagged the four-term keyword query"** (line 798). That sentence is a time-stamp of a review cycle. Appendix A.3 is literally titled **"Truncation Fix"** and opens "During pipeline development, a truncation issue was discovered and corrected" (line 527). Appendix C.2 carries the heading-prose **"Why the raw robustness result does not carry over"** (line 604). Appendix G §5 says it "reports the robustness investigation as it unfolded" (line 756). These are process diaries, not supporting material.
+- The empirical "headline" — the cancellation — is explicitly framed in the abstract as "tentative rather than established" (line 92). A headline the author must so aggressively hedge is usually a *discovered* result that was later promoted to organizing claim.
+
+## 4. Sections that feel added later
+
+| Section | Why it feels bolted on |
+|---|---|
+| §3.8 Register Adjustment (INLP) + Appendices F, G | The analytic crux of the paper, yet squeezed in as one methods subsection with its validation exiled to an appendix that ends "consistent with... rather than confirmed" (G, line 769). |
+| §4.3 "A Possible Cancellation" | The word "Possible" in a results heading; the phenomenon is the *retroactive* headline, not a pre-registered expectation. |
+| §4.4 Robustness of the Gap Rankings | A catalog whose own text admits stability is conditional ("not equally stable across all measurement choices", line 419). Reads as a set of reviewer-driven checks assembled into one section. |
+| Appendices C, D, F, G, H, I, J | Eleven appendices for a ~60-page argument. Several narrate debugging history (C.2, C.3, F.1, G.5) or review responses (H). |
+| §5.2 "Robust Patterns of Divergence" | A Discussion subsection that re-reads the robustness grid — i.e., a robustness digest written after the fact. |
+
+**First-impression verdict:** a coherent, well-written main text that has had a second study (the register decomposition and its consequences) surgically inserted into a first study's skeleton. A careful reader will notice the seams.
 
 ---
 
-## Phase 2 — Writing audit
+# Phase 2 — Architectural dependency map
 
-**Logical flow.** The arc is sound: motivate → instrument → sample-integrity →
-headline result → residual checks → topic check → honesty episode → conclusion →
-limitations. This is a defensible dissertation-appendix structure and is markedly more
-honest than the norm (reporting a signal that died). But there are four structural
-problems:
+## The intellectual dependency graph
 
-1. **The mega-doc disclosure comes one paragraph too late.** The reader is first told
-   policy has "markedly longer sentences" (line 725) and only then that the sample is
-   contaminated (line 728). Every claim in the feature paragraph is retroactively
-   suspect. The contamination must precede or be integrated with the feature evidence.
-2. **The most important bounding evidence is buried in a table.** The register-only
-   classifier rows (0.456/0.544) are the honest answer to "how much of the corpus
-   difference is captured by your register features," and they are never mentioned in
-   prose. They should be a named result, not a silent table row.
-3. **The 2b collapse is framed one-sidedly.** "An apparent residual-register signal was
-   traced to clustering" (line 743) correctly kills the red flag, but the same finding
-   also kills the *positive* evidence (removed magnitude tracks register). The
-   paragraph should acknowledge both consequences, or an examiner will.
-4. **The strongest honesty content is well placed; the strongest positive evidence is
-   not.** The draw-stability paragraph (line 758) is excellent and correctly placed
-   near the end. The corpus-feature discrimination — the only direct surface-linguistic
-   evidence — is placed *before* the contamination caveat and is the overclaimed item.
+```
+RQ: coverage & framing divergence, and their relation
+   │
+   ├──► Framework: coverage vs. framing + 3-level construct (§2.2)
+   │         │
+   │         ├──► Data: research corpus, policy corpus, reference corpora (§3.1–3.2, §5.1)
+   │         │
+   │         ├──► Measurement: embeddings + segmentation + supervised LR (§3.3–3.5)
+   │         │         │
+   │         │         ├──► Coverage gap (§3.6)
+   │         │         └──► Semantic gap (§3.7)
+   │         │                   │
+   │         │                   └──► Register decomposition (INLP) (§3.8) ──► adjusted gap (PRIMARY)
+   │         │                             │
+   │         │                             └──► Register validation (Appendix G) ← needed to trust primary
+   │         │
+   │         ├──► Hypotheses H1a–H1d (§3.9) ──► Interaction / cancellation (§4.3)
+   │         │
+   │         └──► Robustness grid (§4.4 + App. C/D/F/H/I/J)
+   │
+   └──► Discussion claims: SDG17 divergent, SDG15 least, cancellation as
+        knowledge-system difference, coverage≠framing for monitoring (§5, §6)
+```
 
-**Redundancy.** The accuracy numbers are given in the prose (line 731), in Table 1,
-and again in the Conclusion (line 761). Acceptable in a dissertation, but the
-Conclusion should not *repeat* the table as evidence (i) — it should reference it.
+## What depends on what
 
-**Paragraph ordering recommendation.** Merge/reorder to: (1) motivation;
-(2) sample construction and integrity (mega-docs *first*); (3) register
-operationalisation *with* the pooled-PC caveat and the register-only classification
-result; (4) corpus discrimination before/after; (5) topic selectivity (with sample
-stated); (6) residual-signal history (2b/2c + draw-stability, both directions of the
-2b collapse); (7) bounded conclusion; (8) limitations.
+1. **The research question** depends on the two-dimension (coverage/framing) concept.
+2. **The framework** (§2.2) depends on the bibliometric review (§2.1) and the theory literature (§2.3). Order is fine.
+3. **The gap metrics** depend on the classifier and embeddings. Fine.
+4. **The adjusted (primary) gap** depends on the INLP decomposition (§3.8), which in turn depends on the *register concept* (§2.4 — Biber) **and** on the reader trusting the decomposition. The trust evidence is in Appendix G, placed after Results.
+5. **The cancellation claim** (the paper's headline) depends on: (a) the H1a–H1d hypotheses, (b) the decomposition, (c) n=17 power analysis. Two of these three (hypotheses and decomposition) are introduced *after* the measurement machinery, and the third (power) is disclosed only when the result is borderline.
+6. **Discussion claims** depend on the adjusted gap being accepted as valid and on the robustness grid. The robustness grid depends on Appendix I, whose conclusions are pre-stated in §4.4.
+7. **The conclusion** depends on the framework (§2.2), the adjusted gap, and the cancellation — i.e., the conclusion is the only place that restates the *whole* argument, which is more than a summary should need to do if the argument had been cumulative.
 
-**Caveat timing.** The two-sample rebuild caveat is currently in Limitations (line 764,
-fourth item) but is *design-critical* and should appear where the samples are
-introduced. The "two −0.197s" caution, by contrast, is correctly placed late (it is a
-bookkeeping note).
+## Ordering violations
 
-**Overall:** the current text is already good and honest; the defects are (a) one
-overstated feature-direction claim, (b) a too-strong final sentence, (c) three wording
-inaccuracies ("independent sample", "no leakage", selectivity sample), and (d)
-structural timing of the mega-doc disclosure and the register-only evidence.
-
----
-
-## Phase 3 — Main manuscript consistency
-
-The rewiring (`:280, :374, :393, :478, :489`) is **accurate and, if anything, more
-conservative than Appendix G's own conclusion**. No sentence contradicts the appendix.
-Specific findings:
-
-- **Line 280** (Methodology): "substantial reduction of the corpus-level signal … but
-  not its complete elimination, and no robust evidence that topic is being
-  systematically removed" — **accurate**, matches Appendix G.
-- **Lines 283 & 348**: "the adjusted space merges them, **confirming** that the
-  separation is driven by register rather than topic." **Mild overclaim** — the
-  appendix shows partial confirmation with residual signal; "consistent with" is the
-  defensible word. The PCA figure is a 2-component visualisation; the 768-D result
-  leaves adjusted accuracy above chance.
-- **Lines 374 & 393** (table notes): "(primary estimate; evaluated in Appendix G)" —
-  **accurate**.
-- **Line 478** (Limitations, Register effects): "substantially reduces … does not
-  eliminate … no robust evidence topic removed … rests on **partial, not complete,
-  empirical support**" — **accurate and well-calibrated**; slightly *stronger* as a
-  hedge than the appendix's own conclusion, creating the C12 tension.
-- **Line 489** (Conclusion): "register interpretation is evaluated against independent
-  linguistic register markers" — **accurate**.
-- **Lines 695 & 702** (Appendix D): "no further linear register separation was
-  detectable" / "the first 15 orthogonal directions capture the bulk of the **register
-  signal**" — pre-existing; "register signal" is now slightly ahead of Appendix G's
-  evidence. Low priority but worth a one-word tightening to "corpus signal."
-
-No remaining "unvalidated"/"left to future work" wording survives (`grep` confirms);
-the four original line numbers cited in the verification report (§4) were all rewired
-correctly.
-
-**Verdict:** the main text is consistent and appropriately hedged. One softening
-("confirming" → "consistent with") is recommended at lines 283/348; the appendix
-conclusion should be brought down to the main text's level rather than vice versa.
+| # | Violation | Evidence |
+|---|---|---|
+| V1 | **Methods explained before their motivation.** H1a–H1d (the study's only formal hypotheses) are introduced in Methodology §3.9, *after* all instruments are built. The literature review's "Research Gap" (§2.5) ends without deriving them; the intro's RQ is never decomposed into testable hypotheses. The reader is asked to accept the gap metrics before being told the questions they answer. | §3.9 (lines 285–287); §2.5 (lines 166–168) |
+| V2 | **Validity evidence provided after the claim it supports.** The adjusted gap is declared "the primary estimate" in Results §4.2–4.3 and is the basis of the Discussion/Conclusion, but the independent evidence that the removed subspace is really *register* (Appendix G) appears only after the reader has accepted the adjusted gap. G itself concludes the support is partial, not confirmatory. | §4.2 (line 344), G conclusion (line 767–769) |
+| V3 | **Hypotheses inserted where an analysis plan belongs.** §3.9 is titled "Coverage–Semantic Interaction" — it is really the hypotheses + estimation plan, and its correct home is the end of the literature review or a dedicated "Conceptual framework and hypotheses" chapter. | §3.9 (lines 285–287) |
+| V4 | **Concepts introduced after they are already load-bearing.** "Register" is defined in §2.4 and operationalised in §3.8, which is chronologically correct; but the *register-vs-topic decomposition* as the paper's central analytical move is never foreshadowed in the intro's roadmap, and the reader meets it as a method, not as the contribution. | Intro roadmap (line 115) vs. §3.8 |
+| V5 | **Robustness defenses embedded before the quantities they defend exist.** §3.1 (research corpus) and §3.5 (classifier) contain multi-sentence "this asymmetry does not threaten the findings" defenses that forward-reference appendices the reader has not been motivated to care about. These are answers to objections the reader has not yet had. | §3.1 (lines 180–182), §3.5 (line 226) |
+| V6 | **Pipeline summary placed at the end of the methods.** §3.10 summarises a pipeline the reader has just finished reading. A summary of the design belongs at the *start* of Methodology as an orientation. | §3.10 (lines 289–291) |
+| V7 | **Distributional-robustness motivation appears after its contradiction.** Appendix C.2 explains "why the raw robustness result does not carry over" — i.e., the metric battery was added only after the register decomposition broke an earlier-looking raw robustness result. The reader encounters the fix before the problem is stated. | C.2 (lines 599–604) |
 
 ---
 
-## Phase 4 — Writing plan for Appendix G (no rewriting performed)
+# Phase 3 — "Patchwork detection"
 
-**Overall calibration target:** make the appendix's final claim match the main text's
-"partial, not complete, empirical support," and make every sample-dependent number
-carry its sample label.
+## A. Methods introduced too late
 
-### Proposed section structure
+### A1. INLP register adjustment is the paper's central method but arrives as one subsection among nine, with its validation in the appendix — HIGH severity
+The paper's entire distinctiveness — the topic/register decomposition that produces the adjusted primary gap and the "cancellation" — is the INLP procedure. Yet structurally it is presented as a routine sub-step of the semantic-gap measurement (§3.8), the hypotheses it serves come after it (§3.9), and the evidence that it does what it claims is exiled to Appendix G, whose own conclusion is "consistent with the validation evidence rather than confirmed by it" (line 769). A method that the conclusion, abstract, and title-adjacent framing all rest on cannot have its warrant parked in an appendix that ends in "not confirmed."
+**Why it feels wrong:** the abstract leads with the framework; the *mechanism* is back-loaded; the *trust* is further back-loaded.
+**Fix:** either (a) foreground the decomposition: make "measuring topic and register separately" the stated objective from the intro, present the adjusted gap as the primary outcome in Results with a one-paragraph main-text summary of the G validation, and keep G as full detail; or (b) demote the cancellation to a secondary result and let the framework be the headline (see Phase 4).
 
-1. **Purpose and scope** (1 paragraph)
-   - Key message: the structural argument guarantees *what* is removed (corpus-separable
-     linear signal) but not *that it is register*; this appendix tests the
-     interpretation against independent surface-linguistic markers, with honest limits
-     (MPNet, n=408, single operationalisation). State the two things it can establish
-     and the one it cannot (it cannot prove the removed subspace *is* the surface
-     register).
+### A2. Robustness grid reads as reviewer-driven additions — MEDIUM
+§4.4 plus Appendices C, D, F, H, I, J are a wall of robustness: encoder sensitivity, cross-sensitivity, sample stability, balanced subsets, concept retrieval, distributional metrics, pooled regressions, assignment-method comparisons. Each is defensible; *together* they say "this finding needed a lot of defending." Appendix H's "Advisor review flagged..." (line 798) is the smoking gun.
+**Why it feels wrong:** a designed study chooses its sensitivity axes up front and reports them once, with a single synthesis. Here the axes accumulated, and §4.4 must supply the synthesis (§5.2 re-supplies it, and limitations §5.4 re-supplies it again).
+**Fix:** consolidate the robustness story into one Results section with one synthesis paragraph; move raw tables to a single "Robustness and sensitivity" appendix; delete the meta-commentary (below).
 
-2. **Register score and samples** (2 paragraphs + the mega-doc audit moved here)
-   - **Move the "Two sample constructions" content up** so the mega-doc contamination
-     precedes any feature claim.
-   - Key messages: (a) six Biber-style features, PC1 pooled score (report variance
-     share 22% and, if available, the loadings or at least note the orientation
-     convention explicitly as a convention, not as "formality"); (b) the original
-     per-SDG-dedup sample is contaminated by 7 flagship documents (25 segments, 15/17
-     SDGs) which are register outliers and cluster in embedding space; (c) the
-     one-per-parent rebuild is the primary design — and *say it is a rebuild whose
-     replacements are systematically national-monitoring reports* (composition shift
-     caveat here, not only in Limitations).
-   - **Reword the feature-direction claim**: report deontic/hedge/passive as robust
-     across samples, and either drop or explicitly qualify the sentence-length
-     direction (it reverses on the clean sample; the 276.9-word figure is extraction
-     junk).
+### A3. Zero-shot nearest-centroid is a vestigial method — LOW severity but a visible seam
+The zero-shot method is scoped out of the paper's own claims (MPNet-only, one comparison, Appendix I.4) and its AGENTS.md status is explicitly "do not re-add." In the dissertation it appears in §4.4, Appendix I.4, and limitations §5.4. A method kept only to prove it was tried is developmental residue.
+**Fix:** either cut it entirely, or state in §4.4 that a single supervised-vs-unsupervised assignment comparison was run as a boundary check and leave one appendix row.
 
-3. **Corpus discrimination before and after removal** (Table 1 + 2–3 sentences)
-   - Key messages: raw ~0.94 → adjusted ~0.60 (one-per-parent; significantly above
-     chance, CI given), the "collapse to chance" reading is corrected (holds only for
-     the mega-contaminated sample; mega-exclusion reproduces most of the 0.505→0.603
-     rise).
-   - **Add prose on the register-only rows** (0.456/0.544): the six features alone
-     barely distinguish the corpora — this both corroborates that the corpora differ
-     in register-like ways and bounds the claim (the removed subspace is far richer
-     than six surface proxies).
-   - **Fix the table note**: "no leakage" holds for the one-per-parent sample; qualify
-     for the original sample (document twins straddle folds).
+## B. Concepts introduced in the wrong chapter
 
-4. **Topic is not measurably removed** (Table 2 + 1–2 sentences)
-   - Key message: LR/kNN selectivity essentially unchanged; **state the sample used
-     (original/draw-1)** and note it was not re-run on the one-per-parent sample.
+### B1. The register concept is introduced as a caution (§2.4) and a method (§3.8), but its interpretative payoff is only established in Discussion — MEDIUM
+§2.4 correctly motivates register (Biber, "embedding distance mixes topic, register, and contextual convention"). But the *decomposition into topic vs. register* — the move that makes the cancellation possible — is first presented as machinery. Its full interpretative weight ("a structural difference between knowledge systems", §5.1) only lands in Discussion, three chapters after the reader first needed to know that "register" was going to be the load-bearing analytical object.
+**Fix:** state in §2.4 (or the framework §2.2) that the study will not merely flag register but *measure and remove it*, so the method in §3.8 is an anticipated plan, not a surprise.
 
-5. **The apparent residual-register signals did not survive controlled samples**
-   (the honest history)
-   - Report 2b and 2c on both samples (numbers unchanged). **Acknowledge both
-     consequences** of the clean-sample collapse: the original "residual register" red
-     flag was a clustering artefact, *and* the positive link between removed magnitude
-     and the surface features also disappeared — so the direct surface-linguistic
-     corroboration of the removed subspace is weaker than the original sample
-     suggested.
-   - Report the draw-stability results and the −0.197 trace, **correcting "independent
-     sample" to "independent re-run of the same sample"** and noting the mega-exclusion
-     outcome is draw-specific (draws 1/2 give +0.127/−0.138; draw 3 gives −0.213).
-     State plainly why INLP's chance-level stopping rule is compatible with 0.603 on
-     fresh samples (convergence is on the training distribution).
+### B2. Limitations arrive in Discussion but are already being defended in Methodology — LOW
+§3.1 and §3.5 contain inline "the asymmetry does not threaten the findings" defenses, while the formal limitations are §5.4. The reader gets the answer twice, in the wrong order: the defense precedes the objection.
+**Fix:** strip the defensive paragraphs from §3.1/§3.5 to their factual content, and let §5.4 carry the adjudication. (This also shortens the methods chapter.)
 
-6. **What this validation supports** (short synthesis, replaces the current
-   "Conclusion")
-   - Four numbered claims, kept at the evidence level: (i) substantial corpus-separable
-     signal removed; (ii) removal incomplete; (iii) no robust evidence of topic
-     removal; (iv) apparent residual traces attributable to clustering/draw noise.
-     **Final sentence calibrated to the main text**: the register interpretation is
-     *consistent with* the evidence and *partially* supported, with the residual corpus
-     signal and the operationalisation limits explicitly bounding it. Remove "empirically
-     supported for the dominant corpus-level component."
+### B3. Appendix C.3, "Implications for Interpreting the Main Estimates," is a Discussion chapter inside an appendix — MEDIUM
+Appendix C.3 (lines 608–612) re-litigates the classifier choice ("these diagnostics are methodological stress tests... not failed repairs"; "the hard-threshold classifier assignment is therefore retained"). This is the voice of an author arguing with their own robustness work, and it is material that belongs either in Methodology's design rationale or in Discussion — not in an appendix.
+**Fix:** move the substance to §3.5 (design rationale) or §5.4 (limitations); delete the appendix subsection.
 
-7. **Limitations** (as now, lightly tightened)
-   - Keep all six items; add the clean-sample sentence-length reversal and the
-     residual-signal-unidentified point; keep the "two −0.197s" bookkeeping note.
+## C. Results that feel detached
 
-**Where the strongest evidence lives:** corpus discrimination (sec. 3), selectivity
-(sec. 4), and the honest failure history (sec. 5) are the load-bearing results.
-**Where the overclaim is removed:** sec. 2 (sentence-length direction) and sec. 6
-(final sentence). **Where the conclusion ends:** with the bounded sentence in sec. 6,
-immediately before Limitations — no new numbers after the synthesis.
+### C1. The cancellation is reported before the reader is equipped to evaluate it — HIGH
+The near-zero raw correlation, the decomposition, the SDG 17/13 inversion, and the borderline p-values (0.054 / 0.045) are previewed in the abstract (line 92) and the intro (line 113) *before* the reader has seen either the raw gap or the INLP procedure. Then §4.3 presents the cancellation as a finding. The structure reverses the epistemic order: the claim precedes the machinery the reader needs to judge it.
+**Fix:** remove the p-value preview from the intro (the abstract may keep one sentence); let §4.2–4.3 deliver raw gap → decomposition → cancellation in order.
+
+### C2. The SDG 4 lexical artefact — the single most consequential data caveat — is relegated to an appendix — HIGH
+The SDG 4 audit (Appendix B.1) qualifies one of the paper's own headline coverage results (SDG 4's inflated third-place rank, which contradicts prior bibliometrics). The main text flags it repeatedly (lines 330, 336, 377, 404), but the actual analysis is in an appendix. A caveat that must be cited four times is a main-text element.
+**Fix:** promote a compact SDG-4 paragraph to Results §4.1 (with the audit table retained in the appendix), so the reader sees the caveat where the claim is made.
+
+### C3. Multiple appendix sections are process diaries, not supporting material — MEDIUM
+- A.3 "Truncation Fix": documents a mid-development bug ("a truncation issue was discovered and corrected"). This is a git log entry, not a scientific appendix. One sentence ("segmentation enforces the encoder's token budget; truncation was verified at ≤x%") suffices.
+- C.2 "Why the raw robustness result does not carry over": narrates the contradiction discovered when robustness metrics were added after register removal.
+- F.1 duplicates §4.2's SDG 17 register-component story verbatim (lines 366 vs. 697).
+- G.5 "residual register diagnostics and robustness investigation": explicitly "reports the robustness investigation as it unfolded" and "This history is reported deliberately" (lines 756, 762). The *history* of an analysis is not evidence.
+**Fix:** compress A.3 to a sentence; cut F.1's narrative duplication to a pointer to §4.2; convert G.5 from investigation-narrative to results ("draw-stability and clustering checks show the apparent residual signals are not stable"); delete C.3.
+
+### C4. The "possible cancellation" is an inductive result carrying the paper's weight — HIGH
+Read honestly, the empirical arc is: H1a on the raw gap is null → the author decomposes the gap → a borderline (n=17) two-signal cancellation emerges → this tentative finding becomes the paper's headline, the Discussion's centerpiece, and the Conclusion's first paragraph. Structurally, the paper has *built a cathedral on a p=0.054 finding whose mechanism is only partially validated*. That is the single largest architectural risk: the framing makes the reader believe the whole apparatus exists to establish the cancellation, and then the numbers are honest enough to admit it is tentative.
+**Fix:** re-weight the paper so the *framework + measurement protocol* is the thesis (robust, replicable, portable), and the cancellation is "a first application suggests..." — the Discussion already says this ("The framework is the main contribution; the alignment findings are a first application," line 439); the *structure* must be made to agree with that sentence. The intro and abstract should not preview the cancellation as the headline.
 
 ---
 
-## Bottom line
+# Phase 4 — Publication-level restructuring
 
-The validation work is scientifically sound and exceptionally honest — Report 1 →
-Follow-up 1 → Follow-up 2 is a model of self-correction, and the verification work
-(61 acceptance gates, byte-identical re-runs) makes the numbers trustworthy. Appendix G
-as written is good but slightly overstates its central claim in two places (the
-"markedly longer sentences" corpus direction and the final "empirically supported"
-sentence), contains three wording inaccuracies an examiner could exploit ("independent
-sample", "no leakage", unstated selectivity sample), and buries its most important
-bounding evidence (the register-only classifier) in a table. The main text is
-consistent with the evidence and if anything more conservative than the appendix. The
-Phase-4 plan above preserves every number while recalibrating the claims to what the
-evidence actually supports.
+No content is rewritten; the proposal is order, composition, and naming.
+
+## 4.1 Ideal chapter structure
+
+1. **Introduction** — RQ; the two-dimension claim; the register problem stated as part of the research problem (not a discovery); roadmap. No p-value preview.
+2. **Literature Review** — §2.1 bibliometrics; §2.2 three-level framework; §2.3 theory of divergence; §2.4 semantic methods **including a forward statement that the study will decompose topic vs. register**; §2.5 research gap **ending in the explicit hypotheses H1a–H1d**.
+3. **Methodology**
+   - *3.0 Pipeline overview* (move §3.10's figure here, at the start)
+   - Research corpus / Policy corpus (facts only; defenses moved to Limitations)
+   - Reference data and supervised classifier
+   - Embedding, normalisation, segmentation
+   - Measurement: coverage gap; semantic gap
+   - Register decomposition (INLP) — same content, now presented as *the* measurement instrument, with a one-paragraph validity summary (moved from G)
+   - Analysis plan: the H1a–H1d operationalisation (now that hypotheses already exist in §2.5)
+4. **Results**
+   - 4.1 Classifier validation → coverage profiles (incl. the promoted SDG-4 paragraph)
+   - 4.2 Semantic gaps: raw and adjusted; register decomposition explains the inversion
+   - 4.3 Interaction: the cancellation, stated as *the* test of H1a–H1d
+   - 4.4 Robustness (single consolidated section with one synthesis)
+5. **Discussion** — two interpretive subsections (dimensions; robust patterns), implications, limitations. Trim result-repetition.
+6. **Conclusion**
+7. **Appendices** — regrouped (below).
+
+## 4.2 Moves
+
+- **Merge:** Appendix G's *conclusion* into §3.8 (one paragraph); Appendix C.3 into §5.4; Appendix F.1's narrative into §4.2; the three robustness appendices (C, I) into one "Robustness and sensitivity" appendix; D's balanced-subset into D's main flow.
+- **Move:** the hypotheses from §3.9 to the end of the literature review; the pipeline figure from §3.10 to the opening of Methodology; the SDG-4 analysis into Results.
+- **Cut/compress:** Appendix A.3 to one sentence; zero-shot (A3) to a single boundary-check sentence; §5.1/§5.2 result-repetition.
+- **Rename:**
+  - §3.9 "Coverage–Semantic Interaction" → "Hypotheses and Analysis Plan"
+  - §4.1 "Supervised Reference Classifier and Coverage Gap" → "Classifier Validation and Coverage Profiles"
+  - Appendix I "Supplementary Cross-Method Data" → "Cross-Method Robustness Data"
+  - Appendix G title is fine; its §5 should be renamed from "residual register diagnostics and robustness investigation" to something result-shaped.
+
+## 4.3 Principle applied
+
+Every section exists because the reader needs it at that point: hypotheses before instruments (so the instruments answer questions), trust evidence before the primary estimate (so the estimate is credible), caveats where the claims are made (so the reader isn't re-reading after being surprised), robustness once (so it reads as design, not defense).
+
+---
+
+# Phase 5 — Specific ToC audit
+
+Rating scale: **E** essential · **UM** useful but misplaced · **R** redundant · **U** unclear
+
+## Abstract / front matter
+| Item | Rating | Note |
+|---|---|---|
+| Abstract | E | Dense to the point of being a results summary; fine for a dissertation, but the cancellation is over-weighted relative to the framework that is the actual contribution. |
+| Intro roadmap | E | "Sections X and Y report findings and interpretation" is boilerplate; it does not telegraph the register decomposition, the paper's actual center of gravity. **U**-adjacent. |
+
+## Literature Review
+| Item | Rating | Note |
+|---|---|---|
+| 2.1 Bibliometrics | E | Anchors the field; correctly shows SDG 3 lead. |
+| 2.2 Three-level framework | E | Best-executed section; the paper's spine. |
+| 2.3 Theory of divergence | E | Motivated. |
+| 2.4 Semantic methods | E | Correctly introduces register — but should commit to decomposing it (B1). |
+| 2.5 Research gap | UM | Stops before its logical endpoint: the hypotheses. **UM** — should end with H1a–H1d. |
+
+## Methodology
+| Item | Rating | Note |
+|---|---|---|
+| 3.1 Research corpus | E | Facts fine; the asymmetry *defense* is misplaced (B2). |
+| 3.2 Policy corpus | E | |
+| 3.3 Embedding model | E | |
+| 3.4 Segmentation | E | |
+| 3.5 Supervised classifier | E | Contains an over-long "probability gap" defense; trim. |
+| 3.6 Coverage gap | E | Order is: problem → measurement → adjustment → estimation? Not quite. The gap metrics (3.6/3.7) come before the hypotheses (3.9) they serve, and the decomposition (3.8) precedes the question that needs it. The methodology follows *implementation order*, not argument order. |
+| 3.7 Semantic gap | E | |
+| 3.8 Register adjustment (INLP) | E but **UM** in presentation | The paper's central instrument appears as a routine sub-step; its validation summary is missing here (V2). |
+| 3.9 Coverage–semantic interaction | **UM** | A hypotheses + analysis-plan section living at the end of Methods (V3). |
+| 3.10 Methodology summary | **UM** | A pipeline overview placed after the pipeline is described (V6). |
+
+## Results
+| Item | Rating | Note |
+|---|---|---|
+| 4.1 Classifier + coverage | E | Correct: instrument → coverage. But heading merges two distinct results, and the SDG-4 caveat lives in the appendix (C2). |
+| 4.2 Semantic gap after register removal | E | Correct sequence within the section (PCA → gap → decomposition). The PCA figure leads; the gap figure follows — defensible. |
+| 4.3 Cancellation | E but **UM**-adjacent | The section is where the H1 hypotheses are *actually* tested — they should already exist (V1/V3). "A Possible Cancellation" as a heading signals inductive discovery. |
+| 4.4 Robustness | E but **UM** | Correct placement (after findings), but it is a catalog; the synthesis paragraph does heavy lifting that the appendices should have shared. |
+
+Results order verdict: main finding → interpretation → robustness is *mostly* honored, but the paper's true main finding (cancellation) is not framed as the pre-planned test of H1; it reads as "whatever was computed first" because the hypotheses arrived last.
+
+## Discussion
+| Item | Rating | Note |
+|---|---|---|
+| 5.1 Two distinct dimensions | E | Interprets; but re-states the cancellation numbers from §4.3. Trim to interpretation. |
+| 5.2 Robust patterns | **UM** | A second robustness digest (repeats §4.4). Should be folded into 5.1 or trimmed. |
+| 5.3 Implications | E | Genuinely new content. |
+| 5.4 Limitations | E | Strong; but duplicates defenses already embedded in §3.1/§3.5 (B2). |
+
+## Conclusion
+| Item | Rating | Note |
+|---|---|---|
+| Conclusion | E | Correctly identifies the framework as the contribution; the opening paragraph re-states the cancellation at length — fine, but it exposes that the body never gave the framework the same prominence. |
+
+## Appendices
+| Item | Rating | Note |
+|---|---|---|
+| A.1 Retrieval/query | E | Supports methods. |
+| A.2 Segmentation mechanics | E | |
+| A.3 Truncation fix | **R** | Debugging diary. One sentence belongs in A.2. |
+| A.4 Reference provenance | E | |
+| B.1 SDG 4 audit | E but **UM** | Load-bearing caveat in an appendix (C2). |
+| B.2 Centroid similarity | E | Supports classifier section. |
+| C.1 Lexical illustration | E | Concrete, interpretable. |
+| C.2 Distance-functional robustness | E but **UM** | The "why raw robustness doesn't carry over" narrative is process-history (C3). |
+| C.3 Implications for interpreting main estimates | **R** | A discussion inside the appendix (B3). |
+| D Sample stability (+ balanced subset) | E | Legitimate design check. The balanced-subset block is a floating paragraph with a stray `\label` mid-appendage — tidiness issue. |
+| E Model selection | E | Supports §3.5/§4.1; a bit long (MLP grid detail is beyond need). |
+| F Register convergence | E but **UM** | F.1 duplicates §4.2's SDG 17 narrative (C3); convergence table is the real content. |
+| G Register validation | E content, **U** framing | *The* trust evidence for the primary estimate, after the fact; its own conclusion is "consistent with rather than confirmed" and its §5 is a research narrative. Must either be integrated into the argument's flow or explicitly framed as secondary support. |
+| H Concept-retrieval sensitivity | E | Legitimate; the "advisor review flagged" opening is a time-stamp (A2). |
+| I Supplementary cross-method data | E | The values/rank tables are needed; the *prose* subsections (I.4, I.5) narrate troubleshooting. |
+| J Pooled regression | E | Supports the cancellation. |
+| K Declaration of AI use | E | Compliance. |
+
+---
+
+# Phase 6 — Final verdict
+
+## 1. Overall architectural grade
+
+**Strong dissertation but needs restructuring** — one step below publication-level, and closer to it than to "visibly developmental" in the *main text*, but clearly developmental in the *appendix architecture* and in the *rhetorical weight given to the discovered cancellation*.
+
+The main text's skeleton is defensible and well-written. What holds it back from publication-level is not prose: it is that (a) the paper's actual contribution (the topic/register measurement protocol) and its actual headline (the tentative cancellation) are out of proportion with each other; (b) the trust evidence for the primary estimate lives in an appendix whose own conclusion is "not confirmed"; (c) the hypotheses arrive after the instruments; and (d) eleven appendices containing multiple process diaries make the development history visible.
+
+## 2. The three highest-impact structural changes
+
+1. **Re-weight the thesis around the measurement framework, and demote the cancellation to a first-application result.** Make the intro, abstract, and conclusion agree with the Discussion's own sentence: "The framework is the main contribution; the alignment findings are a first application" (line 439). The cancellation stays — but as *suggestive evidence that the decomposition is useful*, not as the headline it is currently previewed as in the abstract and intro. This single move removes the paper's largest credibility risk (a tentative p≈0.05 finding carrying the whole load) and makes the structure match the science.
+2. **Move the hypotheses (H1a–H1d) to the end of the literature review and the pipeline overview to the start of Methodology.** This converts the ordering violations V1, V3, V6 into a designed arc: question → instruments built to answer it → results as the test of the question.
+3. **Bring the register decomposition's warrant into the argument's flow.** Put a one-paragraph validity summary (from Appendix G) into §3.8 or §4.2, promote the SDG-4 caveat into Results, and compress the process-history appendices (A.3, C.2, C.3, F.1, G.5's narrative) so the appendices read as supporting *evidence* rather than a debugging diary. This removes the visible "patched things together" fingerprints.
+
+## 3. The three things that should NOT be changed
+
+1. **The three-level framework (§2.2) and the coverage/framing decomposition as the organizing concepts.** This is the single best-designed element: it motivates the data, the metrics, and the interpretation in one clean stroke. Do not touch it.
+2. **The results arc — instrument validation → coverage → semantic gap → interaction → robustness.** Within each section the internal order (establish the measure, report the gap, decompose, then stress-test) is correct and cumulative. Keep it.
+3. **The raw/adjusted panel convention and the "primary estimate vs. baseline" labeling discipline in the rank tables.** The consistent Panel (a) adjusted / Panel (b) raw structure across every robustness table, and the cross-sensitivity grid as a template for bounding uncertainty, are genuinely publication-grade. Keep this machinery exactly as it is; it is the strongest evidence that the author can do top-tier empirical work.
+
+---
+
+**Bottom line.** The science is strong and honestly reported. The architecture is a good first study with a second study inserted, and the current structure lets the reader see the insertion. Restructure to let the measurement framework — which is the real contribution and is already well-built — be the spine, and the dissertation will read as one designed argument rather than an honest but visible development history. The single most important sentence already exists in the manuscript at line 439; the structure should be made to say it first.
