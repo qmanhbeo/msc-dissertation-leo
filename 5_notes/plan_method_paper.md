@@ -1,7 +1,7 @@
 # Plan: Method-led framing pass + Appendix G second-encoder strengthening
 
 Status: rough plan (2026-08-05). No code or framing changes made yet — this
-document is the intent + feasibility map. Reference: `report.md` (architecture
+document is the intent + feasibility map. Reference: `5_notes/report_editorial_suggestions_ignore.md` (architecture
 verification audit) and the PI consensus in that thread.
 
 ---

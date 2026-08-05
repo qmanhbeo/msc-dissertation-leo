@@ -17,7 +17,7 @@ Scope (deliberately narrow)
 ---------------------------
 This is the verified promotion of the scratch diagnostic line
 (5_notes/scratch/register_validation_{check,followup,followup2}.py). It
-reproduces exactly the reconciled final numbers in report.md §2.2 (the
+reproduces exactly the reconciled final numbers in `5_notes/report_editorial_suggestions_ignore.md` §2.2 (the
 acceptance-gate block at the end of the run verifies each one; any mismatch
 fails the run). It does NOT scale the sample, change statistics, or resolve
 the open operationalization question (PC1 vs a-priori z-sum register score).
@@ -525,7 +525,7 @@ def _fmt_p(p: float) -> str:
 
 def check_gates(checks: list[tuple[str, bool, str]]) -> None:
     print("\n" + "=" * 70)
-    print("ACCEPTANCE GATE (targets: report.md section 2.2)")
+    print("ACCEPTANCE GATE (targets: `5_notes/report_editorial_suggestions_ignore.md` section 2.2)")
     print("=" * 70)
     n_fail = 0
     for label, ok, detail in checks:
@@ -1120,7 +1120,7 @@ def compute_diagnostics() -> tuple[dict, list[dict], list[tuple[str, bool, str]]
         "register_score_operationalization": (
             "PC1 of the six standardised features, oriented so that correlation with "
             "mean_sent_len is positive. (An alternative a-priori z-sum operationalization "
-            "was not adopted; see report.md section 2.4 item 1.)"
+            "was not adopted; see `5_notes/report_editorial_suggestions_ignore.md` section 2.4 item 1.)"
         ),
         "item1_sample_construction": {
             "orig_2A": {"n": len(recs_a), "distinct_parents": len(parents_a),
