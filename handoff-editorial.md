@@ -19,7 +19,8 @@ Timeline of the pass:
   grammar) — DONE, committed + pushed earlier (commits `92ac826`, `91cf7ac`, `b006d36`,
   `75b82f3`).
 - **Sibling audit (S1–S6)** — ran, verified, planned, approved (S4, S5 explicitly via
-  the Question tool) but NOT yet applied. A first handoff (`handoff-editorial.md`) was
+  the Question tool). Applied via Commit-2 (`db64e99`) and the ladder prose Commit-1
+  Step D (`6d5206d`); see §4. A first handoff (`handoff-editorial.md`) was
   written; `handoff.md` was later removed by the repo owner (commit `dbafc56`).
 - **Sample-stability ladder investigation.** The user asked to check whether the ladder
   code/output is current, asserting "it can't be that far (>0.002) off". The check proved
@@ -28,8 +29,8 @@ Timeline of the pass:
   **paper-weight the tiers** (code fix + re-run). **DONE and pushed as `aff6c28`** —
   tiers now converge to the anchor (2m tier gap 0.33951 vs anchor 0.339543; bias 0.121894
   vs 0.121904); c1 re-derived. Commit-1 Step D prose (§6 Commit-1 Step D: tex lines
-  519/619/631 unit labels) was intentionally left out of `aff6c28` and is **still pending**
-  (§4).
+  519/619/631 unit labels) was intentionally left out of `aff6c28` and is **now DONE and
+  pushed as `6d5206d`**.
 - **Zero-shot (ZS) research-weighting sibling bug (handoff-research-weight.md).** Audit
   found `score_zeroshot.py` still accumulated research counts/centroids/cohesion per
   segment row (n_papers summed to 3,105,144 = segments) while LR/MLP rows in the same
@@ -42,8 +43,10 @@ Timeline of the pass:
   (67.3/59.5/81.5/81.4/76.3/79.9). `handoff-research-weight.md` has since been removed
   (its §4.2 cross-referenced this file's Commit-2 items, which remain here).
 
-Current `git status`: clean. HEAD = `4ec340d`. The only outstanding editorial work is
-Commit-1 Step D prose + Commit 2 (both §6 below).
+Current `git status`: clean. HEAD = `db64e99`. The outstanding editorial work described
+below is now DONE (Commit-1 Step D prose + Commit 2 both landed and pushed); this handoff
+is retained for provenance and to flag the two verified-revision details (the three
+persisted i1 policy figures in §2.5, and the SDG8/SDG9 Δ=8 tie in the 868 prose).
 
 Workflow conventions observed: plan-then-approve; one concern per commit; never commit
 unless asked; leave unrelated dirty files unstaged.
@@ -107,7 +110,8 @@ mismatch introduced by the paper-weighting refactor. This is now FIXED (`aff6c28
 | **full corpus (anchor)** | **0.339543** | **0.121904** |
 
 Tiers now converge upward into the anchor within ~0.001–0.002; c1 `\SubsetGapRho*` now
-0.527 (1k) → 1.000 (2m). **Commit-1 Step D prose (tex 519/619/631) is still pending.**
+0.527 (1k) → 1.000 (2m). **Commit-1 Step D prose (tex 519/619/631) is now DONE and
+pushed as `6d5206d`.**
 
 Root cause (historical, for context):
 1. **Tier rows** (`1_code/7_main_analysis/2_appendix/c_sample_stability.py`,
@@ -166,9 +170,11 @@ ladder automatically changes c1's inputs; c1 must be re-run and its macros re-ve
 - **Recomputed read-only** from committed npys via `doc_level_assignments`
   (`1_code/7_main_analysis/0_shared/semantic_gap_shared.py`): policy doc-level LR-vs-ZS =
   **81.4%** (n_docs 6,367); policy segment MLP-vs-ZS = **76.3%**; policy doc-level MLP-vs-ZS
-  = **79.9%**. These three are NOT persisted in any committed json — re-run the i1 script
-  to reconfirm before writing prose (§6 Commit-2 Step B). Agreement rates are unchanged
-  by the ZS fix (they are per-segment computations); only `gap_rank_*` changed.
+  = **79.9%**. These three ARE persisted in the committed
+  `data/assignment_method_comparison.json` (`policy_lr_vs_zs.document`,
+  `policy_mlp_vs_zs.segment`, `policy_mlp_vs_zs.document`) — cite directly; no re-run
+  needed to confirm them. Agreement rates are unchanged by the ZS fix (they are
+  per-segment computations); only `gap_rank_*` changed.
 
 ### 2.6 Git archaeology explaining I.1 prose staleness (unchanged from prior handoff)
 - Appendix I.1 table was regenerated 2026-08-05 in commit `8718d02` — **after** the prose
@@ -207,36 +213,45 @@ ladder automatically changes c1's inputs; c1 must be re-run and its macros re-ve
 ### After the original handoff (landed while the repo was on `dbafc56`)
 | Commit | What | Notes |
 |---|---|---|
-| `aff6c28` | **Ladder paper-weighting fix** (Commit-1 Steps A–C): `c_sample_stability.py` `accumulate_draws` paper-weighted via `paper_units_from_shard`, draw-cache schema v3, `SCRIPT_VERSION` 1→2; ladder + c1 re-run. | Prose Step D (tex 519/619/631) intentionally left out — still pending (§4). |
+| `aff6c28` | **Ladder paper-weighting fix** (Commit-1 Steps A–C): `c_sample_stability.py` `accumulate_draws` paper-weighted via `paper_units_from_shard`, draw-cache schema v3, `SCRIPT_VERSION` 1→2; ladder + c1 re-run. | Prose Step D (tex 519/619/631) later done in `6d5206d` (§4). |
 | `4ec340d` | **ZS research-weighting fix** (from `handoff-research-weight.md`): `score_zeroshot.py` paper-weighted (collapses each shard to paper units); 6 ZS routes re-run; fp fixes in `0_coverage_gap.py` + `h1_cross_method_gap_values.py`; stale docstring fixed; downstream tables (cross-sensitivity, h1, j1, k1, i1) regenerated; `dissertation.tex` rank claims updated; PDF rebuilt. | Changed I.1 rank deltas (SDG17 Δ=10→9, SDG8 Δ=9→8) and `\ZeroShotSemanticRho` 0.63→0.60 — see §2.5. |
+| `6d5206d` | **Commit-1 Step D prose**: tex 519/619/631 unit labels (`\NResearchSegments{}-segment`), 50k claim softened to "within ~0.002". | Completes Commit-1 (code already in `aff6c28`). |
+| `db64e99` | **Commit-2 I.1/macro-F1 fixes**: i1 generator header+docstring relabel (Research segments), table regenerated (only header changed), 865/868 prose updated (67.3/81.5/81.4/26.1/23.6/76.3/79.9/59.5; SDG8/SDG9 Δ=8 tie note), `macro-F1`→`macro-$F_1$` (8 sites). | Completes the sibling-audit Commit-2. |
 
 **Files changed to date in this pass:** `c_sample_stability.py`, `score_zeroshot.py`,
 `0_coverage_gap.py`, `h1_cross_method_gap_values.py`,
-`3_generate_cross_sensitivity_table.py`, `dissertation.tex` (rank claims only), and the
-regenerated `4_outputs/` tables/data. Working tree clean vs HEAD.
+`3_generate_cross_sensitivity_table.py`, `i1_assignment_method_comparison.py`,
+`dissertation.tex` (rank claims + ladder prose + I.1 prose + `macro-$F_1$`), and the
+regenerated `4_outputs/` tables/data (incl. `tab_app_assignment_method_comparison.tex`
+header relabel). Working tree clean vs HEAD.
 
 ---
 
 ## 4) What remains and why
 
-The remaining work is (a) the **Commit-1 Step D ladder prose** (unit labels at tex
+The remaining work was (a) the **Commit-1 Step D ladder prose** (unit labels at tex
 519/619/631 — deliberately excluded from `aff6c28`), and (b) the **Commit-2 I.1/`macro-F1`
 fixes** from the sibling audit. Both code fixes (ladder `aff6c28`, ZS `4ec340d`) are done;
 the prose that quotes their numbers is not. Nothing is blocked.
 
-Summary:
-1. Prose in `dissertation.tex`: S1 unit labels (519/619/631; verify the "within 0.002 at
-   50k" claim against the new macros — raw 50k-vs-2m diff is 0.00212 > 0.002, so check the
-   wording), S3 stale I.1 numbers (865/868), S4 I.1 header + generator (i1 script, line
-   ~352 + docstring ~10), S5 `macro-F1` → `macro-$F_1$`. S2 (relabel "fully converged") is
-   **mostly obsolete** — the estimator fix makes the original convergence claims
-   numerically true; re-verify the macro values instead.
-2. Rebuild PDF, verify with `pdftotext`, commit in two commits (Commit-1 Step D prose;
-   then Commit 2), push.
+**Both remaining items are now DONE and pushed** (`6d5206d` Commit-1 Step D prose,
+`db64e99` Commit-2 I.1/macro-F1 fixes). Sections 6/7 below are kept verbatim as the
+record of what was executed; do not re-run the pipeline stages.
 
-Why these remain: `aff6c28` was scoped to code + outputs so the estimator fix could be
+Summary (all now executed — see `6d5206d` and `db64e99`):
+1. Prose in `dissertation.tex`: S1 unit labels (519/619/631; 50k claim softened to
+   "within ~0.002" since raw 50k-vs-2m diff is 0.00212 > 0.002), S3 stale I.1 numbers
+   (865/868 updated to 67.3/81.5/81.4/26.1/23.6/76.3/79.9/59.5 + SDG8/SDG9 Δ=8 tie note),
+   S4 I.1 header + generator (i1 script line ~352 + docstring ~10 relabelled to segments),
+   S5 `macro-F1` → `macro-$F_1$` (8 sites). S2 (relabel "fully converged") was **obsolete**
+   — the estimator fix made the original convergence claims numerically true; the ladder
+   prose now states the verified values.
+2. PDF rebuilt, verified with `pdftotext`, committed in two commits (Commit-1 Step D
+   prose; then Commit 2), pushed.
+
+Why these remained: `aff6c28` was scoped to code + outputs so the estimator fix could be
 verified before touching prose; the ZS fix `4ec340d` landed between, updating the rank
-claims but not the stale agreement-rate numbers at 865/868.
+claims but not the stale agreement-rate numbers at 865/868. Both are now resolved.
 
 ---
 
@@ -269,12 +284,14 @@ claims but not the stale agreement-rate numbers at 865/868.
    `tmux new-session -d -s ladder "python main.py --appendix-c-sample-stability --overwrite > /tmp/ladder.log 2>&1; touch /tmp/ladder.log.DONE"`,
    poll `tmux capture-pane` / `tail` / `ls /tmp/ladder.log.DONE`. Never `setsid`/`disown`.
    (Only needed if the ladder must be regenerated — it is current as of `aff6c28`.)
-6. **Verify, don't trust — especially the three non-persisted I.1 figures** (policy
-   doc-level LR-vs-ZS ≈ 81.4%, policy MLP segment ≈ 76.3%, doc-level ≈ 79.9%). They are
-   not in any committed json; re-run the i1 script (Commit-2 Step B) and use freshly-
-   generated values in prose. Committed-table values (67.3/59.5/81.5; SDG17 26.1; SDG10
-   23.6) are safe to cite directly. Agreement rates are unchanged by the ZS fix — only
-   the `gap_rank_*` columns changed (to Δ=9/Δ=8, ranks 8/14; already reflected in tex).
+6. **Verify, don't trust — the three policy I.1 figures are now in the committed json.**
+   `policy_lr_vs_zs.document` = 81.4%, `policy_mlp_vs_zs.segment` = 76.3%,
+   `policy_mlp_vs_zs.document` = 79.9% are all persisted in
+   `data/assignment_method_comparison.json` (regenerated by `4ec340d`) and were re-run and
+   reconfirmed in Commit-2 Step B (only the header relabel changed). Committed-table values
+   (67.3/59.5/81.5; SDG17 26.1; SDG10 23.6) are safe to cite. Agreement rates are
+   unchanged by the ZS fix — only the `gap_rank_*` columns changed (to Δ=9/Δ=8, ranks
+   8/14; already reflected in tex).
 7. **Do NOT "fix" the appendix by changing research agreement to paper-level.** Research
    rows in the scored corpus are per-segment (3,105,144); the I.1 header must become
    "Research (segments)", not the numbers changed to paper counts. Coverage *profiles* in
@@ -291,11 +308,11 @@ claims but not the stale agreement-rate numbers at 865/868.
     `4_outputs/not_in_replay/distributional/mpnet/adjusted/g_distributional_gap_records.jsonl`,
     `4_outputs/conceptual_figs/fig6_pipeline_flowchart.pdf` (regenerated each `--build-pdf`).
     (At the time of writing, `git status` is clean — confirm before committing.)
-11. After regenerating the i1 table, `git diff` it and confirm the ONLY changes are the
-    header relabel ("Research (papers)" → "Research (segments)") plus the three freshly
-    reconfirmed non-persisted policy figures if they differ from 81.4/76.3/79.9. The
-    `gap_rank_*` columns are already at their post-ZS-fix values (Δ=9/Δ=8) and should NOT
-    change again. If numbers change for unknown reasons, STOP.
+11. After regenerating the i1 table, `git diff` it — DONE in Commit-2 Step B: the ONLY
+    change was the header relabel ("Research (papers)" → "Research (segments)"), confirming
+    the data JSON is deterministic (three policy figures byte-identical to the committed
+    81.4/76.3/79.9). The `gap_rank_*` columns stayed at their post-ZS-fix values (Δ=9/Δ=8)
+    as expected.
 12. Do not run `--cold-replay` or other long pipeline stages; all required artifacts exist.
 13. `c1` re-run depends on the regenerated draws JSONL; its fingerprint gate
     (`fingerprint_of(full_gap_path, draws_path) + SCRIPT_VERSION`) will re-run it once the
@@ -305,11 +322,11 @@ claims but not the stale agreement-rate numbers at 865/868.
 
 ## 6) The whole comprehensive plan
 
-Commit-1's code+outputs landed as `aff6c28`; its Step D prose is still pending. Two more
-steps remain, executed in order: **(1) Commit-1 Step D/E (ladder prose)**, **(2) Commit-2
-I.1 + macro-F1 fixes**. After each, verify before moving on.
+ALL steps of both commits are now DONE and pushed: Commit-1 code `aff6c28`, Commit-1
+Step D prose `6d5206d`, ZS fix `4ec340d`, Commit-2 `db64e99`. The plan is retained below
+verbatim as the executed record. Do not re-run any stage.
 
-### Commit 1 — Ladder paper-weighting fix (Option A) — **Steps A–C DONE (`aff6c28`); only Step D (prose) + Step E (commit) remain**
+### Commit 1 — Ladder paper-weighting fix (Option A) — **COMPLETE (`aff6c28` code+outputs; `6d5206d` Step D prose)**
 
 **Step A — Edit `1_code/7_main_analysis/2_appendix/c_sample_stability.py`:** DONE in
 `aff6c28` (paper-level `accumulate_draws`, cache schema v3, `SCRIPT_VERSION` 1→2,
@@ -356,7 +373,7 @@ Suggested message:
 fix(writing): correct sample-stability ladder unit labels + 50k precision claim (Commit-1 Step D)
 ```
 
-### Commit 2 — I.1 fixes + macro-F1 normalization (sibling audit S3/S4/S5)
+### Commit 2 — I.1 fixes + macro-F1 normalization (sibling audit S3/S4/S5) — **COMPLETE (`db64e99`)**
 
 **Step A — Fix the I.1 generator (S4):**
 `1_code/7_main_analysis/2_appendix/i1_assignment_method_comparison.py`:
@@ -417,20 +434,20 @@ Then `git push`.
 ## 7) Exactly what was interrupted
 
 The repo has moved past the original handoff's "investigation only" state. Both code
-fixes have landed and been pushed:
+fixes have landed and been pushed, AND both remaining prose fixes have now landed:
 
 - **Ladder paper-weighting fix (`aff6c28`)** — Commit-1 Steps A–C (code, ladder re-run,
-  c1 re-run, verification) are DONE. **Commit-1 Step D (prose: tex 519/619/631 unit
-  labels + the 50k precision claim) and Step E (commit of that prose + PDF) remain.**
+  c1 re-run, verification) DONE. **Commit-1 Step D prose (tex 519/619/631 unit labels +
+  the 50k precision claim) is now DONE and pushed as `6d5206d`.**
 - **ZS research-weighting fix (`4ec340d`)** — from `handoff-research-weight.md` (now
   removed). DONE: producer + fp fixes + all downstream regenerations + rank-claim prose
   + PDF. It changed the I.1 rank deltas (Δ=10→9, Δ=9→8) and `\ZeroShotSemanticRho`
-  (0.63→0.60), which the original Commit-2 Step C had called "verified correct — keep".
-- **Commit 2 (I.1 header/`macro-F1` fixes)** — NOT started. This is the remaining
-  substantive work, plus the Commit-1 Step D prose.
+  (0.63→0.60).
+- **Commit 2 (I.1 header/`macro-F1` fixes)** — DONE and pushed as `db64e99`: i1 generator
+  header/docstring relabel (segments), regenerated table (only the header changed — the
+  three policy figures were confirmed persisted in the committed JSON), 865/868 prose
+  (incl. the SDG8/SDG9 Δ=8 tie note), and `macro-$F_1$` normalization.
 
-**To resume:** run Commit-1 Step D prose first (§6 Commit-1 Step D/E), then Commit 2
-(§6 Commit-2). Do not re-run the audits or any pipeline stages; the ladder and ZS fixes
-are verified and current. Sibling-audit findings S1–S6 are unchanged except S2, which is
-superseded by the Option-A fix (the "fully converged" relabel is obsolete; re-verify the
-now-true convergence claims instead).
+**To resume / wrap up:** the editorial pass is complete. No pipeline stages need to be
+re-run. Sibling-audit findings S1–S6 are all resolved; S2 was superseded by the Option-A
+fix (the "fully converged" relabel was obsolete).
