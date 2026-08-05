@@ -282,7 +282,7 @@ This identification argument is structural, not empirical: the stratification de
 \paragraph{Geometric effect.}
 The effect of INLP register removal is shown in Results (Figure~\ref{fig:pca-register-before-after}): the raw embedding space separates research and policy clouds, while the adjusted space merges them, confirming that the separation is driven by register rather than topic. The effect is encoder-dependent --- SciBERT already fuses the clouds without INLP --- so this figure is MPNet-specific.
 
-\subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
+\subsection{Hypotheses and Analysis Plan}\label{sec:coverage-semantic-interaction}
 
 The first hypothesis (H1) decomposes into four sub-hypotheses, each correlating a distinct coverage predictor with the within-SDG semantic gap across the 17 SDGs: H1a, coverage gap $\leftrightarrow$ semantic gap; H1b, research--policy dominance $\leftrightarrow$ semantic gap; H1c, research coverage $\leftrightarrow$ semantic gap; and H1d, policy coverage $\leftrightarrow$ semantic gap. H1a is the motivating hypothesis; H1b--H1d examine complementary coverage-structure predictions. I compute Pearson $r$ and Spearman $\rho$ between each predictor and semantic-gap scores; SDG~4 is treated as artefact-affected and examined separately (Appendix~\ref{app:sdg4-lexical-audit}). Given $n = 17$, the tests have limited power to detect anything but a large linear effect; this is a scope condition.
 
