@@ -379,3 +379,143 @@ the §5.1–§5.4 pattern rather than inventing a new one.
   `regcheck_followup.log:41` vs `:96` (different p-values 6.1e-05 vs 0.0047), but the
   followup-2 script does not print the 2B pooled 2c value, so that one number is
   implicitly — not explicitly — re-verified by the Follow-up-2 run.
+
+---
+
+# Implementation Report — INLP Register-Validation Appendix (step F2 / `a1_register_validation`)
+
+**Date:** 2026-08-05 (implementation phase; complete)
+**Repo:** `/home/manh/dissertation`, branch `main`
+**Scope:** promotion of the verified register-validation diagnostic (Sections 1–4 of this
+report) into a durable dissertation appendix stage, per Section 5's conventions. The
+verification report above remains ground truth for all numbers; this section records the
+promotion.
+
+## 8. Deliverable summary
+
+### 8.1 Files added
+
+- `1_code/7_main_analysis/2_appendix/a1_register_validation.py` — consolidated A3-shaped
+  appendix script. Canonical-MPNet-only gate (mirrors the zero-shot precedent); `--seed` pinned
+  to 42 (raises on any other value); nltk fail-closed runtime guard (`punkt` +
+  `averaged_perceptron_tagger_eng`) with an actionable download message (conservatively NOT
+  added to `environment.yml` — conda-forge `nltk_data` compatibility with nltk 3.10 unverified;
+  documented in docstring + README). Fingerprint-gated skip via
+  `shared_utils.should_skip` / `record_fingerprint` over (score manifest, research-embed
+  manifest, `G.npy`, `SCRIPT_VERSION("1")`). Ports the verified scratch logic verbatim
+  (single module-level seed-42 `_rng` stream, research-then-policy per draw, draws 1/2/3 +
+  fresh seeds 43/44/45; do not refactor the sampling). Contains a **61-check acceptance-gate
+  block** that raises `RuntimeError` on any mismatch with report.md §2.2; all 61 gates pass in
+  4 independent runs (determinism confirmed).
+- `4_outputs/appendix/mpnet/a1_register_validation/`
+  - `data/register_validation.json` — nested machine-readable record of every number, including
+    the `register_score_operationalization` honesty note.
+  - `data/register_validation.csv` — 8 corpus-discrimination rows.
+  - `data/register_validation.fingerprint.json` — fingerprint sidecar.
+  - `tables/tab_a1_register_validation.tex`, `tables/tab_a1_register_validation_selectivity.tex`
+    — the two appendix tables.
+  - `tables/num_a1_register_validation.tex` — 88 `\RegVal*` macros. **TeX control-word names
+    cannot contain digits** — the script emits spelled-out names (`\RegValDrawFortyThree` etc.),
+    namespace distinct from `Register*` / `RegIter*`.
+
+### 8.2 Files modified
+
+- `1_code/7_main_analysis/0_shared/analysis_orchestrator.py` — `APPENDIX_SPECS` entry
+  (`flag=--appendix-a1-register-validation`, alias `--register-validation`, `step_id=F2`,
+  `in_all=True`, `requires=None`); canonical-order docstring updated to `..., H1, I1, F2,
+  G(opt-in), J1, K1`.
+- `1_code/7_main_analysis/0_shared/shared_utils.py` — outputs added to
+  `MANUSCRIPT_EXTRA_FILES` (JSON/CSV) and `MANUSCRIPT_APPENDIX_TABLE_FILES` (the 3 tex files),
+  required by `require_pdf_inputs` for `--build-pdf`.
+- `main.py` — `--appendix-all` help now "(A2, A3, B2, C, C1, C0, D1, H1, I1, F2, J1, K1)".
+- `README.md` — new appendix command row + nltk-data bullet in Environment notes.
+- `PIPELINE.md` — appendix table row for `a1_register_validation.py`.
+- `AGENTS.md` — Tier-B counts 15 → 16 (two places); checkpoint-inventory row comment updated.
+- `3_writing/dissertation.tex` — see §8.4.
+- `4_outputs/dissertation.pdf` — rebuilt; Appendix G renders (see §8.5).
+- `handoff.md` — status updated to complete.
+- `report.md` — this section.
+
+### 8.3 Appendix identifier
+
+- step_id **F2**; slug **`a1_register_validation`**; flag `--appendix-a1-register-validation`
+  (alias `--register-validation`); `in_all=True`; `requires=None`. Runs under
+  `--appendix-all`, honors `--overwrite`, supports fingerprints, writes to
+  `4_outputs/appendix/{model}/a1_register_validation/` (canonical MPNet only).
+
+### 8.4 Manuscript (dissertation.tex)
+
+- New appendix section, label `app:register-validation`, title "Register Removal: Validation
+  Against Independent Linguistic Register Markers"; becomes **Appendix G** (Concept-Retrieval
+  → H, Cross-Method → I, Pooled Regression → J, AI Declaration → K; all refs label-based).
+  Contains: Motivation; Register score and samples; Two sample constructions;
+  Corpus-discrimination accuracy (Table `tab:register-validation-accuracy`);
+  "An apparent residual-register signal was traced to clustering"; "No robust evidence that
+  topic is being systematically removed" (Table `tab:register-validation-selectivity`);
+  "One apparently surviving signal failed the draw-stability check" (honest history: mega-doc
+  clustering traced, −0.197 downgraded to noise); Conclusion (only report.md §2.2 reconciled
+  values; "substantial reduction, not complete elimination, no robust evidence of topic
+  removal"); Limitations (PC1-vs-z-sum operationalization flagged + unresolved, n=408 /
+  per-SDG n=12 power, draw-stability applied only to within-SDG trace, one-per-parent is a
+  rebuild not subset, MPNet-only, the two −0.197 statistics caution).
+- Preamble: `\InputIfFileExists{...num_a1_register_validation.tex}{}{}` after the
+  `num17_reference_split.tex` line (input once, not again in the section).
+- Rewires of "unvalidated / left to future work" wording: Methodology identification-argument
+  (~line 279) now says the interpretation is evaluated in the appendix, finds substantial
+  reduction but not complete elimination, no robust evidence of topic removal; Table notes at
+  ~373 and ~392 now "(primary estimate; evaluated in Appendix~\ref{app:register-validation})";
+  Limitations "Register effects" (~477) and Conclusion (~488) rewired to the appendix. Stale
+  header comments ("Appendix D/E") fixed. Line-471 corpus-scope "left to future work" is
+  unrelated and untouched.
+
+### 8.5 Verification performed
+
+- **Acceptance gates 61/61**, deterministic across 4 runs (scratch/registry paths).
+- **`--build-pdf --overwrite` succeeds.** A LaTeX structural bug found during the build — the
+  first insertion displaced the register-check table's `\end{table}`, placing the entire new
+  section inside a `table` environment ("Not in outer par mode", 707pt float cascade) — was
+  fixed by restoring the `\end{table}` after the `tab:iterative-register-check` notes line and
+  removing the stray closing before `\section{Concept-Retrieval Sensitivity}`. After the fix
+  the F..G region has balanced 3 begin / 3 end table environments. Rebuild verified: 72 pp, no
+  fatal errors, 0 "Not in outer par mode", 0 "Missing \begin{document}", 0 undefined control
+  sequences; Appendix G renders with both tables and all `\RegVal*` macros resolve to the
+  report.md §2.2 values; rewired Methodology/Limitations/Conclusion sentences read correctly in
+  the PDF; no orphaned register-related "unvalidated"/"left to future work" wording remains.
+  Remaining `Float too large` warnings (lines 71/76/593/881) are pre-existing floats, not from
+  the new section. The PDF was not image-inspected (model cannot view images); geometry was
+  checked via absence of overfull-vbox errors on the G pages.
+- **gz fallback path exercised** (previously untested for this script): with
+  `2_segmented/{research,policy.jsonl}` temporarily hidden, `resolve_research_text_path`
+  (`all-mpnet-base-v2`, `part-{sid:05d}`) and `resolve_policy_text_path` resolve to
+  `3a_warm_replay_texts/mpnet/*.jsonl.gz` and `open_text` reads them; canonical dirs restored
+  intact. The script passes the full model name and `part-{sid:05d}` shard names, which match
+  the fallback layout (all 26 shards present in both score metadata and fallback dirs).
+- **Cleanup:** all `3_writing/min_test*.{tex,aux,log,out,pdf,bcf,run.xml,toc,bbl,blg}`
+  bisection junk deleted; `5_notes/scratch/` untouched (provenance).
+
+### 8.6 Unresolved issues intentionally left (require human scientific judgment)
+
+Per report.md §2.4, none were resolved here:
+
+1. **Register-score operationalization** (PC1 vs. the a-priori "institutional" z-sum, which gave
+   null/reversed 2b/2c on the initial screen) — flagged in the appendix Limitations and in the
+   output JSON as an open limitation.
+2. **The two distinct −0.197 statistics** (2B pooled centroid-distance vs. Item-3 policy
+   other-dist) — documented as a non-contradiction caution in the appendix.
+3. **n=408 / per-SDG n=12 power** and the n=120/SDG scaling question — noted as limitations,
+   not resolved.
+4. **Commits** (see §8.7) and the Phase-5 decisions (retire/keep scratch; commit ground-truth
+   logs under `5_notes/` per report.md §3.5) remain user decisions.
+
+### 8.7 Git state
+
+Committed in three one-concern commits (per AGENTS.md), then pushed:
+
+- (a) script + registration + docs: `1_code/7_main_analysis/2_appendix/a1_register_validation.py`,
+  `analysis_orchestrator.py`, `shared_utils.py`, `main.py`, `README.md`, `PIPELINE.md`,
+  `AGENTS.md`, `report.md`, `handoff.md`.
+- (b) manuscript: `3_writing/dissertation.tex`.
+- (c) outputs + PDF: `4_outputs/appendix/mpnet/a1_register_validation/`,
+  `4_outputs/dissertation.pdf`.
+
+Working tree is clean after the push.

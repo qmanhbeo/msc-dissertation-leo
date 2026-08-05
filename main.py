@@ -133,7 +133,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--cold-replay", action="store_true", help="Full pipeline from live data sources — fetch, preprocess, embed, analyse. Not recommended (long runtime; OpenAlex live changes may break reproducibility).")
-    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C1, C0, D1, H.1, I.1) standalone (requires existing main-text outputs).")
+    p.add_argument("--appendix-all", action="store_true", help="Run all appendix stages (A2, A3, B2, C, C1, C0, D1, H1, I1, F2, J1, K1) standalone (requires existing main-text outputs).")
     # Appendix identities are registry-driven (analysis_orchestrator.APPENDIX_SPECS);
     # the deprecated aliases below are hidden and preserved for backward compatibility.
     for _spec in APPENDIX_SPECS:

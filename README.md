@@ -186,6 +186,12 @@ Not tracked in Git:
 
 - `environment.yml` is the canonical rebuild path. Pins 14 core Python packages;
   platform-specific libraries (CUDA, Linux libs) are handled by conda/pip per-OS.
+- **nltk data is NOT bundled with the conda install.** The register-validation
+  appendix (`--appendix-a1-register-validation`) needs the `punkt` and
+  `averaged_perceptron_tagger_eng` data resources. On a fresh environment, fetch
+  them once:
+  `python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger_eng')"`
+  (the stage fails closed with this hint if they are missing).
 - `requirements.txt` is a human-edited core reference (14 packages). Not needed
   for rebuild — `environment.yml` already covers the pip layer.
 - Python version: `3.11`.
@@ -199,7 +205,8 @@ Not tracked in Git:
 | `python main.py --warm-replay-without-appendix --overwrite` | Rebuild main text analysis from snapshot (no PDF, no appendix) |
 | `python main.py --warm-replay-with-appendix --overwrite` | Rebuild main text + all appendix analyses from snapshot (no PDF) |
 | `python main.py --cold-replay --overwrite` | Full pipeline from the raw frozen snapshot: rebuilds **all three encoder tracks** (MPNet + MiniLM + SciBERT) deterministically in one run. No OpenAlex credentials needed when the raw snapshot is hydrated (see [§Reproducibility boundaries](#reproducibility-boundaries)). |
-| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, B2, C, C1, C0, D1, H1, I1) standalone (no PDF) |
+| `python main.py --appendix-all --overwrite` | Run all appendix stages (A2, A3, B2, C, C1, C0, D1, H1, I1, F2, J1, K1) standalone (no PDF) |
+| `python main.py --appendix-a1-register-validation --overwrite` | Run Register-Removal Validation against Independent Linguistic Register Markers (Appendix G; canonical MPNet only; needs nltk `punkt` + `averaged_perceptron_tagger_eng`, see [Environment](#environment)) |
 | `python main.py --appendix-a2-family --overwrite` | Run A.2 Policy Source-Family Sensitivity |
 | `python main.py --appendix-a3-sdg4 --overwrite` | Run A.3 SDG 4 Lexical Artefact Audit |
 | `python main.py --appendix-b2-interpret --overwrite` | Run B.2 Lexical Illustration of the Semantic Gap |

@@ -223,6 +223,7 @@ There is no standalone `--stage figures`. `plot_figures.py` runs inside `--stage
 
 | script | appendix | output |
 |---|---|---|
+| `a1_register_validation.py` | G (step F2; canonical MPNet only) | `appendix/[model]/a1_register_validation/` |
 | `a2_policy_source_family_sensitivity.py` | A.2 | `appendix/[model]/a2_source_family_sensitivity/` |
 | `a3_sdg4_lexical_audit.py` | A.3 | `appendix/[model]/a3_sdg4_audit/` |
 | `b2_semantic_gap_text_interpretability.py` | B.2 | `appendix/[model]/b2_semantic_gap_interpretability/` |

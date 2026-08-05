@@ -32,7 +32,7 @@ MAIN_STEPS = [
 ]
 
 # Single source of truth for every appendix identity. Canonical order:
-# A2, A3, B2, C, C1, C0, D1, H1, I1, G(opt-in), J1, K1. `in_all` flags whether
+# A2, A3, B2, C, C1, C0, D1, H1, I1, F2, G(opt-in), J1, K1. `in_all` flags whether
 # the script participates in `--appendix-all` (G is opt-in only).
 APPENDIX_SPECS = [
     {
@@ -135,6 +135,17 @@ APPENDIX_SPECS = [
         "warn": "Assignment-method comparison (Appendix I.1)",
         "run_label": "assignment-method comparison",
         "step_id": "I1",
+        "in_all": True,
+        "requires": None,
+    },
+    {
+        "flag": "appendix-a1-register-validation",
+        "aliases": ["register-validation"],
+        "script": "2_appendix/a1_register_validation.py",
+        "help": "Run Register-Removal Validation against Independent Linguistic Register Markers (canonical MPNet only).",
+        "warn": "Register-removal validation (Appendix G)",
+        "run_label": "register-removal validation",
+        "step_id": "F2",
         "in_all": True,
         "requires": None,
     },
