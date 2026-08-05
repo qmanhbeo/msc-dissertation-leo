@@ -262,7 +262,7 @@ def run(args):
     out_dir = root / "appendix" / model_slug(model) / "h1_cross_method_gap_values" / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    SCRIPT_VERSION = "1"
+    SCRIPT_VERSION = "2"
     PRIMARY = out_dir / "tab_app_cross_method_semgap.tex"
     OUTPUTS = [PRIMARY, out_dir / "tab_app_cross_method_covgap.tex"]
     fp_paths = []
@@ -272,6 +272,8 @@ def run(args):
             output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_lr.json",
             output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_zeroshot.json",
             output_dir_for_model(m, root=root) / "data" / "semantic_gap_distances_mlp.json",
+            # _mlp_covgaps reads the cached MLP coverage-gap payload.
+            output_dir_for_model(m, root=root) / "data" / "coverage_document_weighted_mlp.json",
         ]
     # Concept-retrieval track (MPNet only) feeds the appendix cross-method table.
     concept_root = output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept"

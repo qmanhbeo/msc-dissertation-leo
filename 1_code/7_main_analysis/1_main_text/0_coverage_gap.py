@@ -227,12 +227,18 @@ def run(args: argparse.Namespace) -> None:
     tables_dir = Path(args.out_tables_dir) if args.out_tables_dir else layout.tables_dir
     log.info("Canonical output dir: %s", layout.data_dir)
 
-    SCRIPT_VERSION = "1"
+    SCRIPT_VERSION = "2"
     PRIMARY = out_cov_gap
     OUTPUTS = [out_cov_gap, out_cov_gap_raw, out_cov_gap_mlp, out_cov_gap_zs]
     fp = fingerprint_of(PAPER_SCORES_MANIFEST, POLICY_SCORES, POLICY_IDS,
                         embed_dir_for_model(model) / "policy.npy",
-                        scored_dir / "research_centroids.npy")
+                        scored_dir / "research_centroids.npy",
+                        # zs route reads the per-SDG n_papers (paper-weighted)
+                        # from the zs gap json; mlp route reads the research
+                        # coverage from mlp_summary.json.
+                        layout.data_dir / "semantic_gap_distances_zeroshot.json",
+                        scored_dir / "mlp_scores" / "mlp_summary.json",
+                        scored_dir / "mlp_scores" / "mlp_policy_scores.npy")
     fp += SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s — inputs unchanged", PRIMARY)

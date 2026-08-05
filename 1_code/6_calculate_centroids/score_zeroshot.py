@@ -8,6 +8,13 @@ LR classifier uses as its class means.
 Outputs: {data_dir}/semantic_gap_distances_zeroshot.json  (per-SDG gaps, default {output_dir}/{model}/data/)
           {out_dir}/research_centroids.npy       (per-SDG mean of zs-assigned papers, default 2_data/.../zeroshot/)
           {out_dir}/policy_centroids.npy         (per-SDG mean of zs-assigned segments, default 2_data/.../zeroshot/)
+
+The research side is document-weighted (one L2-renormalised unit vector per
+abstract), matching score_supervised.py and the canonical coverage/semantic-gap
+outputs (Plan C). Adjusted mode projects segment embeddings through G and
+RE-ASSIGNS on the projected space first, then collapses to papers, so the
+paper-level assignment reflects the projected-space clusters. The policy side
+stays segment-level with the shared per-(doc, SDG) cap.
 """
 
 from __future__ import annotations
@@ -37,6 +44,12 @@ _ANALYSIS_ROOT = Path(__file__).resolve().parents[1] / "7_main_analysis" / "0_sh
 if str(_ANALYSIS_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_ANALYSIS_ROOT))
 import register_utils
+from research_score_shards import (
+    group_rows_by_paper,
+    paper_run_starts,
+    paper_units_from_shard,
+    read_shard_paper_ids,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -136,14 +149,28 @@ def run(args: argparse.Namespace) -> None:
     manifest_path = Path(args.embedding_manifest) if args.embedding_manifest else embed_root / "research_shards" / "metadata" / "manifest.json"
     manifest = load_json(manifest_path)
     shards = sorted(manifest["shards"], key=lambda x: int(x["shard_id"]))
-    log.info("Scoring %d research shards (zero-shot)...", len(shards))
+    log.info("Scoring %d research shards (zero-shot, document-weighted)...", len(shards))
 
     res_sums = np.zeros((N_SDG, embed_dim), dtype=np.float64)
     res_counts = np.zeros(N_SDG, dtype=np.int64)
     res_cohesion_sums = np.zeros(N_SDG, dtype=np.float64)
     res_cohesion_counts = np.zeros(N_SDG, dtype=np.int64)
+    prev_last_paper_id: str | None = None
 
     for shard in shards:
+        shard_name = str(shard["name"])
+        ids_path = shard.get("ids_path")
+        if not ids_path:
+            raise RuntimeError(
+                f"Shard {shard_name} has no ids_path; paper-level zero-shot "
+                "aggregation cannot group its rows."
+            )
+        paper_ids = read_shard_paper_ids(
+            resolve_manifest_path(
+                ids_path,
+                allowed_dirs=(embed_dir_for_model(model), scored_dir_for_model(model), preprocessed_dir()),
+            )
+        )
         emb = np.load(
             resolve_manifest_path(
                 shard["embedding_path"],
@@ -152,25 +179,39 @@ def run(args: argparse.Namespace) -> None:
             mmap_mode="r",
         )
         embeddings = np.asarray(emb).astype(np.float32)
+        if len(paper_ids) != embeddings.shape[0]:
+            raise RuntimeError(
+                f"Shard {shard_name}: {embeddings.shape[0]} embedding rows but "
+                f"{len(paper_ids)} id rows."
+            )
         if is_adjusted:
             # Adjusted ZS: project research embeddings through G and RE-ASSIGN on
             # the projected space (intentional; PLAN_register_topic_decomposition
             # §6.1). LR/MLP keep raw-space clusters and only project vectors.
             embeddings = register_utils.project(embeddings, G)
         scores = embeddings @ centroids.T
-        assignments = scores.argmax(axis=1)
+        # Collapse segments to papers (document-weighted research unit, Plan C):
+        # one L2-renormalised unit vector per abstract, symmetric with the
+        # document-weighted policy profile and with score_supervised.py.
+        paper_emb, paper_assigned, _, prev_last_paper_id = paper_units_from_shard(
+            embeddings, scores, paper_ids, shard_name,
+            prev_last_paper_id=prev_last_paper_id,
+        )
+        starts = paper_run_starts(paper_ids)
+        paper_scores, _ = group_rows_by_paper(scores, starts)
         for sdg_idx in range(N_SDG):
-            mask = assignments == sdg_idx
+            mask = paper_assigned == sdg_idx
             n = int(mask.sum())
             if n > 0:
-                res_sums[sdg_idx] += embeddings[mask].sum(axis=0).astype(np.float64)
+                res_sums[sdg_idx] += paper_emb[mask].sum(axis=0).astype(np.float64)
                 res_counts[sdg_idx] += n
                 # Mean cosine of assigned research vectors to their reference
-                # centroid = mean of the assignment score column for that SDG.
-                res_cohesion_sums[sdg_idx] += float(scores[mask, sdg_idx].sum())
+                # centroid = mean of the paper-level assignment score column for
+                # that SDG (paper scores = mean of the paper's segment scores).
+                res_cohesion_sums[sdg_idx] += float(paper_scores[mask, sdg_idx].sum())
                 res_cohesion_counts[sdg_idx] += n
-        log.info("  Shard %s done", shard.get("name", shard["shard_id"]))
-        del embeddings, scores, assignments
+        log.info("  Shard %s done (%d papers)", shard_name, paper_emb.shape[0])
+        del embeddings, scores, paper_emb, paper_assigned, paper_scores, paper_ids
 
     log.info("Research per-SDG counts: %s", res_counts.tolist())
     log.info("Research total papers: %d", res_counts.sum())

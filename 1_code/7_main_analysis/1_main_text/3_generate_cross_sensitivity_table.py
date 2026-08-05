@@ -498,9 +498,11 @@ def load_mlp_covgaps(m):
 def load_zs_covgaps(m, concept: bool = False):
     """Document-weighted coverage gap for zero-shot nearest-centroid assignment.
 
-    Research counts from ZS semantic_gap_distances_zeroshot.json (already doc-level).
-    Policy profile uses the shared A19 document-weighting (single source of truth),
-    preferring the persisted coverage_document_weighted_zeroshot.json when available.
+    Research counts from ZS semantic_gap_distances_zeroshot.json (paper-weighted
+    per-SDG n_papers, matching the LR/MLP routes; the producer collapses each
+    shard to one unit per abstract). Policy profile uses the shared A19
+    document-weighting (single source of truth), preferring the persisted
+    coverage_document_weighted_zeroshot.json when available.
 
     When `concept=True`, loads the concept-retrieved variant
     (data/concept/semantic_gap_distances_zeroshot.json + zeroshot_concept/research_centroids.npy)
