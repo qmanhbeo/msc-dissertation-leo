@@ -118,6 +118,12 @@ SCHEMA_VERSION = 1
 # under the frozen embedded snapshot.
 ITERATIVE_N_PER_SDG = 1000
 ITERATIVE_ACC_THRESHOLD = 0.5
+# SAFETY CAP ONLY — NOT a methodological iteration bound. In principle the INLP
+# loop is unbounded (K -> infinity): it terminates as soon as held-out register
+# classification accuracy falls to ITERATIVE_ACC_THRESHOLD (0.5), i.e. when no
+# further linearly decodable register signal remains. Every encoder track
+# converges well before this cap (MPNet 62, MiniLM 40, SciBERT 79 iterations on
+# the hydrated snapshot), so the value below is never reached in practice.
 ITERATIVE_MAX_K = 200
 TEST_SIZE = 0.15
 # Classifier hyperparameters (binary research=0 / policy=1 LR).

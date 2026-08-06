@@ -842,6 +842,14 @@ def run_warm_replay(
         # (main.py:791), which also gates include_appendix to the canonical model.
         model_include_appendix = include_appendix and (model == DEFAULT_EMBED_MODEL)
         run_main_text(output_dir, args, model=model, include_appendix=model_include_appendix)
+    # Regenerate the cross-encoder INLP convergence macros (cheap: reads the three
+    # register checkpoints persisted by the loop above; does NOT re-run register).
+    run_step(
+        "register cross-config convergence macros",
+        [sys.executable, "1_code/7_main_analysis/2_appendix/f2_export_register_cross_config.py",
+         "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(overwrite),
+        model=DEFAULT_EMBED_MODEL,
+    )
     print(
         "Main text + appendix outputs rebuilt for all encoder tracks. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -892,6 +900,14 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         print(sep, file=sys.stderr)
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
                                  include_appendix=(model == CANONICAL_SEGMENT_MODEL))
+    # Regenerate the cross-encoder INLP convergence macros (cheap: reads the three
+    # register checkpoints persisted by the loop above; does NOT re-run register).
+    run_step(
+        "register cross-config convergence macros",
+        [sys.executable, "1_code/7_main_analysis/2_appendix/f2_export_register_cross_config.py",
+         "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(overwrite),
+        model=DEFAULT_EMBED_MODEL,
+    )
     # Cross-sensitivity table + figures (MPNet-only, needs all 3 encoders' data)
     # are produced once now that every encoder analysis pass has completed.
     _run_analysis_poststeps(output_dir, CANONICAL_SEGMENT_MODEL, overwrite=args.overwrite)
