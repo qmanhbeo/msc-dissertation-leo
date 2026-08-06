@@ -177,7 +177,7 @@ The central research question set out in the Introduction is operationalised by 
   \item \textbf{H1c}: research coverage $\leftrightarrow$ semantic gap;
   \item \textbf{H1d}: policy coverage $\leftrightarrow$ semantic gap.
 \end{itemize}
-H1b--H1d examine complementary coverage-structure predictions. SDG~4 is treated as artefact-affected and examined separately (Appendix~\ref{app:sdg4-lexical-audit}). The operationalization of these tests --- Pearson $r$ and Spearman $\rho$ between each predictor and semantic-gap scores, with the $n = 17$ power limitation stated as a scope condition --- is described in Section~\ref{sec:coverage-semantic-interaction}.
+H1b--H1d examine complementary coverage-structure predictions. SDG~4 is treated as artefact-affected and examined separately (Appendix~\ref{app:sdg4-lexical-audit}). The operationalization of these tests --- Pearson $r$ and Spearman $\rho$ between each predictor and semantic-gap scores, including the $n = 17$ scope conditions --- is described in Section~\ref{sec:coverage-semantic-interaction}.
 
 %% ============================================================
 \section{Methodology}
@@ -298,7 +298,15 @@ With the projector learned, the semantic-gap analysis of Section~\ref{sec:semant
 
 \subsection{Coverage--Semantic Interaction}\label{sec:coverage-semantic-interaction}
 
-The hypotheses specifying this interaction are stated in Section~\ref{sec:hypotheses}. Their operationalization is as follows. Pearson $r$ and Spearman $\rho$ are computed between each coverage predictor (coverage gap, research--policy dominance, research coverage, policy coverage) and the within-SDG semantic-gap scores across the 17 SDGs; SDG~4 is treated as artefact-affected and examined separately (Appendix~\ref{app:sdg4-lexical-audit}). The 17 SDGs are not a sample of goals but the complete set of the SDG framework, so the tests are computed over a fully enumerated population rather than over a sample drawn to support inference to a larger population; the observed associations are therefore properties of the framework as a whole, and sampling-based power reasoning does not directly apply. The operative small-$n$ concern is robustness rather than power: with only 17 framework units, individual goals can be influential, so the associations are read together with the leave-one-out and cross-configuration checks (Section~\ref{sec:robustness}). Finer-grained units would raise the observation count (the framework itself defines 169 targets), but no labelled reference data exist at the target level; moving to a finer or alternative taxonomy is left to future work. An additional, supplementary pooled-regression analysis that combines all encoder--classifier configurations into a single panel and controls for encoder, retrieval, and segment-cap indicators is provided in Appendix~\ref{app:regression}; extending it into a full inferential regression framework is left to future work, as it falls outside the present dissertation's scope.
+The hypotheses specifying this interaction are stated in Section~\ref{sec:hypotheses}. Their operationalization is as follows. Pearson $r$ and Spearman $\rho$ are computed between each coverage predictor (coverage gap, research--policy dominance, research coverage, policy coverage) and the within-SDG semantic-gap scores across the 17 SDGs; SDG~4 is treated as artefact-affected and examined separately (Appendix~\ref{app:sdg4-lexical-audit}).
+
+The 17 SDGs are not a sample of goals but the complete set of the SDG framework, so the tests are computed over a fully enumerated population rather than over a sample drawn to support inference to a larger population; the observed associations are therefore properties of the framework as a whole, and sampling-based power reasoning does not directly apply \parencite{BerkWesternWeiss1995, AbadieAtheyImbensWooldridge2020}.
+
+The operative small-$n$ concern is robustness rather than power: with only 17 framework units, individual goals can be influential, so the associations are read together with the leave-one-out check (Section~\ref{sec:interaction}) and the cross-configuration checks (Section~\ref{sec:robustness}).
+
+Finer-grained units would raise the observation count (the framework itself defines 169 targets), but no labelled reference data exist at the target level; moving to a finer or alternative taxonomy is left to future work.
+
+An additional, supplementary pooled-regression analysis combines all 24 encoder--retrieval--method--cap configurations into a single panel and controls for encoder, retrieval, and segment-cap indicators; it is reported in Appendix~\ref{app:regression}. Extending it into a full inferential regression framework is left to future work, as it falls outside the present dissertation's scope.
 
 \subsection{Methodology Summary}\label{sec:pipeline-summary}
 
