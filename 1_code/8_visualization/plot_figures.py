@@ -287,7 +287,7 @@ def main() -> None:
         for i, (_, row) in enumerate(fig2_df.iterrows()):
             if pd.notna(row["raw"]):
                 ax2.plot(row["raw"], i, "D", color="#555555", markersize=5, alpha=0.85,
-                         label="Raw gap (baseline)" if i == 0 else None)
+                         label="Semantic gap (baseline)" if i == 0 else None)
         for i, val in enumerate(fig2_df["gap"]):
             ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
         ax2.axvline(_med, color="grey", linestyle="--", linewidth=1,
@@ -299,7 +299,7 @@ def main() -> None:
         ax2.set_xlabel("Semantic gap (1 − cosine similarity; adjusted = after INLP register removal)")
         ax2.legend(handles=[
             mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Adjusted gap (canonical)"),
-            plt.Line2D([0], [0], marker="D", color="#555555", linestyle="None", label="Raw gap (baseline)"),
+            plt.Line2D([0], [0], marker="D", color="#555555", linestyle="None", label="Semantic gap (baseline)"),
             plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median (adj, {median_semantic_gap:.3f})"),
             plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean (adj, {mean_semantic_gap:.3f})"),
         ], fontsize=7.5)
@@ -368,7 +368,7 @@ def main() -> None:
             plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
                        markersize=7, label="Adjusted gap (canonical)"),
             plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
-                       markeredgecolor="#888888", markersize=7, label="Raw gap (baseline)"),
+                       markeredgecolor="#888888", markersize=7, label="Semantic gap (baseline)"),
         ], fontsize=8, loc="upper right")
     else:
         ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
