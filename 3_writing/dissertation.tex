@@ -307,9 +307,7 @@ The raw, adjusted, and register-component correlations are a single decompositio
 
 Finer-grained units (the framework defines 169 targets) would raise the observation count, but no labelled target-level reference data exist. A supplementary pooled-regression analysis combines all 24 configurations into a single panel (Appendix~\ref{app:regression}).
 
-\subsection{Methodology Summary}\label{sec:pipeline-summary}
-
-Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology. All three tracks share preprocessing (cleaning) and token-aware segmentation to the encoder's token budget with a 20-word minimum (Section~\ref{sec:segmentation}). The reference track pools \NReferencePool{} single-label texts (\NTrainPool{} train, \NTestPool{} test) to train the LR classifier ($C=3.0$, L2, macro-$F_1$ = \MacroFOne{}); the research and policy tracks segment \NResearchAbstracts{} abstracts into \NResearchSegments{} segments and \NPolicySegments{} policy segments respectively. All tracks are embedded with \texttt{all-mpnet-base-v2} (768-D, L2-normalised) and scored via argmax over 17 SDG classes.
+Figure~\ref{fig:pipeline-flowchart} summarises the end-to-end methodology.
 
 \begin{figure}[htbp]
   \centering
