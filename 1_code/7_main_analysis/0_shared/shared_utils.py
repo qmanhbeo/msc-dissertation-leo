@@ -344,6 +344,8 @@ def permutation_p(x, y, kind: str = "spearman",
     n = x.shape[0]
     if n < 3:
         raise ValueError("need at least 3 observations")
+    if seed is None or not isinstance(seed, (int, np.integer)):
+        raise ValueError(f"seed must be an int (got {seed!r}) — permutation draws must be deterministic")
 
     if kind == "spearman":
         stat, _ = stats.spearmanr(x, y)
