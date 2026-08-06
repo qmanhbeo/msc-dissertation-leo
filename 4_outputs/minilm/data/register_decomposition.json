@@ -1,14 +1,19 @@
 {
   "embedding_model": "all-MiniLM-L6-v2",
   "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+  "p_value": {
+    "method": "monte_carlo_permutation",
+    "n_resamples": 100000,
+    "seed": 42
+  },
   "correlations": {
     "coverage_vs_adjusted": {
       "rho": 0.3971,
-      "p": 0.1145
+      "p": 0.1154
     },
     "coverage_vs_register": {
       "rho": -0.4632,
-      "p": 0.0611
+      "p": 0.0626
     }
   },
   "summary": {

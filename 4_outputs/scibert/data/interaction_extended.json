@@ -1,98 +1,103 @@
 {
   "embedding_model": "allenai/scibert_scivocab_uncased",
   "n_valid_sdgs": 17,
+  "p_value": {
+    "method": "monte_carlo_permutation",
+    "n_resamples": 100000,
+    "seed": 42
+  },
   "headline": {
     "coverage_vs_raw_gap": {
       "pearson_r": 0.128682,
-      "pearson_p": 0.62257,
+      "pearson_p": 0.618444,
       "spearman_rho": -0.129902,
-      "spearman_p": 0.619247
+      "spearman_p": 0.612914
     },
     "coverage_vs_adjusted_gap": {
       "pearson_r": 0.151729,
-      "pearson_p": 0.561021,
+      "pearson_p": 0.561714,
       "spearman_rho": 0.220588,
-      "spearman_p": 0.394889
+      "spearman_p": 0.391536
     },
     "coverage_vs_register_component": {
       "pearson_r": -0.079592,
-      "pearson_p": 0.761393,
+      "pearson_p": 0.775812,
       "spearman_rho": -0.267157,
-      "spearman_p": 0.299918
+      "spearman_p": 0.295897
     }
   },
   "per_predictor": {
     "research_vs_raw_gap": {
       "pearson_r": 0.419225,
-      "pearson_p": 0.093924,
+      "pearson_p": 0.097259,
       "spearman_rho": 0.605392,
-      "spearman_p": 0.010018
+      "spearman_p": 0.01179
     },
     "policy_vs_raw_gap": {
       "pearson_r": -0.138133,
-      "pearson_p": 0.597013,
+      "pearson_p": 0.571294,
       "spearman_rho": -0.10049,
-      "spearman_p": 0.701167
+      "spearman_p": 0.698123
     },
     "coverage_gap_vs_raw_gap": {
       "pearson_r": 0.128682,
-      "pearson_p": 0.62257,
+      "pearson_p": 0.618444,
       "spearman_rho": -0.129902,
-      "spearman_p": 0.619247
+      "spearman_p": 0.612914
     },
     "dominance_vs_raw_gap": {
       "pearson_r": 0.460369,
-      "pearson_p": 0.062946,
+      "pearson_p": 0.065329,
       "spearman_rho": 0.54902,
-      "spearman_p": 0.022461
+      "spearman_p": 0.02447
     },
     "research_vs_adjusted_gap": {
       "pearson_r": 0.208137,
-      "pearson_p": 0.422761,
+      "pearson_p": 0.423776,
       "spearman_rho": 0.465686,
-      "spearman_p": 0.059578
+      "spearman_p": 0.059409
     },
     "policy_vs_adjusted_gap": {
       "pearson_r": 0.728252,
-      "pearson_p": 0.000917,
+      "pearson_p": 0.00253,
       "spearman_rho": 0.605392,
-      "spearman_p": 0.010018
+      "spearman_p": 0.01169
     },
     "coverage_gap_vs_adjusted_gap": {
       "pearson_r": 0.151729,
-      "pearson_p": 0.561021,
+      "pearson_p": 0.561714,
       "spearman_rho": 0.220588,
-      "spearman_p": 0.394889
+      "spearman_p": 0.391536
     },
     "dominance_vs_adjusted_gap": {
       "pearson_r": -0.156312,
-      "pearson_p": 0.549105,
+      "pearson_p": 0.552494,
       "spearman_rho": -0.117647,
-      "spearman_p": 0.652933
+      "spearman_p": 0.654233
     },
     "research_vs_register_component": {
       "pearson_r": 0.029343,
-      "pearson_p": 0.910988,
+      "pearson_p": 0.922611,
       "spearman_rho": 0.019608,
-      "spearman_p": 0.940458
+      "spearman_p": 0.940151
     },
     "policy_vs_register_component": {
       "pearson_r": -0.813375,
-      "pearson_p": 7.2e-05,
+      "pearson_p": 0.00074,
       "spearman_rho": -0.686275,
-      "spearman_p": 0.002349
+      "spearman_p": 0.00292
     },
     "coverage_gap_vs_register_component": {
       "pearson_r": -0.079592,
-      "pearson_p": 0.761393,
+      "pearson_p": 0.775812,
       "spearman_rho": -0.267157,
-      "spearman_p": 0.299918
+      "spearman_p": 0.295897
     },
     "dominance_vs_register_component": {
       "pearson_r": 0.420419,
-      "pearson_p": 0.092896,
+      "pearson_p": 0.077889,
       "spearman_rho": 0.546569,
-      "spearman_p": 0.023194
+      "spearman_p": 0.02533
     }
   },
   "per_sdg": [

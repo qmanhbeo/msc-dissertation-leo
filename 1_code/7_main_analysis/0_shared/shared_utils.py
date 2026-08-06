@@ -303,3 +303,69 @@ def canonical_artifact_status(output_dir: Path, model: str | None = None) -> dic
         else:
             missing.append(rel)
     return {"present": present, "missing": missing}
+
+
+# ---------------------------------------------------------------------------
+# Permutation (Monte Carlo) p-values for Pearson/Spearman correlations
+# ---------------------------------------------------------------------------
+# The 17 SDGs are a fully enumerated population, not a sample, so analytic
+# t-approximations (which assume sampling from a superpopulation) do not fit
+# the paper's framing. A permutation test holds one measured vector fixed,
+# permutes the other, and conditions on the observed values: its null is "no
+# linear/monotonic association between the measured quantities" and needs no
+# sampling assumption. Deterministic: draws use np.random.default_rng(seed).
+PERMUTATION_N_RESAMPLES = 100_000
+PERMUTATION_SEED = 42
+
+
+def permutation_p(x, y, kind: str = "spearman",
+                  n_resamples: int = PERMUTATION_N_RESAMPLES,
+                  seed: int = PERMUTATION_SEED):
+    """Two-sided Monte Carlo permutation p-value for a Pearson/Spearman correlation.
+
+    Holds ``x`` fixed and permutes ``y`` (ranks for Spearman, values for Pearson);
+    the null is "no linear/monotonic association between the measured values",
+    conditioning on the observed data. No superpopulation sampling assumption —
+    fits the 17-SDG fully-enumerated-population framing.
+
+    Returns ``(stat, p)``: ``stat`` is computed exactly as scipy computes it, so
+    the reported statistics are unchanged; ``p = (count + 1) / (n_resamples + 1)``.
+    Deterministic given ``seed``.
+    """
+    import numpy as np
+    from scipy import stats
+
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    if x.ndim != 1 or y.ndim != 1:
+        raise ValueError("x and y must be 1-D")
+    if x.shape[0] != y.shape[0]:
+        raise ValueError("x and y must have the same length")
+    n = x.shape[0]
+    if n < 3:
+        raise ValueError("need at least 3 observations")
+
+    if kind == "spearman":
+        stat, _ = stats.spearmanr(x, y)
+        rx = stats.rankdata(x)
+        denom = n * (n * n - 1)
+        rng = np.random.default_rng(seed)
+        perm = np.argsort(rng.random((n_resamples, n)), axis=1) + 1
+        rho_perm = 1.0 - 6.0 * ((rx[None, :] - perm) ** 2).sum(axis=1) / denom
+        n_ext = int(np.sum(np.abs(rho_perm) >= abs(stat)))
+    elif kind == "pearson":
+        stat, _ = stats.pearsonr(x, y)
+        xc = x - x.mean()
+        yc = y - y.mean()
+        denom = (n - 1) * x.std(ddof=1) * y.std(ddof=1)
+        if denom == 0:
+            raise ValueError("zero variance in x or y")
+        rng = np.random.default_rng(seed)
+        perm_y = y[np.argsort(rng.random((n_resamples, n)), axis=1)]
+        r_perm = (perm_y - y.mean()) @ xc / denom
+        n_ext = int(np.sum(np.abs(r_perm) >= abs(stat)))
+    else:
+        raise ValueError(f"kind must be 'spearman' or 'pearson', got {kind!r}")
+
+    p = (n_ext + 1) / (n_resamples + 1)
+    return stat, p

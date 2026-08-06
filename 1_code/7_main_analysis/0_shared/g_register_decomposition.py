@@ -55,7 +55,9 @@ from register_utils import (
     load_raw_data,
     register_dir,
 )
-from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
+from shared_utils import (PERMUTATION_N_RESAMPLES, PERMUTATION_SEED,
+                          ensure_canonical_outputs, fingerprint_of, permutation_p,
+                          should_skip, record_fingerprint)
 from shard_pipeline_utils import atomic_write_json, load_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -144,14 +146,19 @@ def _generate_decomposition(
         cov_arr = np.array([r["coverage_gap"] for r in valid_corr])
         adj_arr = np.array([r["adjusted_gap"] for r in valid_corr])
         reg_arr = np.array([r["register_component"] for r in valid_corr])
-        rho_cov_adj, p_cov_adj = stats.spearmanr(cov_arr, adj_arr)
-        rho_cov_reg, p_cov_reg = stats.spearmanr(cov_arr, reg_arr)
+        rho_cov_adj, p_cov_adj = permutation_p(cov_arr, adj_arr, kind="spearman")
+        rho_cov_reg, p_cov_reg = permutation_p(cov_arr, reg_arr, kind="spearman")
     else:
         rho_cov_adj = p_cov_adj = rho_cov_reg = p_cov_reg = None
 
     output = {
         "embedding_model": model,
         "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+        "p_value": {
+            "method": "monte_carlo_permutation",
+            "n_resamples": PERMUTATION_N_RESAMPLES,
+            "seed": PERMUTATION_SEED,
+        },
         "correlations": {
             "coverage_vs_adjusted": {"rho": round(rho_cov_adj, 4) if rho_cov_adj is not None else None, "p": round(p_cov_adj, 4) if p_cov_adj is not None else None},
             "coverage_vs_register": {"rho": round(rho_cov_reg, 4) if rho_cov_reg is not None else None, "p": round(p_cov_reg, 4) if p_cov_reg is not None else None},

@@ -37,7 +37,9 @@ for path in (CODE_ROOT, SHARED_DIR):
         sys.path.insert(0, str(path))
 
 from model_utils import DEFAULT_EMBED_MODEL, N_SDG, resolve_model_alias
-from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
+from shared_utils import (PERMUTATION_N_RESAMPLES, PERMUTATION_SEED,
+                          ensure_canonical_outputs, fingerprint_of, permutation_p,
+                          should_skip, record_fingerprint)
 from shard_pipeline_utils import atomic_write_json, load_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -45,8 +47,10 @@ log = logging.getLogger(__name__)
 
 
 def pearson_spearman(x: np.ndarray, y: np.ndarray) -> dict:
-    r, r_p = stats.pearsonr(x, y)
-    rho, s_p = stats.spearmanr(x, y)
+    r, _ = stats.pearsonr(x, y)
+    rho, _ = stats.spearmanr(x, y)
+    _, r_p = permutation_p(x, y, kind="pearson")
+    _, s_p = permutation_p(x, y, kind="spearman")
     return {
         "pearson_r": round(float(r), 6),
         "pearson_p": round(float(r_p), 6),
@@ -129,6 +133,11 @@ def run(args: argparse.Namespace) -> None:
     output = {
         "embedding_model": model,
         "n_valid_sdgs": n_valid,
+        "p_value": {
+            "method": "monte_carlo_permutation",
+            "n_resamples": PERMUTATION_N_RESAMPLES,
+            "seed": PERMUTATION_SEED,
+        },
         "headline": headline,
         "per_predictor": results,
         "per_sdg": [

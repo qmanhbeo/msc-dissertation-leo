@@ -1,14 +1,19 @@
 {
   "embedding_model": "allenai/scibert_scivocab_uncased",
   "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+  "p_value": {
+    "method": "monte_carlo_permutation",
+    "n_resamples": 100000,
+    "seed": 42
+  },
   "correlations": {
     "coverage_vs_adjusted": {
       "rho": 0.2206,
-      "p": 0.3949
+      "p": 0.3915
     },
     "coverage_vs_register": {
       "rho": -0.2672,
-      "p": 0.2999
+      "p": 0.2959
     }
   },
   "summary": {

@@ -1,14 +1,19 @@
 {
   "embedding_model": "all-mpnet-base-v2",
   "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+  "p_value": {
+    "method": "monte_carlo_permutation",
+    "n_resamples": 100000,
+    "seed": 42
+  },
   "correlations": {
     "coverage_vs_adjusted": {
       "rho": 0.5441,
-      "p": 0.0239
+      "p": 0.0253
     },
     "coverage_vs_register": {
       "rho": -0.3897,
-      "p": 0.122
+      "p": 0.1204
     }
   },
   "summary": {

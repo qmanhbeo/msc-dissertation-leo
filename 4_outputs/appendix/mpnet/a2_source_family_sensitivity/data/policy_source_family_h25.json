@@ -6,11 +6,11 @@
     "primary_fisher_ci_lower": -0.22183951639783872,
     "primary_fisher_ci_upper": 0.6761971640315521,
     "research_spearman_rho": 0.448529,
-    "research_spearman_p": 0.070946,
+    "research_spearman_p": 0.071249,
     "covgap_spearman_rho": -0.012255,
-    "covgap_spearman_p": 0.962768,
+    "covgap_spearman_p": 0.95931,
     "research_excl4_spearman_rho": 0.605882,
-    "research_excl4_spearman_p": 0.01286
+    "research_excl4_spearman_p": 0.01467
   },
   {
     "family": "curated_ai_sdg",
@@ -19,11 +19,11 @@
     "primary_fisher_ci_lower": -0.657937675846939,
     "primary_fisher_ci_upper": 0.25288794754548677,
     "research_spearman_rho": -0.056373,
-    "research_spearman_p": 0.829849,
+    "research_spearman_p": 0.832832,
     "covgap_spearman_rho": -0.223039,
-    "covgap_spearman_p": 0.389523,
+    "covgap_spearman_p": 0.385566,
     "research_excl4_spearman_rho": 0.052941,
-    "research_excl4_spearman_p": 0.84561
+    "research_excl4_spearman_p": 0.847572
   },
   {
     "family": "sdgi_vnr_vlr",
@@ -32,11 +32,11 @@
     "primary_fisher_ci_lower": 0.2228352455094274,
     "primary_fisher_ci_upper": 0.8549592382894728,
     "research_spearman_rho": 0.595588,
-    "research_spearman_p": 0.011647,
+    "research_spearman_p": 0.01351,
     "covgap_spearman_rho": 0.041667,
-    "covgap_spearman_p": 0.873844,
+    "covgap_spearman_p": 0.872661,
     "research_excl4_spearman_rho": 0.702941,
-    "research_excl4_spearman_p": 0.002387
+    "research_excl4_spearman_p": 0.00307
   },
   {
     "family": "ungdc_speeches",
@@ -45,10 +45,10 @@
     "primary_fisher_ci_lower": -0.13653248556060943,
     "primary_fisher_ci_upper": 0.7591543260249137,
     "research_spearman_rho": 0.425,
-    "research_spearman_p": 0.114295,
+    "research_spearman_p": 0.115409,
     "covgap_spearman_rho": 0.353571,
-    "covgap_spearman_p": 0.196072,
+    "covgap_spearman_p": 0.195088,
     "research_excl4_spearman_rho": 0.608791,
-    "research_excl4_spearman_p": 0.020857
+    "research_excl4_spearman_p": 0.02361
   }
 ]
