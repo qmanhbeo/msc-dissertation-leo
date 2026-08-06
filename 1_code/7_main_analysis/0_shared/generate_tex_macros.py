@@ -116,6 +116,10 @@ def run(args: argparse.Namespace) -> None:
         if r["register_component"] is not None:
             lines.append(rf"\newcommand{{\RegCompSdg{word}}}{{{r['register_component']:+.3f}}}")
 
+    # Adjusted gap range (max - min across SDGs)
+    adj_gaps = [r["adjusted_gap"] for r in decomp["per_sdg"] if r["adjusted_gap"] is not None]
+    lines.append(rf"\newcommand{{\AdjustedGapRange}}{{{max(adj_gaps) - min(adj_gaps):.3f}}}")
+
     # ---- Write ----
     tables_dir.mkdir(parents=True, exist_ok=True)
     out_tex.write_text("\n".join(lines) + "\n", encoding="utf-8")
