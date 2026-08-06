@@ -406,17 +406,17 @@ The semantic-gap ranking is stable across encoders, retrieval strategy, segment 
 
 \subsection{Coverage--Semantic Interaction: Results}\label{sec:interaction}
 
-Table~\ref{tab:interaction} reports the H1a–H1d correlation tests between coverage predictors and the within-SDG semantic gap, computed across every encoder--classifier configuration. Each block is one hypothesis; each row is one config; the three columns are the Spearman $\rho$ of the predictor against the raw gap, the adjusted (topic) gap, and the register component (raw $-$ adjusted). Unlike the rank-robustness tables, raw, adjusted, and register are reported as adjacent columns here because the apparent cancellation \emph{for each config} is the object of comparison.
+Table~\ref{tab:interaction} reports the H1a–H1d rank correlations (Spearman $\rho$) between coverage predictors and the within-SDG semantic gap, computed across every encoder--classifier configuration. Each block is one hypothesis; each row is one config; the three columns are the Spearman $\rho$ of the predictor against the raw gap, the adjusted (topic) gap, and the register component (raw $-$ adjusted). Unlike the rank-robustness tables, raw, adjusted, and register are reported as adjacent columns here because the apparent cancellation \emph{for each config} is the object of comparison.
 
 The four predictors are research coverage, policy coverage, the absolute research--policy coverage gap, and the signed research--policy dominance. MLP configs reuse the INLP projection matrix learned on their encoder's LR classifier (the same G), and the Concept rows use the concept-retrieved research corpus (Appendix~\ref{app:concept-retrieval-sensitivity}) with the same policy corpus.
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{H1a–H1d coverage-predictor vs semantic-gap Spearman correlations across encoder--classifier configs.}
+\caption{H1a–H1d coverage-predictor vs semantic-gap rank correlations (Spearman $\rho$) across encoder--classifier configs.}
 \label{tab:interaction}
 \input{../4_outputs/mpnet/tables/tab4_interaction_h25.tex}
-\par\smallskip\footnotesize\emph{Notes:} Raw gap = main semantic-gap estimate; Adj.\ gap = after INLP register removal (main reported estimate; evaluated in Appendix~\ref{app:register-validation}); Register = raw $-$ adjusted. Each row is an independent computation over 17 SDGs. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.\par
+\par\smallskip\footnotesize\emph{Notes:} Raw gap = main semantic-gap estimate; Adj.\ gap = after INLP register removal (main reported estimate; evaluated in Appendix~\ref{app:register-validation}); Register = raw $-$ adjusted. Each correlation is between two rank vectors (ranks 1--17 across the 17 SDGs); Spearman $\rho$ is the Pearson correlation of these ranks, testing monotonic association. $^{***}p<.001$, $^{**}p<.01$, $^{*}p<.05$, $^{\dagger}p<.10$.\par
 \end{table}
 
 The evidence does not support H1a on the raw gap: across the 17 SDGs, coverage divergence and the raw semantic gap show no detectable association ($\rho = \SpearmanCovRaw$, $p = \SpearmanCovRawP$; Table~\ref{tab:interaction}, MPNet LR row). This is evidence against a strong monotonic relationship, not proof of independence. The raw gap masks a register--topic decomposition: the raw correlation is near-zero because the register component ($\rho = \RhoCovRegister$) appears to cancel the topic signal ($\rho = \RhoCovTopic$; Table~\ref{tab:register-decomposition}). Table~\ref{tab:interaction} shows this apparent cancellation replicates across every encoder--classifier config. Under the raw gap all four H1 hypotheses are null; after register removal the adjusted topic gap is positively associated with coverage divergence (H1a: MPNet LR $\rho = \RhoCovTopic$, $p = \RhoCovTopicP$; positive in \HOneACovgapAdjPositiveCount/\HOneACovgapAdjPositiveCountTotal\ configs, e.g.\ Concept LR \ConceptLRCovgapAdjRho) and with policy coverage (H1d: positive in \HOneDPolicyAdjPositiveCount/\HOneDPolicyAdjPositiveCountTotal\ configs, significant for MPNet LR and the Concept and SciBERT LR configs at $p<0.05$, with MPNet MLP marginal at $p<0.10$). H1b (signed dominance) and H1c (research coverage) do not show a consistent adjusted-direction signal. Coverage and framing are therefore potentially linked through topic, not independent.
@@ -908,7 +908,7 @@ threatens, the rank-based result.
 \begin{table}[htbp]
 \centering
 \small
-\caption{Pearson $r$ on the raw coverage and semantic-gap magnitudes.}
+\caption{Pearson $r$ on the raw coverage and semantic-gap magnitudes (not ranked).}
 \label{tab:raw-value-correlation}
 \input{../4_outputs/appendix/mpnet/j1_raw_value_correlation/tables/tab_j1_raw_value_correlation.tex}
 \par\smallskip\footnotesize\emph{Notes:} Same H1a--H1d grid and column layout as Table~\ref{tab:interaction}; significance stars use the two-sided Monte Carlo permutation $p$-value ($^{***}\,p<0.001$, $^{**}\,p<0.01$, $^{*}\,p<0.05$, $^{\dagger}\,p<0.10$). Identical inputs and configuration grid to
