@@ -825,15 +825,19 @@ Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} r
 
 \subsection{Rank Robustness: Cross-Sensitivity and Encoder Sensitivity}\label{sec:cross-sensitivity}
 
-Table~\ref{tab:cross-sensitivity-robustness} reports each SDG's semantic-gap rank under the canonical MPNet--LR configuration and six alternatives spanning policy source family (curated AI/SDG, SDGi, UNGDC), segment cap (20, none), and retrieval strategy (concept-based field-of-study). Table~\ref{tab:encoder-sensitivity-semantic} and Table~\ref{tab:encoder-sensitivity-coverage} report the within-SDG gap rankings under MPNet, MiniLM, and SciBERT for each assignment method. In every rank-robustness table the adjusted (register-removed) ranking is Panel~(a) and the raw (naive) ranking is Panel~(b), with the tested dimension nested inside each panel.
+Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-robustness-raw} report each SDG's semantic-gap rank under the canonical MPNet--LR configuration and six alternatives spanning policy source family (curated AI/SDG, SDGi, UNGDC), segment cap (20, none), and retrieval strategy (concept-based field-of-study). Tables~\ref{tab:encoder-sensitivity-semantic},~\ref{tab:encoder-sensitivity-semantic-raw}, and~\ref{tab:encoder-sensitivity-coverage} report the within-SDG gap rankings under MPNet, MiniLM, and SciBERT for each assignment method. The adjusted (register-removed) ranking is reported separately from the raw (naive) ranking, with the tested dimension nested inside each table.
 
-\input{../4_outputs/mpnet/tables/tab6_cross_sensitivity.tex}
+\input{../4_outputs/mpnet/tables/tab6a_cross_sensitivity.tex}
+
+\input{../4_outputs/mpnet/tables/tab6b_cross_sensitivity.tex}
 
 \subsection{Encoder Sensitivity}\label{sec:encoder-sensitivity}
 
 The semantic-gap ranking is moderately preserved across the three encoders (MPNet--LR vs.\ SciBERT--LR Spearman $\rho = \SciBERTSemanticRho$; MPNet--LR vs.\ MiniLM--LR $\rho \approx \MiniLMSemanticRho$), and the coverage-gap ranking is highly stable (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$). MiniLM and SciBERT are scored on a deterministic 100,000-paper subset (seed 42) of the canonical segmented corpus, so the architecture comparison isolates encoder choice from corpus scale. Under the raw gap, SDG~3 leads for MPNet--LR while SDG~13 leads for MiniLM--LR and SciBERT--LR; SDG~17 trails under all three. The scientific-domain SciBERT compresses the magnitudes but does not change which goals diverge most. Assignment-method sensitivity within MPNet: the three assignment methods, LR, zero-shot nearest-centroid, and the MLP robustness check, show varied agreement (MPNet LR vs.\ MLP $\rho = \MlpSemanticRho$, LR vs.\ zero-shot $\rho = \ZeroShotSemanticRho$). SDG~17 is the most method-sensitive goal, sitting at rank~17 under LR but rank~8 under zero-shot. The LR baseline is the canonical reference, with MLP and zero-shot as uncertainty bounds.
 
-\input{../4_outputs/mpnet/tables/tab7_encoder_sensitivity.tex}
+\input{../4_outputs/mpnet/tables/tab7a_encoder_sensitivity.tex}
+
+\input{../4_outputs/mpnet/tables/tab7b_encoder_sensitivity.tex}
 
 \input{../4_outputs/mpnet/tables/tab9_encoder_sensitivity_coverage.tex}
 
