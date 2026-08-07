@@ -115,7 +115,7 @@ flowchart TD
         U["Unlabeled<br>research, policy_scrape, policy_manual, ungdc_sdg"]
     end
 
-    subgraph Prep[Preprocess -> Segment (canonical, ONCE) -> Embed]
+    subgraph Prep["Preprocess → Segment (canonical, ONCE) → Embed"]
         PSE["8 preprocess scripts<br>1 canonical 1_segment_corpus run (shared by all models)<br>8 embed + merge policy<br>embed_paper_shards (full for primary, 100k subset for MiniLM/SciBERT)"]
     end
 
