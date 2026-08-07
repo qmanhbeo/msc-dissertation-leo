@@ -52,7 +52,11 @@ then retry.
 # One-time: warm the HuggingFace encoder models (MPNet + MiniLM + SciBERT) into the local cache.
 python main.py --fetch-encoder-models
 
-# Or if you want to rebuild from the raw data snapshot (cold replay):
+# NOTE: --cold-replay rebuilds embeddings from scratch using the frozen raw
+# snapshot. GPU embedding is not bit-deterministic across hardware (CUDA
+# determinism flags were tested but hurt runtime too much), so results may
+# differ at the last mantissa bits. Use --warm-replay (above) for exact
+# reproduction of the submitted outputs.
 python main.py --cold-replay --overwrite
 ```
 
