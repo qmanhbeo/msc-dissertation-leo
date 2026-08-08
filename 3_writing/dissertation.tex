@@ -579,12 +579,7 @@ This subsection reports the pairwise cosine-similarity heatmap (Figure~\ref{fig:
 
 Figure~\ref{fig:centroid-similarity-matrix} shows the full 17$\times$17 similarity grid. The lower triangle is annotated; the upper triangle is left blank because the matrix is symmetric. Reading the grid, three observations stand out. First, the diagonal dominates: most centroids are far more similar to themselves than to any neighbour, which is why the supervised LR classifier (Table~\ref{tab:validation}) can build on this well-separated base to reach \MacroFOne{}. Second, a small set of off-diagonal cells is elevated. SDG 11's centroid neighbours SDG 9 (cosine 0.744), and SDG 8 lies near SDGs 1 and 10 (cosine 0.808{} and 0.862), and SDGs 1 and 10 are themselves the closest off-diagonal pair (cosine 0.931)  --  these are the proximities that make the SDG 11 and SDG 8 scores in Section~\ref{sec:validation} indicative rather than exact. Third, SDG 17 is the clear outlier: its row and column are the flattest, and its nearest neighbour is SDG 13 (cosine 0.821), reflecting the overlap between climate and partnership discourse noted in Section~\ref{sec:validation}.
 
-\section{Supplementary Robustness and Sensitivity Checks}
-\label{app:additional-perspectives}
-
-% \subsection{Within-Corpus SDG Structure Diagnostics}  --  omitted (pipeline not regenerated for LR)
-
-\subsection{Lexical Illustration of the Semantic Gap}
+\section{Lexical Illustration of the Semantic Gap}
 \label{app:semantic-gap-text-interpretability}
 
 Table~\ref{tab:semantic-gap-text-interpretability-full} lists the TF-IDF terms most distinctive of the research and policy sides for each SDG. Generic ML methodology vocabulary, such as \textit{model}, \textit{learning}, and \textit{neural}, is excluded because these terms reflect the search strategy rather than SDG-specific framing.
@@ -606,7 +601,7 @@ The contrasts echo the embedding patterns. The widest-gap SDGs (3, 13, 11, 7, 1,
 
 
 
-\subsection{Distance-Functional Robustness Table}
+\section{Distance-Functional Robustness Table}
 \label{app:distributional-table}\label{sec:distributional-robustness}
 
 Table~\ref{tab:distributional-gap} reports the per-SDG research--policy gap under the full battery of distribution-aware metrics described in Section~\ref{sec:distributional-robustness}, together with the primary semantic gap. Part~1 covers the full-corpus exact metrics (sliced Wasserstein, Chamfer, Hausdorff, Gaussian-2-Wasserstein, Grassmann, linear MMD); part~2 covers the sampled metrics (exact EMD, Sinkhorn, energy, squared RBF MMD, C2ST AUC) plus the sampled semantic gap. The final row of each part reports Spearman $\rho$ between each metric's ranking and the primary (adjusted) ranking.
