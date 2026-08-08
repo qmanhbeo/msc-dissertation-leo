@@ -68,6 +68,10 @@
 \draw[arrow] (top.south) -- ++(0,-0.2cm) -| (cov.north);
 \draw[arrow] (top.south) -- ++(0,-0.2cm) -| (sem.north);
 
+%% ====================  COVERAGE ↔ FRAMING CORRELATION  ====================
+
+\draw[arrow, <->] (cov.east) -- (sem.west) node[midway, above, font=\scriptsize\bfseries] {?} ;
+
 %% ====================  LEVEL 3 BOUNDARY  ====================
 
 \node[base, fill=white, draw=gray!40, text width=9cm,
