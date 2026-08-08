@@ -33,28 +33,16 @@
 %% ====================  TWO COLUMNS  ====================
 
 \node[dimbox, below left=0.4cm and 0.8cm of top.south]
-  (cov) {\textbf{Coverage Divergence}\\
-         \footnotesize\textit{Which SDGs does each corpus prioritise?}};
+  (cov) {\scriptsize\textbf{Level 1}\\[1pt]
+         \textbf{Coverage Divergence}\\[2pt]
+         \footnotesize\textit{Which SDGs does each corpus prioritise?}\\[2pt]
+         \scriptsize Measured through SDG distribution};
 
 \node[dimbox, below right=0.4cm and 0.8cm of top.south]
-  (sem) {\textbf{Semantic Framing Divergence}\\
-         \footnotesize\textit{How differently do they discuss the same SDG?}};
-
-%% ====================  LEVEL TAGS  ====================
-
-\node[leveltag, above right=0.05cm and 0.05cm of cov.north west, anchor=south west]
-  (l1tag) {Level 1};
-
-\node[leveltag, above right=0.05cm and 0.05cm of sem.north west, anchor=south west]
-  (l2tag) {Level 2};
-
-%% ====================  MEASUREMENT LABELS  ====================
-
-\node[label, below=0.1cm of cov]
-  (cov_label) {Measured through SDG distribution};
-
-\node[label, below=0.1cm of sem]
-  (sem_label) {Measured through embedding proximity};
+  (sem) {\scriptsize\textbf{Level 2}\\[1pt]
+         \textbf{Semantic Framing Divergence}\\[2pt]
+         \footnotesize\textit{How differently do they discuss the same SDG?}\\[2pt]
+         \scriptsize Measured through embedding proximity};
 
 %% ====================  TOPIC + REGISTER DECOMPOSITION  ====================
 
