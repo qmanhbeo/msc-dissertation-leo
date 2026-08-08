@@ -536,7 +536,23 @@ The research corpus was retrieved from the OpenAlex API \parencite{Priem2022} us
 
 The retrieval boundary is a deliberate scope condition. Elsevier's data-driven characterisation of AI research draws on over 700 field-specific keywords across some 600,000 documents \parencite{Elsevier2019}, favouring recall. The OECD.AI Observatory methodology instead defines a paper as AI when it carries the Artificial Intelligence or Machine Learning field of study in the Microsoft Academic Graph (MAG), whose Fields of Study taxonomy OpenAlex later inherited and extended by mapping it to Wikidata identifiers \parencite{OECDAiMethod, Priem2022, Wang2020}. The present design prioritises precision: a four-term query keeps non-AI noise out of the embedding space at the cost of recall in specialised AI subfields. \textcite{CSET2023} reach the same conclusion for AI-research identification, namely that results are sensitive to the retrieval method and that supervised classification is preferred.
 
-A direct test of this scope condition re-ran retrieval using field-of-study membership for the same two AI fields, mirroring the OECD.AI definition \parencite{OECDAiMethod}, and re-scored the resulting corpus through the identical pipeline. Concept retrieval used OpenAlex concept tags for Artificial Intelligence and Machine Learning, capped at \texttt{MAX\_PAPERS\_CONCEPT\_CORPUS} = 100{,}000 papers, yielding the roughly 100{,}000-paper concept corpus. This scale sits on the empirical variance plateau established by the sample-stability ladder (Appendix~\ref{app:sample-stability}): at 50,000 papers the coverage-profile standard deviation is \SampleMacroVarianceFiftyK{} and the mean within-SDG semantic gap is \SampleMeanSemanticGapFiftyK{}, within ~0.002 of the full-corpus estimate of \SampleMeanSemanticGapTwoM{} (full corpus N = \SampleStabilityFullCorpusN), while policy-text calibration bias has also converged (\SamplePolicyBiasFiftyK{}). The scale also exceeds every corpus size used in prior SDG classification and mapping benchmarks, namely the OSDG community dataset (30,534 texts) \textcite{Pukelis2022}, the SDG benchmark encoder evaluation corpus (35,001 papers) \textcite{Gjorgjevikj2025}, the SDGi corpus (20,267 segments) \textcite{SDGi2024}, the Aurora expert-validated set (4,971 texts) \textcite{Vanderfeesten2020Aurora}, and the 6,000-paper benchmark by \textcite{Kashnitsky2024}, while remaining far smaller than the full \NResearchSegments{}-segment research corpus and thus a computationally tractable substrate for OpenAlex concept tagging.
+A direct test of this scope condition re-ran retrieval using field-of-study membership for the same two AI fields, mirroring the OECD.AI definition \parencite{OECDAiMethod}, and re-scored the resulting corpus through the identical pipeline. Concept retrieval used OpenAlex concept tags for Artificial Intelligence and Machine Learning, capped at \texttt{MAX\_PAPERS\_CONCEPT\_CORPUS} = 100{,}000 papers, yielding the roughly 100{,}000-paper concept corpus. This scale sits on the empirical variance plateau established by the sample-stability ladder (Appendix~\ref{app:sample-stability}): at 50{,}000 papers the coverage-profile standard deviation is \SampleMacroVarianceFiftyK{} and the mean within-SDG semantic gap is \SampleMeanSemanticGapFiftyK{}, within ~0.002 of the full-corpus estimate of \SampleMeanSemanticGapTwoM{} (full corpus N = \SampleStabilityFullCorpusN), while policy-text calibration bias has also converged (\SamplePolicyBiasFiftyK{}). The scale also exceeds every corpus size used in prior SDG classification and mapping benchmarks, namely the OSDG community dataset (30,534 texts) \textcite{Pukelis2022}, the SDG benchmark encoder evaluation corpus (35,001 papers) \textcite{Gjorgjevikj2025}, the SDGi corpus (20,267 segments) \textcite{SDGi2024}, the Aurora expert-validated set (4,971 texts) \textcite{Vanderfeesten2020Aurora}, and the 6,000-paper benchmark by \textcite{Kashnitsky2024}, while remaining far smaller than the full \NResearchSegments{}-segment research corpus and thus a computationally tractable substrate for OpenAlex concept tagging.
+
+\clearpage
+\section{Concept-Retrieval Sensitivity}
+\label{app:concept-retrieval-sensitivity}
+
+To test sensitivity to the query choice, retrieval was repeated using field-of-study membership for the two AI fields of study \parencite{OECDAiMethod}, mirroring the OECD.AI Observatory methodology, which treats a paper as AI if tagged with the Artificial Intelligence or Machine Learning field of study in the Microsoft Academic Graph (MAG), the taxonomy that OpenAlex later inherited and extended \parencite{Priem2022, Wang2020}. No SDG filter was applied. SDG assignment was performed by the same trained logistic-regression classifier used throughout (Section~\ref{sec:supervised-classifier}), so the only difference from the main corpus is retrieval strategy. The resulting 100,000-paper corpus was passed through the identical segmentation, embedding, scoring, and analysis pipeline.
+
+Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword-retrieved and concept-retrieved corpora. The two profiles are closely aligned (Spearman $\rho = \ConceptCoverageSpearman$, Kendall $\tau = \ConceptCoverageKendall$); the largest deviations are SDG~4 ($-7.3$pp, the known ML-vocabulary artefact, Appendix~\ref{app:sdg4-lexical-audit}) and SDG~9 ($+5.8$pp). The within-SDG coverage-gap and semantic-gap rankings are also stable against the keyword baseline (coverage-gap rank $\rho = \ConceptCoverageGapRho$; semantic-gap rank $\rho = \ConceptSemanticGapRho$, Table~\ref{tab:cross-sensitivity-robustness}). \textcite{CSET2023} independently find that AI-research identification is sensitive to the retrieval method and recommend supervised classification. The present LR scoring is that recommended step applied to SDG assignment. We therefore report the main findings as robust to the query-term choice, while noting that both corpora remain conditional on their respective retrieval strategies.
+
+\begin{table}[ht]
+\centering
+\caption{SDG coverage-share comparison: keyword-retrieved versus concept-retrieved (AI/ML field-of-study) research corpus.}
+\label{tab:concept-coverage}
+\input{../4_outputs/mpnet/tables/tab10_concept_coverage.tex}
+\par\smallskip\footnotesize\emph{Notes:} $\Delta$ is concept minus keyword share in percentage points.\par
+\end{table}
 
 \section{Diagnostics for Reference Classifier}
 \label{app:centroid-diagnostics}
@@ -776,22 +792,6 @@ The validation is bounded in ways that should be read alongside the main text. F
 \label{tab:register-validation-selectivity}
 \resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_validation_selectivity.tex}}
 \par\smallskip\footnotesize\emph{Notes:} Five-fold stratified cross-validated accuracy of logistic regression ($C = 10$) and kNN ($k = 5$) in predicting the SDG of each segment from raw and adjusted embeddings; chance = 1/17. If the adjustment removed topic, these accuracies would fall.\par
-\end{table}
-
-\clearpage
-\section{Concept-Retrieval Sensitivity}
-\label{app:concept-retrieval-sensitivity}
-
-To test sensitivity to the query choice, retrieval was repeated using field-of-study membership for the two AI fields of study \parencite{OECDAiMethod}, mirroring the OECD.AI Observatory methodology, which treats a paper as AI if tagged with the Artificial Intelligence or Machine Learning field of study in the Microsoft Academic Graph (MAG), the taxonomy that OpenAlex later inherited and extended \parencite{Priem2022, Wang2020}. No SDG filter was applied. SDG assignment was performed by the same trained logistic-regression classifier used throughout (Section~\ref{sec:supervised-classifier}), so the only difference from the main corpus is retrieval strategy. The resulting 100,000-paper corpus was passed through the identical segmentation, embedding, scoring, and analysis pipeline.
-
-Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword-retrieved and concept-retrieved corpora. The two profiles are closely aligned (Spearman $\rho = \ConceptCoverageSpearman$, Kendall $\tau = \ConceptCoverageKendall$); the largest deviations are SDG~4 ($-7.3$pp, the known ML-vocabulary artefact, Appendix~\ref{app:sdg4-lexical-audit}) and SDG~9 ($+5.8$pp). The within-SDG coverage-gap and semantic-gap rankings are also stable against the keyword baseline (coverage-gap rank $\rho = \ConceptCoverageGapRho$; semantic-gap rank $\rho = \ConceptSemanticGapRho$, Table~\ref{tab:cross-sensitivity-robustness}). \textcite{CSET2023} independently find that AI-research identification is sensitive to the retrieval method and recommend supervised classification. The present LR scoring is that recommended step applied to SDG assignment. We therefore report the main findings as robust to the query-term choice, while noting that both corpora remain conditional on their respective retrieval strategies.
-
-\begin{table}[ht]
-\centering
-\caption{SDG coverage-share comparison: keyword-retrieved versus concept-retrieved (AI/ML field-of-study) research corpus.}
-\label{tab:concept-coverage}
-\input{../4_outputs/mpnet/tables/tab10_concept_coverage.tex}
-\par\smallskip\footnotesize\emph{Notes:} $\Delta$ is concept minus keyword share in percentage points.\par
 \end{table}
 
 \section{Supplementary Cross-Method Data}
