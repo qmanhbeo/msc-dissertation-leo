@@ -6,14 +6,19 @@
 \definecolor{research}{HTML}{0077BB}
 \definecolor{policy}{HTML}{EE7733}
 \definecolor{sharedbg}{HTML}{444444}
+\definecolor{topiccol}{HTML}{3377AA}
+\definecolor{regcol}{HTML}{999999}
 
 \tikzset{
   base/.style={draw, rounded corners=3pt, align=center,
                inner xsep=6pt, inner ysep=5pt, line width=0.5pt},
   dimbox/.style={base, fill=sharedbg!6, draw=sharedbg, text width=4.8cm, minimum height=1.2cm},
-  levelbox/.style={base, fill=white, draw=gray!60, text width=4.8cm, minimum height=0.8cm, font=\footnotesize},
+  subbox/.style={base, fill=white, draw=gray!50, text width=2.2cm, minimum height=0.9cm, font=\footnotesize},
+  leveltag/.style={font=\scriptsize\bfseries, text=sharedbg!70, align=center},
   arrow/.style={-{Stealth[length=2mm]}, draw=gray!70, line width=0.5pt},
+  decomparrow/.style={-{Stealth[length=2mm]}, draw=gray!50, line width=0.4pt, dashed},
   label/.style={font=\footnotesize\bfseries, align=center, text=black},
+  boundary/.style={draw=gray!40, line width=0.4pt, dashed},
 }
 
 \begin{document}
@@ -28,10 +33,22 @@
 %% ====================  TWO COLUMNS  ====================
 
 \node[dimbox, below left=0.4cm and 0.8cm of top.south]
-  (cov) {\textbf{Coverage Divergence}\\ \footnotesize \textit{Which SDGs does each corpus prioritise?}};
+  (cov) {\textbf{Coverage Divergence}\\
+         \footnotesize\textit{Which SDGs does each corpus prioritise?}};
 
 \node[dimbox, below right=0.4cm and 0.8cm of top.south]
-  (sem) {\textbf{Semantic Framing Divergence}\\ \footnotesize \textit{How differently do they discuss the same SDG?}};
+  (sem) {\textbf{Semantic Framing Divergence}\\
+         \footnotesize\textit{How differently do they discuss the same SDG?}};
+
+%% ====================  LEVEL TAGS  ====================
+
+\node[leveltag, above right=0.05cm and 0.05cm of cov.north west, anchor=south west]
+  (l1tag) {Level 1};
+
+\node[leveltag, above right=0.05cm and 0.05cm of sem.north west, anchor=south west]
+  (l2tag) {Level 2};
+
+%% ====================  MEASUREMENT LABELS  ====================
 
 \node[label, below=0.1cm of cov]
   (cov_label) {Measured through SDG distribution};
@@ -39,31 +56,47 @@
 \node[label, below=0.1cm of sem]
   (sem_label) {Measured through embedding proximity};
 
-%% ====================  THREE-LEVEL LADDER  ====================
+%% ====================  TOPIC + REGISTER DECOMPOSITION  ====================
 
-\node[levelbox, fill=research!8, draw=research!50, left=2.5cm of cov]
-  (l1) {\textbf{L1}\; Lexical / Bibliometric Correspondence};
-\node[levelbox, fill=research!12, draw=research!60, below=0.15cm of l1]
-  (l2) {\textbf{L2}\; Semantic Proximity in Embedding Space};
-\node[levelbox, fill=research!16, draw=research!70, below=0.15cm of l2]
-  (l3) {\textbf{L3}\; Substantive Agreement};
+\node[subbox, fill=topiccol!6, draw=topiccol!50, below left=0.5cm and 0.1cm of sem.south]
+  (topic) {\textbf{Topic}\\[-2pt]
+           \tiny adjusted gap\\[-1pt]
+           \tiny (primary est.)};
 
-\node[label, below=0.1cm of l3, text width=4.5cm, font=\footnotesize]
-  (ladder_label) {This study is positioned at L2};
+\node[subbox, fill=regcol!8, draw=regcol!50, below right=0.5cm and 0.1cm of sem.south]
+  (register) {\textbf{Register}\\[-2pt]
+              \tiny removed by INLP\\[-1pt]
+              \tiny (communicative\\[-1pt]
+              \tiny conventions)};
 
-%% connecting ladder to title
-\draw[arrow, draw=research!50] (l1.north) |- (top.west);
+\draw[decomparrow] (sem.south) -- ++(0,-0.25cm) -| (topic.north);
+\draw[decomparrow] (sem.south) -- ++(0,-0.25cm) -| (register.north);
 
-%% ====================  ARROWS  ====================
+%% decomposition label
+\node[font=\scriptsize, text=gray!60, anchor=west] at ([xshift=0.15cm]$(topic.north)!0.5!(register.north)$)
+  {INLP};
+
+%% ====================  ARROWS FROM TOP  ====================
 
 \draw[arrow] (top.south) -- ++(0,-0.2cm) -| (cov.north);
 \draw[arrow] (top.south) -- ++(0,-0.2cm) -| (sem.north);
+
+%% ====================  LEVEL 3 BOUNDARY  ====================
+
+\coordinate (boundary_left) at ([xshift=-0.3cm]$(topic.south)!0.5!(register.south) + (0,-0.4cm)$);
+\coordinate (boundary_right) at ([xshift=0.3cm]$(topic.south)!0.5!(register.south) + (0,-0.4cm)$);
+
+\draw[boundary] (boundary_left -| cov.west) -- (boundary_right -| sem.east);
+
+\node[below=0.15cm of $(topic.south)!0.5!(register.south)$, text width=9cm, align=center,
+      font=\footnotesize, text=gray!60]
+  (l3) {\textbf{Level 3:} Substantive agreement (problems, actors, interventions) --- requires qualitative methods, beyond scope of this study};
 
 %% ====================  BOTTOM NOTE  ====================
 
 \node[base, fill=white, draw=gray!40, text width=10cm,
       minimum height=0.7cm, font=\footnotesize,
-      below=1.0cm of $(cov.south)!0.5!(sem.south)$]
+      below=0.3cm of l3]
   (note) {Semantic proximity is a register-sensitive proxy for framing, not evidence of substantive alignment or policy influence};
 
 \end{tikzpicture}
