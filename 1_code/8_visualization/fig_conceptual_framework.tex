@@ -60,7 +60,7 @@
 \draw[decomparrow] (sem.south) -- ++(0,-0.25cm) -| (register.north);
 
 %% decomposition label
-\node[font=\scriptsize\bfseries, anchor=center] at ($(topic.north)!0.5!(register.north)$)
+\node[font=\scriptsize\bfseries, anchor=center] at ([yshift=0.35cm]$(topic.north)!0.5!(register.north)$)
   {INLP};
 
 %% ====================  ARROWS FROM TOP  ====================
@@ -72,7 +72,7 @@
 
 \node[base, fill=white, draw=gray!40, text width=9cm,
       minimum height=0.7cm, font=\footnotesize,
-      below=2.0cm of $(cov.south)!0.5!(sem.south)$]
+      below=2.5cm of $(cov.south)!0.5!(sem.south)$]
   (l3) {\textbf{Level 3:} Substantive agreement (problems, actors, interventions) --- requires qualitative methods, beyond scope of this study};
 
 \end{tikzpicture}
