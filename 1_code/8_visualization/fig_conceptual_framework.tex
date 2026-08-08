@@ -33,13 +33,13 @@
 %% ====================  TWO COLUMNS  ====================
 
 \node[dimbox, below left=0.4cm and 0.8cm of top.south]
-  (cov) {\scriptsize\textbf{Level 1}\\[1pt]
+  (cov) {\scriptsize\textbf{Level 1}\\[2pt]
          \textbf{Coverage Divergence}\\[2pt]
          \footnotesize\textit{Which SDGs does each corpus prioritise?}\\[2pt]
          \scriptsize Measured through SDG distribution};
 
 \node[dimbox, below right=0.4cm and 0.8cm of top.south]
-  (sem) {\scriptsize\textbf{Level 2}\\[1pt]
+  (sem) {\scriptsize\textbf{Level 2}\\[2pt]
          \textbf{Semantic Framing Divergence}\\[2pt]
          \footnotesize\textit{How differently do they discuss the same SDG?}\\[2pt]
          \scriptsize Measured through embedding proximity};
@@ -47,15 +47,14 @@
 %% ====================  TOPIC + REGISTER DECOMPOSITION  ====================
 
 \node[subbox, fill=topiccol!6, draw=topiccol!50, below left=0.5cm and 0.1cm of sem.south]
-  (topic) {\textbf{Topic}\\[-2pt]
-           \tiny adjusted gap\\[-1pt]
-           \tiny (primary est.)};
+  (topic) {\textbf{Topic}\\[2pt]
+           \footnotesize adjusted gap\\[2pt]
+           \footnotesize (primary est.)};
 
 \node[subbox, fill=regcol!8, draw=regcol!50, below right=0.5cm and 0.1cm of sem.south]
-  (register) {\textbf{Register}\\[-2pt]
-              \tiny removed by INLP\\[-1pt]
-              \tiny (communicative\\[-1pt]
-              \tiny conventions)};
+  (register) {\textbf{Register}\\[2pt]
+              \footnotesize removed by INLP\\[2pt]
+              \footnotesize (communicative conventions)};
 
 \draw[decomparrow] (sem.south) -- ++(0,-0.25cm) -| (topic.north);
 \draw[decomparrow] (sem.south) -- ++(0,-0.25cm) -| (register.north);
