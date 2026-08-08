@@ -83,13 +83,9 @@
 
 %% ====================  LEVEL 3 BOUNDARY  ====================
 
-\coordinate (boundary_left) at ([xshift=-0.3cm]$(topic.south)!0.5!(register.south) + (0,-0.4cm)$);
-\coordinate (boundary_right) at ([xshift=0.3cm]$(topic.south)!0.5!(register.south) + (0,-0.4cm)$);
-
-\draw[boundary] (boundary_left -| cov.west) -- (boundary_right -| sem.east);
-
-\node[below=0.15cm of $(topic.south)!0.5!(register.south)$, text width=9cm, align=center,
-      font=\footnotesize, text=gray!60]
+\node[base, fill=white, draw=gray!40, text width=9cm,
+      minimum height=0.7cm, font=\footnotesize, text=gray!60,
+      below=0.6cm of $(topic.south)!0.5!(register.south)$]
   (l3) {\textbf{Level 3:} Substantive agreement (problems, actors, interventions) --- requires qualitative methods, beyond scope of this study};
 
 \end{tikzpicture}
