@@ -3,7 +3,7 @@
 
 Counts words in ``3_writing/dissertation.tex`` per top-level ``\section`` and
 per ``\subsection``, excluding the appendix/robustness sections (everything
-from ``\section{Supplementary Methodology}`` onward) so the reported total
+from ``\section{Retrieval and Query Chain}`` onward) so the reported total
 reflects the 8.8k main-text cap only.
 
 The method matches the ad-hoc session counts: strip LaTeX comments, then
@@ -21,7 +21,7 @@ from pathlib import Path
 DEFAULT_TEX = Path(__file__).resolve().parents[1] / "3_writing" / "dissertation.tex"
 
 # Appendix boundary: prose after this section is excluded from the main cap.
-APPENDIX_BOUNDARY = r"\\section\{Supplementary Methodology\}"
+APPENDIX_BOUNDARY = r"\\section\{Retrieval and Query Chain\}"
 
 
 def strip_comments(text: str) -> str:
