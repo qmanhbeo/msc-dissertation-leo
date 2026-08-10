@@ -142,6 +142,8 @@ MANUSCRIPT_TABLE_FILES = [
     "tab4_interaction_h25.tex",
     "num13_distributional_gap.tex",
     "tab13_distributional_gap.tex",
+    "num18_distributional_h1.tex",
+    "tab14_distributional_h1.tex",
     "tab7a_encoder_sensitivity.tex",
     "tab7b_encoder_sensitivity.tex",
     "tab9_encoder_sensitivity_coverage.tex",
@@ -234,7 +236,10 @@ def require_output_files(output_dir: Path, required_files: list[str]) -> Path:
 # into 4_outputs/{model}/adjusted/tables/ (the adjusted embedding track), which is
 # also where dissertation.tex reads them from. The guard below accepts either
 # location so build-pdf does not require a duplicate copy under tables/.
-DISTRIBUTIONAL_TABLES = {"num13_distributional_gap.tex", "tab13_distributional_gap.tex"}
+DISTRIBUTIONAL_TABLES = {
+    "num13_distributional_gap.tex", "tab13_distributional_gap.tex",
+    "num18_distributional_h1.tex", "tab14_distributional_h1.tex",
+}
 
 
 def require_pdf_inputs(output_dir: Path, model: str | None = None) -> Path:

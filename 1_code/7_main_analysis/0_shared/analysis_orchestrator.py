@@ -161,6 +161,17 @@ APPENDIX_SPECS = [
         "requires": ["semantic_gap_distances_lr.json"],
     },
     {
+        "flag": "appendix-g-distributional-h1",
+        "aliases": [],
+        "script": "1_main_text/g_distributional_h1_correlation.py",
+        "help": "Run the H1a--H1d correlation grid under distribution-aware semantic gaps (OPT-IN: requires the G distributional summary; run before --build-pdf).",
+        "warn": "Distributional H1 grid (Appendix G)",
+        "run_label": "distributional H1a--H1d correlation grid",
+        "step_id": "G1",
+        "in_all": False,
+        "requires": None,
+    },
+    {
         "flag": "appendix-j1-raw-value",
         "aliases": ["raw-value-correlation"],
         "script": "2_appendix/j1_raw_value_correlation.py",

@@ -1,0 +1,697 @@
+{
+  "embedding_model": "all-mpnet-base-v2",
+  "note": "H1a--H1d correlation grid re-run with distribution-aware semantic gaps (adjusted embeddings) in place of the centroid gap.",
+  "test": {
+    "method": "spearman",
+    "p_value": "two-sided Monte Carlo permutation",
+    "n_resamples": 100000,
+    "seed": 42
+  },
+  "gates": {
+    "canonical_n17": {
+      "rho": 0.544,
+      "p": 0.025
+    },
+    "canonical_n16": {
+      "rho": 0.597,
+      "p": 0.016
+    },
+    "centroid_rank_min": 0.999
+  },
+  "n17_all_sdgs": true,
+  "n16_sdg4_excluded": true,
+  "methods": [
+    {
+      "key": "sliced_wasserstein",
+      "name": "Sliced Wasserstein",
+      "is_reference": false,
+      "rank_vs_canonical": 0.52451,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.553922,
+            "p": 0.02181
+          },
+          "n16": {
+            "rho": 0.561765,
+            "p": 0.02498
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.061275,
+            "p": 0.809232
+          },
+          "n16": {
+            "rho": 0.011765,
+            "p": 0.96181
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.539216,
+            "p": 0.02803
+          },
+          "n16": {
+            "rho": 0.526471,
+            "p": 0.03762
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.397302,
+            "p": 0.115839
+          },
+          "n16": {
+            "rho": 0.401766,
+            "p": 0.122299
+          }
+        }
+      }
+    },
+    {
+      "key": "linear_mmd",
+      "name": "Linear MMD",
+      "is_reference": false,
+      "rank_vs_canonical": 0.620098,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.602941,
+            "p": 0.01169
+          },
+          "n16": {
+            "rho": 0.597059,
+            "p": 0.01603
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.022059,
+            "p": 0.932201
+          },
+          "n16": {
+            "rho": -0.023529,
+            "p": 0.931791
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.465686,
+            "p": 0.060389
+          },
+          "n16": {
+            "rho": 0.455882,
+            "p": 0.076929
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.438995,
+            "p": 0.079129
+          },
+          "n16": {
+            "rho": 0.44003,
+            "p": 0.087489
+          }
+        }
+      }
+    },
+    {
+      "key": "energy_distance",
+      "name": "Energy distance",
+      "is_reference": false,
+      "rank_vs_canonical": 0.443627,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.536765,
+            "p": 0.02749
+          },
+          "n16": {
+            "rho": 0.529412,
+            "p": 0.03667
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.073529,
+            "p": 0.773462
+          },
+          "n16": {
+            "rho": 0.0,
+            "p": 1.0
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.531863,
+            "p": 0.03041
+          },
+          "n16": {
+            "rho": 0.497059,
+            "p": 0.052239
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.383814,
+            "p": 0.129539
+          },
+          "n16": {
+            "rho": 0.391464,
+            "p": 0.132739
+          }
+        }
+      }
+    },
+    {
+      "key": "rbf_mmd",
+      "name": "Squared RBF MMD",
+      "is_reference": false,
+      "rank_vs_canonical": 0.259804,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.473039,
+            "p": 0.056149
+          },
+          "n16": {
+            "rho": 0.461765,
+            "p": 0.072399
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.112745,
+            "p": 0.667973
+          },
+          "n16": {
+            "rho": 0.017647,
+            "p": 0.948981
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.551471,
+            "p": 0.02425
+          },
+          "n16": {
+            "rho": 0.523529,
+            "p": 0.03894
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.295524,
+            "p": 0.247118
+          },
+          "n16": {
+            "rho": 0.289919,
+            "p": 0.271767
+          }
+        }
+      }
+    },
+    {
+      "key": "exact_emd",
+      "name": "Exact EMD",
+      "is_reference": false,
+      "rank_vs_canonical": 0.693627,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.303922,
+            "p": 0.236368
+          },
+          "n16": {
+            "rho": 0.379412,
+            "p": 0.148639
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.147059,
+            "p": 0.571894
+          },
+          "n16": {
+            "rho": 0.238235,
+            "p": 0.373116
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.166667,
+            "p": 0.515535
+          },
+          "n16": {
+            "rho": 0.244118,
+            "p": 0.359826
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.217045,
+            "p": 0.400116
+          },
+          "n16": {
+            "rho": 0.276674,
+            "p": 0.294587
+          }
+        }
+      }
+    },
+    {
+      "key": "chamfer_symmetric",
+      "name": "Chamfer",
+      "is_reference": false,
+      "rank_vs_canonical": 0.485294,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.102941,
+            "p": 0.692063
+          },
+          "n16": {
+            "rho": 0.167647,
+            "p": 0.531575
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": -0.115196,
+            "p": 0.660983
+          },
+          "n16": {
+            "rho": -0.020588,
+            "p": 0.940121
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": -0.35049,
+            "p": 0.166468
+          },
+          "n16": {
+            "rho": -0.314706,
+            "p": 0.234448
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": -0.006131,
+            "p": 0.98079
+          },
+          "n16": {
+            "rho": 0.041207,
+            "p": 0.877601
+          }
+        }
+      }
+    },
+    {
+      "key": "hausdorff_modified",
+      "name": "Modified Hausdorff",
+      "is_reference": false,
+      "rank_vs_canonical": 0.443627,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.159314,
+            "p": 0.538065
+          },
+          "n16": {
+            "rho": 0.226471,
+            "p": 0.395586
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.151961,
+            "p": 0.558184
+          },
+          "n16": {
+            "rho": 0.252941,
+            "p": 0.342307
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.127451,
+            "p": 0.618094
+          },
+          "n16": {
+            "rho": 0.205882,
+            "p": 0.438196
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.066217,
+            "p": 0.799562
+          },
+          "n16": {
+            "rho": 0.107432,
+            "p": 0.687393
+          }
+        }
+      }
+    },
+    {
+      "key": "gaussian_w2",
+      "name": "Gaussian-2-Wasserstein",
+      "is_reference": false,
+      "rank_vs_canonical": 0.242647,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": -0.007353,
+            "p": 0.97427
+          },
+          "n16": {
+            "rho": 0.085294,
+            "p": 0.752272
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.240196,
+            "p": 0.352466
+          },
+          "n16": {
+            "rho": 0.355882,
+            "p": 0.176418
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.262255,
+            "p": 0.302417
+          },
+          "n16": {
+            "rho": 0.376471,
+            "p": 0.152668
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": -0.041692,
+            "p": 0.872781
+          },
+          "n16": {
+            "rho": 0.03532,
+            "p": 0.895371
+          }
+        }
+      }
+    },
+    {
+      "key": "sinkhorn",
+      "name": "Sinkhorn",
+      "is_reference": false,
+      "rank_vs_canonical": 0.046569,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": -0.198529,
+            "p": 0.439776
+          },
+          "n16": {
+            "rho": -0.179412,
+            "p": 0.505995
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.397059,
+            "p": 0.116459
+          },
+          "n16": {
+            "rho": 0.470588,
+            "p": 0.068659
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": -0.176471,
+            "p": 0.494665
+          },
+          "n16": {
+            "rho": -0.170588,
+            "p": 0.519885
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": -0.505212,
+            "p": 0.04086
+          },
+          "n16": {
+            "rho": -0.47535,
+            "p": 0.063449
+          }
+        }
+      }
+    },
+    {
+      "key": "c2st",
+      "name": "C2ST AUC",
+      "is_reference": false,
+      "rank_vs_canonical": -0.164216,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.269608,
+            "p": 0.293417
+          },
+          "n16": {
+            "rho": 0.217647,
+            "p": 0.414646
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.27451,
+            "p": 0.283617
+          },
+          "n16": {
+            "rho": 0.161765,
+            "p": 0.545855
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.375,
+            "p": 0.135789
+          },
+          "n16": {
+            "rho": 0.285294,
+            "p": 0.279717
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": -0.138565,
+            "p": 0.594594
+          },
+          "n16": {
+            "rho": -0.207506,
+            "p": 0.434696
+          }
+        }
+      }
+    },
+    {
+      "key": "grassmann",
+      "name": "Grassmann",
+      "is_reference": false,
+      "rank_vs_canonical": -0.242647,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": -0.186275,
+            "p": 0.473695
+          },
+          "n16": {
+            "rho": -0.076471,
+            "p": 0.773182
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": 0.034314,
+            "p": 0.894521
+          },
+          "n16": {
+            "rho": 0.147059,
+            "p": 0.582804
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.012255,
+            "p": 0.95936
+          },
+          "n16": {
+            "rho": 0.120588,
+            "p": 0.655253
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": -0.228081,
+            "p": 0.375656
+          },
+          "n16": {
+            "rho": -0.15011,
+            "p": 0.574354
+          }
+        }
+      }
+    },
+    {
+      "key": "centroid_gap_canonical",
+      "name": "centroid_gap_canonical",
+      "is_reference": true,
+      "rank_vs_canonical": 1.0,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.544118,
+            "p": 0.0253
+          },
+          "n16": {
+            "rho": 0.597059,
+            "p": 0.01603
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": -0.058824,
+            "p": 0.823942
+          },
+          "n16": {
+            "rho": -0.073529,
+            "p": 0.780052
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.267157,
+            "p": 0.295127
+          },
+          "n16": {
+            "rho": 0.291176,
+            "p": 0.269977
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.588596,
+            "p": 0.01454
+          },
+          "n16": {
+            "rho": 0.62546,
+            "p": 0.01094
+          }
+        }
+      }
+    },
+    {
+      "key": "centroid_gap_sampled",
+      "name": "centroid_gap_sampled",
+      "is_reference": true,
+      "rank_vs_canonical": 1.0,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.544118,
+            "p": 0.0253
+          },
+          "n16": {
+            "rho": 0.597059,
+            "p": 0.01603
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": -0.058824,
+            "p": 0.823942
+          },
+          "n16": {
+            "rho": -0.073529,
+            "p": 0.780052
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.267157,
+            "p": 0.295127
+          },
+          "n16": {
+            "rho": 0.291176,
+            "p": 0.269977
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.588596,
+            "p": 0.01454
+          },
+          "n16": {
+            "rho": 0.62546,
+            "p": 0.01094
+          }
+        }
+      }
+    },
+    {
+      "key": "centroid_gap_full_corpus",
+      "name": "centroid_gap_full_corpus",
+      "is_reference": true,
+      "rank_vs_canonical": 1.0,
+      "hypotheses": {
+        "covgap": {
+          "n17": {
+            "rho": 0.544118,
+            "p": 0.0253
+          },
+          "n16": {
+            "rho": 0.597059,
+            "p": 0.01603
+          }
+        },
+        "dominance": {
+          "n17": {
+            "rho": -0.058824,
+            "p": 0.823942
+          },
+          "n16": {
+            "rho": -0.073529,
+            "p": 0.780052
+          }
+        },
+        "research": {
+          "n17": {
+            "rho": 0.267157,
+            "p": 0.295127
+          },
+          "n16": {
+            "rho": 0.291176,
+            "p": 0.269977
+          }
+        },
+        "policy": {
+          "n17": {
+            "rho": 0.588596,
+            "p": 0.01454
+          },
+          "n16": {
+            "rho": 0.62546,
+            "p": 0.01094
+          }
+        }
+      }
+    }
+  ]
+}
