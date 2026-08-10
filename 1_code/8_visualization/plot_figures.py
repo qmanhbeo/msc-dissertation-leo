@@ -47,7 +47,7 @@ SHARED_DIR = ROOT / "1_code" / "7_main_analysis" / "0_shared"
 for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, model_slug, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_SHORT_NAMES, model_slug, resolve_model_alias
 from shared_utils import ensure_canonical_outputs, require_output_files
 
 
@@ -80,25 +80,7 @@ plt.rcParams.update({
 RESEARCH_COLOR = "#0077BB"   # blue (Tol palette, colorblind-safe)
 POLICY_COLOR   = "#EE7733"   # orange (Tol palette, colorblind-safe)
 
-SDG_SHORT = {
-    1:  "SDG 1\nNo Poverty",
-    2:  "SDG 2\nZero Hunger",
-    3:  "SDG 3\nGood Health",
-    4:  "SDG 4\nEducation†",
-    5:  "SDG 5\nGender Equality",
-    6:  "SDG 6\nClean Water",
-    7:  "SDG 7\nClean Energy",
-    8:  "SDG 8\nDecent Work",
-    9:  "SDG 9\nInnovation",
-    10: "SDG 10\nReduced Ineq.",
-    11: "SDG 11\nSust. Cities",
-    12: "SDG 12\nConsumption",
-    13: "SDG 13\nClimate‡",
-    14: "SDG 14\nLife Below Water",
-    15: "SDG 15\nLife on Land",
-    16: "SDG 16\nPeace & Justice",
-    17: "SDG 17\nPartnerships‡",
-}
+SDG_SHORT = {sdg: f"SDG {sdg}\n{SDG_SHORT_NAMES[sdg]}" for sdg in range(1, 18)}
 
 
 def plot_centroid_similarity_heatmap(layout, model: str) -> None:

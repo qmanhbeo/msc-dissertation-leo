@@ -48,7 +48,7 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, N_SDG, SDG_NAMES, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, N_SDG, SDG_SHORT_NAMES, resolve_model_alias
 from register_utils import (
     compute_gaps_for_directions,
     load_G,
@@ -131,7 +131,7 @@ def _generate_decomposition(
             "adjusted_gap": adj_val,
             "register_component": register_component,
             "coverage_gap": cov_val,
-            "name": SDG_NAMES[sdg],
+            "name": SDG_SHORT_NAMES[sdg],
         })
 
     valid = [r for r in per_sdg if r["raw_gap"] is not None and r["adjusted_gap"] is not None]
@@ -183,12 +183,12 @@ def _generate_decomposition(
     ]
     for r in per_sdg:
         sdg = r["sdg"]
-        name = SDG_NAMES[sdg]
+        name = SDG_SHORT_NAMES[sdg].replace("&", r"\&")
         raw_s = f"{r['raw_gap']:.3f}" if r['raw_gap'] is not None else "N/A"
         adj_s = f"{r['adjusted_gap']:.3f}" if r['adjusted_gap'] is not None else "N/A"
         reg_s = f"{r['register_component']:+.3f}" if r['register_component'] is not None else "N/A"
         cov_s = f"{r['coverage_gap']:.4f}" if r['coverage_gap'] is not None else "N/A"
-        tex_lines.append(f"SDG {sdg:2d} & {name} & {raw_s} & {adj_s} & {reg_s} & {cov_s} \\\\")
+        tex_lines.append(f"{sdg:2d} & {name} & {raw_s} & {adj_s} & {reg_s} & {cov_s} \\\\")
     tex_lines.extend([
         r"\midrule",
         r"\bottomrule",

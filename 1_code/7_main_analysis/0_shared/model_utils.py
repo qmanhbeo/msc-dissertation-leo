@@ -103,6 +103,15 @@ SDG_NAMES: dict[int, str] = {
     17: "Partnerships for the Goals",
 }
 
+SDG_SHORT_NAMES: dict[int, str] = {
+    1: "No Poverty", 2: "Zero Hunger", 3: "Good Health",
+    4: "Education", 5: "Gender Equality", 6: "Clean Water",
+    7: "Clean Energy", 8: "Decent Work", 9: "Innovation",
+    10: "Reduced Ineq.", 11: "Sust. Cities", 12: "Consumption",
+    13: "Climate", 14: "Life Below Water", 15: "Life on Land",
+    16: "Peace & Justice", 17: "Partnerships",
+}
+
 SDG_NUM_WORDS: dict[int, str] = {
     1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five",
     6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten",

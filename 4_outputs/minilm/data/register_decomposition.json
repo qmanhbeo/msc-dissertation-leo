@@ -45,7 +45,7 @@
       "adjusted_gap": 0.238131,
       "register_component": 0.25668,
       "coverage_gap": 0.219793,
-      "name": "Good Health and Well-Being"
+      "name": "Good Health"
     },
     {
       "sdg": 4,
@@ -53,7 +53,7 @@
       "adjusted_gap": 0.17834,
       "register_component": 0.112816,
       "coverage_gap": 0.088727,
-      "name": "Quality Education"
+      "name": "Education"
     },
     {
       "sdg": 5,
@@ -69,7 +69,7 @@
       "adjusted_gap": 0.100677,
       "register_component": 0.19755,
       "coverage_gap": 0.022689,
-      "name": "Clean Water and Sanitation"
+      "name": "Clean Water"
     },
     {
       "sdg": 7,
@@ -77,7 +77,7 @@
       "adjusted_gap": 0.127275,
       "register_component": 0.302454,
       "coverage_gap": 0.009906,
-      "name": "Affordable and Clean Energy"
+      "name": "Clean Energy"
     },
     {
       "sdg": 8,
@@ -85,7 +85,7 @@
       "adjusted_gap": 0.128679,
       "register_component": 0.206911,
       "coverage_gap": 0.022539,
-      "name": "Decent Work and Economic Growth"
+      "name": "Decent Work"
     },
     {
       "sdg": 9,
@@ -93,7 +93,7 @@
       "adjusted_gap": 0.141585,
       "register_component": 0.208359,
       "coverage_gap": 0.125234,
-      "name": "Industry, Innovation and Infrastructure"
+      "name": "Innovation"
     },
     {
       "sdg": 10,
@@ -101,7 +101,7 @@
       "adjusted_gap": 0.207453,
       "register_component": 0.277572,
       "coverage_gap": 0.010889,
-      "name": "Reduced Inequalities"
+      "name": "Reduced Ineq."
     },
     {
       "sdg": 11,
@@ -109,7 +109,7 @@
       "adjusted_gap": 0.119332,
       "register_component": 0.277705,
       "coverage_gap": 0.016453,
-      "name": "Sustainable Cities and Communities"
+      "name": "Sust. Cities"
     },
     {
       "sdg": 12,
@@ -117,7 +117,7 @@
       "adjusted_gap": 0.146554,
       "register_component": 0.244805,
       "coverage_gap": 0.015978,
-      "name": "Responsible Consumption and Production"
+      "name": "Consumption"
     },
     {
       "sdg": 13,
@@ -125,7 +125,7 @@
       "adjusted_gap": 0.186909,
       "register_component": 0.353677,
       "coverage_gap": 0.050795,
-      "name": "Climate Action"
+      "name": "Climate"
     },
     {
       "sdg": 14,
@@ -149,7 +149,7 @@
       "adjusted_gap": 0.220394,
       "register_component": 0.101139,
       "coverage_gap": 0.112445,
-      "name": "Peace, Justice and Strong Institutions"
+      "name": "Peace & Justice"
     },
     {
       "sdg": 17,
@@ -157,7 +157,7 @@
       "adjusted_gap": 0.189544,
       "register_component": 0.051727,
       "coverage_gap": 0.089047,
-      "name": "Partnerships for the Goals"
+      "name": "Partnerships"
     }
   ]
 }
