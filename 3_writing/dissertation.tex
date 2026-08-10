@@ -422,9 +422,9 @@ The adjusted association is marginal: under a conservative familywise view of th
 
 A metric-sensitivity check repeats this grid with Pearson $r$ on the raw magnitudes
 instead of Spearman $\rho$ (Appendix~\ref{app:raw-value-correlation}); the adjusted-gap
-association is unchanged for the supervised tracks across all four H1 hypotheses, and the
-only reversals are the already-flagged lower-trust SciBERT configs, confirming the
-rank-based reporting is not driving the result.
+association is unchanged in sign under the metric switch for the signal-bearing
+hypotheses (H1a, H1d); the few sign changes are confined to insignificant configs in the
+null H1b/H1c, confirming the rank-based reporting is not driving the result.
 
 The SDG 4 lexical artefact (Appendix~\ref{app:sdg4-lexical-audit}) does not drive this result. A leave-one-out check with SDG 4 removed leaves the raw coverage-gap correlation null ($\rho = \HExclFourCovgapSpearmanRho$, $p = \HExclFourCovgapSpearmanP$) and preserves the positive register-adjusted coverage-gap association ($\rho = \HExclFourCovgapAdjSpearmanRho$, $p = \HExclFourCovgapAdjSpearmanP$), so the artefact props up neither the raw null nor the adjusted association.
 
