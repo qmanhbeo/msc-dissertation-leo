@@ -573,9 +573,9 @@ Table~\ref{tab:concept-coverage} compares the SDG coverage shares of the keyword
 \subsection{SDG 4 Lexical Artefact Audit: The ML `Learning' Overlap}
 \label{app:sdg4-lexical-audit}
 
-SDG 4 is the only goal audited because it is the only one carrying an a priori lexical-overlap concern: ``learning'' is shared ML and education vocabulary, and prior AI--SDG inventories do not rank SDG 4 among the leaders, so its third-place research share is suspect on independent grounds. No other SDG has a comparable overlap. The SDG 4 concern is not used to relabel research records. Its narrower purpose is to test whether the concern is empirically plausible. Table~\ref{tab:sdg4-lexical-audit} therefore compares the lexical composition of SDG 4-assigned research records with a matched non-SDG4 sample and with SDG 9, using only two transparent keyword groups: ML-learning vocabulary and education-specific vocabulary.
+SDG 4 is the only goal audited because it is the only one carrying an a priori lexical-overlap concern: ``learning'' is shared ML and education vocabulary, and prior AI--SDG inventories place SDG 4 outside the leading tier of SDG 3 and SDG 7 \parencite{Singh2024, Cowls2021, Nedungadi2024}, so its third-place research share here is suspect on independent grounds. The audit does not relabel records; it tests whether the concern is empirically plausible. Table~\ref{tab:sdg4-lexical-audit} therefore compares the lexical composition of SDG 4-assigned research with a matched non-SDG4 sample and with SDG 9, using only two transparent keyword groups: ML-learning and education-specific vocabulary.
 
-The audit points to a more nuanced conclusion than a pure false-positive story. More than half of the SDG 4-assigned set contains education-specific vocabulary without ML-only terms, and roughly another third contains both education and ML-learning vocabulary. By contrast, the matched non-SDG4 sample and the SDG 9 comparison set are dominated by ML-only vocabulary. This means the SDG 4 signal is not simply the same technical language that drives SDG 9. However, the large ``both'' share also confirms that ML-learning language and education language overlap materially within the SDG 4-assigned set.
+The result (Table~\ref{tab:sdg4-lexical-audit}) is a negative test of the false-positive hypothesis: education-specific vocabulary alone covers 44.4\% of SDG 4-assigned records and overlaps ML vocabulary in a further 23.8\%, while only 11.8\% are ML-only. The comparison sets are inverted, with ML-only vocabulary dominating the non-SDG4 sample and the SDG 9 set (50.3\% and 61.5\%). The SDG 4 signal is therefore not the same technical language that drives SDG 9; but the 23.8\% ``both'' share (versus 2.6\% and 2.9\% elsewhere) shows the two vocabularies do overlap materially within the SDG 4-assigned set.
 
 The main analysis therefore retains the canonical LR argmax assignment but continues to treat SDG 4 as artefact-affected. The most accurate reading is a learning-related assignment whose interpretation is blurred by lexical overlap: neither ``clean education'' nor ``pure ML artefact.''
 
@@ -587,13 +587,13 @@ The main analysis therefore retains the canonical LR argmax assignment but conti
 \resizebox{\textwidth}{!}{%
 \input{../4_outputs/appendix/mpnet/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex}
 }
-\par\smallskip\footnotesize\emph{Notes:} The audit is not used to reassign SDGs. It only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.\par
+\par\smallskip\footnotesize\emph{Notes:} The audit only checks whether SDG 4-assigned research is disproportionately dominated by machine-learning vocabulary, education vocabulary, or both.\par
 \end{table}
 
 \subsection{Centroid Similarity}
 \label{app:centroid-similarity}
 
-This subsection reports the pairwise cosine-similarity heatmap (Figure~\ref{fig:centroid-similarity-matrix}) for the 17 canonical SDG centroids. The centroids are the per-SDG mean training embeddings (L2-normalised) used by the LR classifier. The heatmap provides supplementary geometric context for the classification geometry that Section~\ref{sec:supervised-classifier} builds on.
+This subsection reports the pairwise cosine-similarity heatmap (Figure~\ref{fig:centroid-similarity-matrix}) for the 17 canonical SDG centroids. The centroids are the per-SDG mean training embeddings (L2-normalised) used by the LR classifier.
 
 \begin{figure}[H]
 \centering
@@ -602,7 +602,7 @@ This subsection reports the pairwise cosine-similarity heatmap (Figure~\ref{fig:
 \label{fig:centroid-similarity-matrix}
 \end{figure}
 
-Figure~\ref{fig:centroid-similarity-matrix} shows the full 17$\times$17 similarity grid. The lower triangle is annotated; the upper triangle is left blank because the matrix is symmetric. Reading the grid, three observations stand out. First, the diagonal dominates: most centroids are far more similar to themselves than to any neighbour, which is why the supervised LR classifier (Table~\ref{tab:validation}) can build on this well-separated base to reach \MacroFOne{}. Second, a small set of off-diagonal cells is elevated. SDG 11's centroid neighbours SDG 9 (cosine 0.744), and SDG 8 lies near SDGs 1 and 10 (cosine 0.808{} and 0.862), and SDGs 1 and 10 are themselves the closest off-diagonal pair (cosine 0.931)  --  these are the proximities that make the SDG 11 and SDG 8 scores in Section~\ref{sec:validation} indicative rather than exact. Third, SDG 17 is the clear outlier: its row and column are the flattest, and its nearest neighbour is SDG 13 (cosine 0.821), reflecting the overlap between climate and partnership discourse noted in Section~\ref{sec:validation}.
+Figure~\ref{fig:centroid-similarity-matrix} shows the full 17$\times$17 similarity grid. Reading the grid, three observations stand out. First, the diagonal dominates: most centroids are far more similar to themselves than to any neighbour, which is why the supervised LR classifier (Table~\ref{tab:validation}) can build on this well-separated base to reach \MacroFOne{}. Second, a small set of off-diagonal cells is elevated: SDG 11's centroid neighbours SDG 9 (cosine 0.744), SDG 8 lies near SDGs 1 and 10 (cosine 0.808{} and 0.862), and SDGs 1 and 10 are themselves the closest off-diagonal pair (cosine 0.931) -- these are the proximities that make the SDG 11 and SDG 8 scores in Section~\ref{sec:validation} indicative rather than exact. Third, SDG 17 is the clear outlier: its row and column are the flattest, and its nearest neighbour is SDG 13 (cosine 0.821), reflecting the overlap between climate and partnership discourse noted in Section~\ref{sec:validation}.
 
 \section{Lexical Illustration of the Semantic Gap}
 \label{app:semantic-gap-text-interpretability}
