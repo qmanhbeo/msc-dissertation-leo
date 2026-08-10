@@ -34,7 +34,8 @@
 \usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
-\usepackage[style=apa,backend=biber]{biblatex}
+\usepackage[style=authoryear,backend=biber,sorting=ynt,maxbibnames=999]{biblatex}
+\DeclareDelimFormat{nameyeardelim}{\addcomma\space}%  comma before year, per Cite Them Right
 \setlength{\bibhang}{0pt}%        % no hanging indent: continuation lines flush with first
 \setlength{\bibitemsep}{6pt}%     % paragraph-style gap between entries
 \usepackage{xcolor}
@@ -543,7 +544,8 @@ The practical implication is that topical mention is not alignment. SDG tags, ba
 
 The framework is the paper's primary contribution. It advances AI--SDG mapping from Level~1 (lexical correspondence) to Level~2 (observed semantic proximity), with explicit marking of Level~3 boundaries (\S\ref{sec:alignment-framework}). The cross-sensitivity grid, the register decomposition, and the coverage--semantic separability test are portable to any research-policy interface that shares a category system and embeds both sides in a common semantic space. Level~3, whether the divergences documented here reflect productive exploration, institutional failure, or simply different knowledge cultures pursuing different mandates, requires qualitative, institutional, and deliberative methods that lie beyond the scope of embedding analysis. The coverage patterns it captures are externally valid, reproducing the SDG ranking that prior keyword- and citation-based inventories established. The framework does not solve the alignment problem. It makes the problem visible.
 
-\printbibliography
+\newrefcontext[sorting=nyt]
+\printbibliography[title={Reference list}]
 
 
 
