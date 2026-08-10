@@ -172,15 +172,6 @@ def parse_policy_source_gaps():
     return _parse_policy_source_gaps_from(POLICY_SOURCE_FAMILY_TEX)
 
 
-def parse_policy_source_gaps_adj():
-    """Adjusted variant of parse_policy_source_gaps: read the adjusted tex table."""
-    adj_tex = (root / "appendix" / model_slug(DEFAULT_EMBED_MODEL) / "a2_source_family_sensitivity"
-               / "tables" / "adjusted" / "tab_a2_policy_source_family_combined.tex")
-    if not adj_tex.exists():
-        return {}
-    return _parse_policy_source_gaps_from(adj_tex)
-
-
 def _spearman(x, y):
     """Spearman rho via Pearson of the rank vectors (scipy-free).
 
@@ -216,16 +207,29 @@ def load_cap_gaps():
 # Concept-retrieval variant: coverage/semantic gap loaders + Kendall tau
 # ---------------------------------------------------------------------------
 SEMANTIC_CAPTION = "Cross-sensitivity robustness of within-SDG semantic-gap rankings across policy source, segment cap, and retrieval strategy."
-SEMANTIC_NOTES = (
+# Fixed order of the raw-panel policy-source axis (tab6b). The adjusted panel
+# (tab6a) deliberately omits this axis — policy-source data is raw-only.
+FAMILY_LABELS = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC", "full": "Full"}
+# Each panel is a separate single-panel table with a FIXED column layout, so the
+# notes describe only the axes actually present. Panel (a) adjusted: Canon,
+# segment cap, retrieval (no policy source). Panel (b) raw: Canon, policy
+# source, segment cap, retrieval.
+SEMANTIC_NOTES_A = (
     "Each cell reports the within-SDG semantic-gap rank "
     "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$). "
-    "Panel~(a) reports the register-removed (adjusted) ranking, which is the canonical measure of this study; "
-    "Panel~(b) reports the naive baseline (un-adjusted, raw) ranking. "
-    "Within each panel, the Canon column is the canonical MPNet---LR ranking. "
+    "The Canon column is the canonical MPNet---LR ranking. "
+    "Segment-cap columns compare cap~20 and no cap. "
+    "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the Canon column."
+)
+SEMANTIC_NOTES_B = (
+    "Each cell reports the within-SDG semantic-gap rank "
+    "($1 = \\text{largest gap}$, $17 = \\text{smallest gap}$). "
+    "The Canon column is the canonical MPNet---LR ranking. "
     "Policy-source columns compare the keyword-retrieved research profile against each policy-source family. "
     "Segment-cap columns compare cap~20 and no cap. "
     "The Retrieval column replaces keyword retrieval with concept-based (AI/ML field-of-study) retrieval. "
-    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against that panel's Canon column."
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the Canon column."
 )
 COVERAGE_CAPTION = "Cross-sensitivity robustness of within-SDG coverage-gap rankings across policy source and retrieval strategy."
 COVERAGE_NOTES = (
@@ -256,11 +260,11 @@ ENC_AXIS_SEMANTIC_CAPTION = (
     "Domain-encoder sensitivity of within-SDG semantic-gap rankings across embedding "
     "architectures of differing domain specialisation but matched dimensionality."
 )
-ENC_AXIS_SEMANTIC_NOTES = (
+# Encoder-axis panels share a FIXED layout: MPNet (LR, MLP, ZS) | MiniLM (LR, MLP)
+# | SciBERT (LR, MLP); only the panel label (adjusted vs raw) differs.
+ENC_AXIS_SEMANTIC_NOTES_A = (
     "Each cell reports the within-SDG semantic-gap rank ($1 = \\text{largest gap}$, "
     "$17 = \\text{smallest gap}$) under that encoder and assignment method. "
-    "Panel~(a) reports the register-removed (adjusted, canonical) ranking; "
-    "Panel~(b) reports the naive baseline (un-adjusted, raw) ranking. "
     "MPNet (768-d) is the canonical general-purpose encoder; MiniLM (384-d) is a smaller "
     "general-purpose encoder; SciBERT (768-d) is a scientific-domain encoder. "
     "MPNet and SciBERT share dimensionality (768-d), isolating architecture/domain from "
@@ -270,8 +274,23 @@ ENC_AXIS_SEMANTIC_NOTES = (
     "Zero-shot = nearest-centroid on SDG reference centroids, "
     "reported for the canonical MPNet encoder only (scoped to a single supervised-vs-"
     "nearest-centroid comparison, Appendix~\\ref{app:assignment-method-comparison}). "
-    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against that "
-    "panel's canonical adjusted (Panel~a) or raw (Panel~b) MPNet-LR column."
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
+    "canonical adjusted MPNet-LR column."
+)
+ENC_AXIS_SEMANTIC_NOTES_B = (
+    "Each cell reports the within-SDG semantic-gap rank ($1 = \\text{largest gap}$, "
+    "$17 = \\text{smallest gap}$) under that encoder and assignment method. "
+    "MPNet (768-d) is the canonical general-purpose encoder; MiniLM (384-d) is a smaller "
+    "general-purpose encoder; SciBERT (768-d) is a scientific-domain encoder. "
+    "MPNet and SciBERT share dimensionality (768-d), isolating architecture/domain from "
+    "the dimensionality drop that confounds the MPNet--MiniLM pair "
+    "(Section~\\ref{sec:encoder-sensitivity}). "
+    "LR = logistic regression; MLP = 4-layer/384-hidden network; "
+    "Zero-shot = nearest-centroid on SDG reference centroids, "
+    "reported for the canonical MPNet encoder only (scoped to a single supervised-vs-"
+    "nearest-centroid comparison, Appendix~\\ref{app:assignment-method-comparison}). "
+    "Rank Corr ($\\rho$) is the Spearman correlation of each column's SDG gap ranks against the "
+    "canonical raw MPNet-LR column."
 )
 ENC_AXIS_COVERAGE_CAPTION = (
     "Domain-encoder sensitivity of within-SDG coverage-gap rankings across embedding "
@@ -320,48 +339,60 @@ def load_mean_gap_and_cohesion(m):
 
 
 def write_encoder_axis_semantic():
+    """Write tab7a (adjusted) / tab7b (raw) with a FIXED column layout.
+
+    Every encoder contributes LR and MLP columns in both panels; the zero-shot
+    column appears for the canonical MPNet encoder only (by design). All
+    declared columns are REQUIRED — a missing input is a hard error, never a
+    silently-dropped column.
+    """
     enc_subgroups_adj = []
     enc_subgroups_raw = []
     for m, sublabel in ENC_AXIS_ENCODERS:
         lr = load_lr_gaps(m)
         mlp = load_mlp_gaps(m)
-        zs = load_zs_gaps(m) if m == DEFAULT_EMBED_MODEL else None
         lr_adj = load_lr_gaps_adj(m)
         mlp_adj = load_mlp_gaps_adj(m)
-        zs_adj = load_zs_gaps_adj(m) if m == DEFAULT_EMBED_MODEL else None
-        cols_adj = []
-        cols_raw = []
-        if lr_adj:
-            cols_adj.append(("LR", compute_ranks(lr_adj),
-                             "LR — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"))
-        if lr:
-            cols_raw.append(("LR", compute_ranks(lr),
-                             "LR (canonical supervised, raw naive baseline) — policy segments capped at 50/doc/SDG"))
-        if mlp_adj:
-            cols_adj.append(("MLP", compute_ranks(mlp_adj),
-                             "MLP — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"))
-        if mlp:
-            cols_raw.append(("MLP", compute_ranks(mlp),
-                             "MLP (4-layer/384-hidden, raw naive baseline) — policy segments capped at 50/doc/SDG"))
-        if zs_adj:
+        if lr is None:
+            raise FileNotFoundError(f"Required raw LR gaps missing for {m}")
+        if mlp is None:
+            raise FileNotFoundError(f"Required raw MLP gaps missing for {m}")
+        if lr_adj is None:
+            raise FileNotFoundError(f"Required adjusted LR gaps missing for {m}")
+        if mlp_adj is None:
+            raise FileNotFoundError(f"Required adjusted MLP gaps missing for {m}")
+        cols_adj = [
+            ("LR", compute_ranks(lr_adj),
+             "LR — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"),
+            ("MLP", compute_ranks(mlp_adj),
+             "MLP — register-removed (adjusted, canonical) — policy segments capped at 50/doc/SDG"),
+        ]
+        cols_raw = [
+            ("LR", compute_ranks(lr),
+             "LR (canonical supervised, raw naive baseline) — policy segments capped at 50/doc/SDG"),
+            ("MLP", compute_ranks(mlp),
+             "MLP (4-layer/384-hidden, raw naive baseline) — policy segments capped at 50/doc/SDG"),
+        ]
+        if m == DEFAULT_EMBED_MODEL:
+            zs = load_zs_gaps(m)
+            zs_adj = load_zs_gaps_adj(m)
+            if zs is None:
+                raise FileNotFoundError(f"Required raw zero-shot gaps missing for {m}")
+            if zs_adj is None:
+                raise FileNotFoundError(f"Required adjusted zero-shot gaps missing for {m}")
             cols_adj.append(("ZS", compute_ranks(zs_adj),
                              "Zero-shot nearest-centroid (register-removed, adjusted) on SDG reference centroids (canonical encoder only)"))
-        if zs:
             cols_raw.append(("ZS", compute_ranks(zs),
                              "Zero-shot nearest-centroid (raw naive baseline) on SDG reference centroids (canonical encoder only)"))
-        if cols_adj:
-            enc_subgroups_adj.append((sublabel, cols_adj))
-        if cols_raw:
-            enc_subgroups_raw.append((sublabel, cols_raw))
-    if not enc_subgroups_adj and not enc_subgroups_raw:
-        print("WARNING: no encoder data for encoder-axis semantic table, skipping")
-        return
+        enc_subgroups_adj.append((sublabel, cols_adj))
+        enc_subgroups_raw.append((sublabel, cols_raw))
     rho_a, rho_b = assemble_paneled(
         adj_groups=[("Encoder (embedding architecture)", enc_subgroups_adj)],
         raw_groups=[("Encoder (embedding architecture)", enc_subgroups_raw)],
         out_path_a=OUT_MAIN / "tab7a_encoder_sensitivity.tex",
         out_path_b=OUT_MAIN / "tab7b_encoder_sensitivity.tex",
-        caption=ENC_AXIS_SEMANTIC_CAPTION, notes=ENC_AXIS_SEMANTIC_NOTES, label="tab:encoder-sensitivity-semantic",
+        caption=ENC_AXIS_SEMANTIC_CAPTION, notes_a=ENC_AXIS_SEMANTIC_NOTES_A, notes_b=ENC_AXIS_SEMANTIC_NOTES_B,
+        label="tab:encoder-sensitivity-semantic",
         panel_a_note="Adjusted (register-removed, canonical).",
         panel_b_note="Raw (naive baseline, un-adjusted).",
     )
@@ -752,88 +783,92 @@ def write_validation_table():
 # Write tab6_cross_sensitivity.tex
 # ---------------------------------------------------------------------------
 def write_cross_sensitivity():
-    cap_20, cap_none = load_cap_gaps()
-    policy_families = parse_policy_source_gaps()
+    """Write tab6a (adjusted) / tab6b (raw) with FIXED column layouts.
+
+    The panel layouts are a declared contract (see manuscript Section 5.4):
+      Panel (a) adjusted:  Canon | Segment cap (20, None) | Retrieval (LR, MLP)
+      Panel (b) raw:       Canon | Policy source (Curated, SDGi, UNGDC, Full)
+                                 | Segment cap (20, None) | Retrieval (LR, MLP)
+    The policy-source axis exists in the raw panel only (it is not available
+    for the adjusted panel). Every declared column is REQUIRED: a missing input
+    is a hard error, never a silently-dropped or conditionally-added column.
+    """
+    # --- Data loads for BOTH panels (fail-closed on every required input) ---
     canon_gaps = load_lr_gaps("all-mpnet-base-v2")
-
-    # --- Adjusted (canonical) group: register-removed rankings ------------
-    adj_cap_20, adj_cap_none = load_cap_gaps_adj()
-    adj_families = parse_policy_source_gaps_adj()
-    adj_canon = load_lr_gaps_adj("all-mpnet-base-v2")
-    adj_concept_lr = load_concept_lr_gaps_adj(model)
-    adj_concept_mlp = load_concept_mlp_gaps_adj(model)
-    adj_group = []
-    if adj_canon:
-        adj_group.append(("", [("Canon", compute_ranks(adj_canon),
-                               "Canonical MPNet-LR ranking (register-removed, adjusted)")]))
-    adj_pcols = []
-    family_labels = {"curated": "Curated", "sdgi": "SDGi", "ungdc": "UNGDC", "full": "Full"}
-    for key, label in family_labels.items():
-        if key in adj_families:
-            adj_pcols.append((label, compute_ranks(adj_families[key]),
-                             f"Policy source: {label} (register-removed)"))
-    if adj_pcols:
-        adj_group.append(("Policy source", adj_pcols))
-    adj_cap_cols = []
-    if adj_cap_20:
-        adj_cap_cols.append(("20", compute_ranks(adj_cap_20), "Segment cap 20 (register-removed)"))
-    if adj_cap_none:
-        adj_cap_cols.append(("None", compute_ranks(adj_cap_none), "No segment cap (register-removed)"))
-    if adj_cap_cols:
-        adj_group.append(("Segment cap", adj_cap_cols))
-    adj_concept_cols = []
-    if adj_concept_lr:
-        adj_concept_cols.append(("LR", compute_ranks(adj_concept_lr),
-                                 "LR centroids (concept retrieval, register-removed)"))
-    if adj_concept_mlp:
-        adj_concept_cols.append(("MLP", compute_ranks(adj_concept_mlp),
-                                 "MLP centroids (concept retrieval, register-removed)"))
-    if adj_concept_cols:
-        adj_group.append(("Retrieval", adj_concept_cols))
-
-    # --- Raw (naive baseline) group --------------------------------------
-    # Mirrors the adjusted group's structure so the two panels share an
-    # identical column layout (Canon / Policy source / Segment cap / Retrieval).
-    raw_group = []
-    if canon_gaps:
-        raw_group.append(("", [("Canon", compute_ranks(canon_gaps),
-                                 "Canonical MPNet-LR ranking (raw, naive baseline)")]))
-    pcols = []
-    for key, label in family_labels.items():
-        if key in policy_families:
-            pcols.append((label, compute_ranks(policy_families[key]), f"Policy source: {label} (raw)"))
-    if pcols:
-        raw_group.append(("Policy source", pcols))
-
-    cap_cols = []
-    if cap_20:
-        cap_cols.append(("20", compute_ranks(cap_20), "Segment cap 20 (raw)"))
-    if cap_none:
-        cap_cols.append(("None", compute_ranks(cap_none), "No segment cap (raw)"))
-    if cap_cols:
-        raw_group.append(("Segment cap", cap_cols))
-
+    if canon_gaps is None:
+        raise FileNotFoundError("Required raw LR gaps missing for canonical panel b")
+    cap_20, cap_none = load_cap_gaps()
+    if cap_20 is None or cap_none is None:
+        raise FileNotFoundError(f"Required raw segment-cap gaps missing: {CAP_PATH}")
     concept_lr = load_concept_lr_gaps(model)
+    if concept_lr is None:
+        raise FileNotFoundError(
+            f"Required raw concept LR gaps missing: {output_dir_for_model(model, root=root) / 'data' / 'concept' / 'semantic_gap_distances_lr.json'}")
     concept_mlp = load_concept_mlp_gaps(model)
-    concept_sub_cols = []
-    if concept_lr:
-        concept_sub_cols.append(("LR", compute_ranks(concept_lr),
-                                 "LR centroids (concept-based AI/ML retrieval, raw)"))
-    if concept_mlp:
-        concept_sub_cols.append(("MLP", compute_ranks(concept_mlp),
-                                 "MLP centroids (concept-based AI/ML retrieval, raw)"))
-    if concept_sub_cols:
-        raw_group.append(("Retrieval", concept_sub_cols))
+    if concept_mlp is None:
+        raise FileNotFoundError(
+            f"Required raw concept MLP gaps missing: {output_dir_for_model(model, root=root) / 'data' / 'concept' / 'semantic_gap_distances_mlp.json'}")
+    policy_families = parse_policy_source_gaps()
+    missing_policy = [k for k in FAMILY_LABELS if k not in policy_families]
+    if missing_policy:
+        raise FileNotFoundError(
+            f"Required raw policy-source families missing from {POLICY_SOURCE_FAMILY_TEX}: {missing_policy}")
 
-    if not adj_group and not raw_group:
-        print("WARNING: no data available for cross-sensitivity table, skipping")
-        return
+    adj_canon = load_lr_gaps_adj("all-mpnet-base-v2")
+    if adj_canon is None:
+        raise FileNotFoundError(
+            f"Required adjusted LR gaps missing: {output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / 'data' / 'adjusted' / 'semantic_gap_distances_lr.json'}")
+    adj_cap_20, adj_cap_none = load_cap_gaps_adj()
+    if adj_cap_20 is None or adj_cap_none is None:
+        raise FileNotFoundError(
+            f"Required adjusted segment-cap gaps missing: {output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / 'data' / 'adjusted' / 'semantic_gap_robustness_caps_lr.json'}")
+    adj_concept_lr = load_concept_lr_gaps_adj(model)
+    if adj_concept_lr is None:
+        raise FileNotFoundError(
+            f"Required adjusted concept LR gaps missing: {output_dir_for_model(model, root=root) / 'data' / 'concept' / 'adjusted' / 'semantic_gap_distances_lr.json'}")
+    adj_concept_mlp = load_concept_mlp_gaps_adj(model)
+    if adj_concept_mlp is None:
+        raise FileNotFoundError(
+            f"Required adjusted concept MLP gaps missing: {output_dir_for_model(model, root=root) / 'data' / 'concept' / 'adjusted' / 'semantic_gap_distances_mlp.json'}")
+
+    # --- Panel (a): adjusted — FIXED layout, no policy-source axis ---------
+    adj_group = [
+        ("", [("Canon", compute_ranks(adj_canon),
+               "Canonical MPNet-LR ranking (register-removed, adjusted)")]),
+        ("Segment cap", [
+            ("20", compute_ranks(adj_cap_20), "Segment cap 20 (register-removed)"),
+            ("None", compute_ranks(adj_cap_none), "No segment cap (register-removed)"),
+        ]),
+        ("Retrieval", [
+            ("LR", compute_ranks(adj_concept_lr), "LR centroids (concept retrieval, register-removed)"),
+            ("MLP", compute_ranks(adj_concept_mlp), "MLP centroids (concept retrieval, register-removed)"),
+        ]),
+    ]
+
+    # --- Panel (b): raw — FIXED layout with the policy-source axis ---------
+    raw_group = [
+        ("", [("Canon", compute_ranks(canon_gaps),
+               "Canonical MPNet-LR ranking (raw, naive baseline)")]),
+        ("Policy source", [
+            (FAMILY_LABELS[k], compute_ranks(policy_families[k]), f"Policy source: {FAMILY_LABELS[k]} (raw)")
+            for k in FAMILY_LABELS
+        ]),
+        ("Segment cap", [
+            ("20", compute_ranks(cap_20), "Segment cap 20 (raw)"),
+            ("None", compute_ranks(cap_none), "No segment cap (raw)"),
+        ]),
+        ("Retrieval", [
+            ("LR", compute_ranks(concept_lr), "LR centroids (concept-based AI/ML retrieval, raw)"),
+            ("MLP", compute_ranks(concept_mlp), "MLP centroids (concept-based AI/ML retrieval, raw)"),
+        ]),
+    ]
 
     rho_a, rho_b = assemble_paneled(
         adj_groups=adj_group, raw_groups=raw_group,
         out_path_a=OUT_MAIN / "tab6a_cross_sensitivity.tex",
         out_path_b=OUT_MAIN / "tab6b_cross_sensitivity.tex",
-        caption=SEMANTIC_CAPTION, notes=SEMANTIC_NOTES, label="tab:cross-sensitivity-robustness",
+        caption=SEMANTIC_CAPTION, notes_a=SEMANTIC_NOTES_A, notes_b=SEMANTIC_NOTES_B,
+        label="tab:cross-sensitivity-robustness",
         panel_a_note="Adjusted (register-removed, canonical).",
         panel_b_note="Raw (naive baseline, un-adjusted).",
     )
@@ -1037,13 +1072,16 @@ def assemble_table(col_groups, out_path, caption, notes, label):
     return rho_by_col
 
 
-def assemble_paneled(adj_groups, raw_groups, out_path_a, out_path_b, caption, notes, label,
+def assemble_paneled(adj_groups, raw_groups, out_path_a, out_path_b, caption, notes_a, notes_b, label,
                     panel_a_note, panel_b_note):
     """Write two separate tables: Panel (a) adjusted and Panel (b) raw.
 
     ``adj_groups`` / ``raw_groups`` are col_groups lists in the same format
     accepted by :func:`build_tabular`. Each panel gets its own table float
-    with a distinct label so the two can be placed independently.
+    with a distinct label so the two can be placed independently. Each panel
+    uses its OWN notes string (``notes_a`` / ``notes_b``) because the panels
+    have fixed, different column layouts and must not cross-reference the
+    other panel.
 
     Returns (rho_a, rho_b).
     """
@@ -1062,7 +1100,7 @@ def assemble_paneled(adj_groups, raw_groups, out_path_a, out_path_b, caption, no
     ]
     tex_a.extend(tab_a)
     tex_a.append(r"\par\smallskip\footnotesize\emph{" + panel_a_note + r"}\par")
-    tex_a.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes + r"\par")
+    tex_a.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes_a + r"\par")
     tex_a.append(r"\end{table}")
     out_path_a.write_text("\n".join(tex_a) + "\n")
     n_a = sum(group_total(g) for g in adj_groups)
@@ -1080,7 +1118,7 @@ def assemble_paneled(adj_groups, raw_groups, out_path_a, out_path_b, caption, no
     ]
     tex_b.extend(tab_b)
     tex_b.append(r"\par\smallskip\footnotesize\emph{" + panel_b_note + r"}\par")
-    tex_b.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes + r"\par")
+    tex_b.append(r"\par\smallskip\footnotesize\emph{Notes:} " + notes_b + r"\par")
     tex_b.append(r"\end{table}")
     out_path_b.write_text("\n".join(tex_b) + "\n")
     n_b = sum(group_total(g) for g in raw_groups)
@@ -1234,7 +1272,7 @@ def run(args: argparse.Namespace) -> None:
         lr_per_sdg[sdg_num] = v
     lr_macro = retrain["test_results"]["macro_f1"]
 
-    SCRIPT_VERSION = "3"
+    SCRIPT_VERSION = "4"
     PRIMARY = OUT_MAIN / "tab6a_cross_sensitivity.tex"
     OUTPUTS = [
         OUT_MAIN / "num1_classifier_performance.tex",
@@ -1252,6 +1290,7 @@ def run(args: argparse.Namespace) -> None:
         OUT_MAIN / "tab7b_encoder_sensitivity.tex",
         OUT_MAIN / "num9_encoder_sensitivity_coverage.tex",
     ]
+    POLICY_SOURCE_FAMILY_TEX = root / "appendix" / model_slug(model) / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_combined.tex"
     fp_paths = [RETRAIN_JSON]
     for m, _ in ENC_AXIS_ENCODERS:
         fp_paths += [
@@ -1276,6 +1315,27 @@ def run(args: argparse.Namespace) -> None:
     fp_paths.append(
         output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "semantic_gap_distances_lr.json"
     )
+    # Adjusted (register-removed) gaps feed the canonical tab6a/tab7a columns.
+    for m, _ in ENC_AXIS_ENCODERS:
+        fp_paths += [
+            output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_lr.json",
+            output_dir_for_model(m, root=root) / "data" / "adjusted" / "semantic_gap_distances_mlp.json",
+        ]
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "adjusted" / "semantic_gap_robustness_caps_lr.json"
+    )
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "adjusted" / "semantic_gap_distances_zeroshot.json"
+    )
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_lr.json"
+    )
+    fp_paths.append(
+        output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_mlp.json"
+    )
+    # tab6b's policy-source columns parse the raw a2 combined tex — fingerprint it
+    # so the table re-derives when the a2 policy-source data changes.
+    fp_paths.append(POLICY_SOURCE_FAMILY_TEX)
     fp = fingerprint_of(*fp_paths) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         print(f"Skipping {PRIMARY} \u2014 inputs unchanged")
@@ -1284,7 +1344,6 @@ def run(args: argparse.Namespace) -> None:
     LR_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_lr.json"
     ZS_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     CAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_robustness_caps_lr.json"
-    POLICY_SOURCE_FAMILY_TEX = root / "appendix" / model_slug(model) / "a2_source_family_sensitivity" / "tables" / "tab_a2_policy_source_family_combined.tex"
 
     write_num_validation()
     write_validation_table()
