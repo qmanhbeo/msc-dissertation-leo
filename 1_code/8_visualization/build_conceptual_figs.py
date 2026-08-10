@@ -27,8 +27,8 @@ FIGURES = {
 }
 
 
-def _needs_build(src: Path, out_pdf: Path, overwrite: bool) -> bool:
-    if overwrite or not out_pdf.exists():
+def _needs_build(src: Path, out_pdf: Path, out_png: Path, overwrite: bool) -> bool:
+    if overwrite or not out_pdf.exists() or not out_png.exists():
         return True
     return src.stat().st_mtime > out_pdf.stat().st_mtime
 
@@ -46,11 +46,12 @@ def main() -> int:
     for src_base, jobname in FIGURES.items():
         src = SRC_DIR / f"{src_base}.tex"
         out_pdf = OUT_DIR / f"{jobname}.pdf"
+        out_png = OUT_DIR / f"{jobname}.png"
         if not src.exists():
             print(f"[conceptual-figs] SKIP {src_base}: source {src} missing", file=sys.stderr)
             continue
-        if not _needs_build(src, out_pdf, args.overwrite):
-            print(f"[conceptual-figs] UP-TO-DATE {jobname}.pdf")
+        if not _needs_build(src, out_pdf, out_png, args.overwrite):
+            print(f"[conceptual-figs] UP-TO-DATE {jobname}.pdf + .png")
             continue
         print(f"[conceptual-figs] Building {jobname}.pdf from {src.name}")
         try:
@@ -62,11 +63,21 @@ def main() -> int:
                 ],
                 cwd=str(SRC_DIR), check=True,
             )
+            # Convert PDF to PNG at 300 DPI (matches matplotlib figures).
+            print(f"[conceptual-figs] Exporting {jobname}.png at 300 DPI")
+            subprocess.run(
+                ["pdftoppm", "-png", "-r", "300", str(out_pdf), str(out_png.with_suffix(""))],
+                check=True,
+            )
+            # pdftoppm outputs <name>-1.png; rename to <name>.png
+            produced = Path(f"{out_png.with_suffix('')}-1.png")
+            if produced.exists():
+                produced.rename(out_png)
         except subprocess.CalledProcessError as exc:
-            print(f"[conceptual-figs] FAILED to build {jobname}.pdf: {exc}", file=sys.stderr)
+            print(f"[conceptual-figs] FAILED to build {jobname}: {exc}", file=sys.stderr)
             rc = 1
         finally:
-            # Clean auxiliary files; the PDF (if produced) is kept.
+            # Clean auxiliary files; the PDF and PNG (if produced) are kept.
             for ext in (".aux", ".log", ".out"):
                 aux = OUT_DIR / f"{jobname}{ext}"
                 if aux.exists():
