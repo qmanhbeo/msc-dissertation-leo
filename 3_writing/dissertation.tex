@@ -8,6 +8,18 @@
 \usepackage{microtype}
 \usepackage{setspace}
 \usepackage{parskip}
+
+% Custom abstract: no first-line indent, no left skip, justified, parskip-style spacing
+\renewenvironment{abstract}{%
+  \par\addvspace{\baselineskip}%
+  \noindent\textbf{\abstractname}\par\medskip
+  \setlength{\parindent}{0pt}%
+  \setlength{\leftskip}{0pt}%
+  \setlength{\rightskip}{0pt}%
+  \noindent
+}{%
+  \par\addvspace{\baselineskip}%
+}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
