@@ -226,7 +226,9 @@ After cross-source deduplication by exact text match (SDGi retained first), \NPo
 
 \subsection{Embedding Model and Normalisation}\label{sec:embedding-choice}
 
-All texts were encoded with \texttt{all-mpnet-base-v2} \parencite{all-mpnet-base-v2, Reimers2019} from the sentence-transformers library, producing 768-dimensional dense vectors. No fine-tuning is applied. Encoder choice is a principal robustness axis: gap rankings are re-computed under two alternative encoders, all-MiniLM-L6-v2 \parencite{all-minilm-l6-v2} (384-dimensional) and SciBERT \parencite{Beltagy2019} (768-dimensional). Embeddings were L2-normalised to unit vectors so that cosine similarity equals their dot product.
+All texts were encoded with \texttt{all-mpnet-base-v2} \parencite{all-mpnet-base-v2, Reimers2019} from the sentence-transformers library, producing 768-dimensional dense vectors. Encoder choice is a principal robustness axis: gap rankings are re-computed under two alternative encoders, all-MiniLM-L6-v2 \parencite{all-minilm-l6-v2} (384-dimensional) and SciBERT \parencite{Beltagy2019} (768-dimensional). Embeddings were L2-normalised to unit vectors so that cosine similarity equals their dot product.
+
+No fine-tuning is applied: under the linear-probing paradigm \parencite{alain2018understandingintermediatelayersusing, conneau2018cramsinglevectorprobing}, a linear classifier on frozen embeddings is the standard instrument for checking whether a representation already encodes the signal of interest, and the supervised reference classifier (Section~\ref{sec:supervised-classifier}) and the INLP register projection (Section~\ref{sec:register-adjustment-inlp}) are both linear instruments on this frozen space. Freezing is also a measurement requirement: the two corpora must be compared in one fixed, shared space, and fine-tuning on SDG reference data, which are weighted toward policy vocabulary, would re-shape that space and confound the comparison. A frozen pipeline also carries no fine-tuning randomness, keeping the analysis deterministic and reproducible.
 
 \subsection{Token-Aware Segmentation}\label{sec:segmentation}
 
