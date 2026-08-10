@@ -82,7 +82,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 import semantic_gap_shared
 import register_utils
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_NAMES, SDG_NUM_WORDS, N_SDG, embed_dir_for_model, resolve_model_alias, scored_dir_for_model
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, SDG_SHORT_NAMES, SDG_NUM_WORDS, N_SDG, embed_dir_for_model, resolve_model_alias, scored_dir_for_model
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
 from shard_pipeline_utils import sha256_file, load_json
 from semantic_gap_shared import (
@@ -479,12 +479,12 @@ def run(args: argparse.Namespace) -> None:
     ]
     for r in sorted_results:
         sdg = r["sdg"]
-        name = SDG_NAMES[sdg]
+        name = SDG_SHORT_NAMES[sdg].replace("&", r"\&")
         g = r["semantic_gap"]
         n_res = r["n_papers"]
         n_pol = r["n_policy_docs_capped"]
         tab_lines.append(
-            rf"SDG {sdg:2d} & {name} & {g:.3f} & {n_res:,} & {n_pol:,} \\"
+            rf"{sdg:2d} & {name} & {g:.3f} & {n_res:,} & {n_pol:,} \\"
         )
     tab_lines.extend([
         r"\midrule",

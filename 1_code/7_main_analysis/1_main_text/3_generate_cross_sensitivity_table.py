@@ -26,18 +26,9 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_results_dir_for_model, model_slug, output_dir_for_model, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_SHORT_NAMES, embed_dir_for_model, model_results_dir_for_model, model_slug, output_dir_for_model, scored_dir_for_model, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from semantic_gap_shared import document_weighted_policy_profile, load_route_coverage_gap
-
-SDG_NAMES = {
-    1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
-    5: "Gender Equality", 6: "Clean Water", 7: "Clean Energy",
-    8: "Decent Work", 9: "Industry \\& Infra.", 10: "Reduced Inequalities",
-    11: "Sustainable Cities", 12: "Responsible Cons.", 13: "Climate Action",
-    14: "Life Below Water", 15: "Life on Land", 16: "Peace \\& Justice",
-    17: "Partnerships",
-}
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -771,7 +762,8 @@ def write_validation_table():
     ]
     for sdg in range(1, N_SDG + 1):
         f1 = lr_per_sdg[sdg]
-        lines.append(f"SDG {sdg} ({SDG_NAMES[sdg]}) & {f1:.3f} \\\\")
+        sname = SDG_SHORT_NAMES[sdg].replace("&", r"\&")
+        lines.append(f"{sdg} ({sname}) & {f1:.3f} \\\\")
     lines.append(r"\midrule")
     lines.append(f"Macro-F1 (SDGs 1--17) & \\textbf{{{lr_macro:.3f}}} \\\\")
     lines.extend([r"\bottomrule", r"\end{tabular}"])
@@ -1017,7 +1009,7 @@ def build_tabular(col_groups):
 
     for sdg in all_sdgs:
         hl = _highlight(sdg)
-        cells = [f"SDG {sdg}"]
+        cells = [f"{sdg}"]
         for _, ranks, _ in all_cols:
             v = ranks.get(sdg, "--")
             if hl == "b":
@@ -1210,7 +1202,7 @@ def write_concept_coverage():
     ]
     for s in sdgs:
         delta = cc[s] - cr[s]
-        tab_lines.append(f"SDG {s:2d} & {cr[s]*100:.1f} & {cc[s]*100:.1f} & {delta*100:+.1f} \\\\")
+        tab_lines.append(f"{s:2d} & {cr[s]*100:.1f} & {cc[s]*100:.1f} & {delta*100:+.1f} \\\\")
     tab_lines.extend([
         r"\midrule",
         rf"\multicolumn{{4}}{{l}}{{Spearman $\rho$ = {rho:.3f}; Kendall $\tau$ = {tau:.3f}}} \\",

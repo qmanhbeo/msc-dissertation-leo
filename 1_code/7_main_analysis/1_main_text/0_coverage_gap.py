@@ -69,7 +69,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_NAMES, SDG_NUM_WORDS, embed_dir_for_model, output_dir_for_model, research_preprocessed_dir, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_SHORT_NAMES, SDG_NUM_WORDS, embed_dir_for_model, output_dir_for_model, research_preprocessed_dir, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
 from semantic_gap_shared import document_weighted_policy_profile, latex_int
 
@@ -490,13 +490,13 @@ def run(args: argparse.Namespace) -> None:
     ]
     for i in range(N_SDG):
         sdg = i + 1
-        name = SDG_NAMES[sdg]
+        name = SDG_SHORT_NAMES[sdg].replace("&", r"\&")
         footnote = r"$^\dagger$" if sdg == 4 else ""
         r_pct = float(res_hard[i]) * 100
         p_pct = float(pol_dw_hard[i]) * 100
         g     = float(gap_dw[i])
         tab_lines.append(
-            rf"SDG {sdg:2d} & {name}{footnote} & {r_pct:.1f} & {p_pct:.1f} & {g:.3f} \\"
+            rf"{sdg:2d} & {name}{footnote} & {r_pct:.1f} & {p_pct:.1f} & {g:.3f} \\"
         )
     tab_lines.extend([
         r"\midrule",

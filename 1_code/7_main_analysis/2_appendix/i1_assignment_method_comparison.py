@@ -61,22 +61,13 @@ for path in (CODE_ROOT, SHARED_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, embed_dir_for_model, model_slug, output_dir_for_model, preprocessed_dir, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_SHORT_NAMES, embed_dir_for_model, model_slug, output_dir_for_model, preprocessed_dir, scored_dir_for_model, resolve_model_alias
 from shared_utils import fingerprint_of, should_skip, record_fingerprint
 from shard_pipeline_utils import load_json, resolve_manifest_path
 from semantic_gap_shared import doc_level_assignments
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-SDG_NAMES = {
-    1: "No Poverty", 2: "Zero Hunger", 3: "Good Health", 4: "Quality Education",
-    5: "Gender Equality", 6: "Clean Water", 7: "Clean Energy",
-    8: "Decent Work", 9: "Industry \\& Infra.", 10: "Reduced Inequalities",
-    11: "Sustainable Cities", 12: "Responsible Cons.", 13: "Climate Action",
-    14: "Life Below Water", 15: "Life on Land", 16: "Peace \\& Justice",
-    17: "Partnerships",
-}
 
 
 def agreement_stats(assign_a: np.ndarray, assign_b: np.ndarray) -> dict:
@@ -336,8 +327,9 @@ def run(args: argparse.Namespace) -> None:
     for row in per_sdg_rows:
         def fmt_pct(v):
             return f"{v * 100:.1f}" if v is not None else "--"
+        sname = SDG_SHORT_NAMES[row["sdg"]].replace("&", r"\&")
         rows_tex.append(
-            f"SDG {row['sdg']:2d} ({SDG_NAMES[row['sdg']]}) & "
+            f"{row['sdg']:2d} ({sname}) & "
             f"{row['research_n_lr']:,} & {fmt_pct(row['research_agree_rate'])} & {fmt_pct(row['research_mlp_agree_rate'])} & "
             f"{row['policy_n_lr']:,} & {fmt_pct(row['policy_agree_rate'])} & "
             f"{row['gap_rank_lr']} & {row['gap_rank_zs']} & {row['gap_rank_delta']} \\\\"
