@@ -662,27 +662,14 @@ To test whether the headline findings depend heavily on research-corpus size, th
 \section{Model Selection: Grid Search Protocol and Rationale}
 \label{app:model-selection}
 
-\subsection{Models Tested}
+Three model families were considered under 5-fold GroupKFold cross-validation (document-level grouping, not random splits) on the pooled training data (n=\NTrainPool{}); the held-out test set (n=\NTestPool{}) was never touched during any grid search. Logistic regression, which exposes interpretable per-dimension coefficients, and a multi-layer perceptron (MLP) were compared; random forests and gradient boosting were excluded because the embedding space is already a learned representation, so bagged trees add ensemble complexity without a mechanism for improvement or per-dimension interpretability.
 
-Three model families were evaluated under 5-fold GroupKFold cross-validation (document-level grouping, not random splits) on the pooled training data (n=\NTrainPool{}). The test set (n=\NTestPool{}) was never touched during any grid search.
+The LR grid searched C $\in \{0.1, 1, 2, 3, 5, 10, 30, 100\}$ with an L2 penalty and class\_weight $\in \{\text{None}, \text{balanced}\}$; the MLP grid swept n\_layers $\in \{2, 3, 4, 6\}$ $\times$ hidden\_size $\in \{256, 384\}$ $\times$ lr $\in \{3\mathrm{e}{-4}, 1\mathrm{e}{-3}\}$ with weight\_decay=0, dropout=0.3, AdamW, and early stopping. Grid search over architecture depth, hidden size, and learning rate revealed negligible performance variance across the MLP configurations (CV macro-$F_1$ = \MlpCvRangeTwoLFourL{}), and LR is flat within $\sim$0.001 for C $\in \{1, 3, 5\}$, confirming that architecture is not a binding constraint (Table~\ref{tab:model-selection-ranking}).
 
-\begin{itemize}
-  \item \textbf{Logistic Regression (LR)}: Interpretable per-dimension coefficients per SDG; fast; standard multiclass baseline.
-  \item \textbf{MLP (PyTorch)}: Can capture non-linear interactions in the embedding space.
-  \item \textbf{RF / XGB}: Considered but excluded because the embedding space is already a learned representation  --  bagged trees add ensemble complexity without a clear mechanism for improvement over LR/MLP, and would not produce interpretable coefficients per dimension.
-\end{itemize}
-
-\subsection{LR Grid Search}
-
-The LR grid searched C $\in \{0.1, 1, 2, 3, 5, 10, 30, 100\}$ with L2 penalty and class\_weight $\in \{\text{None}, \text{balanced}\}$ (16 L2 configurations). The best L2 configuration was C=3.0, penalty=l2, class\_weight=None (CV macro-$F_1$ = \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{}). C=1.0, C=2.0 and C=5.0 lie within $\sim$0.0004 of the optimum, while C=10.0 is $\sim$0.0026 below; C=30 and C=100 degrade clearly (0.804 and 0.797), confirming the optimum is a moderately regularised C$\approx$3 and that weaker regularisation overfits. C=3.0 was selected as the empirical optimum. A separate L1 (lasso) spot-check (C=10) reached CV macro-$F_1$ = 0.8066 $\pm$ 0.0069, below the L2 champion, confirming that L1 penalisation is not competitive for this embedding geometry (prior spot-check documented in 5\_notes/MODEL\_SELECTION.md).
-
-\subsection{MLP Grid Search}
-
-The MLP swept n\_layers $\in \{2, 3, 4, 6\}$ $\times$ hidden\_size $\in \{256, 384\}$ $\times$ lr $\in \{3\mathrm{e}{-4}, 1\mathrm{e}{-3}\}$ (16 configurations) with weight\_decay=0 and dropout=0.3, trained with AdamW and early stopping. The best MLP (3 layers, 256 hidden, lr=3e-4) achieved CV macro-$F_1$ = \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{}. Depth 3 was optimal; depth 6 did not improve over depth 3, and depth 2/4 were within $\sim$0.001, so architecture is not the binding constraint. Learning rate had negligible impact: across the two learning rates the CV macro-$F_1$ range at the best architecture was \MlpCvRangeLrSweep{}.
-
-\subsection{Unified Ranking and Final Selection}
-
-\begin{center}
+\begin{table}[ht]
+\centering
+\caption{Model selection ranking: 5-fold GroupKFold cross-validated macro-$F_1$.}
+\label{tab:model-selection-ranking}
 \begin{tabular}{lcc}
 \toprule
 Rank & Config & CV macro-$F_1$ \\
@@ -694,13 +681,9 @@ Rank & Config & CV macro-$F_1$ \\
 18 & LR C=1, L2 & \LrCvMacroFoneCOne{} $\pm$ \LrCvMacroFoneCOneStd{} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-\noindent\textbf{Champion: LR (C=3.0, L2).} The gap between LR and MLP is \LrMlpGap{} macro-$F_1$, a modest difference insufficient to justify the complexity trade-off. MLP requires 3 hidden layers, AdamW, learning rate tuning, early stopping, and dropout selection (16 configurations swept). LR requires one free parameter (C), no hidden layers, no dropout, no random seed sensitivity. For this study's purpose  --  building an interpretable supervised reference to compare corpora, not a classifier built to label single documents  --  LR is the right choice. LR provides 768 signed coefficients per SDG class, each directly attributable to a specific semantic dimension; MLP's hidden layers diffuse this information across non-linear transformations. The macro-$F_1$ numbers are reported honestly: LR \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{}, MLP \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{}, gap \LrMlpGap{} macro-$F_1$. LR is chosen for transparency, not superior accuracy.
-
-\subsection{Held-Out Test Evaluation of the MLP Robustness Check}
-
-The MLP test macro-$F_1$ (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a separate evaluation from the CV grid-search results above. After the CV sweep, the champion MLP architecture (3 layers, 256 hidden, lr=3e-4) was retrained on the full training pool (n=\NTrainPool{}) and evaluated once against the held-out test set (n=\NTestPool{}), the same sanctioned single-use test evaluation applied to the LR champion. The resulting test macro-$F_1$ of \MlpMacroFOne{} is not directly comparable to the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} from the grid search: the CV number is an average across five document-grouped folds on the training pool alone, while the test number is a single evaluation on a disjoint held-out sample after retraining on the full pool. Both numbers confirm that the LR--MLP gap is modest and that architecture choice is not the binding constraint on classification quality.
+\noindent\textbf{Champion: LR (C=3.0, L2).} LR (C=3.0, L2, class\_weight=None) was chosen over the highest-scoring MLP despite a \LrMlpGap{} macro-$F_1$ gap: LR requires one free parameter (C) and no hidden layers, dropout, learning-rate tuning, or early stopping, and it provides 768 signed coefficients per SDG class, each directly attributable to a specific semantic dimension, whereas MLP's hidden layers diffuse this information across non-linear transformations. For this study's purpose  --  building an interpretable supervised reference to compare corpora, not a classifier built to label single documents  --  LR is chosen for transparency, not superior accuracy. The MLP test macro-$F_1$ (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a single held-out evaluation of the champion MLP retrained on the full training pool (n=\NTrainPool{}), distinct from the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} above.
 
 % ==============================================================================
 % Appendix F: Register Removal — Convergence and Validation (merged former F + G)
