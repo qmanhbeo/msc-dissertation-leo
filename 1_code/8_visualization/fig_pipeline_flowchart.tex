@@ -98,18 +98,13 @@
 %% ====================  LEGEND  ====================
 
 \coordinate (leg) at ($(analysis.south) - (0,0.6)$);
-
-\node[legbox, fill=research]  at ([xshift=-4.5cm]leg) {};
-\node[font=\footnotesize, anchor=west] at ([xshift=-3.7cm]leg) {Research};
-
-\node[legbox, fill=policy]    at ([xshift=-1.2cm]leg) {};
-\node[font=\footnotesize, anchor=west] at ([xshift=-0.4cm]leg) {Policy};
-
-\node[legbox, fill=reference] at ([xshift=2.0cm]leg) {};
-\node[font=\footnotesize, anchor=west] at ([xshift=2.8cm]leg) {Reference / Training};
-
-\node[legbox, fill=sharedbg]  at ([xshift=5.5cm]leg) {};
-\node[font=\footnotesize, anchor=west] at ([xshift=6.3cm]leg) {Shared / Converged};
+\node[anchor=north, inner sep=0pt] at (leg) {
+  \footnotesize
+  \colorbox{research}{\strut\hspace{7mm}}\hspace{0.3em}Research\hspace{1.1em}%
+  \colorbox{policy}{\strut\hspace{7mm}}\hspace{0.3em}Policy\hspace{1.1em}%
+  \colorbox{reference}{\strut\hspace{7mm}}\hspace{0.3em}Reference\hspace{1.1em}%
+  \colorbox{sharedbg}{\strut\hspace{7mm}}\hspace{0.3em}Shared
+};
 
 \end{tikzpicture}
 \end{document}
