@@ -211,7 +211,7 @@ def main() -> None:
         height=height,
         color=RESEARCH_COLOR,
         alpha=0.88,
-        label=f"Research (%, n = {N_RESEARCH_PAPERS})",
+        label=f"Research (abstract-weighted %, n = {N_RESEARCH_PAPERS})",
     )
 
     # Raw count annotations at bar ends
