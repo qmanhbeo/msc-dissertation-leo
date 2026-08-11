@@ -282,8 +282,8 @@ def main() -> None:
         ax2.legend(handles=[
             mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Adjusted gap (canonical)"),
             plt.Line2D([0], [0], marker="D", color="#555555", linestyle="None", label="Semantic gap (baseline)"),
-            plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median (adj, {median_semantic_gap:.3f})"),
-            plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean (adj, {mean_semantic_gap:.3f})"),
+            plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median (adj, {_med:.3f})"),
+            plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean (adj, {_mean:.3f})"),
         ], fontsize=7.5)
     else:
         df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
