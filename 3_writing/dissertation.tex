@@ -713,7 +713,7 @@ The same iterative procedure was run on the MiniLM and SciBERT encoder tracks (t
 \caption{Stratified iterative register-removal diagnostic across the three encoder tracks.}
 \label{tab:iterative-register-check}
 \input{../4_outputs/mpnet/tables/tab12_register_cross.tex}
-\par\smallskip\footnotesize\emph{Notes:} Test acc.\ = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Mean gap = average within-SDG semantic gap after $k$ removals. Spearman $\rho$ = rank correlation of the gap vector at iteration~$k$ versus the raw (iteration~0, un-projected) gap vector; reported per encoder track. Cells marked~--- indicate an iteration not shown for that track.\par
+\par\smallskip\footnotesize\emph{Notes:} acc = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. gap = average within-SDG semantic gap after $k$ removals. p vs raw = Spearman rank correlation of the gap vector at iteration~$k$ versus the raw (iteration~0, un-projected) gap vector; reported per encoder track. Cells marked~--- indicate an iteration not shown for that track.\par
 \end{table}
 
 \clearpage

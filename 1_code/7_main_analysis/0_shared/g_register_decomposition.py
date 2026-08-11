@@ -206,7 +206,7 @@ def _generate_decomposition(
 # --------------------------------------------------------------------------- #
 
 
-SHOW_KS_BASE = {1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50}
+SHOW_KS_BASE = {1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50, 60, 70}
 
 
 def _compute_iterative_rows(model: str, track=None):
