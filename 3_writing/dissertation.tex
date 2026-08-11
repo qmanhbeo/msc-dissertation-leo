@@ -742,7 +742,16 @@ The validation can establish three things: whether the adjustment removes a larg
 \par\smallskip\footnotesize\emph{Notes:} The one-per-parent sample is a rebuild, not a subset of the original sample: excluded flagship segments are replaced by shorter national and thematic monitoring reports, so the two samples differ in composition. Each sample holds 12 segments per SDG per corpus.\par
 \end{table}
 
-\textbf{Register score.} For every sampled segment, six style features are counted per 1{,}000 words: hedge-word rate, deontic-modality rate (must/should/shall/will), passive-voice frequency, mean sentence length, first-person-pronoun rate, and nominalisation rate; the first principal component of the standardised features gives the register score. The orientation (positive loading on sentence length) is a sign convention only; the score does not rest on any single feature.
+\textbf{Register score.} Each sampled segment is lower-cased and tokenised. Six surface features are counted and, except sentence length, expressed per 1{,}000 words:
+\begin{itemize}
+  \item \textbf{Hedge rate:} occurrences of \emph{may, might, could, suggests, appears, potentially, likely}.
+  \item \textbf{Deontic-modality rate:} \emph{must, shall, should, will}.
+  \item \textbf{First-person rate:} first-person pronouns (\emph{I, we, our, us, me, my} and variants).
+  \item \textbf{Nominalisation rate:} words ending in \emph{-tion, -ment, -ness}.
+  \item \textbf{Passive-voice frequency:} a be-form (\emph{am/is/are/was/were/be/been/being}) immediately followed by a past participle, allowing one intervening adverb; detected by part-of-speech tagging.
+  \item \textbf{Mean sentence length:} words per sentence (sentence-split).
+\end{itemize}
+The register score is the first principal component (PC1) of the six standardised features; it is oriented so that it correlates positively with sentence length, but this is only a sign convention and the score does not rest on any single feature.
 
 \textbf{Corpus feature contrasts.} Policy segments use markedly more deontic language (\RegValCorpusDeonticPol{} vs.\ \RegValCorpusDeonticRes{} per 1{,}000 words) and research segments hedge more (\RegValCorpusHedgeRes{} vs.\ \RegValCorpusHedgePol{}) and passivise more (\RegValCorpusPassiveRes{} vs.\ \RegValCorpusPassivePol{}); these contrasts are stable across samples and point in the expected directions for institutional-modality versus academic writing. First-person and nominalisation rates are roughly balanced at the corpus level (\RegValCorpusFirstPersonPol{} vs.\ \RegValCorpusFirstPersonRes{}; \RegValCorpusNominalPol{} vs.\ \RegValCorpusNominalRes{}), with the flagship segments the outliers on both. Mean sentence length is the one feature whose corpus direction is not robust: the apparent policy lead (\RegValCorpusSentLenPol{} vs.\ \RegValCorpusSentLenRes{} words) is driven by the flagship documents and reverses once they are set aside, so sentence length is treated as composition-sensitive rather than load-bearing. Table~\ref{tab:register-feature-contrasts} shows all six features.
 
