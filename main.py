@@ -850,6 +850,14 @@ def run_warm_replay(
          "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(overwrite),
         model=DEFAULT_EMBED_MODEL,
     )
+    # Combined cross-encoder iterative register-removal diagnostic table (Table 12
+    # expanded) — reads the three register checkpoints; does NOT re-run register.
+    run_step(
+        "register iterative cross-table (Table 12 expanded)",
+        [sys.executable, "1_code/7_main_analysis/2_appendix/f3_register_iterative_cross_table.py",
+         "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(overwrite),
+        model=DEFAULT_EMBED_MODEL,
+    )
     print(
         "Main text + appendix outputs rebuilt for all encoder tracks. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -905,6 +913,14 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     run_step(
         "register cross-config convergence macros",
         [sys.executable, "1_code/7_main_analysis/2_appendix/f2_export_register_cross_config.py",
+         "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(overwrite),
+        model=DEFAULT_EMBED_MODEL,
+    )
+    # Combined cross-encoder iterative register-removal diagnostic table (Table 12
+    # expanded) — reads the three register checkpoints; does NOT re-run register.
+    run_step(
+        "register iterative cross-table (Table 12 expanded)",
+        [sys.executable, "1_code/7_main_analysis/2_appendix/f3_register_iterative_cross_table.py",
          "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(overwrite),
         model=DEFAULT_EMBED_MODEL,
     )

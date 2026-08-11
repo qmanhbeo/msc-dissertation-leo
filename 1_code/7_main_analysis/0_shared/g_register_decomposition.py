@@ -206,6 +206,75 @@ def _generate_decomposition(
 # --------------------------------------------------------------------------- #
 
 
+SHOW_KS_BASE = {1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50}
+
+
+def _compute_iterative_rows(model: str, track=None):
+    """Compute per-iteration diagnostic rows for one INLP track.
+
+    Returns ``(iteration_results, summary, G_full, raw_data)``.  Each result dict
+    has keys ``k``, ``test_acc``, ``mean_gap``, ``rho_vs_raw``, ``shown``.
+    ``rho_vs_raw`` is the Spearman rank correlation of the per-SDG gap vector at
+    iteration ``k`` versus the *raw* (iteration 0, un-projected) gap vector — not
+    versus iteration 1.  ``summary`` holds the final / plateau / iteration-1
+    correlations and the gap-reduction percentage.
+    """
+    from scipy.stats import spearmanr
+
+    g_dir = register_dir(model, track)
+    g_path = g_dir / "G.npy"
+    ckpt_path = g_dir / "checkpoint.json"
+    if not g_path.exists() or not ckpt_path.exists():
+        raise FileNotFoundError(f"Register adjust outputs not found at {g_dir}")
+    G_full = load_G(model, track)
+    ckpt = load_json(ckpt_path)
+    iterations_data = ckpt["iterations"]
+    n_iters = ckpt["completed_k"]
+    policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions = load_raw_data(model)
+    rng = np.random.default_rng(PERMUTATION_SEED)
+
+    iteration_results = [{"k": it["k"], "test_acc": it["test_acc"]} for it in iterations_data]
+    show_ks = set(SHOW_KS_BASE) | {len(iteration_results)}
+    raw_gaps = compute_gaps_for_directions(
+        [], policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions, rng
+    )
+    for r in iteration_results:
+        k = r["k"]
+        if k in show_ks:
+            k_gaps = compute_gaps_for_directions(
+                [np.asarray(G_full[i]) for i in range(k)],
+                policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions, rng,
+            )
+            r["mean_gap"] = round(float(np.mean(list(k_gaps.values()))), 4) if k_gaps else 0.0
+            sdgs_common = sorted(set(raw_gaps.keys()) & set(k_gaps.keys()))
+            rho_k = 0.0
+            if len(sdgs_common) >= 3:
+                rho_k, _ = spearmanr([raw_gaps[s] for s in sdgs_common], [k_gaps[s] for s in sdgs_common])
+            r["rho_vs_raw"] = round(float(rho_k), 4)
+            r["shown"] = True
+        else:
+            r["mean_gap"] = None
+            r["rho_vs_raw"] = None
+            r["shown"] = False
+
+    displayed = [r for r in iteration_results if r["rho_vs_raw"] is not None]
+    final_rho = displayed[-1]["rho_vs_raw"]
+    rho_at_15 = next((r["rho_vs_raw"] for r in displayed if r["k"] == 15), final_rho)
+    plateau_rho = float(np.mean([r["rho_vs_raw"] for r in displayed[-5:]])) if len(displayed) >= 5 else final_rho
+    iter1_rho = next((r["rho_vs_raw"] for r in displayed if r["k"] == 1), 1.0)
+    first_mean_gap = iteration_results[0]["mean_gap"]
+    final_mean_gap = iteration_results[-1]["mean_gap"]
+    reduction_pct = (first_mean_gap - final_mean_gap) / first_mean_gap * 100 if first_mean_gap else 0
+    summary = {
+        "n_iters": n_iters, "final_rho": final_rho, "rho_at_15": rho_at_15,
+        "plateau_rho": plateau_rho, "iter1_rho": iter1_rho,
+        "first_mean_gap": first_mean_gap, "final_mean_gap": final_mean_gap,
+        "reduction_pct": reduction_pct,
+    }
+    raw_data = (policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions)
+    return iteration_results, summary, G_full, raw_data
+
+
 def _generate_iterative_diagnostic(
     model: str,
     layout,
@@ -217,66 +286,24 @@ def _generate_iterative_diagnostic(
     register_adjust.py, then computes per-SDG gaps at selected iteration counts.
     Folded from 2_appendix/f_register_adjustment.py to canon.
     """
-    from scipy.stats import spearmanr
-
     tables_dir = layout.tables_dir
     out_tex = tables_dir / "tab12_register_check.tex"
     out_num = tables_dir / "num12_register_check.tex"
 
-    g_path = register_dir(model) / "G.npy"
-    ckpt_path = register_dir(model) / "checkpoint.json"
-    if not g_path.exists() or not ckpt_path.exists():
-        log.warning("Register adjust outputs not found at %s — skipping iterative diagnostic.", g_path)
+    try:
+        iteration_results, summary, G_full, raw_data = _compute_iterative_rows(model)
+    except (FileNotFoundError, RuntimeError, ValueError) as e:
+        log.warning("Register adjust outputs unavailable for %s — skipping iterative diagnostic: %s", model, e)
         return
 
-    fp = fingerprint_of(g_path, ckpt_path) + "iter_v1"
+    g_dir = register_dir(model)
+    fp = fingerprint_of(g_dir / "G.npy", g_dir / "checkpoint.json") + "iter_v2"
     if should_skip([out_tex], fp, overwrite, out_tex):
         log.info("Skipping iterative diagnostic — inputs unchanged")
         return
 
-    G_full = load_G(model)
-    ckpt = load_json(ckpt_path)
-    iterations_data = ckpt["iterations"]
-    n_iters = ckpt["completed_k"]
-    log.info("Loaded canonical G: %d iterations, final acc %.4f", n_iters, ckpt.get("final_acc", 0))
-
-    policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions = (
-        load_raw_data(model)
-    )
+    policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions = raw_data
     rng = np.random.default_rng(PERMUTATION_SEED)
-
-    iteration_results: list[dict] = []
-    for item in iterations_data:
-        iteration_results.append({"k": item["k"], "test_acc": item["test_acc"]})
-
-    show_ks = {1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50, len(iteration_results)}
-
-    for r in iteration_results:
-        k = r["k"]
-        if k in show_ks:
-            k_gaps = compute_gaps_for_directions(
-                [np.asarray(G_full[i]) for i in range(k)],
-                policy_emb, policy_assignments, policy_ids,
-                research_centroids, research_cohesions, rng,
-            )
-            r["mean_gap"] = round(float(np.mean(list(k_gaps.values()))), 4) if k_gaps else 0.0
-            if k == 1:
-                r["rho_vs_iter1"] = 1.0
-                _iter1_gaps = k_gaps
-            else:
-                sdgs_common = sorted(set(_iter1_gaps.keys()) & set(k_gaps.keys()))
-                rho_k = 0.0
-                if len(sdgs_common) >= 3:
-                    rho_k, _ = spearmanr(
-                        [_iter1_gaps[s] for s in sdgs_common],
-                        [k_gaps[s] for s in sdgs_common],
-                    )
-                r["rho_vs_iter1"] = round(rho_k, 4)
-        else:
-            r["mean_gap"] = None
-            r["rho_vs_iter1"] = None
-
-    rho_iter1_final = iteration_results[-1].get("rho_vs_iter1", 0.0)
 
     # ---- LaTeX convergence table ----
     tab_lines = [
@@ -284,14 +311,14 @@ def _generate_iterative_diagnostic(
         "% seed: 42 (PERMUTATION_SEED) — policy per-document cap sampling",
         r"\begin{tabular}{lrrr}",
         r"\toprule",
-        r"Iteration & Test acc. & Mean gap & Spearman $\rho$ vs iter\,1 \\",
+        r"It. & Test acc. & Mean gap & p vs raw \\",
         r"\midrule",
     ]
     for r in iteration_results:
-        if r["k"] not in show_ks:
+        if not r.get("shown"):
             continue
         mg = f"{r['mean_gap']:.3f}" if r.get("mean_gap") is not None else "—"
-        sp = f"{r['rho_vs_iter1']:.3f}" if r.get("rho_vs_iter1") is not None else "—"
+        sp = f"{r['rho_vs_raw']:.3f}" if r.get("rho_vs_raw") is not None else "—"
         tab_lines.append(f"{r['k']} & {r['test_acc']:.3f} & {mg} & {sp} \\\\")
     tab_lines.extend([r"\bottomrule", r"\end{tabular}"])
     tables_dir.mkdir(parents=True, exist_ok=True)
@@ -299,24 +326,19 @@ def _generate_iterative_diagnostic(
     log.info("Saved: %s", out_tex)
 
     # ---- Convergence macros ----
-    first_mean_gap = iteration_results[0].get("mean_gap", 0)
-    final_mean_gap = iteration_results[-1].get("mean_gap", 0)
-    reduction_pct = (first_mean_gap - final_mean_gap) / first_mean_gap * 100 if first_mean_gap > 0 else 0
-    rho_at_15 = next((r.get("rho_vs_iter1", 0) for r in iteration_results if r["k"] == 15), 0)
-    displayed = [r for r in iteration_results if r.get("rho_vs_iter1") is not None]
-    plateau_rho = float(np.mean([r["rho_vs_iter1"] for r in displayed[-5:]])) if len(displayed) >= 5 else rho_iter1_final
     num_lines = [
         "% Auto-generated by g_register_decomposition.py iterative diagnostic",
         "% seed: 42 (PERMUTATION_SEED) — policy per-document cap sampling",
         rf"\newcommand{{\RegisterFirstAcc}}{{{iteration_results[0]['test_acc']:.3f}}}",
         rf"\newcommand{{\RegisterFinalAcc}}{{{iteration_results[-1]['test_acc']:.3f}}}",
         rf"\newcommand{{\RegisterIterFinalK}}{{{len(iteration_results)}}}",
-        rf"\newcommand{{\RegisterIterSpearmanRho}}{{{rho_iter1_final:.3f}}}",
-        rf"\newcommand{{\RegisterIterMeanGapFirst}}{{{first_mean_gap:.3f}}}",
-        rf"\newcommand{{\RegisterIterMeanGapFinal}}{{{final_mean_gap:.3f}}}",
-        rf"\newcommand{{\RegisterIterReductionPct}}{{{reduction_pct:.0f}}}",
-        rf"\newcommand{{\RegisterIterRhoAtFifteen}}{{{rho_at_15:.3f}}}",
-        rf"\newcommand{{\RegisterIterPlateauRho}}{{{plateau_rho:.3f}}}",
+        rf"\newcommand{{\RegisterIterSpearmanRho}}{{{summary['final_rho']:.3f}}}",
+        rf"\newcommand{{\RegisterIterRhoAtOne}}{{{summary['iter1_rho']:.3f}}}",
+        rf"\newcommand{{\RegisterIterRhoAtFifteen}}{{{summary['rho_at_15']:.3f}}}",
+        rf"\newcommand{{\RegisterIterPlateauRho}}{{{summary['plateau_rho']:.3f}}}",
+        rf"\newcommand{{\RegisterIterMeanGapFirst}}{{{summary['first_mean_gap']:.3f}}}",
+        rf"\newcommand{{\RegisterIterMeanGapFinal}}{{{summary['final_mean_gap']:.3f}}}",
+        rf"\newcommand{{\RegisterIterReductionPct}}{{{summary['reduction_pct']:.0f}}}",
     ]
     out_num.write_text("\n".join(num_lines) + "\n", encoding="utf-8")
     log.info("Saved: %s", out_num)
@@ -344,7 +366,7 @@ def _generate_iterative_diagnostic(
         log.info("Saved (appended per-SDG macros): %s", out_num)
 
     record_fingerprint([out_tex, out_num], fp, out_tex)
-    log.info("Iterative register diagnostic complete: %d iterations, Spearman rho=%.4f", len(iteration_results), rho_iter1_final)
+    log.info("Iterative register diagnostic complete: %d iterations, Spearman rho vs raw=%.4f", len(iteration_results), summary['final_rho'])
 
 
 # --------------------------------------------------------------------------- #

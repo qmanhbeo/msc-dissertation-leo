@@ -206,6 +206,9 @@ POST_ADJUSTED_STEPS = [
     "0_shared/g_interaction_extended.py",
     "0_shared/generate_tex_macros.py",
     ("1_main_text/0_pca_register_before_after.py", True),
+    # Combined cross-encoder iterative register-removal table (Table 12 expanded).
+    # Reads all three register checkpoints; gated to the default model so it runs once.
+    ("2_appendix/f3_register_iterative_cross_table.py", True),
 ]
 
 _MODULE_CACHE: dict[str, object] = {}

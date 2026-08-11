@@ -700,7 +700,7 @@ Rank & Config & CV macro-$F_1$ \\
 The full INLP procedure and identification argument are given in Methodology (Section~\ref{sec:register-adjustment-inlp}). This appendix reports the convergence behaviour of the procedure and the construct validation of the component it removes. The adjusted results are the primary decomposition, not sensitivity diagnostics.
 
 \paragraph{Convergence results.}\label{app:register-inlp}
-Held-out accuracy dropped from \RegisterFirstAcc{} (iteration~1) to \RegisterFinalAcc{} by iteration~\RegisterIterFinalK{}, at which point no further linear register separation was detectable. The Spearman rank correlation between the iteration~1 and iteration~\RegisterIterFinalK{} gap vectors was \RegisterIterSpearmanRho{}: the additional removed directions shifted the relative SDG ordering substantially. The mean gap compresses from \MeanRawGap{} to \MeanAdjustedGap{}, a reduction of \RegisterIterReductionPct{}\%, before plateauing. The Spearman $\rho$ decays rapidly in the first 15 iterations (1.000 to \RegisterIterRhoAtFifteen{}) and then stabilises around \RegisterIterPlateauRho{}, indicating that the first 15 orthogonal directions capture the bulk of the register signal. Table~\ref{tab:iterative-register-check} reports the per-iteration diagnostic underlying this summary.
+Held-out accuracy dropped from \RegisterFirstAcc{} (iteration~1) to \RegisterFinalAcc{} by iteration~\RegisterIterFinalK{}, at which point no further linear register separation was detectable. The Spearman rank correlation between the raw (iteration~0, un-projected) and iteration~\RegisterIterFinalK{} gap vectors was \RegisterIterSpearmanRho{}: the additional removed directions shifted the relative SDG ordering substantially. The mean gap compresses from \MeanRawGap{} to \MeanAdjustedGap{}, a reduction of \RegisterIterReductionPct{}\%, before plateauing. The Spearman $\rho$ versus the raw gap decays from \RegisterIterRhoAtOne{} (iteration~1) to \RegisterIterRhoAtFifteen{} by iteration~15 and then stabilises around \RegisterIterPlateauRho{}, indicating that the first 15 orthogonal directions capture the bulk of the register signal. Table~\ref{tab:iterative-register-check} reports the per-iteration diagnostic underlying this summary across all three encoder tracks.
 
 The decomposition surfaces the SDG~17 inversion discussed in Results (Section~\ref{sec:semantic-gap}) and Table~\ref{tab:register-decomposition}: the register component is positive for all SDGs except SDG~17 (range: \RegCompSdgFifteen{} to \RegCompSdgThirteen{}), the only negative value, where register \emph{increases} the apparent research--policy similarity of the partnership goal.
 
@@ -710,10 +710,10 @@ The same iterative procedure was run on the MiniLM and SciBERT encoder tracks (t
 \begin{table}[ht]
 \centering
 \small
-\caption{Stratified iterative register-removal diagnostic.}
+\caption{Stratified iterative register-removal diagnostic across the three encoder tracks.}
 \label{tab:iterative-register-check}
-\input{../4_outputs/mpnet/tables/tab12_register_check.tex}
-\par\smallskip\footnotesize\emph{Notes:} Test acc.\ = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Mean gap = average within-SDG semantic gap after $k$ removals. Spearman $\rho$ = rank correlation of the gap vector at iteration~$k$ versus iteration~1.\par
+\input{../4_outputs/mpnet/tables/tab12_register_cross.tex}
+\par\smallskip\footnotesize\emph{Notes:} Test acc.\ = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Mean gap = average within-SDG semantic gap after $k$ removals. Spearman $\rho$ = rank correlation of the gap vector at iteration~$k$ versus the raw (iteration~0, un-projected) gap vector; reported per encoder track. Cells marked~--- indicate an iteration not shown for that track.\par
 \end{table}
 
 \clearpage
