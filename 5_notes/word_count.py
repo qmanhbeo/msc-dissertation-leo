@@ -11,6 +11,14 @@ strip all ``\command[opts]{args}`` macros (keeping their brace text only where
 it is visible prose), normalise punctuation, and count whitespace-separated
 tokens. This is a review-time aid, not a pipeline stage.
 
+Non-prose macros are removed together with their brace argument so they do not
+pollute the count: ``\input``/``\include``/``\includegraphics`` file paths,
+``\label``/``\ref`` keys, citation keys (``\cite``/``\citep``/``\parencite``/
+``\textcite``), and ``\footnote`` text. ``\caption`` text is kept: table and
+figure captions are counted, matching the usual UoB convention. Table bodies
+never enter the count because they live in separate ``\input`` files that this
+script does not read.
+
 Usage:
     python 5_notes/word_count.py [path/to/dissertation.tex]
 """
@@ -37,7 +45,16 @@ def strip_latex(text: str) -> str:
     # Drop verbatim / include / input style commands entirely.
     text = re.sub(r"\\begin\{(?:table|figure|tabular|verbatim|lstlisting)[^}]*\}", " ", text)
     text = re.sub(r"\\end\{(?:table|figure|tabular|verbatim|lstlisting)[^}]*\}", " ", text)
-    text = re.sub(r"\\(?:input|include|includegraphics|caption|label|ref|citep|cite|parencite|textcite|footnote)\b", " ", text)
+    # Non-prose commands: drop the command AND its brace argument (file paths,
+    # label/ref keys, citation keys, footnote text). \caption is handled
+    # separately below so its prose is kept and counted.
+    text = re.sub(
+        r"\\(?:input|include|includegraphics|label|ref|citep|cite|parencite|textcite|footnote)\b"
+        r"\*?(?:\s*\[[^\]]*\])?(?:\s*\{[^}]*\})?",
+        " ", text,
+    )
+    # \caption: remove only the command name; the brace text is counted.
+    text = re.sub(r"\\caption\*?\b", " ", text)
     # Remove macro definitions and structure commands, keeping brace contents
     # only when they are ordinary prose (we keep all brace text to be safe).
     text = re.sub(r"\\newcommand\b", " ", text)
