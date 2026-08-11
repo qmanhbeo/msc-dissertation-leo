@@ -41,6 +41,7 @@ credentials.json
 !1_code/data_backup_and_fetch/
 !1_code/data_backup_and_fetch/**
 .temp/
+tmp/
 __test-scopus
 
 # === Snapshot archives ===
