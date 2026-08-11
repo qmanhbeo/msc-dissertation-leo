@@ -202,6 +202,7 @@ APPENDIX_STEPS = [(spec["script"], False) for spec in APPENDIX_SPECS if spec["in
 # extended interaction JSONs, and consolidated LaTeX macros.
 POST_ADJUSTED_STEPS = [
     "0_shared/g_register_decomposition.py",
+    "0_shared/g_register_ntarget_macro.py",
     "0_shared/g_interaction_extended.py",
     "0_shared/generate_tex_macros.py",
     ("1_main_text/0_pca_register_before_after.py", True),

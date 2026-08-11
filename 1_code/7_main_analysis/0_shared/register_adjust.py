@@ -114,8 +114,7 @@ SCHEMA_VERSION = 1
 # Retired as a sampling cap (plan §6.1 fix): the per-SDG-per-corpus count is now
 # the GLOBAL MIN over all (SDG, corpus) of available counts — a single number for
 # the whole track, with NO fixed ceiling. Kept only as a documented reference;
-# ``n_target`` (data-derived) supersedes it. MiniLM/SciBERT -> 263, MPNet -> 1207
-# under the frozen embedded snapshot.
+# ``n_target`` (data-derived, recorded in checkpoint.json) supersedes it.
 ITERATIVE_N_PER_SDG = 1000
 ITERATIVE_ACC_THRESHOLD = 0.5
 # SAFETY CAP ONLY — NOT a methodological iteration bound. In principle the INLP
@@ -250,7 +249,7 @@ def load_stratified_samples(
     coverage contributed more rows to the pooled INLP classifier and were thus
     more strongly gap-adjusted. Because n_target is the global minimum available
     count, both corpora are equally AND uniformly represented within and across
-    every SDG (MiniLM/SciBERT -> 263, MPNet -> 1207 under the frozen snapshot).
+    every SDG (value is data-derived and recorded in checkpoint.json).
 
     Returns (X, y, sdg_labels) where sdg_labels is an int array of 1-indexed SDG
     per row, used for stratified train/test splitting.
