@@ -189,6 +189,7 @@ def _generate_decomposition(
         tex_lines.append(f"{sdg:2d} & {name} & {raw_s} & {adj_s} & {reg_s} & {cov_s} \\\\")
     tex_lines.extend([
         r"\midrule",
+        rf"Mean & --- & {mean_raw:.3f} & {mean_adj:.3f} & {mean_reg:+.3f} & {mean_cov:.4f} \\",
         r"\bottomrule",
         r"\end{tabular}",
     ])
