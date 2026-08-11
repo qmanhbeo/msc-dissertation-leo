@@ -472,7 +472,7 @@ Three potential confounds must be ruled out before the cancellation can be inter
 
 \textbf{Independence of classification and measurement.} The LR classifier and the embedding space are separate tools: classification uses softmax probabilities; measurement uses cosine distance between L2-normalised centroids.
 
-\textbf{Cross-configuration replication.} The cancellation replicates across 8 of 9 configs (Table~\ref{tab:interaction}), including concept retrieval and MLP; the register component is negative in 7 of 9; the raw gap is null in all.
+\textbf{Cross-configuration replication.} The cancellation replicates across 8 of 9 configs (Table~\ref{tab:interaction}), including concept retrieval and MLP; the register component is negative in 9 of 9; the raw gap is null in all.
 
 \textbf{SciBERT compression validates the register interpretation.} SciBERT compresses the raw gap from \MPNetMeanGap{} to \SciBERTMeanGap{} (88\% reduction) while preserving coverage ($\rho = \SciBERTCoverageRho$; Table~\ref{tab:encoder-sensitivity-coverage}). Scientific pretraining \parencite{Beltagy2019} fuses the registers because both use scientific conventions, exactly what the decomposition predicts.
 
