@@ -356,6 +356,32 @@ def _h1_grid_macros(rows: list[dict]) -> list[str]:
         n_pos = sum(1 for v in adj if v is not None and v["rho"] > 0)
         lines.append(rf"\newcommand{{\{stem}}}{{{n_pos}}}")
         lines.append(rf"\newcommand{{\{stem}Total}}{{{len(rows)}}}")
+    # MPNet LR H1d (policy coverage -> adjusted/topic gap): headline directional
+    # predictor figure quoted in the abstract. Numeric only (no significance stars),
+    # so it can sit inside a math mode `\rho = \HOneDPolicyCovAdjRho`.
+    _mpnet_lr = by_label.get("MPNet LR")
+    _mlr_pol_adj = (
+        _mpnet_lr.get("predictors", {}).get("policy", {}).get("adj")
+        if _mpnet_lr is not None else None
+    )
+    if _mlr_pol_adj is not None:
+        lines.append(rf"\newcommand{{\HOneDPolicyCovAdjRho}}{{{_mlr_pol_adj['rho']:+.3f}}}")
+        lines.append(rf"\newcommand{{\HOneDPolicyCovAdjRhoP}}{{{_mlr_pol_adj['p']:.3f}}}")
+    else:
+        lines.append(rf"\newcommand{{\HOneDPolicyCovAdjRho}}{{--}}")
+        lines.append(rf"\newcommand{{\HOneDPolicyCovAdjRhoP}}{{--}}")
+    # MPNet LR H1c (research coverage -> adjusted/topic gap): the non-significant
+    # counterpart quoted in the abstract. Same numeric-only convention.
+    _mlr_res_adj = (
+        _mpnet_lr.get("predictors", {}).get("research", {}).get("adj")
+        if _mpnet_lr is not None else None
+    )
+    if _mlr_res_adj is not None:
+        lines.append(rf"\newcommand{{\HOneDResearchCovAdjRho}}{{{_mlr_res_adj['rho']:+.3f}}}")
+        lines.append(rf"\newcommand{{\HOneDResearchCovAdjRhoP}}{{{_mlr_res_adj['p']:.3f}}}")
+    else:
+        lines.append(rf"\newcommand{{\HOneDResearchCovAdjRho}}{{--}}")
+        lines.append(rf"\newcommand{{\HOneDResearchCovAdjRhoP}}{{--}}")
     return lines
 
 
