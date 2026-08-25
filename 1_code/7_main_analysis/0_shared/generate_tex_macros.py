@@ -22,6 +22,9 @@ import logging
 import sys
 from pathlib import Path
 
+import numpy as np
+from scipy.stats import spearmanr
+
 ROOT = Path(__file__).resolve().parents[3]
 CODE_ROOT = ROOT / "1_code"
 ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
@@ -119,6 +122,24 @@ def run(args: argparse.Namespace) -> None:
     # Adjusted gap range (max - min across SDGs)
     adj_gaps = [r["adjusted_gap"] for r in decomp["per_sdg"] if r["adjusted_gap"] is not None]
     lines.append(rf"\newcommand{{\AdjustedGapRange}}{{{max(adj_gaps) - min(adj_gaps):.3f}}}")
+
+    # Register-component "raw-carryover" diagnostics (Appendix D prose).
+    # reg = raw - adj; compute variance ratio and Spearman against raw/adj gaps
+    # across the 17 SDGs. Replaces previously hardcoded 1.24 / 0.67 / -0.29.
+    reg_rows = [
+        (r["raw_gap"], r["adjusted_gap"], r["register_component"])
+        for r in decomp["per_sdg"]
+        if r["raw_gap"] is not None and r["adjusted_gap"] is not None and r["register_component"] is not None
+    ]
+    raw_arr = np.array([x[0] for x in reg_rows], dtype=float)
+    adj_arr = np.array([x[1] for x in reg_rows], dtype=float)
+    reg_arr = np.array([x[2] for x in reg_rows], dtype=float)
+    dist_raw_var_ratio = float(np.var(reg_arr, ddof=1) / np.var(raw_arr, ddof=1))
+    dist_reg_vs_raw_rho = float(spearmanr(reg_arr, raw_arr).correlation)
+    dist_reg_vs_adj_rho = float(spearmanr(reg_arr, adj_arr).correlation)
+    lines.append(rf"\newcommand{{\DistRawVarRatio}}{{{dist_raw_var_ratio:.3f}}}")
+    lines.append(rf"\newcommand{{\DistRegVsRawRho}}{{{dist_reg_vs_raw_rho:.3f}}}")
+    lines.append(rf"\newcommand{{\DistRegVsAdjRho}}{{{dist_reg_vs_adj_rho:.3f}}}")
 
     # ---- Write ----
     tables_dir.mkdir(parents=True, exist_ok=True)
