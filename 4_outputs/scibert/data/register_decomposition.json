@@ -1,6 +1,7 @@
 {
   "embedding_model": "allenai/scibert_scivocab_uncased",
-  "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+  "corpus": "research",
+  "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence. signed_dom = research share - policy share (percentage points).",
   "p_value": {
     "method": "monte_carlo_permutation",
     "n_resamples": 100000,
@@ -29,6 +30,9 @@
       "adjusted_gap": 0.024912,
       "register_component": 0.007453,
       "coverage_gap": 0.051165,
+      "research_pct": 0.145,
+      "policy_pct": 5.2615,
+      "signed_dom": -5.1165,
       "name": "No Poverty"
     },
     {
@@ -37,6 +41,9 @@
       "adjusted_gap": 0.019745,
       "register_component": 0.017356,
       "coverage_gap": 0.026215,
+      "research_pct": 1.3050000000000002,
+      "policy_pct": 3.9265000000000003,
+      "signed_dom": -2.6215,
       "name": "Zero Hunger"
     },
     {
@@ -45,6 +52,9 @@
       "adjusted_gap": 0.043688,
       "register_component": 0.012143,
       "coverage_gap": 0.222517,
+      "research_pct": 27.041999999999998,
+      "policy_pct": 4.7903,
+      "signed_dom": 22.2517,
       "name": "Good Health"
     },
     {
@@ -53,6 +63,9 @@
       "adjusted_gap": 0.039372,
       "register_component": 0.004312,
       "coverage_gap": 0.128367,
+      "research_pct": 17.737,
+      "policy_pct": 4.9003,
+      "signed_dom": 12.836699999999999,
       "name": "Education"
     },
     {
@@ -61,6 +74,9 @@
       "adjusted_gap": 0.062553,
       "register_component": -0.021581,
       "coverage_gap": 0.038527,
+      "research_pct": 1.503,
+      "policy_pct": 5.3557,
+      "signed_dom": -3.8526999999999996,
       "name": "Gender Equality"
     },
     {
@@ -69,6 +85,9 @@
       "adjusted_gap": 0.028258,
       "register_component": 0.017151,
       "coverage_gap": 0.025141,
+      "research_pct": 1.114,
+      "policy_pct": 3.6281,
+      "signed_dom": -2.5141,
       "name": "Clean Water"
     },
     {
@@ -77,6 +96,9 @@
       "adjusted_gap": 0.041954,
       "register_component": 0.010466,
       "coverage_gap": 0.006468,
+      "research_pct": 3.531,
+      "policy_pct": 4.1778,
+      "signed_dom": -0.6468000000000003,
       "name": "Clean Energy"
     },
     {
@@ -85,6 +107,9 @@
       "adjusted_gap": 0.029564,
       "register_component": 0.003794,
       "coverage_gap": 0.037419,
+      "research_pct": 0.75,
+      "policy_pct": 4.4919,
+      "signed_dom": -3.7419000000000002,
       "name": "Decent Work"
     },
     {
@@ -93,6 +118,9 @@
       "adjusted_gap": 0.03493,
       "register_component": 0.009742,
       "coverage_gap": 0.175854,
+      "research_pct": 21.401999999999997,
+      "policy_pct": 3.8165999999999998,
+      "signed_dom": 17.585399999999996,
       "name": "Innovation"
     },
     {
@@ -101,6 +129,9 @@
       "adjusted_gap": 0.043234,
       "register_component": 0.003532,
       "coverage_gap": 0.016304,
+      "research_pct": 0.804,
+      "policy_pct": 2.4344,
+      "signed_dom": -1.6304,
       "name": "Reduced Ineq."
     },
     {
@@ -109,6 +140,9 @@
       "adjusted_gap": 0.053712,
       "register_component": -0.001226,
       "coverage_gap": 0.018374,
+      "research_pct": 4.0680000000000005,
+      "policy_pct": 5.9054,
+      "signed_dom": -1.8373999999999997,
       "name": "Sust. Cities"
     },
     {
@@ -117,6 +151,9 @@
       "adjusted_gap": 0.024431,
       "register_component": 0.014235,
       "coverage_gap": 0.024631,
+      "research_pct": 1.055,
+      "policy_pct": 3.5180999999999996,
+      "signed_dom": -2.4631,
       "name": "Consumption"
     },
     {
@@ -125,6 +162,9 @@
       "adjusted_gap": 0.056112,
       "register_component": -0.002857,
       "coverage_gap": 0.059019,
+      "research_pct": 4.04,
+      "policy_pct": 9.941899999999999,
+      "signed_dom": -5.901899999999999,
       "name": "Climate"
     },
     {
@@ -133,6 +173,9 @@
       "adjusted_gap": 0.039269,
       "register_component": 0.005002,
       "coverage_gap": 0.027793,
+      "research_pct": 0.943,
+      "policy_pct": 3.7222999999999997,
+      "signed_dom": -2.7792999999999997,
       "name": "Life Below Water"
     },
     {
@@ -141,6 +184,9 @@
       "adjusted_gap": 0.032052,
       "register_component": 0.012005,
       "coverage_gap": 0.013253,
+      "research_pct": 2.774,
+      "policy_pct": 4.0993,
+      "signed_dom": -1.3253000000000004,
       "name": "Life on Land"
     },
     {
@@ -149,6 +195,9 @@
       "adjusted_gap": 0.077513,
       "register_component": -0.037094,
       "coverage_gap": 0.091115,
+      "research_pct": 11.589,
+      "policy_pct": 20.700499999999998,
+      "signed_dom": -9.111499999999998,
       "name": "Peace & Justice"
     },
     {
@@ -157,6 +206,9 @@
       "adjusted_gap": 0.041329,
       "register_component": -0.018538,
       "coverage_gap": 0.091314,
+      "research_pct": 0.198,
+      "policy_pct": 9.3294,
+      "signed_dom": -9.1314,
       "name": "Partnerships"
     }
   ]

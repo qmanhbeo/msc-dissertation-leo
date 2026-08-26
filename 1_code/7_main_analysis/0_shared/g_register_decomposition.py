@@ -68,6 +68,8 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate register-topic decomposition + iterative diagnostic.")
     p.add_argument("--output-dir", default=str(ROOT / "4_outputs"))
     p.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias, help=argparse.SUPPRESS)
+    p.add_argument("--corpus", default="research", choices=["research", "concept"],
+                   help="Research corpus variant. 'concept' reads 4_outputs/{model}/data/concept.")
     p.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
     return p.parse_args()
 
@@ -81,23 +83,32 @@ def _generate_decomposition(
     model: str,
     layout,
     overwrite: bool,
+    corpus: str = "research",
 ) -> None:
-    data_dir = layout.data_dir
+    data_dir = layout.data_dir / "concept" if corpus == "concept" else layout.data_dir
     adj_data_dir = data_dir / "adjusted"
     tables_dir = layout.tables_dir
 
     raw_path = data_dir / "semantic_gap_distances_lr.json"
     adj_path = adj_data_dir / "semantic_gap_distances_lr.json"
     cov_path = data_dir / "coverage_document_weighted.json"
+
+    if corpus == "concept":
+        out_tex = tables_dir / "tab_concept_reference.tex"
+    elif "minilm" in model.lower():
+        out_tex = tables_dir / "tab_minilm_reference.tex"
+    elif "scibert" in model.lower():
+        out_tex = tables_dir / "tab_scibert_reference.tex"
+    else:
+        out_tex = tables_dir / "tab5_register_decomposition.tex"
     out_json = data_dir / "register_decomposition.json"
-    out_tex = tables_dir / "tab5_register_decomposition.tex"
 
     if not adj_path.exists():
         log.warning("Adjusted semantic gap not found at %s — skipping decomposition.", adj_path)
         return
 
-    fp = fingerprint_of(raw_path, adj_path, cov_path) + "v1"
-    if should_skip([out_json], fp, overwrite, out_json):
+    fp = fingerprint_of(raw_path, adj_path, cov_path) + "v3"
+    if should_skip([out_json, out_tex], fp, overwrite, out_json):
         log.info("Skipping decomposition — inputs unchanged")
         return
 
@@ -108,16 +119,23 @@ def _generate_decomposition(
     raw_map = {r["sdg"]: r for r in raw_data["per_sdg"]}
     adj_map = {r["sdg"]: r for r in adj_data["per_sdg"]}
     cov_gap_abs = {f"SDG{i}": cov_data["coverage_gap_hard"][f"SDG{i}"] for i in range(1, N_SDG + 1)}
+    res_profile = cov_data.get("research_profile_hard", {})
+    pol_profile = cov_data.get("policy_profile_hard_docweighted", {})
 
     per_sdg = []
     for sdg in range(1, N_SDG + 1):
         raw_gap = raw_map[sdg].get("semantic_gap")
         adj_gap = adj_map[sdg].get("semantic_gap")
         cov_gap = cov_gap_abs.get(f"SDG{sdg}")
+        res_share = res_profile.get(f"SDG{sdg}")
+        pol_share = pol_profile.get(f"SDG{sdg}")
 
         raw_val = float(raw_gap) if raw_gap is not None else None
         adj_val = float(adj_gap) if adj_gap is not None else None
         cov_val = float(cov_gap) if cov_gap is not None else None
+        res_pct = float(res_share) * 100.0 if res_share is not None else None
+        pol_pct = float(pol_share) * 100.0 if pol_share is not None else None
+        signed_dom = (res_pct - pol_pct) if (res_pct is not None and pol_pct is not None) else None
 
         register_component = None
         if raw_val is not None and adj_val is not None:
@@ -129,6 +147,9 @@ def _generate_decomposition(
             "adjusted_gap": adj_val,
             "register_component": register_component,
             "coverage_gap": cov_val,
+            "research_pct": res_pct,
+            "policy_pct": pol_pct,
+            "signed_dom": signed_dom,
             "name": SDG_SHORT_NAMES[sdg],
         })
 
@@ -137,8 +158,13 @@ def _generate_decomposition(
     mean_adj = float(np.mean([r["adjusted_gap"] for r in valid]))
     mean_reg = float(np.mean([r["register_component"] for r in valid]))
     mean_cov = float(np.mean([r["coverage_gap"] for r in valid if r["coverage_gap"] is not None]))
+    mean_res = float(np.mean([r["research_pct"] for r in valid if r["research_pct"] is not None]))
+    mean_pol = float(np.mean([r["policy_pct"] for r in valid if r["policy_pct"] is not None]))
+    mean_sdom = float(np.mean([r["signed_dom"] for r in valid if r["signed_dom"] is not None]))
+    if abs(mean_sdom) < 1e-9:
+        mean_sdom = 0.0
 
-    from scipy import stats
+    from scipy import stats  # noqa: F401  (kept for parity with prior versions)
     valid_corr = [r for r in per_sdg if all(v is not None for v in [r["raw_gap"], r["adjusted_gap"], r["coverage_gap"], r["register_component"]])]
     if len(valid_corr) >= 3:
         cov_arr = np.array([r["coverage_gap"] for r in valid_corr])
@@ -151,7 +177,8 @@ def _generate_decomposition(
 
     output = {
         "embedding_model": model,
-        "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence.",
+        "corpus": corpus,
+        "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence. signed_dom = research share - policy share (percentage points).",
         "p_value": {
             "method": "monte_carlo_permutation",
             "n_resamples": PERMUTATION_N_RESAMPLES,
@@ -174,9 +201,11 @@ def _generate_decomposition(
 
     tex_lines = [
         "% Auto-generated by g_register_decomposition.py — do not edit manually",
-        r"\begin{tabular}{llrrrr}",
+        r"\begin{tabular}{llrrrrrrr}",
         r"\toprule",
-        r"SDG & Description & Semantic Gap & Adj. Gap & Reg. Comp. & Cov. Gap \\",
+        r"SDG & Description & \multicolumn{3}{c}{Semantic gaps} & \multicolumn{4}{c}{Coverage predictors} \\",
+        r"\cmidrule(lr){3-5} \cmidrule(lr){6-9}",
+        r"& & Raw & Adj. & Reg. & Cov. & SDom & Res \% & Pol \% \\",
         r"\midrule",
     ]
     for r in per_sdg:
@@ -185,11 +214,14 @@ def _generate_decomposition(
         raw_s = f"{r['raw_gap']:.3f}" if r['raw_gap'] is not None else "N/A"
         adj_s = f"{r['adjusted_gap']:.3f}" if r['adjusted_gap'] is not None else "N/A"
         reg_s = f"{r['register_component']:+.3f}" if r['register_component'] is not None else "N/A"
-        cov_s = f"{r['coverage_gap']:.4f}" if r['coverage_gap'] is not None else "N/A"
-        tex_lines.append(f"{sdg:2d} & {name} & {raw_s} & {adj_s} & {reg_s} & {cov_s} \\\\")
+        cov_s = f"{r['coverage_gap'] * 100.0:.1f}" if r['coverage_gap'] is not None else "N/A"
+        sdom_s = f"{r['signed_dom']:+.1f}" if r['signed_dom'] is not None else "N/A"
+        res_s = f"{r['research_pct']:.1f}" if r['research_pct'] is not None else "N/A"
+        pol_s = f"{r['policy_pct']:.1f}" if r['policy_pct'] is not None else "N/A"
+        tex_lines.append(f"{sdg:2d} & {name} & {raw_s} & {adj_s} & {reg_s} & {cov_s} & {sdom_s} & {res_s} & {pol_s} \\\\")
     tex_lines.extend([
         r"\midrule",
-        rf"Mean & --- & {mean_raw:.3f} & {mean_adj:.3f} & {mean_reg:+.3f} & {mean_cov:.4f} \\",
+        rf"Mean & --- & {mean_raw:.3f} & {mean_adj:.3f} & {mean_reg:+.3f} & {mean_cov * 100.0:.1f} & {mean_sdom:+.1f} & {mean_res:.1f} & {mean_pol:.1f} \\",
         r"\bottomrule",
         r"\end{tabular}",
     ])
@@ -198,7 +230,7 @@ def _generate_decomposition(
     log.info("Saved: %s", out_tex)
 
     record_fingerprint([out_json, out_tex], fp, out_json)
-    log.info("Decomposition table complete.")
+    log.info("Decomposition table complete (%s/%s).", model, corpus)
 
 
 # --------------------------------------------------------------------------- #
@@ -376,9 +408,11 @@ def _generate_iterative_diagnostic(
 
 def run(args: argparse.Namespace) -> None:
     model = args.embed_model
+    corpus = getattr(args, "corpus", "research")
     layout = ensure_canonical_outputs(Path(args.output_dir), model=model)
-    _generate_decomposition(model, layout, args.overwrite)
-    _generate_iterative_diagnostic(model, layout, args.overwrite)
+    _generate_decomposition(model, layout, args.overwrite, corpus)
+    if corpus != "concept":
+        _generate_iterative_diagnostic(model, layout, args.overwrite)
 
 
 def main() -> None:

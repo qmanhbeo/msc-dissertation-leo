@@ -249,7 +249,7 @@ def print_step_header(title: str) -> None:
     print(sep, file=sys.stderr)
 
 
-def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False, embeddings: str = "raw", classifier: str = "lr") -> None:
+def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = False, embeddings: str = "raw", classifier: str = "lr", corpus: str = "research") -> None:
     print_step_header(f"[{model}] {_friendly_name(rel_path)}")
     mod = _load_module(rel_path)
     argv = [str(ANALYSIS_ROOT / rel_path), "--embed-model", model, "--output-dir", str(output_dir)]
@@ -259,6 +259,8 @@ def _run_step(rel_path: str, model: str, output_dir: Path, *, overwrite: bool = 
         argv.extend(["--embeddings", embeddings])
     if classifier != "lr":
         argv.extend(["--classifier", classifier])
+    if corpus != "research":
+        argv.extend(["--corpus", corpus])
     sys.argv = argv
     mod.main()
 
@@ -302,3 +304,14 @@ def run_post_adjusted(
         else:
             rel_path = item
         _run_step(rel_path, model, output_dir, overwrite=overwrite)
+    # Concept-retrieval reference table reuses MPNet's register-adjusted space
+    # (it is MPNet-only by design), so emit it once for the default model after
+    # the per-model decomposition step has run.
+    if model == DEFAULT_EMBED_MODEL:
+        _run_step(
+            "0_shared/g_register_decomposition.py",
+            model,
+            output_dir,
+            overwrite=overwrite,
+            corpus="concept",
+        )

@@ -185,7 +185,7 @@ _H1_CONFIGS = [
 
 _H1_GROUPS = [
     ("H1a. Coverage gap $\\leftrightarrow$ Semantic gap", "covgap"),
-    ("H1b. Policy--research dominance $\\leftrightarrow$ Semantic gap", "dominance"),
+    ("H1b. Research--policy dominance $\\leftrightarrow$ Semantic gap", "dominance"),
     ("H1c. Research coverage $\\leftrightarrow$ Semantic gap", "research"),
     ("H1d. Policy coverage $\\leftrightarrow$ Semantic gap", "policy"),
 ]

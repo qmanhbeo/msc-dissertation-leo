@@ -1,0 +1,215 @@
+{
+  "embedding_model": "all-mpnet-base-v2",
+  "corpus": "concept",
+  "note": "register_component = raw_gap - adjusted_gap. Positive means register divergence; negative means register similarity masking topic divergence. signed_dom = research share - policy share (percentage points).",
+  "p_value": {
+    "method": "monte_carlo_permutation",
+    "n_resamples": 100000,
+    "seed": 42
+  },
+  "correlations": {
+    "coverage_vs_adjusted": {
+      "rho": 0.4338,
+      "p": 0.0832
+    },
+    "coverage_vs_register": {
+      "rho": -0.1936,
+      "p": 0.4511
+    }
+  },
+  "summary": {
+    "mean_raw_gap": 0.5111,
+    "mean_adjusted_gap": 0.3093,
+    "mean_register_component": 0.2018,
+    "mean_coverage_gap": 0.0579
+  },
+  "per_sdg": [
+    {
+      "sdg": 1,
+      "raw_gap": 0.826887,
+      "adjusted_gap": 0.440369,
+      "register_component": 0.386518,
+      "coverage_gap": 0.038522,
+      "research_pct": 0.6711,
+      "policy_pct": 4.5233,
+      "signed_dom": -3.8522,
+      "name": "No Poverty"
+    },
+    {
+      "sdg": 2,
+      "raw_gap": 0.427632,
+      "adjusted_gap": 0.136586,
+      "register_component": 0.291046,
+      "coverage_gap": 0.024875,
+      "research_pct": 1.8159999999999998,
+      "policy_pct": 4.3034,
+      "signed_dom": -2.4874,
+      "name": "Zero Hunger"
+    },
+    {
+      "sdg": 3,
+      "raw_gap": 0.662966,
+      "adjusted_gap": 0.453774,
+      "register_component": 0.209192,
+      "coverage_gap": 0.210128,
+      "research_pct": 25.6931,
+      "policy_pct": 4.6804,
+      "signed_dom": 21.012700000000002,
+      "name": "Good Health"
+    },
+    {
+      "sdg": 4,
+      "raw_gap": 0.40214,
+      "adjusted_gap": 0.224117,
+      "register_component": 0.178023,
+      "coverage_gap": 0.035153,
+      "research_pct": 8.3056,
+      "policy_pct": 4.7903,
+      "signed_dom": 3.5153,
+      "name": "Education"
+    },
+    {
+      "sdg": 5,
+      "raw_gap": 0.574504,
+      "adjusted_gap": 0.333385,
+      "register_component": 0.241119,
+      "coverage_gap": 0.033399,
+      "research_pct": 1.7489000000000001,
+      "policy_pct": 5.0887,
+      "signed_dom": -3.3398000000000003,
+      "name": "Gender Equality"
+    },
+    {
+      "sdg": 6,
+      "raw_gap": 0.384027,
+      "adjusted_gap": 0.180269,
+      "register_component": 0.203758,
+      "coverage_gap": 0.029377,
+      "research_pct": 0.8003,
+      "policy_pct": 3.7379999999999995,
+      "signed_dom": -2.9376999999999995,
+      "name": "Clean Water"
+    },
+    {
+      "sdg": 7,
+      "raw_gap": 0.514011,
+      "adjusted_gap": 0.242176,
+      "register_component": 0.271835,
+      "coverage_gap": 0.00399,
+      "research_pct": 4.6867,
+      "policy_pct": 4.2877,
+      "signed_dom": 0.399,
+      "name": "Clean Energy"
+    },
+    {
+      "sdg": 8,
+      "raw_gap": 0.624709,
+      "adjusted_gap": 0.363177,
+      "register_component": 0.261532,
+      "coverage_gap": 0.01994,
+      "research_pct": 2.3408,
+      "policy_pct": 4.3349,
+      "signed_dom": -1.9941,
+      "name": "Decent Work"
+    },
+    {
+      "sdg": 9,
+      "raw_gap": 0.421249,
+      "adjusted_gap": 0.329654,
+      "register_component": 0.091595,
+      "coverage_gap": 0.216181,
+      "research_pct": 25.921499999999998,
+      "policy_pct": 4.3034,
+      "signed_dom": 21.6181,
+      "name": "Innovation"
+    },
+    {
+      "sdg": 10,
+      "raw_gap": 0.458155,
+      "adjusted_gap": 0.311713,
+      "register_component": 0.146442,
+      "coverage_gap": 0.020732,
+      "research_pct": 0.7853000000000001,
+      "policy_pct": 2.8585,
+      "signed_dom": -2.0732,
+      "name": "Reduced Ineq."
+    },
+    {
+      "sdg": 11,
+      "raw_gap": 0.693287,
+      "adjusted_gap": 0.457596,
+      "register_component": 0.235691,
+      "coverage_gap": 0.027045,
+      "research_pct": 8.0131,
+      "policy_pct": 5.3086,
+      "signed_dom": 2.7044999999999995,
+      "name": "Sust. Cities"
+    },
+    {
+      "sdg": 12,
+      "raw_gap": 0.399602,
+      "adjusted_gap": 0.279518,
+      "register_component": 0.120084,
+      "coverage_gap": 0.008982,
+      "research_pct": 2.6513,
+      "policy_pct": 3.5496,
+      "signed_dom": -0.8982999999999999,
+      "name": "Consumption"
+    },
+    {
+      "sdg": 13,
+      "raw_gap": 0.597995,
+      "adjusted_gap": 0.265597,
+      "register_component": 0.332398,
+      "coverage_gap": 0.07052,
+      "research_pct": 4.2249,
+      "policy_pct": 11.2769,
+      "signed_dom": -7.052,
+      "name": "Climate"
+    },
+    {
+      "sdg": 14,
+      "raw_gap": 0.503894,
+      "adjusted_gap": 0.252945,
+      "register_component": 0.250949,
+      "coverage_gap": 0.025121,
+      "research_pct": 1.2731,
+      "policy_pct": 3.7851000000000004,
+      "signed_dom": -2.5120000000000005,
+      "name": "Life Below Water"
+    },
+    {
+      "sdg": 15,
+      "raw_gap": 0.345885,
+      "adjusted_gap": 0.139256,
+      "register_component": 0.206629,
+      "coverage_gap": 0.020984,
+      "research_pct": 2.0794,
+      "policy_pct": 4.1778,
+      "signed_dom": -2.0984000000000003,
+      "name": "Life on Land"
+    },
+    {
+      "sdg": 16,
+      "raw_gap": 0.54081,
+      "adjusted_gap": 0.327021,
+      "register_component": 0.213789,
+      "coverage_gap": 0.085092,
+      "research_pct": 8.7674,
+      "policy_pct": 17.276600000000002,
+      "signed_dom": -8.509200000000002,
+      "name": "Peace & Justice"
+    },
+    {
+      "sdg": 17,
+      "raw_gap": 0.31156,
+      "adjusted_gap": 0.521337,
+      "register_component": -0.209777,
+      "coverage_gap": 0.114953,
+      "research_pct": 0.22139999999999999,
+      "policy_pct": 11.7167,
+      "signed_dom": -11.4953,
+      "name": "Partnerships"
+    }
+  ]
+}
