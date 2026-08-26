@@ -143,6 +143,113 @@ def load_gap_maps(layout) -> tuple[dict[int, float], dict[int, float]]:
     return adj_map, raw_map
 
 
+def plot_h1_scatter_grid(layout, model: str) -> None:
+    """H1a--H1d coverage-predictor vs semantic-gap scatter grid (2x2).
+
+    Four SEPARATE PNG/PDF files (one per hypothesis), each plotting a different
+    coverage predictor on x against the within-SDG semantic gap on y. The y-axis
+    is the same semantic-gap variable for every panel (solid blue = adjusted /
+    canonical, open grey = raw baseline), so the panels share a common y-limit
+    and read as one family when grouped as a 2x2 subfigure grid in the text.
+
+    Predictors (from interaction_scatter_data.csv):
+        H1a -> coverage_gap_abs        (absolute research--policy coverage gap, pp)
+        H1b -> research_dominance      (signed dominance = research% - policy%, pp)
+        H1c -> research_pct            (research coverage %)
+        H1d -> policy_pct_docweighted  (policy coverage %)
+    """
+    figures_dir = layout.figures_dir
+    df = pd.read_csv(layout.data_dir / "interaction_scatter_data.csv")
+    df = df.sort_values("sdg").reset_index(drop=True)
+    df["semantic_gap"] = pd.to_numeric(df["semantic_gap"], errors="coerce")
+    df_sem_valid = df[df["semantic_gap"].notna()].copy()
+    if df_sem_valid.empty:
+        raise RuntimeError("No finite semantic-gap rows available for figure generation.")
+
+    adj_map, raw_map = load_gap_maps(layout)
+    use_adjusted = bool(adj_map)
+
+    # Shared y-limits across all four panels (identical semantic-gap quantity).
+    if use_adjusted:
+        _adj_vals = list(adj_map.values())
+        ymin = max(0.0, min(_adj_vals) * 0.92)
+        ymax = max(_adj_vals) * 1.08
+        ymed = float(np.median(_adj_vals))
+    else:
+        ymin = max(0.0, df_sem_valid["semantic_gap"].min() * 0.92)
+        ymax = df_sem_valid["semantic_gap"].max() * 1.08
+        ymed = float(df_sem_valid["semantic_gap"].median())
+
+    panels = [
+        ("h1a", "coverage_gap_abs", "Absolute research–policy coverage gap (pp)"),
+        ("h1b", "research_dominance", "Signed dominance (research% − policy%, pp)"),
+        ("h1c", "research_pct", "Research coverage (%)"),
+        ("h1d", "policy_pct_docweighted", "Policy coverage (%)"),
+    ]
+
+    # Fraction-based x offsets so labels nudge consistently across the very
+    # different x-scales of the four predictors.
+    offsets = {4: (0.05, 0.004), 9: (-0.07, 0.004), 3: (0.05, -0.005),
+               16: (0.05, 0.004), 8: (0.04, 0.004), 17: (0.05, -0.006),
+               13: (0.05, -0.005), 12: (0.05, 0.004)}
+
+    for key, col, xlabel in panels:
+        fig, ax = plt.subplots(figsize=(5.2, 4.2))
+        ax.axhline(ymed, color="grey", linestyle="--", linewidth=1, alpha=0.7)
+
+        signed = col == "research_dominance"
+        xvals = df[col]
+        xmin = float(xvals.min()) if signed else 0.0
+        xmax = float(xvals.max()) * 1.12
+        if signed:
+            xmin = float(xvals.min()) * 1.12
+        xrng = xmax - xmin
+
+        if use_adjusted:
+            for sdg in adj_map:
+                x = df_sem_valid.loc[df_sem_valid["sdg"] == sdg, col]
+                if x.empty:
+                    continue
+                x = float(x.iloc[0])
+                ax.scatter(x, raw_map.get(sdg, np.nan), s=38, facecolors="none",
+                           edgecolors="#888888", zorder=4, alpha=0.7)
+                ax.scatter(x, adj_map[sdg], s=48, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
+                dx, dy = offsets.get(sdg, (0.04, 0.003))
+                ax.annotate(f"SDG {sdg}", (x, adj_map[sdg]),
+                            xytext=(x + dx * xrng, adj_map[sdg] + dy),
+                            fontsize=6.5, color="black")
+            ax.legend(handles=[
+                plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
+                           markersize=6, label="Adjusted gap (canonical)"),
+                plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
+                           markeredgecolor="#888888", markersize=6, label="Semantic gap (baseline)"),
+            ], fontsize=7, loc="upper right")
+        else:
+            for _, row in df_sem_valid.iterrows():
+                sdg = int(row["sdg"])
+                x = row[col]
+                y = row["semantic_gap"]
+                ax.scatter(x, y, s=48, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
+                dx, dy = offsets.get(sdg, (0.04, 0.003))
+                ax.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx * xrng, y + dy),
+                            fontsize=6.5, color="black")
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        ax.set_xlabel(xlabel, fontsize=8.5)
+        ax.set_ylabel("Within-SDG semantic gap\n(adjusted = after INLP register removal)",
+                      fontsize=8.5)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.grid(True, alpha=0.3, linestyle=":", linewidth=0.5)
+        fig.tight_layout()
+        out_base = figures_dir / f"fig9_{key}_scatter"
+        fig.savefig(out_base.with_suffix(".pdf"), bbox_inches="tight")
+        fig.savefig(out_base.with_suffix(".png"), bbox_inches="tight", dpi=300)
+        plt.close(fig)
+        print(f"Saved: fig9_{key}_scatter.png")
+
+
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
@@ -155,7 +262,10 @@ def main() -> None:
         expected = [
             figures_dir / "fig2_coverage_profiles.pdf",
             figures_dir / "fig4_semantic_gap.pdf",
-            figures_dir / "fig5_coverage_semantic_scatter.pdf",
+            figures_dir / "fig9_h1a_scatter.pdf",
+            figures_dir / "fig9_h1b_scatter.pdf",
+            figures_dir / "fig9_h1c_scatter.pdf",
+            figures_dir / "fig9_h1d_scatter.pdf",
         ]
         if all(p.exists() for p in expected):
             print(f"Figures already exist at {figures_dir} — skip. Use --overwrite to regenerate.")
@@ -317,77 +427,11 @@ def main() -> None:
     print("Saved: fig4_semantic_gap.pdf")
 
     # -----------------------------------------------------------------------
-    # Figure 3 — Coverage vs semantic gap scatter (diagnostic map)
-    # Adjusted (canonical) gap is the solid blue series; raw gap is the open
-    # grey baseline so the reader can see both on the same coverage axis.
+    # H1a--H1d coverage-predictor vs semantic-gap scatter grid (2x2, four
+    # separate PNG/PDF files; grouped as a subfigure grid in the manuscript).
+    # Replaces the standalone fig5 single-panel scatter.
     # -----------------------------------------------------------------------
-    fig3, ax3 = plt.subplots(figsize=(7.5, 6))
-
-    if use_adjusted:
-        _ymed = float(np.median(list(adj_map.values())))
-        ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
-        ax3.axhline(_ymed, color="grey", linestyle="--", linewidth=1, alpha=0.7)
-        xlim = (0, df["coverage_gap_abs"].max() * 1.12)
-        _adj_vals = list(adj_map.values())
-        _raw_vals = [raw_map.get(s, np.nan) for s in adj_map]
-        ylim = (max(0.0, min(_adj_vals) * 0.92), max(_adj_vals) * 1.08)
-        for sdg in adj_map:
-            x = df_sem_valid.loc[df_sem_valid["sdg"] == sdg, "coverage_gap_abs"]
-            if x.empty:
-                continue
-            x = float(x.iloc[0])
-            ax3.scatter(x, raw_map.get(sdg, np.nan), s=45, facecolors="none",
-                        edgecolors="#888888", zorder=4, alpha=0.7)
-            ax3.scatter(x, adj_map[sdg], s=55, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
-            offsets = {4: (0.02, 0.003), 9: (-0.03, 0.003), 3: (0.02, -0.004),
-                       16: (0.02, 0.003), 8: (0.015, 0.003), 17: (0.02, -0.005),
-                       13: (0.02, -0.004), 12: (0.02, 0.003)}
-            dx, dy = offsets.get(sdg, (0.015, 0.002))
-            ax3.annotate(f"SDG {sdg}", (x, adj_map[sdg]), xytext=(x + dx, adj_map[sdg] + dy),
-                         fontsize=8, color="black",
-                         arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
-        ax3.legend(handles=[
-            plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
-                       markersize=7, label="Adjusted gap (canonical)"),
-            plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
-                       markeredgecolor="#888888", markersize=7, label="Semantic gap (baseline)"),
-        ], fontsize=8, loc="upper right")
-    else:
-        ax3.axvline(median_coverage_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
-        ax3.axhline(median_semantic_gap, color="grey", linestyle="--", linewidth=1, alpha=0.7)
-        xlim = (0, df["coverage_gap_abs"].max() * 1.12)
-        ylim = (max(0.0, df_sem_valid["semantic_gap"].min() * 0.92), df_sem_valid["semantic_gap"].max() * 1.08)
-        for _, row in df_sem_valid.iterrows():
-            sdg = int(row["sdg"])
-            x = row["coverage_gap_abs"]
-            y = row["semantic_gap"]
-            ax3.scatter(x, y, s=55, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
-            offsets = {4: (0.02, 0.003), 9: (-0.03, 0.003), 3: (0.02, -0.004),
-                       16: (0.02, 0.003), 8: (0.015, 0.003), 17: (0.02, -0.005),
-                       13: (0.02, -0.004), 12: (0.02, 0.003)}
-            dx, dy = offsets.get(sdg, (0.015, 0.002))
-            ax3.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx, y + dy),
-                         fontsize=8, color="black",
-                         arrowprops=dict(arrowstyle="-", color="grey", lw=0.5) if sdg in offsets else None)
-
-    ax3.set_xlim(xlim)
-    ax3.set_ylim(ylim)
-    ax3.set_xlabel("Absolute research–policy coverage gap (H1a predictor)")
-    ax3.set_ylabel("Within-SDG semantic gap (adjusted = after INLP register removal)")
-    ax3.set_title(
-        "",
-        fontsize=8.5,
-        loc="left",
-    )
-    ax3.spines["top"].set_visible(False)
-    ax3.spines["right"].set_visible(False)
-    ax3.grid(True, alpha=0.3, linestyle=":", linewidth=0.5)
-
-    fig3.tight_layout()
-    fig3.savefig(figures_dir / "fig5_coverage_semantic_scatter.pdf", bbox_inches="tight")
-    fig3.savefig(figures_dir / "fig5_coverage_semantic_scatter.png", bbox_inches="tight", dpi=300)
-    plt.close(fig3)
-    print("Saved: fig5_coverage_semantic_scatter.pdf")
+    plot_h1_scatter_grid(layout, args.embed_model)
 
     # -----------------------------------------------------------------------
     # Centroid pairwise similarity heatmap

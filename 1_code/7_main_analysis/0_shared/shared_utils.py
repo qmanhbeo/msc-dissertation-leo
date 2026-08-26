@@ -160,8 +160,14 @@ MANUSCRIPT_FIGURE_FILES = [
     "fig2_coverage_profiles.png",
     "fig4_semantic_gap.pdf",
     "fig4_semantic_gap.png",
-    "fig5_coverage_semantic_scatter.pdf",
-    "fig5_coverage_semantic_scatter.png",
+    "fig9_h1a_scatter.pdf",
+    "fig9_h1a_scatter.png",
+    "fig9_h1b_scatter.pdf",
+    "fig9_h1b_scatter.png",
+    "fig9_h1c_scatter.pdf",
+    "fig9_h1c_scatter.png",
+    "fig9_h1d_scatter.pdf",
+    "fig9_h1d_scatter.png",
 ]
 
 MANUSCRIPT_APPENDIX_TABLE_FILES = [
