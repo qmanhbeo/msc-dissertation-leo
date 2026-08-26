@@ -391,7 +391,7 @@ The chosen classifier was evaluated on the held-out test set (n=\NTestPool{}, do
 \caption{LR, MLP, and zero-shot (nearest-centroid) test-set F1 scores (n=\NTestPool{}).}
 \label{tab:validation}
 \input{../4_outputs/mpnet/tables/tab1_classifier_performance.tex}
-\par\smallskip\footnotesize\emph{Notes:} All three methods are evaluated on the same held-out pooled test set (all reference sources, document-grouped). LR (C=3.0, L2) is the chosen classifier; MLP (3-layer/256-hidden) and zero-shot (raw nearest-centroid on SDG centroids) F1s are shown for comparison, with commentary deferred to Appendix~\ref{app:model-selection}.\par
+\par\smallskip\footnotesize\emph{Notes:} All three methods are evaluated on the same held-out pooled test set (all reference sources, document-grouped). The n (test) column reports the per-SDG gold-label count in the test split (single-label, summing to n=\NTestPool{}), identical for every classifier. LR (C=3.0, L2) is the chosen classifier; MLP (3-layer/256-hidden) and zero-shot (raw nearest-centroid on SDG centroids) F1s are shown for comparison, with commentary deferred to Appendix~\ref{app:model-selection}.\par
 \end{table}
 
 Per-class F1 ranges from \FiSdgTen{} (SDG~10) to \FiSdgThree{} (SDG~3); most goals score between 0.76 and 0.89. The weakest classes (SDGs 10 and 8) are consistent with their semantic breadth suggested by \textcite{Kashnitsky2024} (Appendix~\ref{app:centroid-similarity}, Figure~\ref{fig:centroid-similarity-matrix}).
