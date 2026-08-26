@@ -723,7 +723,45 @@ def macro_f1(values_dict):
     return sum(vals) / len(vals) if vals else 0.0
 
 # ---------------------------------------------------------------------------
-# Write num1_classifier_performance.tex (LR F1 macros)
+# Zero-shot (raw, nearest-centroid) test F1 on the held-out test split.
+# Deterministic, offline: assign each held-out test paper to the nearest SDG
+# centroid (one-hot argmax), then score vs the gold one-hot labels exactly as
+# the LR/MLP routes do (binary per-SDG F1; macro = mean; micro = pooled).
+# Uses RAW embeddings + RAW sdg_centroids so it is directly comparable to the
+# raw LR/MLP test F1 columns in Table 1.
+# ---------------------------------------------------------------------------
+def compute_zeroshot_test_f1(m):
+    centroids = np.load(scored_dir_for_model(m) / "sdg_centroids.npy").astype(np.float32)
+    res_dir = model_results_dir_for_model(m)
+    emb = np.load(res_dir / "embeddings.npy").astype(np.float32)
+    labels = np.load(res_dir / "labels.npy").astype(np.float32)
+    test_idx = np.load(res_dir / "indices" / "test.npy")
+    test_emb = emb[test_idx]
+    test_labels = labels[test_idx]
+    scores = test_emb @ centroids.T
+    pred_int = scores.argmax(axis=1)
+    preds = np.zeros((len(pred_int), N_SDG), dtype=np.float32)
+    preds[np.arange(len(pred_int)), pred_int] = 1.0
+    per_sdg = {}
+    for sdg in range(N_SDG):
+        y_t = test_labels[:, sdg]
+        y_p = preds[:, sdg]
+        from sklearn.metrics import f1_score
+        per_sdg[sdg + 1] = float(f1_score(y_t, y_p, zero_division=0))
+    macro = float(np.mean(list(per_sdg.values())))
+    micro = float(f1_score(test_labels, preds, average="micro", zero_division=0))
+    result = {"per_sdg_f1": per_sdg, "macro_f1": macro, "micro_f1": micro,
+              "n_test": int(len(test_idx))}
+    out_path = output_dir_for_model(m, root=root) / "data" / "zeroshot_test_results.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2)
+    print(f"Written {out_path}  zs_raw_macro={macro:.4f} zs_raw_micro={micro:.4f}")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Write num1_classifier_performance.tex (LR / MLP / ZS F1 macros)
 # ---------------------------------------------------------------------------
 def write_num_validation():
     lines = [
@@ -735,37 +773,60 @@ def write_num_validation():
     for sdg in range(1, N_SDG + 1):
         f1 = lr_per_sdg[sdg]
         name = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven",
-                8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven", 12: "Twelve", 13: "Thirteen",
-                14: "Fourteen", 15: "Fifteen", 16: "Sixteen", 17: "Seventeen"}[sdg]
+                 8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven", 12: "Twelve", 13: "Thirteen",
+                 14: "Fourteen", 15: "Fifteen", 16: "Sixteen", 17: "Seventeen"}[sdg]
         lines.append(rf"\newcommand{{\FiSdg{name}}}{{{f1:.3f}}}")
     # MLP validation macro (used in cross-sensitivity / Appendix D)
     MLP_RETRAIN_PATH = model_results_dir_for_model(model) / "model" / "mlp_retrain_results.json"
+    mlp_macro = None
+    mlp_micro = None
+    mlp_per_sdg = {}
     if MLP_RETRAIN_PATH.exists():
         with open(MLP_RETRAIN_PATH) as f:
             mlp_data = json.load(f)
         mlp_macro = mlp_data["test_results"]["macro_f1"]
+        mlp_micro = mlp_data["test_results"]["micro_f1"]
+        for k, v in mlp_data["test_results"]["per_sdg_f1"].items():
+            mlp_per_sdg[int(k.split("_")[1])] = v
         lines.append(rf"\newcommand{{\MlpMacroFOne}}{{{mlp_macro:.3f}}}")
+        lines.append(rf"\newcommand{{\MlpMicroFOne}}{{{mlp_micro:.4f}}}")
+    # Zero-shot (raw nearest-centroid) test F1
+    zs = compute_zeroshot_test_f1(model)
+    zs_macro = zs["macro_f1"]
+    zs_micro = zs["micro_f1"]
+    lines.append(rf"\newcommand{{\ZsMacroFOne}}{{{zs_macro:.3f}}}")
+    lines.append(rf"\newcommand{{\ZsMicroFOne}}{{{zs_micro:.4f}}}")
+    name_map = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven",
+                8: "Eight", 9: "Nine", 10: "Ten", 11: "Eleven", 12: "Twelve", 13: "Thirteen",
+                14: "Fourteen", 15: "Fifteen", 16: "Sixteen", 17: "Seventeen"}
+    for sdg in range(1, N_SDG + 1):
+        lines.append(rf"\newcommand{{\FiSdgZs{name_map[sdg]}}}{{{zs['per_sdg_f1'][sdg]:.3f}}}")
     path = OUT_MAIN / "num1_classifier_performance.tex"
     path.write_text("\n".join(lines) + "\n")
     print(f"Written {path}")
+    return mlp_per_sdg, mlp_macro, mlp_micro, zs_macro, zs_micro, zs["per_sdg_f1"]
 
 # ---------------------------------------------------------------------------
-# Write tab1_classifier_performance.tex (single LR F1 column)
+# Write tab1_classifier_performance.tex (LR / MLP / ZS test F1 columns)
 # ---------------------------------------------------------------------------
-def write_validation_table():
+def write_validation_table(mlp_per_sdg, zs_per_sdg):
     lines = [
         "% Auto-generated by 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py — do not edit manually",
-        r"\begin{tabular}{lc}",
+        r"\begin{tabular}{lccc}",
         r"\toprule",
-        r"SDG & LR test F1 \\",
+        r"SDG & LR test F1 & MLP test F1 & ZS test F1 \\",
         r"\midrule",
     ]
     for sdg in range(1, N_SDG + 1):
         f1 = lr_per_sdg[sdg]
+        mf1 = mlp_per_sdg.get(sdg, float("nan"))
+        zf1 = zs_per_sdg.get(sdg, float("nan"))
         sname = SDG_SHORT_NAMES[sdg].replace("&", r"\&")
-        lines.append(f"{sdg} ({sname}) & {f1:.3f} \\\\")
+        lines.append(f"{sdg} ({sname}) & {f1:.3f} & {mf1:.3f} & {zf1:.3f} \\\\")
     lines.append(r"\midrule")
-    lines.append(f"Macro-F1 (SDGs 1--17) & \\textbf{{{lr_macro:.3f}}} \\\\")
+    lines.append(f"Macro-F1 (SDGs 1--17) & {lr_macro:.3f} & {mlp_macro:.3f} & {zs_macro:.3f} \\\\")
+    lr_micro = retrain["test_results"]["micro_f1"]
+    lines.append(f"Micro-F1 (SDGs 1--17) & {lr_micro:.3f} & {mlp_micro:.3f} & {zs_micro:.3f} \\\\")
     lines.extend([r"\bottomrule", r"\end{tabular}"])
     path = OUT_MAIN / "tab1_classifier_performance.tex"
     path.write_text("\n".join(lines) + "\n")
@@ -1249,6 +1310,7 @@ def write_num_cross_sensitivity():
 def run(args: argparse.Namespace) -> None:
     global model, root, OUT_MAIN, RETRAIN_JSON, retrain, lr_per_sdg, lr_macro
     global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_SOURCE_FAMILY_TEX
+    global mlp_macro, mlp_micro, zs_macro, zs_micro
 
     model = args.embed_model
 
@@ -1266,7 +1328,7 @@ def run(args: argparse.Namespace) -> None:
         lr_per_sdg[sdg_num] = v
     lr_macro = retrain["test_results"]["macro_f1"]
 
-    SCRIPT_VERSION = "4"
+    SCRIPT_VERSION = "5"
     PRIMARY = OUT_MAIN / "tab6a_cross_sensitivity.tex"
     OUTPUTS = [
         OUT_MAIN / "num1_classifier_performance.tex",
@@ -1327,6 +1389,16 @@ def run(args: argparse.Namespace) -> None:
     fp_paths.append(
         output_dir_for_model(DEFAULT_EMBED_MODEL, root=root) / "data" / "concept" / "adjusted" / "semantic_gap_distances_mlp.json"
     )
+    # Zero-shot (raw) test F1 derivation inputs: SDG centroids + the held-out
+    # test split (test-set embeddings/labels/indices). These drive tab1's ZS column.
+    _res_dir = model_results_dir_for_model(model)
+    fp_paths.append(scored_dir_for_model(model) / "sdg_centroids.npy")
+    fp_paths.append(_res_dir / "embeddings.npy")
+    fp_paths.append(_res_dir / "labels.npy")
+    fp_paths.append(_res_dir / "indices" / "test.npy")
+    fp_paths.append(
+        output_dir_for_model(model, root=root) / "data" / "zeroshot_test_results.json"
+    )
     # tab6b's policy-source columns parse the raw a2 combined tex — fingerprint it
     # so the table re-derives when the a2 policy-source data changes.
     fp_paths.append(POLICY_SOURCE_FAMILY_TEX)
@@ -1339,8 +1411,8 @@ def run(args: argparse.Namespace) -> None:
     ZS_GAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_distances_zeroshot.json"
     CAP_PATH = output_dir_for_model(model, root=root) / "data" / "semantic_gap_robustness_caps_lr.json"
 
-    write_num_validation()
-    write_validation_table()
+    mlp_per_sdg, mlp_macro, mlp_micro, zs_macro, zs_micro, zs_per_sdg = write_num_validation()
+    write_validation_table(mlp_per_sdg, zs_per_sdg)
     write_cross_sensitivity()
     write_coverage_table()
     write_concept_coverage()
