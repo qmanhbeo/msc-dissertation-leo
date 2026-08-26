@@ -332,6 +332,12 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
             subprocess.run([sys.executable, str(_gen)], cwd=ROOT, check=True)
         except subprocess.CalledProcessError as exc:
             print(f"[build-pdf] WARNING: conceptual-figure generation failed: {exc}", file=sys.stderr)
+    _prov = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "export_corpus_provenance.py"
+    if _prov.exists():
+        try:
+            subprocess.run([sys.executable, str(_prov), "--overwrite"], cwd=ROOT, check=True)
+        except subprocess.CalledProcessError as exc:
+            print(f"[build-pdf] WARNING: corpus-provenance generation failed: {exc}", file=sys.stderr)
     require_pdf_inputs(output_dir, model)
     run_step(
         "build pdf",
@@ -796,6 +802,9 @@ def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = Fals
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
              "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9",
              model=model)
+    run_step("export corpus provenance table",
+             [sys.executable, "1_code/7_main_analysis/2_appendix/export_corpus_provenance.py"]
+             + _overwrite_flag(overwrite), step_id="18", model=model)
 
 
 def run_main_text(

@@ -145,9 +145,9 @@ def build(overwrite: bool = False) -> int:
     cursor -= (h_pp + 0.35)
 
     t_sgA = "Token-Aware Segmentation\n~100,000 papers\n(SDG label: classifier-assigned, post hoc)"
-    t_sgB = "Token-Aware Segmentation\n2,536,771 abstracts →\n3,105,144 segments"
-    t_sgC = "Segment + Merge\n6,367 documents →\n40,597 segments"
-    t_sgD = "Segment + Bypass\n62,173 single-label segments\n(52,835 train / 9,338 test)"
+    t_sgB = "Token-Aware Segmentation\nResearch abstracts → segments"
+    t_sgC = "Segment + Merge\nPolicy documents → segments"
+    t_sgD = "Segment + Bypass\nSingle-label reference segments"
     h_seg = row_height([t_sgA, t_sgB, t_sgC, t_sgD])
     sgA = box(x1, cursor, col_w, h_seg, t_sgA, C_SECONDARY_FILL, C_RESEARCH_EDGE, dashed=True)
     sgB = box(x2, cursor, col_w, h_seg, t_sgB, C_RESEARCH, C_RESEARCH_EDGE)
@@ -167,8 +167,8 @@ def build(overwrite: bool = False) -> int:
     emb_w = (x4 + col_w) - x1
     t_emb = (
         "Shared Embedding — all-mpnet-base-v2 (768d, L2-normalised, frozen)\n"
-        "Concept ~100,000 (side track) | Research 3,105,144 | Policy 40,597 | Reference 62,173\n\n"
-        "Encoder robustness (Sec. 3.2 / 4.4): a separate, independently random-seeded 100,000-paper sample drawn from the full 2,536,771-paper\n"
+        "Concept (side track) | Research | Policy | Reference corpora\n\n"
+        "Encoder robustness (Sec. 3.2 / 4.4): a separate, independently random-seeded sample drawn from the full\n"
         "primary research corpus — distinct from the concept-retrieved sample above — plus the full Policy and Reference corpora, all re-embedded\n"
         "with all-MiniLM-L6-v2 (384d) and SciBERT (768d); classifier retrained per encoder and gap rankings recomputed for comparison."
     )
@@ -189,7 +189,7 @@ def build(overwrite: bool = False) -> int:
     cursor -= 0.75
 
     # --- Row: Classifier trained FIRST ---
-    t_clf = "① Train LR Classifier (C=3.0, L2)\nReference pool → 52,835 train / 9,338 test\nMacro-F1 = 0.816 (Table 1)"
+    t_clf = "① Train LR Classifier (C=3.0, L2)\nReference pool split into train / test\nMacro-F1 = 0.816 (Table 1)"
     h_clf = row_height([t_clf])
     clf = box(x4, cursor, col_w, h_clf, t_clf, C_REFERENCE, C_REF_EDGE)
     clf_source_x = x4 + col_w / 2
@@ -199,8 +199,8 @@ def build(overwrite: bool = False) -> int:
 
     # --- Row: Scoring happens only AFTER the classifier is trained ---
     t_scC = "② Score Research (concept)\nsame trained classifier\n(robustness track)"
-    t_scR = "② Score Research (primary)\nLR argmax, 17 SDGs\n3,105,144 segment assignments"
-    t_scP = "② Score Policy\nLR argmax, 17 SDGs\n40,597 segment assignments"
+    t_scR = "② Score Research (primary)\nLR argmax, 17 SDGs\nsegment assignments"
+    t_scP = "② Score Policy\nLR argmax, 17 SDGs\nsegment assignments"
     h_sc = row_height([t_scC, t_scR, t_scP])
     scC = box(x1, cursor, col_w, h_sc, t_scC, C_SECONDARY_FILL, C_RESEARCH_EDGE, dashed=True)
     scR = box(x2, cursor, col_w, h_sc, t_scR, C_RESEARCH, C_RESEARCH_EDGE)
@@ -239,7 +239,7 @@ def build(overwrite: bool = False) -> int:
     cursor -= (h_row3 + 0.42)
 
     # --- INLP — same width as Semantic Gap box directly above it ---
-    t_inlp = ("SDG-Stratified INLP\n(Sec. 3.8, Ravfogel et al. 2020)\n34-class strata, n_target = 1,123/class\n"
+    t_inlp = ("SDG-Stratified INLP\n(Sec. 3.8, Ravfogel et al. 2020)\n34-class strata, n_target per SDG\n"
               "40–79 iterations\n\nRaw Gap → [INLP] →\nAdjusted Gap (topic) + Register Component")
     h_inlp = row_height([t_inlp])
     inlp = box(x3, cursor, col_w, h_inlp, t_inlp, "#FDEBD0", "#B9770E", fontsize=8.0)

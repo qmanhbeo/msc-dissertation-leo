@@ -61,6 +61,7 @@
 \InputIfFileExists{../4_outputs/mpnet/tables/num15_pca_register_before_after.tex}{}{}
 \input{../4_outputs/mpnet/tables/num16_model_selection.tex}
 \input{../4_outputs/mpnet/tables/num17_reference_split.tex}
+\input{../4_outputs/mpnet/tables/num18_corpus_provenance.tex}
 \InputIfFileExists{../4_outputs/appendix/mpnet/a1_register_validation/tables/num_a1_register_validation.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/mpnet/c_sample_stability/tables/num_c_sample_stability.tex}{}{}
 \InputIfFileExists{../4_outputs/appendix/mpnet/c1_subset_balanced_stability/tables/num_c1_subset_stability.tex}{}{}
@@ -72,7 +73,8 @@
 \InputIfFileExists{../4_outputs/mpnet/adjusted/tables/num18_distributional_h1.tex}{}{}
 \InputIfFileExists{../4_outputs/mpnet/tables/num7_encoder_sensitivity.tex}{}{}
 \InputIfFileExists{../4_outputs/mpnet/tables/num9_encoder_sensitivity_coverage.tex}{}{}
-\InputIfFileExists{../4_outputs/mpnet/tables/num19_policy_subcorpus.tex}{}{}
+% num19 (policy sub-collection macros) retired: those macros are now emitted by
+% export_corpus_provenance.py into num18 so Table 3.5 is the single source.
 \InputIfFileExists{../4_outputs/mpnet/tables/num5_register_decomposition.tex}{}{}
 
 \hypersetup{
@@ -219,7 +221,7 @@ All texts were encoded with \texttt{all-mpnet-base-v2} \parencite{all-mpnet-base
 
 No fine-tuning is used. The embeddings are frozen (fixed, not retrained). A linear classifier on frozen embeddings, well-known as linear probing, is the standard way to test what a representation already captures \parencite{alain2018understandingintermediatelayersusing, conneau2018cramsinglevectorprobing}. Both the SDG classifier (Section~\ref{sec:supervised-classifier}) and the INLP step (Section~\ref{sec:register-adjustment-inlp}) are linear operations on this fixed space. Freezing also keeps the two corpora in one shared space. Retraining on the SDG data (which skews toward policy words) would distort that space.
 
-Encoder choice is a primary robustness axis: gap rankings are re-computed under two alternative encoders, all-MiniLM-L6-v2 \parencite{all-minilm-l6-v2} (384-dimensional) and SciBERT \parencite{Beltagy2019} (768-dimensional). Encoder-robustness checks use the same reference (Section~\ref{sec:supervised-classifier}) and policy corpora (Section~\ref{sec:policy-corpus}), but only 100,000 research abstracts sampled randomly from the \NResearchPreprocessed{}-abstract corpus (Section~\ref{sec:research-corpus}) to save computation. This is motivated by the finding that the semantic gap (Section~\ref{sec:semantic-gap-method}) becomes stable compared to the full-corpus value within 100 random re-samples at around the size of 50,000 abstracts (Appendix~\ref{app:sample-stability}). This sample size is also adequately larger than existing SDG-classification works (Section~\ref{sec:prev-biblio}).
+Encoder choice is a primary robustness axis: gap rankings are re-computed under two alternative encoders, all-MiniLM-L6-v2 \parencite{all-minilm-l6-v2} (384-dimensional) and SciBERT \parencite{Beltagy2019} (768-dimensional). Encoder-robustness checks use the same reference (Section~\ref{sec:supervised-classifier}) and policy corpora (Section~\ref{sec:policy-corpus}), but only 100,000 research abstracts sampled randomly from the full research-abstract corpus (Section~\ref{sec:research-corpus}) to save computation. This is motivated by the finding that the semantic gap (Section~\ref{sec:semantic-gap-method}) becomes stable compared to the full-corpus value within 100 random re-samples at around the size of 50,000 abstracts (Appendix~\ref{app:sample-stability}). This sample size is also adequately larger than existing SDG-classification works (Section~\ref{sec:prev-biblio}).
 
 \subsection{Research Corpus}\label{sec:research-corpus}
 
@@ -231,31 +233,41 @@ Encoder choice is a primary robustness axis: gap rankings are re-computed under 
 
  Importantly, the robustness check applies no SDG filter at retrieval time and is therefore a pure AI/ML corpus with SDG labels assigned post hoc by the classifier, not a corpus independently verified as SDG-relevant. This is documented transparently instead of fixed, due to time constraints.
 
- After deduplication and removal of records lacking usable abstracts, \NResearchPreprocessed{} records survived preprocessing; of these, \NResearchDroppedAtSegmentation{} were dropped at segmentation because their combined text is too short, leaving \NResearchAbstracts{} abstracts, which were tokenised into \NResearchSegments{} segments (\NResearchSegPerAbstract{} segments per abstract on average; \NResearchMultiSegPct{}\% exceed the 374-token encoder window and split into multiple segments). The dropped share is below 0.3\%. The corpus is predominantly English (99.5\%) but no hard language filter is applied. The main results reproduce under subsampling from 50,000 papers (Appendix~\ref{app:sample-stability}), two orders of magnitude larger than the non-English share. No balancing by SDG or citation count is applied.
+  After deduplication and removal of records lacking usable abstracts and the 20-word minimum, the research corpus survives as abstracts, tokenised into segments for embedding (record and segment counts in Table~\ref{tab:corpus-provenance}). The corpus is predominantly English (99.5\%) but no hard language filter is applied. The main results reproduce under subsampling from 50,000 papers (Appendix~\ref{app:sample-stability}), two orders of magnitude larger than the non-English share. No balancing by SDG or citation count is applied.
 
 \subsection{Policy Corpus}\label{sec:policy-corpus}
 
-The policy corpus contains \NPolicySegments{} text segments from three collections, representing \NPolicyDocs{} unique source documents. It should be read as mixed international institutional SDG policy discourse rather than every AI-sustainability policy that exists:
+The policy corpus contains text segments from three collections, representing distinct source documents (segment and document counts per collection in Table~\ref{tab:corpus-provenance}). It should be read as mixed international institutional SDG policy discourse rather than every AI-sustainability policy that exists:
 \begin{enumerate}
-  \item \textbf{Curated AI and SDG policy documents} (\PolicyCuratedSegments{} segments, \PolicyCuratedDocs{} documents): UN, OECD, EU, UK, and AU AI governance frameworks; IPCC assessment reports; SDSN sustainable development reports; and national AI strategies.
-  \item \textbf{SDGi Voluntary National Review and Voluntary Local Review corpus} \parencite{SDGi2024} (\PolicySDGiSegAtSeg{} segments from \PolicySDGiDocsAtSeg{} documents at segmentation; \PolicySDGiSingleLabel{} single-label segments in the reference pool): National and local self-assessments submitted to the UN High-Level Political Forum.
-  \item \textbf{UN General Debate Corpus} \parencite{JankinEtAl2024} (\PolicyUNGDCSegments{} segments, \PolicyUNGDCDocs{} documents): SDG-relevant passages from General Debate speeches, sessions 70--80 (2015--2024); paragraph-level keyword filtering precedes segmentation, so only SDG-relevant passages enter the pipeline, which is why its \PolicyUNGDCSegments{} segments are far fewer than the full corpus of speeches.
+  \item \textbf{Curated AI and SDG policy documents}: UN, OECD, EU, UK, and AU AI governance frameworks; IPCC assessment reports; SDSN sustainable development reports; and national AI strategies.
+  \item \textbf{SDGi Voluntary National Review and Voluntary Local Review corpus} \parencite{SDGi2024}: National and local self-assessments submitted to the UN High-Level Political Forum.
+  \item \textbf{UN General Debate Corpus} \parencite{JankinEtAl2024}: SDG-relevant passages from General Debate speeches, sessions 70--80 (2015--2024); paragraph-level keyword filtering precedes segmentation, so only SDG-relevant passages enter the pipeline, which is why its segment count is far fewer than the full corpus of speeches.
 \end{enumerate}
-An important asymmetry follows: the research corpus is a tight intersection of AI and SDG content while the policy corpus (Section~\ref{sec:policy-corpus}) is a broader union covering institutional SDG discourse and AI governance. The curated sub-corpus (\PolicyCuratedDocs{} documents) is the more relevant reference for AI-governance-specific interpretation; Appendix~\ref{app:policy-source-data} reports a source-family sensitivity check.
+An important asymmetry follows: the research corpus is a tight intersection of AI and SDG content while the policy corpus (Section~\ref{sec:policy-corpus}) is a broader union covering institutional SDG discourse and AI governance. The curated sub-corpus is the more relevant reference for AI-governance-specific interpretation; Appendix~\ref{app:policy-source-data} reports a source-family sensitivity check.
 
 \subsection{Supervised Reference Classifier}\label{sec:supervised-classifier}
 
-The canonical instrument is a supervised classifier trained on pooled single-label reference data from five independent annotated corpora (counts below are single-label segments after preprocessing):
+The canonical instrument is a supervised classifier trained on pooled single-label reference data from five independent annotated corpora. Corpus sizes at each pipeline stage---raw, preprocessed + de-duplicated, segmented, and single-label---are reported in Table~\ref{tab:corpus-provenance}:
 \begin{itemize}
-  \item \textbf{OSDG Community Dataset} \parencite{Pukelis2022} (30,532 texts, no SDG17): crowdsourced excerpts validated by multiple volunteers.
-  \item \textbf{SDG Classification Benchmark} \parencite{SDGBenchmark} (281 expert-verified texts): expert-annotated snippets with consensus resolution.
-  \item \textbf{IISD SDG Knowledge Hub} \parencite{Wulff2023SDGKnowledgeHub} (6,122 texts): journalism and policy commentary on 2030 Agenda implementation.
-  \item \textbf{SDGi Corpus} \parencite{SDGi2024} (\PolicySDGiSingleLabel{} texts): government Voluntary National and Local Reviews.
-  \item \textbf{Aurora dataset} \parencite{Vanderfeesten2020Aurora} (4,971 expert-validated texts): academic abstracts validated by domain researchers.
+  \item \textbf{OSDG Community Dataset} \parencite{Pukelis2022} (no SDG17): crowdsourced excerpts validated by multiple volunteers.
+  \item \textbf{SDG Classification Benchmark} \parencite{SDGBenchmark} (expert-verified): expert-annotated snippets with consensus resolution.
+  \item \textbf{IISD SDG Knowledge Hub} \parencite{Wulff2023SDGKnowledgeHub}: multi-label journalism and policy commentary on 2030 Agenda implementation.
+  \item \textbf{SDGi Corpus} \parencite{SDGi2024}: government Voluntary National and Local Reviews (VNRs/LRs).
+  \item \textbf{Aurora dataset} \parencite{Vanderfeesten2020Aurora} (expert-validated): academic abstracts validated by domain researchers.
 \end{itemize}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Corpus provenance: record counts at each pipeline stage (Raw, Prep, Seg, Lab; definitions below).}
+  \label{tab:corpus-provenance}
+  \input{../4_outputs/mpnet/tables/tab18_corpus_provenance.tex}
+  \par\smallskip\footnotesize\noindent
+  \textbf{Column definitions.} Raw: original source size before any pipeline processing. Prep (Preprocessed + Deduped): cleaned, de-duplicated records that survive the 20-word minimum and proceed to embedding; equivalently, the number of documents (abstracts for research, records for reference and policy) that yield at least one segment. Seg (Segments): post-segmentation segment count. Lab (Single-label): count that feeds the classifier; not applicable (---) for the unlabelled research and policy corpora. OSDG and the Benchmark bypass segmentation, so Seg = Lab.
+\end{table}
+
 OSDG alone contributes about 49\% of labelled texts and draws on UN-adjacent documents, so the reference data remain weighted toward policy vocabulary. OSDG and the Benchmark bypass segmentation due to having short texts; the Knowledge Hub, SDGi, and Aurora are segmented before pooling.
 
-The pooled reference data (n=\NReferencePool{} after single-label filtering) were split into training and held-out test sets (n=\NTrainPool{} train, n=\NTestPool{} test) by stratified document-grouped splitting, keeping all texts from the same source document in one fold to enforce strict separation between training and evaluation. The champion LR ($C = 3.0$, L2 penalty, \texttt{class\_weight=None}, solver \texttt{lbfgs}) was selected by 5-fold GroupKFold cross-validation \parencite{Hastie2009} on the training pool. The grid-search protocol, hyperparameter rationale, and the MLP robustness comparison are reported in Appendix~\ref{app:model-selection}.
+The pooled reference data were split into training and held-out test sets by stratified document-grouped splitting (pool size and split are reported in Table~\ref{tab:corpus-provenance}), keeping all texts from the same source document in one fold to enforce strict separation between training and evaluation. The champion LR ($C = 3.0$, L2 penalty, \texttt{class\_weight=None}, solver \texttt{lbfgs}) was selected by 5-fold GroupKFold cross-validation \parencite{Hastie2009} on the training pool. The grid-search protocol, hyperparameter rationale, and the MLP robustness comparison are reported in Appendix~\ref{app:model-selection}.
 
 The validation task does not evaluate a rejection option for non-SDG texts. This is acceptable because the research corpus is first restricted to an OpenAlex AI-and-SDG universe, so the classifier answers a relative question among the 17 SDGs. This restriction does not hold for the concept-retrieved robustness corpus (Section~\ref{sec:research-corpus}), which applies no SDG filter at retrieval; the classifier still forces an argmax assignment there despite the corpus not being pre-restricted to SDG-relevant text. Section~\ref{sec:limitations} discusses this limitation.
 
@@ -365,17 +377,8 @@ Grid search over architecture depth, hidden size, and learning rate revealed neg
 \footnotesize
 \caption{Model selection ranking: 5-fold GroupKFold cross-validated macro-F1.}
 \label{tab:model-selection-ranking}
-\begin{tabular}{lcc}
-\toprule
-Rank & Config & CV macro-F1 \\
-\midrule
-1 & MLP 3L/256h (best) & \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{} \\
-2 & MLP 4L/256h & \MlpCvMacroFoneFourLTwoFiftySixH{} $\pm$ \MlpCvMacroFoneFourLTwoFiftySixHStd{} \\
-3--16 & MLP (remaining 14 configurations) & \MlpCvRangeTwoLFourL{} \\
-17 & LR C=3, L2 & \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{} \\
-18 & LR C=1, L2 & \LrCvMacroFoneCOne{} $\pm$ \LrCvMacroFoneCOneStd{} \\
-\bottomrule
-\end{tabular}
+\input{../4_outputs/mpnet/tables/tab16_model_selection_ranking.tex}
+\par\smallskip\footnotesize\emph{Notes:} Top three configurations per family are shown individually; the remaining configurations are collapsed to their CV macro-F1 range. LR (C=3.0, L2, class\_weight=None) is the chosen champion (rank 17).
 \end{table}
 
 LR (C=3.0, L2, class\_weight=None) was chosen over the highest-scoring MLP despite a \LrMlpGap{} macro-F1 gap: LR requires one free parameter (C) and no hidden layers, dropout, learning-rate tuning, or early stopping, and it provides 768 signed coefficients per SDG class, each directly attributable to a specific semantic dimension, whereas MLP's hidden layers diffuse this information across non-linear transformations. For this study's purpose -- building an interpretable supervised reference to compare corpora, not a classifier built to label single documents -- LR is chosen for transparency, not superior accuracy.
@@ -735,19 +738,9 @@ The LR grid searched C $\in \{0.1, 1, 2, 3, 5, 10, 30, 100\}$ with an L2 penalty
 \begin{table}[ht]
 \centering
 \footnotesize
-\caption{Model selection ranking (full): 5-fold GroupKFold cross-validated macro-F1 across all candidates.}
+\caption{Model selection ranking (full): 5-fold GroupKFold cross-validated macro-F1 across all 32 candidates (16 MLP + 16 LR).}
 \label{tab:model-selection-appendix}
-\begin{tabular}{lcc}
-\toprule
-Rank & Config & CV macro-F1 \\
-\midrule
-1 & MLP 3L/256h (best) & \MlpCvMacroFone{} $\pm$ \MlpCvMacroFoneStd{} \\
-2 & MLP 4L/256h & \MlpCvMacroFoneFourLTwoFiftySixH{} $\pm$ \MlpCvMacroFoneFourLTwoFiftySixHStd{} \\
-3--16 & MLP (remaining 14 configurations) & \MlpCvRangeTwoLFourL{} \\
-17 & LR C=3, L2 & \LrCvMacroFone{} $\pm$ \LrCvMacroFoneStd{} \\
-18 & LR C=1, L2 & \LrCvMacroFoneCOne{} $\pm$ \LrCvMacroFoneCOneStd{} \\
-\bottomrule
-\end{tabular}
+\input{../4_outputs/mpnet/tables/tab16_model_selection_full.tex}
 \end{table}
 
 % ==============================================================================
