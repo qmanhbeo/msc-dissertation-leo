@@ -170,6 +170,7 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
+    p.add_argument("--build-word", action="store_true", help="Build dissertation.docx (Word) from existing manuscript outputs via pandoc (requires pandoc + 3_writing/custom_thesis_template.docx reference-doc).")
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
     p.add_argument(
@@ -237,6 +238,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.backup_data_snapshot,
             args.fetch_encoder_models,
             args.build_pdf,
+            args.build_word,
         ]
         + [getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS]
     )
@@ -342,6 +344,29 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     run_step(
         "build pdf",
         ["bash", str(ROOT / "3_writing" / "build_pdf.sh"), str(output_dir / "dissertation.pdf")],
+    )
+
+
+def build_word(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
+    # Model-independent conceptual figures (TikZ) and the corpus-provenance
+    # table are dissertation.tex inputs; regenerate if missing (idempotent).
+    # Mirrors build_pdf() so both canonical build commands share prerequisites.
+    _gen = ROOT / "1_code" / "8_visualization" / "build_conceptual_figs.py"
+    if _gen.exists():
+        try:
+            subprocess.run([sys.executable, str(_gen)], cwd=ROOT, check=True)
+        except subprocess.CalledProcessError as exc:
+            print(f"[build-word] WARNING: conceptual-figure generation failed: {exc}", file=sys.stderr)
+    _prov = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "export_corpus_provenance.py"
+    if _prov.exists():
+        try:
+            subprocess.run([sys.executable, str(_prov), "--overwrite"], cwd=ROOT, check=True)
+        except subprocess.CalledProcessError as exc:
+            print(f"[build-word] WARNING: corpus-provenance generation failed: {exc}", file=sys.stderr)
+    require_pdf_inputs(output_dir, model)
+    run_step(
+        "build word",
+        ["bash", str(ROOT / "3_writing" / "build_word.sh"), str(output_dir / "dissertation.docx")],
     )
 
 
@@ -1114,6 +1139,7 @@ def main() -> None:
         args.appendix_all
         or any(getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS)
         or args.build_pdf
+        or args.build_word
     ) and canonical_exists(output_dir) and not args.overwrite:
         print("Outputs already exist — use --overwrite to replace them.", file=sys.stderr)
         sys.exit(1)
@@ -1138,6 +1164,8 @@ def main() -> None:
                 run_appendix_spec(spec, output_dir, model=model, overwrite=args.overwrite)
         if args.build_pdf:
             build_pdf(output_dir, model=args.embed_model)
+        if args.build_word:
+            build_word(output_dir, model=args.embed_model)
     elif any(getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS):
         model = args.embed_model
         for spec in APPENDIX_SPECS:
@@ -1145,6 +1173,8 @@ def main() -> None:
                 run_appendix_spec(spec, output_dir, model=model, overwrite=args.overwrite, embeddings=args.embeddings)
                 if args.build_pdf:
                     build_pdf(output_dir, model=args.embed_model)
+                if args.build_word:
+                    build_word(output_dir, model=args.embed_model)
                 break
     elif args.warm_replay_without_appendix:
         ensure_warm_replay_inputs(args)
@@ -1154,6 +1184,8 @@ def main() -> None:
         run_warm_replay(output_dir, args, include_appendix=True)
     elif args.build_pdf:
         build_pdf(output_dir, model=args.embed_model)
+    elif args.build_word:
+        build_word(output_dir, model=args.embed_model)
 
 
 if __name__ == "__main__":

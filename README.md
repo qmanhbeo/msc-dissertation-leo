@@ -66,7 +66,7 @@ Warm replay rebuilds:
 - canonical machine-readable outputs under `4_outputs/{model}/data/`
 - manuscript tables and figures under `4_outputs/{model}/tables/` and `4_outputs/{model}/figures/`
 
-To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler.
+To build the dissertation PDF from warm-replay outputs, run `python main.py --build-pdf --overwrite` (requires bash — WSL/Linux only). If you have your own LaTeX distribution, you can also compile `3_writing/dissertation.tex` directly with `latexmk`, `pdflatex` + `biber`, or your preferred compiler. To build a Word (`.docx`) copy from the same outputs, run `python main.py --build-word --overwrite` (requires `pandoc` and `3_writing/custom_thesis_template.docx`; produces `4_outputs/dissertation.docx` styled in Times New Roman).
 
 ## Pipeline architecture
 
@@ -222,6 +222,7 @@ Not tracked in Git:
 | `python main.py --appendix-i1-assignment-method --overwrite` | Run I.1 Assignment Method Comparison |
 | `python main.py --appendix-g-distributional --overwrite` | OPT-IN main-result table: distributional semantic-gap robustness. NOT run by warm replay or `--appendix-all`; run this before `--build-pdf`. |
 | `python main.py --build-pdf --overwrite` | Build PDF from existing outputs (WSL/Linux only — requires bash) |
+| `python main.py --build-word --overwrite` | Build Word `.docx` from existing outputs (requires pandoc + `3_writing/custom_thesis_template.docx`) |
 | `python main.py --fetch-data-snapshot embedded` | Hydrate embedded snapshot into `2_data/` |
 | `python main.py --fetch-data-snapshot raw` | Hydrate raw snapshot for cold-replay rebuilds |
 | `python main.py --backup-data-snapshot {raw\|embedded\|both}` | Create and upload a snapshot archive (maintainer-only — requires rclone on WSL) |
