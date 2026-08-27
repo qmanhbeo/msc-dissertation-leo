@@ -51,7 +51,8 @@ TRACKS = [
 ]
 
 
-def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
+def run(model: str, output_dir: Path, overwrite: bool = False,
+        allow_partial: bool = False) -> None:
     outs = ensure_canonical_outputs(output_dir, model=model)
     out_tex = outs.tables_dir / "tab12_register_cross.tex"
 
@@ -62,17 +63,29 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
         return
 
     tracks_data = []
+    failed: list[str] = []
     for m, label in TRACKS:
         try:
             rows, _summary, _G_full, _raw = _compute_iterative_rows(m)
         except (FileNotFoundError, RuntimeError, ValueError) as e:
-            print(f"Skipping track {label} ({m}): {e}", file=sys.stderr)
+            print(f"Track {label} ({m}) unavailable: {e}", file=sys.stderr)
+            failed.append(label)
             continue
         tracks_data.append((label, {r["k"]: r for r in rows if r.get("shown")}))
 
-    if not tracks_data:
-        print("No register checkpoints available — nothing to write.", file=sys.stderr)
-        return
+    if failed and not allow_partial:
+        # Fail closed: a partially-filled cross-encoder Table 12 must never be
+        # published silently (stderr alone was easy to miss — exactly what hid
+        # the degraded Aug-2026 cold-replay table). Canonical replays run the
+        # MiniLM/SciBERT register stages BEFORE this MPNet-post step, so a
+        # missing checkpoint here means a genuine upstream problem.
+        raise RuntimeError(
+            "f3: register checkpoint(s) unavailable for "
+            + ", ".join(failed)
+            + "; refusing to write a degraded tab12_register_cross.tex. Re-run after "
+              "the missing tracks' register stages completed, or pass "
+              "--allow-partial-tracks for scratch diagnostics."
+        )
 
     all_ks = sorted(set().union(*[set(d.keys()) for _, d in tracks_data]))
 
@@ -118,12 +131,18 @@ def parse_args(argv=None):
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--overwrite", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--allow-partial-tracks", action="store_true",
+                        help="Write the cross-encoder table even when an encoder track's "
+                             "register checkpoint is missing/degenerate. Scratch diagnostics "
+                             "only; canonical replay runs WITHOUT it so a degraded Table 12 "
+                             "cannot be published silently.")
     return parser.parse_args(argv)
 
 
 def main():
     args = parse_args()
-    run(args.embed_model, args.output_dir, overwrite=args.overwrite)
+    run(args.embed_model, args.output_dir, overwrite=args.overwrite,
+        allow_partial=args.allow_partial_tracks)
 
 
 if __name__ == "__main__":
