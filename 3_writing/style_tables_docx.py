@@ -30,8 +30,20 @@ pattern as ``5_notes/word_count_docx.py``):
       ``ImageCaption`` paragraph -> a caption cannot orphan onto the previous
       page; it always stays with its table/figure below.
   6. Notes paragraphs centered: any paragraph whose joined run text starts
-      with ``Notes:`` (the classification used by ``5_notes/word_count_docx.py``)
-      gets ``<w:jc w:val="center"/>`` unless it already has one.
+       with ``Notes:`` (the classification used by ``5_notes/word_count_docx.py``)
+       gets ``<w:jc w:val="center"/>`` unless it already has one.
+  7. Booktabs borders on content tables (``tblCaption`` present; Harvard
+       three-line style — horizontal rules only, no verticals, no lines
+       between data rows): 1.5pt (``w:sz="12"`` eighth-point units) top and
+       bottom table rules via ``tblPr`` ``tblBorders`` (everything else
+       ``none``), and a 1pt (``w:sz="8"``) bottom border on every cell of
+       each flattened header-stack row and mid-table group/summary row.
+       Pandoc flattens multi-row LaTeX headers into ordinary rows, so the
+       stack is re-identified structurally (see EXPECTED_* census below);
+       this also moves the header separator to its correct place (under the
+       LAST stack row — the template's ``firstRow`` rule alone would draw it
+       under the group row of 2/3-tier headers). Layout tables (pandoc's
+       subfigure grids, no ``tblCaption``) are untouched.
 
 Bold headers, single cell line spacing and cell padding are NOT handled here:
 they live declaratively in ``custom_thesis_template.docx`` (``Table`` style
@@ -52,6 +64,53 @@ import sys
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+# --- Booktabs border constants (step 7) --------------------------------------
+# Border sizes in eighth-point units (Word's w:sz for borders).
+RULE_HEAVY_SZ = 12  # 1.5pt — top/bottom table rules (booktabs \toprule/\bottomrule)
+RULE_LIGHT_SZ = 8   # 1pt   — header-stack separators + mid-table group rules
+# A markerless label row (flattened header row with no cmidrule debris and no
+# gridSpan) is accepted as a stack row only if no cell holds a digit and every
+# non-empty cell is at most LABEL_CELL_MAX chars. Rationale: the two such rows
+# in the census (Table 12 "Cov. gap/Dominance/...", Table 34 "Adj. gap/...")
+# max out at 20 chars, while the nearest digit-free prose rows (Table 35 "AI
+# use declaration" body) run to hundreds — 24 sits far from both.
+LABEL_CELL_MAX = 24
+# cmidrule debris pandoc leaves inside flattened header cells, e.g. "2-4 (lr)"
+# (\cmidrule(lr){2-4}) or bare "2-8" (\cmidrule{2-8}). Matched PER CELL: the
+# joined row text of data rows can fuse adjacent values ("4.1" + "-4.1" ->
+# "4.1-4.1") and would false-positive.
+JUNK_CELL_RE = re.compile(r"\d+-\d+(?: \(lr\))?")
+
+# Fail-closed census of the 2026-08-27 build (35 content tables). Any
+# manuscript table change that alters the header structure must update these:
+#   - 35 caption'd tables — ALL tables are content tables (since fe3efeb the
+#     H1 scatter panels are one generator image, so no caption-less layout
+#     grid exists any more; the row pass below still guards on `not nested`);
+#   - 68 bordered rows = 61 stack rows (15 flat x1 + 12 two-tier x2
+#     + 5 three-tier x3 + 2 label-header tables x2) + 7 mid-table gridSpan
+#     rows (Table 5 H1a-H1d panels x3, Table 6 Spearman line x1,
+#     Table 31 x3);
+#   - 2 markerless label rows (Table 12 row 1, Table 34 row 2).
+EXPECTED_CONTENT_TABLES = 35
+EXPECTED_BORDERED_ROWS = 68
+EXPECTED_LABEL_ROWS = 2
+
+TBL_BORDERS_XML = (
+    "<w:tblBorders>"
+    f'<w:top w:val="single" w:sz="{RULE_HEAVY_SZ}" w:space="0" w:color="auto" />'
+    '<w:left w:val="none" w:sz="0" w:space="0" w:color="auto" />'
+    f'<w:bottom w:val="single" w:sz="{RULE_HEAVY_SZ}" w:space="0" w:color="auto" />'
+    '<w:right w:val="none" w:sz="0" w:space="0" w:color="auto" />'
+    '<w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto" />'
+    '<w:insideV w:val="none" w:sz="0" w:space="0" w:color="auto" />'
+    "</w:tblBorders>"
+)
+CELL_BOTTOM_XML = (
+    "<w:tcBorders>"
+    f'<w:bottom w:val="single" w:sz="{RULE_LIGHT_SZ}" w:space="0" w:color="auto" />'
+    "</w:tcBorders>"
+)
 
 
 def fail(msg: str) -> "NoReturn":  # type: ignore[valid-type]
@@ -90,10 +149,17 @@ def main() -> None:
             fail(f"styles.xml {sid} style lacks center alignment - stale "
                  "custom_thesis_template.docx? Re-apply the template edits.")
 
-    # Idempotency guard: refuse to double-apply.
-    if "cantSplit" in doc or "keepNext" in doc:
-        fail("document.xml already contains cantSplit/keepNext - refusing to "
-             "double-apply; rebuild the docx with pandoc first.")
+    # Idempotency guard: refuse to double-apply. Fresh pandoc output contains
+    # none of these (borders live in the template style, not the document).
+    if (
+        "cantSplit" in doc
+        or "keepNext" in doc
+        or "w:tblBorders" in doc
+        or "w:tcBorders" in doc
+    ):
+        fail("document.xml already contains cantSplit/keepNext/tblBorders/"
+             "tcBorders - refusing to double-apply; rebuild the docx with "
+             "pandoc first.")
 
     n_tables = doc.count("<w:tbl>")
     n_body = doc.count("<w:tr><w:tc>")
@@ -118,6 +184,45 @@ def main() -> None:
     n_glue = 0          # keepNext insertions in non-last table rows
     n_glued_tables = 0  # tables that actually had >=2 rows to glue
     n_multirow_tables = 0  # tables with >1 row (these are the ones we glue)
+    n_bordered_tables = 0  # content tables that received booktabs borders
+    n_border_rows = 0      # rows given a 1pt bottom separator (stack + mid)
+    n_border_cells = 0     # individual cells bordered
+    n_label_rows = 0       # stack rows classified via the markerless-label rule
+
+    def row_cell_texts(row: str) -> "list[str]":
+        return [
+            "".join(re.findall(r"<[wm]:t[^>]*>([^<]*)</[wm]:t>", c))
+            for c in re.findall(r"<w:tc>.*?(?=<w:tc>|</w:tr>)", row, re.S)
+        ]
+
+    def is_label_row(texts: "list[str]") -> bool:
+        """Markerless flattened label row: no digit anywhere, all non-empty
+        cells short (see LABEL_CELL_MAX)."""
+        ne = [t for t in texts if t.strip()]
+        return (
+            bool(ne)
+            and not any(re.search(r"\d", t) for t in texts)
+            and all(len(t) <= LABEL_CELL_MAX for t in ne)
+        )
+
+    def border_row_cells(row: str) -> str:
+        nonlocal n_border_cells
+
+        def _cell(m: "re.Match[str]") -> str:
+            cell = m.group(0)
+            if "<w:tcBorders>" in cell:
+                fail(f"cell already carries tcBorders - unexpected: {cell[:80]!r}")
+            if "<w:tcPr />" in cell:
+                return cell.replace(
+                    "<w:tcPr />", f"<w:tcPr>{CELL_BOTTOM_XML}</w:tcPr>", 1
+                )
+            if "</w:tcPr>" in cell:
+                return cell.replace("</w:tcPr>", f"{CELL_BOTTOM_XML}</w:tcPr>", 1)
+            fail(f"cell without tcPr - unexpected shape: {cell[:80]!r}")
+
+        bordered = re.sub(r"<w:tc>.*?(?=<w:tc>|</w:tr>)", _cell, row, flags=re.S)
+        n_border_cells += len(re.findall(CELL_BOTTOM_XML, bordered))
+        return bordered
 
     def glue_para(pm: "re.Match[str]") -> str:
         """Insert <w:keepNext/> into one table-cell paragraph (CT_PPr order)."""
@@ -145,6 +250,7 @@ def main() -> None:
 
     def style_table(tbl: str) -> str:
         nonlocal n_promoted, n_centered, n_glued_tables, n_multirow_tables
+        nonlocal n_bordered_tables, n_border_rows, n_label_rows
         # Recurse into nested tables first, then style this table's own
         # properties. pandoc wraps the Figure 6 image-grid table in a
         # FigureTable layout table, so a region may contain another table;
@@ -174,7 +280,53 @@ def main() -> None:
             n_centered += 1
         elif '<w:jc w:val="center" />' not in tblpr:
             fail("table tblPr lacks start/center jc - unexpected shape")
+        # Step 7: booktabs borders (content tables only; layout grids have
+        # no tblCaption and must stay untouched).
+        if "w:tblCaption" in tbl:
+            if TBL_BORDERS_XML not in tblpr:
+                tblpr = tblpr.replace(
+                    '<w:jc w:val="center" />',
+                    '<w:jc w:val="center" />' + TBL_BORDERS_XML,
+                    1,
+                )
+            n_bordered_tables += 1
         tbl = tbl[: m.start()] + tblpr + tbl[m.end() :]
+        # Step 7 (continued): 1pt separators under every header-stack row and
+        # every mid-table group/summary row. Row classification uses a flat
+        # row regex, so it must only run on non-nested regions (a nested
+        # wrapper's flat scan would mis-span rows across the inner boundary).
+        if not nested and "w:tblCaption" in tbl:
+            b_rows = re.findall(r"<w:tr>.*?</w:tr>", tbl, re.S)
+            if "tblHeader" not in b_rows[0]:
+                fail("content table without header row 0 - unexpected shape")
+            stack_end = 0
+            for i in range(1, len(b_rows)):
+                ts = row_cell_texts(b_rows[i])
+                if "gridSpan" in b_rows[i] or any(
+                    JUNK_CELL_RE.search(t) for t in ts
+                ):
+                    stack_end = i
+                elif is_label_row(ts):
+                    stack_end = i
+                    n_label_rows += 1
+                else:
+                    break
+            border_idx = set(range(stack_end + 1))
+            border_idx.update(
+                i
+                for i in range(stack_end + 1, len(b_rows))
+                if "gridSpan" in b_rows[i]
+            )
+            bordered = {i: border_row_cells(b_rows[i]) for i in border_idx}
+            seen_i = {"i": 0}
+
+            def border_mapper(rm: "re.Match[str]") -> str:
+                i = seen_i["i"]
+                seen_i["i"] += 1
+                return bordered.get(i, rm.group(0))
+
+            tbl = re.sub(r"<w:tr>.*?</w:tr>", border_mapper, tbl, flags=re.S)
+            n_border_rows += len(border_idx)
         # Whole-table keep: glue every row except the last. Non-nested regions
         # only: their inner tables were glued by the recursion above, and a
         # wrapper's single row is its own last row (the generic pass would
@@ -337,6 +489,34 @@ def main() -> None:
     if n_header and not n_body:
         fail("header rows found but no body rows - unexpected document shape")
 
+    # Step 7 postconditions: booktabs borders landed on exactly the census.
+    if n_bordered_tables != EXPECTED_CONTENT_TABLES:
+        fail(f"bordered {n_bordered_tables} content tables but expected "
+             f"{EXPECTED_CONTENT_TABLES} - table census changed; update the "
+             f"EXPECTED_* constants")
+    if doc.count("<w:tblBorders>") != n_bordered_tables:
+        fail(f"tblBorders count {doc.count('<w:tblBorders>')} != bordered "
+             f"tables {n_bordered_tables}")
+    bad_heavy = [
+        b
+        for b in re.findall(r"<w:tblBorders>.*?</w:tblBorders>", doc, re.S)
+        if f'w:top w:val="single" w:sz="{RULE_HEAVY_SZ}"' not in b
+        or f'w:bottom w:val="single" w:sz="{RULE_HEAVY_SZ}"' not in b
+    ]
+    if bad_heavy:
+        fail(f"{len(bad_heavy)} tblBorders blocks lack 1.5pt top+bottom rules")
+    if n_border_rows != EXPECTED_BORDERED_ROWS:
+        fail(f"bordered {n_border_rows} header-stack/group rows but expected "
+             f"{EXPECTED_BORDERED_ROWS} - header census changed; update the "
+             f"EXPECTED_* constants")
+    if doc.count(CELL_BOTTOM_XML) != n_border_cells:
+        fail(f"tcBorders count {doc.count(CELL_BOTTOM_XML)} != cells bordered "
+             f"{n_border_cells}")
+    if n_label_rows != EXPECTED_LABEL_ROWS:
+        fail(f"{n_label_rows} markerless label rows classified but expected "
+             f"{EXPECTED_LABEL_ROWS} - header census changed; update the "
+             f"EXPECTED_* constants")
+
     # Well-formedness before writing anything.
     try:
         ET.fromstring(doc.encode("utf-8"))
@@ -356,7 +536,10 @@ def main() -> None:
           f"keepNext on {n_glue} cell paragraphs of {n_glued_tables} multi-row "
           f"tables + {n_captions} caption paragraphs; "
           f"{n_centered} tables centered ({n_tables - n_centered} already); "
-          f"{n_notes} Notes paragraphs centered")
+          f"{n_notes} Notes paragraphs centered; "
+          f"booktabs borders on {n_bordered_tables} tables "
+          f"({n_border_rows} separator rows, {n_border_cells} cells, "
+          f"{n_label_rows} label rows)")
 
 
 if __name__ == "__main__":
