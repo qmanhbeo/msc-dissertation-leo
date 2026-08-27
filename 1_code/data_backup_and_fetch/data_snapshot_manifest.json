@@ -15,9 +15,9 @@
       ]
     },
     "embedded": {
-      "version": "2026-08-27-155122",
-      "url": "https://drive.usercontent.google.com/download?id=1D5l7wQYhN_n3bi9hwhQrkyHHp78x8hov&export=download",
-      "sha256": "1c1328ec547c34f3b26148d0efe34bcfa85ab298dc0f8f2ed0677869d65646b5",
+      "version": "2026-08-27-183122",
+      "url": "https://drive.usercontent.google.com/download?id=1UnC_ln8sW6UKggMCNU6wSlq9yThp3-Vl&export=download",
+      "sha256": "93582ca2f260db5fd95b535fe7c9d2ea50ad4e6eb2d00620213d7a9632bcd885",
       "expected_repo_paths": [
         "2_data/3_embedded",
         "2_data/3a_warm_replay_texts"
@@ -27,7 +27,8 @@
         "Excludes 0_raw, 1_preprocessed, 2_segmented, and all downstream stages.",
         "Both embedded models (all-mpnet-base-v2, all-minilm-l6-v2): ids files in 3_embedded/{model}/metadata and research_shards/metadata are ID/label-only. Canonical plain-text segment files live in 2_segmented/ (producer-side cold-replay artifact, not shipped); appendix readers (a3, b2) resolve 2_segmented/ first and fall back to the gzipped 3a_warm_replay_texts/ copy.",
         "Also ships 3a_warm_replay_texts/_shared_metadata/preprocessed_research_manifest.json (byte-identical copy of 1_preprocessed/research/metadata/manifest.json) since 2026-08-27; 0_coverage_gap.py resolves it via model_utils.resolve_research_preprocessed_manifest_path when 1_preprocessed/ is absent.",
-        "Regenerated 2026-08-27 from the post-sweep codebase; validated by a fresh-clone warm replay."
+        "Also ships 3a_warm_replay_texts/_shared_metadata/corpus_provenance.json (precomputed export_corpus_provenance.compute() output, reconstructed byte-identically from the committed num18/tab18) since 2026-08-27-183122; export_corpus_provenance.py resolves it via model_utils.resolve_corpus_provenance_path when 2_segmented/ is absent (second snapshot-gap fix: fresh-clone warm replay regenerated tab18/num18 without crashing on 2_segmented/).",
+        "Regenerated 2026-08-27 (added corpus_provenance.json); fresh-clone warm replay validated after the export_corpus_provenance.py crash was fixed."
       ]
     }
   }
