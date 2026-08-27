@@ -583,6 +583,10 @@ def _embed_model_steps(
         "--normalize-embeddings", "--batch-size", str(research_bs),
     ] + model_args + ow
     if model != CANONICAL_SEGMENT_MODEL:
+        # Encoder-sensitivity tracks (MiniLM/SciBERT) embed ONLY the 100k-paper
+        # S1 subset (122,472 rows), not the full research corpus — by design:
+        # subset-scoped outputs feed the cross-sensitivity tables. Do NOT
+        # "fix" this to the full corpus (see AGENTS.md); MPNet alone embeds all.
         embed_cmd += ["--corpus", "research_subset"]
     steps.append((f"embed paper shards ({model})", embed_cmd))
     if model == CANONICAL_SEGMENT_MODEL:
@@ -704,6 +708,9 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     # Concept-retrieval robustness (MPNet only): score the concept-retrieved
     # research corpus with all three assignment methods (LR/MLP/ZS), feeding the
     # Retrieval column of the cross-sensitivity tables (stage 10).
+    # NOTE: the concept_* paths defined here are consumed by EVERY later
+    # `if model == DEFAULT_EMBED_MODEL:` gate below — those guards also keep
+    # these names defined. Relaxing one gate in isolation is a NameError.
     if model == DEFAULT_EMBED_MODEL:
         concept_embed_dir = embed_dir_for_model(model) / "research_concept"
         concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
@@ -1123,6 +1130,11 @@ def ensure_warm_replay_inputs(args: argparse.Namespace, *, model: str = DEFAULT_
     print(f"[info] warm replay inputs missing: {missing_str}")
     if len(missing) > 12:
         print(f"[info] ... and {len(missing) - 12} more")
+    # overwrite_data=(2_data exists) makes the fetcher rmtree the WHOLE 2_data/
+    # and re-extract whenever ANY of it is present (fetch_data_snapshot.py
+    # deletes the tree on --overwrite). Intentional: 2_data is fully regenerable
+    # from the frozen snapshot, so clobber-and-rehydrate is the correct repair
+    # for partial hydration — incremental resume lives in the pipeline stages.
     run_fetch_data_snapshot(args, profile_name="embedded", overwrite_data=(ROOT / "2_data").exists())
 
 
