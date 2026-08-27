@@ -48,9 +48,13 @@ local function table_carrier(block)
   return nil
 end
 
+-- custom-style must match the template style's NAME ("TOC Heading"), not its
+-- styleId. pandoc resolves custom-style by w:name; requesting "TOCHeading"
+-- (the id) misses and makes pandoc emit a second, BodyText-based, non-bold
+-- TOCHeading style that shadows the template's bold Heading1-based one.
 local function list_title(text)
   return pandoc.Div({pandoc.Para({pandoc.Str(text)})},
-                    pandoc.Attr("", {}, {{"custom-style", "TOCHeading"}}))
+                    pandoc.Attr("", {}, {{"custom-style", "TOC Heading"}}))
 end
 
 local function entry_para(prefix, inlines, anchor)
