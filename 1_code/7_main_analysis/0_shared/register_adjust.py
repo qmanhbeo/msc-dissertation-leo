@@ -438,6 +438,13 @@ def run(args: argparse.Namespace) -> None:
     sdg_index = build_research_sdg_index(model)
     res_avail = {sdg: len(sdg_index[sdg]) for sdg in range(1, N_SDG + 1)}
     pol_avail = np.bincount(policy_assignments, minlength=N_SDG)
+    # NOTE: pol_avail is 0-indexed (slot 0 = SDG 1), so pol_avail[1:]
+    # DELIBERATELY-OR-NOT excludes SDG 1 from the policy-side min, while
+    # res_avail covers all 17 SDGs. The documented rule (WITHIN_SDG_BALANCE_CAP_RULE,
+    # "min over all (SDG, corpus)") implies pol_avail.min() — if SDG 1 is ever
+    # the binding minimum, this slice raises n_target and the per-SDG
+    # min(n_target, len(...)) fallback below reintroduces exactly the cross-SDG
+    # skew the rule exists to remove. Research side is unaffected.
     n_target = int(min(min(res_avail.values()), int(pol_avail[1:].min())))
     log.info(
         "Global per-SDG-per-corpus target n_target=%d (res_min=%d, pol_min=%d)",

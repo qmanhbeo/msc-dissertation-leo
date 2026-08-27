@@ -107,13 +107,18 @@ def project(emb: np.ndarray, G: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    adjusted : (N, dim) float32 — unit L2 norm per row
+    adjusted : (N, dim) float32 — unit L2 norm per row (degenerate
+        near-zero-residual rows excepted, see comment below).
     """
     if G.shape[0] == 0:
         return emb.copy()
     proj = (emb @ G.T) @ G  # (N, K) @ (K, dim) = (N, dim)
     residual = emb - proj
     norms = np.linalg.norm(residual, axis=1, keepdims=True)
+    # Degenerate rows FAIL OPEN: a residual ~0 (vector fully inside span(G))
+    # cannot be renormalised, so it passes through as a ~zero vector instead
+    # of raising (contrast paper_units_from_shard's fail-closed RuntimeError).
+    # Callers assert unit norms on centroids, not per row.
     norms = np.where(norms > 1e-12, norms, 1.0)
     return (residual / norms).astype(np.float32)
 
@@ -187,6 +192,13 @@ def compute_gaps_for_directions(
 
     adj_res_centroids = np.zeros((N_SDG, research_centroids.shape[1]), dtype=np.float32)
     for sdg_idx in range(N_SDG):
+        # Reconstruct the pre-normalisation mean: centroid_unit * cohesion is
+        # EXACT because research units are L2-renormalised (Plan C), so
+        # cohesion == ||mean|| (same identity as mean_cos_to_centroid in
+        # score_supervised.py). Fail-open fallback below: if the projection
+        # collapses this SDG's mean (norm <= 1e-8), keep the RAW centroid —
+        # that SDG's "adjusted" gap is then biased toward its raw value
+        # instead of failing loudly.
         raw_mean = research_centroids[sdg_idx] * research_cohesions[sdg_idx]
         adj_raw = raw_mean.copy()
         for g_k in G_list:

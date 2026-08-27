@@ -12,7 +12,16 @@ log = logging.getLogger(__name__)
 
 
 def _file_fp(path: Path) -> str:
-    """Return a content-sensitive fingerprint for a single file (size + mtime + first 64KB)."""
+    """Return a content-sensitive fingerprint for a single file (size + mtime + first 64KB).
+
+    mtime is a deliberate part of the fingerprint: `2_data/` re-hydration
+    resets all mtimes, which forces Tier-B analysis stages to re-derive
+    instead of silently skipping on stale-looking-but-identical inputs.
+    That re-derivation is accepted as cheap relative to the frontier stages
+    (which use shard-manifest resume and must NOT gain mtime gates).
+    NOTE: logic changes inside a script are NOT captured by input hashes —
+    callers append a hand-bumped version salt to fingerprint_of(...) for that.
+    """
     if not path.exists():
         return "missing"
     st = path.stat()
@@ -25,7 +34,12 @@ def _file_fp(path: Path) -> str:
 
 
 def fingerprint_of(*paths: Path) -> str:
-    """Compute a combined fingerprint of one or more file paths."""
+    """Compute a combined fingerprint of one or more file paths.
+
+    Convention: callers append a hand-bumped suffix (e.g. `+ "v3"`) as a
+    code-version salt. ANY change to a caller's computation must bump its
+    suffix, or should_skip() will keep serving the stale outputs forever.
+    """
     h = hashlib.sha256()
     for p in paths:
         h.update(_file_fp(p).encode())

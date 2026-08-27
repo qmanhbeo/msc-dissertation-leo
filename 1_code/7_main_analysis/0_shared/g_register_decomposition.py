@@ -107,6 +107,9 @@ def _generate_decomposition(
         log.warning("Adjusted semantic gap not found at %s — skipping decomposition.", adj_path)
         return
 
+    # "+ v3" is the code-version salt — bump it on ANY change to the
+    # computation below, or should_skip keeps the stale outputs forever
+    # (convention documented in shared_utils.fingerprint_of).
     fp = fingerprint_of(raw_path, adj_path, cov_path) + "v3"
     if should_skip([out_json, out_tex], fp, overwrite, out_json):
         log.info("Skipping decomposition — inputs unchanged")
@@ -263,6 +266,13 @@ def _compute_iterative_rows(model: str, track=None):
     iterations_data = ckpt["iterations"]
     n_iters = ckpt["completed_k"]
     policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions = load_raw_data(model)
+    # Cap sampling draws from this SHARED rng in loop order, so every gap
+    # value below depends on how much rng state was consumed before its call:
+    # raw_gaps + each shown-k gap consume it sequentially here, while run()
+    # re-seeds PERMUTATION_SEED for the final per-SDG gaps. The last shown
+    # table row and the per-SDG macros therefore need not match exactly.
+    # Reordering these calls shifts every sampled cap (deterministic, but a
+    # different draw).
     rng = np.random.default_rng(PERMUTATION_SEED)
 
     iteration_results = [{"k": it["k"], "test_acc": it["test_acc"]} for it in iterations_data]
@@ -338,6 +348,10 @@ def _generate_iterative_diagnostic(
         return
 
     policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions = raw_data
+    # FRESH rng (re-seeded): the per-SDG final gaps below are the same
+    # full-G quantity as the last row of the convergence table computed in
+    # _compute_iterative_rows, but under a differently-consumed rng stream —
+    # tiny last-digit differences between the two are expected, not a bug.
     rng = np.random.default_rng(PERMUTATION_SEED)
 
     # ---- LaTeX convergence table ----

@@ -180,6 +180,13 @@ def load_route_coverage_gap(model: str, route: str) -> dict[int, float] | None:
     return {int(k[3:]): float(v) for k, v in cg.items()}
 
 
+# Result-affecting thresholds (segment_cap is recorded in the gap JSONs'
+# "segment_cap" field). SEGMENT_CAP_PRIMARY = policy segments sampled per
+# (source_doc, SDG) when building policy sub-centroids for the primary gap;
+# SENS_LO/HI/NONE feed the cap-sensitivity runs. 10_000_000 is the "no cap"
+# sentinel for the uncapped run (never hit by real documents), NOT a real
+# bound. MIN_CLUSTER_SIZE = minimum assigned papers (research) / capped
+# segments (policy) below which a gap is flagged unreliable in the JSONs.
 SEGMENT_CAP_PRIMARY = 50
 SEGMENT_CAP_SENS_LO = 20
 SEGMENT_CAP_SENS_HI = 100
