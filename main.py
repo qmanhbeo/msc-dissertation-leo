@@ -223,8 +223,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--stage",
         choices=["fetch", "preprocess", "segment", "embed", "train", "infer", "centroids", "register_adjust", "analysis"],
-        help="Run a single pipeline stage (assumes upstream outputs exist).",
-    )
+        help="Run a single pipeline stage (assumes upstream outputs exist). "
+             "'analysis' runs the MAIN-TEXT pipeline only; appendices go via --appendix-all / per-spec flags.")
     p.add_argument("--corpus",
                    choices=["all", "reference", "policy", "research", "research_concept"],
                    default="all",
@@ -1251,11 +1251,17 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         )
 
     elif stage == "analysis":
-        # Single-model composition for --embed-model. Cross-sensitivity + figures
-        # are produced (MPNet-only gate inside _run_analysis_poststeps) here; the
-        # 3-encoder aggregation is cold-replay-only.
+        # Single-model composition for --embed-model, MAIN TEXT ONLY: the
+        # appendix battery is deliberately NOT included here (include_appendix
+        # was hardcoded True, which contradicted the "single stage" semantics
+        # and ran the full in-process APPENDIX_STEPS battery — for any
+        # --embed-model — while both replays gate appendix to MPNet). Run
+        # appendices via --appendix-all or the per-spec flags. Cross-sensitivity
+        # + figures are produced (MPNet-only gate inside
+        # _run_analysis_poststeps) here; the 3-encoder aggregation is
+        # cold-replay-only.
         _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite,
-                                 include_appendix=True)
+                                 include_appendix=False)
         _run_analysis_poststeps(output_dir, model, overwrite=args.overwrite)
 
     else:
