@@ -11,13 +11,22 @@ strip all ``\command[opts]{args}`` macros (keeping their brace text only where
 it is visible prose), normalise punctuation, and count whitespace-separated
 tokens. This is a review-time aid, not a pipeline stage.
 
+IMPORTANT (2026-08-27): this is a REVIEW AID, not the declaration count. It
+keeps captions and the table "Notes:" paragraphs and silently drops
+macro-injected numbers, so its total (8,521 at HEAD bf9317e) is neither
+Word-exact nor regulation-compliant. The declaration-grade canon count comes
+from ``word_count_docx.py`` on the built DOCX: main-text prose + headings
+including in-text citations, excluding table cells, captions/legends and
+table "Notes:" paragraphs (canon 8,559 at HEAD bf9317e; cap 8,000 + 10% =
+8,800). Never declare this script's number.
+
 Non-prose macros are removed together with their brace argument so they do not
 pollute the count: ``\input``/``\include``/``\includegraphics`` file paths,
 ``\label``/``\ref`` keys, citation keys (``\cite``/``\citep``/``\parencite``/
-``\textcite``), and ``\footnote`` text. ``\caption`` text is kept: table and
-figure captions are counted, matching the usual UoB convention. Table bodies
-never enter the count because they live in separate ``\input`` files that this
-script does not read.
+``\textcite``), and ``\footnote`` text. ``\caption`` text is kept here for
+review only; the canon declaration count EXCLUDES captions/legends (UoB Reg
+7.4.2(d)). Table bodies never enter the count because they live in separate
+``\input`` files that this script does not read.
 
 Usage:
     python 5_notes/word_count.py [path/to/dissertation.tex]
