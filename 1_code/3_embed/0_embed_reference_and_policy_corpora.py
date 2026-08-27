@@ -117,11 +117,16 @@ def embed_corpus(
     emb_path = output_dir / f"{corpus_name}.npy"
     ids_path = metadata_dir / f"{corpus_name}_ids.json"
 
-    if emb_path.exists() and not overwrite:
+    if emb_path.exists() and ids_path.exists() and not overwrite:
         # Resume-safe: a completed embedding is reused when --overwrite is not
-        # passed, so re-runs never redo finished corpora.
+        # passed, so re-runs never redo finished corpora. BOTH files must be
+        # present: an .npy without its ids JSON means a kill between the two
+        # publishes — re-embed rather than silently reuse an orphaned artifact.
         log.info("Skipping %s — %s already exists", corpus_name, emb_path)
         return
+    if emb_path.exists() and not ids_path.exists() and not overwrite:
+        log.info("Re-embedding %s — %s exists but ids %s missing (torn publish)",
+                 corpus_name, emb_path.name, ids_path.name)
     if overwrite and emb_path.exists():
         # --overwrite forces a clean re-embed: drop the stale .npy/.json so a
         # changed segmentation/encoder produces fresh embeddings.

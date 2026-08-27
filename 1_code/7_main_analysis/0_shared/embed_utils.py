@@ -77,14 +77,30 @@ def concatenate_batches(
     with tmp_emb.open("wb") as f:
         np.save(f, all_embs)
         f.flush()
+        os.fsync(f.fileno())
     if not tmp_emb.exists():
         raise RuntimeError(f"Failed to write {tmp_emb}")
-    tmp_emb.replace(emb_path)
 
-    shutil.rmtree(tmp_dir)
-
-    if ids_meta is not None and ids_path is not None:
-        with ids_path.open("w") as f:
+    # Stage the ids JSON as a sibling .tmp BEFORE publishing anything, then
+    # do the two renames back-to-back. Publishing the .npy while the ids are
+    # still pending means a kill in between leaves an embedding whose resume
+    # gate would silently accept it forever without matching metadata.
+    # Callers therefore also require both files to exist before skipping.
+    have_ids = ids_meta is not None and ids_path is not None
+    tmp_ids = None
+    if have_ids:
+        tmp_ids = ids_path.with_suffix(ids_path.suffix + ".tmp")
+        with tmp_ids.open("w") as f:
             json.dump(ids_meta, f)
+            f.flush()
+            os.fsync(f.fileno())
+
+    tmp_emb.replace(emb_path)
+    if have_ids:
+        tmp_ids.replace(ids_path)
+
+    # Drop per-batch checkpoints last: they remain the resume basis until the
+    # final pair is fully published.
+    shutil.rmtree(tmp_dir)
 
     log.info("Saved %s \u2192 shape %s", emb_path, all_embs.shape)
