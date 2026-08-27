@@ -96,6 +96,11 @@ def load_consolidated_reference(path: Path, field: str = "text") -> dict[str, li
 
 def load_research_shards(base: Path, field: str = "combined_text",
                          n_shards: int = 5, target: int = MAX_SAMPLE_PER_SOURCE) -> list[str]:
+    """Sample research texts from the FIRST `n_shards` preprocessed shards only
+    (5 of the 27 in the full-corpus layout), `target // n_shards` per shard.
+    The token-length KDE is therefore a fixed shard-bounded sample, not a
+    corpus-wide draw — widen n_shards only if the figure is re-validated.
+    """
     per_shard = target // n_shards
     records = []
     for i in range(1, n_shards + 1):
