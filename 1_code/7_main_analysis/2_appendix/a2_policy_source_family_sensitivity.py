@@ -192,6 +192,12 @@ def top3_sdgs(profile: np.ndarray) -> str:
 
 
 def _spearman(xs: list[float], ys: list[float]) -> float:
+    """Hand-rolled Spearman: TIE-BLIND (ordinal ranks, no tie averaging), and
+    callers feed 6-dp-rounded JSON values, so rho can deviate in the last
+    digits from scipy.stats.spearmanr used elsewhere in this file. Kept for
+    the per-family H25 table cells; do not "unify" it with scipy without
+    expecting the printed table values to shift.
+    """
     n = len(xs)
     if n < 3:
         return 1.0

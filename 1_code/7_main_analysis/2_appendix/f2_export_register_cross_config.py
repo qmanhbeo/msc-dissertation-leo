@@ -70,6 +70,11 @@ def _track_stats(model: str, track: str) -> dict:
     iter1_acc = float(its[0]["test_acc"])
     final_acc = float(its[-1]["test_acc"])
     n_iters = int(its[-1]["k"])
+    # k=15 is the cross-track comparison point: every INLP track currently
+    # completes well past 15 iterations before its data-dependent stop, so
+    # the entry exists in every checkpoint. If a future track stops earlier,
+    # the nan fallback below silently prints the literal text "nan" into
+    # num12b — fail loudly instead of relying on it.
     acc_at_15 = next((float(r["test_acc"]) for r in its if r["k"] == 15), float("nan"))
     return {
         "model": model,

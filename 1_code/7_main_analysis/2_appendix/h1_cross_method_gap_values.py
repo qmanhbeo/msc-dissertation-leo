@@ -198,6 +198,12 @@ ENC_METHODS = {
 
 
 def _write_table(path, rows, fmt, has_concept, label):
+    # HEADER/DATA COUPLING: n_data (and the header rows below) come from the
+    # STATIC ENC_METHODS, while data rows carry only the columns whose loader
+    # returned values (avail_cov/avail_gap in run()). A missing upstream gap
+    # JSON does NOT fail here — it silently shifts every later cell left
+    # under the fixed header (trailing cells render "--"). Check column
+    # alignment whenever a gap JSON is unexpectedly absent.
     n_data = 1 + sum(len(methods) for _, methods in ENC_METHODS.items()) + (1 if has_concept else 0)
 
     lines = [

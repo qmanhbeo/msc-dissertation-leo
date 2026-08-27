@@ -99,6 +99,11 @@ def build_doi_to_sdgs_from_zip(zip_path: Path) -> dict[str, list[int]]:
 
 
 def read_records():
+    # FAIL-OPEN-EMPTY: a missing input logs an error but yields nothing, so
+    # this stage exits 0 with an EMPTY output file — downstream stages then
+    # consume an empty benchmark corpus as if legitimate (the UNGDC variant
+    # guards against this; changing preprocess exit semantics mid-dissertation
+    # needs owner sign-off). Always check the row count in the log.
     if not INPUT_FILE.exists():
         log.error("Input not found: %s\n  Run fetch_aurora.py first.", INPUT_FILE)
         return

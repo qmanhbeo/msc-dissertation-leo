@@ -202,6 +202,10 @@ def run(model: str, output_dir: Path, overwrite: bool = False) -> None:
             f"{it['mean_f1']:.4f} $\\pm$ {it['std_f1']:.4f} \\\\"
         )
     rank_lines.append(
+        # HARDCODED row label: "4--16" / "13 configurations" assume the
+        # 16-config grid with the top-3 shown above (16 - 3 = 13). The VALUES
+        # (mlp_rlo/rhi) are computed from the data; only the labels are not.
+        # If the grid or the top-N ever changes, update these strings too.
         f"4--16 & MLP (remaining 13 configurations) & {mlp_rlo:.4f}--{mlp_rhi:.4f} \\\\"
     )
     base = len(mlp_sorted) + 1

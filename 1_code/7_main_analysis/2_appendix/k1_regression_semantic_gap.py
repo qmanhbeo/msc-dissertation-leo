@@ -93,7 +93,14 @@ CONFIGS: list[tuple[str, str, str, str, int]] = [
     ("SciBERT MLP",    "allenai/scibert_scivocab_uncased", "MLP", "keyword", 50),
     ("SciBERT MLP c20","allenai/scibert_scivocab_uncased", "MLP", "keyword", 20),
     ("SciBERT MLP c∞", "allenai/scibert_scivocab_uncased", "MLP", "keyword", 0),
-    # Keyword × ZS × cap=50 only × 3 encoders
+    # Keyword × ZS × cap=50 only × 3 encoders.
+    # NOTE: unlike the manuscript cross-method tables (where ZS is MPNet-only
+    # per AGENTS.md), the ZS rows here span all THREE encoders — they enter
+    # the K1 regressions as classifier/assignment-method observations, not as
+    # a cross-method gap comparison. tab_k1_specification_grid.tex IS \input
+    # in the dissertation appendix yet is NOT in shared_utils'
+    # MANUSCRIPT_*_TABLE_FILES gate lists (build-pdf preflight skips it).
+    # Reconcile with AGENTS.md before re-scoping either side.
     ("MPNet ZS",       "all-mpnet-base-v2",              "ZS",  "keyword", 50),
     ("MiniLM ZS",      "all-MiniLM-L6-v2",               "ZS",  "keyword", 50),
     ("SciBERT ZS",     "allenai/scibert_scivocab_uncased", "ZS",  "keyword", 50),
@@ -627,7 +634,15 @@ def ols_bootstrap(
     Y: np.ndarray, X: np.ndarray, cluster_ids: np.ndarray,
     n_boot: int = 500, seed: int = 42,
 ) -> dict:
-    """Bootstrap SE by resampling SDG clusters."""
+    """Bootstrap SE by resampling SDG clusters.
+
+    DEVIATION from the textbook pairs cluster bootstrap: duplicate-drawn
+    clusters are de-duplicated via np.isin, so a cluster drawn twice still
+    contributes its observations ONCE (no multiplicity). With only 17 SDG
+    clusters this understates se_boot relative to the multiplicity-corrected
+    estimator; kept as the committed convention. Seed is pinned to 42 at the
+    call site (run_spec) — do not randomise.
+    """
     rng = np.random.default_rng(seed)
     unique = np.unique(cluster_ids)
     betas = []

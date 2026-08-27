@@ -68,6 +68,9 @@ _MULTI_NL = re.compile(r"\n{3,}")
 
 
 def discover_docs(input_dir: Path) -> dict[str, Path]:
+    # FAIL-OPEN-EMPTY: a missing input dir returns {} → the stage completes
+    # with an EMPTY output and exit 0 instead of failing. Check the written
+    # row count before trusting a policy corpus built under this path.
     docs: dict[str, Path] = {}
     if not input_dir.exists():
         return docs

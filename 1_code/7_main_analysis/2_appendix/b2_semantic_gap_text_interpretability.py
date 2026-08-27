@@ -209,6 +209,12 @@ def collect_research(
     seq = 0
 
     shards = load_research_shards(embed_dir, scored_dir, model)
+    # Deliberate: scan only the FIRST 2 embedding shards (~200k of the 3.1M
+    # segment rows). They fill the 6,000-per-SDG sample cap many times over,
+    # and the policy side is scanned in full, so the term contrasts are
+    # sample-limited, not corpus-limited. Widening this changes the committed
+    # B.2 counts/representative examples, and the restriction is NOT recorded
+    # in the provenance JSON — keep scan scope and provenance in sync.
     for shard_idx, shard in enumerate(shards[:2], start=1):
         emb = np.load(shard["emb_path"], mmap_mode="r")
         score_rows = list(iter_jsonl(shard["score_ids_path"]))

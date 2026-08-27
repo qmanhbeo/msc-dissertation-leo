@@ -188,7 +188,11 @@ def compute() -> dict:
     ref_seg = _group_segments_by_source(SEGMENTED / "reference.jsonl")
     ref_sl = _group_single_label_segments_by_source(SEGMENTED / "reference.jsonl")
 
-    # Raw input counts per reference source
+    # Raw input counts per reference source. Each read FAILS OPEN (except →
+    # warning → None): a missing/moved raw file renders as an empty ("---")
+    # cell in the manuscript provenance table instead of failing the stage.
+    # Deliberate for this one-off provenance export — but check the warnings
+    # if any cell is unexpectedly empty.
     raw_counts = {}
     # OSDG
     try:
