@@ -29,7 +29,7 @@ from pathlib import Path
 DEFAULT_TEX = Path(__file__).resolve().parents[1] / "3_writing" / "dissertation.tex"
 
 # Appendix boundary: prose after this section is excluded from the main cap.
-APPENDIX_BOUNDARY = r"\\section\{Retrieval and Query Chain\}"
+APPENDIX_BOUNDARY = r"\\section\{Concept-based Research Retrieval\}"
 
 
 def strip_comments(text: str) -> str:
