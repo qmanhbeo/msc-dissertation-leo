@@ -11,11 +11,19 @@ consumers read:
   3_embedded/{model}/research_shards/metadata/manifest.json, plus
   2_segmented/{model}/policy.jsonl. No other warm-replay code reads segment
   text (verified 2026-07-29).
+- 0_coverage_gap.py reads 1_preprocessed/research/metadata/manifest.json for
+  JSON diagnostics (n_research_preprocessed / dropped-at-segmentation; no tex
+  macro consumes them). The embedded snapshot does not ship 1_preprocessed/,
+  so this builder also ships a byte-identical plain copy under
+  _shared_metadata/ (added 2026-08-27). That file is model-independent, so it
+  is written once per build, not per model.
 
 This builder derives the shard list from that same embed manifest, so
 coverage matches the consumers by construction. Consumers resolve the
 canonical plain path first and fall back to 3a_warm_replay_texts/*.jsonl.gz
-(see model_utils.resolve_research_text_path / resolve_policy_text_path).
+(see model_utils.resolve_research_text_path / resolve_policy_text_path);
+the shared metadata copy is resolved by
+model_utils.resolve_research_preprocessed_manifest_path.
 
 Design decisions (recorded, not magic):
 - GZIP_LEVEL = 6: measured on shard part-00003 (201 MB) 2026-07-29 —
@@ -55,7 +63,12 @@ MODEL_UTILS_DIR = WORKSPACE_ROOT / "1_code" / "7_main_analysis" / "0_shared"
 if str(MODEL_UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(MODEL_UTILS_DIR))
 
-from model_utils import WARM_REPLAY_TEXTS_DIRNAME, model_slug  # noqa: E402
+from model_utils import (  # noqa: E402
+    PREPROCESSED_RESEARCH_MANIFEST_NAME,
+    SHARED_METADATA_DIRNAME,
+    WARM_REPLAY_TEXTS_DIRNAME,
+    model_slug,
+)
 
 GZIP_LEVEL = 6
 GZIP_HEADER_MTIME = 0
@@ -132,6 +145,63 @@ def _plan_for_model(source_dir: Path, model: str) -> list[tuple[Path, str]]:
     return plan
 
 
+def _build_shared_metadata(source_dir: Path, rebuild: bool = False) -> Path:
+    """Ship the model-independent preprocessed research manifest (plain copy).
+
+    0_coverage_gap.py reads 1_preprocessed/research/metadata/manifest.json
+    (JSON diagnostics only). The embedded snapshot excludes 1_preprocessed/,
+    so the builder ships a byte-identical copy under
+    3a_warm_replay_texts/_shared_metadata/, which
+    model_utils.resolve_research_preprocessed_manifest_path falls back to.
+    Same incremental skip (source size+mtime) and tmp+replace durability as
+    the per-model gz files.
+    """
+    src = source_dir / "1_preprocessed" / "research" / "metadata" / "manifest.json"
+    if not src.exists():
+        raise FileNotFoundError(f"preprocessed research manifest missing: {src}")
+    out_root = source_dir / WARM_REPLAY_TEXTS_DIRNAME / SHARED_METADATA_DIRNAME
+    out_root.mkdir(parents=True, exist_ok=True)
+    dest = out_root / PREPROCESSED_RESEARCH_MANIFEST_NAME
+    manifest_path = out_root / BUILD_MANIFEST_NAME
+    payload = _load_build_manifest(manifest_path)
+    files: dict = payload.get("files", {}) if isinstance(payload.get("files"), dict) else {}
+
+    stat = src.stat()
+    entry = files.get(dest.name)
+    if (
+        not rebuild
+        and dest.exists()
+        and isinstance(entry, dict)
+        and entry.get("source_size") == stat.st_size
+        and entry.get("source_mtime_ns") == stat.st_mtime_ns
+    ):
+        _log(f"[shared] up-to-date: {dest.name}")
+        return dest
+
+    _log(f"[shared] copying {src} ({stat.st_size} bytes)")
+    tmp = dest.with_name(dest.name + ".tmp")
+    with src.open("rb") as fi, tmp.open("wb") as fo:
+        shutil.copyfileobj(fi, fo, 1024 * 1024)
+        fo.flush()
+        os.fsync(fo.fileno())
+    tmp.replace(dest)
+    files[dest.name] = {
+        "source": str(src.relative_to(source_dir)),
+        "source_size": stat.st_size,
+        "source_mtime_ns": stat.st_mtime_ns,
+        "dest_size": dest.stat().st_size,
+        "dest_sha256": _sha256_file(dest),
+    }
+    payload = {
+        "generated_by": "1_code/data_backup_and_fetch/build_warm_replay_texts.py",
+        "shared_metadata": True,
+        "updated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "files": files,
+    }
+    _write_build_manifest(manifest_path, payload)
+    return dest
+
+
 def build_warm_replay_texts(
     source_dir: Path,
     models: tuple[str, ...] = WARM_REPLAY_TEXT_MODELS,
@@ -140,6 +210,7 @@ def build_warm_replay_texts(
 ) -> list[Path]:
     source_dir = source_dir.resolve()
     built: list[Path] = []
+    built.append(_build_shared_metadata(source_dir, rebuild=rebuild))
     for model in models:
         slug = model_slug(model)
         plan = _plan_for_model(source_dir, model)

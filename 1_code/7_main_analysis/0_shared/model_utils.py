@@ -260,6 +260,11 @@ def research_concept_segmented_dir_for_model(model: str) -> Path:
 # else fail closed.
 
 WARM_REPLAY_TEXTS_DIRNAME = "3a_warm_replay_texts"
+# Model-independent metadata files shipped by build_warm_replay_texts.py under
+# 3a_warm_replay_texts/_shared_metadata/ (not per-model: one copy serves every
+# --embed-model track).
+SHARED_METADATA_DIRNAME = "_shared_metadata"
+PREPROCESSED_RESEARCH_MANIFEST_NAME = "preprocessed_research_manifest.json"
 
 
 def warm_replay_texts_dir_for_model(model: str) -> Path:
@@ -292,6 +297,31 @@ def resolve_policy_text_path(model: str) -> Path:
         f"Policy segment text for model {model!r} not found: "
         f"neither {canonical} nor {fallback} exists. "
         "Hydrate 2_segmented/ or fetch the embedded snapshot (3a_warm_replay_texts/)."
+    )
+
+
+def resolve_research_preprocessed_manifest_path() -> Path:
+    """Resolve the pre-segmentation research manifest (model-independent).
+
+    The canonical 1_preprocessed/ tree ships only with raw/cold-replay data.
+    The embedded snapshot instead carries a byte-identical copy under
+    3a_warm_replay_texts/_shared_metadata/ (built by
+    build_warm_replay_texts.py). Resolution order: canonical path first, then
+    the snapshot fallback, else fail closed.
+    """
+    canonical = research_preprocessed_dir() / "metadata" / "manifest.json"
+    if canonical.exists():
+        return canonical
+    fallback = (
+        DATA_ROOT / WARM_REPLAY_TEXTS_DIRNAME / SHARED_METADATA_DIRNAME / PREPROCESSED_RESEARCH_MANIFEST_NAME
+    )
+    if fallback.exists():
+        return fallback
+    raise FileNotFoundError(
+        "Preprocessed research manifest not found: "
+        f"neither {canonical} nor {fallback} exists. "
+        "Hydrate 1_preprocessed/ or fetch the embedded snapshot "
+        "(3a_warm_replay_texts/_shared_metadata/)."
     )
 
 
