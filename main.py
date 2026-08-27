@@ -177,8 +177,8 @@ def parse_args() -> argparse.Namespace:
             "--warm-replay so those stages stay offline."
         ),
     )
-    p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
-    p.add_argument("--build-word", action="store_true", help="Build dissertation.docx (Word) from existing manuscript outputs via pandoc (requires pandoc + 3_writing/custom_thesis_template.docx reference-doc).")
+    p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only). Needs --overwrite whenever canonical outputs exist — on a fresh clone the committed 4_outputs/ already trips the refuse guard.")
+    p.add_argument("--build-word", action="store_true", help="Build dissertation.docx (Word) from existing manuscript outputs via pandoc (requires pandoc + 3_writing/custom_thesis_template.docx reference-doc). Same --overwrite rule as --build-pdf.")
     p.add_argument(
         "--get-outputs-final",
         action="store_true",
@@ -257,6 +257,10 @@ def action_requested(args: argparse.Namespace) -> bool:
 
 
 def run_step(label: str, cmd: list[str], step_id: str | None = None, *, model: str = "") -> None:
+    # step_id values (0, 1, 2, 3, 3b, 3c, 4, 5, 6, 9, 9a, 18, 19, A2, ...) are
+    # HISTORICAL log labels from earlier pipeline layouts, not a global
+    # sequence — gaps and out-of-order numbers are expected. Grep-friendly
+    # tags only; never treat them as ordering or dependency information.
     model_tag = f" [{model}]" if model else ""
     header = f"[{step_id}]{model_tag} {label}" if step_id else f"[{label}]{model_tag}"
     sep = "=" * 70
@@ -294,6 +298,12 @@ def warn_ambiguous_dispatch(args: argparse.Namespace) -> None:
     combinations outside the composed appendix+pdf/word pair are silently
     dropped. Print a warning so users are never surprised."""
     chosen = _selected_action_flags(args)
+    if args.corpus != "all" and args.stage != "segment":
+        print(
+            f"[warning] --corpus {args.corpus!r} is only used with --stage segment; "
+            "it is ignored for every other action.",
+            file=sys.stderr,
+        )
     if len(chosen) > 1:
         print(
             "[warning] Multiple action flags requested: " + ", ".join(chosen)
@@ -1151,6 +1161,14 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         # research corpus (27 shards); MiniLM/SciBERT embed the shared 100k
         # subset via --corpus research_subset (handled below by the
         # model != DEFAULT_EMBED_MODEL check).
+        # --embed-model is deliberately ignored here (as in the replays): embed
+        # is an all-encoders stage, so a model-specific invocation would be a
+        # silent no-op surprise.
+        if args.embed_model != DEFAULT_EMBED_MODEL:
+            print(
+                f"NOTE: --embed-model {args.embed_model!r} is ignored by --stage embed "
+                "(all three encoder tracks are embedded, mirroring the replays)."
+            )
         for embed_model in COLD_REPLAY_MODELS:
             for label, cmd in _embed_model_steps(embed_model, overwrite=args.overwrite,
                                                  batch_size=args.batch_size,
@@ -1220,6 +1238,10 @@ def main() -> None:
     if not output_dir.is_absolute():
         output_dir = (ROOT / output_dir).resolve()
 
+    # Deliberate bare call: embed_dir_for_model runs _validate_model(), which
+    # raises ValueError on unknown --embed-model names. resolve_model_alias()
+    # above only maps mpnet/minilm/scibert aliases and passes anything else
+    # through, so THIS is the fail-closed model validation for every action.
     embed_dir_for_model(args.embed_model)
 
     # args.fetch_data_snapshot is None (flag absent), "embedded" (bare flag,
