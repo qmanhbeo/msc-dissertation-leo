@@ -1,12 +1,15 @@
 \documentclass[12pt,a4paper]{article}
 
 % Packages
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[left=3cm,right=2cm,top=3cm,bottom=3cm]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
 \usepackage{microtype}
 \usepackage{setspace}
+\doublespacing
 \usepackage{parskip}
 \setcounter{tocdepth}{2}
 
@@ -31,11 +34,15 @@
 \usepackage{enumitem}
 \setlist{nosep}
 \graphicspath{{../4_outputs/mpnet/figures/}{../4_outputs/appendix/mpnet/a4_centroid_similarity/figures/}{../4_outputs/conceptual_figs/}}
+% UoB thesis guide: section (chapter) titles centred and in capitals
+\usepackage{titlesec}
+\usepackage{textcase}
+\titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{\MakeTextUppercase}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
-\usepackage[style=authoryear,backend=biber,sorting=ynt,maxbibnames=999]{biblatex}
+\usepackage[style=authoryear,backend=biber,sorting=nyt,maxcitenames=3,maxbibnames=3]{biblatex}
 \DeclareDelimFormat{nameyeardelim}{\addcomma\space}%  comma before year, per Cite Them Right
 \setlength{\bibhang}{0pt}%        % no hanging indent: continuation lines flush with first
 \setlength{\bibitemsep}{6pt}%     % paragraph-style gap between entries
