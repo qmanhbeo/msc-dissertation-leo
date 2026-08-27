@@ -171,6 +171,11 @@ def run(args: argparse.Namespace) -> None:
                         "zero_flag": norm < 1e-8,
                     })
             else:
+                log.warning(
+                    "MLP concept summary not found at %s — falling back to canonical "
+                    "mlp_summary.json, whose n_papers/coverage describe the CANONICAL "
+                    "corpus rather than the concept variant.", _summary_path,
+                )
                 research_meta = semantic_gap_shared.build_mlp_centroid_meta(args.embed_model)
         else:
             research_meta = semantic_gap_shared.build_mlp_centroid_meta(args.embed_model)
@@ -213,7 +218,7 @@ def run(args: argparse.Namespace) -> None:
     # Fingerprint: include classifier-specific input files.
     if is_mlp:
         fp = fingerprint_of(
-            semantic_gap_shared.get_mlp_research_centroids(args.embed_model),
+            _RESEARCH_CENTROIDS,  # override-aware: the concept variant must re-derive when ITS centroids change, not when the canonical MLP ones do
             _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
         )
     else:
