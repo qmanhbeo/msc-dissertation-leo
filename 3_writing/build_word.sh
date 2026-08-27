@@ -71,9 +71,11 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
 # Bold headers, single cell line spacing and cell padding live declaratively
 # in custom_thesis_template.docx styles; the script verifies those survived
 # the pandoc copy and fails closed otherwise. The text changes are
-# excising pandoc-leaked \cmidrule debris from table header cells (item 8)
-# and setting an explicit 2.5pt size on the wide Table 34 grid (item 9);
-# see style_tables_docx.py docstring.
+# excising pandoc-leaked \cmidrule debris from table header cells (item 8),
+# setting an explicit 2.5pt size on the wide Table 34 grid (item 9), and
+# single-spacing the Notes paragraphs (item 6). Captions/table text single
+# spacing + zero paragraph spacing live in the template and are verified
+# (item 10); see style_tables_docx.py docstring.
 python3 style_tables_docx.py "$output_docx"
 
 printf 'Built %s\n' "$output_docx"

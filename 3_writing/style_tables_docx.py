@@ -29,9 +29,14 @@ pattern as ``5_notes/word_count_docx.py``):
   5. Caption glue: ``<w:keepNext/>`` on every ``TableCaption`` and
       ``ImageCaption`` paragraph -> a caption cannot orphan onto the previous
       page; it always stays with its table/figure below.
-  6. Notes paragraphs centered: any paragraph whose joined run text starts
-       with ``Notes:`` (the classification used by ``5_notes/word_count_docx.py``)
-       gets ``<w:jc w:val="center"/>`` unless it already has one.
+  6. Notes paragraphs centered AND single-spaced: any paragraph whose joined
+       run text starts with ``Notes:`` (the classification used by
+       ``5_notes/word_count_docx.py``) gets ``<w:jc w:val="center"/>`` and an
+       explicit ``<w:spacing w:line="240" w:lineRule="auto"/>`` (single)
+       unless it already has them. Notes use the ``BodyText`` style, which
+       shares ``Normal``'s double line spacing with the intentionally-double
+       main prose, so they must be fixed per-paragraph; captions/table text
+       get single spacing declaratively (see item 10).
   7. Booktabs borders on content tables (``tblCaption`` present; Harvard
        three-line style — horizontal rules only, no verticals, no lines
        between data rows): 1.5pt (``w:sz="12"`` eighth-point units) top and
@@ -59,11 +64,23 @@ pattern as ``5_notes/word_count_docx.py``):
         — the PDF sizes the same ``\input`` via ``\resizebox``. Captioned
         as ``TABLE34_CAPTION``; every other table keeps its inherited size.
 
+10. Single spacing policy (user request): table/figure captions and table
+        text and after-table/figure Notes are single line-spaced, and table
+        text has no space before/after each paragraph. Done declaratively in
+        ``custom_thesis_template.docx`` (which pandoc copies into the output
+        and this script verifies): ``Caption`` gains ``w:line="240"``
+        ``w:lineRule="auto"`` (covers ``TableCaption``/``ImageCaption`` via
+        inheritance), and ``Compact`` (every table-cell paragraph) becomes
+        ``w:before="0" w:after="0"``. Notes use the shared ``BodyText`` style
+        and are fixed per-paragraph in step 6 because ``BodyText`` must stay
+        double-spaced for the main prose.
+
 Bold headers, single cell line spacing and cell padding are NOT handled here:
 they live declaratively in ``custom_thesis_template.docx`` (``Table`` style
 ``firstRow`` rule + ``Compact`` style), which pandoc copies into the output.
-Caption/figure centering is likewise declarative (``TableCaption`` /
-``ImageCaption`` / ``CaptionedFigure`` styles). The script verifies that copy
+Caption/figure centering and single line spacing (item 10) are likewise
+declarative (``TableCaption``/``ImageCaption``/``CaptionedFigure`` +
+``Caption`` + ``Compact`` styles). The script verifies that copy
 and fails closed if the template lacks them.
 
 Run exactly once per fresh pandoc output (``build_word.sh`` does this);
@@ -293,13 +310,27 @@ def main() -> None:
     doc = blobs["word/document.xml"].decode("utf-8")
     styles = blobs["word/styles.xml"].decode("utf-8")
 
-    # Fail closed on template state: bold firstRow + single-spacing Compact.
+    # Fail closed on template state: bold firstRow, single-spacing + zero
+    # before/after on Compact (table text), single line on Caption (covers
+    # table/figure captions). Notes get single spacing per-paragraph in step
+    # 6, not here (BodyText is shared with the deliberately-double prose).
     # Pandoc re-serializes styles.xml (attribute order, "<w:b/>" -> "<w:b />"),
     # so these checks are normalization-tolerant.
     m = re.search(r'<w:style [^>]*w:styleId="Compact".*?</w:style>', styles, re.S)
+    if not (
+        m
+        and 'w:line="240"' in m.group(0)
+        and 'w:lineRule="auto"' in m.group(0)
+        and 'w:before="0"' in m.group(0)
+        and 'w:after="0"' in m.group(0)
+    ):
+        fail("styles.xml Compact style lacks single spacing (w:line=\"240\") "
+             "and/or zero before/after (w:before=\"0\" w:after=\"0\") - stale "
+             "custom_thesis_template.docx? Re-apply the template edits.")
+    m = re.search(r'<w:style [^>]*w:styleId="Caption".*?</w:style>', styles, re.S)
     if not (m and 'w:line="240"' in m.group(0) and 'w:lineRule="auto"' in m.group(0)):
-        fail("styles.xml Compact style lacks single spacing (w:line=\"240\") - "
-             "stale custom_thesis_template.docx? Re-apply the template edits.")
+        fail("styles.xml Caption style lacks single spacing (w:line=\"240\") "
+             "- stale custom_thesis_template.docx? Re-apply the template edits.")
     m = re.search(r'<w:tblStylePr w:type="firstRow">.*?</w:tblStylePr>', styles, re.S)
     if not (m and re.search(r"<w:rPr>\s*<w:b\s*/>", m.group(0))):
         fail("styles.xml Table style firstRow rule lacks <w:b/> - stale "
@@ -620,29 +651,46 @@ def main() -> None:
         flags=re.S,
     )
 
-    # 5. Notes paragraphs: center via the same joined-text prefix rule the
-    #    word counter uses ("Notes:"). Only the pPr shapes pandoc actually
-    #    emits are accepted (pStyle-only, or already centered); anything
-    #    else fails closed so a silent wrong ordering cannot slip in.
+    # 6. Notes paragraphs: center AND single-space via the same joined-text
+    #    prefix rule the word counter uses ("Notes:"). Notes use the shared
+    #    BodyText style (double-spaced for main prose), so the single line
+    #    spacing must be set per-paragraph. Only the pPr shapes pandoc
+    #    actually emits are accepted; anything else fails closed so a silent
+    #    wrong ordering cannot slip in.
     n_notes = 0
+    NOTE_SPACING = '<w:spacing w:line="240" w:lineRule="auto" />'
+    NOTE_JC = '<w:jc w:val="center" />'
 
     def center_note(p_match: "re.Match[str]") -> str:
         nonlocal n_notes
         p = p_match.group(0)
         text = "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", p))
-        if not text.startswith("Notes:") or "<w:jc " in p:
+        if not text.startswith("Notes:"):
             return p
         if "<w:pPr>" not in p:
             p = p.replace(
-                "<w:p>", '<w:p><w:pPr><w:jc w:val="center" /></w:pPr>', 1
+                "<w:p>", f"<w:p><w:pPr>{NOTE_SPACING}{NOTE_JC}</w:pPr>", 1
             )
         else:
             m = re.match(
-                r"<w:p><w:pPr>(<w:pStyle w:val=\"[^\"]+\" />)?</w:pPr>", p
+                r'<w:p><w:pPr>(<w:pStyle w:val="[^"]+" />)?(.*?)</w:pPr>',
+                p,
+                re.S,
             )
             if not m:
                 fail(f"unrecognized Notes paragraph pPr shape: {p[:120]!r}")
-            p = p[: m.end(1)] + '<w:jc w:val="center" />' + p[m.end(1) :]
+            # Rebuild pPr children as pStyle + spacing + jc (CT_PPr order);
+            # strip any pre-existing spacing/jc so a re-run cannot duplicate.
+            inner = m.group(2)
+            inner = re.sub(r"<w:spacing[^>]*/>", "", inner)
+            inner = re.sub(r"<w:jc[^>]*/>", "", inner)
+            p = (
+                p[: m.start(2)]
+                + NOTE_SPACING
+                + NOTE_JC
+                + inner
+                + p[m.end(2) :]
+            )
         n_notes += 1
         return p
 
