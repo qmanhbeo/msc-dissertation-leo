@@ -141,7 +141,7 @@
 \section{Introduction}
 \label{sec:intro}
 
-Research-policy alignment is often inferred from whether the two sides address the same topics \parencite{bornmann2016policy}, but shared coverage does not mean comparable framing. Research and policy rarely co-occur on a topic (only 1.2\% of 191,276 climate-change publications carry at least one policy mention \parencite{bornmann2016policy}), and shared terminology conceals differences in term salience and focal concerns \parencite{ToneyWails2024}. A paper and a policy document can both be labelled the same SDG while emphasising different problems, actors, and interventions. Legislative agendas, ESG disclosures, and funding decisions increasingly treat SDG tags as evidence of alignment \parencite{Heilinger2023, HerasSaizarbitoria2022} while this assumption is rarely tested directly.
+Research-policy alignment is often inferred from whether the two sides address the same topics \parencite{bornmann2016policy}, but shared coverage does not mean comparable framing. Research and policy rarely co-occur on a topic: Only 1.2\% of 191,276 climate-change publications carry at least one policy mention \parencite{bornmann2016policy}, and shared terminology conceals differences in term salience and focal concerns \parencite{ToneyWails2024}. A paper and a policy document can both be labelled the same SDG while emphasising different problems, actors, and interventions. Legislative agendas, ESG disclosures, and funding decisions increasingly treat SDG tags as evidence of alignment \parencite{Heilinger2023, HerasSaizarbitoria2022} while this assumption is rarely tested directly.
 
 Existing methods for mapping research to the Sustainable Development Goals (SDGs) operate mainly at the level of lexical or bibliometric correspondence: keyword dictionaries, Boolean queries, or citation and mention counts \parencite{Armitage2020, Kashnitsky2024}. Broader AI-SDG assessments compound this, resting on expert opinion or publication counts rather than on the texts themselves \parencite{Vinuesa2020}. They identify whether a text addresses an SDG and leave its framing unexamined.
 
@@ -250,11 +250,11 @@ Encoder choice is a primary robustness axis: gap rankings are re-computed under 
 \subsection{Policy Corpus}\label{sec:policy-corpus}
 
 The policy corpus contains text segments from three collections, representing distinct source documents (segment and document counts per collection in Table~\ref{tab:corpus-provenance}). It should be read as mixed international institutional SDG policy discourse rather than every AI-sustainability policy that exists:
-\begin{enumerate}
+\begin{itemize}
   \item \textbf{Curated AI and SDG policy documents}: UN, OECD, EU, UK, and AU AI governance frameworks, IPCC assessment reports, SDSN sustainable development reports, and national AI strategies.
   \item \textbf{SDGi Voluntary National Review and Voluntary Local Review corpus} \parencite{SDGi2024}: National and local self-assessments submitted to the UN High-Level Political Forum.
   \item \textbf{UN General Debate Corpus} \parencite{JankinEtAl2024}: SDG-relevant passages from General Debate speeches, sessions 70--80 (2015--2024). Paragraph-level keyword filtering precedes segmentation, so only SDG-relevant passages enter the pipeline and its segment count is accordingly far smaller than the full speech corpus.
-\end{enumerate}
+\end{itemize}
 The SDGi VNR/VLR collection is also one of the five supervised reference corpora (Section~\ref{sec:supervised-classifier}), so its policy segments carry gold SDG labels.
 An asymmetry follows: the research corpus is an intersection of AI and SDG content while the policy corpus is a broader union covering institutional SDG discourse and AI governance. The curated sub-corpus is the more relevant reference for AI-governance-specific interpretation. Appendix~\ref{app:policy-source-data} reports a source-family sensitivity check.
 
@@ -333,11 +333,9 @@ The per-document segment cap of $K = 50$ (seeded, reproducible) mitigates the in
 
 The semantic gap is not a clean measure of substantive disagreement. Research and policy texts differ in both topic (what they discuss) and register (how they are written -- audience, purpose, style). Embedding distance mixes the two. INLP \parencite{Ravfogel2020INLP} is used in this paper to split the gap into an adjusted semantic gap (topic) and a register component (See results in Section~\ref{sec:semantic-gap}).
 
-\paragraph{Objective.}
-INLP learns directions that, when subtracted from the embeddings, erase the research--policy difference. After $K$ iterations, held-out corpus-classification accuracy is at chance on the stratified training distribution. A residual corpus signal remains detectable out of sample (Appendix~\ref{app:register-validation}). Each iteration removes the direction carrying the most remaining corpus signal.
+\textbf{Objective:} INLP learns directions that, when subtracted from the embeddings, erase the research--policy difference. After $K$ iterations, held-out corpus-classification accuracy is at chance on the stratified training distribution. A residual corpus signal remains detectable out of sample (Appendix~\ref{app:register-validation}). Each iteration removes the direction carrying the most remaining corpus signal.
 
-\paragraph{SDG-stratified procedure.}
-Vanilla INLP removes a binary attribute (e.g.\ gender). The present adaptation must remove register, a corpus-level property confounded with SDG topic in the raw embeddings. The modification is SDG stratification: at each iteration, equal numbers of research and policy embeddings are drawn from each of the 17 SDGs, so the classifier cannot use topic as a stand-in for register. The procedure proceeds as follows at each iteration $k = 1,\ldots,K$:
+\textbf{SDG-stratified procedure:} Vanilla INLP removes a binary attribute (e.g.\ gender). The present adaptation must remove register, a corpus-level property confounded with SDG topic in the raw embeddings. The modification is SDG stratification: at each iteration, equal numbers of research and policy embeddings are drawn from each of the 17 SDGs, so the classifier cannot use topic as a stand-in for register. The procedure proceeds as follows at each iteration $k = 1,\ldots,K$:
 \begin{enumerate}
   \item \textbf{Stratified sample:} Independently redraw $n_{\text{target}}$ texts per SDG per corpus without replacement, under the global-minimum rule $n_{\text{target}} = \min_j \min(|X_j^{\text{res}}|, |X_j^{\text{pol}}|)$ ($n_{\text{target}} = \RegisterIterNPerSdg{}$ for MPNet on the frozen snapshot). Form the 34-class stratification key $z_{\text{strat}} = 2 \times \text{sdg\_labels} + y$, ensuring balanced corpus $\times$ topic combinations.
   \item \textbf{Project existing directions:} Subtract from each sample embedding the components along all previously learned directions: $\tilde{\mathbf{x}} = \mathbf{x} - \sum_{j<k} (\mathbf{g}_j \cdot \mathbf{x})\,\mathbf{g}_j$.

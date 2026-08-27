@@ -227,11 +227,11 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
                 if x.empty:
                     continue
                 x = float(x.iloc[0])
-                ax.scatter(x, raw_map.get(sdg, np.nan), s=38, facecolors="none",
+                ax.scatter(x, raw_map.get(sdg, np.nan), s=22, facecolors="none",
                            edgecolors="#888888", zorder=4, alpha=0.7)
-                ax.scatter(x, adj_map[sdg], s=48, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
+                ax.scatter(x, adj_map[sdg], s=28, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
                 dx, dy = offsets.get(sdg, (0.04, 0.003))
-                ax.annotate(f"SDG {sdg}", (x, adj_map[sdg]),
+                ax.annotate(f"{sdg}", (x, adj_map[sdg]),
                             xytext=(x + dx * xrng, adj_map[sdg] + dy),
                             fontsize=6.5, color="black")
         else:
@@ -239,9 +239,9 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
                 sdg = int(row["sdg"])
                 x = row[col]
                 y = row["semantic_gap"]
-                ax.scatter(x, y, s=48, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
+                ax.scatter(x, y, s=28, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
                 dx, dy = offsets.get(sdg, (0.04, 0.003))
-                ax.annotate(f"SDG {sdg}", (x, y), xytext=(x + dx * xrng, y + dy),
+                ax.annotate(f"{sdg}", (x, y), xytext=(x + dx * xrng, y + dy),
                             fontsize=6.5, color="black")
 
         ax.set_xlim(xmin, xmax)
@@ -255,8 +255,7 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
 
     # Shared y-label on the left column only; one shared legend above the grid.
     for ax in axes[:, 0]:
-        ax.set_ylabel("Within-SDG semantic gap\n(adjusted = after INLP register removal)",
-                      fontsize=8)
+        ax.set_ylabel("Within-SDG semantic gap", fontsize=8)
     if legend_handles is not None:
         fig.legend(handles=legend_handles, loc="upper center", ncol=2,
                    frameon=False, fontsize=8, columnspacing=1.6, handletextpad=0.4)
