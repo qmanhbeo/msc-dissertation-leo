@@ -28,6 +28,25 @@ p = pathlib.Path("dissertation.tex")
 s = p.read_text(encoding="utf-8")
 s = re.sub(r'\\InputIfFileExists\{([^}]*)\}\{\}\{\}', r'\\input{\1}', s)
 s = s.replace("\\documentclass", "\\providecommand{\\resizebox}[3]{#3}\n\\documentclass", 1)
+# pandoc flattens a figure float's trailing Notes paragraph into an extra cell
+# of its image layout grid; relocate figure Notes after \end{figure} in this
+# working copy only (the PDF keeps them glued inside the float, so they cannot
+# drift across page breaks). Table Notes are untouched: the tempered guard
+# blocks at \end{table}, so a table Notes block can never reach a \end{figure}.
+moves = 0
+def _relocate_fig_notes(m):
+    global moves
+    moves += 1
+    return "\\end{figure}\n" + m.group(1)
+s = re.sub(
+    r"(\\par\\smallskip\\footnotesize\\emph\{Notes:\}"
+    r"(?:(?!\\end\{(?:figure|table)\}|\\par(?![a-zA-Z])).)*?\\par)"
+    r"(\s*\\end\{figure\})",
+    _relocate_fig_notes,
+    s,
+    flags=re.S,
+)
+print(f"build_word: relocated {moves} figure-float Notes paragraph(s)")
 pathlib.Path("_build_word_tmp.tex").write_text(s, encoding="utf-8")
 PY
 

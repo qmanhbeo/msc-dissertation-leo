@@ -123,7 +123,7 @@ def main() -> None:
         """Insert <w:keepNext/> into one table-cell paragraph (CT_PPr order)."""
         nonlocal n_glue
         p = pm.group(0)
-        if p == "<w:p/>":
+        if p in ("<w:p/>", "<w:p />"):
             n_glue += 1
             return "<w:p><w:pPr><w:keepNext /></w:pPr></w:p>"
         if "<w:keepNext" in p:
@@ -141,12 +141,18 @@ def main() -> None:
         fail(f"unrecognized cell paragraph shape: {p[:100]!r}")
 
     def glue_row(row: str) -> str:
-        return re.sub(r"<w:p>.*?</w:p>|<w:p/>", glue_para, row, flags=re.S)
+        return re.sub(r"<w:p>.*?</w:p>|<w:p/>|<w:p />", glue_para, row, flags=re.S)
 
-    def style_table(table_match: "re.Match[str]") -> str:
+    def style_table(tbl: str) -> str:
         nonlocal n_promoted, n_centered, n_glued_tables, n_multirow_tables
-        tbl = table_match.group(0)
-        if "<w:tblHeader" not in tbl and "w:tblCaption" in tbl:
+        # Recurse into nested tables first, then style this table's own
+        # properties. pandoc wraps the Figure 6 image-grid table in a
+        # FigureTable layout table, so a region may contain another table;
+        # a flat <w:tr> regex would mis-span rows across the boundary.
+        body = tbl[len("<w:tbl>"):-len("</w:tbl>")]
+        nested = "<w:tbl>" in body
+        tbl = "<w:tbl>" + transform_tables(body) + "</w:tbl>"
+        if not nested and "<w:tblHeader" not in tbl and "w:tblCaption" in tbl:
             tbl = tbl.replace(
                 "<w:tr><w:trPr><w:cantSplit /></w:trPr>",
                 '<w:tr><w:trPr><w:cantSplit /><w:tblHeader w:val="true" /></w:trPr>',
@@ -169,22 +175,79 @@ def main() -> None:
         elif '<w:jc w:val="center" />' not in tblpr:
             fail("table tblPr lacks start/center jc - unexpected shape")
         tbl = tbl[: m.start()] + tblpr + tbl[m.end() :]
-        # Whole-table keep: glue every row except the last.
-        rows = re.findall(r"<w:tr>.*?</w:tr>", tbl, re.S)
-        if len(rows) > 1:
-            n_multirow_tables += 1
-            seen = {"i": 0}
-            n = len(rows)
+        # Whole-table keep: glue every row except the last. Non-nested regions
+        # only: their inner tables were glued by the recursion above, and a
+        # wrapper's single row is its own last row (the generic pass would
+        # skip it) - but a figure caption detaching from its grid is exactly
+        # what keep-with-next exists to prevent, so for a nested wrapper we
+        # glue the wrapper cell's OWN paragraphs (those outside the grid) to
+        # the caption paragraph that follows the table.
+        if nested:
+            inner_open = tbl.find("<w:tbl>", len("<w:tbl>"))
+            depth = 1
+            k = inner_open + len("<w:tbl>")
+            while depth:
+                nxt_open = tbl.find("<w:tbl>", k)
+                nxt_close = tbl.find("</w:tbl>", k)
+                if nxt_close == -1:
+                    fail("unbalanced nested <w:tbl> in figure wrapper")
+                if nxt_open != -1 and nxt_open < nxt_close:
+                    depth += 1
+                    k = nxt_open + len("<w:tbl>")
+                else:
+                    depth -= 1
+                    k = nxt_close + len("</w:tbl>")
+            head = tbl[len("<w:tbl>") : inner_open]
+            tail = tbl[k : -len("</w:tbl>")]
+            tbl = (
+                "<w:tbl>"
+                + glue_row(head)
+                + tbl[inner_open:k]
+                + glue_row(tail)
+                + "</w:tbl>"
+            )
+        else:
+            rows = re.findall(r"<w:tr>.*?</w:tr>", tbl, re.S)
+            if len(rows) > 1:
+                n_multirow_tables += 1
+                seen = {"i": 0}
+                n = len(rows)
 
-            def keep_row(rm: "re.Match[str]") -> str:
-                seen["i"] += 1
-                return glue_row(rm.group(0)) if seen["i"] < n else rm.group(0)
+                def keep_row(rm: "re.Match[str]") -> str:
+                    seen["i"] += 1
+                    return glue_row(rm.group(0)) if seen["i"] < n else rm.group(0)
 
-            tbl = re.sub(r"<w:tr>.*?</w:tr>", keep_row, tbl, flags=re.S)
-            n_glued_tables += 1
+                tbl = re.sub(r"<w:tr>.*?</w:tr>", keep_row, tbl, flags=re.S)
+                n_glued_tables += 1
         return tbl
 
-    doc = re.sub(r"<w:tbl>.*?</w:tbl>", style_table, doc, flags=re.S)
+    def transform_tables(doc: str) -> str:
+        """Style every complete <w:tbl> region, innermost tables first."""
+        out = []
+        i = 0
+        while True:
+            j = doc.find("<w:tbl>", i)
+            if j == -1:
+                out.append(doc[i:])
+                return "".join(out)
+            depth = 1
+            k = j + len("<w:tbl>")
+            while depth:
+                nxt_open = doc.find("<w:tbl>", k)
+                nxt_close = doc.find("</w:tbl>", k)
+                if nxt_close == -1:
+                    fail("unbalanced <w:tbl> regions in document.xml")
+                if nxt_open != -1 and nxt_open < nxt_close:
+                    depth += 1
+                    k = nxt_open + len("<w:tbl>")
+                else:
+                    depth -= 1
+                    k = nxt_close + len("</w:tbl>")
+            out.append(doc[i:j])
+            out.append(style_table(doc[j:k]))
+            i = k
+
+    doc = transform_tables(doc)
 
     # 6. Caption paragraphs: keepNext right after pStyle (CT_PPr order) on
     #    every TableCaption / ImageCaption paragraph, so a caption cannot

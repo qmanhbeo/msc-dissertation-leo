@@ -42,6 +42,17 @@ excluded as a table note instead of counted as prose):
     main-range total 9,266
     whole document 24,926
 
+Re-verified after the 2026-08-27 Figure 6 Word-grid fix (subfigures -> 2x2
+tabular; the figure Notes paragraph is relocated to the notes bucket by
+``build_word.sh``; literal ``(a)``-``(d)`` panel letters added inside the
+grid):
+
+    canon (declaration count) 8,234
+    main-range prose+headings (incl. citations) 8,234
+    main-range table cells 661; captions 143; table Notes 230
+    main-range total 9,268
+    whole document 24,930
+
 Layout notes affecting these numbers: since ``e63b860`` the Word build numbers
 captions ("Figure 1:"/"Table 1:", +2 words per caption vs the ``bf9317e``
 build), and since ``7bbefba`` the bibliography sits before the appendix with a
