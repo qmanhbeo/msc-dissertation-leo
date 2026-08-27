@@ -48,6 +48,7 @@ if str(ANALYSIS_DIR) not in sys.path:
 from model_utils import (
     model_results_dir_for_model, append_grid_log, N_SDG, RANDOM_SEED,
 )
+from shard_pipeline_utils import atomic_write_joblib
 
 log = logging.getLogger(__name__)
 
@@ -358,7 +359,6 @@ def run_lr_grid_search(X, y_int, Y, sd_train, cv, output_dir):
     best_params = best_entry["params"]
     best_score = best_entry["mean_f1"]
     best_std = best_entry["std_f1"]
-    import joblib
     if best_params["l1_ratio"] == 0.0:
         best_clf = LogisticRegression(
             C=best_params["C"], penalty="l2", class_weight=best_params["class_weight"],
@@ -373,7 +373,7 @@ def run_lr_grid_search(X, y_int, Y, sd_train, cv, output_dir):
         )
     best_clf.fit(X, y_int)
     model_path = output_dir / "lr_classifier.joblib"
-    joblib.dump(best_clf, model_path)
+    atomic_write_joblib(model_path, best_clf)
     log.info("  Saved best LR classifier (full-data fit) -> %s", model_path)
 
     results_data = {
@@ -540,13 +540,12 @@ def run_mlp_grid_search(X, Y, sd_train, cv, output_dir, device=None):
             optimizer.step()
     net.eval()
 
-    import joblib
     wrapper = _NetWrapper(net.cpu(), input_dim)
     model_path = output_dir / "mlp_classifier.joblib"
-    joblib.dump(wrapper, model_path)
+    atomic_write_joblib(model_path, wrapper)
 
     canonical_path = output_dir / "sdg_classifier.joblib"
-    joblib.dump(wrapper, canonical_path)
+    atomic_write_joblib(canonical_path, wrapper)
 
     results_data = {
         "model": "mlp",
