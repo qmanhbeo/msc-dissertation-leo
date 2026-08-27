@@ -874,8 +874,19 @@ def run(args: argparse.Namespace) -> None:
     root = Path(args.output_dir)
     model = args.embed_model
 
-    # Ensure adjusted ZS gaps exist for MiniLM/SciBERT
+    # Ensure adjusted ZS gaps exist for MiniLM/SciBERT. Spawn the producer
+    # stages ONLY when their outputs are absent (or --overwrite): previously
+    # these subprocesses ran unconditionally BEFORE any fingerprint check, so
+    # even a pure-skip invocation paid for two full corpus scoring passes.
+    # Their outputs feed both build_panel and this script's own fingerprint,
+    # so a genuinely missing file must still be materialised here.
     for zs_model in ("minilm", "scibert"):
+        zs_out = (output_dir_for_model(zs_model, root=root) / "data"
+                  / "adjusted" / "semantic_gap_distances_zeroshot.json")
+        if not args.overwrite and zs_out.exists():
+            log.info("ZS adjusted gaps present for %s — skipping producer spawn (%s)",
+                     zs_model, zs_out.name)
+            continue
         zs_cmd = [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
                   "--embed-model", zs_model, "--embeddings", "adjusted",
                   "--output-dir", str(root)]
