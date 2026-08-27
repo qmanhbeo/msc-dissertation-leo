@@ -58,13 +58,13 @@ PY
 # prefixes body captions "Figure N:" / "Table N:" like the PDF.
 pandoc _build_word_tmp.tex -o "$output_docx" \
   --citeproc \
-  --csl harvard-university-of-birmingham.csl \
+  --csl word-helper/harvard-university-of-birmingham.csl \
   --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet \
   --standalone \
-  --lua-filter=word_section_numbers.lua \
-  --lua-filter=move_bibliography.lua \
+  --lua-filter=word-helper/word_section_numbers.lua \
+  --lua-filter=word-helper/move_bibliography.lua \
   --lua-filter=lof_lot.lua \
-  --reference-doc=custom_thesis_template.docx
+  --reference-doc=word-helper/custom_thesis_template.docx
 
 # Table formatting that pandoc/the reference doc cannot express (row
 # keep-together via cantSplit, header rows glued to the body via keepNext).
@@ -76,6 +76,6 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
 # single-spacing the Notes paragraphs (item 6). Captions/table text single
 # spacing + zero paragraph spacing live in the template and are verified
 # (item 10); see style_tables_docx.py docstring.
-python3 style_tables_docx.py "$output_docx"
+python3 word-helper/style_tables_docx.py "$output_docx"
 
 printf 'Built %s\n' "$output_docx"
