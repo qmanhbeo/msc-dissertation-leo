@@ -131,3 +131,9 @@ reviews.md
 # === Local working docs (not part of the artifact) ===
 5_notes/dissertation-submission.docx
 5_notes/guide/
+
+# === Local-only workspace dirs: named explicitly (instead of being hidden by
+# content patterns like *.log / *.tar.zst) so git status stays honest ===
+/data_archive/
+/logs/
+/lib/
