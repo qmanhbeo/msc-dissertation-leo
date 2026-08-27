@@ -34,12 +34,16 @@ PY
 # word_section_numbers.lua owns heading numbering (levels 1-3 decimal, then
 # appendix letters A..J matching the PDF) and rewrites resolved \ref contents
 # from the same map, so headings and cross-refs stay mutually consistent.
+# lof_lot.lua injects ToC/LoF/LoT after the abstract (pandoc's own --toc
+# always lands at the very top of the docx and cannot be reordered) and
+# prefixes body captions "Figure N:" / "Table N:" like the PDF.
 pandoc _build_word_tmp.tex -o "$output_docx" \
   --citeproc \
   --csl harvard-university-of-birmingham.csl \
   --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet \
-  --standalone --toc \
+  --standalone \
   --lua-filter=word_section_numbers.lua \
+  --lua-filter=lof_lot.lua \
   --reference-doc=custom_thesis_template.docx
 
 printf 'Built %s\n' "$output_docx"
