@@ -1116,9 +1116,30 @@ def ensure_warm_replay_inputs(args: argparse.Namespace, *, model: str = DEFAULT_
 
 
 def ensure_cold_replay_inputs(args: argparse.Namespace) -> None:
-    if raw_dir().exists():
+    raw = raw_dir()
+    if raw.exists() and any(raw.iterdir()):
         return
-    print("[info] raw snapshot not found at 2_data/0_raw/ — fetching automatically")
+    if not raw.exists():
+        print("[info] raw snapshot not found at 2_data/0_raw/ — fetching automatically")
+        run_fetch_data_snapshot(args, profile_name="raw", overwrite_data=True)
+        return
+    # 0_raw exists but is EMPTY (e.g. left by a failed extraction): a usable
+    # raw snapshot always has content, so the pre-C7 existence-only check
+    # would let cold replay proceed and die later with confusing missing-file
+    # errors. Auto-refetch ONLY when 2_data/ holds nothing else (the fetcher's
+    # --overwrite rmtree's the WHOLE 2_data/ tree — safe when there is nothing
+    # to lose); otherwise fail closed with the manual recovery paths.
+    other = [p for p in raw.parent.iterdir() if p != raw]
+    if other:
+        raise RuntimeError(
+            "2_data/0_raw/ exists but is empty while 2_data/ also holds: "
+            + ", ".join(rel(p) for p in other[:5])
+            + ". The raw snapshot fetcher's --overwrite replaces the WHOLE 2_data/ "
+            "tree. If that other content is disposable, run "
+            "`python main.py --fetch-data-snapshot raw --overwrite`; otherwise "
+            "restore 2_data/0_raw manually (re-extract the raw snapshot)."
+        )
+    print("[info] 2_data/0_raw/ exists but is empty (failed extraction?) — refetching")
     run_fetch_data_snapshot(args, profile_name="raw", overwrite_data=True)
 
 

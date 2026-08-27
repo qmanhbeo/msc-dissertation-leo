@@ -15,7 +15,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.631905,
       "semantic_gap": 0.368095,
-      "research_cohesion": 0.224064,
+      "research_cohesion": 0.22635,
       "policy_cohesion": 0.474748,
       "unreliable": false,
       "unreliable_reason": null
@@ -30,7 +30,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.85431,
       "semantic_gap": 0.14569,
-      "research_cohesion": 0.361841,
+      "research_cohesion": 0.367202,
       "policy_cohesion": 0.553176,
       "unreliable": false,
       "unreliable_reason": null
@@ -45,7 +45,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.743435,
       "semantic_gap": 0.256565,
-      "research_cohesion": 0.252732,
+      "research_cohesion": 0.258896,
       "policy_cohesion": 0.50231,
       "unreliable": false,
       "unreliable_reason": null
@@ -60,7 +60,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.854187,
       "semantic_gap": 0.145813,
-      "research_cohesion": 0.418899,
+      "research_cohesion": 0.424413,
       "policy_cohesion": 0.563906,
       "unreliable": false,
       "unreliable_reason": null
@@ -75,7 +75,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.834894,
       "semantic_gap": 0.165106,
-      "research_cohesion": 0.303741,
+      "research_cohesion": 0.306502,
       "policy_cohesion": 0.559042,
       "unreliable": false,
       "unreliable_reason": null
@@ -90,7 +90,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.8262,
       "semantic_gap": 0.1738,
-      "research_cohesion": 0.349516,
+      "research_cohesion": 0.357073,
       "policy_cohesion": 0.566637,
       "unreliable": false,
       "unreliable_reason": null
@@ -105,7 +105,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.806851,
       "semantic_gap": 0.193149,
-      "research_cohesion": 0.355911,
+      "research_cohesion": 0.36009,
       "policy_cohesion": 0.586172,
       "unreliable": false,
       "unreliable_reason": null
@@ -120,7 +120,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.839247,
       "semantic_gap": 0.160753,
-      "research_cohesion": 0.300991,
+      "research_cohesion": 0.30447,
       "policy_cohesion": 0.46718,
       "unreliable": false,
       "unreliable_reason": null
@@ -135,7 +135,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.875341,
       "semantic_gap": 0.124659,
-      "research_cohesion": 0.308345,
+      "research_cohesion": 0.312339,
       "policy_cohesion": 0.505584,
       "unreliable": false,
       "unreliable_reason": null
@@ -150,7 +150,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.776363,
       "semantic_gap": 0.223637,
-      "research_cohesion": 0.252465,
+      "research_cohesion": 0.255382,
       "policy_cohesion": 0.446048,
       "unreliable": false,
       "unreliable_reason": null
@@ -165,7 +165,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.825124,
       "semantic_gap": 0.174876,
-      "research_cohesion": 0.331481,
+      "research_cohesion": 0.335415,
       "policy_cohesion": 0.469981,
       "unreliable": false,
       "unreliable_reason": null
@@ -180,7 +180,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.796642,
       "semantic_gap": 0.203358,
-      "research_cohesion": 0.302578,
+      "research_cohesion": 0.307097,
       "policy_cohesion": 0.537959,
       "unreliable": false,
       "unreliable_reason": null
@@ -195,7 +195,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.800086,
       "semantic_gap": 0.199914,
-      "research_cohesion": 0.324218,
+      "research_cohesion": 0.331546,
       "policy_cohesion": 0.562518,
       "unreliable": false,
       "unreliable_reason": null
@@ -210,7 +210,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.871621,
       "semantic_gap": 0.128379,
-      "research_cohesion": 0.335841,
+      "research_cohesion": 0.341939,
       "policy_cohesion": 0.605019,
       "unreliable": false,
       "unreliable_reason": null
@@ -225,7 +225,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.899233,
       "semantic_gap": 0.100767,
-      "research_cohesion": 0.393427,
+      "research_cohesion": 0.40305,
       "policy_cohesion": 0.583146,
       "unreliable": false,
       "unreliable_reason": null
@@ -240,7 +240,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.803945,
       "semantic_gap": 0.196055,
-      "research_cohesion": 0.327722,
+      "research_cohesion": 0.33204,
       "policy_cohesion": 0.497777,
       "unreliable": false,
       "unreliable_reason": null
@@ -255,7 +255,7 @@
       "segment_cap": 50,
       "semantic_similarity": 0.665402,
       "semantic_gap": 0.334598,
-      "research_cohesion": 0.197506,
+      "research_cohesion": 0.200495,
       "policy_cohesion": 0.484968,
       "unreliable": false,
       "unreliable_reason": null
