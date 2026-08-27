@@ -229,7 +229,8 @@ def run(args: argparse.Namespace) -> None:
 
     SCRIPT_VERSION = "3"
     PRIMARY = out_cov_gap
-    OUTPUTS = [out_cov_gap, out_cov_gap_raw, out_cov_gap_mlp, out_cov_gap_zs]
+    OUTPUTS = [out_cov_gap, out_cov_gap_raw, out_cov_gap_mlp, out_cov_gap_zs,
+               tables_dir / "num2_coverage_gap.tex", tables_dir / "tab2_coverage_gap.tex"]
     fp = fingerprint_of(PAPER_SCORES_MANIFEST, POLICY_SCORES, POLICY_IDS,
                         embed_dir_for_model(model) / "policy.npy",
                         scored_dir / "research_centroids.npy",

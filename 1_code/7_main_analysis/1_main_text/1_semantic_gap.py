@@ -213,7 +213,8 @@ def run(args: argparse.Namespace) -> None:
 
     SCRIPT_VERSION = "2"
     PRIMARY = out_sem_gap
-    OUTPUTS = [out_sem_gap, out_sem_sens]
+    OUTPUTS = [out_sem_gap, out_sem_sens,
+               tables_dir / "num3_semantic_gap.tex", tables_dir / "tab3_semantic_gap.tex"]
 
     # Fingerprint: include classifier-specific input files.
     if is_mlp:

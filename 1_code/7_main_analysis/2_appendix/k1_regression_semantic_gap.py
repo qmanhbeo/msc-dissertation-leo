@@ -954,7 +954,12 @@ def _run_spec_grid(root: Path, model: str, args: argparse.Namespace) -> None:
     out_grid = layout.data_dir / "spec_grid.json"
     out_boot = layout.data_dir / "bootstrap_grid.json"
     out_tex = layout.tables_dir / "tab_k1_specification_grid.tex"
-    outputs = [out_grid, out_tex]
+    # Pre-register bootstrap_grid.json in the gate list whenever any spec runs
+    # bootstrap: a deleted file would otherwise never regenerate because its
+    # inputs are covered by the same fingerprint. When no spec bootstraps the
+    # file is legitimately absent and must NOT force re-runs.
+    specs_with_boot = any(spec.get("bootstrap", 0) > 0 for spec in SPEC_GRID)
+    outputs = [out_grid, out_tex] + ([out_boot] if specs_with_boot else [])
 
     # Fingerprint
     fp_paths: list[Path] = []
@@ -1001,7 +1006,6 @@ def _run_spec_grid(root: Path, model: str, args: argparse.Namespace) -> None:
     if boot_results:
         atomic_write_json(out_boot, boot_results)
         log.info("Saved: %s", out_boot)
-        outputs.append(out_boot)
 
     write_spec_grid_tex(out_tex, all_results, boot_results)
     log.info("Saved: %s", out_tex)

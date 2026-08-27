@@ -441,7 +441,8 @@ def run(args: argparse.Namespace) -> None:
     # gaps instead of the concept-corpus gaps, so every committed tab4 is stale.
     SCRIPT_VERSION = "3"
     PRIMARY = out_corr
-    OUTPUTS = [out_corr, out_scatter, tables_dir / "tab4_interaction_h25.tex"]
+    OUTPUTS = [out_corr, out_scatter,
+               tables_dir / "tab4_interaction_h25.tex", tables_dir / "num4_interaction_h25.tex"]
     fp = fingerprint_of(
         coverage_gap_path, semantic_gap_path, adj_gap_path,
         *h1_grid_input_paths(Path(args.output_dir)),
