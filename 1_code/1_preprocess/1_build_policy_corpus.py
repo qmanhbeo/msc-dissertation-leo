@@ -97,6 +97,9 @@ def main() -> None:
     all_records: list[dict] = []
     source_stats: dict[str, int] = {}
 
+    # FAIL-OPEN: a missing source file shrinks the merged policy corpus and
+    # the stage still exits 0 — the warning is the only signal. Check
+    # per_source counts in the metadata before trusting policy.jsonl.
     for cfg in SOURCES:
         path = cfg["path"]()
         if not path.exists():

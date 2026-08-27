@@ -92,6 +92,11 @@ def segment_text(
 
     for i, sent in enumerate(sentences):
         ntoks = sentence_lengths[i]
+        # +2 reserves [CLS]/[SEP]; the running sum otherwise counts
+        # per-sentence tokens only (no separator tokens between joined
+        # sentences, no join-retokenization drift). `margin` absorbs that
+        # gap empirically — this is why CANONICAL_MAX_SEQ_LENGTH=384 yields
+        # the 374-token effective window cited in the dissertation.
         projected = current_tokens + ntoks + 2
 
         if current and projected > max_tokens:

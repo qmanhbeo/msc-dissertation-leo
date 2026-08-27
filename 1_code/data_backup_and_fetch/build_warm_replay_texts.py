@@ -249,6 +249,10 @@ def build_warm_replay_texts(
                 "model": model,
                 "gzip_level": gzip_level,
                 "gzip_header_mtime": GZIP_HEADER_MTIME,
+                # plan = N research shard entries + exactly ONE trailing
+                # policy.jsonl entry (see _plan_for_model), so -1 recovers the
+                # research shard count. If the plan ever appends another
+                # non-research corpus, this count silently goes wrong.
                 "shard_count": len(plan) - 1,
                 "updated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "files": files,

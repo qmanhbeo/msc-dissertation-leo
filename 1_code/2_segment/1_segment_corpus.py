@@ -101,6 +101,9 @@ def _segment_shard_worker(task):
     in_path = Path(in_path_str)
     out_path = Path(out_path_str)
 
+    # Cheap validity probe: only the FIRST line is parsed. Atomic tmp+replace
+    # publishes make torn tails unlikely, but a file truncated after line 1
+    # would still pass — do not treat this check as full integrity validation.
     if out_path.exists() and not overwrite:
         existing = sum(1 for line in open(out_path, encoding="utf-8") if line.strip())
         if existing > 0:
@@ -194,6 +197,11 @@ def segment_records(
 
         for si, sub_text in enumerate(sub_texts):
             seg = dict(rec)
+            # segment_id embeds the INPUT-RECORD index (dropped rows included —
+            # `continue` above keeps idx advancing), so ids are reproducible
+            # only while the preprocessed input is byte-stable: re-sharding,
+            # re-sorting, or one dropped/inserted record changes every id.
+            # segment_index instead counts kept segments per source_doc.
             seg["segment_id"] = f"{prefix}_{idx:07d}_{si}"
             seg["source_doc"] = source_doc
             seg["segment_index"] = doc_counts[source_doc]

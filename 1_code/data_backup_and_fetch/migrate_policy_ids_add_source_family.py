@@ -92,6 +92,10 @@ def main() -> None:
             continue
         doc = entry.get("source_doc")
         family = source_family.get(doc)
+        # FAIL-OPEN: entries whose source_doc maps to no segmented file get NO
+        # source_family and the run still exits 0 (unlike the fail-closed
+        # conflict check above). Check `missing` in the log before treating
+        # the migration as complete.
         if family is None:
             missing += 1
             continue

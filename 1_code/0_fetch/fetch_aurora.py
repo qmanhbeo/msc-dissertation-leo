@@ -222,6 +222,13 @@ def main():
                     title = data.get("title", "") or ""
                     abstract = reconstruct_abstract(data.get("abstract_inverted_index"))
                     has_abstract = abstract is not None
+                    # Benchmark-corpus convention, deliberately DIFFERENT from
+                    # the research corpus's f"{title}. {abstract}": text =
+                    # "title abstract" with no ". " separator. Do not "align"
+                    # this without re-embedding the benchmark corpus.
+                    # NB: abstract == "" (empty inverted index) counts as
+                    # has_abstract=True but yields title-only text; only None
+                    # means the paper truly has no abstract field.
                     combined_text = title
                     if abstract:
                         combined_text = title + " " + abstract
@@ -250,6 +257,10 @@ def main():
                     break
 
                 elif resp.status_code == 404:
+                    # Permanent tombstone: a 404 writes an empty record AND
+                    # marks the DOI fetched, so resume never retries it.
+                    # Recovering a transient 404 requires deleting the DOI
+                    # from aurora_fetched.log AND its record from the jsonl.
                     rec = {
                         "doi": doi,
                         "sdgs": sdgs,

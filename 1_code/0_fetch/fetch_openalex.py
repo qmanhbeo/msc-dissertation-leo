@@ -204,6 +204,10 @@ def extract_paper(paper: dict) -> dict:
         "cited_by_count": paper.get("cited_by_count", 0),
         "concepts": [
             {"id": c.get("id"), "display_name": c.get("display_name"), "score": c.get("score")}
+            # [:10] truncates in API order — ASSUMES OpenAlex returns concepts
+            # score-sorted. Preprocess re-sorts by score but only ever sees
+            # these 10, so a silently unsorted API response corrupts top-3
+            # selection with no error.
             for c in paper.get("concepts", [])[:10]
         ],
         "author_count": len(paper.get("authorships", [])),
@@ -338,6 +342,11 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
         results = data.get("results", [])
         raw_total += len(results)
 
+        # Dedupe is GLOBAL across all queries (seen_ids loaded once, line ~420):
+        # a paper matching multiple SDG/term queries is kept only in the
+        # FIRST-fetched query's file (SDG 1..17, then AI_TERMS order), so
+        # per-file counts do NOT sum to the unique total. The supervised LR
+        # assigns SDGs downstream; fetch order decides file membership only.
         for raw in results:
             record = extract_paper(raw)
             oid = record["openalex_id"]
@@ -355,7 +364,11 @@ def fetch_query(q: dict, seen_ids: set[str], progress: dict) -> dict:
             buffer = []
             save_seen_ids(seen_ids)
 
-        # Save progress after each page
+        # Save progress after each page. NOT transactional with the buffer:
+        # the cursor checkpoint advances every page while records flush only
+        # every SAVE_EVERY rows. A crash with a non-empty buffer permanently
+        # loses those rows (the saved cursor is already past them) — accepted
+        # to keep progress.json cheap; SAVE_EVERY bounds the loss.
         next_cursor = data.get("meta", {}).get("next_cursor")
         done = not next_cursor or not results
         progress[key] = {"page": page, "cursor": next_cursor or cursor, "done": done}

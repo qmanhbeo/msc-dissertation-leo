@@ -33,6 +33,10 @@ from shard_pipeline_utils import atomic_write_json, ensure_dir, read_json
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
+# ORDER MATTERS: exact-text duplicates keep the FIRST source's record AND its
+# labels (priority: osdg > benchmark > sdg_knowledge_hub > aurora > sdgi), so
+# reordering SOURCES silently changes reference-corpus label provenance.
+# (1_build_policy_corpus.py documents its analogous MERGED_ORDER rationale.)
 SOURCES = [
     {"name": "osdg", "path": lambda: individual_source_dir("osdg") / "osdg_clean.jsonl",
      "id_field": "text_id"},
@@ -91,6 +95,9 @@ def main() -> None:
     all_records: list[dict] = []
     source_stats: dict[str, dict] = {}
 
+    # FAIL-OPEN: a missing source file shrinks the merged corpus and the stage
+    # still exits 0 — the warning is the only signal. Check per-source counts
+    # in the metadata before trusting the merged corpus as complete.
     for cfg in SOURCES:
         path = cfg["path"]()
         if not path.exists():

@@ -50,6 +50,9 @@ HEADERS = {
 }
 
 # Merged registry from legacy policy fetchers.
+# NOTE: `confirmed` is provenance bookkeeping ONLY (banner/metadata counts);
+# it does NOT gate download order, retries, or skipping — every document is
+# fetched identically. No need to "verify" an entry before adding it.
 DOCUMENTS = [{'name': 'UN_SDG_Progress_Report_2023',
   'url': 'https://unstats.un.org/sdgs/report/2023/The-Sustainable-Development-Goals-Report-2023.pdf',
   'institution': 'UN Statistics Division',

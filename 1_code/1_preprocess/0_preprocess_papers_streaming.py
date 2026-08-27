@@ -39,6 +39,10 @@ from model_utils import raw_dir, preprocessed_dir
 log = logging.getLogger(__name__)
 STATUS_STAGE = "openalex_papers_to_clean_shards"
 
+# Boilerplate stripping applied BEFORE embedding; lossy by design:
+# `© YYYY` deletes the REST of the line (abstracts are single-line), and the
+# URL/email patterns overmatch legitimate tokens. Accepted to kill publisher
+# junk — check here first if abstracts appear truncated downstream.
 _BOILERPLATE = [
     re.compile(r"©\s*\d{4}.*", re.IGNORECASE),
     re.compile(r"all rights reserved\.?", re.IGNORECASE),
@@ -74,7 +78,13 @@ def cleaned_record(raw: dict[str, Any], min_abstract_chars: int) -> dict[str, An
     abstract = clean_text(raw.get("abstract", ""))
     if not abstract or len(abstract) < min_abstract_chars:
         return None
+    # CANONICAL embedding-text convention: "{title}. {abstract}" (title, period,
+    # space). Segmenting and every embedding key on this exact string shape —
+    # do not change the separator or the no-title fallback without re-embedding
+    # the full corpus (AGENTS.md canon).
     combined_text = f"{title}. {abstract}" if title else abstract
+    # top_concepts is provenance metadata only — no consumer anywhere in the
+    # active pipeline reads it; [:3] keeps the field stable, not any score.
     concepts_sorted = sorted(raw.get("concepts", []), key=lambda c: c.get("score", 0), reverse=True)
     top_concepts = [c["display_name"] for c in concepts_sorted[:3] if c.get("display_name")]
     return {
@@ -243,6 +253,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--db", default="")
     p.add_argument("--pending", default="")
     p.add_argument("--shard-size", type=int, default=100_000)
+    # 30 chars ≈ one short clause: drops page-number/boilerplate-only
+    # "abstracts" while keeping short-but-real ones. Result-affecting: shapes
+    # the canonical preprocessed-abstract count.
     p.add_argument("--min-abstract-chars", type=int, default=30)
     p.add_argument("--start-year", type=int, default=2018)
     p.add_argument("--end-year", type=int, default=2025)
@@ -320,6 +333,11 @@ def main() -> None:
 
     pending_rows_count = pending_count(pending_path)
     if pending_rows_count:
+        # Recovery trusts pending.jsonl UNCONDITIONALLY (no idempotency check):
+        # if the previous run died between write_shard and truncate_file below,
+        # these rows were already committed to a shard and are replayed here
+        # into the NEXT shard (duplicate rows, inflated manifest). The window
+        # is one statement wide; accepted for streaming simplicity.
         log.info("Recovery: found %d pending rows, committing to next shard first.", pending_rows_count)
         state = write_shard(out_dir, metadata_dir, manifest_path, state_path, state, read_pending(pending_path))
         truncate_file(pending_path)
@@ -334,6 +352,10 @@ def main() -> None:
     kept_limit = args.limit if args.limit > 0 else None
     since_last_commit = 0
 
+    # Resume by BYTE OFFSET: assumes papers.jsonl is byte-identical to the run
+    # that wrote state.json (no input fingerprint is recorded). If the raw
+    # fetch re-ran or the file changed, --reset the stage — a stale offset
+    # lands mid-line/mid-record and silently resumes from the wrong position.
     with input_path.open(encoding="utf-8") as f:
         f.seek(int(state["last_input_offset"]))
         while True:

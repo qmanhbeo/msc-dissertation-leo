@@ -140,6 +140,12 @@ def build_canonical_research_subset(overwrite: bool) -> Path:
     ):
         try:
             _meta = _json.loads(subset_manifest.read_text(encoding="utf-8"))
+            # Reuse is validated ONLY against the recorded manifest
+            # (self-consistency + file line count) — it does NOT re-check
+            # that the canonical segmented corpus still matches. After a
+            # re-segmentation, delete the subset dir or pass --overwrite.
+            # NB: the chained comparison means rows == n_segments AND
+            # n_segments != -1.
             if _meta.get("sample_method") == "uniform_paper_ordinals" and int(
                 _meta.get("totals", {}).get("rows", -1)
             ) == int(_meta.get("n_segments", -1)) != -1:
@@ -183,6 +189,10 @@ def build_canonical_research_subset(overwrite: bool) -> Path:
                         out.write(line_buf[k])
                         written += 1
             run_cursor += len(starts)
+    # Atomic publish deliberately precedes the invariant checks below: on a
+    # failed check the manifest is never written, so the reuse gate above
+    # (line count vs manifest n_segments) rejects the bad subset on the next
+    # run. Keep this order — the gate is the backstop.
     tmp_jsonl.replace(subset_jsonl)  # atomic publish
 
     if run_cursor != n_papers:

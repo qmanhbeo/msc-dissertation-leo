@@ -76,6 +76,11 @@ def snapshot_archive_prefix(profile_name: str) -> str:
 
 
 def should_exclude_data_path(rel_data_path: Path, profile: SnapshotProfile) -> bool:
+    # INCLUSION mode takes precedence: when included_data_paths is set (BOTH
+    # current profiles), anything NOT under those roots is excluded regardless
+    # of excluded_data_paths — so excluded_data_paths=() does NOT mean
+    # "exclude nothing". A new top-level 2_data/ subdir is silently omitted
+    # from snapshots unless added to the profile's included_data_paths.
     rel = Path(rel_data_path)
     if profile.included_data_paths:
         for included in profile.included_data_paths:

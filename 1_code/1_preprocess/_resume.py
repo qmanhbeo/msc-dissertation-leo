@@ -19,6 +19,11 @@ Design (correctness over micro-optimisation):
     records for the first ``rows_done`` input records. On resume we truncate
     any trailing junk and re-derive from ``rows_done`` => no duplicates, no
     loss, byte-identical to an uninterrupted run.
+  - The checkpoint is POSITIONAL: ``rows_done`` indexes the input by yield
+    order. If the input set/order changes between runs (a file added to a
+    glob, a CSV re-sorted, a raw re-fetch), every record after the change
+    maps onto the wrong checkpoint slot — delete the state file (or pass
+    --reset) whenever upstream inputs changed.
 
 Only 1_build_policy_corpus.py does NOT use this helper: it overwrites its own
 inputs in place and is implemented transactional-atomically instead.

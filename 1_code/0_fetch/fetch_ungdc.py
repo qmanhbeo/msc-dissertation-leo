@@ -133,6 +133,11 @@ def main() -> None:
             output_path = OUTPUT_DIR / file_info["label"]
             download_url = file_info["download_url"]
 
+            # Existence-skip WITHOUT validation (no checksum gate): a download
+            # killed mid-stream leaves a truncated file that is skipped forever,
+            # and a kill mid-extraction leaves a partial CORPUS_DIR that
+            # suppresses re-extraction. If a fetch died mid-stream, delete the
+            # file (and the extracted corpus dir) before re-running.
             if output_path.exists():
                 size_mb = output_path.stat().st_size / (1024 * 1024)
                 print(f"  {file_info['label']} already exists ({size_mb:.2f} MB)")
