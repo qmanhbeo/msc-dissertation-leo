@@ -712,36 +712,15 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     # Concept-retrieval robustness (MPNet only): score the concept-retrieved
     # research corpus with all three assignment methods (LR/MLP/ZS), feeding the
     # Retrieval column of the cross-sensitivity tables (stage 10).
-    # NOTE: the concept_* paths defined here are consumed by EVERY later
+    # NOTE: `cp` (concept paths) defined here is consumed by EVERY later
     # `if model == DEFAULT_EMBED_MODEL:` gate below — those guards also keep
-    # these names defined. Relaxing one gate in isolation is a NameError.
+    # `cp` defined. Relaxing one gate in isolation is a NameError.
+    # The three scoring commands come from _concept_track_steps, the SAME
+    # builder --stage infer uses, so the two entry points cannot drift.
     if model == DEFAULT_EMBED_MODEL:
-        concept_embed_dir = embed_dir_for_model(model) / "research_concept"
-        concept_scores_dir = scored_dir_for_model(model) / "paper_scores_shards_concept"
-        concept_data_dir = output_dir_for_model(model, root=output_dir) / "data" / "concept"
-        concept_centroids = scored_dir_for_model(model) / "research_concept_centroids.npy"
-        concept_centroids_meta = scored_dir_for_model(model) / "metadata" / "research_concept_centroid_meta.json"
-        run_step("score concept research corpus (LR)", [
-            sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-            "--embed-model", model, "--classifier", "lr", "--corpus", "research",
-            "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
-            "--out-dir", str(concept_scores_dir),
-            "--metadata-dir", str(concept_scores_dir / "metadata"),
-            "--research-centroids-out", str(concept_centroids),
-            "--research-meta-out", str(concept_centroids_meta),
-        ] + _overwrite_flag(overwrite), model=model)
-        run_step("score concept research corpus (MLP)", [
-            sys.executable, "1_code/5_supervised_model_infer/score_supervised.py",
-            "--embed-model", model, "--classifier", "mlp",
-            "--corpus", "research_concept",
-        ] + _overwrite_flag(overwrite), model=model)
-        run_step("zero-shot concept research corpus", [
-            sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
-            "--embed-model", model,
-            "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
-            "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
-            "--data-dir", str(concept_data_dir),
-        ] + _overwrite_flag(overwrite), model=model)
+        cp = _concept_retrieval_paths(model, output_dir)
+        for label, cmd in _concept_track_steps(model, output_dir, overwrite):
+            run_step(label, cmd, model=model)
 
     # ==== STAGE 7: COVERAGE GAP (raw) ========================================
     run_step("coverage gap (raw)", [
@@ -752,9 +731,9 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         run_step("coverage gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/0_coverage_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
-            "--paper-scores-manifest", str(concept_scores_dir / "metadata" / "manifest.json"),
-            "--out-data-dir", str(concept_data_dir),
-            "--out-tables-dir", str(concept_data_dir / "tables"),
+            "--paper-scores-manifest", str(cp["concept_scores_dir"] / "metadata" / "manifest.json"),
+            "--out-data-dir", str(cp["concept_data_dir"]),
+            "--out-tables-dir", str(cp["concept_data_dir"] / "tables"),
         ] + _overwrite_flag(overwrite), model=model)
 
     # ==== STAGE 8: REGISTER ADJUSTMENT (INLP -> G) ===========================
@@ -783,10 +762,10 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
         run_step("semantic gap (concept corpus)", [
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
-            "--research-centroids", str(concept_centroids),
-            "--research-centroid-meta", str(concept_centroids_meta),
-            "--out-data-dir", str(concept_data_dir),
-            "--out-tables-dir", str(concept_data_dir / "tables"),
+            "--research-centroids", str(cp["concept_centroids"]),
+            "--research-centroid-meta", str(cp["concept_centroids_meta"]),
+            "--out-data-dir", str(cp["concept_data_dir"]),
+            "--out-tables-dir", str(cp["concept_data_dir"] / "tables"),
         ] + _overwrite_flag(overwrite), model=model)
     # Adjusted semantic gap (LR + MLP) — needs G
     run_step("semantic gap (adjusted, LR)", [
@@ -804,10 +783,10 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             sys.executable, "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
             "--output-dir", str(output_dir), "--embed-model", model,
             "--embeddings", "adjusted",
-            "--research-centroids", str(concept_centroids),
-            "--research-centroid-meta", str(concept_centroids_meta),
-            "--out-data-dir", str(concept_data_dir),
-            "--out-tables-dir", str(concept_data_dir / "tables"),
+            "--research-centroids", str(cp["concept_centroids"]),
+            "--research-centroid-meta", str(cp["concept_centroids_meta"]),
+            "--out-data-dir", str(cp["concept_data_dir"]),
+            "--out-tables-dir", str(cp["concept_data_dir"] / "tables"),
         ] + _overwrite_flag(overwrite), model=model)
         mlp_concept_dir = scored_dir_for_model(model) / "mlp_scores_concept"
         run_step("semantic gap (concept corpus, MLP adjusted)", [
@@ -816,8 +795,8 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--classifier", "mlp", "--embeddings", "adjusted",
             "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
-            "--out-data-dir", str(concept_data_dir),
-            "--out-tables-dir", str(concept_data_dir / "tables"),
+            "--out-data-dir", str(cp["concept_data_dir"]),
+            "--out-tables-dir", str(cp["concept_data_dir"] / "tables"),
         ] + _overwrite_flag(overwrite), model=model)
         # Raw concept-MLP semantic gap (capped, single source of truth).
         run_step("semantic gap (concept corpus, MLP)", [
@@ -826,8 +805,8 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "--classifier", "mlp",
             "--mlp-centroids", str(mlp_concept_dir / "mlp_research_centroids.npy"),
             "--mlp-policy-scores", str(mlp_concept_dir / "mlp_policy_scores.npy"),
-            "--out-data-dir", str(concept_data_dir),
-            "--out-tables-dir", str(concept_data_dir / "tables"),
+            "--out-data-dir", str(cp["concept_data_dir"]),
+            "--out-tables-dir", str(cp["concept_data_dir"] / "tables"),
         ] + _overwrite_flag(overwrite), model=model)
         # Adjusted zeroshot (MPNet only)
         run_step(
@@ -845,9 +824,9 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
             "zero-shot concept research corpus (adjusted)",
             [sys.executable, "1_code/6_calculate_centroids/score_zeroshot.py",
              "--embed-model", model,
-             "--embedding-manifest", str(concept_embed_dir / "metadata" / "manifest.json"),
+             "--embedding-manifest", str(cp["concept_embed_dir"] / "metadata" / "manifest.json"),
              "--out-dir", str(scored_dir_for_model(model) / "zeroshot_concept"),
-             "--data-dir", str(concept_data_dir),
+             "--data-dir", str(cp["concept_data_dir"]),
              "--embeddings", "adjusted"] + _overwrite_flag(overwrite),
             model=model,
         )
