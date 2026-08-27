@@ -143,9 +143,9 @@ def main():
         # Extract
         extracted = extract_archive(temp_file, OUTPUT_DIR)
 
-        # Clean up temp file if it was a ZIP
-        if temp_file.exists() and temp_file.suffix == ".zip":
-            temp_file.unlink()
+        # Clean up the temp archive. The temp file is named "osdg_temp" (no
+        # suffix), so a suffix == ".zip" check never fires; delete unconditionally.
+        temp_file.unlink(missing_ok=True)
 
         # Count CSV files and estimate records
         csv_files = list(OUTPUT_DIR.glob("*.csv"))
