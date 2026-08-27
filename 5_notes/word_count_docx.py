@@ -21,18 +21,25 @@ joined with NO separator; ``<w:tab/>`` and ``<w:br/>`` become a space. Table
 cells are counted per cell-paragraph. ``str.split()`` (Unicode whitespace,
 non-breaking space included) is the tokenizer, matching the verified baselines.
 
-Verified baselines at HEAD ``bf9317e`` (2026-08-27); any rebuild shifts them,
-so re-run after every manuscript edit:
+Verified baselines at the trim commit following HEAD ``7bbefba`` (2026-08-27,
+post reference-list move and LoF/LoT build); any rebuild shifts them, so re-run
+after every manuscript edit:
 
-    canon (declaration count) 8,559
-    main-range prose+headings (incl. citations) 8,559
-    main-range table cells 679; captions 121; table Notes 154
-    main-range total 9,513
-    whole document 24,461
+    canon (declaration count) 8,289
+    main-range prose+headings (incl. citations) 8,289
+    main-range table cells 679; captions 143; table Notes 154
+    main-range total 9,265
+    whole document 24,927
 
-The 25,197 whole-document figure quoted in the 2026-08-27 handoff came from an
-uncommitted one-off script with different outside-main-range handling; it is
-not reproducible and does not affect the canon figure.
+Layout notes affecting these numbers: since ``e63b860`` the Word build numbers
+captions ("Figure 1:"/"Table 1:", +2 words per caption vs the ``bf9317e``
+build), and since ``7bbefba`` the bibliography sits before the appendix with a
+``Reference list`` Heading1, which this counter treats as the main-range end
+boundary. The pre-trim baselines at HEAD ``bf9317e`` were: canon 8,559;
+captions 121; main total 9,513; whole document 24,461. The 25,197
+whole-document figure quoted in the 2026-08-27 handoff came from an uncommitted
+one-off script with different outside-main-range handling; it is not
+reproducible and does not affect the canon figure.
 
 Usage:
     python 5_notes/word_count_docx.py [path/to/dissertation.docx]
