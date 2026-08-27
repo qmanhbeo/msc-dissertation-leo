@@ -190,12 +190,6 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
-    p.add_argument(
-        "--snapshot-profile",
-        choices=["raw", "embedded"],
-        default="embedded",
-        help=argparse.SUPPRESS,
-    )
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto", help="Device for embed_paper_shards.py in --cold-replay mode.")
     p.add_argument("--batch-size", type=int, default=None,
                    help="Batch size for ALL embedding stages (global fallback). Overridden per "
@@ -1085,34 +1079,6 @@ def run_backup_data_snapshot(*, profile_name: str) -> None:
     run_step(f"backup data snapshot ({profile_name})", cmd)
 
 
-def explicit_fetch_snapshot_profile(argv: list[str]) -> str | None:
-    tokens = argv[1:]
-    for index, token in enumerate(tokens):
-        if token.startswith("--fetch-data-snapshot="):
-            return token.split("=", 1)[1]
-        if token == "--fetch-data-snapshot":
-            if index + 1 < len(tokens) and not tokens[index + 1].startswith("-"):
-                return tokens[index + 1]
-            return None
-    return None
-
-
-def resolve_fetch_snapshot_profile(args: argparse.Namespace) -> str | None:
-    requested_profile = args.fetch_data_snapshot
-    legacy_profile = args.snapshot_profile
-    if requested_profile is None:
-        return None
-    explicit_profile = explicit_fetch_snapshot_profile(sys.argv)
-    if explicit_profile is None:
-        return legacy_profile
-    if explicit_profile != legacy_profile and legacy_profile != "embedded":
-        raise RuntimeError(
-            "Conflicting fetch snapshot profiles. Use either `--fetch-data-snapshot <profile>` "
-            "or the legacy `--snapshot-profile <profile>`, but not different values for both."
-        )
-    return explicit_profile
-
-
 def selected_backup_profiles(profile_name: str) -> list[str]:
     if profile_name == "both":
         return ["raw", "embedded"]
@@ -1256,7 +1222,9 @@ def main() -> None:
 
     embed_dir_for_model(args.embed_model)
 
-    fetch_profile = resolve_fetch_snapshot_profile(args)
+    # args.fetch_data_snapshot is None (flag absent), "embedded" (bare flag,
+    # via nargs="?" const) or an explicit "raw"/"embedded" value.
+    fetch_profile = args.fetch_data_snapshot
 
     if not action_requested(args):
         print_status(output_dir, model=args.embed_model)
