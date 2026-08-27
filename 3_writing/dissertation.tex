@@ -266,7 +266,7 @@ The canonical instrument is a supervised classifier trained on pooled single-lab
 
 \begin{table}[htbp]
   \centering
-  \caption{Corpus provenance: record counts at each pipeline stage (Raw, Prep, Seg, Lab; definitions below).}
+  \caption{Corpus provenance: record counts at each pipeline stage.}
   \label{tab:corpus-provenance}
   \input{../4_outputs/mpnet/tables/tab18_corpus_provenance.tex}
   \par\smallskip\footnotesize\noindent
@@ -415,7 +415,7 @@ Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverag
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{fig2_coverage_profiles.png}
-\caption{Coverage profiles by SDG. SDG~4 is flagged as artefact-affected due to ML-learning vocabulary overlap with education corpora (Appendix~\ref{app:sdg4-lexical-audit}).}
+  \caption{Coverage profiles by SDG; SDG~4 is flagged as artefact-affected (Appendix~\ref{app:sdg4-lexical-audit}).}
 \label{fig:coverage_profiles}
 \end{figure}
 
@@ -454,7 +454,7 @@ Table~\ref{tab:register-decomposition} consolidates the per-SDG inputs that the 
 \begin{table}[htbp]
 \centering
 \small
-\caption{Reference values for the semantic-gap and coverage-predictor families (per SDG). Semantic gaps from Figs~\ref{fig:semantic_gap} and~\ref{fig:typology_scatter}; coverage predictors from Fig.~\ref{fig:coverage_profiles}. Cov.\ = $|\text{research}-\text{policy}|$ (pp). Signed dom.\ = research share $-$ policy share (pp). Reg.\ Comp.\ = raw $-$ adjusted.}
+  \caption{Reference values for the semantic-gap and coverage-predictor families (per SDG).}
 \label{tab:register-decomposition}
 \input{../4_outputs/mpnet/tables/tab5_register_decomposition.tex}
 \par\smallskip\footnotesize\emph{Notes:} Raw gap is the reference semantic-gap estimate; Adj.\ gap is after INLP register removal (primary estimate; evaluated in Appendix~\ref{app:register-validation}); Reg.\ Comp.\ = raw $-$ adjusted. Coverage predictors are document-weighted research/policy shares; Signed dom.\ = research \% $-$ policy \% (pp). These are the per-SDG inputs to the Section~\ref{sec:interaction} tests.\par
@@ -508,8 +508,9 @@ Figure~\ref{fig:typology_scatter} shows the within-SDG semantic gap against each
 \includegraphics[width=\textwidth]{fig9_h1d_scatter.png}
 \caption{H1d: policy coverage (\%)}
 \end{subfigure}
-\caption{Coverage predictor vs within-SDG semantic gap, one point per SDG. Both the adjusted (canonical, after INLP register removal) and raw baseline gaps are plotted. (a) absolute coverage gap; (b) signed dominance; (c) research coverage; (d) policy coverage.}
-\label{fig:typology_scatter}
+  \caption{Coverage predictor vs within-SDG semantic gap, one point per SDG.}
+  \label{fig:typology_scatter}
+  \par\smallskip\footnotesize\emph{Notes:} Semantic gaps from Figs~\ref{fig:semantic_gap} and~\ref{fig:typology_scatter}; coverage predictors from Fig.~\ref{fig:coverage_profiles}. Cov.\ = $|\text{research}-\text{policy}|$ (pp). Signed dom.\ = research share $-$ policy share (pp). Reg.\ Comp.\ = raw $-$ adjusted.\par
 \end{figure}
 
 \subsection{Robustness of the Gap Rankings}\label{sec:robustness}
@@ -685,7 +686,7 @@ This subsection reports the pairwise cosine-similarity heatmap (Figure~\ref{fig:
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{fig8_centroid_similarity_heatmap.png}
-\caption{Pairwise cosine similarity between canonical SDG centroids (lower triangle). SDG 13 and SDG 17 sit close together (cosine 0.821), as do SDGs 1, 8, and 10.}
+  \caption{Pairwise cosine similarity between canonical SDG centroids (lower triangle).}
 \label{fig:centroid-similarity-matrix}
 \end{figure}
 
