@@ -286,6 +286,8 @@ def require_pdf_inputs(output_dir: Path, model: str | None = None) -> Path:
 
 def canonical_artifact_paths(output_dir: Path, model: str | None = None) -> list[Path]:
     root = Path(output_dir)
+    mpnet_tables = output_dir_for_model(model, root=root) / "tables"
+    adj_tables = output_dir_for_model(model, root=root) / "adjusted" / "tables"
     files = []
     for name in MANUSCRIPT_ROOT_FILES:
         if name == "dissertation.pdf":
@@ -295,7 +297,13 @@ def canonical_artifact_paths(output_dir: Path, model: str | None = None) -> list
     for name in MANUSCRIPT_EXTRA_FILES:
         files.append(root / _insert_model_in_rel(name, model))
     for name in MANUSCRIPT_TABLE_FILES:
-        files.append(output_dir_for_model(model, root=root) / "tables" / name)
+        path = mpnet_tables / name
+        # Distributional-gap tables are written by g_distributional_gap.py into
+        # adjusted/tables (the adjusted track); accept either location so
+        # status reporting matches require_pdf_inputs.
+        if name in DISTRIBUTIONAL_TABLES and adj_tables.joinpath(name).exists():
+            path = adj_tables / name
+        files.append(path)
     for name in MANUSCRIPT_FIGURE_FILES:
         files.append(output_dir_for_model(model, root=root) / "figures" / name)
     for name in MANUSCRIPT_APPENDIX_TABLE_FILES:

@@ -370,7 +370,7 @@ def canonical_exists(output_dir: Path) -> bool:
     return any(path.exists() for path in canonical_artifact_paths(output_dir))
 
 
-def print_status(output_dir: Path) -> None:
+def print_status(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
     print(f"Project root: {ROOT}")
     print(f"Manuscript output dir: {output_dir}")
 
@@ -381,11 +381,16 @@ def print_status(output_dir: Path) -> None:
         for path in warm_missing:
             print(f"  missing: {rel(ROOT / path)}")
 
-    status = canonical_artifact_status(output_dir)
+    # Model-scoped lookup so {model}/-relative artifact paths resolve; a
+    # model=None query would report nearly everything as "missing".
+    status = canonical_artifact_status(output_dir, model=model)
     print("")
     print("Manuscript output status:")
     print(f"  present: {len(status['present'])}")
     print(f"  missing: {len(status['missing'])}")
+    if status['missing']:
+        for path in status['missing']:
+            print(f"  missing: {path}")
 
 
 def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
@@ -960,8 +965,8 @@ def run_warm_replay(
         # non-canonical tracks run the CORE pipeline only (train -> classify ->
         # centroids -> register adjust -> coverage gap -> semantic gap ->
         # correlation); their G / coverage / semantic / correlation values are
-        # what MPNet's cross-sensitivity table reads. This mirrors cold replay
-        # (main.py:791), which also gates include_appendix to the canonical model.
+        # what MPNet's cross-sensitivity table reads. This mirrors cold replay,
+        # which also gates include_appendix to the canonical model.
         model_include_appendix = include_appendix and (model == DEFAULT_EMBED_MODEL)
         run_main_text(output_dir, args, model=model, include_appendix=model_include_appendix)
     # Regenerate the cross-encoder INLP convergence macros (cheap: reads the three
@@ -1227,7 +1232,7 @@ def main() -> None:
     fetch_profile = resolve_fetch_snapshot_profile(args)
 
     if not action_requested(args):
-        print_status(output_dir)
+        print_status(output_dir, model=args.embed_model)
         return
 
     warn_ambiguous_dispatch(args)
