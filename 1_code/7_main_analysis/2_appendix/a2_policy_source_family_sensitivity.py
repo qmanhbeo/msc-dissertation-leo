@@ -258,7 +258,7 @@ def _fisher_ci(r: float, n: int) -> tuple[float, float]:
 
 
 def _fmt2(v: float) -> str:
-    s = f"{abs(v):.2f}"
+    s = f"{abs(v):.3f}"
     return f"-{s}" if v < 0 else s
 
 
@@ -385,7 +385,7 @@ def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: l
             cr = cov_lookup.get((family, sdg))
             share = f"{float(cr['document_weighted_share']) * 100:.1f}" if cr is not None else "--"
             raw_n = f"{int(cr['document_count_assigned']):,}" if cr is not None else "--"
-            gap = f"{float(sr['semantic_gap']):.2f}" if sr is not None and sr["semantic_gap"] is not None else "--"
+            gap = f"{float(sr['semantic_gap']):.3f}" if sr is not None and sr["semantic_gap"] is not None else "--"
             capped_n = f"{int(sr['n_policy_segments_capped']):,}" if sr is not None else "--"
             cells.append(f"{share} ({raw_n})")
             cells.append(f"{gap} ({capped_n})")
@@ -398,12 +398,12 @@ def write_table_combined(path: Path, semantic_rows: list[dict], coverage_rows: l
     rho_cells = [r"$\rho$"]
     for fam in families_order:
         if fam == "full_policy_corpus":
-            rho_cells.extend(["1.00", "1.00"])
+            rho_cells.extend(["1.000", "1.000"])
         else:
             fv_share = [float(cov_lookup[(fam, s)]['document_weighted_share']) for s in range(1, N_SDG + 1)]
             fv_gap = [float(sem_lookup[(fam, s)]['semantic_gap']) for s in range(1, N_SDG + 1)]
-            rho_cells.append(f"{_spearman(full_share, fv_share):.2f}")
-            rho_cells.append(f"{_spearman(full_gap, fv_gap):.2f}")
+            rho_cells.append(f"{_spearman(full_share, fv_share):.3f}")
+            rho_cells.append(f"{_spearman(full_gap, fv_gap):.3f}")
 
     lines.append(r"\midrule")
     lines.append(" & ".join(rho_cells) + r" \\")

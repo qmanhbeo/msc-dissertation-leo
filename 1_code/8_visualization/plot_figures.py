@@ -111,7 +111,7 @@ def plot_centroid_similarity_heatmap(layout, model: str) -> None:
             if mask[i, j]:
                 continue
             v = M[i, j]
-            ax.text(j, i, f"{v:.2f}", ha="center", va="center",
+            ax.text(j, i, f"{v:.3f}", ha="center", va="center",
                     fontsize=6.5, color="white" if v > 0.72 else "black")
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Cosine similarity")

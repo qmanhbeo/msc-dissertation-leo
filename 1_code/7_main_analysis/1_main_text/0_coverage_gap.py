@@ -446,7 +446,7 @@ def run(args: argparse.Namespace) -> None:
         rf"\newcommand{{\NResearchSegments}}{{{latex_int(n_segments)}}}",
         rf"\newcommand{{\NResearchAbstracts}}{{{latex_int(n_abstracts)}}}",
         rf"\newcommand{{\NResearchSegPerAbstract}}{{{seg_per_abstract:.3f}}}",
-        rf"\newcommand{{\NResearchMultiSegPct}}{{{100.0 * n_multi / max(n_abstracts, 1):.2f}}}",
+        rf"\newcommand{{\NResearchMultiSegPct}}{{{100.0 * n_multi / max(n_abstracts, 1):.1f}}}",
         rf"\newcommand{{\NResearchPreprocessed}}{{{latex_int(n_abstracts)}}}",
         rf"\newcommand{{\ResearchPolicyUnitRatio}}{{{n_abstracts / max(len(doc_meta), 1):.0f}}}",
         rf"\newcommand{{\ResearchPolicySegmentRatio}}{{{n_segments / max(n_policy, 1):.1f}}}",

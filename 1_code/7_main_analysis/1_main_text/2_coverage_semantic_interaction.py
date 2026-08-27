@@ -712,7 +712,7 @@ def run(args: argparse.Namespace) -> None:
 
     def _fmt2(v):
         """Format float for LaTeX with 2 d.p."""
-        s = f"{abs(v):.2f}"
+        s = f"{abs(v):.3f}"
         return f"-{s}" if v < 0 else s
 
     # ---- 95% CIs (Fisher z) for all four primary predictors, plus minimal detectable effect ----
@@ -779,7 +779,7 @@ def run(args: argparse.Namespace) -> None:
     num_lines += _macro("HExclFourCovgapAdj", tests_excl4_adj, "covgap")
     num_lines += _macro("HExclFourDominanceAdj", tests_excl4_adj, "dominance")
     num_lines += [
-        rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.2f}}}",
+        rf"\newcommand{{\MedianResearchPct}}{{{median_res_pct:.1f}}}",
     ]
 
     # ---- H1 x config register-correlation grid (replaces the stale exclude-SDG rows) ----
