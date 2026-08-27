@@ -275,7 +275,7 @@ The canonical instrument is a supervised classifier trained on pooled single-lab
 
 OSDG alone contributes about 49\% of labelled texts and draws on UN-adjacent documents, so the reference data remain weighted toward policy vocabulary. OSDG and the Benchmark bypass segmentation due to having short texts; the Knowledge Hub, SDGi, and Aurora are segmented before pooling.
 
-The pooled reference data were split into training and held-out test sets by stratified document-grouped splitting (pool size and split are reported in Table~\ref{tab:corpus-provenance}), keeping all texts from the same source document in one fold to enforce strict separation between training and evaluation. The champion LR ($C = 3.0$, L2 penalty, \texttt{class\_weight=None}, solver \texttt{lbfgs}) was selected by 5-fold GroupKFold cross-validation \parencite{Hastie2009} on the training pool. The grid-search protocol, hyperparameter rationale, and the MLP robustness comparison are reported in Appendix~\ref{app:model-selection}.
+The pooled reference data were split into training and held-out test sets by stratified document-grouped splitting (pool size and split are reported in Table~\ref{tab:corpus-provenance}), keeping all texts from the same source document in one fold to enforce strict separation between training and evaluation. The champion LR ($C = 3.0$, L2 penalty, \texttt{class\_weight=None}, solver \texttt{lbfgs}) was selected by 5-fold GroupKFold cross-validation \parencite{Hastie2009} on the training pool; the grid-search protocol and hyperparameter rationale are given in Section~\ref{sec:supervised-classifier}, and the MLP robustness comparison in Appendix~\ref{app:model-selection}.
 
 The validation task does not evaluate a rejection option for non-SDG texts. This is acceptable because the research corpus is first restricted to an OpenAlex AI-and-SDG universe, so the classifier answers a relative question among the 17 SDGs. This restriction does not hold for the concept-retrieved robustness corpus (Section~\ref{sec:research-corpus}), which applies no SDG filter at retrieval; the classifier still forces an argmax assignment there despite the corpus not being pre-restricted to SDG-relevant text. Section~\ref{sec:limitations} discusses this limitation.
 
@@ -750,14 +750,29 @@ To test whether the headline findings depend heavily on research-corpus size, th
 \section{Model Selection: Grid Search Protocol and Rationale}
 \label{app:model-selection}
 
-Three model families were considered under 5-fold GroupKFold cross-validation (document-level grouping, not random splits) on the pooled training data (n=\NTrainPool{}); the held-out test set (n=\NTestPool{}) was never touched during any grid search. Logistic regression, which exposes interpretable per-dimension coefficients, and a multi-layer perceptron (MLP) were compared; random forests and gradient boosting were excluded because the embedding space is already a learned representation, so bagged trees add ensemble complexity without a mechanism for improvement or per-dimension interpretability.
+This appendix supplies the commentary on the MLP robustness and zero-shot
+nearest-centroid results reported without interpretation in
+Section~\ref{sec:robustness} (and the held-out test results of
+Section~\ref{sec:validation}), and reproduces the full 32-candidate ranking
+behind the champion selection.
 
-The LR grid searched C $\in \{0.1, 1, 2, 3, 5, 10, 30, 100\}$ with an L2 penalty and class\_weight $\in \{\text{None}, \text{balanced}\}$; the MLP grid swept n\_layers $\in \{2, 3, 4, 6\}$ $\times$ hidden\_size $\in \{256, 384\}$ $\times$ lr $\in \{3\mathrm{e}{-4}, 1\mathrm{e}{-3}\}$ with weight\_decay=0, dropout=0.3, AdamW, and early stopping. Grid search over architecture depth, hidden size, and learning rate showed negligible performance variance across the MLP configurations (CV macro-$F_1$ = \MlpCvRangeTwoLFourL{}), and LR is flat within $\sim$0.001 for C $\in \{1, 3, 5\}$, confirming that architecture is not a binding constraint (Table~\ref{tab:model-selection-ranking}).
+The MLP test macro-F1 (\MlpMacroFOne{}) is a single held-out evaluation of the
+champion MLP retrained on the full training pool (n=\NTrainPool{}), distinct
+from the 5-fold CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} in
+Section~\ref{sec:validation}.
 
-
-\noindent\textbf{Champion: LR (C=3.0, L2).} LR (C=3.0, L2, class\_weight=None) was chosen over the highest-scoring MLP despite a \LrMlpGap{} macro-$F_1$ gap: LR requires one free parameter (C) and no hidden layers, dropout, learning-rate tuning, or early stopping, and it provides 768 signed coefficients per SDG class, each directly attributable to a specific semantic dimension, whereas MLP's hidden layers diffuse this information across non-linear transformations. For this study's purpose  --  building an interpretable supervised reference to compare corpora, not a classifier built to label single documents  --  LR is chosen for transparency, not superior accuracy. The MLP test macro-$F_1$ (\MlpMacroFOne{}) cited in Section~\ref{sec:validation} is a single held-out evaluation of the champion MLP retrained on the full training pool (n=\NTrainPool{}), distinct from the CV mean of \MlpCvMacroFone{}~$\pm$~\MlpCvMacroFoneStd{} above. The full candidate ranking is reproduced in Table~\ref{tab:model-selection-appendix}.
-
-Held-out test performance (Table~\ref{tab:validation}) quantifies the cost of each simplification. The champion MLP reaches macro-F1 \MlpMacroFOne{} and micro-F1 \MlpMicroFOne{}, only ~1.0 and ~0.9 points above LR (0.816 / 0.831) with a near-identical per-SDG ordering (Spearman $\rho = 0.980$), so its extra capacity yields negligible accuracy and the interpretability-first choice of LR is justified. The zero-shot nearest-centroid baseline is weaker -- macro-F1 \ZsMacroFOne{} and micro-F1 \ZsMicroFOne{}, ~5.6 points below LR -- because it has no trained decision boundary, only the unweighted mean of reference embeddings, and the penalty is concentrated on the goals hardest to separate for all methods (SDG 10: 0.485 vs 0.610; SDG 17: 0.671). ZS still recovers the same broad ranking ($\rho = 0.930$ vs LR) and far exceeds the 1/17 random baseline, so it remains a usable unsupervised sanity check rather than a competitive classifier.
+Held-out test performance quantifies the cost of each simplification. The
+champion MLP reaches macro-F1 \MlpMacroFOne{} and micro-F1 \MlpMicroFOne{}, only
+~1.0 and ~0.9 points above LR (0.816 / 0.831) with a near-identical per-SDG
+ordering (Spearman $\rho = 0.980$), so its extra capacity yields negligible
+accuracy and the interpretability-first choice of LR is justified. The zero-shot
+nearest-centroid baseline is weaker -- macro-F1 \ZsMacroFOne{} and micro-F1
+\ZsMicroFOne{}, ~5.6 points below LR -- because it has no trained decision
+boundary, only the unweighted mean of reference embeddings, and the penalty is
+concentrated on the goals hardest to separate for all methods (SDG 10: 0.485 vs
+0.610; SDG 17: 0.671). ZS still recovers the same broad ranking ($\rho = 0.930$
+vs LR) and far exceeds the 1/17 random baseline, so it remains a usable
+unsupervised sanity check rather than a competitive classifier.
 
 \begin{table}[ht]
 \centering
