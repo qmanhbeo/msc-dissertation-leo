@@ -104,7 +104,9 @@ def main() -> None:
 
     if not emb_path.exists() or not ids_path.exists():
         log.error("Missing: %s or %s", emb_path, ids_path)
-        return
+        # Fail closed: a bare return would let main.py's run_step treat this
+        # stage as successful and proceed on stale downstream artifacts.
+        raise SystemExit(1)
 
     all_embs = np.load(emb_path).astype(np.float32)
     all_rows = load_ids(ids_path)
@@ -114,7 +116,9 @@ def main() -> None:
             "Mismatch: reference.npy (%d) vs reference_ids.json (%d)",
             len(all_embs), len(all_rows),
         )
-        return
+        # Fail closed: see note above — silent success would corrupt the
+        # supervised-data contract downstream.
+        raise SystemExit(1)
 
     # Group by source field
     source_to_indices: dict[str, list[int]] = defaultdict(list)
@@ -173,7 +177,9 @@ def main() -> None:
 
     if not embs_list:
         log.error("No corpora loaded — nothing to do.")
-        return
+        # Fail closed: see note above — silent success would corrupt the
+        # supervised-data contract downstream.
+        raise SystemExit(1)
 
     embeddings = np.vstack(embs_list)
     labels = np.vstack(labels_list)
