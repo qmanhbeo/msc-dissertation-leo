@@ -28,10 +28,12 @@ and retrain_full_data (both read prepare_data's output files).
 
 Orchestration — replays are compositions, not bespoke scripts:
 
-  Warm replay  : run_main_text  -> _run_main_analysis_steps(model)
-                                      + _run_analysis_poststeps(model)
+  Warm replay  : per-model run_main_text -> _run_main_analysis_steps(model);
+                 then ONCE after the encoder loop: f2 cross-config macros
+                 -> _run_analysis_poststeps (SAME tail order as cold replay)
   Cold replay  : pre_steps (preprocess+segment via builders)
                   -> per-model _embed_model_steps + _run_main_analysis_steps
+                  -> f2 cross-config macros
                   -> _run_analysis_poststeps once (after the encoder loop)
   --stage      : preprocess/segment/embed/train/infer/centroids/register_adjust
                  delegate to the same shared builders; `--stage analysis`
@@ -664,7 +666,7 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
           + appendix analyses (if include_appendix)
           NOTE: cross-sensitivity table + figures are NOT produced here; they
           are emitted exactly once by _run_analysis_poststeps, which every
-          consumer calls after this function.
+          replay/stage entry point calls after this function.
 
     Three method axes—LR (PRIMARY), MLP (sensitivity), zeroshot (sensitivity)—
     each produce their own research/policy centroids in separate namespaces.
@@ -863,8 +865,10 @@ def _run_main_analysis_steps(output_dir: Path, model: str, overwrite: bool = Fal
     run_post_adjusted(model, output_dir, overwrite=overwrite)
     # NOTE: cross-sensitivity table + figures are NOT produced here. They are
     # emitted exactly once by _run_analysis_poststeps (gated to the default
-    # model), which every consumer of this function calls afterwards. Producing
-    # them here too would double-run them (the original bug).
+    # model), which every replay/stage entry point calls after this function
+    # (directly in --stage analysis / cold replay; via run_warm_replay's tail
+    # in warm replay). Producing them here too would double-run them (the
+    # original bug).
 
 
 def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = False) -> None:
@@ -941,12 +945,20 @@ def run_main_text(
     model: str = DEFAULT_EMBED_MODEL,
     include_appendix: bool = False,
 ) -> None:
+    """Per-encoder replay steps: input guard + the linear analysis pipeline.
+
+    The replay TAIL (f2 cross-config macros, then _run_analysis_poststeps =
+    cross-sensitivity table + figures) is deliberately NOT part of this
+    function: both need ALL encoder tracks complete, so the caller
+    (run_warm_replay) runs them once after the encoder loop — the same shape
+    as run_cold_replay. Calling poststeps here for the LAST (MPNet) track
+    would also run them BEFORE f2, the order asymmetry this split removed.
+    """
     missing = missing_warm_replay_requirements(model=model)
     if missing:
         missing_str = ", ".join(rel(ROOT / p) for p in missing)
         raise RuntimeError(f"Main text replay is not ready. Missing required inputs: {missing_str}")
     _run_main_analysis_steps(output_dir, model, overwrite=args.overwrite, include_appendix=include_appendix)
-    _run_analysis_poststeps(output_dir, model, overwrite=args.overwrite)
 
 
 def run_warm_replay(
@@ -957,9 +969,10 @@ def run_warm_replay(
 ) -> None:
     # Regenerate ALL three encoder tracks (MPNet + MiniLM + SciBERT) in ONE run.
     # Process the non-canonical encoders first and the canonical (MPNet) LAST, so
-    # its poststep cross-sensitivity / encoder-sensitivity tables are assembled
-    # from the freshly regenerated MiniLM and SciBERT coverage / semantic /
-    # correlation values (the adjusted columns depend on each model's own G).
+    # the poststep cross-sensitivity / encoder-sensitivity tables (run once after
+    # the loop) are assembled from the freshly regenerated MiniLM and SciBERT
+    # coverage / semantic / correlation values (the adjusted columns depend on
+    # each model's own G).
     # --embed-model is intentionally ignored here (as in --cold-replay): warm
     # replay always rebuilds every track.
     # NOTE: the encoder models are assumed already warmed into the HF cache via
@@ -991,6 +1004,13 @@ def run_warm_replay(
          "--output-dir", str(output_dir), "--embed-model", DEFAULT_EMBED_MODEL] + _overwrite_flag(args.overwrite),
         model=DEFAULT_EMBED_MODEL,
     )
+    # Cross-sensitivity table + figures (MPNet-only, needs all 3 encoders' data),
+    # produced ONCE after f2 — the SAME tail order as run_cold_replay
+    # (analysis loop -> f2 -> poststeps). Warm replay previously ran poststeps
+    # inside run_main_text BEFORE f2; both orders are artifact-equivalent (f2
+    # reads only register checkpoints; num12b has no analysis-script consumers),
+    # but one shared shape avoids the unwarranted asymmetry.
+    _run_analysis_poststeps(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
     scope_txt = (
         "Main text + appendix outputs rebuilt"
         if include_appendix
