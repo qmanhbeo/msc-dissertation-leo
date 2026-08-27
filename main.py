@@ -65,7 +65,11 @@ if str(CODE_ROOT) not in sys.path:
 ANALYSIS_DIR = CODE_ROOT / "7_main_analysis" / "0_shared"
 if str(ANALYSIS_DIR) not in sys.path:
     sys.path.insert(0, str(ANALYSIS_DIR))
+FINAL_OUTPUTS_DIR = CODE_ROOT / "9_final_outputs"
+if str(FINAL_OUTPUTS_DIR) not in sys.path:
+    sys.path.insert(0, str(FINAL_OUTPUTS_DIR))
 
+from collect_final_outputs import collect_final_outputs
 from shared_utils import (
     canonical_artifact_paths,
     canonical_artifact_status,
@@ -171,6 +175,15 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--build-pdf", action="store_true", help="Build dissertation.pdf from existing manuscript outputs (requires bash — WSL/Linux only).")
     p.add_argument("--build-word", action="store_true", help="Build dissertation.docx (Word) from existing manuscript outputs via pandoc (requires pandoc + 3_writing/custom_thesis_template.docx reference-doc).")
+    p.add_argument(
+        "--get-outputs-final",
+        action="store_true",
+        help=(
+            "Bundle manuscript tables (one TableX.xlsx each) and figures (FigX.png/.pdf) "
+            "into 4_outputs/final/ for human-facing inspection. MPNet track, manuscript-printed "
+            "tables + figures only. Pure read-derived; never overwrites canonical artifacts."
+        ),
+    )
     p.add_argument("--overwrite", action="store_true", help="Required before replacing existing manuscript outputs.")
     p.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Manuscript output directory. Default: 4_outputs/")
     p.add_argument(
@@ -239,6 +252,7 @@ def action_requested(args: argparse.Namespace) -> bool:
             args.fetch_encoder_models,
             args.build_pdf,
             args.build_word,
+            args.get_outputs_final,
         ]
         + [getattr(args, spec["flag"].replace("-", "_")) for spec in APPENDIX_SPECS]
     )
@@ -1186,6 +1200,8 @@ def main() -> None:
         build_pdf(output_dir, model=args.embed_model)
     elif args.build_word:
         build_word(output_dir, model=args.embed_model)
+    elif args.get_outputs_final:
+        collect_final_outputs(output_dir, model=args.embed_model)
 
 
 if __name__ == "__main__":
