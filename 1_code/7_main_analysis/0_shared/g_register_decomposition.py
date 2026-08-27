@@ -322,16 +322,19 @@ def _generate_iterative_diagnostic(
     out_tex = tables_dir / "tab12_register_check.tex"
     out_num = tables_dir / "num12_register_check.tex"
 
+    g_dir = register_dir(model)
+    fp = fingerprint_of(g_dir / "G.npy", g_dir / "checkpoint.json") + "iter_v2"
+    # Gate BEFORE _compute_iterative_rows: the fingerprint depends only on
+    # G.npy/checkpoint.json, so unchanged inputs must not pay for per-iteration
+    # gap recomputation over the full policy cloud.
+    if should_skip([out_tex, out_num], fp, overwrite, out_tex):
+        log.info("Skipping iterative diagnostic — inputs unchanged")
+        return
+
     try:
         iteration_results, summary, G_full, raw_data = _compute_iterative_rows(model)
     except (FileNotFoundError, RuntimeError, ValueError) as e:
         log.warning("Register adjust outputs unavailable for %s — skipping iterative diagnostic: %s", model, e)
-        return
-
-    g_dir = register_dir(model)
-    fp = fingerprint_of(g_dir / "G.npy", g_dir / "checkpoint.json") + "iter_v2"
-    if should_skip([out_tex], fp, overwrite, out_tex):
-        log.info("Skipping iterative diagnostic — inputs unchanged")
         return
 
     policy_emb, policy_assignments, policy_ids, research_centroids, research_cohesions = raw_data
