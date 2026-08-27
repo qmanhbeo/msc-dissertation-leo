@@ -70,7 +70,9 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
 # keep-together via cantSplit, header rows glued to the body via keepNext).
 # Bold headers, single cell line spacing and cell padding live declaratively
 # in custom_thesis_template.docx styles; the script verifies those survived
-# the pandoc copy and fails closed otherwise. Text content is untouched.
+# the pandoc copy and fails closed otherwise. The only text change is
+# excising pandoc-leaked \cmidrule debris from table header cells (see
+# style_tables_docx.py docstring item 8).
 python3 style_tables_docx.py "$output_docx"
 
 printf 'Built %s\n' "$output_docx"

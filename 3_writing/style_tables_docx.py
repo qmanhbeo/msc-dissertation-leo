@@ -44,6 +44,14 @@ pattern as ``5_notes/word_count_docx.py``):
        LAST stack row — the template's ``firstRow`` rule alone would draw it
        under the group row of 2/3-tier headers). Layout tables (pandoc's
        subfigure grids, no ``tblCaption``) are untouched.
+   8. Cmidrule-debris excision: pandoc 3.1.3 cannot parse booktabs
+        ``\cmidrule`` — it leaks the rule arguments as literal text into the
+        leading cell of the next flattened header-stack row ("3-5 (lr)6-9",
+        bare "2-8"), fusing them with any real header text there
+        ("...8-10 It."). After stack-row classification, pure debris cells
+        are blanked and fused cells keep only the real remainder
+        ("It."/"SDG", matching the PDF render). Census: ``EXPECTED_JUNK_CELLS``
+        cells across ``EXPECTED_JUNK_TABLES`` tables.
 
 Bold headers, single cell line spacing and cell padding are NOT handled here:
 they live declaratively in ``custom_thesis_template.docx`` (``Table`` style
@@ -54,7 +62,9 @@ and fails closed if the template lacks them.
 
 Run exactly once per fresh pandoc output (``build_word.sh`` does this);
 re-running on an already-processed docx fails closed rather than double-
-applying. Does not touch any text content, so the word count is unaffected.
+applying. The only text-content change is the excision of pandoc-leaked
+``\cmidrule`` debris from header cells (item 8 below); the declaration
+(canon) word count is unaffected because table cells are excluded from it.
 
 Usage:
     python3 style_tables_docx.py path/to/dissertation.docx
@@ -81,6 +91,27 @@ LABEL_CELL_MAX = 24
 # joined row text of data rows can fuse adjacent values ("4.1" + "-4.1" ->
 # "4.1-4.1") and would false-positive.
 JUNK_CELL_RE = re.compile(r"\d+-\d+(?: \(lr\))?")
+
+# pandoc 3.1.3's LaTeX reader cannot parse booktabs \cmidrule: it leaks the
+# rule arguments as literal text runs into the leading cell of the next
+# flattened header-stack row ("3-5 (lr)6-9" from \cmidrule(lr){3-5}
+# \cmidrule(lr){6-9}; bare "2-8" from a lone \cmidrule(lr){2-8}), fusing the
+# debris with any real header text in that cell ("...8-10 It." = Table 15's
+# iteration label, "...7-9 SDG" = Table 30's first-column label; both
+# verified against the tex sources and the PDF render). Excision runs AFTER
+# stack-row classification above (which keys on JUNK_CELL_RE) and BEFORE
+# bordering, restricted to rows 0..stack_end so data rows are never touched.
+# Pure debris is blanked; fused cells keep only the real remainder, matching
+# the PDF. Fail-closed census of the 2026-08-27 build: 20 debris cells across
+# 17 content tables (18 pure + 2 fused).
+EXPECTED_JUNK_CELLS = 20
+EXPECTED_JUNK_TABLES = 17
+JUNK_FULL_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s*$")
+JUNK_PREFIX_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s+(\S.*)$")
+# A fused remainder must be a short digit-free header label ("It.", "SDG");
+# anything longer or digit-bearing is not safely excisable — fail closed
+# rather than guess. Same 24-char rationale as LABEL_CELL_MAX above.
+REMAINDER_MAX_CHARS = 24
 
 # Fail-closed census of the 2026-08-27 build (35 content tables). Any
 # manuscript table change that alters the header structure must update these:
@@ -116,6 +147,78 @@ CELL_BOTTOM_XML = (
 def fail(msg: str) -> "NoReturn":  # type: ignore[valid-type]
     print(f"ERROR: {msg}", file=sys.stderr)
     sys.exit(1)
+
+
+def excise_junk_cell(tc: str) -> "tuple[str, bool]":
+    """Excise pandoc-leaked ``\\cmidrule`` debris from one table cell.
+
+    Returns ``(cell_xml, changed)``. Pure debris (``JUNK_FULL_RE``) -> empty
+    paragraph; fused debris (``JUNK_PREFIX_RE``) -> single run holding the
+    real remainder. ``tcPr`` and the paragraph ``pPr`` are preserved.
+    """
+    joined = "".join(re.findall(r"<[wm]:t[^>]*>([^<]*)</[wm]:t>", tc))
+    remainder = ""
+    if JUNK_FULL_RE.match(joined):
+        pass
+    else:
+        m = JUNK_PREFIX_RE.match(joined)
+        if not m:
+            return tc, False
+        remainder = m.group(1)
+        if (
+            len(remainder) > REMAINDER_MAX_CHARS
+            or any(ch.isdigit() for ch in remainder)
+            or any(ch in remainder for ch in "<>&")
+        ):
+            fail(
+                "fused cmidrule debris remainder not safely excisable: "
+                f"{joined[:80]!r}"
+            )
+    m_cell = re.match(
+        r"(<w:tc>(?:<w:tcPr\s*/>|<w:tcPr>.*?</w:tcPr>))"
+        r"(<w:p>(?:<w:pPr>.*?</w:pPr>)?(?:<w:r>.*</w:r>)+</w:p>|<w:p/>|<w:p />)"
+        r"(</w:tc>)$",
+        tc,
+        re.S,
+    )
+    if not m_cell:
+        fail(f"unexpected cmidrule-debris cell shape: {tc[:120]!r}")
+    head, para, tail = m_cell.groups()
+    if para in ("<w:p/>", "<w:p />"):
+        fail(f"cmidrule-debris cell already has an empty paragraph: {tc[:80]!r}")
+    mp = re.match(
+        r"<w:p>(<w:pPr>.*?</w:pPr>)?(?:<w:r>.*</w:r>)+</w:p>$", para, re.S
+    )
+    if not mp:
+        fail(f"unexpected cmidrule-debris paragraph shape: {para[:120]!r}")
+    ppr = mp.group(1) or ""
+    if remainder:
+        new_para = (
+            f'<w:p>{ppr}<w:r>'
+            f'<w:t xml:space="preserve">{remainder}</w:t></w:r></w:p>'
+        )
+    else:
+        new_para = f"<w:p>{ppr}</w:p>"
+    return head + new_para + tail, True
+
+
+def excise_junk_row(row: str) -> "tuple[str, int]":
+    """Excise debris from every qualifying cell of one ``<w:tr>`` region.
+
+    Returns ``(row_xml, n_cells_changed)``. Non-debris cells pass through
+    untouched (``excise_junk_cell`` only rewrites matching cells).
+    """
+    n = 0
+
+    def _cell(m: "re.Match[str]") -> str:
+        nonlocal n
+        new, changed = excise_junk_cell(m.group(0))
+        if changed:
+            n += 1
+        return new
+
+    out = re.sub(r"<w:tc>.*?(?=<w:tc>|</w:tr>)", _cell, row, flags=re.S)
+    return out, n
 
 
 def main() -> None:
@@ -188,6 +291,8 @@ def main() -> None:
     n_border_rows = 0      # rows given a 1pt bottom separator (stack + mid)
     n_border_cells = 0     # individual cells bordered
     n_label_rows = 0       # stack rows classified via the markerless-label rule
+    n_junk_cells = 0       # pandoc-leaked \cmidrule debris cells excised
+    n_junk_tables = 0      # content tables that had debris cells excised
 
     def row_cell_texts(row: str) -> "list[str]":
         return [
@@ -251,6 +356,7 @@ def main() -> None:
     def style_table(tbl: str) -> str:
         nonlocal n_promoted, n_centered, n_glued_tables, n_multirow_tables
         nonlocal n_bordered_tables, n_border_rows, n_label_rows
+        nonlocal n_junk_cells, n_junk_tables
         # Recurse into nested tables first, then style this table's own
         # properties. pandoc wraps the Figure 6 image-grid table in a
         # FigureTable layout table, so a region may contain another table;
@@ -311,6 +417,17 @@ def main() -> None:
                     n_label_rows += 1
                 else:
                     break
+            # Step 7 preamble: excise pandoc-leaked \cmidrule debris from the
+            # header-stack rows (0..stack_end). Runs AFTER classification so
+            # the JUNK_CELL_RE stack detection above still sees the debris it
+            # keys on, and BEFORE bordering (which only touches tcPr).
+            n_junk_in_table = 0
+            for i in range(stack_end + 1):
+                b_rows[i], n_excised = excise_junk_row(b_rows[i])
+                n_junk_in_table += n_excised
+            if n_junk_in_table:
+                n_junk_cells += n_junk_in_table
+                n_junk_tables += 1
             border_idx = set(range(stack_end + 1))
             border_idx.update(
                 i
@@ -323,7 +440,9 @@ def main() -> None:
             def border_mapper(rm: "re.Match[str]") -> str:
                 i = seen_i["i"]
                 seen_i["i"] += 1
-                return bordered.get(i, rm.group(0))
+                # Non-bordered rows fall back to their (possibly debris-
+                # excised) b_rows entry, not the raw match.
+                return bordered.get(i, b_rows[i])
 
             tbl = re.sub(r"<w:tr>.*?</w:tr>", border_mapper, tbl, flags=re.S)
             n_border_rows += len(border_idx)
@@ -517,6 +636,26 @@ def main() -> None:
              f"{EXPECTED_LABEL_ROWS} - header census changed; update the "
              f"EXPECTED_* constants")
 
+    # Cmidrule-debris excision postconditions.
+    if n_junk_cells != EXPECTED_JUNK_CELLS:
+        fail(f"excised {n_junk_cells} cmidrule-debris cells but expected "
+             f"{EXPECTED_JUNK_CELLS} - table census changed; update the "
+             f"EXPECTED_* constants")
+    if n_junk_tables != EXPECTED_JUNK_TABLES:
+        fail(f"excised cmidrule debris in {n_junk_tables} tables but expected "
+             f"{EXPECTED_JUNK_TABLES} - table census changed; update the "
+             f"EXPECTED_* constants")
+    if "(lr)" in doc:
+        fail("cmidrule debris '(lr)' still present in document.xml after "
+             "excision")
+    # The (lr) scan above cannot see bare debris like "2-8" (a lone
+    # \cmidrule(lr){2-8} leaks no "(lr)" token), so re-scan every cell.
+    for tc in re.findall(r"<w:tc>.*?(?=<w:tc>|</w:tr>)", doc, re.S):
+        joined = "".join(re.findall(r"<[wm]:t[^>]*>([^<]*)</[wm]:t>", tc))
+        if JUNK_FULL_RE.match(joined) or JUNK_PREFIX_RE.match(joined):
+            fail(f"cmidrule debris still present in a table cell: "
+                 f"{joined[:80]!r}")
+
     # Well-formedness before writing anything.
     try:
         ET.fromstring(doc.encode("utf-8"))
@@ -539,7 +678,9 @@ def main() -> None:
           f"{n_notes} Notes paragraphs centered; "
           f"booktabs borders on {n_bordered_tables} tables "
           f"({n_border_rows} separator rows, {n_border_cells} cells, "
-          f"{n_label_rows} label rows)")
+          f"{n_label_rows} label rows); "
+          f"excised {n_junk_cells} cmidrule-debris cells in {n_junk_tables} "
+          f"tables")
 
 
 if __name__ == "__main__":

@@ -54,6 +54,17 @@ the tables bucket):
     main-range total 9,247
     whole document 24,909
 
+Re-verified after the 2026-08-27 cmidrule-debris excision (pandoc-leaked
+``\cmidrule`` junk like "3-5 (lr)6-9" in 20 header cells across 17 tables is
+now blanked/stripped by ``style_tables_docx.py``; canon unchanged because
+table cells are excluded from the declaration count):
+
+    canon (declaration count) 8,234
+    main-range prose+headings (incl. citations) 8,234
+    main-range table cells 638; captions 143; table Notes 230
+    main-range total 9,245
+    whole document 24,868
+
 Layout notes affecting these numbers: since ``e63b860`` the Word build numbers
 captions ("Figure 1:"/"Table 1:", +2 words per caption vs the ``bf9317e``
 build), and since ``7bbefba`` the bibliography sits before the appendix with a
