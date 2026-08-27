@@ -446,6 +446,11 @@ def run(args: argparse.Namespace) -> None:
         rf"\newcommand{{\NResearchAbstracts}}{{{latex_int(n_abstracts)}}}",
         rf"\newcommand{{\NResearchSegPerAbstract}}{{{seg_per_abstract:.3f}}}",
         rf"\newcommand{{\NResearchMultiSegPct}}{{{100.0 * n_multi / max(n_abstracts, 1):.1f}}}",
+        # NOTE: deliberately n_abstracts, NOT n_preprocessed — the true
+        # pre-split count exceeds it by the records dropped at segmentation
+        # (see n_dropped above) and is exposed only via that delta. The macro
+        # name is historical; it duplicates \NResearchAbstracts above, so
+        # prefer the honest name in prose.
         rf"\newcommand{{\NResearchPreprocessed}}{{{latex_int(n_abstracts)}}}",
         rf"\newcommand{{\ResearchPolicyUnitRatio}}{{{n_abstracts / max(len(doc_meta), 1):.0f}}}",
         rf"\newcommand{{\ResearchPolicySegmentRatio}}{{{n_segments / max(n_policy, 1):.1f}}}",

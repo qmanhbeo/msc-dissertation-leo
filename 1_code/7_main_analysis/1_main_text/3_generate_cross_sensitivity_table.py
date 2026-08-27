@@ -125,6 +125,13 @@ def load_cap_gaps_adj():
 
 def _parse_policy_source_gaps_from(tex_path):
     """Shared parser: extract per-family semantic gaps from an a2 combined tex table."""
+    # COUPLING: this regex-scrapes the GENERATED a2 combined tex (not a2's CSV
+    # outputs) because the cross-sensitivity tables need the exact per-family
+    # cells as printed. The gap_indices below hard-code a2's combined-table
+    # layout — any change to a2's column order/cell format MUST update this
+    # parser AND parse_policy_source_covgaps (the coverage twin, indices
+    # 1,3,5,7). Failure modes differ: an unparseable semantic family is
+    # detected downstream, but a lost SDG row here just renders as "--".
     text = tex_path.read_text(encoding="utf-8")
     in_header = True
     families = {}
@@ -1042,6 +1049,13 @@ def build_tabular(col_groups):
         all_sdgs.update(ranks.keys())
     all_sdgs = sorted(all_sdgs)
 
+    # Highlight semantics for the encoder-axis tables: bold = |MPNet-LR rank
+    # minus MiniLM-LR rank| <= 1 (stable across encoders), italic = >= 4
+    # (sensitive). Applies to EVERY column of tables whose group label starts
+    # with "Encoder"; silently inert elsewhere (those groups never match the
+    # prefix). The string-matching below is load-bearing for the emphasis in
+    # the published tables — renaming "LR"/"mpnet"/"minilm" labels breaks it
+    # silently.
     STABLE_RANK_DELTA = 1
     SENSITIVE_RANK_DELTA = 4
     mpnet_lr = minilm_lr = None
@@ -1294,6 +1308,11 @@ def write_num_cross_sensitivity():
         vec_20 = [cap_20.get(sdg) for sdg in range(1, N_SDG + 1)]
         vec_none = [cap_none.get(sdg) for sdg in range(1, N_SDG + 1)]
         if all(v is not None for v in vec_20) and all(v is not None for v in vec_none):
+            # Deliberate Pearson r on raw gap VALUES (np.corrcoef), unlike
+            # every other "rho" macro in this file, which is rank-based
+            # Spearman via _spearman. The cap-stability prose quotes this
+            # Pearson value — switching to _spearman changes the manuscript
+            # number.
             r = np.corrcoef(vec_20, vec_none)[0, 1]
             rho_val = f"{r:.3f}"
     lines = [
@@ -1308,6 +1327,13 @@ def write_num_cross_sensitivity():
 # Main
 # ---------------------------------------------------------------------------
 def run(args: argparse.Namespace) -> None:
+    # MODULE-GLOBAL CONTRACT: every load_*/write_* helper below reads model/
+    # root/OUT_MAIN/lr_per_sdg/lr_macro/CAP_PATH/POLICY_SOURCE_FAMILY_TEX (and
+    # write_validation_table additionally the mlp_*/zs_* macros) from module
+    # scope, populated ONLY by the assignments in this function. The call
+    # order here is therefore load-bearing — do not reorder the write_*
+    # calls or invoke the helpers standalone (NameError / stale values far
+    # from the cause).
     global model, root, OUT_MAIN, RETRAIN_JSON, retrain, lr_per_sdg, lr_macro
     global LR_GAP_PATH, ZS_GAP_PATH, CAP_PATH, POLICY_SOURCE_FAMILY_TEX
     global mlp_macro, mlp_micro, zs_macro, zs_micro

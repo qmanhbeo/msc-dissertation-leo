@@ -589,6 +589,12 @@ def run(args: argparse.Namespace) -> None:
         )
 
     # Directional reading for the research predictor (matches prior reporting).
+    # ±0.3 Pearson band = the conventional |r| < 0.3 "weak" cutoff. It decides
+    # the SUPPORTED/CONTRADICTED/WEAK verdict AND which narrative string is
+    # recorded in interaction_h25.json — the WEAK branch embeds the raw-vs-
+    # adjusted cancellation account. Fixed decision constant: do not tune it
+    # toward the current data; a refresh landing near ±0.3 flips the recorded
+    # headline verdict.
     if r_primary > 0.3:
         correlation_direction = "SUPPORTED"
         correlation_story = (

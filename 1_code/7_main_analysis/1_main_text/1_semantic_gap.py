@@ -367,6 +367,11 @@ def run(args: argparse.Namespace) -> None:
     log.info("=" * 60)
     log.info("SENSITIVITY: no segment cap (uncapped)")
     log.info("=" * 60)
+    # sens_none intentionally REUSES rng_lo (continuing its stream). With
+    # SEGMENT_CAP_SENS_NONE = 10_000_000 no per-document cap sampling occurs,
+    # so no draws are consumed and the shared state is harmless — but if the
+    # "none" cap ever becomes a real number, re-derive against a fresh
+    # default_rng(RANDOM_SEED) or the committed sensitivity numbers shift.
     sens_none, _ = compute_sdg_semantic_gaps(
         research_centroids, research_counts, research_cohesions,
         policy_emb, policy_assignments,

@@ -420,7 +420,12 @@ def run(args: argparse.Namespace) -> None:
         dtype=bool,
     )
 
-    # Adjusted centroids: project through G then compute centroids in adjusted space
+    # Adjusted centroids: project through G then compute centroids in adjusted space.
+    # NOTE: build_policy_centroids reseeds per SDG (rng_seed + sdg_idx), so
+    # passing the SAME args.seed as the raw call above means raw and adjusted
+    # policy centroids are built from the IDENTICAL capped segment sets — the
+    # raw-vs-adjusted movement in the figure is purely the G projection, not
+    # sampling noise. Keep the two seeds in sync.
     policy_emb_adj_full = project(policy_emb, G)
     policy_centroids_adj, _ = build_policy_centroids(
         policy_emb=policy_emb_adj_full,
