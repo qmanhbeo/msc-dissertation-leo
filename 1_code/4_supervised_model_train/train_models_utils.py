@@ -163,6 +163,11 @@ def train_mlp_fold(
     train_ds = TensorDataset(X_t[tr_idx].to(device), Y_t[tr_idx].to(device))
     val_ds = TensorDataset(X_t[val_idx].to(device), Y_t[val_idx].to(device))
     _seed_loader = torch.Generator().manual_seed(RANDOM_SEED)
+    # shuffle=True WITHOUT drop_last feeds BatchNorm1d layers: a train pool
+    # with N % 256 == 1 would produce a final size-1 batch and crash loudly
+    # in training mode. Practically unreachable with current corpus sizes
+    # (both loaders here and in 2_retrain_full_data.py); if pool sizes ever
+    # approach a 256 boundary, add drop_last=True deliberately.
     train_loader = DataLoader(train_ds, batch_size=256, shuffle=True, generator=_seed_loader)
     val_loader = DataLoader(val_ds, batch_size=512)
 

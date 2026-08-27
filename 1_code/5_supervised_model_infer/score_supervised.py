@@ -406,6 +406,11 @@ def run_research_lr(args) -> None:
         norm = float(np.linalg.norm(raw))
         unit = normalize(raw)
         research_centroids[sdg_idx] = unit
+        # mean_cos_to_centroid == raw_centroid_norm by construction, NOT a
+        # copy-paste bug: paper units are L2-renormalised (Plan C), so the
+        # mean cosine to the unit centroid equals the norm of the mean.
+        # register_utils.load_raw_data reads this field to reconstruct the
+        # raw (pre-normalisation) mean — do not "fix" the duplication.
         meta.append(
             {
                 "sdg": sdg,

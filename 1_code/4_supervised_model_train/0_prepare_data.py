@@ -56,6 +56,9 @@ def _group_by_source_doc(indices: np.ndarray, source_docs: np.ndarray, labels: n
     for i in indices:
         doc = source_docs[i]
         doc_to_idxs[doc].append(i)
+        # Group label = FIRST row seen for this source_doc. Assumes all rows
+        # of one document share a single SDG label; mixed-label documents are
+        # silently labelled by whichever row arrives first.
         if doc not in doc_to_label:
             label = int(labels[i].argmax())
             doc_to_label[doc] = label
@@ -128,6 +131,10 @@ def main() -> None:
 
     ordered_sources = ["osdg", "benchmark", "sdg_knowledge_hub", "sdgi", "aurora"]
 
+    # WHITELIST: only these five sources enter the supervised pool. Rows with
+    # an unlisted or missing "source" (→ "unknown") are SILENTLY dropped —
+    # the warning below fires only for expected-but-absent sources, never for
+    # present-but-unexpected ones. A new upstream source must be added here.
     embs_list, labels_list, sources_list, source_docs_list = [], [], [], []
     source_summary: dict[str, int] = {}  # name -> kept text count
 
@@ -166,6 +173,9 @@ def main() -> None:
                 labels[j, sdg - 1] = 1.0
             elif isinstance(sdgs, list) and len(sdgs) == 1 and 1 <= sdgs[0] <= N_SDG:
                 labels[j, sdgs[0] - 1] = 1.0
+            # Rows without source_doc get a UNIQUE per-row key, i.e. they
+            # become singleton "documents" — the train/test leakage guard
+            # silently degrades to row-level splitting for those rows.
             source_docs_corpus.append(entry.get("source_doc", f"{name}_{sub_i}"))
 
         embs_list.append(kept_embs)
@@ -195,6 +205,9 @@ def main() -> None:
         mask = sources == src
         src_idx = all_idx[mask]
 
+        # Sources with < 5 texts cannot be document-group-split meaningfully;
+        # they are kept wholly in train and never appear in the held-out test
+        # split. This floor shapes test-set composition by construction.
         if len(src_idx) < 5:
             train_pool_idx.extend(src_idx.tolist())
             log.warning("  %s: only %d texts — kept entirely in train", src, len(src_idx))

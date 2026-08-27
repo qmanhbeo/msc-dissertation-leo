@@ -345,7 +345,15 @@ def main() -> None:
                     log.info("Early stop at epoch %d (best val F1=%.4f at epoch %d)", epoch + 1, best_val_f1, best_epoch)
                     break
 
-        # Stage 2: retrain from scratch on 100% of training data for best_epoch epochs
+        # Stage 2: retrain from scratch on 100% of training data for best_epoch epochs.
+        # EPOCH-COUNT TRANSFER ASSUMPTION: best_epoch was selected by early
+        # stopping on a 90/10 internal split (Stage 1) and is applied here as a
+        # FIXED count on the full pool — fresh optimizer, no validation. This
+        # two-stage protocol is deliberately DIFFERENT from the parked
+        # grid-search champion fit in train_models_utils.py (fixed 100 epochs,
+        # no early stop). Do not unify the two loops without re-validating
+        # test macro-F1: the canonical artifacts are trained under different
+        # regimes.
         log.info("Retraining on full training pool (%d docs) for %d epochs...", len(X_t), best_epoch)
         net = MultiLabelMLP(input_dim, args.n_layers, args.hidden_size, args.dropout).to(device)
         optimizer2 = optim.AdamW(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)

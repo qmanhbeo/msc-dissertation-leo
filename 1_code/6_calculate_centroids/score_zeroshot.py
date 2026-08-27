@@ -97,6 +97,12 @@ def run(args: argparse.Namespace) -> None:
     output_root = Path(args.output_dir)
 
     # .npy files → 2_data/5_supervised_scored/{model}/zeroshot/ (or custom)
+    # NOTE: this root is SHARED between --embeddings raw and adjusted (main.py
+    # passes no --out-dir for either), so the .npy files always hold whichever
+    # mode ran LAST, and the skip gate below cannot tell the two modes' .npy
+    # artifacts apart (only the gaps JSON is mode-scoped under adjusted/).
+    # Safe under canonical replays (raw→adjusted order with --overwrite);
+    # beware manual single-mode reruns reusing the other mode's centroids.
     npy_root = Path(args.out_dir) if args.out_dir else scored_dir_for_model(model) / "zeroshot"
     npy_root.mkdir(parents=True, exist_ok=True)
 

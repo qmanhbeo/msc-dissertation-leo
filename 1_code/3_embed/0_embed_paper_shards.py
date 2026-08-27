@@ -59,6 +59,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--precision", choices=["fp32", "fp16"], default=None,
                    help="Compute + storage precision for embeddings. Default: fp16.")
     p.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
+    # store_true + default=True: there is NO way to disable normalisation
+    # from the CLI — this flag is documentation only. L2-normalised output
+    # is a pipeline invariant (cosine == dot product downstream).
     p.add_argument("--normalize-embeddings", action="store_true", default=True,
                    help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     p.add_argument("--local-files-only", action="store_true")
@@ -100,6 +103,11 @@ def load_texts(path: Path) -> list[str]:
 def generate_ids(data_path: Path, ids_out: Path) -> None:
     tmp = ids_out.with_suffix(ids_out.suffix + ".tmp")
     with data_path.open(encoding="utf-8") as src, tmp.open("w", encoding="utf-8", newline="") as dst:
+        # row_in_shard is the RAW line index and must equal the row's index
+        # into the .npy — true only because segmented shards contain no blank
+        # lines (load_texts skips blanks when building the embed order). If a
+        # shard ever gained a blank line, ids and embeddings would silently
+        # misalign from that row onward.
         for row_in_shard, line in enumerate(src):
             if not line.strip():
                 continue
@@ -250,6 +258,14 @@ def main() -> None:
             m = json.loads(manifest_path.read_text())
             if m.get("status") == "concatenating":
                 log.info("Resuming %s — final concatenation", shard_name)
+                # concatenate_batches DELETES batches_dir on success, so we
+                # CANNOT fall through to the batch loop below: completed_batches
+                # is empty here, so the first batch write would crash on the
+                # removed directory (and every batch would re-embed anyway).
+                # The shard is published on disk by this call but only enters
+                # out_manifest after the loop — a crash in that window costs
+                # one redundant full-shard re-embed on the next run. (The
+                # reference/policy embedder returns immediately instead.)
                 concatenate_batches(batches_dir, out_emb, n, dim)
                 generate_ids(in_data, out_ids)
             else:
@@ -263,6 +279,12 @@ def main() -> None:
         else:
             batches_dir.mkdir(parents=True, exist_ok=True)
 
+        # completed_batches are INDICES into this exact batch grid
+        # (range(0, n, batch_size)). The batch manifest records total_rows/dim
+        # but NOT batch_size, so resuming with a different --batch-size
+        # misaligns old indices against the new ranges — corrupting or
+        # skipping rows, surfacing late (concat shape check) or not at all.
+        # Always resume with the original --batch-size.
         batch_starts = list(range(0, n, args.batch_size))
         n_batches = len(batch_starts)
 

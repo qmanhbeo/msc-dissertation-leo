@@ -91,6 +91,9 @@ def parse_args() -> argparse.Namespace:
         "--precision", choices=["fp32", "fp16"], default=None,
         help="Compute + storage precision for embeddings. Default: fp16.",
     )
+    # store_true + default=True: normalisation cannot be disabled from the
+    # CLI (no --no-normalize-embeddings). L2-normalised output is a pipeline
+    # invariant (cosine == dot product downstream).
     parser.add_argument("--normalize-embeddings", action="store_true", default=True,
                         help="L2-normalise embeddings so cosine similarity equals dot product (default: %(default)s)")
     return parser.parse_args()
@@ -250,8 +253,11 @@ def main() -> None:
     config = CORPUS_CONFIG[args.corpus]
 
     # Skip-check BEFORE loading the model: a completed corpus (no --overwrite)
-    # must not pay the (expensive) embedder load. Mirrors embed_corpus's own
-    # skip at L120 so behavior is identical for direct callers.
+    # must not pay the (expensive) embedder load. NOTE: this fast path checks
+    # the .npy ALONE — it does NOT mirror embed_corpus's both-file gate at
+    # L120, so a torn publish (.npy without ids JSON) reaching main() is
+    # accepted here instead of re-embedded. If an ids file is ever suspected
+    # missing, check metadata/{corpus}_ids.json manually.
     emb_path = output_dir / f"{args.corpus}.npy"
     if emb_path.exists() and not args.overwrite:
         log.info("Skipping %s — %s already exists", args.corpus, emb_path)
