@@ -33,6 +33,7 @@ PY
 
 pandoc _build_word_tmp.tex -o "$output_docx" \
   --citeproc \
+  --csl harvard-university-of-birmingham.csl \
   --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet \
   --standalone --toc \
   --reference-doc=custom_thesis_template.docx
