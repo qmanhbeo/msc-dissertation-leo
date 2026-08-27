@@ -31,6 +31,9 @@ OUT_DIR = ROOT / "4_outputs" / "conceptual_figs"
 JOBNAME = "fig6_pipeline_flowchart"
 
 
+plt.rcParams["font.sans-serif"] = ["Arial", "Helvetica", "DejaVu Sans"]
+plt.rcParams["font.family"] = "sans-serif"
+
 # ---------- palette ----------
 C_RESEARCH = "#AED6F1"
 C_RESEARCH_EDGE = "#1F618D"

@@ -66,8 +66,8 @@ def parse_args() -> argparse.Namespace:
 # Shared style
 # ---------------------------------------------------------------------------
 plt.rcParams.update({
-    "font.family": "serif",
-    "font.serif": ["DejaVu Serif", "Times New Roman", "serif"],
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
     "font.size": 10,
     "axes.titlesize": 12,
     "axes.labelsize": 10,
@@ -184,68 +184,63 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
         ymax = df_sem_valid["semantic_gap"].max() * 1.08
         ymed = float(df_sem_valid["semantic_gap"].median())
 
-    # (embedded panel title, dataframe column, x-axis label)
+    # (embedded panel title, dataframe column, x-axis label, x-scale factor)
     panels = [
-        ("(a) H1a: absolute coverage gap", "coverage_gap_abs",
-         "Absolute research–policy coverage gap (pp)"),
-        ("(b) H1b: signed dominance", "research_dominance",
-         "Signed dominance (research% − policy%, pp)"),
-        ("(c) H1c: research coverage", "research_pct",
-         "Research coverage (%)"),
-        ("(d) H1d: policy coverage", "policy_pct_docweighted",
-         "Policy coverage (%)"),
+        ("(a) H1a", "coverage_gap_abs",
+         "Absolute research–policy coverage gap (%)", 100),
+        ("(b) H1b", "research_dominance",
+         "Signed dominance (research% − policy%, %)", 100),
+        ("(c) H1c", "research_pct",
+         "Research coverage (%)", 1),
+        ("(d) H1d", "policy_pct_docweighted",
+         "Policy coverage (%)", 1),
     ]
 
-    # Fraction-based x offsets so labels nudge consistently across the very
-    # different x-scales of the four predictors.
-    offsets = {4: (0.05, 0.004), 9: (-0.07, 0.004), 3: (0.05, -0.005),
-               16: (0.05, 0.004), 8: (0.04, 0.004), 17: (0.05, -0.006),
-               13: (0.05, -0.005), 12: (0.05, 0.004)}
-
-    fig, axes = plt.subplots(2, 2, figsize=(6.6, 4.9))
+    fig, axes = plt.subplots(2, 2, figsize=(6.6, 7.0))
     legend_handles = [
         plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
-                   markersize=6, label="Adjusted gap (canonical)"),
+                   markersize=6, label="Adjusted Semantic Gap"),
         plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
-                   markeredgecolor="#888888", markersize=6, label="Semantic gap (baseline)"),
+                   markeredgecolor="#888888", markersize=6, label="Raw Semantic Gap"),
     ] if use_adjusted else None
 
-    for (title, col, xlabel), ax in zip(panels, axes.ravel()):
+    for (title, col, xlabel, xscale), ax in zip(panels, axes.ravel()):
         ax.axhline(ymed, color="grey", linestyle="--", linewidth=1, alpha=0.7)
 
         signed = col == "research_dominance"
-        xvals = df[col]
+        xvals = df[col] * xscale
         xmin = float(xvals.min()) if signed else 0.0
         xmax = float(xvals.max()) * 1.12
         if signed:
             xmin = float(xvals.min()) * 1.12
-        xrng = xmax - xmin
 
         if use_adjusted:
             for sdg in adj_map:
                 x = df_sem_valid.loc[df_sem_valid["sdg"] == sdg, col]
                 if x.empty:
                     continue
-                x = float(x.iloc[0])
+                x = float(x.iloc[0]) * xscale
                 ax.scatter(x, raw_map.get(sdg, np.nan), s=22, facecolors="none",
                            edgecolors="#888888", zorder=4, alpha=0.7)
                 ax.scatter(x, adj_map[sdg], s=28, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
-                dx, dy = offsets.get(sdg, (0.04, 0.003))
+                ax.annotate(f"{sdg}", (x, raw_map.get(sdg, np.nan)),
+                            fontsize=4, color="black", fontweight="bold",
+                            ha="center", va="center", zorder=6)
                 ax.annotate(f"{sdg}", (x, adj_map[sdg]),
-                            xytext=(x + dx * xrng, adj_map[sdg] + dy),
-                            fontsize=6.5, color="black")
+                            fontsize=4, color="white", fontweight="bold",
+                            ha="center", va="center", zorder=6)
         else:
             for _, row in df_sem_valid.iterrows():
                 sdg = int(row["sdg"])
-                x = row[col]
+                x = row[col] * xscale
                 y = row["semantic_gap"]
                 ax.scatter(x, y, s=28, color=RESEARCH_COLOR, zorder=5, alpha=0.85)
-                dx, dy = offsets.get(sdg, (0.04, 0.003))
-                ax.annotate(f"{sdg}", (x, y), xytext=(x + dx * xrng, y + dy),
-                            fontsize=6.5, color="black")
+                ax.annotate(f"{sdg}", (x, y),
+                            fontsize=4, color="white", fontweight="bold",
+                            ha="center", va="center", zorder=6)
 
         ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+        ax.set_ylim(ymin, ymax * 1.05)
         ax.set_title(title, fontsize=9)
         ax.set_xlabel(xlabel, fontsize=8)
         ax.spines["top"].set_visible(False)
@@ -260,6 +255,7 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
         fig.legend(handles=legend_handles, loc="upper center", ncol=2,
                    frameon=False, fontsize=8, columnspacing=1.6, handletextpad=0.4)
     fig.tight_layout(rect=(0, 0, 1, 0.94))
+
     out_base = figures_dir / "fig9_h1_grid"
     fig.savefig(out_base.with_suffix(".pdf"), bbox_inches="tight")
     fig.savefig(out_base.with_suffix(".png"), bbox_inches="tight", dpi=300)
