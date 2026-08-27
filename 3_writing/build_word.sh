@@ -47,4 +47,11 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
   --lua-filter=lof_lot.lua \
   --reference-doc=custom_thesis_template.docx
 
+# Table formatting that pandoc/the reference doc cannot express (row
+# keep-together via cantSplit, header rows glued to the body via keepNext).
+# Bold headers, single cell line spacing and cell padding live declaratively
+# in custom_thesis_template.docx styles; the script verifies those survived
+# the pandoc copy and fails closed otherwise. Text content is untouched.
+python3 style_tables_docx.py "$output_docx"
+
 printf 'Built %s\n' "$output_docx"
