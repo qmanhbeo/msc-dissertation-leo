@@ -582,14 +582,16 @@ def _embed_model_steps(
         "--device", device, "--local-files-only", "--precision", precision,
         "--normalize-embeddings", "--batch-size", str(research_bs),
     ] + model_args + ow
-    if model != CANONICAL_SEGMENT_MODEL:
-        # Encoder-sensitivity tracks (MiniLM/SciBERT) embed ONLY the 100k-paper
-        # S1 subset (122,472 rows), not the full research corpus — by design:
-        # subset-scoped outputs feed the cross-sensitivity tables. Do NOT
-        # "fix" this to the full corpus (see AGENTS.md); MPNet alone embeds all.
+    if model != DEFAULT_EMBED_MODEL:
+        # Primary-track predicate (DEFAULT_EMBED_MODEL, not the segmentation
+        # role): encoder-sensitivity tracks (MiniLM/SciBERT) embed ONLY the
+        # 100k-paper S1 subset (122,472 rows), not the full research corpus —
+        # by design: subset-scoped outputs feed the cross-sensitivity tables.
+        # Do NOT "fix" this to the full corpus (see AGENTS.md); MPNet alone
+        # embeds all.
         embed_cmd += ["--corpus", "research_subset"]
     steps.append((f"embed paper shards ({model})", embed_cmd))
-    if model == CANONICAL_SEGMENT_MODEL:
+    if model == DEFAULT_EMBED_MODEL:
         steps.append((f"embed concept research corpus ({model})", [
             sys.executable, "1_code/3_embed/0_embed_paper_shards.py",
             "--corpus", "research_concept", "--device", device,
@@ -1039,19 +1041,19 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
             run_step(label, cmd)
 
     # PHASE 2 — analyze every encoder track (all embeddings now present).
-    # Non-canonical encoders first, canonical (MPNet) LAST — mirroring warm
+    # Non-primary encoders first, primary (MPNet) LAST — mirroring warm
     # replay — so MPNet's pass runs the f3 cross-encoder register table
     # (tab12_register_cross.tex) only after MiniLM/SciBERT have persisted their
     # register checkpoints. MPNet-first would fail-open inside f3 ("Skipping
     # track") and silently write an MPNet-only Table 12 that is never re-run.
-    analysis_order = [m for m in COLD_REPLAY_MODELS if m != CANONICAL_SEGMENT_MODEL] + [CANONICAL_SEGMENT_MODEL]
+    analysis_order = [m for m in COLD_REPLAY_MODELS if m != DEFAULT_EMBED_MODEL] + [DEFAULT_EMBED_MODEL]
     for model in analysis_order:
         sep = "=" * 70
         print(f"\n{sep}", file=sys.stderr)
         print(f"  Analysis phase — Encoder track: [{model}]", file=sys.stderr)
         print(sep, file=sys.stderr)
         _run_main_analysis_steps(output_dir, model=model, overwrite=args.overwrite,
-                                 include_appendix=(model == CANONICAL_SEGMENT_MODEL))
+                                 include_appendix=(model == DEFAULT_EMBED_MODEL))
     # Regenerate the cross-encoder INLP convergence macros (cheap: reads the three
     # register checkpoints persisted by the loop above; does NOT re-run register).
     run_step(
@@ -1062,7 +1064,7 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
     )
     # Cross-sensitivity table + figures (MPNet-only, needs all 3 encoders' data)
     # are produced once now that every encoder analysis pass has completed.
-    _run_analysis_poststeps(output_dir, CANONICAL_SEGMENT_MODEL, overwrite=args.overwrite)
+    _run_analysis_poststeps(output_dir, DEFAULT_EMBED_MODEL, overwrite=args.overwrite)
     print(
         "Cold replay complete. To build the dissertation PDF, run:\n"
         "  python main.py --build-pdf --overwrite\n"
@@ -1183,7 +1185,7 @@ def _run_single_stage(stage: str, output_dir: Path, args: argparse.Namespace) ->
         # canonical/shared; only the encoder varies. MPNet embeds the full
         # research corpus (27 shards); MiniLM/SciBERT embed the shared 100k
         # subset via --corpus research_subset (handled below by the
-        # model != CANONICAL_SEGMENT_MODEL check).
+        # model != DEFAULT_EMBED_MODEL check).
         for embed_model in COLD_REPLAY_MODELS:
             for label, cmd in _embed_model_steps(embed_model, overwrite=args.overwrite,
                                                  batch_size=args.batch_size,

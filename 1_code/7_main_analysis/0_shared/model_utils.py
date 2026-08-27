@@ -4,7 +4,22 @@ import gzip
 import json
 from pathlib import Path
 
-DEFAULT_EMBED_MODEL = "all-mpnet-base-v2"
+# Single source of truth for the MPNet checkpoint string. Both role constants
+# below are MPNet BY DESIGN: one model currently holds both roles (primary
+# encoder track for the manuscript, and the segmenter whose tokenizer/token
+# window defines the shared canonical segments). Aliasing both to this root
+# makes the equality structural — moving a role off MPNet requires editing the
+# assignment here, never a silent string edit. The two names are NOT redundant:
+# DEFAULT_EMBED_MODEL selects the primary track / output namespace, while
+# CANONICAL_SEGMENT_MODEL marks the segmenter that produced the shared
+# segments (see the constants' own comments).
+MPNET = "all-mpnet-base-v2"
+
+# Role: primary encoder track. Default --embed-model, the {model} output
+# namespace, and the "is this the canonical/primary track" predicate used by
+# the pipeline gates (main.py analysis gates, subset-vs-full embed routing,
+# replay ordering).
+DEFAULT_EMBED_MODEL = MPNET
 ALLOWED_MODELS = {"all-mpnet-base-v2", "all-MiniLM-L6-v2", "allenai/scibert_scivocab_uncased"}
 VALID_DIMS = {384, 768}
 # Raw (non-sentence-transformers) BERT checkpoints that lack a pooling head and
@@ -27,13 +42,13 @@ NORM_EPS = 1e-12
 # Below this L2 norm a (policy/research) centroid is treated as degenerate and
 # excluded from semantic-gap computation.
 MIN_CENTROID_NORM = 0.5
-# Canonical segmentation shared by every encoder in the architecture-sensitivity
-# comparison. All models embed the SAME canonical segments, so the only varying
-# factor is the encoder (architecture + native context window). 384 is
+# Role: canonical segmenter. All encoder tracks embed the SAME segments this
+# model produced, so the architecture-sensitivity comparison varies ONLY the
+# encoder. 384 is
 # all-mpnet-base-v2's native limit: it covers SciBERT (<=512) fully and MiniLM
 # truncates internally to 256 — a documented model property, not a hidden text
-# difference.
-CANONICAL_SEGMENT_MODEL = "all-mpnet-base-v2"
+# difference. Equal to DEFAULT_EMBED_MODEL today (both MPNet; see MPNET note).
+CANONICAL_SEGMENT_MODEL = MPNET
 CANONICAL_MAX_SEQ_LENGTH = 384
 # Encoder tracks rebuilt by --cold-replay / --warm-replay. The canonical
 # (MPNet) track is listed FIRST, but the ANALYSIS loops in main.py deliberately
