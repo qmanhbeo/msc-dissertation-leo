@@ -69,7 +69,7 @@ for path in (CODE_ROOT, SHARED_DIR):
 
 from research_score_shards import aggregate_research_scores
 from shared_utils import ensure_canonical_outputs, fingerprint_of, should_skip, record_fingerprint
-from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_SHORT_NAMES, SDG_NUM_WORDS, embed_dir_for_model, output_dir_for_model, research_preprocessed_dir, scored_dir_for_model, resolve_model_alias
+from model_utils import DEFAULT_EMBED_MODEL, DEFAULT_OUTPUT_ROOT, N_SDG, SDG_SHORT_NAMES, SDG_NUM_WORDS, embed_dir_for_model, output_dir_for_model, resolve_research_preprocessed_manifest_path, scored_dir_for_model, resolve_model_alias
 from shard_pipeline_utils import load_json
 from semantic_gap_shared import document_weighted_policy_profile, latex_int
 
@@ -251,9 +251,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("  segments=%d  abstracts=%d", research["n_segments"], research["n_papers"])
 
     # Pre-segmentation preprocessing record total, for the dropped-at-segmentation footnote.
-    preprocessed_manifest = load_json(
-        research_preprocessed_dir() / "metadata" / "manifest.json"
-    )
+    preprocessed_manifest = load_json(resolve_research_preprocessed_manifest_path())
     n_preprocessed = int(preprocessed_manifest.get("totals", {}).get("rows", 0))
 
     log.info("Loading policy scores: %s", POLICY_SCORES)
