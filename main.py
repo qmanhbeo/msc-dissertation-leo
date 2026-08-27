@@ -53,6 +53,7 @@ import json
 import logging
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -83,6 +84,7 @@ from model_utils import (
     embed_dir_for_model,
     embed_research_dir_for_model,
     model_results_dir_for_model,
+    model_slug,
     output_dir_for_model,
     raw_dir,
     research_preprocessed_dir,
@@ -880,6 +882,30 @@ def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = Fals
              + _overwrite_flag(overwrite), step_id="18", model=model)
 
 
+def _print_replay_ok_sentinel(kind: str, include_appendix: bool) -> None:
+    """Final greppable success line for replay runs.
+
+    The Aug-2026 replay tails crashed AFTER most artifacts were written and
+    went unnoticed for three weeks. This one-line sentinel — plus the
+    num12b table's last-write timestamp — makes 'did the run actually
+    complete its tail steps?' answerable with a single log grep instead of
+    forensic mtime comparison.
+    """
+    num12b = ROOT / "4_outputs" / model_slug(DEFAULT_EMBED_MODEL) / "tables" / "num12b_register_cross_config.tex"
+    if num12b.exists():
+        tail_mtime = datetime.fromtimestamp(num12b.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+        tail_info = f"num12b_last_write={tail_mtime}"
+    else:
+        # NOT silent: a completed replay always writes (or skips on an
+        # unchanged fingerprint with the file present); absence here means
+        # the F2 step never ran in this or any prior run.
+        tail_info = "num12b_last_write=MISSING(!!)"
+    print(
+        f"REPLAY OK kind={kind} appendix={'yes' if include_appendix else 'no'} "
+        f"at={datetime.now(timezone.utc).isoformat(timespec='seconds')} {tail_info}"
+    )
+
+
 def _print_replay_deferral_notice() -> None:
     """Point replay users at the two analysis families intentionally excluded
     from warm/cold replay because they are too slow for a quick replay: the
@@ -967,6 +993,7 @@ def run_warm_replay(
         "Note: --build-pdf requires bash (WSL/Linux) and is not supported on bare Windows."
     )
     _print_replay_deferral_notice()
+    _print_replay_ok_sentinel("warm", include_appendix)
 
 
 def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
@@ -1034,6 +1061,8 @@ def run_cold_replay(output_dir: Path, args: argparse.Namespace) -> None:
         "  python main.py --build-pdf --overwrite\n"
         "Note: --build-pdf requires bash (WSL/Linux) and is not supported on bare Windows."
     )
+    _print_replay_deferral_notice()
+    _print_replay_ok_sentinel("cold", True)
 
 
 def run_fetch_data_snapshot(args: argparse.Namespace, *, profile_name: str, overwrite_data: bool) -> None:
