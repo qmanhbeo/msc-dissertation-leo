@@ -45,8 +45,6 @@ if str(_ANALYSIS_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_ANALYSIS_ROOT))
 import register_utils
 from research_score_shards import (
-    group_rows_by_paper,
-    paper_run_starts,
     paper_units_from_shard,
     read_shard_paper_ids,
 )
@@ -197,21 +195,25 @@ def run(args: argparse.Namespace) -> None:
             embeddings, scores, paper_ids, shard_name,
             prev_last_paper_id=prev_last_paper_id,
         )
-        starts = paper_run_starts(paper_ids)
-        paper_scores, _ = group_rows_by_paper(scores, starts)
         for sdg_idx in range(N_SDG):
             mask = paper_assigned == sdg_idx
             n = int(mask.sum())
             if n > 0:
                 res_sums[sdg_idx] += paper_emb[mask].sum(axis=0).astype(np.float64)
                 res_counts[sdg_idx] += n
-                # Mean cosine of assigned research vectors to their reference
-                # centroid = mean of the paper-level assignment score column for
-                # that SDG (paper scores = mean of the paper's segment scores).
-                res_cohesion_sums[sdg_idx] += float(paper_scores[mask, sdg_idx].sum())
+                # Mean cosine of assigned research units to their reference
+                # centroid: paper_emb rows are L2-renormalised unit vectors and
+                # centroids are asserted unit above, so the cosine is their dot
+                # product. The former "mean of the paper-level score column"
+                # equals true_cos x ||mean_seg||, so it deviates whenever an
+                # abstract has >1 segment and understates |cosine| vs the LR
+                # route's true-cosine definition.
+                res_cohesion_sums[sdg_idx] += float(
+                    np.dot(paper_emb[mask], centroids[sdg_idx]).sum()
+                )
                 res_cohesion_counts[sdg_idx] += n
         log.info("  Shard %s done (%d papers)", shard_name, paper_emb.shape[0])
-        del embeddings, scores, paper_emb, paper_assigned, paper_scores, paper_ids
+        del embeddings, scores, paper_emb, paper_assigned, paper_ids
 
     log.info("Research per-SDG counts: %s", res_counts.tolist())
     log.info("Research total papers: %d", res_counts.sum())
