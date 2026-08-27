@@ -394,21 +394,10 @@ def print_status(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
 
 
 def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    # Model-independent conceptual figures are hand-authored TikZ diagrams
-    # (1_code/8_visualization/*.tex). Regenerate them if missing; the generator
-    # is idempotent, so this is cheap on a warm tree.
-    _gen = ROOT / "1_code" / "8_visualization" / "build_conceptual_figs.py"
-    if _gen.exists():
-        try:
-            subprocess.run([sys.executable, str(_gen)], cwd=ROOT, check=True)
-        except subprocess.CalledProcessError as exc:
-            print(f"[build-pdf] WARNING: conceptual-figure generation failed: {exc}", file=sys.stderr)
-    _prov = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "export_corpus_provenance.py"
-    if _prov.exists():
-        try:
-            subprocess.run([sys.executable, str(_prov), "--overwrite"], cwd=ROOT, check=True)
-        except subprocess.CalledProcessError as exc:
-            print(f"[build-pdf] WARNING: corpus-provenance generation failed: {exc}", file=sys.stderr)
+    # --build-pdf only compiles. Manuscript inputs (conceptual figures, corpus
+    # provenance, analysis tables/figures) are produced by the analysis
+    # orchestrator (_run_analysis_poststeps), not here. declare_pdf_inputs()
+    # fails closed with a clear message if any required input is missing.
     require_pdf_inputs(output_dir, model)
     run_step(
         "build pdf",
@@ -417,21 +406,8 @@ def build_pdf(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
 
 
 def build_word(output_dir: Path, model: str = DEFAULT_EMBED_MODEL) -> None:
-    # Model-independent conceptual figures (TikZ) and the corpus-provenance
-    # table are dissertation.tex inputs; regenerate if missing (idempotent).
-    # Mirrors build_pdf() so both canonical build commands share prerequisites.
-    _gen = ROOT / "1_code" / "8_visualization" / "build_conceptual_figs.py"
-    if _gen.exists():
-        try:
-            subprocess.run([sys.executable, str(_gen)], cwd=ROOT, check=True)
-        except subprocess.CalledProcessError as exc:
-            print(f"[build-word] WARNING: conceptual-figure generation failed: {exc}", file=sys.stderr)
-    _prov = ROOT / "1_code" / "7_main_analysis" / "2_appendix" / "export_corpus_provenance.py"
-    if _prov.exists():
-        try:
-            subprocess.run([sys.executable, str(_prov), "--overwrite"], cwd=ROOT, check=True)
-        except subprocess.CalledProcessError as exc:
-            print(f"[build-word] WARNING: corpus-provenance generation failed: {exc}", file=sys.stderr)
+    # --build-word only compiles. See build_pdf() for why input generation is
+    # the analysis orchestrator's job, not the build command's.
     require_pdf_inputs(output_dir, model)
     run_step(
         "build word",
@@ -895,7 +871,10 @@ def _run_analysis_poststeps(output_dir: Path, model: str, overwrite: bool = Fals
              model=model)
     run_step("plot figures", [sys.executable, "1_code/8_visualization/plot_figures.py",
              "--output-dir", str(output_dir), "--embed-model", model] + _overwrite_flag(overwrite), step_id="9",
-             model=model)
+              model=model)
+    run_step("generate conceptual figures",
+             [sys.executable, "1_code/8_visualization/build_conceptual_figs.py"]
+             + _overwrite_flag(overwrite), step_id="19", model=model)
     run_step("export corpus provenance table",
              [sys.executable, "1_code/7_main_analysis/2_appendix/export_corpus_provenance.py"]
              + _overwrite_flag(overwrite), step_id="18", model=model)
