@@ -63,12 +63,18 @@ MODEL_UTILS_DIR = WORKSPACE_ROOT / "1_code" / "7_main_analysis" / "0_shared"
 if str(MODEL_UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(MODEL_UTILS_DIR))
 
+APPENDIX_DIR = WORKSPACE_ROOT / "1_code" / "7_main_analysis" / "2_appendix"
+if str(APPENDIX_DIR) not in sys.path:
+    sys.path.insert(0, str(APPENDIX_DIR))
+
 from model_utils import (  # noqa: E402
+    CORPUS_PROVENANCE_NAME,
     PREPROCESSED_RESEARCH_MANIFEST_NAME,
     SHARED_METADATA_DIRNAME,
     WARM_REPLAY_TEXTS_DIRNAME,
     model_slug,
 )
+from export_corpus_provenance import compute as _corpus_provenance_compute  # noqa: E402
 
 GZIP_LEVEL = 6
 GZIP_HEADER_MTIME = 0
@@ -202,6 +208,59 @@ def _build_shared_metadata(source_dir: Path, rebuild: bool = False) -> Path:
     return dest
 
 
+def _build_corpus_provenance(source_dir: Path, rebuild: bool = False) -> Path:
+    """Ship the precomputed corpus-provenance rows (model-independent).
+
+    export_corpus_provenance.compute() reads 2_segmented/ and is only possible
+    in the dev repo. The embedded snapshot instead carries a byte-identical
+    copy of its return value under 3a_warm_replay_texts/_shared_metadata/,
+    which model_utils.resolve_corpus_provenance_path falls back to on fresh
+    clones (so tab18/num18 regenerate without 2_segmented/). Same incremental
+    skip (sha256) and tmp+replace durability as the manifest copy. Added
+    2026-08-27 (second snapshot-gap fix).
+    """
+    out_root = source_dir / WARM_REPLAY_TEXTS_DIRNAME / SHARED_METADATA_DIRNAME
+    out_root.mkdir(parents=True, exist_ok=True)
+    dest = out_root / CORPUS_PROVENANCE_NAME
+    manifest_path = out_root / BUILD_MANIFEST_NAME
+    payload = _load_build_manifest(manifest_path)
+    files: dict = payload.get("files", {}) if isinstance(payload.get("files"), dict) else {}
+
+    rows = _corpus_provenance_compute()
+    data = json.dumps(rows, indent=2, sort_keys=True) + "\n"
+    new_sha = hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+    entry = files.get(dest.name)
+    if (
+        not rebuild
+        and dest.exists()
+        and isinstance(entry, dict)
+        and entry.get("dest_sha256") == new_sha
+    ):
+        _log(f"[shared] corpus-provenance up-to-date: {dest.name}")
+        return dest
+
+    _log(f"[shared] writing corpus-provenance JSON ({len(data)} bytes)")
+    tmp = dest.with_name(dest.name + ".tmp")
+    tmp.write_text(data, encoding="utf-8")
+    tmp.flush()
+    os.fsync(tmp.fileno())
+    tmp.replace(dest)
+    files[dest.name] = {
+        "source": "export_corpus_provenance.compute()",
+        "dest_size": dest.stat().st_size,
+        "dest_sha256": new_sha,
+    }
+    payload = {
+        "generated_by": "1_code/data_backup_and_fetch/build_warm_replay_texts.py",
+        "shared_metadata": True,
+        "updated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "files": files,
+    }
+    _write_build_manifest(manifest_path, payload)
+    return dest
+
+
 def build_warm_replay_texts(
     source_dir: Path,
     models: tuple[str, ...] = WARM_REPLAY_TEXT_MODELS,
@@ -211,6 +270,7 @@ def build_warm_replay_texts(
     source_dir = source_dir.resolve()
     built: list[Path] = []
     built.append(_build_shared_metadata(source_dir, rebuild=rebuild))
+    built.append(_build_corpus_provenance(source_dir, rebuild=rebuild))
     for model in models:
         slug = model_slug(model)
         plan = _plan_for_model(source_dir, model)

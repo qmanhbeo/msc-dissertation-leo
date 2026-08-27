@@ -30,6 +30,12 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODEL_UTILS_DIR = SCRIPT_DIR.parent / "0_shared"
+if str(MODEL_UTILS_DIR) not in sys.path:
+    sys.path.insert(0, str(MODEL_UTILS_DIR))
+from model_utils import resolve_corpus_provenance_path  # noqa: E402
+
 SEGMENTED = ROOT / "2_data" / "2_segmented"
 PREPROCESSED = ROOT / "2_data" / "1_preprocessed"
 RAW = ROOT / "2_data" / "0_raw"
@@ -181,6 +187,22 @@ def _policy_subcollection_stats(policy_seg: Path) -> dict:
 
 
 def compute() -> dict:
+    """Return the corpus-provenance rows dict.
+
+    In the dev repo 2_segmented/ is present, so the counts are computed
+    locally. On a fresh clone (no 2_segmented/, no 1_preprocessed/) the
+    embedded snapshot ships a byte-identical precomputed copy under
+    3a_warm_replay_texts/_shared_metadata/corpus_provenance.json; load that
+    instead. Fail closed via the resolver if neither is available.
+    """
+    if SEGMENTED.exists():
+        return _compute_from_segmented()
+    path = resolve_corpus_provenance_path()
+    log.info("2_segmented/ absent; loading shipped provenance JSON: %s", path)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _compute_from_segmented() -> dict:
     rows = {}
 
     # ---- Reference corpora ----
@@ -317,7 +339,8 @@ def main() -> None:
         "% Corpus-provenance macros (Raw / Prep / Seg / Sln -> Step 0/1/2/3 in header)",
         "",
     ]
-    for key, r in rows.items():
+    for key in prefix:
+        r = rows[key]
         pre = prefix[key]
         for mstage, fstage in stage_keys:
             val = r[fstage]

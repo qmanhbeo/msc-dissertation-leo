@@ -13,44 +13,62 @@ Counts verified to match the committed manuscript:
 from __future__ import annotations
 
 import json
+import logging
 from collections import defaultdict
 from pathlib import Path
 
 SEGMENTED = Path("2_data/2_segmented")
 OUT = Path("4_outputs/mpnet/tables/num19_policy_subcorpus.tex")
 
+log = logging.getLogger(__name__)
 
-def _tex_int(n: int) -> str:
-    s = f"{n:,}"
-    return s.replace(",", "{,}")
+
+def _tex_int(n) -> str:
+    if isinstance(n, int):
+        s = f"{n:,}"
+        return s.replace(",", "{,}")
+    return "---"
 
 
 def main() -> None:
     # --- policy sub-corpus counts (segments + distinct source_doc per source_family) ---
+    # Degrade to "---" (not a hard crash) when 2_segmented/ is absent — this
+    # script's num19 output is retired (folded into num18) and is never a warm/
+    # cold replay step, but a manual run on a fresh clone must not raise.
     pol_fam = defaultdict(lambda: [0, set()])
-    with open(SEGMENTED / "policy.jsonl") as f:
-        for line in f:
-            o = json.loads(line)
-            sf = o.get("source_family")
-            pol_fam[sf][0] += 1
-            pol_fam[sf][1].add(o.get("source_doc"))
+    seg_policy = SEGMENTED / "policy.jsonl"
+    try:
+        with open(seg_policy) as f:
+            for line in f:
+                o = json.loads(line)
+                sf = o.get("source_family")
+                pol_fam[sf][0] += 1
+                pol_fam[sf][1].add(o.get("source_doc"))
+    except FileNotFoundError:
+        log.warning("policy.jsonl not found: %s (fresh clone?) emitting '---' macros", seg_policy)
 
-    curated_seg, curated_doc_set = pol_fam["curated_ai_sdg"]
-    curated_doc = len(curated_doc_set)
-    sdgi_seg, sdgi_doc_set = pol_fam["sdgi_vnr_vlr"]
-    sdgi_doc = len(sdgi_doc_set)
-    ungdc_seg, ungdc_doc_set = pol_fam["ungdc_speeches"]
-    ungdc_doc = len(ungdc_doc_set)
+    curated_seg = curated_doc = sdgi_seg = sdgi_doc = ungdc_seg = ungdc_doc = None
+    if seg_policy.exists():
+        curated_seg, curated_doc_set = pol_fam["curated_ai_sdg"]
+        curated_doc = len(curated_doc_set)
+        sdgi_seg, sdgi_doc_set = pol_fam["sdgi_vnr_vlr"]
+        sdgi_doc = len(sdgi_doc_set)
+        ungdc_seg, ungdc_doc_set = pol_fam["ungdc_speeches"]
+        ungdc_doc = len(ungdc_doc_set)
 
     # --- SDGi single-label reference texts (sdgs is a length-1 list) ---
-    sdgi_single = 0
-    with open(SEGMENTED / "reference.jsonl") as f:
-        for line in f:
-            o = json.loads(line)
-            if o.get("source") == "sdgi":
-                L = o.get("sdgs")
-                if isinstance(L, list) and len(L) == 1:
-                    sdgi_single += 1
+    ref_path = SEGMENTED / "reference.jsonl"
+    sdgi_single = None
+    if ref_path.exists():
+        with open(ref_path) as f:
+            for line in f:
+                o = json.loads(line)
+                if o.get("source") == "sdgi":
+                    L = o.get("sdgs")
+                    if isinstance(L, list) and len(L) == 1:
+                        sdgi_single += 1
+    else:
+        log.warning("reference.jsonl not found: %s (fresh clone?) sdgi_single='---'", ref_path)
 
     macros = [
         ("PolicyCuratedSegments", curated_seg),
@@ -72,7 +90,7 @@ def main() -> None:
     OUT.write_text("\n".join(lines) + "\n")
     print("wrote", OUT)
     for name, val in macros:
-        print(f"  \\{name} = {val:,}")
+        print(f"  \\{name} = {_tex_int(val)}")
 
 
 if __name__ == "__main__":

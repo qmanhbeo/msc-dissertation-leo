@@ -280,6 +280,10 @@ WARM_REPLAY_TEXTS_DIRNAME = "3a_warm_replay_texts"
 # --embed-model track).
 SHARED_METADATA_DIRNAME = "_shared_metadata"
 PREPROCESSED_RESEARCH_MANIFEST_NAME = "preprocessed_research_manifest.json"
+# Precomputed export_corpus_provenance.compute() output (model-independent),
+# shipped by build_warm_replay_texts.py so fresh clones regenerate tab18/num18
+# without 2_segmented/ (added 2026-08-27, second snapshot-gap fix).
+CORPUS_PROVENANCE_NAME = "corpus_provenance.json"
 
 
 def warm_replay_texts_dir_for_model(model: str) -> Path:
@@ -336,6 +340,31 @@ def resolve_research_preprocessed_manifest_path() -> Path:
         "Preprocessed research manifest not found: "
         f"neither {canonical} nor {fallback} exists. "
         "Hydrate 1_preprocessed/ or fetch the embedded snapshot "
+        "(3a_warm_replay_texts/_shared_metadata/)."
+    )
+
+
+def resolve_corpus_provenance_path() -> Path:
+    """Resolve the precomputed corpus-provenance rows (model-independent).
+
+    The canonical computation reads 2_segmented/ (and PREPROCESSED/RAW) and is
+    only possible in the dev repo. The embedded snapshot instead carries a
+    precomputed, byte-identical copy of export_corpus_provenance.compute()'s
+    return value under 3a_warm_replay_texts/_shared_metadata/ (built by
+    build_warm_replay_texts.py). On a fresh clone export_corpus_provenance.py
+    loads this shipped JSON instead of recomputing from 2_segmented/. Fail
+    closed: no silent fallback to empty cells, because the Seg/Prep counts are
+    declared manuscript numbers (tab18/num18) and must be exact.
+    """
+    fallback = (
+        DATA_ROOT / WARM_REPLAY_TEXTS_DIRNAME / SHARED_METADATA_DIRNAME / CORPUS_PROVENANCE_NAME
+    )
+    if fallback.exists():
+        return fallback
+    raise FileNotFoundError(
+        "Corpus-provenance JSON not found: "
+        f"{fallback} does not exist. "
+        "Hydrate 2_segmented/ (dev repo) or fetch the embedded snapshot "
         "(3a_warm_replay_texts/_shared_metadata/)."
     )
 
