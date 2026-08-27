@@ -1,0 +1,8 @@
+Sample,Input,n,Fold-mean acc.,Pooled acc. (k/n),Wilson 95% CI,Binom. p
+Original (per-SDG dedup),register-only,408,0.456,0.456 (186/408),"[0.408, 0.504]",0.967
+Original (per-SDG dedup),raw embeddings,408,0.909,0.909 (371/408),"[0.878, 0.933]",<0.001
+Original (per-SDG dedup),adjusted (INLP),408,0.505,0.505 (206/408),"[0.457, 0.553]",0.441
+One-per-parent,register-only,408,0.544,0.544 (222/408),"[0.496, 0.592]",0.042
+One-per-parent,raw embeddings,408,0.944,0.944 (385/408),"[0.917, 0.962]",<0.001
+One-per-parent,adjusted (INLP),408,0.603,0.603 (246/408),"[0.555, 0.649]",<0.001
+Original (per-SDG dedup),"adjusted, mega-policy excluded",383,0.574,0.574 (220/383),"[0.524, 0.623]",0.002

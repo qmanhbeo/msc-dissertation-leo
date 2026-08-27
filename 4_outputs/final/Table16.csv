@@ -1,0 +1,8 @@
+Feature,Corpus mean,,Direction,Load-bearing?,Mega-doc vs rest,
+,Policy,Research,,,Mega-doc,Rest
+Hedge rate (/1k words),0.85,1.43,R > P,Yes,1.21,1.14
+Deontic (must/should) rate (/1k words),3.13,0.78,P > R,Yes,2.21,1.94
+Passive-voice rate (/1k words),8.45,10.30,R > P,Yes,3.35,9.77
+Mean sentence length (words),63.8,37.0,P > R,No,276.9,35.6
+First-person rate (/1k words),6.46,6.90,≈,No,19.00,5.88
+Nominalisation rate (/1k words),39.00,36.37,≈,No,20.02,38.84

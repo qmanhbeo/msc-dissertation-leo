@@ -7,132 +7,135 @@ This is a pure read-derived convenience step. It NEVER overwrites any canonical
 artifact: it only reads the existing MPNet-track tex tables and figure images and
 writes a human-facing copy into ``4_outputs/final/``:
 
-    * TableX.xlsx          — one Excel workbook per manuscript table (tex -> xlsx)
-    * FigX.png / FigX.pdf  — one copy per manuscript figure, by PRINTED PDF order
-    * tables_tex/<orig>.tex— the original .tex for traceability
-    * README.md            — cross-reference: each TableX/FigX -> origin -> scripts
+    * TableXX.xlsx + TableXX.csv — one pair per manuscript table (tex -> xlsx/csv)
+    * FigXX.png / FigXX.pdf      — one copy per manuscript figure, by PRINTED PDF
+                                   order, two-digit (Fig01..Fig07; Fig06a..Fig06d)
+    * tables_tex/<orig>.tex      — the original .tex for traceability
+    * README.md                  — cross-reference: each TableXX/FigXX -> origin -> scripts
 
-The bundle is MPNet-only (the canonical manuscript track). Figures are named by
-their printed order in dissertation.pdf (not by their source filename), so the
+The bundle is MPNet-only (the canonical manuscript track). Tables are named in
+DISSERTATION.tex \\input APPEARANCE order (Table01 = first \\input =
+tab18_corpus_provenance ... Table33 = tab_k1_specification_grid). Figures are named
+by their printed order in dissertation.pdf (not by their source filename), so the
 files match what a reader sees.
 
 Cross-references below ("generator" = script that writes the output file;
 "data" = script that produces the underlying data when different) are mirrored
 into 4_outputs/final/README.md at runtime.
 
-# ----- MANIFEST (tables) ---------------------------------------------------
-# Table18   tab18_corpus_provenance.tex
+# ----- MANIFEST (tables, in dissertation.tex \\input appearance order) --------
+# Table01  tab18_corpus_provenance.tex
 #           generator: 1_code/7_main_analysis/2_appendix/export_corpus_provenance.py
 #           data:      1_code/2_segment (hydrated snapshot counts)
-# Table16   tab16_model_selection_ranking.tex
+# Table02  tab16_model_selection_ranking.tex
 #           generator: 1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py
 #           data:      1_code/4_supervised_model_train/1_grid_search.py
-# Table1    tab1_classifier_performance.tex
+# Table03  tab1_classifier_performance.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table5    tab5_register_decomposition.tex
+# Table04  tab5_register_decomposition.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table4    tab4_interaction_h25.tex
+# Table05  tab4_interaction_h25.tex
 #           generator: 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table10   tab10_concept_coverage.tex
+# Table06  tab10_concept_coverage.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table11   tab_concept_reference.tex
+# Table07  tab_concept_reference.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# TableA3   tab_a3_sdg4_lexical_audit.tex
+# Table08  tab_a3_sdg4_lexical_audit.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# TableB2   tab_b2_semantic_gap_interpret_all.tex
+# Table09  tab_b2_semantic_gap_interpret_all.tex
 #           generator: 1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table13 (+_cont) tab13_distributional_gap.tex  (two tabular blocks)
+# Table10 (+_cont) tab13_distributional_gap.tex  (two tabular blocks)
 #           generator: 1_code/7_main_analysis/1_main_text/g_distributional_gap.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table14   tab14_distributional_h1.tex
+# Table11  tab14_distributional_h1.tex
 #           generator: 1_code/7_main_analysis/1_main_text/g_distributional_h1_correlation.py
 #           data:      1_code/7_main_analysis/1_main_text/g_distributional_gap.py
-# TableC    tab_c_sample_stability.tex
+# Table12  tab_c_sample_stability.tex
 #           generator: 1_code/7_main_analysis/2_appendix/c_sample_stability.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table16_full tab16_model_selection_full.tex
+# Table13  tab16_model_selection_full.tex
 #           generator: 1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py
 #           data:      1_code/4_supervised_model_train/1_grid_search.py
-# Table12_cross tab12_register_cross.tex
+# Table14  tab12_register_cross.tex
 #           generator: 1_code/7_main_analysis/2_appendix/f3_register_iterative_cross_table.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# TableA1_design tab_a1_register_sample_design.tex
+# Table15  tab_a1_register_sample_design.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# TableA1_features tab_a1_register_features.tex
+# Table16  tab_a1_register_features.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# TableA1   tab_a1_register_validation.tex
+# Table17  tab_a1_register_validation.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# TableA1_selectivity tab_a1_register_validation_selectivity.tex
+# Table18  tab_a1_register_validation_selectivity.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# Table6a   tab6a_cross_sensitivity.tex
+# Table19  tab6a_cross_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table6b   tab6b_cross_sensitivity.tex
+# Table20  tab6b_cross_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table7a   tab7a_encoder_sensitivity.tex
+# Table21  tab7a_encoder_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table7b   tab7b_encoder_sensitivity.tex
+# Table22  tab7b_encoder_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table9    tab9_encoder_sensitivity_coverage.tex
+# Table23  tab9_encoder_sensitivity_coverage.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table8    tab8_coverage_sensitivity.tex
+# Table24  tab8_coverage_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Table_minilm_ref tab_minilm_reference.tex
+# Table25  tab_minilm_reference.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table_scibert_ref tab_scibert_reference.tex
+# Table26  tab_scibert_reference.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# TableH1_covgap tab_app_cross_method_covgap.tex
+# Table27  tab_app_cross_method_covgap.tex
 #           generator: 1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# TableH1_semgap tab_app_cross_method_semgap.tex
+# Table28  tab_app_cross_method_semgap.tex
 #           generator: 1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# TableI1   tab_app_assignment_method_comparison.tex
+# Table29  tab_app_assignment_method_comparison.tex
 #           generator: 1_code/7_main_analysis/2_appendix/i1_assignment_method_comparison.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# TableJ1   tab_j1_raw_value_correlation.tex
+# Table30  tab_j1_raw_value_correlation.tex
 #           generator: 1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# TableA2   tab_a2_policy_source_family_combined.tex
+# Table31  tab_a2_policy_source_family_combined.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# TableA2_h25 tab_a2_policy_source_family_h25.tex
+# Table32  tab_a2_policy_source_family_h25.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# TableK1   tab_k1_specification_grid.tex
+# Table33  tab_k1_specification_grid.tex
 #           generator: 1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
 #
-# ----- MANIFEST (figures, by printed PDF order) -----------------------------
-# Fig1  fig1_conceptual_framework  generator: 1_code/8_visualization/build_conceptual_figs.py
-# Fig2  fig6_pipeline_flowchart    generator: 1_code/8_visualization/build_pipeline_flowchart.py
-# Fig3  fig2_coverage_profiles     generator: 1_code/8_visualization/plot_figures.py
+# ----- MANIFEST (figures, by printed PDF order, two-digit) -------------------
+# Fig01  fig1_conceptual_framework  generator: 1_code/8_visualization/build_conceptual_figs.py
+# Fig02  fig6_pipeline_flowchart    generator: 1_code/8_visualization/build_pipeline_flowchart.py
+# Fig03  fig2_coverage_profiles     generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Fig4  fig3_pca_register_before_after generator: 1_code/7_main_analysis/1_main_text/0_pca_register_before_after.py
+# Fig04  fig3_pca_register_before_after generator: 1_code/7_main_analysis/1_main_text/0_pca_register_before_after.py
 #                                 data: 1_code/7_main_analysis/0_shared/register_adjust.py
-# Fig5  fig4_semantic_gap          generator: 1_code/8_visualization/plot_figures.py
+# Fig05  fig4_semantic_gap          generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Fig6a..Fig6d fig9_h1a..h1d       generator: 1_code/8_visualization/plot_figures.py
+# Fig06a..Fig06d fig9_h1a..h1d     generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Fig7  fig8_centroid_similarity_heatmap generator: 1_code/8_visualization/plot_figures.py
+# Fig07  fig8_centroid_similarity_heatmap generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py
 # ---------------------------------------------------------------------------
 """
@@ -149,186 +152,187 @@ from openpyxl.styles import Font
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# Each table: final handle, LaTeX label, origin tex (relative to repo root),
-# generator script, data-producing script, and optional per-block suffixes
-# (when one .tex holds several \begin{tabular} blocks).
+# Tables in dissertation.tex \input APPEARANCE order. Final name TableXX is derived
+# from the list position (1-based, zero-padded). Each entry: origin tex (relative
+# to repo root), generator script, data-producing script, optional per-block
+# suffixes (when one .tex holds several \begin{tabular} blocks).
 TABLES = [
-    {"name": "Table18", "label": "tab:corpus-provenance",
+    {"label": "tab:corpus-provenance",
      "origin": "4_outputs/mpnet/tables/tab18_corpus_provenance.tex",
      "generator": "1_code/7_main_analysis/2_appendix/export_corpus_provenance.py",
      "data": "1_code/2_segment (hydrated snapshot counts)"},
-    {"name": "Table16", "label": "tab:model-selection-ranking",
+    {"label": "tab:model-selection-ranking",
      "origin": "4_outputs/mpnet/tables/tab16_model_selection_ranking.tex",
      "generator": "1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py",
      "data": "1_code/4_supervised_model_train/1_grid_search.py"},
-    {"name": "Table1", "label": "tab:validation",
+    {"label": "tab:validation",
      "origin": "4_outputs/mpnet/tables/tab1_classifier_performance.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table5", "label": "tab:register-decomposition",
+    {"label": "tab:register-decomposition",
      "origin": "4_outputs/mpnet/tables/tab5_register_decomposition.tex",
      "generator": "1_code/7_main_analysis/0_shared/g_register_decomposition.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "Table4", "label": "tab:interaction",
+    {"label": "tab:interaction",
      "origin": "4_outputs/mpnet/tables/tab4_interaction_h25.tex",
      "generator": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table10", "label": "tab:concept-coverage",
+    {"label": "tab:concept-coverage",
      "origin": "4_outputs/mpnet/tables/tab10_concept_coverage.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "Table11", "label": "tab:reference-concept",
+    {"label": "tab:reference-concept",
      "origin": "4_outputs/mpnet/tables/tab_concept_reference.tex",
      "generator": "1_code/7_main_analysis/0_shared/g_register_decomposition.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "TableA3", "label": "tab:sdg4-lexical-audit",
+    {"label": "tab:sdg4-lexical-audit",
      "origin": "4_outputs/appendix/mpnet/a3_sdg4_audit/tables/tab_a3_sdg4_lexical_audit.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "TableB2", "label": "tab:semantic-gap-text-interpretability-full",
+    {"label": "tab:semantic-gap-text-interpretability-full",
      "origin": "4_outputs/appendix/mpnet/b2_semantic_gap_interpretability/tables/tab_b2_semantic_gap_interpret_all.tex",
      "generator": "1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "Table13", "label": "tab:distributional-gap", "parts": ["", "_cont"],
+    {"label": "tab:distributional-gap", "parts": ["", "_cont"],
      "origin": "4_outputs/mpnet/adjusted/tables/tab13_distributional_gap.tex",
      "generator": "1_code/7_main_analysis/1_main_text/g_distributional_gap.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table14", "label": "tab:distributional-h1",
+    {"label": "tab:distributional-h1",
      "origin": "4_outputs/mpnet/adjusted/tables/tab14_distributional_h1.tex",
      "generator": "1_code/7_main_analysis/1_main_text/g_distributional_h1_correlation.py",
      "data": "1_code/7_main_analysis/1_main_text/g_distributional_gap.py"},
-    {"name": "TableC", "label": "tab:sample-stability",
+    {"label": "tab:sample-stability",
      "origin": "4_outputs/appendix/mpnet/c_sample_stability/tables/tab_c_sample_stability.tex",
      "generator": "1_code/7_main_analysis/2_appendix/c_sample_stability.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table16_full", "label": "tab:model-selection-appendix",
+    {"label": "tab:model-selection-appendix",
      "origin": "4_outputs/mpnet/tables/tab16_model_selection_full.tex",
      "generator": "1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py",
      "data": "1_code/4_supervised_model_train/1_grid_search.py"},
-    {"name": "Table12_cross", "label": "tab:iterative-register-check",
+    {"label": "tab:iterative-register-check",
      "origin": "4_outputs/mpnet/tables/tab12_register_cross.tex",
      "generator": "1_code/7_main_analysis/2_appendix/f3_register_iterative_cross_table.py",
      "data": "1_code/7_main_analysis/0_shared/register_adjust.py"},
-    {"name": "TableA1_design", "label": "tab:register-sample-design",
+    {"label": "tab:register-sample-design",
      "origin": "4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_sample_design.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a1_register_validation.py",
      "data": "1_code/7_main_analysis/0_shared/register_adjust.py"},
-    {"name": "TableA1_features", "label": "tab:register-feature-contrasts",
+    {"label": "tab:register-feature-contrasts",
      "origin": "4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_features.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a1_register_validation.py",
      "data": "1_code/7_main_analysis/0_shared/register_adjust.py"},
-    {"name": "TableA1", "label": "tab:register-validation-accuracy",
+    {"label": "tab:register-validation-accuracy",
      "origin": "4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_validation.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a1_register_validation.py",
      "data": "1_code/7_main_analysis/0_shared/register_adjust.py"},
-    {"name": "TableA1_selectivity", "label": "tab:register-validation-selectivity",
+    {"label": "tab:register-validation-selectivity",
      "origin": "4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_validation_selectivity.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a1_register_validation.py",
      "data": "1_code/7_main_analysis/0_shared/register_adjust.py"},
-    {"name": "Table6a", "label": "tab:cross-sensitivity-robustness",
+    {"label": "tab:cross-sensitivity-robustness",
      "origin": "4_outputs/mpnet/tables/tab6a_cross_sensitivity.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table6b", "label": "tab:cross-sensitivity-robustness-raw",
+    {"label": "tab:cross-sensitivity-robustness-raw",
      "origin": "4_outputs/mpnet/tables/tab6b_cross_sensitivity.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table7a", "label": "tab:encoder-sensitivity-semantic",
+    {"label": "tab:encoder-sensitivity-semantic",
      "origin": "4_outputs/mpnet/tables/tab7a_encoder_sensitivity.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table7b", "label": "tab:encoder-sensitivity-semantic-raw",
+    {"label": "tab:encoder-sensitivity-semantic-raw",
      "origin": "4_outputs/mpnet/tables/tab7b_encoder_sensitivity.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table9", "label": "tab:encoder-sensitivity-coverage",
+    {"label": "tab:encoder-sensitivity-coverage",
      "origin": "4_outputs/mpnet/tables/tab9_encoder_sensitivity_coverage.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "Table8", "label": "tab:cross-sensitivity-coverage",
+    {"label": "tab:cross-sensitivity-coverage",
      "origin": "4_outputs/mpnet/tables/tab8_coverage_sensitivity.tex",
      "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py"},
-    {"name": "Table_minilm_ref", "label": "tab:reference-minilm",
+    {"label": "tab:reference-minilm",
      "origin": "4_outputs/minilm/tables/tab_minilm_reference.tex",
      "generator": "1_code/7_main_analysis/0_shared/g_register_decomposition.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "Table_scibert_ref", "label": "tab:reference-scibert",
+    {"label": "tab:reference-scibert",
      "origin": "4_outputs/scibert/tables/tab_scibert_reference.tex",
      "generator": "1_code/7_main_analysis/0_shared/g_register_decomposition.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "TableH1_covgap", "label": "tab:app-cross-method-covgap",
+    {"label": "tab:app-cross-method-covgap",
      "origin": "4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_covgap.tex",
      "generator": "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py"},
-    {"name": "TableH1_semgap", "label": "tab:app-cross-method-semgap",
+    {"label": "tab:app-cross-method-semgap",
      "origin": "4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex",
      "generator": "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"name": "TableI1", "label": "tab:app-assignment-method-comparison",
+    {"label": "tab:app-assignment-method-comparison",
      "origin": "4_outputs/appendix/mpnet/i1_assignment_method_comparison/tables/tab_app_assignment_method_comparison.tex",
      "generator": "1_code/7_main_analysis/2_appendix/i1_assignment_method_comparison.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"name": "TableJ1", "label": "tab:raw-value-correlation",
+    {"label": "tab:raw-value-correlation",
      "origin": "4_outputs/appendix/mpnet/j1_raw_value_correlation/tables/tab_j1_raw_value_correlation.tex",
      "generator": "1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py"},
-    {"name": "TableA2", "label": "tab:policy-source-family",
+    {"label": "tab:policy-source-family",
      "origin": "4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_combined.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py"},
-    {"name": "TableA2_h25", "label": "tab:policy-source-family-h25",
+    {"label": "tab:policy-source-family-h25",
      "origin": "4_outputs/appendix/mpnet/a2_source_family_sensitivity/tables/tab_a2_policy_source_family_h25.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py"},
-    {"name": "TableK1", "label": "tab:k1-specification-grid",
+    {"label": "tab:k1-specification-grid",
      "origin": "4_outputs/appendix/mpnet/k1_regression_semantic_gap/tables/tab_k1_specification_grid.tex",
      "generator": "1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
 ]
 
-# Figures by PRINTED PDF order. Each "sources" entry is (origin relative path,
-# final filename).
+# Figures by PRINTED PDF order, two-digit. Each "sources" entry is (origin relative
+# path, final filename).
 FIGURES = [
-    {"name": "Fig1", "label": "fig:conceptual-framework",
+    {"name": "Fig01", "label": "fig:conceptual-framework",
      "generator": "1_code/8_visualization/build_conceptual_figs.py", "data": "same",
-     "sources": [("4_outputs/conceptual_figs/fig1_conceptual_framework.png", "Fig1.png"),
-                 ("4_outputs/conceptual_figs/fig1_conceptual_framework.pdf", "Fig1.pdf")]},
-    {"name": "Fig2", "label": "fig:pipeline-flowchart",
+     "sources": [("4_outputs/conceptual_figs/fig1_conceptual_framework.png", "Fig01.png"),
+                 ("4_outputs/conceptual_figs/fig1_conceptual_framework.pdf", "Fig01.pdf")]},
+    {"name": "Fig02", "label": "fig:pipeline-flowchart",
      "generator": "1_code/8_visualization/build_pipeline_flowchart.py", "data": "same",
-     "sources": [("4_outputs/conceptual_figs/fig6_pipeline_flowchart.png", "Fig2.png"),
-                 ("4_outputs/conceptual_figs/fig6_pipeline_flowchart.pdf", "Fig2.pdf")]},
-    {"name": "Fig3", "label": "fig:coverage_profiles",
+     "sources": [("4_outputs/conceptual_figs/fig6_pipeline_flowchart.png", "Fig02.png"),
+                 ("4_outputs/conceptual_figs/fig6_pipeline_flowchart.pdf", "Fig02.pdf")]},
+    {"name": "Fig03", "label": "fig:coverage_profiles",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py",
-     "sources": [("4_outputs/mpnet/figures/fig2_coverage_profiles.png", "Fig3.png"),
-                 ("4_outputs/mpnet/figures/fig2_coverage_profiles.pdf", "Fig3.pdf")]},
-    {"name": "Fig4", "label": "fig:pca-register-before-after",
+     "sources": [("4_outputs/mpnet/figures/fig2_coverage_profiles.png", "Fig03.png"),
+                 ("4_outputs/mpnet/figures/fig2_coverage_profiles.pdf", "Fig03.pdf")]},
+    {"name": "Fig04", "label": "fig:pca-register-before-after",
      "generator": "1_code/7_main_analysis/1_main_text/0_pca_register_before_after.py",
      "data": "1_code/7_main_analysis/0_shared/register_adjust.py",
-     "sources": [("4_outputs/mpnet/figures/fig3_pca_register_before_after.png", "Fig4.png"),
-                 ("4_outputs/mpnet/figures/fig3_pca_register_before_after.pdf", "Fig4.pdf")]},
-    {"name": "Fig5", "label": "fig:semantic_gap",
+     "sources": [("4_outputs/mpnet/figures/fig3_pca_register_before_after.png", "Fig04.png"),
+                 ("4_outputs/mpnet/figures/fig3_pca_register_before_after.pdf", "Fig04.pdf")]},
+    {"name": "Fig05", "label": "fig:semantic_gap",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
-     "sources": [("4_outputs/mpnet/figures/fig4_semantic_gap.png", "Fig5.png"),
-                 ("4_outputs/mpnet/figures/fig4_semantic_gap.pdf", "Fig5.pdf")]},
-    {"name": "Fig6", "label": "fig:typology_scatter",
+     "sources": [("4_outputs/mpnet/figures/fig4_semantic_gap.png", "Fig05.png"),
+                 ("4_outputs/mpnet/figures/fig4_semantic_gap.pdf", "Fig05.pdf")]},
+    {"name": "Fig06", "label": "fig:typology_scatter",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py",
-     "sources": [("4_outputs/mpnet/figures/fig9_h1a_scatter.png", "Fig6a.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1a_scatter.pdf", "Fig6a.pdf"),
-                 ("4_outputs/mpnet/figures/fig9_h1b_scatter.png", "Fig6b.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1b_scatter.pdf", "Fig6b.pdf"),
-                 ("4_outputs/mpnet/figures/fig9_h1c_scatter.png", "Fig6c.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1c_scatter.pdf", "Fig6c.pdf"),
-                 ("4_outputs/mpnet/figures/fig9_h1d_scatter.png", "Fig6d.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1d_scatter.pdf", "Fig6d.pdf")]},
-    {"name": "Fig7", "label": "fig:centroid-similarity-matrix",
+     "sources": [("4_outputs/mpnet/figures/fig9_h1a_scatter.png", "Fig06a.png"),
+                 ("4_outputs/mpnet/figures/fig9_h1a_scatter.pdf", "Fig06a.pdf"),
+                 ("4_outputs/mpnet/figures/fig9_h1b_scatter.png", "Fig06b.png"),
+                 ("4_outputs/mpnet/figures/fig9_h1b_scatter.pdf", "Fig06b.pdf"),
+                 ("4_outputs/mpnet/figures/fig9_h1c_scatter.png", "Fig06c.png"),
+                 ("4_outputs/mpnet/figures/fig9_h1c_scatter.pdf", "Fig06c.pdf"),
+                 ("4_outputs/mpnet/figures/fig9_h1d_scatter.png", "Fig06d.png"),
+                 ("4_outputs/mpnet/figures/fig9_h1d_scatter.pdf", "Fig06d.pdf")]},
+    {"name": "Fig07", "label": "fig:centroid-similarity-matrix",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py",
-     "sources": [("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.png", "Fig7.png"),
-                 ("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.pdf", "Fig7.pdf")]},
+     "sources": [("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.png", "Fig07.png"),
+                 ("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.pdf", "Fig07.pdf")]},
 ]
 
 _SYMBOL_MAP = {
@@ -339,7 +343,6 @@ _SYMBOL_MAP = {
     r"\rightarrow": "→", r"\leftarrow": "←",
 }
 
-# Alignment column may itself contain braces, e.g. p{0.28\textwidth}.
 _MULTICOLUMN_RE = re.compile(r"\\multicolumn\{(\d+)\}\{(?:[^{}]|\{[^{}]*\})*\}\{([^{}]*)\}")
 _MULTIROW_RE = re.compile(r"\\multirow\{[^}]*\}\{[^}]*\}\{([^{}]*)\}")
 _RULE_RE = re.compile(r"\\(toprule|midrule|bottomrule|hline|cmidrule|addlinespace|specialrule)")
@@ -405,11 +408,11 @@ def _tex_to_tables(path: Path) -> list[list[list[str]]]:
     return out
 
 
-def _write_xlsx(rows: list[list[str]], dest: Path) -> None:
+def _write_table(rows: list[list[str]], xlsx_path: Path, csv_path: Path) -> None:
     max_cols = max((len(r) for r in rows), default=0)
     padded = [r + [""] * (max_cols - len(r)) for r in rows]
     df = pd.DataFrame(padded)
-    with pd.ExcelWriter(dest, engine="openpyxl") as writer:
+    with pd.ExcelWriter(xlsx_path, engine="openpyxl") as writer:
         df.to_excel(writer, sheet_name="Sheet1", index=False, header=False)
         ws = writer.sheets["Sheet1"]
         for col in ws.columns:
@@ -417,6 +420,7 @@ def _write_xlsx(rows: list[list[str]], dest: Path) -> None:
             ws.column_dimensions[col[0].column_letter].width = min(width + 2, 60)
         for cell in ws[1]:
             cell.font = Font(bold=True)
+    df.to_csv(csv_path, index=False, header=False)
 
 
 def collect_final_outputs(output_dir: Path, model: str = "all-mpnet-base-v2") -> None:
@@ -426,16 +430,25 @@ def collect_final_outputs(output_dir: Path, model: str = "all-mpnet-base-v2") ->
     final_dir.mkdir(parents=True, exist_ok=True)
     tex_dir.mkdir(parents=True, exist_ok=True)
 
+    # Drop stale outputs from a previous run (old non-zero-padded names) so renumbering
+    # stays clean. New names are recreated below.
+    for pat in ("Table*.xlsx", "Table*.csv", "Fig*.png", "Fig*.pdf"):
+        for old in final_dir.glob(pat):
+            old.unlink()
+
     readme_lines = ["# 4_outputs/final — human-facing bundle (MPNet track)\n",
-                    "Generated by `python main.py --get-outputs-final`.\n"]
+                    "Generated by `python main.py --get-outputs-final`.\n",
+                    "Tables are named by dissertation.tex \\input order (Table01 = first "
+                    "\\input). Figures by printed PDF order (Fig01..Fig07).\n"]
 
     # ----- tables -----
-    readme_lines.append("\n## Tables (one .xlsx each; original .tex in tables_tex/)\n")
-    for t in TABLES:
+    readme_lines.append("\n## Tables (one .xlsx + one .csv each; original .tex in tables_tex/)\n")
+    for idx, t in enumerate(TABLES, start=1):
+        name = f"Table{idx:02d}"
         origin = REPO_ROOT / t["origin"]
         if not origin.exists():
             print(f"[skip] missing {origin}", file=sys.stderr)
-            readme_lines.append(f"- **{t['name']}** — MISSING: {t['origin']}\n")
+            readme_lines.append(f"- **{name}** — MISSING: {t['origin']}\n")
             continue
         parts = t.get("parts", [""])
         tables = _tex_to_tables(origin)
@@ -443,22 +456,21 @@ def collect_final_outputs(output_dir: Path, model: str = "all-mpnet-base-v2") ->
             print(f"[warn] no tabular parsed in {origin}", file=sys.stderr)
         for i, rows in enumerate(tables):
             suffix = parts[i] if i < len(parts) else f"_{i+1}"
-            dest = final_dir / f"{t['name']}{suffix}.xlsx"
-            _write_xlsx(rows, dest)
+            _write_table(rows, final_dir / f"{name}{suffix}.xlsx", final_dir / f"{name}{suffix}.csv")
         shutil.copy2(origin, tex_dir / origin.name)
-        print(f"# ----- {t['name']} ------")
+        print(f"# ----- {name} ------")
         print(f"# output_origin = {t['origin']}")
-        print(f"# output_final  = 4_outputs/final/{t['name']}.xlsx (tex->xlsx conversion)")
+        print(f"# output_final  = 4_outputs/final/{name}.xlsx (+ .csv) (tex->xlsx/csv conversion)")
         print(f"# generator script : {t['generator']}")
         print(f"# data script      : {t['data']}")
         readme_lines.append(
-            f"- **{t['name']}** (`{t['name']}.xlsx`) — origin `{t['origin']}`  \n"
+            f"- **{name}** (`{name}.xlsx` / `{name}.csv`) — origin `{t['origin']}`  \n"
             f"  generator: `{t['generator']}`  \n"
             f"  data: `{t['data']}`\n"
         )
 
     # ----- figures -----
-    readme_lines.append("\n## Figures (copied as FigX.png / FigX.pdf)\n")
+    readme_lines.append("\n## Figures (copied as FigXX.png / FigXX.pdf)\n")
     for f in FIGURES:
         print(f"# ----- {f['name']} ------")
         print(f"# generator script : {f['generator']}")

@@ -1,0 +1,3 @@
+Design,Segments,Research,Policy,Distinct docs,Multi-parent units,Mega-doc segments,Mega-SDGs
+Original (per-SDG dedup),408,204,204,390,25,25,15
+One-per-parent (global dedup),408,204,204,408,0,0,0
