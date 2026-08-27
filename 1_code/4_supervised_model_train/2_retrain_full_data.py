@@ -221,7 +221,8 @@ def main() -> None:
     parser.add_argument("--C", type=float, default=LR_C,
                         help="LogisticRegression inverse regularisation strength (default: %(default)s)")
     parser.add_argument("--penalty", default=LR_PENALTY, choices=["l2", "l1", "none"],
-                        help="LogisticRegression penalty (default: %(default)s)")
+                        help="LogisticRegression penalty (default: %(default)s). "
+                             "sklearn rejects invalid penalty/solver combinations (e.g. l1+lbfgs) loudly.")
     parser.add_argument("--solver", default=LR_SOLVER, choices=["lbfgs", "liblinear"],
                         help="LogisticRegression solver (default: %(default)s)")
     parser.add_argument("--class-weight", default=None, choices=[None, "balanced"],
@@ -371,7 +372,7 @@ def main() -> None:
 
         y_int_train = Y_train.argmax(axis=1)
         clf = LogisticRegression(
-            C=args.C, solver=args.solver,
+            C=args.C, penalty=args.penalty, solver=args.solver,
             class_weight=args.class_weight, max_iter=args.max_iter, random_state=RANDOM_SEED,
         )
         clf.fit(X_train, y_int_train)
