@@ -133,7 +133,7 @@ into 4_outputs/final/README.md at runtime.
 #                                 data: 1_code/7_main_analysis/0_shared/register_adjust.py
 # Fig05  fig4_semantic_gap          generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Fig06a..Fig06d fig9_h1a..h1d     generator: 1_code/8_visualization/plot_figures.py
+# Fig06  fig9_h1_grid              generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
 # Fig07  fig8_centroid_similarity_heatmap generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py
@@ -320,14 +320,8 @@ FIGURES = [
     {"name": "Fig06", "label": "fig:typology_scatter",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py",
-     "sources": [("4_outputs/mpnet/figures/fig9_h1a_scatter.png", "Fig06a.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1a_scatter.pdf", "Fig06a.pdf"),
-                 ("4_outputs/mpnet/figures/fig9_h1b_scatter.png", "Fig06b.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1b_scatter.pdf", "Fig06b.pdf"),
-                 ("4_outputs/mpnet/figures/fig9_h1c_scatter.png", "Fig06c.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1c_scatter.pdf", "Fig06c.pdf"),
-                 ("4_outputs/mpnet/figures/fig9_h1d_scatter.png", "Fig06d.png"),
-                 ("4_outputs/mpnet/figures/fig9_h1d_scatter.pdf", "Fig06d.pdf")]},
+     "sources": [("4_outputs/mpnet/figures/fig9_h1_grid.png", "Fig06.png"),
+                 ("4_outputs/mpnet/figures/fig9_h1_grid.pdf", "Fig06.pdf")]},
     {"name": "Fig07", "label": "fig:centroid-similarity-matrix",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py",

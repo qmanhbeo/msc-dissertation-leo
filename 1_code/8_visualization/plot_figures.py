@@ -5,8 +5,8 @@ Produces the figure set (PDF + PNG) from main-text analysis outputs:
 
     fig2 — Coverage profiles: research vs policy (horizontal grouped bar chart)
     fig4 — Semantic gap by SDG (horizontal bar chart, sorted descending)
-    fig9 — Coverage vs semantic gap scatter grid for the H1a–d configurations
-           (one panel per {coverage, semantic} x {raw, MLP-robustness} pair)
+    fig9 — H1a–H1d coverage-predictor vs semantic-gap scatter grid (one
+           combined 2x2 image with embedded panel titles and a shared legend)
     fig8 — Centroid pairwise similarity heatmap (lower triangle), written under
            4_outputs/appendix/{model}/a4_centroid_similarity/figures/
 
@@ -18,7 +18,7 @@ Inputs:
 Outputs:
       4_outputs/mpnet/figures/fig2_coverage_profiles.{pdf,png}
       4_outputs/mpnet/figures/fig4_semantic_gap.{pdf,png}
-      4_outputs/mpnet/figures/fig9_h1{a,b,c,d}_scatter.{pdf,png}
+      4_outputs/mpnet/figures/fig9_h1_grid.{pdf,png}
       4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.{pdf,png}
 
 Run:
@@ -146,13 +146,15 @@ def load_gap_maps(layout) -> tuple[dict[int, float], dict[int, float]]:
 
 
 def plot_h1_scatter_grid(layout, model: str) -> None:
-    """H1a--H1d coverage-predictor vs semantic-gap scatter grid (2x2).
+    """H1a--H1d coverage-predictor vs semantic-gap scatter grid (single image).
 
-    Four SEPARATE PNG/PDF files (one per hypothesis), each plotting a different
-    coverage predictor on x against the within-SDG semantic gap on y. The y-axis
-    is the same semantic-gap variable for every panel (solid blue = adjusted /
-    canonical, open grey = raw baseline), so the panels share a common y-limit
-    and read as one family when grouped as a 2x2 subfigure grid in the text.
+    One combined PNG/PDF: a 2x2 grid of panels, each plotting a different
+    coverage predictor on x against the within-SDG semantic gap on y. The
+    y-axis is the same semantic-gap variable for every panel (solid blue =
+    adjusted / canonical, open grey = raw baseline), so the panels share a
+    common y-limit. Panel titles "(a)"-"(d)" are embedded in the image (the
+    manuscript text references "panel a" directly), and a single shared
+    legend replaces the former per-panel legends.
 
     Predictors (from interaction_scatter_data.csv):
         H1a -> coverage_gap_abs        (absolute research--policy coverage gap, pp)
@@ -182,11 +184,16 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
         ymax = df_sem_valid["semantic_gap"].max() * 1.08
         ymed = float(df_sem_valid["semantic_gap"].median())
 
+    # (embedded panel title, dataframe column, x-axis label)
     panels = [
-        ("h1a", "coverage_gap_abs", "Absolute research–policy coverage gap (pp)"),
-        ("h1b", "research_dominance", "Signed dominance (research% − policy%, pp)"),
-        ("h1c", "research_pct", "Research coverage (%)"),
-        ("h1d", "policy_pct_docweighted", "Policy coverage (%)"),
+        ("(a) H1a: absolute coverage gap", "coverage_gap_abs",
+         "Absolute research–policy coverage gap (pp)"),
+        ("(b) H1b: signed dominance", "research_dominance",
+         "Signed dominance (research% − policy%, pp)"),
+        ("(c) H1c: research coverage", "research_pct",
+         "Research coverage (%)"),
+        ("(d) H1d: policy coverage", "policy_pct_docweighted",
+         "Policy coverage (%)"),
     ]
 
     # Fraction-based x offsets so labels nudge consistently across the very
@@ -195,8 +202,15 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
                16: (0.05, 0.004), 8: (0.04, 0.004), 17: (0.05, -0.006),
                13: (0.05, -0.005), 12: (0.05, 0.004)}
 
-    for key, col, xlabel in panels:
-        fig, ax = plt.subplots(figsize=(5.2, 4.2))
+    fig, axes = plt.subplots(2, 2, figsize=(6.6, 4.9))
+    legend_handles = [
+        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
+                   markersize=6, label="Adjusted gap (canonical)"),
+        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
+                   markeredgecolor="#888888", markersize=6, label="Semantic gap (baseline)"),
+    ] if use_adjusted else None
+
+    for (title, col, xlabel), ax in zip(panels, axes.ravel()):
         ax.axhline(ymed, color="grey", linestyle="--", linewidth=1, alpha=0.7)
 
         signed = col == "research_dominance"
@@ -220,12 +234,6 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
                 ax.annotate(f"SDG {sdg}", (x, adj_map[sdg]),
                             xytext=(x + dx * xrng, adj_map[sdg] + dy),
                             fontsize=6.5, color="black")
-            ax.legend(handles=[
-                plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
-                           markersize=6, label="Adjusted gap (canonical)"),
-                plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
-                           markeredgecolor="#888888", markersize=6, label="Semantic gap (baseline)"),
-            ], fontsize=7, loc="upper right")
         else:
             for _, row in df_sem_valid.iterrows():
                 sdg = int(row["sdg"])
@@ -238,18 +246,26 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
 
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        ax.set_xlabel(xlabel, fontsize=8.5)
-        ax.set_ylabel("Within-SDG semantic gap\n(adjusted = after INLP register removal)",
-                      fontsize=8.5)
+        ax.set_title(title, fontsize=9)
+        ax.set_xlabel(xlabel, fontsize=8)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
         ax.grid(True, alpha=0.3, linestyle=":", linewidth=0.5)
-        fig.tight_layout()
-        out_base = figures_dir / f"fig9_{key}_scatter"
-        fig.savefig(out_base.with_suffix(".pdf"), bbox_inches="tight")
-        fig.savefig(out_base.with_suffix(".png"), bbox_inches="tight", dpi=300)
-        plt.close(fig)
-        print(f"Saved: fig9_{key}_scatter.png")
+        ax.tick_params(labelsize=7.5)
+
+    # Shared y-label on the left column only; one shared legend above the grid.
+    for ax in axes[:, 0]:
+        ax.set_ylabel("Within-SDG semantic gap\n(adjusted = after INLP register removal)",
+                      fontsize=8)
+    if legend_handles is not None:
+        fig.legend(handles=legend_handles, loc="upper center", ncol=2,
+                   frameon=False, fontsize=8, columnspacing=1.6, handletextpad=0.4)
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    out_base = figures_dir / "fig9_h1_grid"
+    fig.savefig(out_base.with_suffix(".pdf"), bbox_inches="tight")
+    fig.savefig(out_base.with_suffix(".png"), bbox_inches="tight", dpi=300)
+    plt.close(fig)
+    print("Saved: fig9_h1_grid.png")
 
 
 def main() -> None:
@@ -269,10 +285,7 @@ def main() -> None:
         expected = [
             figures_dir / "fig2_coverage_profiles.pdf",
             figures_dir / "fig4_semantic_gap.pdf",
-            figures_dir / "fig9_h1a_scatter.pdf",
-            figures_dir / "fig9_h1b_scatter.pdf",
-            figures_dir / "fig9_h1c_scatter.pdf",
-            figures_dir / "fig9_h1d_scatter.pdf",
+            figures_dir / "fig9_h1_grid.pdf",
         ]
         if all(p.exists() for p in expected):
             print(f"Figures already exist at {figures_dir} — skip. Use --overwrite to regenerate.")

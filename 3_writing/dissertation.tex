@@ -491,22 +491,15 @@ The SDG 4 lexical artefact (Appendix~\ref{app:sdg4-lexical-audit}) does not driv
 
 Figure~\ref{fig:typology_scatter} plots the within-SDG semantic gap against each coverage predictor. Large coverage gaps span the full range of adjusted gaps (panel a), so no single SDG drives the near-zero raw association. The directional panels mirror the asymmetry above: no consistent trend for H1b or H1c, rising H1d.
 
-% 2x2 panel grid as an explicit tabular (not \subfigure): pandoc's docx build
-% flattens consecutive subfigures into a single 1-row layout grid and swallows
-% the trailing Notes paragraph as an extra grid cell. The tabular renders as a
-% 2x2 grid in both PDF and Word. The Notes paragraph stays inside the float so
-% it cannot drift from the figure across page breaks in the PDF; build_word.sh
-% relocates it after \end{figure} in its pandoc working copy only, where pandoc
-% emits it below the "Figure 6." caption (matching the PDF reading order).
+% Figure 6 is ONE combined generator image (embedded "(a)"-"(d)" panel titles,
+% one shared legend): a single-image figure renders cleanly in both PDF and
+% Word. The Notes paragraph stays inside the float so it cannot drift from the
+% figure across page breaks in the PDF; build_word.sh relocates it after
+% \end{figure} in its pandoc working copy only, where pandoc emits it below
+% the "Figure 6." caption (matching the PDF reading order).
 \begin{figure}[ht]
 \centering
-\begin{tabular}{@{}p{0.48\textwidth}p{0.48\textwidth}@{}}
-{\centering\includegraphics[width=\linewidth]{fig9_h1a_scatter.png}\newline\small\mbox{\textbf{(a)} H1a: absolute coverage gap}\par} &
-{\centering\includegraphics[width=\linewidth]{fig9_h1b_scatter.png}\newline\small\mbox{\textbf{(b)} H1b: signed dominance (research\% $-$ policy\%)}\par} \\[-10pt]
-{\centering\includegraphics[width=\linewidth]{fig9_h1c_scatter.png}\newline\small\mbox{\textbf{(c)} H1c: research coverage (\%)}\par} &
-{\centering\includegraphics[width=\linewidth]{fig9_h1d_scatter.png}\newline\small\mbox{\textbf{(d)} H1d: policy coverage (\%)}\par} \\
-\end{tabular}
-\vspace{-15pt}
+\includegraphics[width=\textwidth]{fig9_h1_grid.png}
   \caption{Coverage predictor vs within-SDG semantic gap, one point per SDG.}
   \label{fig:typology_scatter}
   \par\smallskip\footnotesize\emph{Notes:} Semantic gaps from Figure~\ref{fig:semantic_gap}. Coverage predictors from Figure~\ref{fig:coverage_profiles}. Cov.\ = $|\text{research}-\text{policy}|$ (pp). Signed dom.\ = research share $-$ policy share (pp).\par
