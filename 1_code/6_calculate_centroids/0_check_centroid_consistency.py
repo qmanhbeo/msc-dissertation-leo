@@ -1,9 +1,9 @@
 """
-Check centroid consistency for MLP-supervised classification.
+Check centroid consistency for the LR-supervised classification.
 
 For each corpus (research, policy):
   - Compute which SDG centroid each text is nearest to (cosine sim).
-  - Compare with the MLP-assigned SDG (argmax of sigmoid probabilities).
+  - Compare with the LR-assigned SDG.
   - Report per-SDG agreement rates and confusion matrices.
 
 Also saves policy centroids persistently (research centroids already exist).
@@ -13,6 +13,9 @@ outputs (policy_centroids.npy, policy_centroid_meta.json,
 centroid_consistency.json) are diagnostic-only and are NOT read by any
 downstream script — its value is failing loudly if research/policy
 centroids or scores are inconsistent, not the artifacts it writes.
+(Its inputs became the LR classifier's products when score_supervised.py
+absorbed the former per-classifier scoring scripts; older copies of this
+docstring still said MLP.)
 
 Inputs:
    2_data/3_embedded/{model}/research_shards/metadata/manifest.json
@@ -234,7 +237,7 @@ def check_policy(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Check centroid consistency for MLP-supervised classification."
+        description="Check centroid consistency for LR-supervised classification."
     )
     parser.add_argument("--embed-model", default=DEFAULT_EMBED_MODEL, type=resolve_model_alias,
                         help="Embed model (default: %(default)s)")
@@ -290,7 +293,7 @@ def main() -> None:
     log.info("  Shape: %s", policy_scores.shape)
 
     # --- Compute and save policy centroids ---
-    log.info("Computing policy centroids from MLP-assigned segments")
+    log.info("Computing policy centroids from LR-assigned segments")
     policy_centroids, policy_centroid_available, policy_centroid_meta = build_policy_centroids(
         policy_emb, policy_scores
     )

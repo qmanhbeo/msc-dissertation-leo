@@ -712,7 +712,8 @@ def run(args: argparse.Namespace) -> None:
         return f"-{s}" if v < 0 else s
 
     def _fmt2(v):
-        """Format float for LaTeX with 2 d.p."""
+        """Format float for LaTeX with 3 d.p. (kept separate from _fmt in case
+        the grid needs a different precision later; identical today)."""
         s = f"{abs(v):.3f}"
         return f"-{s}" if v < 0 else s
 

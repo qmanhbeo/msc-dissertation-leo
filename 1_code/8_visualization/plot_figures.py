@@ -1,26 +1,28 @@
 """
 plot_figures.py — Generate dissertation figures from analysis outputs.
 
-Produces four publication-quality figures for the dissertation:
+Produces the figure set (PDF + PNG) from main-text analysis outputs:
 
-    Figure 1 — Centroid pairwise similarity heatmap (lower triangle, all-MiniLM-L6-v2)
-    Figure 2 — Coverage profiles: research vs policy (horizontal grouped bar chart)
-    Figure 3 — Semantic gap by SDG (horizontal bar chart, sorted descending)
-    Figure 4 — Coverage vs semantic gap scatter (diagnostic map)
+    fig2 — Coverage profiles: research vs policy (horizontal grouped bar chart)
+    fig4 — Semantic gap by SDG (horizontal bar chart, sorted descending)
+    fig9 — Coverage vs semantic gap scatter grid for the H1a–d configurations
+           (one panel per {coverage, semantic} x {raw, MLP-robustness} pair)
+    fig8 — Centroid pairwise similarity heatmap (lower triangle), written under
+           4_outputs/appendix/{model}/a4_centroid_similarity/figures/
 
 Inputs:
-      4_outputs/mpnet/data/centroid_similarity_matrix.csv     — 17x17 pairwise centroid cosine similarity
-      4_outputs/mpnet/data/interaction_scatter_data.csv       — per-SDG metrics table from coverage_semantic_interaction.py
-      4_outputs/mpnet/data/coverage_document_weighted.json   — corpus-level n counts for legend labels
+      4_outputs/{model}/data/interaction_scatter_data.csv    — per-SDG metrics table
+      4_outputs/{model}/data/coverage_document_weighted.json — corpus-level n counts
+      4_outputs/{model}/data/centroid_similarity_matrix.csv  — pairwise cosine similarities
 
 Outputs:
-      4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.pdf
-      4_outputs/mpnet/figures/fig2_coverage_profiles.pdf
-      4_outputs/mpnet/figures/fig4_semantic_gap.pdf
-      4_outputs/mpnet/figures/fig5_coverage_semantic_scatter.pdf
+      4_outputs/mpnet/figures/fig2_coverage_profiles.{pdf,png}
+      4_outputs/mpnet/figures/fig4_semantic_gap.{pdf,png}
+      4_outputs/mpnet/figures/fig9_h1{a,b,c,d}_scatter.{pdf,png}
+      4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.{pdf,png}
 
 Run:
-    python 1_code/8_visualization/plot_figures.py
+    python 1_code/8_visualization/plot_figures.py --output-dir 4_outputs/mpnet
 """
 
 from __future__ import annotations
