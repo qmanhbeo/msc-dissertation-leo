@@ -749,8 +749,8 @@ def _fmt_coef_se(b: float, se: float, p: float, in_log: bool = False) -> tuple[s
     if in_log:
         coef_str = f"{b:+.3f}{stars}"
     else:
-        coef_str = f"{b:+.1f}{stars}"
-    se_str = f"({se:.1f})"
+        coef_str = f"{b:+.3f}{stars}"
+    se_str = f"({se:.3f})"
     return coef_str, se_str
 
 
