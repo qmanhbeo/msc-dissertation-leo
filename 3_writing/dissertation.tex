@@ -427,7 +427,7 @@ Figure~\ref{fig:coverage_profiles} presents the document-weighted policy coverag
 
 \subsection{Register Adjustment and Semantic Gap}\label{sec:semantic-gap}
 
-Register adjustment converges after \RegisterIterFinalK{} iterations for the MPNet embedding space. Detailed data on the iterations until convergence, also for MiniLM and SciBERT spaces, is reported in Appendix~\ref{app:register-robustness}. Figure~\ref{fig:pca-register-before-after} shows the combined embedding space and the geometric effect of INLP register adjustment: the raw space (left) separates research and policy clouds, while the adjusted space (right) shows no major separation between them. Although the PCA projection is coarse, the adjusted space removes the research--policy separation while leaving SDG separability intact (Appendix~\ref{app:register-validation}).
+Register adjustment converges after \RegisterIterFinalK{} iterations for the MPNet embedding space. Detailed data on the iterations until convergence, also for MiniLM and SciBERT spaces, is reported in Appendix~\ref{app:register-robustness}. Figure~\ref{fig:pca-register-before-after} shows the combined embedding space and the geometric effect of INLP register adjustment: the raw space separates research and policy clouds, while the adjusted space shows no major separation between them. Although the PCA projection is coarse, the adjusted space removes the research--policy separation while leaving SDG separability intact (Appendix~\ref{app:register-validation}).
 
 \begin{figure}[ht]
 \centering
@@ -487,7 +487,7 @@ The SDG 4 lexical artefact (Appendix~\ref{app:sdg4-lexical-audit}) does not driv
 
 The corpus asymmetry does not manufacture this null. Because the research corpus is the AI $\cap$ SDG intersection while the policy corpus pools AI-specific and broad institutional SDG discourse, this study re-ran the interaction test with the policy side restricted to the curated AI/SDG family, a symmetric AI/SDG-vs-AI/SDG comparison that matches the research corpus's scope. The raw-null pattern holds: research share remains uncorrelated with the gap ($\rho = \CuratedHPrimaryResearchSpearmanRho$, $p = \CuratedHPrimaryResearchSpearmanP$), and the coverage-gap correlation does not reach significance either ($\rho = \CuratedHPrimaryCovgapSpearmanRho$, $p = \CuratedHPrimaryCovgapSpearmanP$; Table~\ref{tab:policy-source-family-h25}, Appendix~\ref{app:policy-source-data}). The adjusted decomposition shows the same boundary: on register-removed gaps, the curated-family coverage--gap correlation is null ($\rho = \CuratedHPrimaryCovgapAdjSpearmanRho$, $p = \CuratedHPrimaryCovgapAdjSpearmanP$), while the corresponding SDGi-family and full-corpus correlations are positive ($\rho = \SdgiHPrimaryCovgapAdjSpearmanRho$, $p = \SdgiHPrimaryCovgapAdjSpearmanP$; Table~\ref{tab:policy-source-family-h25}, Appendix~\ref{app:policy-source-data}).
 
-Figure~\ref{fig:typology_scatter} shows the within-SDG semantic gap against each coverage predictor, one point per SDG; open grey markers are the raw baseline, solid blue the adjusted (canonical) gap. The raw and adjusted gaps share the same vertical scale across all four panels. Panel (a) is the H1a test (absolute coverage gap): large coverage gaps span the full range of adjusted semantic gaps, so no single SDG drives the near-zero raw H1a association. The directional panels show the asymmetry: H1b (signed dominance) and H1c (research coverage) show no consistent adjusted-direction trend, while H1d (policy coverage) rises with the adjusted gap.
+Figure~\ref{fig:typology_scatter} shows the within-SDG semantic gap against each coverage predictor. Panel (a) is the H1a test (absolute coverage gap): large coverage gaps span the full range of adjusted semantic gaps, so no single SDG drives the near-zero raw H1a association. The directional panels show the asymmetry: H1b (signed dominance) and H1c (research coverage) show no consistent adjusted-direction trend, while H1d (policy coverage) rises with the adjusted gap.
 
 \begin{figure}[ht]
 \centering
@@ -508,7 +508,7 @@ Figure~\ref{fig:typology_scatter} shows the within-SDG semantic gap against each
 \includegraphics[width=\textwidth]{fig9_h1d_scatter.png}
 \caption{H1d: policy coverage (\%)}
 \end{subfigure}
-\caption{Coverage predictor vs within-SDG semantic gap, one point per SDG. Solid blue = adjusted gap (canonical, after INLP register removal); open grey = raw baseline. (a) absolute coverage gap; (b) signed dominance; (c) research coverage; (d) policy coverage.}
+\caption{Coverage predictor vs within-SDG semantic gap, one point per SDG. Both the adjusted (canonical, after INLP register removal) and raw baseline gaps are plotted. (a) absolute coverage gap; (b) signed dominance; (c) research coverage; (d) policy coverage.}
 \label{fig:typology_scatter}
 \end{figure}
 
