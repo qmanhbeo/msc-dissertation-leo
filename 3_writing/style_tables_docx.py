@@ -52,6 +52,12 @@ pattern as ``5_notes/word_count_docx.py``):
         are blanked and fused cells keep only the real remainder
         ("It."/"SDG", matching the PDF render). Census: ``EXPECTED_JUNK_CELLS``
         cells across ``EXPECTED_JUNK_TABLES`` tables.
+   9. Font cap: an explicit 2.5pt ``w:sz`` is set on every run of Table 34
+        (the 24-column pooled-OLS grid, ``tab:k1-specification-grid``), the
+        widest table in the manuscript. Without it the table inherits the
+        default body size and renders far too large in Word. Word-build-only
+        — the PDF sizes the same ``\input`` via ``\resizebox``. Captioned
+        as ``TABLE34_CAPTION``; every other table keeps its inherited size.
 
 Bold headers, single cell line spacing and cell padding are NOT handled here:
 they live declaratively in ``custom_thesis_template.docx`` (``Table`` style
@@ -126,6 +132,21 @@ REMAINDER_MAX_CHARS = 24
 EXPECTED_CONTENT_TABLES = 35
 EXPECTED_BORDERED_ROWS = 68
 EXPECTED_LABEL_ROWS = 2
+
+# Font cap for Table 34 (tab:k1-specification-grid, "Pooled OLS ... across 24
+# configurations"): the widest table in the manuscript (23 coefficient columns
+# + a row-major stub column, 24 cells/row across ~70 rows). Everything else
+# inherits the template's default size; without an explicit size this table
+# renders far too large in Word (its runs carry no w:sz at all). The user
+# requested exactly 2.5pt. Word stores font sizes in half-point units, so
+# 2.5pt = w:sz w:val="5" (w:szCs mirrors complex-script runs, which pandoc
+# never emits here, but is correct CT_RPr practice). New runs injected with a
+# fresh rPr; runs that already carry an rPr (<w:bCs/><w:b/> bold headers,
+# 4 in the census) get it appended before </w:rPr> (valid order after
+# b/bCs). Applied below as step 9, Word build only — the PDF uses
+# \resizebox{\textwidth}{!} on the same \input and is untouched.
+TABLE34_CAPTION = 'w:tblCaption w:val="Table 34: Pooled OLS'
+TABLE34_SZ = 5            # w:sz half-point val for the requested 2.5pt
 
 TBL_BORDERS_XML = (
     "<w:tblBorders>"
@@ -221,6 +242,43 @@ def excise_junk_row(row: str) -> "tuple[str, int]":
     return out, n
 
 
+def size_table_runs(tbl: str) -> "tuple[str, int]":
+    """Set an explicit ``w:sz`` on every run of one table region to 2.5pt.
+
+    Returns ``(new_table, n_runs_sized)``. Runs with no ``rPr`` get a fresh
+    ``<w:rPr>``; runs that already carry one (bold header cells) get the size
+    appended before ``</w:rPr>`` (CT_RPr order after ``b``/``bCs``). Fails
+    closed if any run already declares a ``w:sz``, so a re-run cannot double-
+    size, and if it meets a run shape it does not recognise.
+    """
+    n = 0
+    sz_elem = (f'<w:sz w:val="{TABLE34_SZ}" />'
+               f'<w:szCs w:val="{TABLE34_SZ}" />')
+    sz_open = f"<w:rPr>{sz_elem}</w:rPr>"
+
+    def _run(m: "re.Match[str]") -> str:
+        nonlocal n
+        r = m.group(0)
+        if "w:sz" in r:
+            fail(f"run in Table 34 already carries a w:sz - double-size "
+                 f"guard: {r[:80]!r}")
+        if "<w:rPr>" in r:
+            if "</w:rPr>" not in r:
+                fail(f"run rPr not closed in Table 34: {r[:80]!r}")
+            n += 1
+            # Insert the size elements before the run's OWN </w:rPr> close.
+            return r.replace("</w:rPr>", f"{sz_elem}</w:rPr>", 1)
+        if r.startswith("<w:r><w:t"):
+            n += 1
+            return "<w:r>" + sz_open + r[len("<w:r>") :]
+        fail(f"unexpected run shape in Table 34: {r[:80]!r}")
+
+    # NOTE: 4th positional arg of re.sub is `count`, not `flags` — must use
+    # the keyword or the integer value of re.S (16) is read as a max count.
+    out = re.sub(r"<w:r>.*?</w:r>", _run, tbl, flags=re.S)
+    return out, n
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         fail(f"usage: {sys.argv[0]} <docx>")
@@ -293,6 +351,8 @@ def main() -> None:
     n_label_rows = 0       # stack rows classified via the markerless-label rule
     n_junk_cells = 0       # pandoc-leaked \cmidrule debris cells excised
     n_junk_tables = 0      # content tables that had debris cells excised
+    n_tab34_tables = 0     # tables explicit-sized to 2.5pt (expect: 1 = Table 34)
+    n_tab34_runs = 0       # runs given the explicit 2.5pt size
 
     def row_cell_texts(row: str) -> "list[str]":
         return [
@@ -357,6 +417,7 @@ def main() -> None:
         nonlocal n_promoted, n_centered, n_glued_tables, n_multirow_tables
         nonlocal n_bordered_tables, n_border_rows, n_label_rows
         nonlocal n_junk_cells, n_junk_tables
+        nonlocal n_tab34_tables, n_tab34_runs
         # Recurse into nested tables first, then style this table's own
         # properties. pandoc wraps the Figure 6 image-grid table in a
         # FigureTable layout table, so a region may contain another table;
@@ -490,6 +551,17 @@ def main() -> None:
 
                 tbl = re.sub(r"<w:tr>.*?</w:tr>", keep_row, tbl, flags=re.S)
                 n_glued_tables += 1
+        # Step 9: explicit 2.5pt font size on every run of Table 34 (the one
+        # 24-column pooled-OLS grid). Word-build-only; the PDF sizes the same
+        # \input via \resizebox. Runs carry no w:sz otherwise, so without this
+        # the table inherits the giant default body size.
+        if TABLE34_CAPTION in tbl:
+            if "/w:tblPr>" not in tbl:
+                fail("Table 34 region lacks tblPr - unexpected shape")
+            new_tbl, n_runs = size_table_runs(tbl)
+            n_tab34_runs += n_runs
+            n_tab34_tables += 1
+            return new_tbl
         return tbl
 
     def transform_tables(doc: str) -> str:
@@ -656,6 +728,20 @@ def main() -> None:
             fail(f"cmidrule debris still present in a table cell: "
                  f"{joined[:80]!r}")
 
+    # Table 34 explicit-font postconditions.
+    if n_tab34_tables != 1:
+        fail(f"{n_tab34_tables} tables explicit-sized but expected exactly 1 "
+             f"(Table 34) - census changed; update the script")
+    if not n_tab34_runs:
+        fail("Table 34 explicit sizing ran but sized 0 runs - unexpected")
+    # The document has no other explicit w:sz (sizes all come from the
+    # template), so every val="5" must be a Table 34 run we just wrote.
+    sz5 = f'w:sz w:val="{TABLE34_SZ}"'
+    if doc.count(sz5) != n_tab34_runs:
+        fail(f"explicit 2.5pt w:sz count {doc.count(sz5)} != sized runs "
+             f"{n_tab34_runs} - a non-Table-34 table carries the size; "
+             f"unexpected")
+
     # Well-formedness before writing anything.
     try:
         ET.fromstring(doc.encode("utf-8"))
@@ -680,7 +766,9 @@ def main() -> None:
           f"({n_border_rows} separator rows, {n_border_cells} cells, "
           f"{n_label_rows} label rows); "
           f"excised {n_junk_cells} cmidrule-debris cells in {n_junk_tables} "
-          f"tables")
+          f"tables; "
+          f"set 2.5pt font on {n_tab34_runs} runs of {n_tab34_tables} "
+          f"table")
 
 
 if __name__ == "__main__":
