@@ -97,7 +97,7 @@ def _worker_init(model_name: str, max_len: int) -> None:
 
 def _segment_shard_worker(task):
     """Process one shard in a worker process and return a manifest entry."""
-    shard_idx, in_path_str, out_path_str, text_field, id_field, prefix, overwrite = task
+    shard_idx, in_path_str, out_path_str, text_field, id_field, prefix, overwrite, min_words = task
     in_path = Path(in_path_str)
     out_path = Path(out_path_str)
 
@@ -116,7 +116,7 @@ def _segment_shard_worker(task):
                 pass
 
     records = _load_records(in_path)
-    segments = segment_records(records, _WTOK, _WMAXLEN, text_field, id_field, prefix)
+    segments = segment_records(records, _WTOK, _WMAXLEN, text_field, id_field, prefix, min_words)
 
     tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -255,11 +255,16 @@ def main() -> None:
                 continue
             log.info("Processing %s", corpus_name)
             records = _load_records(input_path)
-            segments = segment_records(records, tok, max_seq_length, "text", id_field, prefix)
+            segments = segment_records(records, tok, max_seq_length, "text", id_field, prefix, args.min_words)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with output_path.open("w", encoding="utf-8", newline="") as f:
+            # Atomic write (matches single-file mode below): stage to .tmp,
+            # then replace, so a kill mid-write never leaves a torn file that
+            # the exists-skip above would silently accept on the next run.
+            tmp_output = output_path.with_suffix(output_path.suffix + ".tmp")
+            with tmp_output.open("w", encoding="utf-8", newline="") as f:
                 for s in segments:
                     f.write(json.dumps(s, ensure_ascii=False) + "\n")
+            os.replace(tmp_output, output_path)
             log.info("  wrote %d segments -> %s", len(segments), output_path.name)
         return
 
@@ -309,7 +314,7 @@ def main() -> None:
 
         tasks = [
             (shard_idx, str(in_path), str(output_dir / in_path.name),
-             args.text_field, args.id_field, args.prefix, args.overwrite)
+             args.text_field, args.id_field, args.prefix, args.overwrite, args.min_words)
             for shard_idx, in_path in enumerate(input_paths, start=1)
         ]
         # Skip spawning workers (and their per-process tokenizer loads) when
