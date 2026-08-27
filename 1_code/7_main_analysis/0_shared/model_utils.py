@@ -36,8 +36,11 @@ MIN_CENTROID_NORM = 0.5
 CANONICAL_SEGMENT_MODEL = "all-mpnet-base-v2"
 CANONICAL_MAX_SEQ_LENGTH = 384
 # Encoder tracks rebuilt by --cold-replay / --warm-replay. The canonical
-# (MPNet) segment model comes first so its cross-sensitivity tables read the
-# freshly regenerated MiniLM / SciBERT coverage / semantic / correlation values.
+# (MPNet) track is listed FIRST, but the ANALYSIS loops in main.py deliberately
+# iterate it LAST (non-canonical encoders first): MPNet's cross-sensitivity
+# tables and the f3 register Table 12 read MiniLM / SciBERT coverage, semantic,
+# correlation values and register checkpoints, so those must be freshly
+# regenerated in the same run before MPNet's pass consumes them.
 COLD_REPLAY_MODELS = (
     CANONICAL_SEGMENT_MODEL,
     "all-MiniLM-L6-v2",

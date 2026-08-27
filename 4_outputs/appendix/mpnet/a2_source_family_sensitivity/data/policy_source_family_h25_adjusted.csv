@@ -1,0 +1,5 @@
+family,family_label,n_primary,predictor,n,skipped,pearson_r,pearson_p,spearman_rho,spearman_p
+full_policy_corpus,Full corpus,17,covgap_adjusted,17,False,0.695052,0.00271,0.544118,0.0253
+curated_ai_sdg,Curated AI/SDG,17,covgap_adjusted,17,False,0.183114,0.489205,-0.061275,0.807362
+sdgi_vnr_vlr,SDGi VNR/VLR,17,covgap_adjusted,17,False,0.734348,0.00104,0.497549,0.04429
+ungdc_speeches,UNGDC speeches,15,covgap_adjusted,15,False,0.481452,0.070369,0.357143,0.190758

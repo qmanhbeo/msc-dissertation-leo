@@ -1,0 +1,34 @@
+[
+  {
+    "family": "full_policy_corpus",
+    "family_label": "Full corpus",
+    "n_primary": 17,
+    "covgap_adjusted_spearman_rho": 0.544118,
+    "covgap_adjusted_spearman_p": 0.0253,
+    "note": "Predictors identical to the raw H25 test; dependent variable is the register-removed within-SDG semantic gap (INLP G projection)."
+  },
+  {
+    "family": "curated_ai_sdg",
+    "family_label": "Curated AI/SDG",
+    "n_primary": 17,
+    "covgap_adjusted_spearman_rho": -0.061275,
+    "covgap_adjusted_spearman_p": 0.807362,
+    "note": "Predictors identical to the raw H25 test; dependent variable is the register-removed within-SDG semantic gap (INLP G projection)."
+  },
+  {
+    "family": "sdgi_vnr_vlr",
+    "family_label": "SDGi VNR/VLR",
+    "n_primary": 17,
+    "covgap_adjusted_spearman_rho": 0.497549,
+    "covgap_adjusted_spearman_p": 0.04429,
+    "note": "Predictors identical to the raw H25 test; dependent variable is the register-removed within-SDG semantic gap (INLP G projection)."
+  },
+  {
+    "family": "ungdc_speeches",
+    "family_label": "UNGDC speeches",
+    "n_primary": 15,
+    "covgap_adjusted_spearman_rho": 0.357143,
+    "covgap_adjusted_spearman_p": 0.190758,
+    "note": "Predictors identical to the raw H25 test; dependent variable is the register-removed within-SDG semantic gap (INLP G projection)."
+  }
+]

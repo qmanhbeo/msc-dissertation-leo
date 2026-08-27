@@ -124,3 +124,9 @@ checkpoints/
 # === Agent instructions: not part of the dissertation artifact ===
 AGENTS.md
 handoff.md
+plan.md
+reviews.md
+
+# === Local working docs (not part of the artifact) ===
+5_notes/dissertation-submission.docx
+5_notes/guide/
