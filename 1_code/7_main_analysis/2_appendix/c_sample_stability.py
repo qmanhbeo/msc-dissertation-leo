@@ -70,7 +70,7 @@ from shard_pipeline_utils import load_json
 CANONICAL_COVERAGE_JSON = "coverage_document_weighted.json"
 CANONICAL_SEMANTIC_JSON = "semantic_gap_distances_lr.json"
 CANONICAL_INTERACTION_JSON = "interaction_h25.json"
-CACHE_SCHEMA_VERSION = 3
+CACHE_SCHEMA_VERSION = 4
 DRAW_SEEDS = tuple(range(42, 142))
 DRAWS_PER_TIER = len(DRAW_SEEDS)
 TIER_SPECS: list[tuple[str, int]] = [
@@ -159,6 +159,19 @@ def draw_seed(draw_index: int) -> int:
     return DRAW_SEEDS[draw_index - 1]
 
 
+def _load_G_if_available(model: str) -> np.ndarray | None:
+    """Load the register-projection matrix G if it exists and is complete.
+
+    Returns None (graceful degradation to raw-only metrics) when the
+    register_adjust stage has not produced a complete G, so the ladder can
+    still emit the coverage gap and raw semantic gap columns.
+    """
+    try:
+        return register_utils.load_G(model)
+    except (FileNotFoundError, RuntimeError):
+        return None
+
+
 def format_sample_label(label: str, sample_size: int, is_full: bool = False) -> str:
     if is_full:
         return "Full corpus"
@@ -199,8 +212,6 @@ def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_id
     policy_scores = np.load(policy_scores_path).astype(np.float32)
     policy_ids = load_json(policy_ids_path)
     policy_emb = np.load(policy_emb_path).astype(np.float32)
-    if G is not None and G.shape[0] > 0:
-        policy_emb = register_utils.project(policy_emb, G)
     if policy_scores.shape[0] != len(policy_ids) or policy_emb.shape[0] != len(policy_ids):
         raise RuntimeError(
             "Policy score/embedding/id row mismatch: "
@@ -238,6 +249,10 @@ def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_id
             policy_cohesions[sdg_idx] = float(cohesion)
             policy_centroid_available[sdg_idx] = True
 
+    policy_centroids_adj = (
+        register_utils.project(policy_centroids.copy(), G) if G is not None else None
+    )
+
     per_sdg_semantic = {int(row["sdg"]): row for row in semantic_out["per_sdg"]}
     full_semantic_gaps = [
         float(per_sdg_semantic[sdg]["semantic_gap"])
@@ -245,6 +260,30 @@ def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_id
         if per_sdg_semantic[sdg]["semantic_gap"] is not None
     ]
     full_mean_semantic_gap = float(np.mean(full_semantic_gaps))
+
+    research_profile_hard = np.array(
+        [
+            float(coverage_out["research_profile_hard"][f"SDG{i}"])
+            for i in range(1, N_SDG + 1)
+        ],
+        dtype=np.float64,
+    )
+    full_coverage_gap = float(
+        np.abs(research_profile_hard - policy_profile_hard).mean()
+    )
+
+    full_mean_semantic_gap_adjusted = None
+    adj_semantic_path = canonical_data_dir / "adjusted" / CANONICAL_SEMANTIC_JSON
+    if adj_semantic_path.exists():
+        adj_semantic_out = load_json(adj_semantic_path)
+        adj_per_sdg = {int(row["sdg"]): row for row in adj_semantic_out["per_sdg"]}
+        adj_gaps = [
+            float(adj_per_sdg[sdg]["semantic_gap"])
+            for sdg in range(1, N_SDG + 1)
+            if adj_per_sdg[sdg].get("semantic_gap") is not None
+        ]
+        if adj_gaps:
+            full_mean_semantic_gap_adjusted = float(np.mean(adj_gaps))
 
     return {
         "policy_profile_hard_docweighted": policy_profile_hard,
@@ -254,9 +293,12 @@ def load_policy_state(canonical_data_dir: Path, policy_emb_path: Path, policy_id
         "policy_counts_capped": policy_counts_capped,
         "policy_doc_counts_capped": policy_doc_counts_capped,
         "policy_centroids": policy_centroids,
+        "policy_centroids_adj": policy_centroids_adj,
         "policy_cohesions": policy_cohesions,
         "policy_centroid_available": policy_centroid_available,
         "full_mean_semantic_gap": full_mean_semantic_gap,
+        "full_mean_semantic_gap_adjusted": full_mean_semantic_gap_adjusted,
+        "full_coverage_gap": full_coverage_gap,
         "full_mean_paper_top_vs_osdg": mean_paper_top_vs_osdg,
     }
 
@@ -409,7 +451,7 @@ def write_draw_caches(cache_root: Path, draws: list[DrawAccumulator]) -> None:
         )
 
 
-def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator], model: str, G: np.ndarray | None = None) -> None:
+def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator], model: str) -> None:
     # Load each research shard's embedding/score arrays directly (shard-native).
     # Each draw's sampled documents are collapsed to paper (abstract) units
     # before accumulating, so hard counts, centroid sums and top scores are all
@@ -426,8 +468,6 @@ def accumulate_draws(shards: list[ResearchShard], draws: list[DrawAccumulator], 
             )
         score = np.load(shard.score_path).astype(np.float32)
         emb = np.load(shard.emb_path).astype(np.float32)
-        if G is not None and G.shape[0] > 0:
-            emb = register_utils.project(emb, G)
         if score.shape[0] != emb.shape[0]:
             raise RuntimeError(
                 f"Score/embedding row mismatch for shard {shard.name}: "
@@ -500,15 +540,24 @@ def to_sdg_dict(values: np.ndarray, *, scale: float = 1.0, round_digits: int = 6
     }
 
 
-def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) -> dict[str, Any]:
+def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any], G: np.ndarray | None = None) -> dict[str, Any]:
     research_centroids, research_counts, research_cohesions = finalize_research_centroids(draw)
     coverage_profile = draw.hard_counts.astype(np.float64) / float(draw.rows_seen)
 
     semantic_gap_by_sdg: dict[str, float | None] = {}
     semantic_reliable_by_sdg: dict[str, bool] = {}
+    semantic_gap_adj_by_sdg: dict[str, float | None] = {}
     research_counts_by_sdg: dict[str, int] = {}
     semantic_values_all: list[float] = []
     semantic_values_reliable: list[float] = []
+    semantic_values_adj_all: list[float] = []
+    semantic_values_adj_reliable: list[float] = []
+
+    research_centroids_adj = (
+        register_utils.project(research_centroids, G)
+        if G is not None and policy_state.get("policy_centroids_adj") is not None
+        else None
+    )
 
     for sdg_idx in range(N_SDG):
         sdg = sdg_idx + 1
@@ -534,6 +583,16 @@ def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) ->
         if not unreliable:
             semantic_values_reliable.append(gap)
 
+        if research_centroids_adj is not None:
+            sim_adj = float(np.dot(research_centroids_adj[sdg_idx], policy_state["policy_centroids_adj"][sdg_idx]))
+            gap_adj = 1.0 - sim_adj
+            semantic_gap_adj_by_sdg[f"SDG{sdg}"] = round(gap_adj, 6)
+            semantic_values_adj_all.append(gap_adj)
+            if not unreliable:
+                semantic_values_adj_reliable.append(gap_adj)
+        else:
+            semantic_gap_adj_by_sdg[f"SDG{sdg}"] = None
+
     mean_paper_top_vs_osdg = draw.top_sum_osdg / float(draw.rows_seen)
     policy_vs_sample_research = (
         policy_state["policy_embeddings"] @ research_centroids.T
@@ -544,6 +603,12 @@ def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) ->
     mean_semantic_gap = float(np.mean(semantic_values_all)) if semantic_values_all else None
     mean_semantic_gap_reliable = (
         float(np.mean(semantic_values_reliable)) if semantic_values_reliable else None
+    )
+    mean_semantic_gap_adjusted = (
+        float(np.mean(semantic_values_adj_all)) if semantic_values_adj_all else None
+    )
+    mean_semantic_gap_adjusted_reliable = (
+        float(np.mean(semantic_values_adj_reliable)) if semantic_values_adj_reliable else None
     )
 
     return {
@@ -560,9 +625,18 @@ def compute_draw_metrics(draw: DrawAccumulator, policy_state: dict[str, Any]) ->
         "mean_semantic_gap_reliable_only": (
             None if mean_semantic_gap_reliable is None else round(mean_semantic_gap_reliable, 6)
         ),
+        "mean_semantic_gap_adjusted": (
+            None if mean_semantic_gap_adjusted is None else round(mean_semantic_gap_adjusted, 6)
+        ),
+        "mean_semantic_gap_adjusted_reliable_only": (
+            None
+            if mean_semantic_gap_adjusted_reliable is None
+            else round(mean_semantic_gap_adjusted_reliable, 6)
+        ),
         "n_observed_semantic_sdgs": len(semantic_values_all),
         "n_reliable_semantic_sdgs": len(semantic_values_reliable),
         "semantic_gap_by_sdg": semantic_gap_by_sdg,
+        "semantic_gap_adj_by_sdg": semantic_gap_adj_by_sdg,
         "semantic_reliable_by_sdg": semantic_reliable_by_sdg,
         "research_counts_by_sdg": research_counts_by_sdg,
         "coverage_gap_vs_policy_abs_mean": round(
@@ -585,6 +659,8 @@ def summarize_tiers(
     total_rows: int,
     full_mean_semantic_gap: float,
     full_a15_gap: float,
+    full_coverage_gap: float,
+    full_mean_semantic_gap_adjusted: float | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     summary_rows: list[dict[str, Any]] = []
     per_sdg_rows: list[dict[str, Any]] = []
@@ -596,6 +672,10 @@ def summarize_tiers(
                 [row["coverage_profile_hard"][f"SDG{i}"] for i in range(1, N_SDG + 1)]
                 for row in tier_draws
             ],
+            dtype=np.float64,
+        )
+        coverage_gap_array = np.array(
+            [float(row["coverage_gap_vs_policy_abs_mean"]) for row in tier_draws],
             dtype=np.float64,
         )
         semantic_matrix = np.array(
@@ -621,6 +701,9 @@ def summarize_tiers(
         macro_coverage_variance = float(macro_coverage_sd_by_sdg.mean())
 
         semantic_means = np.array([row["mean_semantic_gap"] for row in tier_draws], dtype=np.float64)
+        semantic_adj_means = np.array(
+            [row["mean_semantic_gap_adjusted"] for row in tier_draws], dtype=np.float64
+        )
         a15_values = np.array([row["a15_calibration_bias"] for row in tier_draws], dtype=np.float64)
 
         summary_rows.append(
@@ -629,9 +712,20 @@ def summarize_tiers(
                 "sample_size": sample_size,
                 "n_draws": DRAWS_PER_TIER,
                 "deterministic": False,
-                "macro_coverage_variance": round(macro_coverage_variance, 6),
+                "coverage_gap": round(float(coverage_gap_array.mean()), 6),
+                "std_coverage_gap": round(float(coverage_gap_array.std()), 6),
                 "mean_semantic_gap": round(float(semantic_means.mean()), 6),
                 "std_semantic_gap": round(float(semantic_means.std()), 6),
+                "mean_semantic_gap_adjusted": (
+                    None
+                    if np.isnan(semantic_adj_means).all()
+                    else round(float(np.nanmean(semantic_adj_means)), 6)
+                ),
+                "std_semantic_gap_adjusted": (
+                    None
+                    if np.isnan(semantic_adj_means).all()
+                    else round(float(np.nanstd(semantic_adj_means)), 6)
+                ),
                 "mean_a15_calibration_bias": round(float(a15_values.mean()), 6),
                 "std_a15_calibration_bias": round(float(a15_values.std()), 6),
                 "mean_observed_semantic_sdgs": round(
@@ -680,9 +774,15 @@ def summarize_tiers(
             "sample_size": total_rows,
             "n_draws": 1,
             "deterministic": True,
-            "macro_coverage_variance": None,
+            "coverage_gap": round(full_coverage_gap, 6),
+            "std_coverage_gap": None,
             "mean_semantic_gap": round(full_mean_semantic_gap, 6),
             "std_semantic_gap": None,
+            "mean_semantic_gap_adjusted": (
+                None if full_mean_semantic_gap_adjusted is None
+                else round(full_mean_semantic_gap_adjusted, 6)
+            ),
+            "std_semantic_gap_adjusted": None,
             "mean_a15_calibration_bias": round(full_a15_gap, 6),
             "std_a15_calibration_bias": None,
             "mean_observed_semantic_sdgs": None,
@@ -693,12 +793,20 @@ def summarize_tiers(
     return summary_rows, {
         "method": "sample_stability_random_subsampling",
         "draws_per_tier": DRAWS_PER_TIER,
+        "draw_seed_start": DRAW_SEEDS[0],
+        "draw_seed_end": DRAW_SEEDS[-1],
+        "draw_seeds": list(DRAW_SEEDS),
         "sampled_tiers": [label for label, _ in TIER_SPECS],
         "sampled_tier_sizes": {label: size for label, size in TIER_SPECS},
         "per_tier": per_sdg_rows,
         "full_corpus": {
             "sample_size": total_rows,
+            "coverage_gap": round(full_coverage_gap, 6),
             "mean_semantic_gap": round(full_mean_semantic_gap, 6),
+            "mean_semantic_gap_adjusted": (
+                None if full_mean_semantic_gap_adjusted is None
+                else round(full_mean_semantic_gap_adjusted, 6)
+            ),
             "mean_a15_calibration_bias": round(full_a15_gap, 6),
         },
     }
@@ -749,9 +857,12 @@ def write_outputs(
                 "sample_size",
                 "n_draws",
                 "deterministic",
-                "macro_coverage_variance",
+                "coverage_gap",
+                "std_coverage_gap",
                 "mean_semantic_gap",
                 "std_semantic_gap",
+                "mean_semantic_gap_adjusted",
+                "std_semantic_gap_adjusted",
                 "mean_a15_calibration_bias",
                 "std_a15_calibration_bias",
                 "mean_observed_semantic_sdgs",
@@ -771,8 +882,6 @@ def write_outputs(
             rf"\newcommand{{\SampleStabilityFullCorpusN}}{{{latex_int(total_rows)}}}",
         ]
         for row in summary_rows:
-            if row["tier_label"] == "full corpus":
-                continue
             word = {
                 "1k": "OneK",
                 "2k": "TwoK",
@@ -785,9 +894,25 @@ def write_outputs(
                 "500k": "FiveHundredK",
                 "1m": "OneM",
                 "2m": "TwoM",
-            }[row["tier_label"]]
+            }.get(row["tier_label"])
+            if word is None:
+                if row["tier_label"] == "full corpus":
+                    num_lines.append(
+                        rf"\newcommand{{\SampleCoverageGapFull}}{{{row['coverage_gap']:.3f}}}"
+                    )
+                    num_lines.append(
+                        rf"\newcommand{{\SampleMeanSemanticGapFull}}{{{row['mean_semantic_gap']:.3f}}}"
+                    )
+                    if row["mean_semantic_gap_adjusted"] is not None:
+                        num_lines.append(
+                            rf"\newcommand{{\SampleMeanSemanticGapAdjFull}}{{{row['mean_semantic_gap_adjusted']:.3f}}}"
+                        )
+                continue
             num_lines.append(
-                rf"\newcommand{{\SampleMacroVariance{word}}}{{{row['macro_coverage_variance']:.3f}}}"
+                rf"\newcommand{{\SampleCoverageGap{word}}}{{{row['coverage_gap']:.3f}}}"
+            )
+            num_lines.append(
+                rf"\newcommand{{\SampleStdCoverageGap{word}}}{{{row['std_coverage_gap']:.3f}}}"
             )
             num_lines.append(
                 rf"\newcommand{{\SampleMeanSemanticGap{word}}}{{{row['mean_semantic_gap']:.3f}}}"
@@ -795,13 +920,12 @@ def write_outputs(
             num_lines.append(
                 rf"\newcommand{{\SampleStdSemanticGap{word}}}{{{row['std_semantic_gap']:.3f}}}"
             )
-            if row["tier_label"] == "50k":
+            if row["mean_semantic_gap_adjusted"] is not None:
                 num_lines.append(
-                    rf"\newcommand{{\SamplePolicyBiasFiftyK}}{{{row['mean_a15_calibration_bias']:.3f}}}"
+                    rf"\newcommand{{\SampleMeanSemanticGapAdj{word}}}{{{row['mean_semantic_gap_adjusted']:.3f}}}"
                 )
-            elif row["tier_label"] == "200k":
                 num_lines.append(
-                    rf"\newcommand{{\SamplePolicyBiasTwoHundredK}}{{{row['mean_a15_calibration_bias']:.3f}}}"
+                    rf"\newcommand{{\SampleStdSemanticGapAdj{word}}}{{{row['std_semantic_gap_adjusted']:.3f}}}"
                 )
         (tables_dir / "num_c_sample_stability.tex").write_text(
             "\n".join(num_lines) + "\n", encoding="utf-8"
@@ -809,9 +933,9 @@ def write_outputs(
 
         tab_lines = [
             "% Auto-generated by 1_code/7_main_analysis/2_appendix/c_sample_stability.py — do not edit manually",
-            r"\begin{tabular}{lccc}",
+            r"\begin{tabular}{lcccc}",
             r"\toprule",
-            r"Sample Size & \shortstack{Mean SD of SDG\\coverage shares} & \shortstack{Mean within-SDG\\semantic gap} & \shortstack{Policy-text\\calibration bias} \\",
+            r"Sample Size & \shortstack{Coverage gap\\(vs policy)} & \shortstack{Semantic gap\\(raw)} & \shortstack{Semantic gap\\(adjusted)} \\",
             r"\midrule",
         ]
         for row in summary_rows:
@@ -824,9 +948,9 @@ def write_outputs(
                 " & ".join(
                     [
                         label,
-                        format_variance(row["macro_coverage_variance"]),
+                        format_pm(row["coverage_gap"], row["std_coverage_gap"]),
                         format_pm(row["mean_semantic_gap"], row["std_semantic_gap"]),
-                        format_pm(row["mean_a15_calibration_bias"], row["std_a15_calibration_bias"]),
+                        format_pm(row["mean_semantic_gap_adjusted"], row["std_semantic_gap_adjusted"]),
                     ]
                 )
                 + r" \\"
@@ -843,42 +967,34 @@ def run(args: argparse.Namespace) -> None:
     _POLICY_EMB = semantic_gap_shared.get_policy_emb(args.embed_model)
     _POLICY_IDS = semantic_gap_shared.get_policy_ids(args.embed_model)
     _POLICY_SCORES = semantic_gap_shared.get_policy_scores(args.embed_model)
-    is_adjusted = args.embeddings == "adjusted"
     layout = ensure_dissertation_outputs(Path(args.output_dir), subdir="appendix/c_sample_stability", model=args.embed_model)
-    if is_adjusted:
-        layout.root = layout.root / "adjusted"
-        layout.data_dir = layout.root / "data"
-        layout.tables_dir = layout.root / "tables"
-        layout.data_dir.mkdir(parents=True, exist_ok=True)
-        layout.tables_dir.mkdir(parents=True, exist_ok=True)
     cache_root = Path(args.cache_dir) if args.cache_dir is not None else scored_dir / f"paper_sample_seed_{DRAW_SEEDS[0]}_{DRAW_SEEDS[-1]}"
     log.info("Canonical output dir: %s", layout.root)
     log.info("Sample-stability cache dir: %s", cache_root)
 
-    SCRIPT_VERSION = "2"
+    SCRIPT_VERSION = "3"
     PRIMARY = layout.data_dir / "c_sample_stability_summary.json"
     OUTPUTS = [PRIMARY, layout.data_dir / "c_sample_stability_draws.jsonl",
                layout.data_dir / "c_sample_stability_per_sdg.json",
-               layout.data_dir / "c_sample_stability_table.csv"]
-    if not is_adjusted:
-        OUTPUTS += [
-            layout.tables_dir / "num_c_sample_stability.tex",
-            layout.tables_dir / "tab_c_sample_stability.tex",
-        ]
+               layout.data_dir / "c_sample_stability_table.csv",
+               layout.tables_dir / "num_c_sample_stability.tex",
+               layout.tables_dir / "tab_c_sample_stability.tex"]
     fp = fingerprint_of(
         scored_dir / "paper_scores_shards" / "metadata" / "manifest.json",
         embed_dir / "metadata" / "manifest.json",
         _POLICY_EMB, _POLICY_IDS, _POLICY_SCORES,
     ) + SCRIPT_VERSION
-    if is_adjusted:
-        g_path = register_utils.register_dir(args.embed_model) / "G.npy"
-        fp += f"_adjusted_{register_utils.track_for_model(args.embed_model)}"
-        fp += fingerprint_of(g_path)
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s \u2014 inputs unchanged", PRIMARY)
         return
 
-    G = register_utils.load_G(args.embed_model) if is_adjusted else None
+    G = _load_G_if_available(args.embed_model)
+    if G is None:
+        log.warning(
+            "Register-projection matrix G not available — semantic-gap adjusted "
+            "column will be reported as unavailable. Run register_adjust first for "
+            "the adjusted column."
+        )
 
     expected_sig = _compute_cache_signature(scored_dir, embed_dir)
     manifest_path = cache_root / "manifest.json"
@@ -928,7 +1044,7 @@ def run(args: argparse.Namespace) -> None:
         len(pending_draws),
     )
     if pending_draws:
-        accumulate_draws(shards, pending_draws, args.embed_model, G=G)
+        accumulate_draws(shards, pending_draws, args.embed_model)
         write_draw_caches(cache_root, pending_draws)
 
     LOG_INTERVAL = 100
@@ -943,7 +1059,7 @@ def run(args: argparse.Namespace) -> None:
                 draw.draw_index,
                 draw.sample_size,
             )
-        draw_results.append(compute_draw_metrics(draw, policy_state))
+        draw_results.append(compute_draw_metrics(draw, policy_state, G=G))
 
     full_a15_gap = float(
         policy_state["policy_top_vs_osdg"] - policy_state["full_mean_paper_top_vs_osdg"]
@@ -954,6 +1070,8 @@ def run(args: argparse.Namespace) -> None:
         total_rows=total_rows,
         full_mean_semantic_gap=policy_state["full_mean_semantic_gap"],
         full_a15_gap=full_a15_gap,
+        full_coverage_gap=policy_state["full_coverage_gap"],
+        full_mean_semantic_gap_adjusted=policy_state["full_mean_semantic_gap_adjusted"],
     )
     write_outputs(
         layout.data_dir,
@@ -962,7 +1080,7 @@ def run(args: argparse.Namespace) -> None:
         draw_results=draw_results,
         per_sdg_payload=per_sdg_payload,
         total_rows=total_rows,
-        skip_tex=is_adjusted,
+        skip_tex=False,
     )
     log.info("Saved sample-stability outputs into %s", layout.data_dir)
     record_fingerprint(OUTPUTS, fp, PRIMARY)
