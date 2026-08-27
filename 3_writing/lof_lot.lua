@@ -72,7 +72,9 @@ function Pandoc(doc)
   local figs, tabs = {}, {}   -- {n, inlines, anchor} in document order
 
   -- Pass 1: number top-level floats and prefix their captions.
-  for _, b in ipairs(doc.blocks) do
+  -- Wrap each Figure in a Div so pandoc's docx writer creates a bookmark
+  -- (bare Figure nodes get no bookmark, breaking LoF hyperlinks).
+  for i, b in ipairs(doc.blocks) do
     if b.t == "Figure" then
       local n = #figs + 1
       local cap = caption_inlines(b.caption)
@@ -80,6 +82,7 @@ function Pandoc(doc)
       local pre = {pandoc.Str("Figure " .. n .. ": ")}
       for _, x in ipairs(cap) do pre[#pre + 1] = x end
       b.caption = {pandoc.Plain(pre)}
+      doc.blocks[i] = pandoc.Div({b}, pandoc.Attr(b.identifier))
     else
       local tbl, anchor = table_carrier(b)
       if tbl then

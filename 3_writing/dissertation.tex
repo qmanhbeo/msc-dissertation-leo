@@ -138,6 +138,7 @@
 \newpage
 
 %% ============================================================
+\clearpage
 \section{Introduction}
 \label{sec:intro}
 
@@ -233,7 +234,7 @@ All texts were encoded with \texttt{all-mpnet-base-v2} \parencite{all-mpnet-base
 
 No fine-tuning is used. The embeddings are frozen. A linear classifier on frozen embeddings (linear probing) is the standard way to test what a representation already captures \parencite{alain2018understandingintermediatelayersusing, conneau2018cramsinglevectorprobing}. Both the SDG classifier (Section~\ref{sec:supervised-classifier}) and the INLP step (Section~\ref{sec:register-adjustment-inlp}) are linear operations on this fixed space. Freezing also keeps the two corpora in one shared space. Retraining on the SDG data (which skews toward policy words) would distort that space.
 
-Encoder choice is a primary robustness axis: gap rankings are re-computed under two alternative encoders, all-MiniLM-L6-v2 \parencite{all-minilm-l6-v2} (384-dimensional) and SciBERT \parencite{Beltagy2019} (768-dimensional). Encoder-robustness checks use the same reference (Section~\ref{sec:supervised-classifier}) and policy corpora (Section~\ref{sec:policy-corpus}), but only 100,000 research abstracts drawn once with a fixed seed from the full research-abstract corpus (Section~\ref{sec:research-corpus}) to save computation, following evidence that the gap ranking stabilises near 50,000 abstracts under repeated resampling, while gap magnitudes stabilise by roughly 200,000 (Appendix~\ref{app:sample-stability}). The subset exceeds the corpora used in prior SDG-classification studies (Section~\ref{sec:prev-biblio}).
+Encoder choice is a primary robustness axis: gap rankings are re-computed under two alternative encoders, all-MiniLM-L6-v2 \parencite{all-minilm-l6-v2} (384-dimensional) and SciBERT \parencite{Beltagy2019,AllenAI2019Scibert} (768-dimensional). Encoder-robustness checks use the same reference (Section~\ref{sec:supervised-classifier}) and policy corpora (Section~\ref{sec:policy-corpus}), but only 100,000 research abstracts drawn once with a fixed seed from the full research-abstract corpus (Section~\ref{sec:research-corpus}) to save computation, following evidence that the gap ranking stabilises near 50,000 abstracts under repeated resampling, while gap magnitudes stabilise by roughly 200,000 (Appendix~\ref{app:sample-stability}). The subset exceeds the corpora used in prior SDG-classification studies (Section~\ref{sec:prev-biblio}).
 
 \subsection{Research Corpus}\label{sec:research-corpus}
 
@@ -509,7 +510,7 @@ Register removal is validated against independent linguistic markers (Appendix~\
 
 \textbf{Cross-sensitivity (policy source, segment cap, retrieval):} Under MPNet--LR, the semantic-gap ranking is stable across segment cap and retrieval in the adjusted panel ($\rho \geq 0.65$, Table~\ref{tab:cross-sensitivity-robustness}) and across policy source, segment cap, and retrieval in the raw panel ($\rho \geq 0.65$, Table~\ref{tab:cross-sensitivity-robustness-raw}). The same holds for coverage (Table~\ref{tab:cross-sensitivity-coverage}).
 
-\textbf{Encoder sensitivity:} Coverage-gap ranks are stable across encoders (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$; vs.\ MiniLM--LR $\rho = \MiniLMCoverageRho$; Table~\ref{tab:encoder-sensitivity-coverage}). Semantic-gap magnitude is encoder-dependent (SciBERT: \SciBERTMeanGap{} vs.\ MPNet: \MPNetMeanGap{}) because scientific pretraining fuses the genres \parencite{Beltagy2019}, and the divergence conclusion holds (Table~\ref{tab:encoder-sensitivity-semantic}).
+\textbf{Encoder sensitivity:} Coverage-gap ranks are stable across encoders (MPNet--LR vs.\ SciBERT--LR $\rho = \SciBERTCoverageRho$; vs.\ MiniLM--LR $\rho = \MiniLMCoverageRho$; Table~\ref{tab:encoder-sensitivity-coverage}). Semantic-gap magnitude is encoder-dependent (SciBERT: \SciBERTMeanGap{} vs.\ MPNet: \MPNetMeanGap{}) because scientific pretraining fuses the genres \parencite{Beltagy2019,AllenAI2019Scibert}, and the divergence conclusion holds (Table~\ref{tab:encoder-sensitivity-semantic}).
 
 \textbf{Classifier sensitivity:} LR and MLP show varied agreement (MPNet LR vs.\ MLP $\rho = \MlpSemanticRho$, Table~\ref{tab:encoder-sensitivity-semantic}), with SDG~17 the most classifier-sensitive goal.
 
@@ -529,7 +530,7 @@ The raw coverage-gap correlation is near zero ($\rho = \SpearmanCovRaw$, $p = \S
 
 \textbf{Cross-configuration replication:} This pattern replicates across most configs (Table~\ref{tab:interaction}): signs are stable for all encoder--classifier combinations under the primary keyword-retrieved corpus. Excluding the concept-retrieved track (Section~\ref{sec:limitations}), it does not appear to be a quirk of a specific encoder space, classifier, or methodological choice (segmentation, segment-capping for long documents).
 
-\textbf{SciBERT compression supports the register interpretation:} SciBERT compresses the raw gap from \MPNetMeanGap{} to \SciBERTMeanGap{} (88\% reduction) while preserving coverage ($\rho = \SciBERTCoverageRho$; Table~\ref{tab:encoder-sensitivity-coverage}). Scientific pretraining \parencite{Beltagy2019} fuses the registers because both use scientific conventions, which the decomposition expects.
+\textbf{SciBERT compression supports the register interpretation:} SciBERT compresses the raw gap from \MPNetMeanGap{} to \SciBERTMeanGap{} (88\% reduction) while preserving coverage ($\rho = \SciBERTCoverageRho$; Table~\ref{tab:encoder-sensitivity-coverage}). Scientific pretraining \parencite{Beltagy2019,AllenAI2019Scibert} fuses the registers because both use scientific conventions, which the decomposition expects.
 
 \subsection{Two communities, two dimensions}
 
@@ -606,6 +607,7 @@ The takeaway for practice is that an SDG label does not by itself evidence align
 
 
 %% ============================================================
+\clearpage
 \clearpage
 \appendix
 \section{Concept-based Research Retrieval}

@@ -50,5 +50,17 @@ function Pandoc(doc)
   table.remove(doc.blocks, bib_idx)
   table.insert(doc.blocks, app_idx, heading)
   table.insert(doc.blocks, app_idx + 1, bib)
+
+  -- Apply hanging indent (0.5 in = 720 twips) to every bibliography paragraph
+  -- so each entry's first line is flush-left and continuation lines indent.
+  if bib.t == "Div" then
+    for i, block in ipairs(bib.content) do
+      if block.t == "Para" then
+        block.attr = block.attr or pandoc.Attr()
+        block.attr.attributes["firstLine"] = "-720"
+      end
+    end
+  end
+
   return doc
 end

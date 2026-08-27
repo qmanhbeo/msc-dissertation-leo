@@ -64,6 +64,7 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
   --lua-filter=word-helper/word_section_numbers.lua \
   --lua-filter=word-helper/move_bibliography.lua \
   --lua-filter=lof_lot.lua \
+  --lua-filter=word-helper/page_breaks.lua \
   --reference-doc=word-helper/custom_thesis_template.docx
 
 # Table formatting that pandoc/the reference doc cannot express (row

@@ -790,6 +790,14 @@ def main() -> None:
              f"{n_tab34_runs} - a non-Table-34 table carries the size; "
              f"unexpected")
 
+    # 11. Hanging indent on bibliography paragraphs (0.5 in = 720 twips).
+    HANG_IND = '<w:ind w:firstLine="-720" w:left="720" />'
+    doc = re.sub(
+        r'(<w:pStyle w:val="Bibliography" />)',
+        r'\1' + HANG_IND,
+        doc,
+    )
+
     # Well-formedness before writing anything.
     try:
         ET.fromstring(doc.encode("utf-8"))

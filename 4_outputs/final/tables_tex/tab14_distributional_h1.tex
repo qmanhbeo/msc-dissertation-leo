@@ -3,7 +3,7 @@
 \begin{table}[ht]
 \centering
 \small
-\caption{H1a--H1d coverage-predictor vs semantic-gap Spearman correlations under distribution-aware semantic gaps (adjusted embeddings). Distributional gaps replace the centroid gap as the outcome vector; predictors and test are identical to Table~\ref{tab:interaction}.}
+\caption{H1a--H1d coverage-predictor vs semantic-gap Spearman correlations under distribution-aware semantic gaps (adjusted embeddings).}
 \label{tab:distributional-h1}
 \begin{tabular}{lcccc}
 \toprule
@@ -23,5 +23,5 @@ C2ST AUC & +0.270 & +0.275 & +0.375 & -0.139 \\
 Grassmann & -0.186 & +0.034 & +0.012 & -0.228 \\
 \bottomrule
 \end{tabular}
-\par\smallskip\footnotesize\emph{Notes:} Spearman $\rho$ with two-sided Monte Carlo permutation $p$-values (100{,}000 resamples, seed 42), $n = 17$ SDGs; $^{***}p<0.001$, $^{**}p<0.01$, $^{*}p<0.05$, $^{\dagger}p<0.10$. Excluding SDG~4 ($n = 16$) leaves every conclusion unchanged; the full $n = 16$ grid is in the analysis JSON (distributional\_h1\_interaction.json).
+\par\smallskip\footnotesize\emph{Notes:} Distributional gaps replace the centroid gap as the outcome vector; predictors and test are identical to Table~\ref{tab:interaction}. Spearman $\rho$ with two-sided Monte Carlo permutation $p$-values (100{,}000 resamples, seed 42), $n = 17$ SDGs; $^{***}p<0.001$, $^{**}p<0.01$, $^{*}p<0.05$, $^{\dagger}p<0.10$. Excluding SDG~4 ($n = 16$) leaves every conclusion unchanged; the full $n = 16$ grid is in the analysis JSON (distributional\_h1\_interaction.json).
 \end{table}

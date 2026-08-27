@@ -1,6 +1,6 @@
 \begin{table}[ht]
 \centering
-\caption{Per-SDG research--policy gap under distribution-aware metrics versus the canonical centroid gap (Part 1 of 2: full-corpus exact metrics). SWD = sliced Wasserstein; MMD$^2$ = squared RBF maximum mean discrepancy; Gauss.\ $W_2$ = Gaussian 2-Wasserstein; C2ST = classifier two-sample test AUC. The final row reports Spearman $\rho$ between each metric's ranking and the canonical ranking across the 17 SDGs.}
+\caption{Per-SDG research--policy gap under distribution-aware metrics versus the canonical centroid gap (Part 1 of 2: full-corpus exact metrics).}
 \label{tab:distributional-gap}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{lccccccc}
@@ -29,11 +29,12 @@ $\rho$ vs.\ canonical & -- & 0.525 & 0.485 & 0.444 & 0.243 & -0.243 & 0.620 \\
 \bottomrule
 \end{tabular}
 }
+\par\smallskip\footnotesize\emph{Notes:} SWD = sliced Wasserstein; MMD$^2$ = squared RBF maximum mean discrepancy; Gauss.\ $W_2$ = Gaussian 2-Wasserstein; C2ST = classifier two-sample test AUC. The final row reports Spearman $\rho$ between each metric's ranking and the canonical ranking across the 17 SDGs.
 \end{table}
 
 \begin{table}[ht]
 \centering
-\caption{Per-SDG research--policy gap under distribution-aware metrics versus the canonical centroid gap (Part 2 of 2: sampled metrics; continuation of Table~\ref{tab:distributional-gap}). EMD = exact 1-Wasserstein; MMD$^2$ = squared RBF-MMD; Centroid (samp.) = sampled centroid-gap control column.}
+\caption{Per-SDG research--policy gap under distribution-aware metrics versus the canonical centroid gap (Part 2 of 2: sampled metrics; continuation of Table~\ref{tab:distributional-gap}).}
 \label{tab:distributional-gap-cont}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{lccccccc}
@@ -62,4 +63,5 @@ $\rho$ vs.\ canonical & -- & 0.694 & 0.047 & 0.444 & 0.260 & -0.164 & 1.000 \\
 \bottomrule
 \end{tabular}
 }
+\par\smallskip\footnotesize\emph{Notes:} EMD = exact 1-Wasserstein; MMD$^2$ = squared RBF-MMD; Centroid (samp.) = sampled centroid-gap control column.
 \end{table}
