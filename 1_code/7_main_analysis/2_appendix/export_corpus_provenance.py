@@ -223,11 +223,11 @@ def compute() -> dict:
         log.warning("sdgi raw: %s", e)
 
     ref_sources = {
-        "osdg": "OSDG Community Dataset",
-        "benchmark": "SDG Classification Benchmark",
-        "sdg_knowledge_hub": "IISD SDG Knowledge Hub",
-        "sdgi": "SDGi Corpus",
-        "aurora": "Aurora dataset",
+        "osdg": "OSDG",
+        "benchmark": "SDGCB",
+        "sdg_knowledge_hub": "SDGKH",
+        "sdgi": "SDGi",
+        "aurora": "Aurora",
     }
     for key, label in ref_sources.items():
         rows[key] = {
@@ -249,7 +249,7 @@ def compute() -> dict:
     # this is the analysis-ready research count, equal to \NResearchAbstracts{}.
     research_abstracts, research_seg, _ = _research_segment_stats(SEGMENTED / "research")
     rows["research"] = {
-        "label": "Research corpus (OpenAlex)",
+        "label": "Research (OpenAlex)",
         "raw": research_raw,
         "prep": research_abstracts,
         "seg": research_seg,
@@ -268,7 +268,7 @@ def compute() -> dict:
     policy_seg = _count_jsonl(SEGMENTED / "policy.jsonl")
     sub = _policy_subcollection_stats(SEGMENTED / "policy.jsonl")
     rows["policy"] = {
-        "label": "Policy corpus (3 collections)",
+        "label": "Policy (3 Collections)",
         "raw": policy_raw,
         "prep": policy_prep,
         "seg": policy_seg,
@@ -352,7 +352,7 @@ def main() -> None:
     for key in order[:5]:
         r = rows[key]
         pre = prefix[key]
-        sln_cell = f"\\{pre}Sln" + ("\\ (no SDG17)" if key == "osdg" else "")
+        sln_cell = f"\\{pre}Sln"
         tab_lines.append(
             f"{r['label']} & \\{pre}Raw & \\{pre}Prep & \\{pre}Seg & {sln_cell} \\\\"
         )
