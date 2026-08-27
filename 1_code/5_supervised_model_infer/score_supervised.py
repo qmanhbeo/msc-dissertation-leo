@@ -251,9 +251,11 @@ def run_research_lr(args) -> None:
     ensure_dir(status_dir)
 
     emb_manifest = read_json(embed_manifest_path)
-    input_dim = emb_manifest.get("embedding_dim", 768)
     if not emb_manifest or "shards" not in emb_manifest:
+        # Validate BEFORE touching fields below, so a missing/corrupt manifest
+        # raises this clear error instead of an AttributeError on None.
         raise RuntimeError(f"Invalid embedding manifest: {embed_manifest_path}")
+    input_dim = emb_manifest.get("embedding_dim", 768)
 
     out_manifest_path = metadata_dir / "manifest.json"
     out_manifest = read_json(out_manifest_path, default=None)
@@ -684,8 +686,10 @@ def main() -> None:
     parser.add_argument("--classifier", default="lr", choices=["lr", "mlp"],
                         help="Classifier family to score with (default: %(default)s)")
     parser.add_argument("--corpus", default="research", choices=["research", "policy", "research_concept"],
-                        help="Corpus to score for the LR classifier (ignored for --classifier mlp, which scores both). "
-                             "Use research_concept for the concept-retrieval variant.")
+                        help="Corpus to score (LR scores one corpus; mlp scores both and honours "
+                             "research_concept). For the LR concept-retrieval variant pass --corpus "
+                             "research plus explicit --embedding-manifest/--out-dir/--metadata-dir "
+                             "overrides, as main.py does.")
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--embedding-manifest", default=None)
     parser.add_argument("--out-dir", default=None)
@@ -710,6 +714,16 @@ def main() -> None:
     if args.classifier == "mlp":
         run_mlp(args)
     else:
+        if args.corpus == "research_concept":
+            # Fail closed: the LR branch would otherwise silently score the
+            # POLICY corpus (the routing 'else') and write over canonical
+            # policy_scores paths. The LR concept variant is invoked via
+            # --corpus research with explicit path overrides instead.
+            parser.error(
+                "--corpus research_concept is not supported with --classifier lr; "
+                "the LR concept variant uses --corpus research with explicit "
+                "--embedding-manifest/--out-dir/--metadata-dir overrides."
+            )
         if args.corpus == "research":
             run_research_lr(args)
         else:
