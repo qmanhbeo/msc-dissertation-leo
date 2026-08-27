@@ -26,11 +26,16 @@ latexmk -g -pdf -interaction=nonstopmode -auxdir="$artifact_dir" -outdir="$artif
 cp "$artifact_dir/dissertation.pdf" "$output_pdf"
 rm -f "$artifact_dir/dissertation.pdf"
 
-# Keep 3_writing/ source-only apart from artifact/.
+# Keep 3_writing/ source-only: move ONLY generated LaTeX aux files to artifact/.
+# (Never move source assets such as .docx/.csl used by the Word build.)
 while IFS= read -r -d '' f; do
-  base="$(basename "$f")"
-  mv "$f" "$artifact_dir/$base"
-done < <(find . -maxdepth 1 -type f \
-  ! -name '*.tex' ! -name '*.bib' ! -name '*.sh' -print0)
+  mv "$f" "$artifact_dir/$(basename "$f")"
+done < <(find . -maxdepth 1 -type f \( \
+  -name '*.aux' -o -name '*.bbl' -o -name '*.blg' -o -name '*.log' -o -name '*.out' \
+  -o -name '*.toc' -o -name '*.fls' -o -name '*.fdb_latexmk' -o -name '*.synctex.gz' \
+  -o -name '*.synctex' -o -name '*.bcf' -o -name '*.run.xml' -o -name '*.loa' \
+  -o -name '*.lof' -o -name '*.lot' -o -name '*.idx' -o -name '*.ilg' -o -name '*.ind' \
+  -o -name '*.nav' -o -name '*.snm' -o -name '*.vrb' -o -name '*.4tc' -o -name '*.4ct' \
+  -o -name '*.xref' -o -name '*.lg' \) -print0)
 
 printf 'Built %s\n' "$output_pdf"
