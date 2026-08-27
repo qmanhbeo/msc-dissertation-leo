@@ -462,7 +462,7 @@ Table~\ref{tab:register-decomposition} consolidates the per-SDG inputs that the 
 
 \subsection{Coverage--Semantic Interaction: Results}\label{sec:interaction}
 
-Table~\ref{tab:interaction} reports H1a--H1d rank correlations between coverage predictors and the within-SDG semantic gap across all encoder--classifier configs. Columns show Spearman $\rho$ against the raw gap, adjusted gap, and register component. The per-SDG values underlying these correlations are consolidated in Table~\ref{tab:register-decomposition}.
+Table~\ref{tab:interaction} reports H1a--H1d rank correlations between coverage predictors and the within-SDG semantic gap across all encoder--classifier configs. Columns show Spearman $\rho$ against the raw gap, adjusted gap, and register component. The per-SDG values underlying these correlations are reported in Table~\ref{tab:register-decomposition}.
 
 Predictors are research coverage, policy coverage, absolute coverage gap, and signed dominance. MLP configs reuse their encoder's INLP matrix; Concept rows use the concept-retrieved research corpus (Appendix~\ref{app:concept-retrieval-sensitivity}).
 
@@ -950,7 +950,7 @@ The semantic-gap ranking is moderately preserved across the three encoders on th
 \subsection{Per-Track Reference Value Tables}
 \label{app:reference-tables}
 
-The consolidated per-SDG reference table from Section~\ref{sec:interaction} is reproduced below for the MiniLM and SciBERT encoder tracks (each scored on the deterministic 100,000-paper subset, isolating encoder choice from corpus scale). Column structure matches Table~\ref{tab:register-decomposition}: a semantic-gap family (raw, adjusted, register component) and a coverage-predictor family (coverage gap, signed dominance, research share, policy share). Signed dominance = research share $-$ policy share (pp); coverage gap = $|\text{research}-\text{policy}|$ (pp).
+The per-SDG reference table from Section~\ref{sec:interaction} is reproduced below for the MiniLM and SciBERT encoder tracks (each scored on the deterministic 100,000-paper subset, isolating encoder choice from corpus scale). Column structure matches Table~\ref{tab:register-decomposition}: a semantic-gap family (raw, adjusted, register component) and a coverage-predictor family (coverage gap, signed dominance, research share, policy share). Signed dominance = research share $-$ policy share (pp); coverage gap = $|\text{research}-\text{policy}|$ (pp).
 
 \begin{table}[htbp]
 \centering
