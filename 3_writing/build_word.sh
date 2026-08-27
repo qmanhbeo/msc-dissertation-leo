@@ -43,6 +43,7 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
   --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet \
   --standalone \
   --lua-filter=word_section_numbers.lua \
+  --lua-filter=move_bibliography.lua \
   --lua-filter=lof_lot.lua \
   --reference-doc=custom_thesis_template.docx
 
