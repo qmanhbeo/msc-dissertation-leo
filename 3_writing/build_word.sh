@@ -31,11 +31,15 @@ s = s.replace("\\documentclass", "\\providecommand{\\resizebox}[3]{#3}\n\\docume
 pathlib.Path("_build_word_tmp.tex").write_text(s, encoding="utf-8")
 PY
 
+# word_section_numbers.lua owns heading numbering (levels 1-3 decimal, then
+# appendix letters A..J matching the PDF) and rewrites resolved \ref contents
+# from the same map, so headings and cross-refs stay mutually consistent.
 pandoc _build_word_tmp.tex -o "$output_docx" \
   --citeproc \
   --csl harvard-university-of-birmingham.csl \
   --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet \
   --standalone --toc \
+  --lua-filter=word_section_numbers.lua \
   --reference-doc=custom_thesis_template.docx
 
 printf 'Built %s\n' "$output_docx"
