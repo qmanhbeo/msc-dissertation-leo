@@ -274,8 +274,7 @@ The canonical instrument is a supervised classifier trained on pooled single-lab
   \caption{Corpus provenance: record counts at each pipeline stage.}
   \label{tab:corpus-provenance}
   \input{../4_outputs/mpnet/tables/tab18_corpus_provenance.tex}
-  \par\smallskip\footnotesize\noindent
-  \textbf{Column definitions:} Raw is source size before processing. Prep is cleaned, de-duplicated records surviving the 20-word minimum, i.e.\ documents yielding at least one segment. Seg is the post-segmentation segment count. Lab is the single-label count feeding the classifier (--- for the unlabelled research and policy corpora). OSDG and SDGCB bypass segmentation, so Seg = Lab.
+  \par\smallskip\footnotesize\emph{Notes:} Raw is source size before processing. Prep is cleaned, de-duplicated records surviving the 20-word minimum, i.e.\ documents yielding at least one segment. Seg is the post-segmentation segment count. Lab is the single-label count feeding the classifier (--- for the unlabelled research and policy corpora). OSDG and SDGCB bypass segmentation, so Seg = Lab.
 \end{table}
 
 OSDG alone contributes about 49\% of labelled texts and draws on UN-adjacent documents, so the reference data remain weighted toward policy vocabulary. OSDG and SDGCB bypass segmentation due to having short texts. SDGKH, SDGi, and Aurora are segmented before pooling.

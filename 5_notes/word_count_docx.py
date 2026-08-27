@@ -31,6 +31,17 @@ after every manuscript edit:
     main-range total 9,265
     whole document 24,927
 
+Re-verified after the 2026-08-27 corpus-provenance note fix (the
+``tab:corpus-provenance`` note re-tagged from a bare ``\textbf{Column
+definitions:}`` to the canonical ``\emph{Notes:}`` prefix, so it is now
+excluded as a table note instead of counted as prose):
+
+    canon (declaration count) 8,234
+    main-range prose+headings (incl. citations) 8,234
+    main-range table cells 679; captions 143; table Notes 208
+    main-range total 9,266
+    whole document 24,926
+
 Layout notes affecting these numbers: since ``e63b860`` the Word build numbers
 captions ("Figure 1:"/"Table 1:", +2 words per caption vs the ``bf9317e``
 build), and since ``7bbefba`` the bibliography sits before the appendix with a

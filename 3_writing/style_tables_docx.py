@@ -6,22 +6,32 @@ script rewrites ``word/document.xml`` in place (stdlib only, same zip-surgery
 pattern as ``5_notes/word_count_docx.py``):
 
   1. ``<w:cantSplit/>`` in every row's ``trPr``  -> a row never splits across
-     pages (body rows get a fresh ``trPr``; header rows keep their existing
-     one, ``cantSplit`` inserted before ``tblHeader`` per CT_TrPr order).
-  2. ``<w:keepNext/>`` on every header-row cell paragraph (after ``pStyle``
-     per CT_PPr order) -> the header row stays glued to the first body row.
+      pages (body rows get a fresh ``trPr``; header rows keep their existing
+      one, ``cantSplit`` inserted before ``tblHeader`` per CT_TrPr order).
+  2. Whole-table keep: ``<w:keepNext/>`` on every cell paragraph of every row
+      except the last -> with ``cantSplit``, Word keeps a whole table on one
+      page whenever it fits, and degrades gracefully when it cannot (breaks
+      between rows; the repeated ``tblHeader`` row still shows). This is the
+      canonical Word recipe; keepNext is best-effort, so oversized tables
+      (worse than one page) are unaffected. The LAST row stays unglued so a
+      table never drags the following Notes/heading onto its page. Header
+      rows are always non-last in content tables, so header-to-first-body-row
+      glue is subsumed.
   3. Header promotion: pandoc's LaTeX reader fails to mark header rows when
-     they contain ``\shortstack`` or multi-row ``\multicolumn``/``\cmidrule``
-     headers, so those tables carry the header text as an untagged first row.
-     For every table that has a ``tblCaption`` but no ``tblHeader`` row, the
-     first row is promoted to a header (``tblHeader`` repeat + bold via the
-     style's firstRow rule + keepNext). Layout tables (pandoc's subfigure
-     grids) have no ``tblCaption`` and are left untouched.
+      they contain ``\shortstack`` or multi-row ``\multicolumn``/``\cmidrule``
+      headers, so those tables carry the header text as an untagged first row.
+      For every table that has a ``tblCaption`` but no ``tblHeader`` row, the
+      first row is promoted to a header (``tblHeader`` repeat + bold via the
+      style's firstRow rule + keepNext via item 2). Layout tables (pandoc's
+      subfigure grids) have no ``tblCaption`` and are not promoted.
   4. Tables centered horizontally: ``tblPr`` ``jc`` ``start`` -> ``center``
-     (covers layout tables too; per-cell text alignment is untouched).
-  5. Notes paragraphs centered: any paragraph whose joined run text starts
-     with ``Notes:`` (the classification used by ``5_notes/word_count_docx.py``)
-     gets ``<w:jc w:val="center"/>`` unless it already has one.
+      (covers layout tables too; per-cell text alignment is untouched).
+  5. Caption glue: ``<w:keepNext/>`` on every ``TableCaption`` and
+      ``ImageCaption`` paragraph -> a caption cannot orphan onto the previous
+      page; it always stays with its table/figure below.
+  6. Notes paragraphs centered: any paragraph whose joined run text starts
+      with ``Notes:`` (the classification used by ``5_notes/word_count_docx.py``)
+      gets ``<w:jc w:val="center"/>`` unless it already has one.
 
 Bold headers, single cell line spacing and cell padding are NOT handled here:
 they live declaratively in ``custom_thesis_template.docx`` (``Table`` style
@@ -95,17 +105,46 @@ def main() -> None:
     # 2. Header rows: cantSplit before tblHeader (CT_TrPr order).
     doc = doc.replace("<w:trPr><w:tblHeader", "<w:trPr><w:cantSplit /><w:tblHeader")
 
-    # 3+4. Per-table pass. (a) Header promotion for caption'd tables pandoc
+    # 3+4+5. Per-table pass. (a) Header promotion for caption'd tables pandoc
     #    left without a header row (shortstack / multi-row multicolumn
     #    headers): tag their first row with tblHeader so it repeats, goes
-    #    bold via the firstRow style rule, and receives keepNext below;
+    #    bold via the firstRow style rule, and receives keepNext via item 2;
     #    tblLook firstRow must also flip to 1 or the bold rule never
     #    applies. (b) Horizontal centering: tblPr jc start -> center.
+    #    (c) Whole-table keep (item 2): keepNext on every cell paragraph of
+    #    every row except the last; see glue_row / glue_para below.
     n_promoted = 0
     n_centered = 0
+    n_glue = 0          # keepNext insertions in non-last table rows
+    n_glued_tables = 0  # tables that actually had >=2 rows to glue
+    n_multirow_tables = 0  # tables with >1 row (these are the ones we glue)
+
+    def glue_para(pm: "re.Match[str]") -> str:
+        """Insert <w:keepNext/> into one table-cell paragraph (CT_PPr order)."""
+        nonlocal n_glue
+        p = pm.group(0)
+        if p == "<w:p/>":
+            n_glue += 1
+            return "<w:p><w:pPr><w:keepNext /></w:pPr></w:p>"
+        if "<w:keepNext" in p:
+            fail(f"cell paragraph already carries keepNext - unexpected: {p[:100]!r}")
+        m2 = re.match(r'(<w:p><w:pPr><w:pStyle w:val="[^"]+" />)', p)
+        if m2:
+            n_glue += 1
+            return p[: m2.end(1)] + "<w:keepNext />" + p[m2.end(1) :]
+        if p.startswith("<w:p><w:pPr>"):
+            n_glue += 1
+            return "<w:p><w:pPr><w:keepNext />" + p[len("<w:p><w:pPr>") :]
+        if p.startswith("<w:p>"):
+            n_glue += 1
+            return "<w:p><w:pPr><w:keepNext /></w:pPr>" + p[len("<w:p>") :]
+        fail(f"unrecognized cell paragraph shape: {p[:100]!r}")
+
+    def glue_row(row: str) -> str:
+        return re.sub(r"<w:p>.*?</w:p>|<w:p/>", glue_para, row, flags=re.S)
 
     def style_table(table_match: "re.Match[str]") -> str:
-        nonlocal n_promoted, n_centered
+        nonlocal n_promoted, n_centered, n_glued_tables, n_multirow_tables
         tbl = table_match.group(0)
         if "<w:tblHeader" not in tbl and "w:tblCaption" in tbl:
             tbl = tbl.replace(
@@ -129,27 +168,48 @@ def main() -> None:
             n_centered += 1
         elif '<w:jc w:val="center" />' not in tblpr:
             fail("table tblPr lacks start/center jc - unexpected shape")
-        return tbl[: m.start()] + tblpr + tbl[m.end() :]
+        tbl = tbl[: m.start()] + tblpr + tbl[m.end() :]
+        # Whole-table keep: glue every row except the last.
+        rows = re.findall(r"<w:tr>.*?</w:tr>", tbl, re.S)
+        if len(rows) > 1:
+            n_multirow_tables += 1
+            seen = {"i": 0}
+            n = len(rows)
+
+            def keep_row(rm: "re.Match[str]") -> str:
+                seen["i"] += 1
+                return glue_row(rm.group(0)) if seen["i"] < n else rm.group(0)
+
+            tbl = re.sub(r"<w:tr>.*?</w:tr>", keep_row, tbl, flags=re.S)
+            n_glued_tables += 1
+        return tbl
 
     doc = re.sub(r"<w:tbl>.*?</w:tbl>", style_table, doc, flags=re.S)
 
-    # 4. Header-row cell paragraphs: keepNext right after pStyle (CT_PPr
-    #    order). Scoped to header rows (incl. promoted) so body cells are
-    #    untouched.
-    keep_next_count = 0
+    # 6. Caption paragraphs: keepNext right after pStyle (CT_PPr order) on
+    #    every TableCaption / ImageCaption paragraph, so a caption cannot
+    #    orphan onto the previous page and always stays with its table/figure.
+    n_captions = 0
+    caption_count = len(
+        re.findall(r'<w:pStyle w:val="(?:TableCaption|ImageCaption)" />', doc)
+    )
 
-    def glue(row_match: "re.Match[str]") -> str:
-        nonlocal keep_next_count
-        row = row_match.group(0)
-        row, n = re.subn(
-            r'(<w:pPr><w:pStyle w:val="[^"]+" />)', r"\1<w:keepNext />", row
+    def glue_caption(p_match: "re.Match[str]") -> str:
+        nonlocal n_captions
+        p = p_match.group(0)
+        if "<w:keepNext" in p:
+            fail(f"caption paragraph already carries keepNext - unexpected: {p[:100]!r}")
+        m2 = re.match(
+            r'(<w:p><w:pPr><w:pStyle w:val="(?:TableCaption|ImageCaption)" />)', p
         )
-        keep_next_count += n
-        return row
+        if not m2:
+            fail(f"unrecognized caption paragraph shape: {p[:100]!r}")
+        n_captions += 1
+        return p[: m2.end(1)] + "<w:keepNext />" + p[m2.end(1) :]
 
     doc = re.sub(
-        r"<w:trPr><w:cantSplit /><w:tblHeader[^/]*/></w:trPr>.*?</w:tr>",
-        glue,
+        r'<w:p><w:pPr><w:pStyle w:val="(?:TableCaption|ImageCaption)" />.*?</w:p>',
+        glue_caption,
         doc,
         flags=re.S,
     )
@@ -200,8 +260,17 @@ def main() -> None:
         fail(f"{uncentered} tables left without centered tblPr")
     if not n_notes:
         fail("no Notes paragraphs found to center")
-    if not keep_next_count:
-        fail("no header-row cell paragraphs matched for keepNext")
+    if n_glued_tables != n_multirow_tables:
+        fail(f"whole-table glue ran on {n_glued_tables} but {n_multirow_tables} "
+             f"multi-row tables found - a table parser mismatch")
+    if n_glued_tables and not n_glue:
+        fail("tables had multiple rows but no cell paragraphs were glued")
+    if n_captions != caption_count:
+        fail(f"caption keepNext {n_captions} != caption paragraphs "
+             f"{caption_count} - a caption parser mismatch")
+    if doc.count("<w:keepNext />") != n_glue + n_captions:
+        fail(f"keepNext count {doc.count('<w:keepNext />')} != "
+             f"{n_glue} cell + {n_captions} caption")
     if n_header and not n_body:
         fail("header rows found but no body rows - unexpected document shape")
 
@@ -221,7 +290,8 @@ def main() -> None:
     print(f"style_tables_docx: {n_tables} tables; cantSplit on "
           f"{n_body + n_header} rows ({n_body} body + {n_header} header); "
           f"{n_promoted} promoted header rows; "
-          f"keepNext on {keep_next_count} header-cell paragraphs; "
+          f"keepNext on {n_glue} cell paragraphs of {n_glued_tables} multi-row "
+          f"tables + {n_captions} caption paragraphs; "
           f"{n_centered} tables centered ({n_tables - n_centered} already); "
           f"{n_notes} Notes paragraphs centered")
 
