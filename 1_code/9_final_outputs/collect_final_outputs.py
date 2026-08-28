@@ -9,13 +9,13 @@ writes a human-facing copy into ``4_outputs/final/``:
 
     * TableXX.xlsx + TableXX.csv — one pair per manuscript table (tex -> xlsx/csv)
     * FigXX.png / FigXX.pdf      — one copy per manuscript figure, by PRINTED PDF
-                                   order, two-digit (Fig01..Fig07; Fig06a..Fig06d)
+                                   order, two-digit (Fig01..Fig11)
     * tables_tex/<orig>.tex      — the original .tex for traceability
     * README.md                  — cross-reference: each TableXX/FigXX -> origin -> scripts
 
 The bundle is MPNet-only (the canonical manuscript track). Tables are named in
 DISSERTATION.tex \\input APPEARANCE order (Table01 = first \\input =
-tab18_corpus_provenance ... Table33 = tab_k1_specification_grid). Figures are named
+tab18_corpus_provenance ... Table28 = tab_k1_specification_grid). Figures are named
 by their printed order in dissertation.pdf (not by their source filename), so the
 files match what a reader sees.
 
@@ -39,88 +39,73 @@ into 4_outputs/final/README.md at runtime.
 # Table05  tab4_interaction_h25.tex
 #           generator: 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table06  tab10_concept_coverage.tex
-#           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
-#           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table07  tab_concept_reference.tex
+# Table06  tab_concept_reference.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table08  tab_a3_sdg4_lexical_audit.tex
+# Table07  tab_a3_sdg4_lexical_audit.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a3_sdg4_lexical_audit.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table09  tab_b2_semantic_gap_interpret_all.tex
+# Table08  tab_b2_semantic_gap_interpret_all.tex
 #           generator: 1_code/7_main_analysis/2_appendix/b2_semantic_gap_text_interpretability.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table10 (+_cont) tab13_distributional_gap.tex  (two tabular blocks)
+# Table09 (+_cont) tab13_distributional_gap.tex  (two tabular blocks)
 #           generator: 1_code/7_main_analysis/1_main_text/g_distributional_gap.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table11  tab14_distributional_h1.tex
+# Table10  tab14_distributional_h1.tex
 #           generator: 1_code/7_main_analysis/1_main_text/g_distributional_h1_correlation.py
 #           data:      1_code/7_main_analysis/1_main_text/g_distributional_gap.py
-# Table12  tab_c_sample_stability.tex
-#           generator: 1_code/7_main_analysis/2_appendix/c_sample_stability.py
-#           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table13  tab16_model_selection_full.tex
+# Table11  tab16_model_selection_full.tex
 #           generator: 1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py
 #           data:      1_code/4_supervised_model_train/1_grid_search.py
-# Table14  tab12_register_cross.tex
-#           generator: 1_code/7_main_analysis/2_appendix/f3_register_iterative_cross_table.py
-#           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# Table15  tab_a1_register_sample_design.tex
+# Table12  tab_a1_register_sample_design.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# Table16  tab_a1_register_features.tex
+# Table13  tab_a1_register_features.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# Table17  tab_a1_register_validation.tex
+# Table14  tab_a1_register_validation.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# Table18  tab_a1_register_validation_selectivity.tex
+# Table15  tab_a1_register_validation_selectivity.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a1_register_validation.py
 #           data:      1_code/7_main_analysis/0_shared/register_adjust.py
-# Table19  tab6a_cross_sensitivity.tex
+# Table16  tab6a_cross_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table20  tab6b_cross_sensitivity.tex
+# Table17  tab6b_cross_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table21  tab7a_encoder_sensitivity.tex
+# Table18  tab7a_encoder_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table22  tab7b_encoder_sensitivity.tex
+# Table19  tab7b_encoder_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table23  tab9_encoder_sensitivity_coverage.tex
+# Table20  tab9_encoder_sensitivity_coverage.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table24  tab8_coverage_sensitivity.tex
+# Table21  tab8_coverage_sensitivity.tex
 #           generator: 1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Table25  tab_minilm_reference.tex
+# Table22  tab_minilm_reference.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table26  tab_scibert_reference.tex
+# Table23  tab_scibert_reference.tex
 #           generator: 1_code/7_main_analysis/0_shared/g_register_decomposition.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table27  tab_app_cross_method_covgap.tex
-#           generator: 1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py
-#           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Table28  tab_app_cross_method_semgap.tex
-#           generator: 1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py
-#           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
-# Table29  tab_app_assignment_method_comparison.tex
+# Table24  tab_app_assignment_method_comparison.tex
 #           generator: 1_code/7_main_analysis/2_appendix/i1_assignment_method_comparison.py
 #           data:      1_code/5_supervised_model_infer/score_supervised.py
-# Table30  tab_j1_raw_value_correlation.tex
+# Table25  tab_j1_raw_value_correlation.tex
 #           generator: 1_code/7_main_analysis/2_appendix/j1_raw_value_correlation.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Table31  tab_a2_policy_source_family_combined.tex
+# Table26  tab_a2_policy_source_family_combined.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Table32  tab_a2_policy_source_family_h25.tex
+# Table27  tab_a2_policy_source_family_h25.tex
 #           generator: 1_code/7_main_analysis/2_appendix/a2_policy_source_family_sensitivity.py
 #           data:      1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Table33  tab_k1_specification_grid.tex
+# Table28  tab_k1_specification_grid.tex
 #           generator: 1_code/7_main_analysis/2_appendix/k1_regression_semantic_gap.py
 #           data:      1_code/7_main_analysis/1_main_text/1_semantic_gap.py
 #
@@ -135,8 +120,16 @@ into 4_outputs/final/README.md at runtime.
 #                                 data: 1_code/7_main_analysis/1_main_text/1_semantic_gap.py
 # Fig06  fig9_h1_grid              generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py
-# Fig07  fig8_centroid_similarity_heatmap generator: 1_code/8_visualization/plot_figures.py
+# Fig07  fig10_concept_coverage     generator: 1_code/8_visualization/plot_figures.py
+#                                 data: 1_code/7_main_analysis/1_main_text/1_semantic_gap.py
+# Fig08  fig8_centroid_similarity_heatmap generator: 1_code/8_visualization/plot_figures.py
 #                                 data: 1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py
+# Fig09  fig11_sample_stability    generator: 1_code/8_visualization/plot_figures.py
+#                                 data: 1_code/7_main_analysis/2_appendix/c_sample_stability.py
+# Fig10  fig12_register_convergence generator: 1_code/8_visualization/plot_figures.py
+#                                 data: 1_code/7_main_analysis/0_shared/register_adjust.py
+# Fig11  fig13_cross_method_heatmap generator: 1_code/8_visualization/plot_figures.py
+#                                 data: 1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py
 # ---------------------------------------------------------------------------
 """
 
@@ -177,10 +170,6 @@ TABLES = [
      "origin": "4_outputs/mpnet/tables/tab4_interaction_h25.tex",
      "generator": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py",
      "data": "1_code/5_supervised_model_infer/score_supervised.py"},
-    {"label": "tab:concept-coverage",
-     "origin": "4_outputs/mpnet/tables/tab10_concept_coverage.tex",
-     "generator": "1_code/7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py",
-     "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
     {"label": "tab:reference-concept",
      "origin": "4_outputs/mpnet/tables/tab_concept_reference.tex",
      "generator": "1_code/7_main_analysis/0_shared/g_register_decomposition.py",
@@ -201,18 +190,10 @@ TABLES = [
      "origin": "4_outputs/mpnet/adjusted/tables/tab14_distributional_h1.tex",
      "generator": "1_code/7_main_analysis/1_main_text/g_distributional_h1_correlation.py",
      "data": "1_code/7_main_analysis/1_main_text/g_distributional_gap.py"},
-    {"label": "tab:sample-stability",
-     "origin": "4_outputs/appendix/mpnet/c_sample_stability/tables/tab_c_sample_stability.tex",
-     "generator": "1_code/7_main_analysis/2_appendix/c_sample_stability.py",
-     "data": "1_code/5_supervised_model_infer/score_supervised.py"},
     {"label": "tab:model-selection-appendix",
      "origin": "4_outputs/mpnet/tables/tab16_model_selection_full.tex",
      "generator": "1_code/7_main_analysis/2_appendix/d1_export_model_selection_nums.py",
      "data": "1_code/4_supervised_model_train/1_grid_search.py"},
-    {"label": "tab:iterative-register-check",
-     "origin": "4_outputs/mpnet/tables/tab12_register_cross.tex",
-     "generator": "1_code/7_main_analysis/2_appendix/f3_register_iterative_cross_table.py",
-     "data": "1_code/7_main_analysis/0_shared/register_adjust.py"},
     {"label": "tab:register-sample-design",
      "origin": "4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_sample_design.tex",
      "generator": "1_code/7_main_analysis/2_appendix/a1_register_validation.py",
@@ -260,14 +241,6 @@ TABLES = [
     {"label": "tab:reference-scibert",
      "origin": "4_outputs/scibert/tables/tab_scibert_reference.tex",
      "generator": "1_code/7_main_analysis/0_shared/g_register_decomposition.py",
-     "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
-    {"label": "tab:app-cross-method-covgap",
-     "origin": "4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_covgap.tex",
-     "generator": "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py",
-     "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py"},
-    {"label": "tab:app-cross-method-semgap",
-     "origin": "4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex",
-     "generator": "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py",
      "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py"},
     {"label": "tab:app-assignment-method-comparison",
      "origin": "4_outputs/appendix/mpnet/i1_assignment_method_comparison/tables/tab_app_assignment_method_comparison.tex",
@@ -322,11 +295,31 @@ FIGURES = [
      "data": "1_code/7_main_analysis/1_main_text/2_coverage_semantic_interaction.py",
      "sources": [("4_outputs/mpnet/figures/fig9_h1_grid.png", "Fig06.png"),
                  ("4_outputs/mpnet/figures/fig9_h1_grid.pdf", "Fig06.pdf")]},
-    {"name": "Fig07", "label": "fig:centroid-similarity-matrix",
+    {"name": "Fig07", "label": "fig:concept-coverage",
+     "generator": "1_code/8_visualization/plot_figures.py",
+     "data": "1_code/7_main_analysis/1_main_text/1_semantic_gap.py",
+     "sources": [("4_outputs/mpnet/figures/fig10_concept_coverage.png", "Fig07.png"),
+                 ("4_outputs/mpnet/figures/fig10_concept_coverage.pdf", "Fig07.pdf")]},
+    {"name": "Fig08", "label": "fig:centroid-similarity-matrix",
      "generator": "1_code/8_visualization/plot_figures.py",
      "data": "1_code/6_calculate_centroids/1_build_centroid_similarity_matrix.py",
-     "sources": [("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.png", "Fig07.png"),
-                 ("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.pdf", "Fig07.pdf")]},
+     "sources": [("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.png", "Fig08.png"),
+                 ("4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.pdf", "Fig08.pdf")]},
+    {"name": "Fig09", "label": "fig:sample-stability",
+     "generator": "1_code/8_visualization/plot_figures.py",
+     "data": "1_code/7_main_analysis/2_appendix/c_sample_stability.py",
+     "sources": [("4_outputs/appendix/mpnet/c_sample_stability/figures/fig11_sample_stability.png", "Fig09.png"),
+                 ("4_outputs/appendix/mpnet/c_sample_stability/figures/fig11_sample_stability.pdf", "Fig09.pdf")]},
+    {"name": "Fig10", "label": "fig:register-convergence",
+     "generator": "1_code/8_visualization/plot_figures.py",
+     "data": "1_code/7_main_analysis/0_shared/register_adjust.py",
+     "sources": [("4_outputs/mpnet/figures/fig12_register_convergence.png", "Fig10.png"),
+                 ("4_outputs/mpnet/figures/fig12_register_convergence.pdf", "Fig10.pdf")]},
+    {"name": "Fig11", "label": "fig:cross-method-values",
+     "generator": "1_code/8_visualization/plot_figures.py",
+     "data": "1_code/7_main_analysis/2_appendix/h1_cross_method_gap_values.py",
+     "sources": [("4_outputs/appendix/mpnet/h1_cross_method_gap_values/figures/fig13_cross_method_heatmap.png", "Fig11.png"),
+                 ("4_outputs/appendix/mpnet/h1_cross_method_gap_values/figures/fig13_cross_method_heatmap.pdf", "Fig11.pdf")]},
 ]
 
 _SYMBOL_MAP = {
@@ -433,7 +426,7 @@ def collect_final_outputs(output_dir: Path, model: str = "all-mpnet-base-v2") ->
     readme_lines = ["# 4_outputs/final — human-facing bundle (MPNet track)\n",
                     "Generated by `python main.py --get-outputs-final`.\n",
                     "Tables are named by dissertation.tex \\input order (Table01 = first "
-                    "\\input). Figures by printed PDF order (Fig01..Fig07).\n"]
+                    "\\input). Figures by printed PDF order (Fig01..Fig11).\n"]
 
     # ----- tables -----
     readme_lines.append("\n## Tables (one .xlsx + one .csv each; original .tex in tables_tex/)\n")

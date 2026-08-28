@@ -33,7 +33,7 @@
 \usepackage{subcaption}
 \usepackage{enumitem}
 \setlist{nosep}
-\graphicspath{{../4_outputs/mpnet/figures/}{../4_outputs/appendix/mpnet/a4_centroid_similarity/figures/}{../4_outputs/conceptual_figs/}}
+\graphicspath{{../4_outputs/mpnet/figures/}{../4_outputs/appendix/mpnet/a4_centroid_similarity/figures/}{../4_outputs/appendix/mpnet/c_sample_stability/figures/}{../4_outputs/appendix/mpnet/h1_cross_method_gap_values/figures/}{../4_outputs/conceptual_figs/}}
 % UoB thesis guide: section (chapter) titles centred and in capitals
 \usepackage{titlesec}
 \usepackage{textcase}
@@ -615,17 +615,18 @@ The takeaway for practice is that an SDG label does not by itself evidence align
 
 This section reports results of using the concept-retrieved research corpus. This test uses field-of-study membership for the same two AI fields, mirroring the OECD.AI definition \parencite{OECDAiMethod}, and re-scored the resulting corpus through the identical pipeline (segmentation, Section~\ref{sec:segmentation}; classifier, Section~\ref{sec:supervised-classifier}). No SDG filter was applied at retrieval. See Section~\ref{sec:limitations} for this limitation. Concept retrieval used OpenAlex concept tags for Artificial Intelligence and Machine Learning, capped at 100{,}000 papers total. This scale sits within the stable range of the sample-stability ladder reported in Appendix~\ref{app:sample-stability} (coverage gap \SampleCoverageGapFiftyK{} and mean within-SDG semantic gap (raw) \SampleMeanSemanticGapFiftyK{}, consistent with the 2{,}000{,}000-paper estimates of \SampleCoverageGapTwoM{} and \SampleMeanSemanticGapTwoM{}) and exceeds every corpus size used in prior SDG classification and mapping benchmarks: the OSDG community dataset (30,532 texts) \parencite{Pukelis2022}, the SDG benchmark encoder evaluation corpus (35,001 excerpts) \parencite{Gjorgjevikj2025}, the SDGi corpus (20,267 segments) \parencite{SDGi2024}, the Aurora expert-validated set (4,971 texts) \parencite{Vanderfeesten2020Aurora}, and the \textcite{Kashnitsky2024} benchmark (6,000 papers)---while remaining far smaller than the full research corpus of \NResearchAbstracts{} abstracts, making it a computationally tractable substrate for OpenAlex concept tagging.
 
-Table~\ref{tab:concept-coverage} compares SDG coverage shares between the keyword-retrieved and concept-retrieved corpora. The two profiles are closely aligned (Spearman $\rho = \ConceptCoverageSpearman$, Kendall $\tau = \ConceptCoverageKendall$). The largest deviations are SDG~4 ($-$\ConceptCoverageMaxAbsDelta{}pp, the known ML-vocabulary artefact, Appendix~\ref{app:sdg4-lexical-audit}) and SDG~9 ($\ConceptCoverageSdgNineDelta$pp). Within-SDG coverage-gap and semantic-gap rankings are also stable against the keyword baseline (coverage-gap rank $\rho = \ConceptCoverageGapRho$; semantic-gap rank $\rho = \ConceptSemanticGapRho$, Table~\ref{tab:cross-sensitivity-robustness}). The main findings are therefore reported as robust to query-term choice, while both corpora remain conditional on their respective retrieval strategies.
+Figure~\ref{fig:concept-coverage} compares SDG coverage shares between the keyword-retrieved and concept-retrieved corpora. The two profiles are closely aligned (Spearman $\rho = \ConceptCoverageSpearman$, Kendall $\tau = \ConceptCoverageKendall$). The largest deviations are SDG~4 ($-$\ConceptCoverageMaxAbsDelta{}pp, the known ML-vocabulary artefact, Appendix~\ref{app:sdg4-lexical-audit}) and SDG~9 ($\ConceptCoverageSdgNineDelta$pp). Within-SDG coverage-gap and semantic-gap rankings are also stable against the keyword baseline (coverage-gap rank $\rho = \ConceptCoverageGapRho$; semantic-gap rank $\rho = \ConceptSemanticGapRho$, Table~\ref{tab:cross-sensitivity-robustness}). The main findings are therefore reported as robust to query-term choice, while both corpora remain conditional on their respective retrieval strategies.
 
 The unfiltered-retrieval concern also manifests in the interaction grid (Table~\ref{tab:interaction}). On H1a's raw semantic-gap column, the concept-retrieved configuration is the only one whose sign flips against the rest of the encoder--classifier grid (Concept LR: +0.108, versus negative values in the other eight configurations), while the MiniLM and SciBERT tracks --- also different encoders --- show no comparable sign flip. (H1c's raw column is mixed across all configs, so no single track uniquely flips there.) This does not prove the unfiltered-retrieval concern causes the instability, but it is the pattern that concern would predict. Time constraints prevented applying a comparable SDG filter to this alternative corpus; applying one is recommended before treating it as a fully independent validation.
 
-\begin{table}[ht]
+\begin{figure}[ht]
 \centering
-\caption{SDG coverage-share comparison: keyword-retrieved versus concept-retrieved (AI/ML field-of-study) research corpus.}
-\label{tab:concept-coverage}
-\input{../4_outputs/mpnet/tables/tab10_concept_coverage.tex}
-\par\smallskip\footnotesize\emph{Notes:} $\Delta$ is concept minus keyword share in percentage points.\par
-\end{table}
+\includegraphics[width=0.9\textwidth]{fig10_concept_coverage.png}
+  \caption{SDG coverage-share comparison: keyword-retrieved versus concept-retrieved (AI/ML field-of-study) research corpus.}
+\label{fig:concept-coverage}
+\par\smallskip\footnotesize\emph{Notes:} $\Delta$ is concept minus keyword share in percentage points; SDGs~4 and~9 (shaded) are the largest deviations.
+\par
+\end{figure}
 
 Table~\ref{tab:reference-concept} reproduces the per-SDG reference values (Section~\ref{sec:interaction}) for the concept-retrieved corpus: the semantic-gap family (raw, adjusted, register component) and the coverage-predictor family (coverage gap, signed dominance, research share, policy share). Signed dominance = research share $-$ policy share (pp); coverage gap = $|\text{research}-\text{policy}|$ (pp). These are the per-SDG inputs behind the Concept rows in the interaction grid (Table~\ref{tab:interaction}) and the cross-sensitivity tables.
 
@@ -718,15 +719,14 @@ Table~\ref{tab:distributional-gap} reports the per-SDG research--policy gap unde
 
 To test whether the headline findings depend heavily on research-corpus size, this study reran the downstream research-side analysis on repeated random subsamples drawn from the pre-embedded, pre-scored OpenAlex corpus. For each of \SampleStabilitySampledTierCount{} sampled tiers (from 1{,}000 to 2{,}000{,}000 papers), \SampleStabilityDraws{} independent samples were drawn without replacement, the research coverage profile was recomputed, sampled research centroids were rebuilt, the coverage gap against the fixed policy profile was recalculated, and the within-SDG semantic gap was recomputed on both the raw and the register-adjusted (topic-only) embeddings. Policy-side quantities were held fixed.
 
-\begin{table}[ht]
+\begin{figure}[ht]
 \centering
-\caption{Sample-stability ladder for the research corpus.}
-\label{tab:sample-stability}
-\resizebox{\textwidth}{!}{%
-\input{../4_outputs/appendix/mpnet/c_sample_stability/tables/tab_c_sample_stability.tex}
-}
-\par\smallskip\footnotesize\emph{Notes:} Coverage gap is the unweighted mean absolute deviation of the research SDG coverage shares from the fixed policy SDG coverage shares. The semantic-gap columns report the mean and draw-to-draw standard deviation of the within-SDG semantic gap on the raw and register-adjusted embeddings; the full-corpus row is deterministic and therefore has no dispersion term.\par
-\end{table}
+\includegraphics[width=0.88\textwidth]{fig11_sample_stability.png}
+  \caption{Sample-stability ladder for the research corpus.}
+\label{fig:sample-stability}
+\par\smallskip\footnotesize\emph{Notes:} Coverage gap is the unweighted mean absolute deviation of the research SDG coverage shares from the fixed policy SDG coverage shares. Lines show the per-tier mean and shaded bands the draw-to-draw $\pm 1$ SD of the within-SDG semantic gap on the raw and register-adjusted embeddings (100 draws per tier); the star marks the deterministic full-corpus value, which has no dispersion term.
+\par
+\end{figure}
 
 \noindent\textit{Plain-language guide.} The stability ladder tracks three metrics: (1) coverage gap, how far the research SDG coverage shares sit from the fixed policy SDG coverage shares; (2) semantic gap (raw), how different research and policy language are within the same SDG before register removal; (3) semantic gap (adjusted), the same gap after the register direction is projected out, isolating topic. The coverage gap is stable at $\sim$\SampleCoverageGapTwoHundredK{} across every sampled tier. Both the raw semantic gap and the register-adjusted semantic gap stabilise to within 0.001 of their full-corpus values (raw $\sim$\SampleMeanSemanticGapFull{}; adjusted $\sim$\SampleMeanSemanticGapAdjFull{}) by roughly 200{,}000 papers (raw $\sim$\SampleMeanSemanticGapTwoHundredK{}; adjusted $\sim$\SampleMeanSemanticGapAdjTwoHundredK{}). From 500{,}000 papers upward, draw-to-draw dispersion is negligible. The full \SampleStabilityFullCorpusN{}-segment result is retained as the primary estimate because it uses all available data, yields the tightest values, and enables per-SDG subgroup detail and rank-order precision that the plateau minimum does not guarantee; the substantive conclusions are not artefacts of sample size choice.
 
@@ -787,21 +787,21 @@ The full INLP procedure and identification argument are given in Methodology (Se
 Two details of the sampling in Section~\ref{sec:register-adjustment-inlp} bear on how the adjusted gap should be read. First, $n_{\text{target}}$ is one global constant -- the smallest available count across all SDG--corpus pools, \RegisterIterNPerSdg{} segments for MPNet -- so every SDG contributes the same number of research and policy texts at every iteration regardless of how large its actual pool is; how much text an SDG has cannot change how much register adjustment it receives. Second, the stratified sample is redrawn independently at each iteration (seeded per iteration, without replacement within each draw), so the learned directions do not hinge on any single subsample of the pool. One residue is unavoidable: for the pool that binds the global minimum, all available texts are used at every iteration, so that one stratum sees identical samples throughout; this affects only the smallest pool, treats both corpora identically, and cannot differentiate well-covered from sparsely-covered goals.
 
 \paragraph{Convergence results.}\label{app:register-inlp}
-INLP removal converges fast. Held-out accuracy falls from \RegisterFirstAcc{} at iteration~1 to \RegisterFinalAcc{} by iteration~\RegisterIterFinalK{}, and the mean gap shrinks by \RegisterIterReductionPct{}\% before flattening. Almost all of that happens in the first 15 directions: the gap's correlation with the raw (un-removed) gap drops from \RegisterIterRhoAtOne{} to about \RegisterIterPlateauRho{} and stays there. Table~\ref{tab:iterative-register-check} shows the per-iteration path for all three encoders.
+INLP removal converges fast. Held-out accuracy falls from \RegisterFirstAcc{} at iteration~1 to \RegisterFinalAcc{} by iteration~\RegisterIterFinalK{}, and the mean gap shrinks by \RegisterIterReductionPct{}\% before flattening. Almost all of that happens in the first 15 directions: the gap's correlation with the raw (un-removed) gap drops from \RegisterIterRhoAtOne{} to about \RegisterIterPlateauRho{} and stays there. Figure~\ref{fig:register-convergence} shows the per-iteration paths for all three encoders.
 
 The decomposition identifies the SDG~17 inversion discussed in Results (Section~\ref{sec:semantic-gap}) and Table~\ref{tab:register-decomposition}: the register component is positive for all SDGs except SDG~17 (range: \RegCompSdgTen{} to \RegCompSdgThirteen{}, smallest SDG~10, largest SDG~13), the only negative value, where register \emph{increases} the apparent research--policy similarity of the partnership goal.
 
 \paragraph{Cross-config replication.}
 The same iterative procedure was run on the MiniLM and SciBERT encoder tracks (the latter two on the S1 subset, by design). All three reach the $\leq 0.5$ stopping threshold. Held-out register-classification accuracy falls from \RegisterCrossFirstAccMin{}--\RegisterCrossFirstAccMax{} at iteration~1 to \RegisterCrossFinalAccMin{}--\RegisterCrossFinalAccMax{} at convergence, and all three compress sharply in the first 15 iterations (to \RegisterCrossAccAtFifteenMin{}--\RegisterCrossAccAtFifteenMax{}) before plateauing at the majority-class baseline. The iteration count required to reach the threshold differs across encoders, but the qualitative convergence --- a rapid early drop followed by a plateau --- is identical, confirming that the convergence behaviour is a property of the INLP procedure rather than of the MPNet embedding space.
 
-\begin{table}[ht]
+\begin{figure}[ht]
 \centering
-\small
-\caption{Stratified iterative register-removal diagnostic across the three encoder tracks.}
-\label{tab:iterative-register-check}
-\input{../4_outputs/mpnet/tables/tab12_register_cross.tex}
-\par\smallskip\footnotesize\emph{Notes:} acc = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. gap = average within-SDG semantic gap after $k$ removals. p vs raw = Spearman rank correlation of the gap vector at iteration~$k$ versus the raw (iteration~0, un-projected) gap vector; reported per encoder track. Cells marked~--- indicate an iteration not shown for that track.\par
-\end{table}
+\includegraphics[width=0.88\textwidth]{fig12_register_convergence.png}
+  \caption{Stratified iterative register-removal diagnostic across the three encoder tracks.}
+\label{fig:register-convergence}
+\par\smallskip\footnotesize\emph{Notes:} Top: acc = held-out accuracy on a stratified 15\% test split after projecting out the first $k$ learned directions. Middle: gap = average within-SDG semantic gap after $k$ removals. Bottom: p vs raw = Spearman rank correlation of the gap vector at iteration~$k$ versus the raw (iteration~0, un-projected) gap vector. Values are shown at the published iterations per encoder track; curves end where a track reached the stopping threshold.
+\par
+\end{figure}
 
 \clearpage
 \subsection{Construct Validation}\label{app:register-validation}
@@ -943,7 +943,7 @@ The validation is bounded in ways that should be read alongside the main text. F
 \subsection{Cross-Method Coverage and Semantic Gap Values}
 \label{app:cross-method-gap-values}
 
-Tables~\ref{tab:app-cross-method-covgap} and~\ref{tab:app-cross-method-semgap} report the raw coverage gap and semantic gap values for each SDG across seven encoder--classifier combinations, with an additional concept-retrieval LR column for comparison against the keyword-retrieved research corpus baseline (Appendix~\ref{app:concept-retrieval-sensitivity}). While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the tables below show the unrounded gap magnitudes, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Section~\ref{sec:coverage-gap-method}). Semantic gap policy centroids use a 50-segment-per-document cap. The zero-shot nearest-centroid method is reported for the canonical MPNet encoder in these rank and value tables and in Appendix~\ref{app:assignment-method-comparison}. The pooled regression of Appendix~\ref{app:regression} additionally includes it as an assignment-method configuration under each encoder.
+Figure~\ref{fig:cross-method-values} reports the raw coverage gap and semantic gap values for each SDG across seven encoder--classifier combinations, with concept-retrieval LR and MLP columns for comparison against the keyword-retrieved research corpus baseline (Appendix~\ref{app:concept-retrieval-sensitivity}). While Tables~\ref{tab:cross-sensitivity-robustness} and~\ref{tab:cross-sensitivity-coverage} rank these values to compare cross-method stability, the figure annotates the gap magnitudes per cell, allowing the rank separation to be interpreted in absolute terms. Coverage gap is document-weighted (Section~\ref{sec:coverage-gap-method}). Semantic gap policy centroids use a 50-segment-per-document cap. The zero-shot nearest-centroid method is reported for the canonical MPNet encoder in the rank tables, the value figure, and Appendix~\ref{app:assignment-method-comparison}. The pooled regression of Appendix~\ref{app:regression} additionally includes it as an assignment-method configuration under each encoder.
 
 \subsection{Rank Robustness: Cross-Sensitivity and Encoder Sensitivity}\label{sec:cross-sensitivity}
 
@@ -988,23 +988,14 @@ The per-SDG reference table from Section~\ref{sec:interaction} is reproduced bel
 \par\smallskip\footnotesize\emph{Notes:} Same structure as Table~\ref{tab:register-decomposition}. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted.\par
 \end{table}
 
-\begin{table}[ht]
+\begin{figure}[ht]
 \centering
-\footnotesize
-\caption{Coverage gap values across embedding architectures, classifier variants, and retrieval strategies.}
-\label{tab:app-cross-method-covgap}
-\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_covgap.tex}}
-\par\smallskip\footnotesize\emph{Notes:} Coverage gap = $|\text{research proportion} - \text{policy proportion}|$ per SDG in percentage points, using document-weighted policy proportions (Section~\ref{sec:coverage-gap-method}) for all methods.\par
-\end{table}
-
-\begin{table}[ht]
-\centering
-\footnotesize
-\caption{(continued) Semantic gap values across embedding architectures, classifier variants, and retrieval strategies.}
-\label{tab:app-cross-method-semgap}
-\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/h1_cross_method_gap_values/tables/tab_app_cross_method_semgap.tex}}
-\par\smallskip\footnotesize\emph{Notes:} Semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap. All values are cosine units. This is a \emph{values} table reporting the raw (naive) semantic gap; the adjusted (register-removed) ranking is shown in the rank-robustness tables (Section~\ref{sec:cross-sensitivity}).\par
-\end{table}
+\includegraphics[width=\textwidth]{fig13_cross_method_heatmap.png}
+  \caption{Coverage gap values and semantic gap values across embedding architectures, classifier variants, and retrieval strategies.}
+\label{fig:cross-method-values}
+\par\smallskip\footnotesize\emph{Notes:} Top: coverage gap = $|\text{research proportion} - \text{policy proportion}|$ per SDG in percentage points, using document-weighted policy proportions (Section~\ref{sec:coverage-gap-method}) for all methods. Bottom: semantic gap = $1 - \cos(\mathbf{r}_{\text{SDG}}, \mathbf{p}_{\text{SDG}})$ where $\mathbf{r}_{\text{SDG}}$ and $\mathbf{p}_{\text{SDG}}$ are the research and policy centroids; policy centroids use a 50-segment-per-document cap, values in cosine units. This is a \emph{values} figure reporting the raw (naive) semantic gap; the adjusted (register-removed) ranking is shown in the rank-robustness tables (Section~\ref{sec:cross-sensitivity}).
+\par
+\end{figure}
 
 \subsection{Assignment-Method Comparison: Supervised vs.\ Nearest-Centroid}
 \label{app:assignment-method-comparison}

@@ -5,7 +5,9 @@ Reads the three register checkpoints (canon for MPNet, subset for MiniLM/SciBERT
 by design) and writes a single wide LaTeX table covering all three encoder tracks:
     It. | MPNet (acc, gap, p vs raw) | MiniLM (...) | SciBERT (...)
 
-This is the expanded version of Table 12 (tab:iterative-register-check) that the
+This is the data source for the register-convergence figure (fig12,
+fig:register-convergence; formerly Table 12, tab:iterative-register-check,
+converted to a figure in the 2026-08-28 table-to-figure conversion) that the
 per-model `g_register_decomposition.py` only emits for MPNet.  The Spearman
 column is the rank correlation of each track's per-SDG gap vector at iteration k
 versus that track's *raw* (iteration 0, un-projected) gap vector — consistent

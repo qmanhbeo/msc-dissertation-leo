@@ -56,9 +56,8 @@ pattern as ``5_notes/word_count_docx.py``):
         ("...8-10 It."). After stack-row classification, pure debris cells
         are blanked and fused cells keep only the real remainder
         ("It."/"SDG", matching the PDF render). Census: ``EXPECTED_JUNK_CELLS``
-        cells across ``EXPECTED_JUNK_TABLES`` tables.
-   9. Font cap: an explicit 2.5pt ``w:sz`` is set on every run of Table 34
-        (the 24-column pooled-OLS grid, ``tab:k1-specification-grid``), the
+        cells across ``EXPECTED_JUNK_TABLES`` tables.   9. Font cap: an explicit 2.5pt ``w:sz`` is set on every run of Table 29
+         (the 24-column pooled-OLS grid, ``tab:k1-specification-grid``), the
         widest table in the manuscript. Without it the table inherits the
         default body size and renders far too large in Word. Word-build-only
         — the PDF sizes the same ``\input`` via ``\resizebox``. Captioned
@@ -105,8 +104,8 @@ RULE_LIGHT_SZ = 8   # 1pt   — header-stack separators + mid-table group rules
 # A markerless label row (flattened header row with no cmidrule debris and no
 # gridSpan) is accepted as a stack row only if no cell holds a digit and every
 # non-empty cell is at most LABEL_CELL_MAX chars. Rationale: the two such rows
-# in the census (Table 12 "Cov. gap/Dominance/...", Table 34 "Adj. gap/...")
-# max out at 20 chars, while the nearest digit-free prose rows (Table 35 "AI
+# in the census (Table 11 "Cov. gap/Dominance/...", Table 29 "Adj. gap/...")
+# max out at 20 chars, while the nearest digit-free prose rows (Table 30 "AI
 # use declaration" body) run to hundreds — 24 sits far from both.
 LABEL_CELL_MAX = 24
 # cmidrule debris pandoc leaves inside flattened header cells, e.g. "2-4 (lr)"
@@ -119,16 +118,17 @@ JUNK_CELL_RE = re.compile(r"\d+-\d+(?: \(lr\))?")
 # rule arguments as literal text runs into the leading cell of the next
 # flattened header-stack row ("3-5 (lr)6-9" from \cmidrule(lr){3-5}
 # \cmidrule(lr){6-9}; bare "2-8" from a lone \cmidrule(lr){2-8}), fusing the
-# debris with any real header text in that cell ("...8-10 It." = Table 15's
-# iteration label, "...7-9 SDG" = Table 30's first-column label; both
-# verified against the tex sources and the PDF render). Excision runs AFTER
+# debris with any real header text in that cell ("...7-9 SDG" = Table 25's
+# first-column label; the former "...8-10 It." example came from the
+# register-convergence table, converted to Figure 10 in the 2026-08-28
+# table-to-figure conversion). Excision runs AFTER
 # stack-row classification above (which keys on JUNK_CELL_RE) and BEFORE
 # bordering, restricted to rows 0..stack_end so data rows are never touched.
 # Pure debris is blanked; fused cells keep only the real remainder, matching
-# the PDF. Fail-closed census of the 2026-08-27 build: 20 debris cells across
-# 17 content tables (18 pure + 2 fused).
-EXPECTED_JUNK_CELLS = 20
-EXPECTED_JUNK_TABLES = 17
+# the PDF. Fail-closed census of the 2026-08-28 build: 17 debris cells across
+# 14 content tables (15 pure + 2 fused).
+EXPECTED_JUNK_CELLS = 17
+EXPECTED_JUNK_TABLES = 14
 JUNK_FULL_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s*$")
 JUNK_PREFIX_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s+(\S.*)$")
 # A fused remainder must be a short digit-free header label ("It.", "SDG");
@@ -136,18 +136,19 @@ JUNK_PREFIX_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s+(\S.*)$")
 # rather than guess. Same 24-char rationale as LABEL_CELL_MAX above.
 REMAINDER_MAX_CHARS = 24
 
-# Fail-closed census of the 2026-08-28 build (36 content tables). Any
+# Fail-closed census of the 2026-08-28 build (31 content tables, after the
+# 2026-08-28 table-to-figure conversion of the concept-coverage,
+# sample-stability, register-convergence and cross-method value tables). Any
 # manuscript table change that alters the header structure must update these:
-#   - 36 caption'd tables — ALL tables are content tables (since fe3efeb the
+#   - 31 caption'd tables — ALL tables are content tables (since fe3efeb the
 #     H1 scatter panels are one generator image, so no caption-less layout
 #     grid exists any more; the row pass below still guards on `not nested`);
-#   - 69 bordered rows = 62 stack rows (16 flat x1 + 12 two-tier x2
-#     + 5 three-tier x3 + 2 label-header tables x2) + 7 mid-table gridSpan
-#     rows (Table 5 H1a-H1d panels x3, Table 6 Spearman line x1,
-#     Table 31 x3);
-#   - 2 markerless label rows (Table 12 row 1, Table 34 row 2).
-EXPECTED_CONTENT_TABLES = 36
-EXPECTED_BORDERED_ROWS = 69
+#   - 58 bordered rows = 52 stack rows + 6 mid-table gridSpan rows
+#     (Table 5 H1a-H1d panels x3, Table 26 x3; the concept-coverage Spearman
+#     line left with that table's conversion to Figure 7);
+#   - 2 markerless label rows (Table 11 row 1, Table 29 row 2).
+EXPECTED_CONTENT_TABLES = 31
+EXPECTED_BORDERED_ROWS = 58
 EXPECTED_LABEL_ROWS = 2
 
 # Font cap for the Pooled OLS table (tab:k1-specification-grid, "Pooled OLS ... across 24

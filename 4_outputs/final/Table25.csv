@@ -1,20 +1,41 @@
-SDG,Description,Semantic gaps,,,Coverage predictors,,,
-,,Raw,Adj.,Reg.,Cov.,SDom,Res %,Pol %
-1,No Poverty,0.222,0.176,+0.046,4.1,-4.1,0.3,4.4
-2,Zero Hunger,0.297,0.077,+0.220,2.1,-2.1,2.3,4.4
-3,Good Health,0.495,0.238,+0.257,22.0,+22.0,26.9,4.9
-4,Education,0.291,0.178,+0.113,8.9,+8.9,13.8,4.9
-5,Gender Equality,0.470,0.272,+0.198,1.7,-1.7,3.3,5.1
-6,Clean Water,0.298,0.101,+0.198,2.3,-2.3,1.4,3.7
-7,Clean Energy,0.430,0.127,+0.302,1.0,+1.0,5.3,4.3
-8,Decent Work,0.336,0.129,+0.207,2.3,-2.3,2.0,4.2
-9,Innovation,0.350,0.142,+0.208,12.5,+12.5,16.9,4.4
-10,Reduced Ineq.,0.485,0.207,+0.278,1.1,-1.1,1.8,2.9
-11,Sust. Cities,0.397,0.119,+0.278,1.6,-1.6,3.7,5.3
-12,Consumption,0.391,0.147,+0.245,1.6,-1.6,1.9,3.5
-13,Climate,0.541,0.187,+0.354,5.1,-5.1,5.6,10.7
-14,Life Below Water,0.330,0.111,+0.218,2.2,-2.2,1.4,3.6
-15,Life on Land,0.345,0.112,+0.233,0.1,-0.1,4.1,4.2
-16,Peace & Justice,0.322,0.220,+0.101,11.2,-11.2,8.7,19.9
-17,Partnerships,0.241,0.190,+0.052,8.9,-8.9,0.6,9.5
-Mean,---,0.367,0.161,+0.206,5.2,+0.0,5.9,5.9
+,Semantic Gap,Adj. gap,Reg. Comp.
+H1a. Coverage gap Semantic gap,,,
+MPNet LR,+0.102,+0.694^**,-0.382
+MPNet MLP,-0.069,+0.441^,-0.404
+MPNet ZS,-0.171,+0.230,-0.333
+MiniLM LR,+0.068,+0.474^,-0.226
+MiniLM MLP,+0.333,+0.611^**,-0.093
+SciBERT LR,+0.129,+0.152,-0.080
+SciBERT MLP,-0.108,-0.189,+0.138
+Concept LR,+0.030,+0.445^,-0.357
+Concept MLP,-0.092,+0.196,-0.310
+H1b. Research--policy dominance Semantic gap,,,
+MPNet LR,+0.274,+0.196,+0.115
+MPNet MLP,+0.050,+0.090,-0.014
+MPNet ZS,-0.152,-0.227,+0.033
+MiniLM LR,+0.293,+0.119,+0.240
+MiniLM MLP,+0.353,+0.150,+0.260
+SciBERT LR,+0.460^,-0.156,+0.420^
+SciBERT MLP,+0.194,-0.358,+0.484^*
+Concept LR,+0.117,+0.120,+0.021
+Concept MLP,-0.060,+0.046,-0.119
+H1c. Research coverage Semantic gap,,,
+MPNet LR,+0.288,+0.464^,-0.055
+MPNet MLP,+0.032,+0.308,-0.197
+MPNet ZS,-0.191,-0.117,-0.087
+MiniLM LR,+0.302,+0.355,+0.101
+MiniLM MLP,+0.429^,+0.438^,+0.132
+SciBERT LR,+0.419^,+0.208,+0.029
+SciBERT MLP,+0.029,-0.234,+0.262
+Concept LR,+0.134,+0.262,-0.085
+Concept MLP,-0.074,+0.113,-0.205
+H1d. Policy coverage Semantic gap,,,
+MPNet LR,-0.018,+0.501^*,-0.359
+MPNet MLP,-0.045,+0.418^,-0.361
+MPNet ZS,-0.052,+0.258,-0.244
+MiniLM LR,-0.041,+0.381,-0.284
+MiniLM MLP,+0.064,+0.466^*,-0.269
+SciBERT LR,-0.138,+0.728^**,-0.813^***
+SciBERT MLP,-0.344,+0.287,-0.492^*
+Concept LR,+0.009,+0.269,-0.225
+Concept MLP,-0.017,+0.130,-0.154

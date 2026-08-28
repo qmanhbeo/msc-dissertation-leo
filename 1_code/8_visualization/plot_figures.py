@@ -21,6 +21,14 @@ Outputs:
       4_outputs/mpnet/figures/fig9_h1_grid.{pdf,png}
       4_outputs/appendix/mpnet/a4_centroid_similarity/figures/fig8_centroid_similarity_heatmap.{pdf,png}
 
+Appendix table-to-figure renders (MPNet canonical track only; each renders the
+same frozen pipeline artifacts as the appendix table it replaces in the
+manuscript):
+      4_outputs/mpnet/figures/fig10_concept_coverage.{pdf,png}
+      4_outputs/mpnet/figures/fig12_register_convergence.{pdf,png}
+      4_outputs/appendix/mpnet/c_sample_stability/figures/fig11_sample_stability.{pdf,png}
+      4_outputs/appendix/mpnet/h1_cross_method_gap_values/figures/fig13_cross_method_heatmap.{pdf,png}
+
 Run:
     python 1_code/8_visualization/plot_figures.py --output-dir 4_outputs/mpnet
 """
@@ -263,6 +271,359 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
     print("Saved: fig9_h1_grid.png")
 
 
+# ---------------------------------------------------------------------------
+# Appendix table-to-figure renders (MPNet canonical track only)
+#
+# Each figure below replaces an appendix table in dissertation.tex and is
+# rendered from the SAME frozen pipeline artifacts the published table was
+# generated from. Where the published table itself is the only persisted form
+# of the values (tab12 convergence paths, the cross-method value grids), the
+# figure parses that generated .tex strictly and fails closed on any shape
+# mismatch — the figure can therefore never silently diverge from the table
+# it replaced. House style (Tol palette, PDF+PNG 300 dpi) matches the rest of
+# this module.
+# ---------------------------------------------------------------------------
+
+TRACK_COLORS = {"MPNet": RESEARCH_COLOR, "MiniLM": POLICY_COLOR, "SciBERT": "#009988"}
+_EM_DASH_CELLS = {"\u2014", "--", "---"}
+
+
+def _read_tex_table_rows(path: Path) -> list[list[str]]:
+    """Return '&'-split cell rows of the first tabular block of a generated table.
+
+    Strips comments, booktabs rules and \\multicolumn scaffolding rows (header
+    groups / summary lines); rows whose first cell is not an integer (headers
+    like "It." / "SDG") are dropped by the callers via int(cells[0]).
+    """
+    rows = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("%"):
+            continue
+        if line.startswith(("\\begin{tabular", "\\end{tabular", "\\toprule",
+                            "\\midrule", "\\bottomrule", "\\cmidrule")):
+            continue
+        if "\\multicolumn" in line:
+            continue
+        if "&" not in line:
+            continue
+        cells = [c.strip() for c in line.removesuffix("\\\\").split("&")]
+        rows.append(cells)
+    return rows
+
+
+def _parse_concept_coverage_tex(path: Path) -> dict[int, tuple[float, float, float]]:
+    """Parse tab10_concept_coverage.tex -> {sdg: (keyword %, concept %, delta pp)}."""
+    out: dict[int, tuple[float, float, float]] = {}
+    for cells in _read_tex_table_rows(path):
+        try:
+            sdg = int(cells[0])
+        except ValueError:
+            continue
+        if len(cells) != 4:
+            raise RuntimeError(f"tab10 parse: row {cells!r} does not have 4 cells")
+        kw, con, delta = (float(c) for c in cells[1:4])
+        out[sdg] = (kw, con, delta)
+    if sorted(out) != list(range(1, 18)):
+        raise RuntimeError(f"tab10 parse: expected 17 SDG rows, got {sorted(out)}")
+    return out
+
+
+def _parse_tab12_register_cross(path: Path) -> dict[str, list[tuple[int, float | None, float | None, float | None]]]:
+    """Parse tab12_register_cross.tex -> {track: [(k, acc, gap, rho_vs_raw), ...]}.
+
+    Em-dash cells (iterations not shown for a track) become None.
+    """
+    tracks = ["MPNet", "MiniLM", "SciBERT"]
+    out: dict[str, list[tuple[int, float | None, float | None, float | None]]] = {t: [] for t in tracks}
+    for cells in _read_tex_table_rows(path):
+        try:
+            k = int(cells[0])
+        except ValueError:
+            continue
+        if len(cells) != 10:
+            raise RuntimeError(f"tab12 parse: row k={k} has {len(cells)} cells, expected 10")
+        vals = [None if c in _EM_DASH_CELLS else float(c) for c in cells[1:]]
+        for t, group in zip(tracks, (vals[0:3], vals[3:6], vals[6:9])):
+            out[t].append((k, group[0], group[1], group[2]))
+    for t in tracks:
+        if len(out[t]) < 8:
+            raise RuntimeError(f"tab12 parse: track {t} has only {len(out[t])} rows")
+        ks = [r[0] for r in out[t]]
+        if not all(b > a for a, b in zip(ks, ks[1:])):
+            raise RuntimeError(f"tab12 parse: non-monotonic iteration k for {t}")
+    return out
+
+
+def _parse_cross_method_values_tex(path: Path) -> dict[int, list[float]]:
+    """Parse a tab_app_cross_method_* table -> {sdg: [9 method values]}."""
+    out: dict[int, list[float]] = {}
+    for cells in _read_tex_table_rows(path):
+        try:
+            sdg = int(cells[0])
+        except ValueError:
+            continue
+        if len(cells) != 10:
+            raise RuntimeError(f"cross-method parse: row {cells!r} does not have 10 cells")
+        out[sdg] = [float(c) for c in cells[1:]]
+    if sorted(out) != list(range(1, 18)):
+        raise RuntimeError(f"cross-method parse: expected 17 SDG rows, got {sorted(out)}")
+    return out
+
+
+def _appendix_fig_dir(layout, model: str, module: str) -> Path:
+    """figures/ under 4_outputs/appendix/{model}/{module}/ (fig8 convention)."""
+    out_dir = layout.root.parent / "appendix" / model_slug(model) / module / "figures"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return out_dir
+
+
+def _save_fig(fig, out_dir: Path, name: str) -> None:
+    fig.savefig(out_dir / f"{name}.pdf", bbox_inches="tight")
+    fig.savefig(out_dir / f"{name}.png", bbox_inches="tight", dpi=300)
+    plt.close(fig)
+    print(f"Saved: {name}.pdf")
+
+
+def plot_concept_coverage_figure(layout) -> None:
+    """fig10 — keyword vs concept retrieval coverage shares per SDG (dumbbell).
+
+    Replaces tab10_concept_coverage.tex. Shares come from the two frozen
+    coverage_document_weighted.json profiles; the generated tex table is
+    cross-checked (fail-closed) so the figure cannot diverge from the table
+    it replaced.
+    """
+    kw_json = layout.data_dir / "coverage_document_weighted.json"
+    con_json = layout.data_dir / "concept" / "coverage_document_weighted.json"
+    tex = layout.tables_dir / "tab10_concept_coverage.tex"
+    missing = [str(p) for p in (kw_json, con_json, tex) if not p.exists()]
+    if missing:
+        print(f"Skip fig10 (missing inputs: {', '.join(missing)})")
+        return
+
+    shares: dict[str, dict[int, float]] = {}
+    for label, path in (("keyword", kw_json), ("concept", con_json)):
+        with open(path) as f:
+            prof = json.load(f)["research_profile_hard"]
+        shares[label] = {int(k[3:]): 100.0 * v for k, v in prof.items()}
+        if sorted(shares[label]) != list(range(1, 18)):
+            raise RuntimeError(f"fig10: {label} profile does not cover SDGs 1-17")
+
+    tex_rows = _parse_concept_coverage_tex(tex)
+    for sdg in range(1, 18):
+        kw_tex, con_tex, delta_tex = tex_rows[sdg]
+        kw, con = shares["keyword"][sdg], shares["concept"][sdg]
+        # tex values are rounded to 1 dp -> |unrounded - printed| <= 0.05.
+        if abs(kw - kw_tex) > 0.0501 or abs(con - con_tex) > 0.0501:
+            raise RuntimeError(
+                f"fig10: SDG{sdg} shares (kw={kw:.3f}, con={con:.3f}) diverge "
+                f"from published table ({kw_tex}, {con_tex})"
+            )
+        # Delta may have been rounded from unrounded shares (|diff - round| <= 0.05)
+        # or from the printed 1-dp shares (|diff - (round-con - round-kw)| <= 0.1).
+        if abs((con - kw) - delta_tex) > 0.101:
+            raise RuntimeError(
+                f"fig10: SDG{sdg} delta ({con - kw:+.3f}) diverges from "
+                f"published table ({delta_tex:+.1f})"
+            )
+
+    sdgs = list(range(1, 18))
+    fig, ax = plt.subplots(figsize=(7.5, 6.8))
+    y = np.arange(len(sdgs))
+    for i, sdg in enumerate(sdgs):
+        kw, con = shares["keyword"][sdg], shares["concept"][sdg]
+        ax.plot([kw, con], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
+        ax.plot(kw, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
+        ax.plot(con, i, "o", color=POLICY_COLOR, ms=5.5, zorder=2)
+        d = con - kw
+        ax.text(29.0, i, f"{d:+.1f}", va="center", ha="left", fontsize=7,
+                fontweight="bold" if sdg in (4, 9) else "normal")
+    for sdg in (4, 9):  # the two deviations the manuscript prose discusses
+        ax.axhspan(sdg - 1 - 0.42, sdg - 1 + 0.42, color=POLICY_COLOR, alpha=0.07, lw=0)
+    ax.set_yticks(y)
+    ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
+    ax.axvline(0, color="black", lw=0.5)
+    ax.axvline(27.5, color="grey", lw=0.5, ls=":")
+    ax.set_xlim(0, 33)
+    # y already inverted by the (top, bottom) ordering of set_ylim below.
+    ax.set_ylim(len(sdgs) - 0.5, -1.4)
+    ax.text(29.0, -1.0, "$\\Delta$ (pp)", fontsize=7.5, ha="left", va="center")
+    ax.set_xlabel("Share of research corpus assigned to SDG (%)")
+    ax.legend(handles=[
+        plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
+                   label="Keyword-retrieved"),
+        plt.Line2D([0], [0], marker="o", ls="None", color=POLICY_COLOR, ms=5.5,
+                   label="Concept-retrieved (AI/ML field-of-study)"),
+    ], loc="lower right", fontsize=8, frameon=False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    _save_fig(fig, layout.figures_dir, "fig10_concept_coverage")
+
+
+def plot_sample_stability_figure(layout, model: str) -> None:
+    """fig11 — sample-stability ladder (replaces tab_c_sample_stability.tex).
+
+    Three stacked panels (coverage gap; semantic gap raw; semantic gap
+    adjusted) against research-corpus size on a log axis, mean line with a
+    +/-1 SD draw-to-draw band, and the deterministic full-corpus value as a
+    star. Data: c_sample_stability_table.csv (mean and SD over 100 draws per
+    tier; full-corpus row deterministic).
+    """
+    module_dir = layout.root.parent / "appendix" / model_slug(model) / "c_sample_stability"
+    csv_path = module_dir / "data" / "c_sample_stability_table.csv"
+    if not csv_path.exists():
+        print(f"Skip fig11 (missing input: {csv_path})")
+        return
+
+    df = pd.read_csv(csv_path)
+    needed = {"sample_size", "deterministic", "coverage_gap", "std_coverage_gap",
+              "mean_semantic_gap", "std_semantic_gap",
+              "mean_semantic_gap_adjusted", "std_semantic_gap_adjusted"}
+    if not needed.issubset(df.columns) or len(df) != 12:
+        raise RuntimeError(f"fig11: unexpected c_sample_stability_table.csv shape ({len(df)} rows)")
+    if int(df.loc[~df["deterministic"].astype(bool), "n_draws"].nunique()) != 1:
+        raise RuntimeError("fig11: sampled tiers do not share a single draw count")
+
+    specs = [
+        ("coverage_gap", "std_coverage_gap", "Coverage gap (pp)", TRACK_COLORS["MPNet"]),
+        ("mean_semantic_gap", "std_semantic_gap", "Semantic gap (raw)", TRACK_COLORS["MiniLM"]),
+        ("mean_semantic_gap_adjusted", "std_semantic_gap_adjusted", "Semantic gap (adjusted)", TRACK_COLORS["SciBERT"]),
+    ]
+    fig, axes = plt.subplots(3, 1, figsize=(7.5, 7.6), sharex=True)
+    x = df["sample_size"].to_numpy(float)
+    det = df[df["deterministic"].astype(bool)]
+    for ax, (m, s, lbl, color) in zip(axes, specs):
+        mean = df[m].to_numpy(float)
+        sd = df[s].to_numpy(float)
+        ax.plot(x, mean, "-o", color=color, ms=3.5, lw=1.4, zorder=2)
+        ax.fill_between(x, mean - sd, mean + sd, color=color, alpha=0.18, lw=0,
+                        label="\u00b11 SD (draw-to-draw)", zorder=1)
+        ax.plot(det["sample_size"], det[m], "*", color="black", ms=11, zorder=3,
+                label="Full corpus (deterministic)")
+        ax.set_ylabel(lbl, fontsize=9)
+        ax.set_xscale("log")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.grid(True, alpha=0.3, linestyle=":", linewidth=0.5, which="both")
+    axes[0].legend(loc="upper right", fontsize=7.5, frameon=False)
+    axes[2].axvline(2e5, color="grey", ls="--", lw=0.9)
+    axes[2].text(2e5 * 1.15, 0.02, "stabilised by \u2248200k", fontsize=7.5,
+                 color="grey", ha="left", va="bottom", rotation=90,
+                 transform=axes[2].get_xaxis_transform())  # x=data, y=axes fraction
+    axes[2].set_xlabel("Research-corpus size (papers, log scale)")
+    axes[2].set_xticks([1e3, 1e4, 1e5, 1e6])
+    axes[2].set_xticklabels(["1k", "10k", "100k", "1m"])
+    axes[2].set_xlim(8e2, 5e6)
+    fig.tight_layout()
+    _save_fig(fig, _appendix_fig_dir(layout, model, "c_sample_stability"), "fig11_sample_stability")
+
+
+def plot_register_convergence_figure(layout) -> None:
+    """fig12 — INLP register-removal convergence (replaces tab12_register_cross.tex).
+
+    Three stacked panels (held-out register-classification accuracy; mean
+    within-SDG semantic gap; Spearman rho of the per-SDG gap vector vs. the
+    raw gap) against the number of removed directions k, one line per encoder
+    track. Data: the generated tab12_register_cross.tex (values at the shown
+    iterations only, parsed strictly).
+    """
+    tex = layout.tables_dir / "tab12_register_cross.tex"
+    if not tex.exists():
+        print(f"Skip fig12 (missing input: {tex})")
+        return
+    data = _parse_tab12_register_cross(tex)
+
+    panels = [
+        (1, "Held-out register-classification accuracy", (0.44, 1.02)),
+        (2, "Mean within-SDG semantic gap", None),
+        (3, "Spearman $\\rho$ of gap vector vs. raw", (-0.02, 1.06)),
+    ]
+    fig, axes = plt.subplots(3, 1, figsize=(7.5, 7.8), sharex=True)
+    for ax, (idx, lbl, ylim) in zip(axes, panels):
+        for track, color in TRACK_COLORS.items():
+            xs, ys = [], []
+            for k, acc, gap, rho in data[track]:
+                v = (acc, gap, rho)[idx - 1]
+                if v is not None:
+                    xs.append(k)
+                    ys.append(v)
+            ax.plot(xs, ys, "-o", color=color, ms=3.5, lw=1.4, label=track)
+        if idx == 1:
+            ax.axhline(0.5, color="grey", ls="--", lw=0.9)
+            ax.text(79 * 0.92, 0.507, "0.5 (majority-class baseline)", fontsize=7,
+                    color="grey", ha="right", va="bottom")
+        if ylim:
+            ax.set_ylim(*ylim)
+        ax.set_ylabel(lbl, fontsize=9)
+        ax.set_xscale("log")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.grid(True, alpha=0.3, linestyle=":", linewidth=0.5, which="both")
+    axes[2].set_xlabel("INLP directions removed ($k$, log scale)")
+    axes[2].set_xticks([1, 2, 5, 10, 20, 50, 79])
+    axes[2].set_xticklabels(["1", "2", "5", "10", "20", "50", "79"])
+    axes[2].set_xlim(0.9, 95)
+    axes[0].legend(loc="upper right", fontsize=8, frameon=False, ncol=3)
+    fig.tight_layout()
+    _save_fig(fig, layout.figures_dir, "fig12_register_convergence")
+
+
+def plot_cross_method_heatmap_figure(layout, model: str) -> None:
+    """fig13 — cross-method coverage/semantic gap values (replaces BOTH
+    tab_app_cross_method_covgap.tex and tab_app_cross_method_semgap.tex).
+
+    Two annotated heatmaps (17 SDGs x 9 method configurations): coverage gap
+    in pp on top, semantic gap in cosine units below. Values are parsed
+    strictly from the two generated tables the figure replaces.
+    """
+    tables_dir = layout.root.parent / "appendix" / model_slug(model) / "h1_cross_method_gap_values" / "tables"
+    cov_tex = tables_dir / "tab_app_cross_method_covgap.tex"
+    sem_tex = tables_dir / "tab_app_cross_method_semgap.tex"
+    missing = [str(p) for p in (cov_tex, sem_tex) if not p.exists()]
+    if missing:
+        print(f"Skip fig13 (missing inputs: {', '.join(missing)})")
+        return
+
+    cov = _parse_cross_method_values_tex(cov_tex)
+    sem = _parse_cross_method_values_tex(sem_tex)
+    A_cov = np.array([[cov[s][j] for j in range(9)] for s in range(1, 18)])
+    A_sem = np.array([[sem[s][j] for j in range(9)] for s in range(1, 18)])
+
+    method_cols = ["LR", "MLP", "ZS", "LR", "MLP", "LR", "MLP", "LR", "MLP"]
+    groups = [("MPNet", 0, 2), ("MiniLM", 3, 4), ("SciBERT", 5, 6), ("Concept", 7, 8)]
+    fig, axes = plt.subplots(2, 1, figsize=(8.8, 8.4))
+    for ax, (A, title, fmt) in zip(axes, [
+        (A_cov, "(a) Coverage gap (%)", "{:.1f}"),
+        (A_sem, "(b) Semantic gap (cosine)", "{:.3f}"),
+    ]):
+        vmax = float(A.max())
+        im = ax.imshow(A, cmap="Blues", vmin=0, vmax=vmax, aspect="auto")
+        ax.set_yticks(range(17))
+        ax.set_yticklabels([f"SDG {s}" for s in range(1, 18)], fontsize=7)
+        ax.set_xticks(range(9))
+        ax.set_xticklabels(method_cols, fontsize=7.5)
+        # Panel title inside the axes (above the SDG 1 row) so it cannot
+        # collide with the encoder group labels above the top panel.
+        ax.text(-0.45, -0.72, title, fontsize=9.5, fontweight="bold", ha="left", va="bottom")
+        for i in range(17):
+            for j in range(9):
+                v = A[i, j]
+                ax.text(j, i, fmt.format(v), ha="center", va="center", fontsize=5.4,
+                        color="white" if v > 0.62 * vmax else "black")
+        for xb in (2.5, 4.5, 6.5):
+            ax.axvline(xb, color="white", lw=1.6)
+        cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.015)
+        cbar.ax.tick_params(labelsize=7)
+    axes[1].set_xlabel("Embedding--classifier configuration")
+    for name, j0, j1 in groups:
+        axes[0].annotate(name, xy=((j0 + j1) / 2, 1.09),
+                         xycoords=axes[0].get_xaxis_transform(),
+                         ha="center", fontsize=8.5, fontweight="bold")
+    fig.tight_layout()
+    _save_fig(fig, _appendix_fig_dir(layout, model, "h1_cross_method_gap_values"), "fig13_cross_method_heatmap")
+
+
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
@@ -282,6 +643,15 @@ def main() -> None:
             figures_dir / "fig4_semantic_gap.pdf",
             figures_dir / "fig9_h1_grid.pdf",
         ]
+        if model_slug(args.embed_model) == "mpnet":
+            # Appendix table-to-figure renders (canonical MPNet track only).
+            appendix_root = layout.root.parent / "appendix" / "mpnet"
+            expected += [
+                figures_dir / "fig10_concept_coverage.pdf",
+                figures_dir / "fig12_register_convergence.pdf",
+                appendix_root / "c_sample_stability" / "figures" / "fig11_sample_stability.pdf",
+                appendix_root / "h1_cross_method_gap_values" / "figures" / "fig13_cross_method_heatmap.pdf",
+            ]
         if all(p.exists() for p in expected):
             print(f"Figures already exist at {figures_dir} — skip. Use --overwrite to regenerate.")
             return
@@ -452,6 +822,15 @@ def main() -> None:
     # Centroid pairwise similarity heatmap
     # -----------------------------------------------------------------------
     plot_centroid_similarity_heatmap(layout, args.embed_model)
+
+    # -----------------------------------------------------------------------
+    # Appendix table-to-figure renders (MPNet canonical track only)
+    # -----------------------------------------------------------------------
+    if model_slug(args.embed_model) == "mpnet":
+        plot_concept_coverage_figure(layout)
+        plot_sample_stability_figure(layout, args.embed_model)
+        plot_register_convergence_figure(layout)
+        plot_cross_method_heatmap_figure(layout, args.embed_model)
 
     print(f"\\nAll figures saved to {figures_dir}")
 

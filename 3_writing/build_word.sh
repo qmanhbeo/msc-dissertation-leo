@@ -59,7 +59,7 @@ PY
 pandoc _build_word_tmp.tex -o "$output_docx" \
   --citeproc \
   --csl word-helper/harvard-university-of-birmingham.csl \
-  --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet \
+  --resource-path=.:../4_outputs/mpnet/figures:../4_outputs/appendix/mpnet/a4_centroid_similarity/figures:../4_outputs/appendix/mpnet/c_sample_stability/figures:../4_outputs/appendix/mpnet/h1_cross_method_gap_values/figures \
   --standalone \
   --lua-filter=word-helper/word_section_numbers.lua \
   --lua-filter=word-helper/move_bibliography.lua \
