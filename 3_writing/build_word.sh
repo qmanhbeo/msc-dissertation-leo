@@ -79,4 +79,9 @@ pandoc _build_word_tmp.tex -o "$output_docx" \
 # (item 10); see style_tables_docx.py docstring.
 python3 word-helper/style_tables_docx.py "$output_docx"
 
+# Add guide-compliant page numbering to the Word build: the pandoc output has
+# no footer, so this carves three sections (title page unnumbered; preliminaries
+# lowercase roman; main body arabic from 1), bottom-right, to match the PDF.
+python3 word-helper/add_page_numbers_docx.py "$output_docx"
+
 printf 'Built %s\n' "$output_docx"
