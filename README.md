@@ -140,66 +140,92 @@ research/policy centroids in a separate namespace for cross-method comparison.
 
 ```mermaid
 flowchart TD
-    subgraph Sources[Data sources]
-        L["Labeled<br>osdg, benchmark, KH, sdgi, aurora"]
-        U["Unlabeled<br>research, policy_scrape, policy_manual, ungdc_sdg"]
+    subgraph T1["Tier 1 — Corpus Construction (four parallel intake tracks)"]
+        direction TB
+        subgraph B["Keyword-research (primary)"]
+            SB["OpenAlex API<br>68 Boolean queries (17 SDG × 4 AI terms)"]
+            PB["1_preprocess/0_preprocess_papers_streaming.py<br>SDG filter: native, min 20 words"]
+            SGB["2_segment/1_segment_corpus.py<br>Research abstracts → segments"]
+            SB --> PB --> SGB
+        end
+        subgraph A["Concept-research (robustness track)"]
+            SA["OpenAlex concept tags<br>AI/ML field-of-study"]
+            PA["1_preprocess/0_preprocess_papers_streaming.py<br>SDG filter: none, capped 100k"]
+            SGA["2_segment/1_segment_corpus.py<br>~100k papers, classifier-assigned SDG"]
+            SA --> PA --> SGA
+        end
+        subgraph C["Policy"]
+            SC["4 policy sources<br>curated / SDGi VNR-VLR / UNGDC / scrape+manual"]
+            PC["1_preprocess/0_preprocess_policy.py (+ 1_preprocess/1_build_policy_corpus.py)<br>min 20 words"]
+            SGC["2_segment/1_segment_corpus.py<br>Policy documents → segments (merge)"]
+            SC --> PC --> SGC
+        end
+        subgraph D["Reference"]
+            SD["5 reference corpora<br>OSDG / Benchmark / KH / SDGi / Aurora"]
+            PD["1_preprocess/0_preprocess_osdg.py<br>0_preprocess_sdg_benchmark.py<br>0_preprocess_sdg_knowledge_hub.py<br>0_preprocess_sdgi_unified.py<br>0_preprocess_aurora.py<br>0_preprocess_ungdc_sdg.py"]
+            SGD["2_segment/1_segment_corpus.py<br>single-label reference segments (bypass)"]
+            SD --> PD --> SGD
+        end
     end
 
-    subgraph Prep["Preprocess → Segment (canonical, ONCE) → Embed"]
-        PSE["8 preprocess scripts<br>1 canonical 1_segment_corpus run (shared by all models)<br>8 embed + merge policy<br>embed_paper_shards (full for primary, 100k subset for MiniLM/SciBERT)"]
+    EMB["3_embed/0_embed_paper_shards.py (research: full MPNet / 100k subset MiniLM·SciBERT)<br>3_embed/0_embed_reference_and_policy_corpora.py<br>Shared MPNet 768d, L2; encoder robustness: MiniLM/SciBERT"]
+    SGB --> EMB
+    SGA --> EMB
+    SGC --> EMB
+    SGD --> EMB
+
+    subgraph T2["Tier 2 — Classification & Decomposition"]
+        CLF["4_supervised_model_train/0_prepare_data.py → 4_supervised_model_train/2_retrain_full_data.py<br>Train LR (C=3.0, L2) on reference pool; 1_grid_search.py for MLP"]
+        SCR["6_calculate_centroids/score_supervised.py --lr --research (primary)<br>research_centroids.npy"]
+        SCM["6_calculate_centroids/score_supervised.py --lr --research (concept)<br>robustness track"]
+        SCP["6_calculate_centroids/score_supervised.py --lr --policy<br>policy_scores.npy"]
+        SCMLP["6_calculate_centroids/score_supervised.py --mlp<br>mlp_research_centroids.npy"]
+        ZS["6_calculate_centroids/0_build_sdg_reference_centroids.py → 6_calculate_centroids/score_zeroshot.py<br>sdg_centroids.npy, zeroshot research/policy centroids"]
+        CLF --> SCR
+        CLF --> SCM
+        CLF --> SCP
+        CLF --> SCMLP
+        CLF --> ZS
+        COV["7_main_analysis/1_main_text/0_coverage_gap.py<br>CoverageGapⱼ = |Researchⱼ − Policyⱼ|"]
+        SEM["7_main_analysis/1_main_text/1_semantic_gap.py<br>Raw Gap = 1 − (cᵢꞋ · cₚꞌ)"]
+        SCR --> COV
+        SCP --> COV
+        SCR --> SEM
+        SCP --> SEM
+        INLP["7_main_analysis/0_shared/register_adjust.py (SDG-stratified INLP)<br>Raw Gap → Adjusted Gap (topic) + Register Component"]
+        SEM --> INLP
+        INT["7_main_analysis/1_main_text/2_coverage_semantic_interaction.py<br>H1a–H1d: coverage predictors × {raw, adjusted, register} gap"]
+        COV --> INT
+        INLP --> INT
+        XT["7_main_analysis/1_main_text/3_generate_cross_sensitivity_table.py<br>LR + MLP + ZS cross-method grid"]
+        SCR --> XT
+        SCM --> XT
+        SCP --> XT
+        SCMLP --> XT
+        ZS --> XT
+        SIM["6_calculate_centroids/1_build_centroid_similarity_matrix.py ← sdg_centroids.npy"]
+        ZS --> SIM
     end
 
-    subgraph Train[Shared training data]
-        PD["0_prepare_data.py<br>→ 4_supervised_model_results/{model}/<br>embeddings.npy, labels.npy<br>sources.npy, indices/"]
-    end
-
-    subgraph LR[Axis A: Supervised LR — PRIMARY]
-        R1["2_retrain_full_data LR<br>→ sdg_classifier.joblib"]
-        S1["score_supervised --lr --research<br>→ 5_supervised_scored/{model}/<br>research_centroids.npy<br>score_supervised --lr --policy<br>→ policy_scores.npy"]
-    end
-
-    subgraph MLP[Axis B: Supervised MLP — sensitivity]
-        R2["2_retrain_full_data MLP<br>→ mlp_retrained.joblib"]
-        S2["score_supervised --mlp<br>→ mlp_research_centroids.npy"]
-    end
-
-    subgraph ZS[Axis C: Zeroshot nearest-centroid — sensitivity]
-        RC["0_build_sdg_reference_centroids<br>→ 5_supervised_scored/{model}/<br>sdg_centroids.npy"]
-        ZSO["score_zeroshot<br>→ 4_outputs/{model}/zeroshot/<br>research_centroids.npy<br>policy_centroids.npy"]
-    end
-
-    subgraph Analysis[Downstream]
-        G1["0_coverage_gap<br>← LR policy_scores.npy"]
-        G2["1_semantic_gap<br>← supervised research_centroids.npy"]
-        XT["3_generate_cross_sensitivity_table<br>← LR + MLP + zeroshot artifacts"]
-        SM["1_build_centroid_similarity_matrix<br>← sdg_centroids.npy"]
-    end
-
-    L --> PSE
-    U --> PSE
-    PSE --> PD
-    PD --> R1
-    PD --> R2
-    PD --> RC
-    R1 --> S1
-    R2 --> S2
-    RC --> ZSO
-    S1 --> G1
-    S1 --> G2
-    S1 --> XT
-    S2 --> XT
-    ZSO --> XT
-    RC --> SM
-
-    style LR fill:#dae8fc,stroke:#2c6e9c
-    style MLP fill:#e8d4f1,stroke:#8e2c9c
-    style ZS fill:#f1e6d4,stroke:#9c6e2c
+    style A fill:#EAF2F8,stroke:#1F618D,stroke-dasharray: 4 3
+    style SCM fill:#EAF2F8,stroke:#1F618D,stroke-dasharray: 4 3
+    style B fill:#AED6F1,stroke:#1F618D
+    style C fill:#FAD7A0,stroke:#B9770E
+    style D fill:#A9DFBF,stroke:#1E8449
+    style EMB fill:#EAECEE,stroke:#4D5656
+    style COV fill:#EAECEE,stroke:#4D5656
+    style SEM fill:#EAECEE,stroke:#4D5656
+    style INT fill:#EAECEE,stroke:#4D5656
+    style XT fill:#EAECEE,stroke:#4D5656
+    style SIM fill:#EAECEE,stroke:#4D5656
+    style INLP fill:#FDEBD0,stroke:#B9770E
 ```
 
-**Order constraint:** `0_prepare_data.py` MUST run before both
-`0_build_sdg_reference_centroids.py` and `2_retrain_full_data.py`, because both
-read the `embeddings.npy` / `labels.npy` files that `0_prepare_data.py` writes
-to `2_data/4_supervised_model_results/{model}/`.
+**Order constraint:** `4_supervised_model_train/0_prepare_data.py` MUST run before both
+`6_calculate_centroids/0_build_sdg_reference_centroids.py` and
+`4_supervised_model_train/2_retrain_full_data.py`, because both read the
+`embeddings.npy` / `labels.npy` files that `0_prepare_data.py` writes to
+`2_data/4_supervised_model_results/{model}/`.
 
 ## Tracked vs not tracked
 
