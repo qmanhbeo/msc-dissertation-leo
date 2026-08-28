@@ -48,6 +48,7 @@ __test-scopus
 data_archive_fetch/
 *.tar.zst
 *.tar.zst.sha256
+snapshot-meta-*/
 
 # === PDF (keep literature, ignore everything else) ===
 *.pdf
