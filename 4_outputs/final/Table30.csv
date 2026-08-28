@@ -1,4 +1,4 @@
-,Raw gap,Adj. gap,Register
+,Semantic Gap,Adj. gap,Reg. Comp.
 H1a. Coverage gap Semantic gap,,,
 MPNet LR,+0.102,+0.694^**,-0.382
 MPNet MLP,-0.069,+0.441^,-0.404
@@ -9,7 +9,7 @@ SciBERT LR,+0.129,+0.152,-0.080
 SciBERT MLP,-0.108,-0.189,+0.138
 Concept LR,+0.030,+0.445^,-0.357
 Concept MLP,-0.092,+0.196,-0.310
-H1b. Policy--research dominance Semantic gap,,,
+H1b. Research--policy dominance Semantic gap,,,
 MPNet LR,+0.274,+0.196,+0.115
 MPNet MLP,+0.050,+0.090,-0.014
 MPNet ZS,-0.152,-0.227,+0.033
