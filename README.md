@@ -9,13 +9,13 @@ This repository contains the dissertation code, manuscript source, committed out
 | Requirement | Details |
 |---|---|
 | **Disk space** | Embedded snapshot: ~14 GB archive. Raw snapshot: ~3.7 GB archive |
-| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu). On Windows (native): `--warm-replay-without-appendix` / `--warm-replay-with-appendix` and `--appendix-all` work. `--cold-replay` was not tested on bare Windows (OpenAlex re-fetch would cost too much). `--build-pdf` requires bash (WSL/Linux only) |
+| **Platform** | Full pipeline tested end-to-end on WSL (Ubuntu); both `--cold-replay` and `--warm-replay-without-appendix` / `--warm-replay-with-appendix` were tested and worked on WSL (08-28) and on native Windows (07-26). `--cold-replay` hydrates from the remote raw archive (no live OpenAlex fetch). On Windows (native) `--warm-replay-without-appendix` / `--warm-replay-with-appendix` and `--appendix-all` also work. `--build-pdf` requires bash (WSL/Linux only) |
 | **Conda** | Required — environment is defined in `environment.yml` |
 | **RAM / VRAM** | 10 GB RAM + 4 GB VRAM is sufficient for the full pipeline (warm replay and cold replay). CPU-only warm replay works on the same RAM budget |
-| **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). For `--cold-replay`, a **live OpenAlex re-fetch** needs the OpenAlex API (see Credentials); with the frozen **raw snapshot** hydrated, cold replay is offline/deterministic and only needs the HuggingFace model download (one-time, cached). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
+| **Network** | Required for `conda env create` (packages) and `--fetch-data-snapshot` (archive download). For `--cold-replay`, the canonical run hydrates the frozen **raw snapshot** from the remote archive (offline/deterministic, no OpenAlex); only a forced **live OpenAlex re-fetch** needs the OpenAlex API (see Credentials). Cold replay otherwise only needs the HuggingFace model download (one-time, cached). Warm replay is fully offline once Conda exists and the snapshot is hydrated |
 | **LaTeX** | `latexmk` + `pdflatex` + `biber` for `--build-pdf` |
 | **rclone** | Required for `--backup-data-snapshot` only (maintainer tool). Override remote via `--remote-root` or `DISSERTATION_SNAPSHOT_REMOTE_ROOT`. Not needed for warm/cold replay |
-| **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only for a **live** `--cold-replay` OpenAlex re-fetch. The full OpenAlex re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week. A `--cold-replay` from the frozen **raw snapshot** needs **no** key (deterministic/offline) |
+| **OpenAlex key(s)** | `.env` with `OPENALEX_MAILTO` + `OPENALEX_API_KEY` — only if you force a **live** `--cold-replay` OpenAlex re-fetch. The canonical cold replay hydrates the frozen **raw snapshot** from the remote archive and needs **no** key (deterministic/offline). The full live re-fetch cycles through up to 4 parallel API keys and takes approximately 1 week |
 | **Embedding runtimes** (one-time, cold replay only) | Segmentation is **canonical and shared** — one ~17h pass at 384 tokens produces segments reused by every encoder. MPNet (`all-mpnet-base-v2`, primary) embeds the full corpus (~17h on 4 GB VRAM). MiniLM and SciBERT embed only the shared 100k-paper subset (~minutes each). SciBERT also loads as a raw BERT wrapped with mean pooling |
 | **Git** | Required for cloning and pulling updates |
 
@@ -295,15 +295,15 @@ hydration. Byte-identical across runs and platforms.
 
 ```mermaid
 flowchart LR
-    Fetch["1. Fetch<br><em>live sources</em>"] --> Preproc["2. Preprocess<br><em>deterministic</em>"]
+    Fetch["1. Hydrate raw snapshot<br><em>remote archive</em>"] --> Preproc["2. Preprocess<br><em>deterministic</em>"]
     Preproc --> Seg["3. Segment<br><em>canonical, once</em>"]
     Seg --> Embed["4. Embed<br><em>deterministic</em>"]
     Embed --> Analyse["5. Analyse<br><em>deterministic</em>"]
-    Fetch -.-|"will drift"| Note["OpenAlex changes daily,<br>policy URLs fragile,<br>manual PDFs not automatable"]
+    Fetch -.-|"deterministic"| Note["frozen raw snapshot<br>from remote archive<br>no live OpenAlex fetch"]
 ```
 
-Four deterministic stages produce identical results given frozen inputs.
-The fetch stage cannot be reproduced because its sources change continuously.
+Four deterministic stages produce identical results given the frozen raw snapshot.
+The canonical run hydrates that snapshot from the remote archive (offline, no live OpenAlex fetch); only a forced live re-fetch drifts as its sources change continuously.
 
 ### What drifts on live re-fetch
 
@@ -317,14 +317,14 @@ The fetch stage cannot be reproduced because its sources change continuously.
 
 ### Credentials
 
-A **live** `--cold-replay` OpenAlex re-fetch requires OpenAlex API credentials.
+A forced **live** `--cold-replay` OpenAlex re-fetch requires OpenAlex API credentials; the canonical cold replay hydrates the frozen raw snapshot from the remote archive and needs none.
 Copy `.env.example` to `.env` and fill in your key (free at
 https://openalex.org/keys). Without these the live fetch stage raises
 `RuntimeError`. The 3 rate-limit fallback keys are optional — only
 `OPENALEX_MAILTO` + `OPENALEX_API_KEY` are required. If provided, they enable
 parallel API key rotation during the full re-fetch. **Note:** a `--cold-replay`
 run from the frozen **raw snapshot** is deterministic and offline — it needs
-**no** OpenAlex credentials. The raw snapshot is auto-fetched if missing.
+**no** OpenAlex credentials. The raw snapshot is auto-hydrated from the remote archive if missing.
 
 ### Snapshot scope
 
