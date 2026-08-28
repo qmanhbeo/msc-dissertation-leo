@@ -1,0 +1,266 @@
+# P0-full — Unbiased full-vocabulary scan (MPNet canon)
+
+G = 62 x 768. Word score = ||projection onto span(G)||. Random-direction expected score = sqrt(K/d) = 0.2841.
+
+## Calibration: G vs random-direction subspace
+
+- G:    max=0.5270, p99=0.3925, median=0.3024
+- Rand: max=0.4008, p99=0.3478, median=0.2921
+
+If G's top score is near the random top score, the subspace is not preferentially aligned with any specific vocabulary (register reading not supported at word level).
+
+## Top 200 words by alignment with the removed subspace
+
+  1. underdevelopment 0.5270
+  2. ai 0.5261
+  3. developmentary 0.5247
+  4. socionomics 0.5226
+  5. economy 0.5219
+  6. economically 0.5125
+  7. liberalization 0.5094
+  8. convolutional 0.5089
+  9. humanitarianize 0.5085
+ 10. infrastructure 0.5043
+ 11. governance 0.5042
+ 12. convolutionary 0.5017
+ 13. reprivatization 0.5012
+ 14. governmentalize 0.4945
+ 15. deindustrialization 0.4931
+ 16. legislation 0.4921
+ 17. developmentist 0.4909
+ 18. poverty 0.4891
+ 19. prosperity 0.4881
+ 20. socioeconomic 0.4869
+ 21. scientize 0.4864
+ 22. superdevelopment 0.4852
+ 23. developmentarian 0.4844
+ 24. ineconomic 0.4840
+ 25. economic 0.4829
+ 26. sanitation 0.4811
+ 27. progressivity 0.4790
+ 28. data 0.4783
+ 29. bionomics 0.4776
+ 30. ruralization 0.4774
+ 31. citizenize 0.4771
+ 32. legalization 0.4766
+ 33. industrialize 0.4763
+ 34. econometrics 0.4749
+ 35. economics 0.4743
+ 36. anthroponomics 0.4738
+ 37. deeplier 0.4735
+ 38. cognizer 0.4733
+ 39. deindustrialize 0.4733
+ 40. fiscalify 0.4725
+ 41. decarbonization 0.4720
+ 42. kras 0.4718
+ 43. municipalization 0.4718
+ 44. sciuromorphic 0.4712
+ 45. overindustrialize 0.4711
+ 46. economization 0.4693
+ 47. involutional 0.4683
+ 48. cynology 0.4676
+ 49. legislational 0.4669
+ 50. neuralist 0.4667
+ 51. overindustrialization 0.4666
+ 52. binational 0.4663
+ 53. sciuroid 0.4657
+ 54. liberalize 0.4654
+ 55. sciograph 0.4652
+ 56. intergovernmental 0.4648
+ 57. autofermentation 0.4648
+ 58. pneumograph 0.4645
+ 59. greenkeeping 0.4644
+ 60. nondevelopment 0.4642
+ 61. convolute 0.4642
+ 62. regularization 0.4640
+ 63. micromillimeter 0.4636
+ 64. urbanization 0.4635
+ 65. sanify 0.4630
+ 66. progress 0.4627
+ 67. reprivatize 0.4617
+ 68. nationalize 0.4610
+ 69. microbrachius 0.4607
+ 70. microtasimeter 0.4601
+ 71. nationalization 0.4597
+ 72. decentralism 0.4590
+ 73. fiscalize 0.4587
+ 74. democratization 0.4587
+ 75. necessitarianism 0.4586
+ 76. industrialization 0.4577
+ 77. socialism 0.4573
+ 78. biomicroscopy 0.4572
+ 79. underpopulation 0.4563
+ 80. depopulation 0.4563
+ 81. pythogenetic 0.4562
+ 82. autosauri 0.4558
+ 83. collectivize 0.4558
+ 84. econometric 0.4555
+ 85. recession 0.4554
+ 86. ecostate 0.4546
+ 87. cynography 0.4546
+ 88. bioscopic 0.4541
+ 89. neurypnology 0.4540
+ 90. government 0.4538
+ 91. pollution 0.4535
+ 92. neuropter 0.4528
+ 93. livelihood 0.4526
+ 94. autoinoculable 0.4523
+ 95. zincograph 0.4522
+ 96. polluted 0.4522
+ 97. undercapitalization 0.4520
+ 98. semigovernmental 0.4515
+ 99. micrograver 0.4514
+100. phecda 0.4514
+101. demonetization 0.4513
+102. microscopize 0.4508
+103. econometrician 0.4505
+104. autoist 0.4504
+105. neuropile 0.4502
+106. microblephary 0.4501
+107. participatively 0.4494
+108. micrologic 0.4494
+109. fiscalization 0.4490
+110. municipalism 0.4489
+111. parelectronomic 0.4488
+112. automatograph 0.4487
+113. democratize 0.4479
+114. sustainable 0.4478
+115. micromeric 0.4477
+116. livability 0.4476
+117. oecodomic 0.4475
+118. overpopulousness 0.4474
+119. oecodomical 0.4474
+120. demographer 0.4473
+121. environmentalism 0.4473
+122. binous 0.4472
+123. micronization 0.4470
+124. economist 0.4470
+125. microcosmic 0.4467
+126. micrological 0.4467
+127. fishify 0.4466
+128. neovitalism 0.4466
+129. governing 0.4465
+130. microlith 0.4465
+131. micropyle 0.4464
+132. sentinelwise 0.4462
+133. medicamentation 0.4461
+134. nonindustrial 0.4461
+135. overpopulation 0.4461
+136. sennet 0.4459
+137. dactylograph 0.4456
+138. decentralize 0.4455
+139. collectivization 0.4455
+140. humanitarianism 0.4454
+141. famine 0.4450
+142. superoutput 0.4445
+143. convoluta 0.4445
+144. welfare 0.4445
+145. cybernetics 0.4442
+146. reformism 0.4442
+147. digitalization 0.4441
+148. subsidization 0.4440
+149. polluter 0.4440
+150. decentralization 0.4437
+151. plenipotentiaryship 0.4437
+152. trillionize 0.4437
+153. microsphere 0.4432
+154. nongovernmental 0.4430
+155. overcrowdedness 0.4430
+156. metergram 0.4427
+157. digraphic 0.4426
+158. astrolabe 0.4426
+159. autoecy 0.4424
+160. supercentrifuge 0.4423
+161. counterdevelopment 0.4415
+162. sanability 0.4414
+163. theca 0.4412
+164. autocollimator 0.4411
+165. decadarchy 0.4411
+166. axal 0.4410
+167. autocarpic 0.4408
+168. vitalize 0.4407
+169. biniodide 0.4406
+170. allegorizer 0.4406
+171. telomic 0.4406
+172. decipium 0.4405
+173. axonost 0.4401
+174. austerity 0.4399
+175. datary 0.4398
+176. microlitic 0.4397
+177. pteridography 0.4397
+178. capitalism 0.4396
+179. oecist 0.4396
+180. tariffize 0.4396
+181. botanizer 0.4396
+182. superscrive 0.4395
+183. microgram 0.4393
+184. antirennet 0.4393
+185. bureaucracy 0.4393
+186. protectionism 0.4390
+187. dataria 0.4390
+188. sciniph 0.4390
+189. fiscally 0.4389
+190. microcrith 0.4389
+191. microcosmal 0.4387
+192. pneumographic 0.4387
+193. stremmatograph 0.4385
+194. subsistence 0.4384
+195. sciapod 0.4383
+196. decemvirship 0.4380
+197. devolution 0.4379
+198. phoronomics 0.4379
+199. autodiagnosis 0.4377
+200. specimenize 0.4377
+
+## Top 50 words by alignment with a RANDOM 62-dim subspace (null)
+
+  1. shellacker 0.4008
+  2. lidgate 0.4001
+  3. nable 0.3999
+  4. shellcracker 0.3952
+  5. door 0.3951
+  6. implunge 0.3888
+  7. sealet 0.3884
+  8. seastrand 0.3884
+  9. landsick 0.3877
+ 10. allspice 0.3877
+ 11. capulin 0.3856
+ 12. doorsill 0.3826
+ 13. incavation 0.3825
+ 14. poldavis 0.3823
+ 15. bummalo 0.3823
+ 16. patripassian 0.3823
+ 17. watersmeet 0.3822
+ 18. somegate 0.3821
+ 19. honeymooner 0.3817
+ 20. rampick 0.3813
+ 21. caplin 0.3801
+ 22. sealing 0.3795
+ 23. brutedom 0.3794
+ 24. capsula 0.3792
+ 25. solvency 0.3791
+ 26. poteye 0.3791
+ 27. othergates 0.3789
+ 28. hatchgate 0.3788
+ 29. icebreaker 0.3787
+ 30. prediscourse 0.3787
+ 31. sheepstealing 0.3783
+ 32. gillhooter 0.3781
+ 33. nonopening 0.3781
+ 34. sarcosporida 0.3775
+ 35. swanskin 0.3774
+ 36. stallar 0.3774
+ 37. crossruff 0.3774
+ 38. blindball 0.3770
+ 39. bailee 0.3770
+ 40. osteal 0.3769
+ 41. oket 0.3768
+ 42. lumpfish 0.3766
+ 43. impack 0.3766
+ 44. sporting 0.3765
+ 45. housebug 0.3765
+ 46. abreaction 0.3763
+ 47. turngate 0.3763
+ 48. illation 0.3760
+ 49. glacieret 0.3759
+ 50. testoon 0.3756
