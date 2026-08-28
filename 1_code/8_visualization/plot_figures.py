@@ -90,6 +90,38 @@ plt.rcParams.update({
 RESEARCH_COLOR = "#0077BB"   # blue (Tol palette, colorblind-safe)
 POLICY_COLOR   = "#EE7733"   # orange (Tol palette, colorblind-safe)
 
+# ---------------------------------------------------------------------------
+# Semantic color roles (ratified 2026-08-28) — follow these for every new
+# figure; do not introduce new hues without updating this block.
+#
+#   1. One primary contrast per figure: the two things a figure compares get
+#      the blue/orange pair; everything else in the figure is grey.
+#   2. POLICY_COLOR is RESERVED for the policy corpus. Never use orange for
+#      any other series (retrieval strategies, encoders, metrics, ...).
+#   3. RESEARCH_COLOR (blue) = the canonical object: the research corpus in
+#      corpus figures, the adjusted (post-INLP) state in method figures.
+#   4. BASELINE_GREY = baselines and deviations: raw (pre-INLP) series, the
+#      reference pool, matched samples. Open/hollow markers reinforce it.
+#   5. Derive variants within a family instead of adding hues: the
+#      non-canonical member of a pair is a hollow/dashed/lighter variant of
+#      the family colour (e.g. concept retrieval = hollow blue, keyword =
+#      filled blue).
+#
+#   Axis cheat-sheet:
+#     corpus      research=blue solid | policy=orange solid | reference=grey
+#     state       raw=grey (open)     | adjusted=blue
+#     encoder     MPNet=blue | MiniLM=purple | SciBERT=teal   (TRACK_COLORS)
+#     retrieval   keyword=filled blue | concept=hollow blue
+#     classifier  NEVER coloured: linestyle/marker only (LR solid, MLP
+#                 dashed, ZS dotted) or column labels in heatmaps
+#
+#   Grayscale note: blue/orange/teal differ in luminance, and hollow vs
+#   filled + linestyle survive B/W printing — check any new figure there.
+# ---------------------------------------------------------------------------
+BASELINE_GREY = "#555555"   # raw / baseline series (raw gap, reference pool)
+MINILM_COLOR  = "#AA3377"   # Tol purple — encoder family; keeps orange policy-only
+SCIBERT_COLOR = "#009988"   # Tol teal — encoder family
+
 SDG_SHORT = {sdg: f"SDG {sdg}\n{SDG_SHORT_NAMES[sdg]}" for sdg in range(1, 18)}
 
 
@@ -284,7 +316,9 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
 # this module.
 # ---------------------------------------------------------------------------
 
-TRACK_COLORS = {"MPNet": RESEARCH_COLOR, "MiniLM": POLICY_COLOR, "SciBERT": "#009988"}
+# Encoder family (palette block): MPNet stays blue (canonical encoder);
+# MiniLM/SciBERT get their own hues so POLICY_COLOR stays policy-only.
+TRACK_COLORS = {"MPNet": RESEARCH_COLOR, "MiniLM": MINILM_COLOR, "SciBERT": SCIBERT_COLOR}
 _EM_DASH_CELLS = {"\u2014", "--", "---"}
 
 
@@ -434,12 +468,15 @@ def plot_concept_coverage_figure(layout) -> None:
         kw, con = shares["keyword"][sdg], shares["concept"][sdg]
         ax.plot([kw, con], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
         ax.plot(kw, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
-        ax.plot(con, i, "o", color=POLICY_COLOR, ms=5.5, zorder=2)
+        # Concept = non-canonical retrieval -> hollow blue variant (palette
+        # rule 5); orange stays reserved for the policy corpus (rule 2).
+        ax.plot(con, i, "o", markerfacecolor="white", markeredgecolor=RESEARCH_COLOR,
+                markeredgewidth=1.4, ms=5.5, zorder=2)
         d = con - kw
         ax.text(29.0, i, f"{d:+.1f}", va="center", ha="left", fontsize=7,
                 fontweight="bold" if sdg in (4, 9) else "normal")
     for sdg in (4, 9):  # the two deviations the manuscript prose discusses
-        ax.axhspan(sdg - 1 - 0.42, sdg - 1 + 0.42, color=POLICY_COLOR, alpha=0.07, lw=0)
+        ax.axhspan(sdg - 1 - 0.42, sdg - 1 + 0.42, color=RESEARCH_COLOR, alpha=0.07, lw=0)
     ax.set_yticks(y)
     ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
     ax.axvline(0, color="black", lw=0.5)
@@ -451,8 +488,9 @@ def plot_concept_coverage_figure(layout) -> None:
     ax.set_xlabel("Share of research corpus assigned to SDG (%)")
     ax.legend(handles=[
         plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
-                   label="Keyword-retrieved"),
-        plt.Line2D([0], [0], marker="o", ls="None", color=POLICY_COLOR, ms=5.5,
+                   label="Keyword-retrieved (canonical)"),
+        plt.Line2D([0], [0], marker="o", ls="None", markerfacecolor="white",
+                   markeredgecolor=RESEARCH_COLOR, markeredgewidth=1.4, ms=5.5,
                    label="Concept-retrieved (AI/ML field-of-study)"),
     ], loc="lower right", fontsize=8, frameon=False)
     ax.spines["top"].set_visible(False)
@@ -485,10 +523,13 @@ def plot_sample_stability_figure(layout, model: str) -> None:
     if int(df.loc[~df["deterministic"].astype(bool), "n_draws"].nunique()) != 1:
         raise RuntimeError("fig11: sampled tiers do not share a single draw count")
 
+    # Palette: raw = baseline grey, adjusted = canonical blue (state axis);
+    # coverage gap is not a pipeline state, so it takes the spare encoder-
+    # family hue (teal) rather than policy orange.
     specs = [
-        ("coverage_gap", "std_coverage_gap", "Coverage gap (pp)", TRACK_COLORS["MPNet"]),
-        ("mean_semantic_gap", "std_semantic_gap", "Semantic gap (raw)", TRACK_COLORS["MiniLM"]),
-        ("mean_semantic_gap_adjusted", "std_semantic_gap_adjusted", "Semantic gap (adjusted)", TRACK_COLORS["SciBERT"]),
+        ("coverage_gap", "std_coverage_gap", "Coverage gap (pp)", SCIBERT_COLOR),
+        ("mean_semantic_gap", "std_semantic_gap", "Semantic gap (raw)", BASELINE_GREY),
+        ("mean_semantic_gap_adjusted", "std_semantic_gap_adjusted", "Semantic gap (adjusted)", RESEARCH_COLOR),
     ]
     fig, axes = plt.subplots(3, 1, figsize=(7.5, 7.6), sharex=True)
     x = df["sample_size"].to_numpy(float)
