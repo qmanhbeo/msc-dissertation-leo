@@ -472,19 +472,24 @@ def plot_concept_coverage_figure(layout) -> None:
         # rule 5); orange stays reserved for the policy corpus (rule 2).
         ax.plot(con, i, "o", markerfacecolor="white", markeredgecolor=RESEARCH_COLOR,
                 markeredgewidth=1.4, ms=5.5, zorder=2)
+        # Share labels: keyword above its dot, concept below its dot; gap
+        # right of the righter-most dot — all in the axis's % unit.
+        ax.text(kw, i - 0.30, f"{kw:.1f}", ha="center", va="center", fontsize=6.5,
+                color="#444444")
+        ax.text(con, i + 0.30, f"{con:.1f}", ha="center", va="center", fontsize=6.5,
+                color="#444444")
         d = con - kw
-        ax.text(29.0, i, f"{d:+.1f}", va="center", ha="left", fontsize=7,
-                fontweight="bold" if sdg in (4, 9) else "normal")
+        ax.text(max(kw, con) + 0.6, i, f"{d:+.1f}%", ha="left", va="center",
+                fontsize=7, fontweight="bold" if sdg in (4, 9) else "normal",
+                color="#444444")
     for sdg in (4, 9):  # the two deviations the manuscript prose discusses
         ax.axhspan(sdg - 1 - 0.42, sdg - 1 + 0.42, color=RESEARCH_COLOR, alpha=0.07, lw=0)
     ax.set_yticks(y)
     ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
     ax.axvline(0, color="black", lw=0.5)
-    ax.axvline(27.5, color="grey", lw=0.5, ls=":")
-    ax.set_xlim(0, 33)
+    ax.set_xlim(0, 31)
     # y already inverted by the (top, bottom) ordering of set_ylim below.
     ax.set_ylim(len(sdgs) - 0.5, -1.4)
-    ax.text(29.0, -1.0, "$\\Delta$ (pp)", fontsize=7.5, ha="left", va="center")
     ax.set_xlabel("Share of research corpus assigned to SDG (%)")
     ax.legend(handles=[
         plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
@@ -665,6 +670,53 @@ def plot_cross_method_heatmap_figure(layout, model: str) -> None:
     _save_fig(fig, _appendix_fig_dir(layout, model, "h1_cross_method_gap_values"), "fig13_cross_method_heatmap")
 
 
+def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
+                           n_research: int, n_policy: int) -> None:
+    """fig2 — research vs policy coverage shares per SDG (dumbbell).
+
+    Redesign of the former grouped bar chart: one row per SDG with research
+    and policy dots on a common % axis. The research share is labelled above
+    its dot, the policy share below its dot, and the coverage gap (absolute,
+    same % unit as the axis — no pp/% mixing) right of the righter-most dot
+    of the row. Palette: this is the one pair that earns the full blue/orange
+    contrast (research vs policy).
+    """
+    sdgs = list(range(1, 18))
+    res = {int(r["sdg"]): float(r["research_pct"]) for _, r in df.iterrows()}
+    pol = {int(r["sdg"]): float(r["policy_pct_docweighted"]) for _, r in df.iterrows()}
+    fig, ax = plt.subplots(figsize=(8.0, 6.8))
+    y = np.arange(len(sdgs))
+    for i, sdg in enumerate(sdgs):
+        xr, xp = res[sdg], pol[sdg]
+        ax.plot([xr, xp], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
+        ax.plot(xr, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
+        ax.plot(xp, i, "o", color=POLICY_COLOR, ms=5.5, zorder=2)
+        ax.text(xr, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=6.5,
+                color=RESEARCH_COLOR)
+        ax.text(xp, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=6.5,
+                color=POLICY_COLOR)
+        gap = abs(xr - xp)
+        ax.text(max(xr, xp) + 0.6, i, f"{gap:.1f}%", ha="left", va="center",
+                fontsize=7, color="#444444")
+    ax.set_yticks(y)
+    ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
+    ax.axvline(0, color="black", lw=0.5)
+    ax.set_xlim(0, 31)
+    # y inverted by the (bottom, top) ordering of set_ylim: SDG 1 at the top.
+    ax.set_ylim(len(sdgs) - 0.5, -1.2)
+    ax.set_xlabel("Share of corpus assigned to SDG (%)")
+    ax.legend(handles=[
+        plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
+                   label=f"Research (abstract-weighted, n = {n_research})"),
+        plt.Line2D([0], [0], marker="o", ls="None", color=POLICY_COLOR, ms=5.5,
+                   label=f"Policy (document-weighted, n = {n_policy})"),
+    ], loc="lower right", fontsize=8, frameon=False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    _save_fig(fig, figures_dir, "fig2_coverage_profiles")
+
+
 def main() -> None:
     args = parse_args()
     layout = ensure_canonical_outputs(Path(args.output_dir), model=args.embed_model)
@@ -725,68 +777,14 @@ def main() -> None:
     use_adjusted = bool(adj_map)
 
     # -----------------------------------------------------------------------
-    # Figure 1 — Coverage profiles comparison
+    # Figure 1 — Coverage profiles: research vs policy dumbbell per SDG
+    # (replaces the former grouped bar chart; value labels above/below the
+    # dots, coverage gap right of the righter-most dot, all in %)
     # -----------------------------------------------------------------------
-    fig1, ax1 = plt.subplots(figsize=(8.5, 6))
-
     df_sorted = df.sort_values("sdg", ascending=True).reset_index(drop=True)
-    y = np.arange(len(df_sorted))
-    height = 0.38
-
-    ax1.barh(
-        y - height / 2,
-        df_sorted["policy_pct_docweighted"],
-        height=height,
-        color=POLICY_COLOR,
-        alpha=0.88,
-        label=f"Policy (document-weighted %, n = {N_POLICY_DOCS})",
+    plot_coverage_dumbbell(
+        df_sorted, figures_dir, n_research=N_RESEARCH_PAPERS, n_policy=N_POLICY_DOCS,
     )
-    ax1.barh(
-        y + height / 2,
-        df_sorted["research_pct"],
-        height=height,
-        color=RESEARCH_COLOR,
-        alpha=0.88,
-        label=f"Research (abstract-weighted %, n = {N_RESEARCH_PAPERS})",
-    )
-
-    # Raw count annotations at bar ends
-    research_counts = (df_sorted["research_pct"] / 100 * N_RESEARCH_PAPERS).astype(int)
-    policy_counts = (df_sorted["policy_pct_docweighted"] / 100 * N_POLICY_DOCS).astype(int)
-
-    def _fmt(n):
-        return f"{n/1_000:.0f}k" if n >= 1_000 else str(n)
-
-    for i in range(len(df_sorted)):
-        ax1.text(
-            df_sorted["policy_pct_docweighted"].iloc[i] + 0.3,
-            i - height / 2,
-            _fmt(policy_counts.iloc[i]),
-            va="center", ha="left", fontsize=7,
-        )
-        ax1.text(
-            df_sorted["research_pct"].iloc[i] + 0.3,
-            i + height / 2,
-            _fmt(research_counts.iloc[i]),
-            va="center", ha="left", fontsize=7,
-        )
-
-    labels = [SDG_SHORT[int(row["sdg"])].replace("\n", " ") for _, row in df_sorted.iterrows()]
-    ax1.set_yticks(y)
-    ax1.set_yticklabels(labels, fontsize=8.5)
-    ax1.set_xlabel("Proportion of corpus assigned to SDG (%)")
-    # ax1.set_title("Coverage profiles by SDG", fontsize=8.5, loc="left")
-    ax1.legend(loc="upper right")
-    ax1.axvline(0, color="black", linewidth=0.5)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.invert_yaxis()
-
-    fig1.tight_layout()
-    fig1.savefig(figures_dir / "fig2_coverage_profiles.pdf", bbox_inches="tight")
-    fig1.savefig(figures_dir / "fig2_coverage_profiles.png", bbox_inches="tight", dpi=300)
-    plt.close(fig1)
-    print("Saved: fig2_coverage_profiles.pdf")
 
     # -----------------------------------------------------------------------
     # Figure 2 — Semantic gap by SDG (adjusted canonical, raw baseline)
