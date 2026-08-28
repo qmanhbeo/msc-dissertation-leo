@@ -140,7 +140,7 @@ def write_tex(path: Path, rows: list[dict]) -> None:
         "% p-values: two-sided Monte Carlo permutation (100,000 resamples, seed 42)",
         r"\begin{tabular}{lccc}",
         r"\toprule",
-        r" & Semantic Gap & Adj.\ gap & Reg. Comp. \\",
+        r" & Raw Gap & Adj. Gap & Reg. Comp. \\",
         r"\midrule",
     ]
     for title, key in _H1_GROUPS:

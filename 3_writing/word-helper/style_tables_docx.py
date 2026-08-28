@@ -298,6 +298,25 @@ def size_table_runs(tbl: str) -> "tuple[str, int]":
     # NOTE: 4th positional arg of re.sub is `count`, not `flags` — must use
     # the keyword or the integer value of re.S (16) is read as a max count.
     out = re.sub(r"<w:r>.*?</w:r>", _run, tbl, flags=re.S)
+    # Pandoc may encode equation text in Office Math runs rather than ordinary
+    # Word runs. Apply the same explicit size to every math run property block.
+    math_rpr = (f'<w:sz w:val="{TABLE34_SZ}" />'
+                f'<w:szCs w:val="{TABLE34_SZ}" />')
+    def _math_rpr(m: "re.Match[str]") -> str:
+        block = m.group(0)
+        if "<w:sz" in block:
+            return block
+        return block.replace("</w:rPr>", f"{math_rpr}</w:rPr>", 1)
+    out = re.sub(r"<m:rPr>.*?</m:rPr>", _math_rpr, out, flags=re.S)
+    # Office Math ignores m:sz for display sizing in Word; its run inherits
+    # from the surrounding w:rPr. Apply the explicit 2.5pt Word size to the
+    # wrapper w:rPr that contains each Office Math object.
+    out = re.sub(
+        r'(<w:r><w:rPr>)(.*?)(</w:rPr>)(<m:oMath>)',
+        rf'\1\2<w:sz w:val="{TABLE34_SZ}" /><w:szCs w:val="{TABLE34_SZ}" />\3\4',
+        out,
+        flags=re.S,
+    )
     return out, n
 
 

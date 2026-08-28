@@ -1,4 +1,4 @@
-,Semantic Gap,Adj. gap,Reg. Comp.
+,Raw Gap,Adj. Gap,Reg. Comp.
 H1a. Coverage gap Semantic gap,,,
 MPNet LR,-0.012,+0.544^*,-0.390
 MPNet MLP,-0.135,+0.336,-0.370

@@ -481,7 +481,7 @@ def run(args: argparse.Namespace) -> None:
         ax_adj, ref_adj_2d, research_centroids_adj_2d, policy_centroids_adj_2d,
         research_centroid_available, policy_centroid_available,
     )
-    ax_adj.set_title("(b) Adjusted embeddings (register removed)", fontweight="bold")
+    ax_adj.set_title("(b) Adjusted embeddings", fontweight="bold")
     ax_adj.set_xlabel(f"PC1 ({evr_adj[0] * 100:.1f}% variance)")
     ax_adj.set_ylabel(f"PC2 ({evr_adj[1] * 100:.1f}% variance)")
     ax_adj.spines["top"].set_visible(False)
