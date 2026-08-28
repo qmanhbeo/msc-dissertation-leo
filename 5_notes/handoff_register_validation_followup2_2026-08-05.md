@@ -190,12 +190,12 @@ pooled acc here, so numbers match follow-up 1 exactly.)
 
 ## 5. Environment / repo / data facts (still true)
 
-- Python: `/home/manh/miniforge3/envs/dissertation/bin/python` (conda env
-  `dissertation`; `source activate` is BROKEN on this box — use the absolute path).
+- Python: `/home/manh/miniforge3/envs/dissertation-leo/bin/python` (conda env
+  `dissertation-leo`; `source activate` is BROKEN on this box — use the absolute path).
 - **Long jobs MUST run under tmux** (harness kills process group at ~120 s):
   `tmux new-session -d -s <name> "<cmd> > log 2>&1; touch log.DONE"`, poll
   `tail -F log` / `ls log.DONE`. Never poll the PID.
-- Git: branch `main`, remote `https://github.com/qmanhbeo/dissertation-bham.git`.
+- Git: branch `main`, remote `https://github.com/qmanhbeo/msc-dissertation-leo.git`.
   Committed history: `c2773a9` (follow-up 1), `26455a5` (handoffs), `0f96a3f` (report 1).
   Working tree clean; nothing committed this session; no commits without an explicit ask.
 - Units are **segments** (~384-token chunks); research `assigned_sdg` is per-segment;

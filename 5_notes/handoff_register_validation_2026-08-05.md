@@ -58,7 +58,7 @@ see §5.6/§6 Phase 0).
 - **Long jobs must run under `tmux`** (harness kills at ~120s). Short jobs (PDF
   build, this check) can run directly; poll short first.
 - **Verify, don't trust** every prior claim/artifact. Deterministic seed **42**.
-- No test/lint/typecheck suite; Conda env `dissertation` (Python 3.11) is the only
+- No test/lint/typecheck suite; Conda env `dissertation-leo` (Python 3.11) is the only
   build path. No spaCy — **nltk** was used (punkt + POS tagger; see §2.5).
 
 ### 2.2 Pipeline architecture (high level)
@@ -119,7 +119,7 @@ Cannot be used as an independent encoder check.
 ### 2.5 Environment change made this session (not committed)
 
 - Installed **nltk POS tagger** data (`averaged_perceptron_tagger_eng`) into the
-  `dissertation` conda env (needed for the passive-voice feature; punkt was
+  `dissertation-leo` conda env (needed for the passive-voice feature; punkt was
   already present). A clean rebuild of the env will NOT have this. Record the
   download in the appendix's environment note if it gets promoted.
 
@@ -351,6 +351,6 @@ gap can be called anything stronger than "primary but unvalidated"
 
 Re-run command (if the scratch dir still exists, env has the nltk tagger):
 ```bash
-source activate dissertation
+source activate dissertation-leo
 python 5_notes/scratch/register_validation_check.py   # ~2-3 min, writes only to 5_notes/scratch/
 ```

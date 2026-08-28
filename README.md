@@ -28,10 +28,10 @@ embeddings, skipping the expensive fetch and embed stages. It is the canonical
 reproducibility target — deterministic and snapshot-based.
 
 ```bash
-git clone https://github.com/qmanhbeo/dissertation-bham.git
-cd dissertation-bham
+git clone https://github.com/qmanhbeo/msc-dissertation-leo.git
+cd msc-dissertation-leo
 conda env create -f environment.yml
-conda activate dissertation
+conda activate dissertation-leo
 # optional: if you have an NVIDIA GPU with CUDA 12.1:
 # pip install torch==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
 
