@@ -91,7 +91,7 @@ FIG_NAME = "fig3_pca_register_before_after"
 
 RESEARCH_COLOR = "#2166AC"
 POLICY_COLOR = "#D6604D"
-REFERENCE_COLOR = "#1B7837"
+REFERENCE_COLOR = "#555555"
 GAP_LINE_COLOR = "#666666"
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
