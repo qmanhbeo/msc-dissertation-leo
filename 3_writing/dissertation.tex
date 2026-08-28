@@ -115,6 +115,18 @@
 
 
 \begin{abstract}
+Research and policy can address the same Sustainable Development Goal while framing it in different ways. Existing assessments of research--policy alignment usually measure whether both sides mention the same goals, but this does not show whether they discuss those goals similarly. This paper asks how academic AI-for-sustainability research and policy discourse differ in both the SDGs they prioritise and the way they discuss each SDG.
+
+The study compares a large corpus of research abstracts with policy documents covering all 17 SDGs. It measures each corpus's distribution of attention across the goals and compares research and policy language within each SDG. The analysis separates differences associated with substantive topics from differences associated with corpus-specific writing conventions. The framework uses supervised text classification and embeddings, with checks across alternative encoders, classifiers, retrieval strategies, sampling levels, and policy-source collections.
+
+The results show different coverage profiles. Research concentrates especially on SDGs 3, 4, 9, and 16, whereas policy discourse places greater emphasis on SDGs 16, 17, and 13. Differences in coverage alone do not explain the raw semantic differences between the two corpora. After adjustment for corpus-associated linguistic variation, the relationship between coverage and semantic divergence becomes more apparent. The adjustment also changes the ranking of some goals, most notably SDG 17, showing that writing conventions can either inflate or conceal substantive differences.
+
+These findings show that shared SDG labels are insufficient evidence of research--policy alignment. Alignment should be assessed along at least two dimensions: which goals each community prioritises and how each community frames those goals. The framework provides a reproducible way to identify where apparent semantic disagreement reflects substantive differences, corpus-associated language, or both.
+\end{abstract}
+
+\clearpage
+\section*{Executive Summary}
+\addcontentsline{toc}{section}{Executive Summary}
  Shared SDG labels do not mean research and policy \emph{frame} a goal similarly. This paper contributes a measurement framework that separates research-policy divergence into two dimensions: coverage (which SDGs each corpus prioritises) and within-SDG semantic framing (how differently the same SDG is discussed). Framing is composed of topic (substantive content) and register (communicative conventions).
 
  The paper embeds \NReferencePool{} labelled reference texts, \NResearchSegments{} research segments, and \NPolicySegments{} policy segments with a frozen Sentence-BERT encoder. Labelled segments are used to train a single-label logistic regression classifier to score research and policy text segments. The study then trains an SDG-stratified research-policy LR classifier to subtract the linear directions that separate research and policy from the original semantic space using Iterative Nullspace Projection \parencite{Ravfogel2020INLP}. What remains is called the adjusted semantic space, interpreted as containing the substantive topic. Texts are re-scored in this adjusted space. The difference between the raw and adjusted embeddings is called the register component.
@@ -124,8 +136,7 @@
  The SDG classifier achieves macro-F1 = \MacroFOne{} on a held-out test set and reproduces the high research coverage of SDGs 3, 4, and 16 reported in prior inventories; SDG 9's second place is plausibly an artefact of the AI-focused retrieval. The policy-side ranking (top SDGs: 16, 17, and 13) is reported here. The raw coverage-semantic correlation is null (\(\rho = \SpearmanCovRaw\), p = \SpearmanCovRawP{}). However, the adjusted semantic gap is positively associated with coverage (\(\rho = \RhoCovTopic\), p = \RhoCovTopicP), whereas the register component has a negative, non-significant association (\(\rho = \RhoCovRegister\), p = \RhoCovRegisterP). Policy coverage is the strongest directional predictor of the adjusted semantic gap (\(\rho = \HOneDPolicyCovAdjRho\), p = \HOneDPolicyCovAdjRhoP{}), while research coverage shows no consistent signal (\(\rho = \HOneDResearchCovAdjRho\), p = \HOneDResearchCovAdjRhoP{}).
 
  These results are stable across encoders, classifier family, retrieval strategy, segment cap, and policy-source family (source families agree on the raw-gap pattern; Section~\ref{sec:interaction}), apart from one sign flip in the concept-retrieved track (Section~\ref{sec:limitations}). To conclude, coverage and framing should be measured and reported as separate axes of divergence. Shared labels are insufficient evidence of shared framing.
-\end{abstract}
-
+\addcontentsline{toc}{section}{Executive Summary}
 \par\medskip\noindent\textbf{Keywords:} research-policy alignment; Sustainable Development Goals; semantic similarity; transformer embeddings; measurement protocol; bibliometrics.
 
 \par\noindent\textbf{Data and code availability:} The analysis code and the frozen, processed outputs are version-controlled at \url{https://github.com/qmanhbeo/msc-dissertation-leo}.
