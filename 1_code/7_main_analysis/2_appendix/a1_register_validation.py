@@ -107,6 +107,9 @@ from register_utils import TRACK_CANON, load_G  # noqa: E402
 from semantic_gap_shared import latex_escape, write_csv  # noqa: E402
 from shared_utils import fingerprint_of, permutation_p, record_fingerprint, should_skip  # noqa: E402
 
+import register_adjust as ra  # noqa: E402  (frozen-sample rebuild for P1/P2)
+from embed_loader import load_embedder  # noqa: E402  (frozen MPNet for P0b recalc)
+
 SEED = RANDOM_SEED  # 42
 N_PER_SDG = 12
 N_BOOT = 500
@@ -120,6 +123,7 @@ TABLE_TEX_SELECTIVITY = "tab_a1_register_validation_selectivity.tex"
 NUM_TEX = "num_a1_register_validation.tex"
 TABLE_TEX_SAMPLE = "tab_a1_register_sample_design.tex"
 TABLE_TEX_FEATURES = "tab_a1_register_features.tex"
+TABLE_TEX_SUBSPACE = "tab_a1_register_subspace.tex"
 
 FEAT_KEYS = [
     "hedge_rate",
@@ -155,6 +159,7 @@ def _check_nltk_resources() -> None:
     required = [
         ("tokenizers/punkt", "punkt"),
         ("taggers/averaged_perceptron_tagger_eng", "averaged_perceptron_tagger_eng"),
+        ("corpora/words", "words"),
     ]
     for resource, name in required:
         try:
@@ -514,6 +519,224 @@ def sdg_selectivity(X_raw: np.ndarray, X_adj: np.ndarray, sdg_arr: np.ndarray) -
 
 
 # --------------------------------------------------------------------------- #
+# Subspace characterisation (P1 + P2 + P0b) — promoted from scratch inspection
+# --------------------------------------------------------------------------- #
+
+def _align_subspace(w: np.ndarray, basis: np.ndarray) -> float:
+    """||basis w|| / ||w|| for an orthonormal-row basis (projection norm)."""
+    w = np.asarray(w, dtype=np.float32)
+    nw = np.linalg.norm(w)
+    if nw < 1e-12:
+        return 0.0
+    return float(np.linalg.norm(basis @ w) / nw)
+
+
+def _load_vocab() -> list[str]:
+    """Exact port of the P0b vocabulary filter (lowercase alpha, 2--25 chars)."""
+    words: set[str] = set()
+    try:
+        from nltk.corpus import words as nltk_words
+        for w in nltk_words.words():
+            w = w.lower()
+            if w.isalpha() and 2 <= len(w) <= 25:
+                words.add(w)
+    except Exception as exc:  # pragma: no cover - env without nltk words
+        raise RuntimeError(
+            f"nltk 'words' corpus is missing (required for the P0b vocabulary "
+            f"scan). Install it with:\n    python -c \"import nltk; nltk.download('words')\"\n"
+            f"then re-run. (Original error: {exc})"
+        )
+    return sorted(words)
+
+
+def compute_subspace_characterisation(model: str) -> dict:
+    """Characterise the removed subspace G (MPNet canon) with three tests.
+
+    P1 (topic-direction orthogonality): independent 17-class SDG-topic LR weight
+        vectors w_s align with span(G) no more than a random 62-dim subspace does,
+        while the corpus/register direction sits inside span(G).
+    P2 (held-out-SDG generalisation): leave-one-SDG-out corpus accuracy stays well
+        above chance -> the removed direction is topic-independent (falsifies T1).
+    P0b (lexical calibration, recomputed in-pipeline): max projection norm of the
+        full English vocabulary onto span(G) vs a random 62-dim subspace.
+
+    All classifiers are cheap LRs on the SAME frozen SDG-balanced sample G was
+    trained on (register_adjust.load_stratified_samples); no re-embed of segments,
+    no INLP re-run. P0b re-embeds the nltk vocabulary with the frozen MPNet model.
+    Returns macros, table rows, and acceptance-gate checks.
+    """
+    global G
+    assert G is not None, "G must be loaded before subspace characterisation"
+    K, d = G.shape
+    rng = np.random.default_rng(SEED)
+
+    # Random orthonormal 62-dim null (same construction as the verified scratch).
+    R = np.linalg.qr(rng.standard_normal((d, K)))[0][:, :K].T.astype(np.float32)
+
+    # ---- rebuild the exact frozen sample G was trained on ----
+    sdg_index = ra.build_research_sdg_index(model)
+    policy_emb = np.load(ra.get_policy_emb(model)).astype(np.float32)
+    policy_assignments = ra.get_cluster_assignments(np.load(ra.get_policy_scores(model)))
+    ckpt = json.load(open(register_dir_for_model(model) / TRACK_CANON / "checkpoint.json"))
+    n_target = int(ckpt["n_target"]) if "n_target" in ckpt else 1123
+    Xs, ys, sdgs = ra.load_stratified_samples(
+        model, sdg_index, n_target, rng, policy_emb, policy_assignments, projector=None)
+    log.info("Subspace sample: X=%s, n_target=%d, SDGs=%s",
+             Xs.shape, n_target, sorted(set(sdgs.tolist())))
+
+    # ===================== P1: topic-direction overlap =====================
+    clf_topic = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)
+    clf_topic.fit(Xs, sdgs)
+    Wt = clf_topic.coef_.astype(np.float32)
+    topic_align_G = [float(_align_subspace(Wt[i], G)) for i in range(Wt.shape[0])]
+    topic_align_R = [float(_align_subspace(Wt[i], R)) for i in range(Wt.shape[0])]
+
+    clf_corp = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)
+    clf_corp.fit(Xs, ys)
+    c = clf_corp.coef_.astype(np.float32).flatten()
+    corpus_align_G = float(_align_subspace(c, G))
+    corpus_align_R = float(_align_subspace(c, R))
+
+    # ===================== P2: held-out-SDG generalisation =====================
+    acc_loo: dict[int, float] = {}
+    acc_full: dict[int, float] = {}
+    loo_align_G: dict[int, float] = {}
+    for s in range(1, 18):
+        tr = sdgs != s
+        te = sdgs == s
+        clf = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)
+        clf.fit(Xs[tr], ys[tr])
+        acc_loo[s] = float(clf.score(Xs[te], ys[te]))
+        loo_align_G[s] = float(_align_subspace(clf.coef_.astype(np.float32).flatten(), G))
+        clf2 = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)
+        clf2.fit(Xs, ys)
+        acc_full[s] = float(clf2.score(Xs[te], ys[te]))
+
+    # topic control: SDG a vs b direction should NOT generalise to other SDGs
+    a, b = 1, 2
+    res = ys == 0
+    ab = res & ((sdgs == a) | (sdgs == b))
+    clf_ab = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)
+    clf_ab.fit(Xs[ab], (sdgs[ab] == b).astype(int))
+    train_acc_ab = float(clf_ab.score(Xs[ab], (sdgs[ab] == b).astype(int)))
+    other = res & (~((sdgs == a) | (sdgs == b)))
+    other_pred = clf_ab.predict(Xs[other])
+    other_acc_ab = float(np.mean(other_pred == (sdgs[other] == b).astype(int)))
+
+    # balanced data-size control: register direction on only 2 SDGs tested on rest
+    a2, b2 = 1, 2
+    two = (sdgs == a2) | (sdgs == b2)
+    clf_2 = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED)
+    clf_2.fit(Xs[two], ys[two])
+    two_train_acc = float(clf_2.score(Xs[two], ys[two]))
+    other_mask = ~two
+    two_test_acc = float(clf_2.score(Xs[other_mask], ys[other_mask]))
+
+    # ===================== P0b: lexical calibration (recomputed) =====================
+    vocab = _load_vocab()
+    log.info("P0b: encoding %d vocabulary words with frozen %s", len(vocab), model)
+    emb = load_embedder(model, "cpu", local_files_only=True)
+    W = np.zeros((len(vocab), d), dtype=np.float32)
+    batch = 2048
+    for i in range(0, len(vocab), batch):
+        chunk = vocab[i:i + batch]
+        e = emb.encode(chunk, normalize_embeddings=True,
+                       show_progress_bar=False).astype(np.float32)
+        e = e / np.linalg.norm(e, axis=1, keepdims=True)
+        W[i:i + len(chunk)] = e
+    score_G = np.linalg.norm((W @ G.T) @ G, axis=1)
+    score_R = np.linalg.norm((W @ R.T) @ R, axis=1)
+    p0b_g = float(score_G.max())
+    p0b_r = float(score_R.max())
+
+    # ---- aggregate ----
+    p1_topic_G_mean = float(np.mean(topic_align_G))
+    p1_topic_G_max = float(np.max(topic_align_G))
+    p1_topic_R_mean = float(np.mean(topic_align_R))
+    p2_held = float(np.mean(list(acc_loo.values())))
+    p2_full = float(np.mean(list(acc_full.values())))
+    p2_loo_align = float(np.mean(list(loo_align_G.values())))
+
+    macros = {
+        "POneTopicAlignG": f"{p1_topic_G_mean:.3f}",
+        "POneTopicAlignMax": f"{p1_topic_G_max:.3f}",
+        "POneTopicAlignRand": f"{p1_topic_R_mean:.3f}",
+        "POneCorpusAlignG": f"{corpus_align_G:.3f}",
+        "POneCorpusAlignRand": f"{corpus_align_R:.3f}",
+        "PTwoHeldOut": f"{p2_held:.3f}",
+        "PTwoFull": f"{p2_full:.3f}",
+        "PTwoLooAlignG": f"{p2_loo_align:.3f}",
+        "PTwoTopicCtrlTrain": f"{train_acc_ab:.3f}",
+        "PTwoTopicCtrlTest": f"{other_acc_ab:.3f}",
+        "PTwoBalancedTrain": f"{two_train_acc:.3f}",
+        "PTwoBalancedTest": f"{two_test_acc:.3f}",
+        "PZeroBG": f"{p0b_g:.3f}",
+        "PZeroBRand": f"{p0b_r:.3f}",
+    }
+
+    table_rows = [
+        ("P1", "Topic-weight align.\ w/ $\span(G)$ (mean)", f"{p1_topic_G_mean:.3f}", f"random {p1_topic_R_mean:.3f}"),
+        ("P1", "Topic-weight align.\ w/ $\span(G)$ (max)", f"{p1_topic_G_max:.3f}", "---"),
+        ("P1", "Corpus/register align.\ w/ $\span(G)$", f"{corpus_align_G:.3f}", f"random {corpus_align_R:.3f}"),
+        ("P2", "Held-out-SDG corpus acc.\ (mean)", f"{p2_held:.3f}", f"full-data {p2_full:.3f}"),
+        ("P2", "Topic-control dir.\ on other SDGs", f"{other_acc_ab:.3f}", "chance 0.5"),
+        ("P2", "Register dir.\ (2 SDG) on other 15", f"{two_test_acc:.3f}", f"train {two_train_acc:.3f}"),
+        ("P0b", "Max vocab projection on $\span(G)$", f"{p0b_g:.3f}", f"random {p0b_r:.3f}"),
+    ]
+
+    # Acceptance gates: verify the promoted numbers reproduce the verified
+    # inspection (5_notes/register_validity/VALIDITY_REPORT.md). Tolerance 0.005
+    # absorbs harmless library-level float drift; logical gates catch real
+    # regressions (topic must NOT align more than random; held-out must be high).
+    def _close_loose(a, b, tol=0.005):
+        return abs(a - b) <= tol
+
+    checks: list[tuple[str, bool, str]] = []
+    checks.append(("P1 topic-align-G mean == 0.248", _close_loose(p1_topic_G_mean, 0.248),
+                   f"{p1_topic_G_mean:.3f}"))
+    checks.append(("P1 topic-align-R mean == 0.286", _close_loose(p1_topic_R_mean, 0.286),
+                   f"{p1_topic_R_mean:.3f}"))
+    checks.append(("P1 corpus-align-G == 0.979", _close_loose(corpus_align_G, 0.979),
+                   f"{corpus_align_G:.3f}"))
+    checks.append(("P2 held-out mean == 0.967", _close_loose(p2_held, 0.967), f"{p2_held:.3f}"))
+    checks.append(("P2 full-data mean == 0.978", _close_loose(p2_full, 0.978), f"{p2_full:.3f}"))
+    checks.append(("P2 topic-control test == 0.781", _close_loose(other_acc_ab, 0.781),
+                   f"{other_acc_ab:.3f}"))
+    checks.append(("P2 balanced test == 0.920", _close_loose(two_test_acc, 0.920),
+                   f"{two_test_acc:.3f}"))
+    checks.append(("P0b G max == 0.527", _close_loose(p0b_g, 0.527), f"{p0b_g:.3f}"))
+    checks.append(("P0b random max == 0.401", _close_loose(p0b_r, 0.401), f"{p0b_r:.3f}"))
+    # logical gates
+    checks.append(("P1 topic-align-G < random (orthogonality)",
+                   p1_topic_G_mean < p1_topic_R_mean + 0.01,
+                   f"{p1_topic_G_mean:.3f} < {p1_topic_R_mean:.3f}"))
+    checks.append(("P1 corpus-align-G >> random (inside span)",
+                   corpus_align_G > 0.9,
+                   f"{corpus_align_G:.3f}"))
+    checks.append(("P2 held-out > 0.9 (topic-independent)",
+                   p2_held > 0.9, f"{p2_held:.3f}"))
+    checks.append(("P2 topic-control << register (contrast)",
+                   other_acc_ab < 0.85, f"{other_acc_ab:.3f}"))
+
+    return {
+        "macros": macros,
+        "table_rows": table_rows,
+        "checks": checks,
+        "p1": {
+            "topic_align_G_mean": p1_topic_G_mean, "topic_align_G_max": p1_topic_G_max,
+            "topic_align_R_mean": p1_topic_R_mean, "corpus_align_G": corpus_align_G,
+            "corpus_align_R": corpus_align_R, "random_exp": float(np.sqrt(K / d)),
+        },
+        "p2": {
+            "acc_loo_mean": p2_held, "acc_full_mean": p2_full, "loo_align_G_mean": p2_loo_align,
+            "topic_control_train": train_acc_ab, "topic_control_test": other_acc_ab,
+            "register_2sdg_train": two_train_acc, "register_2sdg_test": two_test_acc,
+        },
+        "p0b": {"G_max": p0b_g, "random_max": p0b_r, "vocab_size": len(vocab)},
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Acceptance gate                                                             #
 # --------------------------------------------------------------------------- #
 
@@ -593,6 +816,20 @@ def write_table_selectivity(path: Path, sel: dict) -> None:
         r"\bottomrule",
         r"\end{tabular}",
     ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_table_subspace(path: Path, rows: list[tuple[str, str, str, str]]) -> None:
+    lines = [
+        "% Auto-generated by 1_code/7_main_analysis/2_appendix/a1_register_validation.py — do not edit manually",
+        r"\begin{tabular}{llrl}",
+        r"\toprule",
+        r"Test & Quantity & Value & Comparison \\",
+        r"\midrule",
+    ]
+    for test, qty, val, comp in rows:
+        lines.append(f"{latex_escape(test)} & {qty} & {val} & {latex_escape(comp)} \\\\")
+    lines.extend([r"\bottomrule", r"\end{tabular}"])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -704,12 +941,16 @@ def run(args: argparse.Namespace) -> None:
         tables_dir / NUM_TEX,
         tables_dir / TABLE_TEX_SAMPLE,
         tables_dir / TABLE_TEX_FEATURES,
+        tables_dir / TABLE_TEX_SUBSPACE,
     ]
     g_path = register_dir_for_model(model) / TRACK_CANON / "G.npy"
+    ckpt_path = register_dir_for_model(model) / TRACK_CANON / "checkpoint.json"
     fp = fingerprint_of(
         scored_dir_for_model(model) / "paper_scores_shards" / "metadata" / "manifest.json",
         embed_research_dir_for_model(model) / "metadata" / "manifest.json",
+        embed_dir_for_model(model) / "metadata" / "manifest.json",
         g_path,
+        ckpt_path,
     ) + SCRIPT_VERSION
     if should_skip(OUTPUTS, fp, args.overwrite, PRIMARY):
         log.info("Skipping %s — inputs unchanged", PRIMARY)
@@ -733,6 +974,7 @@ def run(args: argparse.Namespace) -> None:
     write_table_sample_design(tables_dir / TABLE_TEX_SAMPLE, orig_si, opp_si, N_PER_SDG)
     write_table_features(tables_dir / TABLE_TEX_FEATURES, results["corpus_mean_features"],
                          results["mega_vs_nonmega_features"])
+    write_table_subspace(tables_dir / TABLE_TEX_SUBSPACE, results["subspace"]["table_rows"])
 
     log.info("Saved: %s", PRIMARY)
     log.info("Saved: %s", data_dir / CSV_OUT)
@@ -741,6 +983,7 @@ def run(args: argparse.Namespace) -> None:
     log.info("Saved: %s", tables_dir / NUM_TEX)
     log.info("Saved: %s", tables_dir / TABLE_TEX_SAMPLE)
     log.info("Saved: %s", tables_dir / TABLE_TEX_FEATURES)
+    log.info("Saved: %s", tables_dir / TABLE_TEX_SUBSPACE)
     record_fingerprint(OUTPUTS, fp, PRIMARY)
 
 
@@ -1181,6 +1424,18 @@ def compute_diagnostics() -> tuple[dict, list[dict], list[tuple[str, bool, str]]
         macros[f"Corpus{tag}Res"] = f"{corpus_means[k]['research']:.3f}"
         macros[f"Corpus{tag}Pol"] = f"{corpus_means[k]['policy']:.3f}"
 
+    # ---- Subspace characterisation (P1 + P2 + P0b), promoted from scratch ----
+    sub = compute_subspace_characterisation(_model)
+    checks.extend(sub["checks"])
+    macros.update(sub["macros"])
+    log.info(
+        "Subspace char: P1 topic-align-G mean=%.3f (random %.3f), corpus=%.3f; "
+        "P2 held-out=%.3f; P0b G-max=%.3f (random %.3f)",
+        sub["p1"]["topic_align_G_mean"], sub["p1"]["topic_align_R_mean"],
+        sub["p1"]["corpus_align_G"], sub["p2"]["acc_loo_mean"],
+        sub["p0b"]["G_max"], sub["p0b"]["random_max"],
+    )
+
     results = {
         "script": "1_code/7_main_analysis/2_appendix/a1_register_validation.py",
         "script_version": SCRIPT_VERSION,
@@ -1229,6 +1484,10 @@ def compute_diagnostics() -> tuple[dict, list[dict], list[tuple[str, bool, str]]
             "per_sdg_significant": n_sig,
             "mega_exclusion": mega_excl_rows,
             "draw_stability": draw_rows,
+        },
+        "subspace": {
+            "p1": sub["p1"], "p2": sub["p2"], "p0b": sub["p0b"],
+            "table_rows": sub["table_rows"],
         },
         "macros": macros,
     }

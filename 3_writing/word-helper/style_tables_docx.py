@@ -136,21 +136,21 @@ JUNK_PREFIX_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s+(\S.*)$")
 # rather than guess. Same 24-char rationale as LABEL_CELL_MAX above.
 REMAINDER_MAX_CHARS = 24
 
-# Fail-closed census of the 2026-08-27 build (35 content tables). Any
+# Fail-closed census of the 2026-08-28 build (36 content tables). Any
 # manuscript table change that alters the header structure must update these:
-#   - 35 caption'd tables — ALL tables are content tables (since fe3efeb the
+#   - 36 caption'd tables — ALL tables are content tables (since fe3efeb the
 #     H1 scatter panels are one generator image, so no caption-less layout
 #     grid exists any more; the row pass below still guards on `not nested`);
-#   - 68 bordered rows = 61 stack rows (15 flat x1 + 12 two-tier x2
+#   - 69 bordered rows = 62 stack rows (16 flat x1 + 12 two-tier x2
 #     + 5 three-tier x3 + 2 label-header tables x2) + 7 mid-table gridSpan
 #     rows (Table 5 H1a-H1d panels x3, Table 6 Spearman line x1,
 #     Table 31 x3);
 #   - 2 markerless label rows (Table 12 row 1, Table 34 row 2).
-EXPECTED_CONTENT_TABLES = 35
-EXPECTED_BORDERED_ROWS = 68
+EXPECTED_CONTENT_TABLES = 36
+EXPECTED_BORDERED_ROWS = 69
 EXPECTED_LABEL_ROWS = 2
 
-# Font cap for Table 34 (tab:k1-specification-grid, "Pooled OLS ... across 24
+# Font cap for the Pooled OLS table (tab:k1-specification-grid, "Pooled OLS ... across 24
 # configurations"): the widest table in the manuscript (23 coefficient columns
 # + a row-major stub column, 24 cells/row across ~70 rows). Everything else
 # inherits the template's default size; without an explicit size this table
@@ -162,7 +162,11 @@ EXPECTED_LABEL_ROWS = 2
 # 4 in the census) get it appended before </w:rPr> (valid order after
 # b/bCs). Applied below as step 9, Word build only — the PDF uses
 # \resizebox{\textwidth}{!} on the same \input and is untouched.
-TABLE34_CAPTION = 'w:tblCaption w:val="Table 34: Pooled OLS'
+# Matched by unique caption substring (the trailing number shifts whenever a
+# table is added earlier in the manuscript, so we key on "Pooled OLS" rather
+# than the hard-coded "Table 34:" that broke after the a1 promotion added a
+# table before this one).
+TABLE34_CAPTION = 'Pooled OLS'
 TABLE34_SZ = 5            # w:sz half-point val for the requested 2.5pt
 
 TBL_BORDERS_XML = (

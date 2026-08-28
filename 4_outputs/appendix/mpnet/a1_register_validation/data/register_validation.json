@@ -445,6 +445,74 @@
       }
     ]
   },
+  "subspace": {
+    "p1": {
+      "topic_align_G_mean": 0.24779812027426326,
+      "topic_align_G_max": 0.43011099100112915,
+      "topic_align_R_mean": 0.28600335559424234,
+      "corpus_align_G": 0.9791610240936279,
+      "corpus_align_R": 0.2424497902393341,
+      "random_exp": 0.284128785353872
+    },
+    "p2": {
+      "acc_loo_mean": 0.9666858729244145,
+      "acc_full_mean": 0.978000104761406,
+      "loo_align_G_mean": 0.9805128784740672,
+      "topic_control_train": 0.9906500445235975,
+      "topic_control_test": 0.7811813594538438,
+      "register_2sdg_train": 0.976179875333927,
+      "register_2sdg_test": 0.9202730780647076
+    },
+    "p0b": {
+      "G_max": 0.5269899964332581,
+      "random_max": 0.40082207322120667,
+      "vocab_size": 234349
+    },
+    "table_rows": [
+      [
+        "P1",
+        "Topic-weight align.\\ w/ $\\Span(G)$ (mean)",
+        "0.248",
+        "random 0.286"
+      ],
+      [
+        "P1",
+        "Topic-weight align.\\ w/ $\\Span(G)$ (max)",
+        "0.430",
+        "---"
+      ],
+      [
+        "P1",
+        "Corpus/register align.\\ w/ $\\Span(G)$",
+        "0.979",
+        "random 0.242"
+      ],
+      [
+        "P2",
+        "Held-out-SDG corpus acc.\\ (mean)",
+        "0.967",
+        "full-data 0.978"
+      ],
+      [
+        "P2",
+        "Topic-control dir.\\ on other SDGs",
+        "0.781",
+        "chance 0.5"
+      ],
+      [
+        "P2",
+        "Register dir.\\ (2 SDG) on other 15",
+        "0.920",
+        "train 0.976"
+      ],
+      [
+        "P0b",
+        "Max vocab projection on $\\Span(G)$",
+        "0.527",
+        "random 0.401"
+      ]
+    ]
+  },
   "macros": {
     "SampleN": "408",
     "DistinctParentsOrig": "390",
@@ -533,6 +601,20 @@
     "CorpusFirstPersonRes": "6.901",
     "CorpusFirstPersonPol": "6.463",
     "CorpusNominalRes": "36.367",
-    "CorpusNominalPol": "39.003"
+    "CorpusNominalPol": "39.003",
+    "P1TopicAlignG": "0.248",
+    "P1TopicAlignMax": "0.430",
+    "P1TopicAlignRand": "0.286",
+    "P1CorpusAlignG": "0.979",
+    "P1CorpusAlignRand": "0.242",
+    "P2HeldOut": "0.967",
+    "P2Full": "0.978",
+    "P2LooAlignG": "0.981",
+    "P2TopicCtrlTrain": "0.991",
+    "P2TopicCtrlTest": "0.781",
+    "P2BalancedTrain": "0.976",
+    "P2BalancedTest": "0.920",
+    "P0bG": "0.527",
+    "P0bRand": "0.401"
   }
 }

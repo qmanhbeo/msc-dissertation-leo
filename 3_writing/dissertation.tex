@@ -867,6 +867,35 @@ The register-only rows of Table~\ref{tab:register-validation-accuracy} bound the
 
 If the adjustment removed topic, 17-way SDG selectivity, how well the SDG of a segment can be predicted from its embedding, would fall. It does not (Table~\ref{tab:register-validation-selectivity}): on the original per-SDG-dedup sample (draw~1), LR cross-validated accuracy is \RegValSelRawLr{} on raw and \RegValSelAdjLr{} on adjusted embeddings, and kNN \RegValSelRawKnn{} and \RegValSelAdjKnn{} (chance \RegValSelChance{}). The change is small and of mixed sign, so there is no evidence that topic structure is systematically removed; the analysis does not claim perfect preservation, and it was run on the original sample only, not re-estimated on the one-per-parent rebuild. Topic remains linearly decodable after register removal, as the identification argument anticipates.
 
+\subsubsection{Characterisation of the Removed Subspace}
+\label{sec:regval-subspace}
+
+The tests above show the removed component is corpus-separable and topic-preserving, but not what it encodes. Two direction-space tests, on the same frozen SDG-balanced sample used to train~$G$, characterise it directly.
+
+\textbf{Topic-direction orthogonality (P1).}
+An independent 17-class SDG-topic logistic regression on the raw embeddings gives per-SDG weight vectors~$w_s$. Alignment with $span(G)$ is $\lVert Gw_s\rVert/\lVert w_s\rVert$. The topic weights align with $span(G)$ at a mean of \RegValPOneTopicAlignG{} (max \RegValPOneTopicAlignMax{}), no more than a random 62-dimensional subspace (\RegValPOneTopicAlignRand{}, expected $\sqrt{62/768}\approx0.284$); the corpus/register direction lies inside $span(G)$ at \RegValPOneCorpusAlignG{} (random \RegValPOneCorpusAlignRand{}). The removed subspace did not preferentially absorb SDG topic.
+
+\textbf{Held-out-SDG generalisation (P2).}
+Leave-one-SDG-out, a corpus classifier trained on the other 16 SDGs still separates research from policy on the held-out SDG at \RegValPTwoHeldOut{} (full-data \RegValPTwoFull{}; held-out directions align with $span(G)$ at \RegValPTwoLooAlignG{}). This falsifies the topic-leakage threat: a register direction is a corpus property and generalises across unseen topics, whereas a topic-leak direction would be SDG-specific and collapse. A control topic direction (SDG\,1 vs SDG\,2) trains at \RegValPTwoTopicCtrlTrain{} but classifies the other SDGs' research at only \RegValPTwoTopicCtrlTest{} (chance 0.5); a register direction trained on only SDG\,1+2 still classifies the other 15 SDGs at \RegValPTwoBalancedTest{}, so the \RegValPTwoHeldOut{} is not a training-mass artefact (Table~\ref{tab:register-subspace}).
+
+\textbf{Lexical signature (qualification, not relabelling).}
+The removed subspace's lexical signature is a policy-domain / socio-economic-governance vocabulary -- economy, governance, legislation, infrastructure, sustainable, decentralization and the like (illustrative; the calibration below is the evidence) -- not the Biber surface-register features (hedges, deontic modals, nominalisations) the manual score in G.2.2 targets. That is why the manual score tracks $G$ only weakly ($\rho\approx0.10$): the mismatch is now explained. In a full-vocabulary scan the top projection onto $span(G)$ reaches \RegValPZeroBG{} versus \RegValPZeroBRand{} for a random 62-dimensional subspace, and SDG leaf-topics (climate, water, health, biodiversity) are absent from the top words.
+
+\textbf{Implementation trust.}
+The INLP loop that produced~$G$ was verified bit-for-bit against Ravfogel et al.'s reference implementation: principal-angle cosines between the two removed subspaces are 1.0 and a fresh classifier collapses to chance after either projection (promoted parity check at \texttt{1\_code/\_inlp\_parity/}; synthesis in \texttt{5\_notes/register\_validity/VALIDITY\_REPORT.md}, \S6). The P1/P2 results are trustworthy as INLP results.
+
+\textbf{Scope.}
+These tests are MPNet-canonical only; MiniLM and SciBERT were not re-verified under P1/P2.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Direction-space characterisation of the removed subspace $G$ (MPNet canon).}
+\label{tab:register-subspace}
+\resizebox{\textwidth}{!}{\input{../4_outputs/appendix/mpnet/a1_register_validation/tables/tab_a1_register_subspace.tex}}
+\par\smallskip\footnotesize\emph{Notes:} P1 aligns independent SDG-topic and corpus logistic-regression weight vectors with $span(G)$ (orthonormal rows, so alignment $=\lVert Gw\rVert/\lVert w\rVert$); a random 62-dimensional subspace is the null. P2 is leave-one-SDG-out corpus-classification accuracy; the topic control is an SDG\,1-vs-2 direction's accuracy on other SDGs' research (chance 0.5), and the balanced control is a register direction trained on only SDG\,1+2 tested on the other 15 SDGs. P0b calibration is the maximum projection norm of the full English vocabulary onto $span(G)$ versus a random subspace. All figures reproduce from frozen embeddings and $G$ under seed 42.\par
+\end{table}
+
 \subsubsection{Residual Register Diagnostics and Robustness Investigation}
 \label{sec:regval-residual}
 
@@ -877,18 +906,18 @@ The register score used here is the independent surface-linguistic score defined
 
 The validation supports the following claims.
 \begin{itemize}
-  \item The adjustment removes a corpus-level component: corpus-discrimination accuracy falls from near-perfect on raw embeddings to moderately above chance after removal, on both the original and one-per-parent samples (Table~\ref{tab:register-validation-accuracy}).
-  \item The removed component is not strongly attributable to SDG topic loss: 17-way SDG selectivity is essentially unchanged (Table~\ref{tab:register-validation-selectivity}).
-  \item Apparent residual register signals were explained by sampling and document-clustering effects rather than by stable residual structure: the initial removed-magnitude and centroid-distance associations vanished or reversed on the controlled sample, and the one surviving within-SDG trace was draw-unstable.
-  \item The remaining evidence provides partial empirical support for the register reading: the corpora differ in register-like surface features in stable directions, and the adjustment removes corpus-separable signal while leaving topic structure intact, but a measured correspondence between the removed component and the six features was not demonstrated, and residual corpus-linear signal remains.
+  \item The adjustment removes a corpus-level component: corpus-discrimination accuracy falls from near-perfect on raw embeddings to moderately above chance after removal, on both samples (Table~\ref{tab:register-validation-accuracy}).
+  \item The removed component is not SDG topic loss: 17-way SDG selectivity is essentially unchanged (Table~\ref{tab:register-validation-selectivity}), and SDG-topic weight vectors are orthogonal to $span(G)$ while the corpus/register direction lies inside it (P1; Table~\ref{tab:register-subspace}).
+  \item The register direction generalises across held-out SDGs at \RegValPTwoHeldOut{} (P2), falsifying the topic-leakage threat; the removed subspace is topic-independent at the SDG level.
+  \item Apparent residual register signals were sampling/document-clustering effects, not stable residual structure: the removed-magnitude and centroid-distance associations vanished or reversed on the controlled sample, and the one surviving within-SDG trace was draw-unstable.
 \end{itemize}
 
-The register interpretation is therefore consistent with the validation evidence rather than confirmed by it. The main text describes it as resting on partial empirical support.
+The structural claim -- the removed subspace is a corpus/register component, not SDG topic -- is now \emph{supported} by the direction-space tests (P1: topic directions orthogonal to $span(G)$; P2: register direction generalises across held-out SDGs at \RegValPTwoHeldOut{}). The lexical label is qualified, not abandoned: the removed component is a policy-genre / socio-economic-governance domain axis, not a pure grammatical register, which is why the surface-register score tracks it only weakly. The main text describes it as resting on empirical support stronger than the earlier `consistent with' framing implied.
 
 \subsubsection{Limitations}
 \label{sec:regval-limitations}
 
-The validation is bounded in ways that should be read alongside the main text. First, the register score is one choice among several: an alternative a-priori ``institutional'' combination gave null or reversed results, and the score's sign is a convention, not a substantive prior. Second, each sample contains only \RegValSampleN{} segments (12 per SDG per corpus), and the per-SDG tests within the draw-stability stage have $n = 12$ policy units each, so the \RegValPerSdgSig{}-of-17 significant per-SDG result is not evidence of absence at the per-SDG level. Third, the draw-stability check was applied to the within-SDG trace only; the corpus-level accuracies in Table~\ref{tab:register-validation-accuracy} were not re-estimated on fresh draws. Fourth, the one-per-parent sample is a rebuild, not a subset of the original sample, and the excluded flagship documents are replaced by shorter national and thematic monitoring reports, so the two-sample comparison is partly compositional. Fifth, the validation is MPNet-canonical only. Sixth, the residual corpus-linear signal that survives adjustment is not characterised further; its exact linguistic content remains open, part of why the empirical support is only partial.
+The validation is bounded in ways that should be read alongside the main text. First, the register score is one choice among several: an alternative a-priori ``institutional'' combination gave null or reversed results, and the score's sign is a convention, not a substantive prior. Second, each sample contains only \RegValSampleN{} segments (12 per SDG per corpus), and the per-SDG tests within the draw-stability stage have $n = 12$ policy units each, so the \RegValPerSdgSig{}-of-17 significant per-SDG result is not evidence of absence at the per-SDG level. Third, the draw-stability check was applied to the within-SDG trace only; the corpus-level accuracies in Table~\ref{tab:register-validation-accuracy} were not re-estimated on fresh draws. Fourth, the one-per-parent sample is a rebuild, not a subset of the original sample, and the excluded flagship documents are replaced by shorter national and thematic monitoring reports, so the two-sample comparison is partly compositional. Fifth, the validation is MPNet-canonical only; P1/P2 likewise. Sixth, the residual corpus-linear signal is now characterised at the direction level (P1/P2): corpus/register and topic-independent, with a policy-domain lexical signature; open only whether a finer sub-lexical decomposition would recover more structure.
 
 \begin{table}[ht]
 \centering

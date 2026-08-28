@@ -1,0 +1,19 @@
+{
+  "source_commit": "e1edcc19d808108ab71cbb3afb0389db0206a7eb",
+  "K": 5,
+  "D": 40,
+  "N": 1200,
+  "seed": 42,
+  "principal_angle_cosines": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "min_principal_angle_cosine": 1.0,
+  "fresh_acc_on_original": 0.815,
+  "fresh_acc_after_OUR_projection": 0.515,
+  "fresh_acc_after_THEIR_projection": 0.515,
+  "Ws_len": 5
+}
