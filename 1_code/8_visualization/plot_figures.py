@@ -676,10 +676,10 @@ def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
 
     Redesign of the former grouped bar chart: one row per SDG with research
     and policy dots on a common % axis. The research share is labelled above
-    its dot, the policy share below its dot, and the coverage gap (absolute,
-    same % unit as the axis — no pp/% mixing) right of the righter-most dot
-    of the row. Palette: this is the one pair that earns the full blue/orange
-    contrast (research vs policy).
+    its dot (black), the policy share below its dot (black), and the coverage
+    gap as a signed dominance value (research − policy, %) right of the
+    righter-most dot of the row. Palette: this is the one pair that earns the
+    full blue/orange contrast (research vs policy).
     """
     sdgs = list(range(1, 18))
     res = {int(r["sdg"]): float(r["research_pct"]) for _, r in df.iterrows()}
@@ -691,20 +691,21 @@ def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
         ax.plot([xr, xp], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
         ax.plot(xr, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
         ax.plot(xp, i, "o", color=POLICY_COLOR, ms=5.5, zorder=2)
-        ax.text(xr, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=6.5,
-                color=RESEARCH_COLOR)
-        ax.text(xp, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=6.5,
-                color=POLICY_COLOR)
-        gap = abs(xr - xp)
-        ax.text(max(xr, xp) + 0.6, i, f"{gap:.1f}%", ha="left", va="center",
-                fontsize=7, color="#444444")
+        ax.text(xr, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=8,
+                color="black")
+        ax.text(xp, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=8,
+                color="black")
+        gap = xr - xp
+        ax.text(max(xr, xp) + 0.6, i, f"{gap:+.1f}%", ha="left", va="center",
+                fontsize=8, color="#222222")
     ax.set_yticks(y)
     ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
+    ax.tick_params(axis="x", labelsize=8)
     ax.axvline(0, color="black", lw=0.5)
     ax.set_xlim(0, 31)
     # y inverted by the (bottom, top) ordering of set_ylim: SDG 1 at the top.
     ax.set_ylim(len(sdgs) - 0.5, -1.2)
-    ax.set_xlabel("Share of corpus assigned to SDG (%)")
+    ax.set_xlabel("Share of corpus assigned to SDG (%)", fontsize=8)
     ax.legend(handles=[
         plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
                    label=f"Research (abstract-weighted, n = {n_research})"),
