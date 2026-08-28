@@ -51,7 +51,9 @@
 \usepackage{float}
 \usepackage{placeins}
 \let\OldSection\section
-\renewcommand{\section}{\FloatBarrier\OldSection}
+% Every \section is a chapter: the UB thesis guide requires each chapter to
+% commence on a fresh page, so force a clearpage before every chapter.
+\renewcommand{\section}{\clearpage\FloatBarrier\OldSection}
 
 \providecommand{\DraftCompiledAt}{manual build (run build\_pdf.sh for exact timestamp)}
 \providecommand{\DraftVersionTag}{manual-build}
@@ -128,7 +130,7 @@ These findings show that shared SDG labels are insufficient evidence of research
 
 \par\noindent\textbf{Data and code availability:} The analysis code and the frozen, processed outputs are version-controlled at \url{https://github.com/qmanhbeo/msc-dissertation-leo}.
 
-\renewcommand{\abstractname}{Executive Summary}
+\renewcommand{\abstractname}{Technical Summary}
 \begin{abstract}
  Shared SDG labels do not mean research and policy \emph{frame} a goal similarly. This paper contributes a measurement framework that separates research-policy divergence into two dimensions: coverage (which SDGs each corpus prioritises) and within-SDG semantic framing (how differently the same SDG is discussed). Framing is composed of topic (substantive content) and register (communicative conventions).
 
@@ -605,6 +607,7 @@ The takeaway for practice is that an SDG label does not by itself evidence align
  The asymmetric corpus construction is itself suggestive: the difficulty of building a symmetric AI-SDG policy corpus may reflect that ``AI and the SDGs'' is not yet a settled organising category in policy discourse the way it already is in research (Section~\ref{sec:level0}). Level~3, whether the divergences documented here reflect productive exploration, institutional failure, or different knowledge cultures pursuing different mandates, requires qualitative, institutional, and deliberative methods that lie beyond the scope of embedding analysis.
 
 \newrefcontext[sorting=nyt]
+\clearpage
 \printbibliography[title={Reference list}]
 
 

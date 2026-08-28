@@ -46,10 +46,16 @@ function Pandoc(doc)
   local heading = pandoc.Header(1, pandoc.Inlines { pandoc.Str("Reference list") })
   heading.attr.classes:insert("unnumbered")
 
+  -- Force the Reference list onto its own page (pandoc ignores LaTeX
+  -- \clearpage, so inject the OpenXML page break here to match the PDF).
+  local PAGE_BREAK = pandoc.RawBlock("openxml",
+    '<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
+
   local bib = doc.blocks[bib_idx]
   table.remove(doc.blocks, bib_idx)
-  table.insert(doc.blocks, app_idx, heading)
-  table.insert(doc.blocks, app_idx + 1, bib)
+  table.insert(doc.blocks, app_idx, PAGE_BREAK)
+  table.insert(doc.blocks, app_idx + 1, heading)
+  table.insert(doc.blocks, app_idx + 2, bib)
 
   -- Apply hanging indent (0.5 in = 720 twips) to every bibliography paragraph
   -- so each entry's first line is flush-left and continuation lines indent.

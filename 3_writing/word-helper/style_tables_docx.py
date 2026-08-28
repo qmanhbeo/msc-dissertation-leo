@@ -186,6 +186,19 @@ CELL_BOTTOM_XML = (
     "</w:tcBorders>"
 )
 
+# Tables that need 1pt horizontal rules BETWEEN EVERY DATA ROW for readability.
+# The booktabs style otherwise sets insideH="none", which leaves body rows with
+# no separator in Word (the PDF keeps its \midrule). Matched by caption
+# substring so a renumbering caption ("Table N:") does not break the match.
+INNER_H_BORDER_TABLES = (
+    "Declaration of AI use",
+    "Distinctive TF-IDF terms for all 17 SDGs",
+)
+INNER_H_XML = (
+    '<w:insideH w:val="single" w:sz="8" w:space="0" w:color="auto" />'
+)
+INSIDEH_NONE_XML = '<w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto" />'
+
 
 def fail(msg: str) -> "NoReturn":  # type: ignore[valid-type]
     print(f"ERROR: {msg}", file=sys.stderr)
@@ -408,6 +421,7 @@ def main() -> None:
     n_junk_tables = 0      # content tables that had debris cells excised
     n_tab34_tables = 0     # tables explicit-sized to 2.5pt (expect: 1 = Table 34)
     n_tab34_runs = 0       # runs given the explicit 2.5pt size
+    n_inner_h_tables = 0   # tables given 1pt insideH inter-row rules (Table 7 + 30)
 
     def row_cell_texts(row: str) -> "list[str]":
         return [
@@ -473,6 +487,7 @@ def main() -> None:
         nonlocal n_bordered_tables, n_border_rows, n_label_rows
         nonlocal n_junk_cells, n_junk_tables
         nonlocal n_tab34_tables, n_tab34_runs
+        nonlocal n_inner_h_tables
         # Recurse into nested tables first, then style this table's own
         # properties. pandoc wraps the Figure 6 image-grid table in a
         # FigureTable layout table, so a region may contain another table;
@@ -512,6 +527,17 @@ def main() -> None:
                     1,
                 )
             n_bordered_tables += 1
+        # 1pt horizontal rules between every data row for the tables the user
+        # asked to keep readable in Word (otherwise booktabs insideH="none"
+        # leaves body rows unseparated). insideV stays none (no verticals).
+        if any(cap in tbl for cap in INNER_H_BORDER_TABLES):
+            if INNER_H_XML in tblpr:
+                fail("table already carries insideH single rule - unexpected")
+            if INSIDEH_NONE_XML not in tblpr:
+                fail("table lacking insideH none token - cannot inject 1pt "
+                     "inter-row rule (stale TBL_BORDERS_XML?)")
+            tblpr = tblpr.replace(INSIDEH_NONE_XML, INNER_H_XML, 1)
+            n_inner_h_tables += 1
         tbl = tbl[: m.start()] + tblpr + tbl[m.end() :]
         # Step 7 (continued): 1pt separators under every header-stack row and
         # every mid-table group/summary row. Row classification uses a flat
@@ -675,6 +701,35 @@ def main() -> None:
         flags=re.S,
     )
 
+    # 6b. Heading paragraphs: keepNext so a section heading (e.g. "4 Results")
+    #     cannot orphan at the bottom of a page; it stays with the following
+    #     paragraph. Mirrors the caption glue (CT_PPr order: keepNext after
+    #     pStyle). Fail-closed on any unrecognized heading shape.
+    n_headings = 0
+    heading_count = len(
+        re.findall(r'<w:p><w:pPr><w:pStyle w:val="Heading\d+" />', doc)
+    )
+
+    def glue_heading(p_match: "re.Match[str]") -> str:
+        nonlocal n_headings
+        p = p_match.group(0)
+        if "<w:keepNext" in p:
+            fail(f"heading paragraph already carries keepNext - unexpected: {p[:100]!r}")
+        g1, g2 = p_match.group(1), p_match.group(2)
+        n_headings += 1
+        return g1 + "<w:keepNext />" + g2
+
+    doc = re.sub(
+        r'(<w:p><w:pPr><w:pStyle w:val="Heading\d+" />)(.*?</w:p>)',
+        glue_heading,
+        doc,
+        flags=re.S,
+    )
+    if n_headings != heading_count:
+        fail(f"heading keepNext {n_headings} != heading paragraphs "
+             f"{heading_count} - a heading pPr shape was unrecognized; "
+             f"extend the heading matcher")
+
     # 6. Notes paragraphs: center AND single-space via the same joined-text
     #    prefix rule the word counter uses ("Notes:"). Notes use the shared
     #    BodyText style (double-spaced for main prose), so the single line
@@ -746,9 +801,9 @@ def main() -> None:
     if n_captions != caption_count:
         fail(f"caption keepNext {n_captions} != caption paragraphs "
              f"{caption_count} - a caption parser mismatch")
-    if doc.count("<w:keepNext />") != n_glue + n_captions:
+    if doc.count("<w:keepNext />") != n_glue + n_captions + n_headings:
         fail(f"keepNext count {doc.count('<w:keepNext />')} != "
-             f"{n_glue} cell + {n_captions} caption")
+             f"{n_glue} cell + {n_captions} caption + {n_headings} heading")
     if n_header and not n_body:
         fail("header rows found but no body rows - unexpected document shape")
 
@@ -779,6 +834,13 @@ def main() -> None:
         fail(f"{n_label_rows} markerless label rows classified but expected "
              f"{EXPECTED_LABEL_ROWS} - header census changed; update the "
              f"EXPECTED_* constants")
+
+    # Inner-H inter-row rule postconditions (Table 7 + Table 30).
+    if n_inner_h_tables != len(INNER_H_BORDER_TABLES):
+        fail(f"{n_inner_h_tables} tables given 1pt insideH inter-row rules but "
+             f"expected {len(INNER_H_BORDER_TABLES)} "
+             f"({', '.join(INNER_H_BORDER_TABLES)}) - caption census changed; "
+             f"update INNER_H_BORDER_TABLES")
 
     # Cmidrule-debris excision postconditions.
     if n_junk_cells != EXPECTED_JUNK_CELLS:
@@ -838,13 +900,15 @@ def main() -> None:
     print(f"style_tables_docx: {n_tables} tables; cantSplit on "
           f"{n_body + n_header} rows ({n_body} body + {n_header} header); "
           f"{n_promoted} promoted header rows; "
-          f"keepNext on {n_glue} cell paragraphs of {n_glued_tables} multi-row "
-          f"tables + {n_captions} caption paragraphs; "
+           f"keepNext on {n_glue} cell paragraphs of {n_glued_tables} multi-row "
+           f"tables + {n_captions} caption paragraphs + {n_headings} heading "
+           f"paragraphs; "
           f"{n_centered} tables centered ({n_tables - n_centered} already); "
           f"{n_notes} Notes paragraphs centered; "
-          f"booktabs borders on {n_bordered_tables} tables "
-          f"({n_border_rows} separator rows, {n_border_cells} cells, "
-          f"{n_label_rows} label rows); "
+           f"booktabs borders on {n_bordered_tables} tables "
+           f"({n_border_rows} separator rows, {n_border_cells} cells, "
+           f"{n_label_rows} label rows); "
+           f"{n_inner_h_tables} tables given 1pt insideH inter-row rules; "
           f"excised {n_junk_cells} cmidrule-debris cells in {n_junk_tables} "
           f"tables; "
           f"set 2.5pt font on {n_tab34_runs} runs of {n_tab34_tables} "

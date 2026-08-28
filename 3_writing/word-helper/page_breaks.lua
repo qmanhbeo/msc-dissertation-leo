@@ -6,10 +6,13 @@
 local PAGE_BREAK = pandoc.RawBlock("openxml",
   '<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
 
+-- Every chapter (main 1-6 and appendices A-J) must start on a fresh page per
+-- the UB thesis guide. pandoc drops LaTeX \clearpage, so inject the page break
+-- here, keyed on the numbered/lettered prefix word_section_numbers.lua prepends.
 local targets = {
-  ["Introduction"] = true,
-  ["1"] = true,       -- numbered Introduction
-  ["A"] = true,       -- Appendix A (already labelled by word_section_numbers.lua)
+  ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true, ["5"] = true, ["6"] = true,
+  ["A"] = true, ["B"] = true, ["C"] = true, ["D"] = true, ["E"] = true,
+  ["F"] = true, ["G"] = true, ["H"] = true, ["I"] = true, ["J"] = true,
 }
 
 function Pandoc(doc)
