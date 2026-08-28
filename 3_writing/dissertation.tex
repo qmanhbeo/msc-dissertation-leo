@@ -124,9 +124,12 @@ The results show different coverage profiles. Research concentrates especially o
 These findings show that shared SDG labels are insufficient evidence of research--policy alignment. Alignment should be assessed along at least two dimensions: which goals each community prioritises and how each community frames those goals. The framework provides a reproducible way to identify where apparent semantic disagreement reflects substantive differences, corpus-associated language, or both.
 \end{abstract}
 
-\clearpage
-\section*{Executive Summary}
-\addcontentsline{toc}{section}{Executive Summary}
+\par\medskip\noindent\textbf{Keywords:} research-policy alignment; Sustainable Development Goals; semantic similarity; transformer embeddings; measurement protocol; bibliometrics.
+
+\par\noindent\textbf{Data and code availability:} The analysis code and the frozen, processed outputs are version-controlled at \url{https://github.com/qmanhbeo/msc-dissertation-leo}.
+
+\renewcommand{\abstractname}{Executive Summary}
+\begin{abstract}
  Shared SDG labels do not mean research and policy \emph{frame} a goal similarly. This paper contributes a measurement framework that separates research-policy divergence into two dimensions: coverage (which SDGs each corpus prioritises) and within-SDG semantic framing (how differently the same SDG is discussed). Framing is composed of topic (substantive content) and register (communicative conventions).
 
  The paper embeds \NReferencePool{} labelled reference texts, \NResearchSegments{} research segments, and \NPolicySegments{} policy segments with a frozen Sentence-BERT encoder. Labelled segments are used to train a single-label logistic regression classifier to score research and policy text segments. The study then trains an SDG-stratified research-policy LR classifier to subtract the linear directions that separate research and policy from the original semantic space using Iterative Nullspace Projection \parencite{Ravfogel2020INLP}. What remains is called the adjusted semantic space, interpreted as containing the substantive topic. Texts are re-scored in this adjusted space. The difference between the raw and adjusted embeddings is called the register component.
@@ -136,17 +139,15 @@ These findings show that shared SDG labels are insufficient evidence of research
  The SDG classifier achieves macro-F1 = \MacroFOne{} on a held-out test set and reproduces the high research coverage of SDGs 3, 4, and 16 reported in prior inventories; SDG 9's second place is plausibly an artefact of the AI-focused retrieval. The policy-side ranking (top SDGs: 16, 17, and 13) is reported here. The raw coverage-semantic correlation is null (\(\rho = \SpearmanCovRaw\), p = \SpearmanCovRawP{}). However, the adjusted semantic gap is positively associated with coverage (\(\rho = \RhoCovTopic\), p = \RhoCovTopicP), whereas the register component has a negative, non-significant association (\(\rho = \RhoCovRegister\), p = \RhoCovRegisterP). Policy coverage is the strongest directional predictor of the adjusted semantic gap (\(\rho = \HOneDPolicyCovAdjRho\), p = \HOneDPolicyCovAdjRhoP{}), while research coverage shows no consistent signal (\(\rho = \HOneDResearchCovAdjRho\), p = \HOneDResearchCovAdjRhoP{}).
 
  These results are stable across encoders, classifier family, retrieval strategy, segment cap, and policy-source family (source families agree on the raw-gap pattern; Section~\ref{sec:interaction}), apart from one sign flip in the concept-retrieved track (Section~\ref{sec:limitations}). To conclude, coverage and framing should be measured and reported as separate axes of divergence. Shared labels are insufficient evidence of shared framing.
-\addcontentsline{toc}{section}{Executive Summary}
-\par\medskip\noindent\textbf{Keywords:} research-policy alignment; Sustainable Development Goals; semantic similarity; transformer embeddings; measurement protocol; bibliometrics.
+\end{abstract}
 
-\par\noindent\textbf{Data and code availability:} The analysis code and the frozen, processed outputs are version-controlled at \url{https://github.com/qmanhbeo/msc-dissertation-leo}.
-
-\newpage
+\clearpage
 \tableofcontents
-\newpage
+\clearpage
 \listoffigures
+\clearpage
 \listoftables
-\newpage
+\clearpage
 
 %% ============================================================
 \clearpage

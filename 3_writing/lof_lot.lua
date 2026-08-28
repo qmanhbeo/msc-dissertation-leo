@@ -57,6 +57,11 @@ local function list_title(text)
                     pandoc.Attr("", {}, {{"custom-style", "TOC Heading"}}))
 end
 
+-- pandoc's LaTeX reader drops \clearpage/\newpage, so inject explicit OpenXML
+-- page breaks before ToC, LoF, and LoT to mirror the PDF front-matter layout.
+local PAGE_BREAK = pandoc.RawBlock("openxml",
+  '<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
+
 local function entry_para(prefix, inlines, anchor)
   local content = {pandoc.Str(prefix .. " ")}
   for _, x in ipairs(inlines) do content[#content + 1] = x end
@@ -102,11 +107,14 @@ function Pandoc(doc)
 
   -- Pass 2: assemble [ToC, LoF, LoT] and insert before the first Header.
   local front = pandoc.List()
+  front:insert(PAGE_BREAK)
   front:insert(pandoc.RawBlock("openxml", TOC_SDT))
+  front:insert(PAGE_BREAK)
   front:insert(list_title("List of Figures"))
   for _, f in ipairs(figs) do
     front:insert(entry_para("Figure " .. f.n .. ":", f.inlines, f.anchor))
   end
+  front:insert(PAGE_BREAK)
   front:insert(list_title("List of Tables"))
   for _, t in ipairs(tabs) do
     front:insert(entry_para("Table " .. t.n .. ":", t.inlines, t.anchor))
