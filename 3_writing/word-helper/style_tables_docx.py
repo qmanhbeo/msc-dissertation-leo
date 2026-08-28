@@ -127,8 +127,8 @@ JUNK_CELL_RE = re.compile(r"\d+-\d+(?: \(lr\))?")
 # Pure debris is blanked; fused cells keep only the real remainder, matching
 # the PDF. Fail-closed census of the 2026-08-28 build: 17 debris cells across
 # 14 content tables (15 pure + 2 fused).
-EXPECTED_JUNK_CELLS = 17
-EXPECTED_JUNK_TABLES = 14
+EXPECTED_JUNK_CELLS = 16
+EXPECTED_JUNK_TABLES = 13
 JUNK_FULL_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s*$")
 JUNK_PREFIX_RE = re.compile(r"^\s*\d+-\d+(?: \(lr\)\d+-\d+)*\s+(\S.*)$")
 # A fused remainder must be a short digit-free header label ("It.", "SDG");
@@ -147,8 +147,8 @@ REMAINDER_MAX_CHARS = 24
 #     (Table 5 H1a-H1d panels x3, Table 26 x3; the concept-coverage Spearman
 #     line left with that table's conversion to Figure 7);
 #   - 2 markerless label rows (Table 11 row 1, Table 29 row 2).
-EXPECTED_CONTENT_TABLES = 31
-EXPECTED_BORDERED_ROWS = 58
+EXPECTED_CONTENT_TABLES = 30
+EXPECTED_BORDERED_ROWS = 56
 EXPECTED_LABEL_ROWS = 2
 
 # Font cap for the Pooled OLS table (tab:k1-specification-grid, "Pooled OLS ... across 24

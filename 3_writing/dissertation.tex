@@ -81,9 +81,9 @@
 \InputIfFileExists{../4_outputs/mpnet/adjusted/tables/num18_distributional_h1.tex}{}{}
 \InputIfFileExists{../4_outputs/mpnet/tables/num7_encoder_sensitivity.tex}{}{}
 \InputIfFileExists{../4_outputs/mpnet/tables/num9_encoder_sensitivity_coverage.tex}{}{}
+\InputIfFileExists{../4_outputs/mpnet/tables/num5_register_decomposition.tex}{}{}
 % num19 (policy sub-collection macros) retired: those macros are now emitted by
 % export_corpus_provenance.py into num18 so Table 3.5 is the single source.
-\InputIfFileExists{../4_outputs/mpnet/tables/num5_register_decomposition.tex}{}{}
 
 \hypersetup{
   pdftitle={Shared SDG Labels Do Not Imply Shared Framing --- Embedding-Based Register-Topic Decomposition of Research-Policy Divergence Across the SDGs},
@@ -450,16 +450,7 @@ Register adjustment converges after \RegisterIterFinalK{} iterations for the MPN
 
 \textbf{Smallest semantic gaps (adjusted):} SDG~15 (Life on Land, \AdjGapSdgFifteen), SDG~2 (Zero Hunger, \AdjGapSdgTwo), SDG~6 (Clean Water, \AdjGapSdgSix), SDG~14 (Life Below Water, \AdjGapSdgFourteen), and SDG~5 (Gender Equality, \AdjGapSdgFive) show the narrowest adjusted gaps. A narrow gap does not mean balanced attention: SDG~9 is still research-dominant, and SDG~4 carries the learning-vocabulary concern (Appendix~\ref{app:sdg4-lexical-audit}). Appendix~\ref{app:semantic-gap-text-interpretability} lists the most distinctive research- and policy-side terms for each SDG.
 
-Table~\ref{tab:register-decomposition} consolidates the per-SDG inputs behind the interaction tests. It reports the \emph{semantic-gap} family (raw, adjusted, and register component, Figs~\ref{fig:semantic_gap} and~\ref{fig:typology_scatter}) and the \emph{coverage-predictor} family (absolute coverage gap, signed dominance, research share, and policy share, Fig.~\ref{fig:coverage_profiles}).
-
-\begin{table}[htbp]
-\centering
-\small
-  \caption{Reference values for the semantic-gap and coverage-predictor families (per SDG).}
-\label{tab:register-decomposition}
-\input{../4_outputs/mpnet/tables/tab5_register_decomposition.tex}
-\par\smallskip\footnotesize\emph{Notes:} Raw gap is the reference semantic-gap estimate. Adj.\ gap is after INLP register removal, the primary estimate, evaluated in Appendix~\ref{app:register-validation}. Reg.\ Comp.\ = raw $-$ adjusted. Coverage predictors are document-weighted research/policy shares. Signed dom.\ = research \% $-$ policy \% (pp).\par
-\end{table}
+Figures~\ref{fig:coverage_profiles} and~\ref{fig:semantic_gap} report the per-SDG coverage-predictor and semantic-gap values underlying the interaction tests.
 
 \subsection{Coverage--Semantic Interaction: Results}\label{sec:interaction}
 
@@ -550,7 +541,7 @@ This asymmetry is consistent with Cash et al.'s \parencite{Cash2003} observation
 
 \subsection{The register decomposition: what the raw gap actually measures}
 
-For 16 of 17 SDGs, the register component is positive (\RegCompSdgTen{} to \RegCompSdgThirteen{}, Table~\ref{tab:register-decomposition}), meaning register uniformly inflates the apparent divergence. Studies comparing corpora that differ in register overstate semantic divergence when they use raw embedding distances. The adjusted gap alone approximates topic.
+For 16 of 17 SDGs, the register component is positive (\RegCompSdgTen{} to \RegCompSdgThirteen{}, Fig.~\ref{fig:semantic_gap}), meaning register uniformly inflates the apparent divergence. Studies comparing corpora that differ in register overstate semantic divergence when they use raw embedding distances. The adjusted gap alone approximates topic.
 
 The exception is SDG~17, where the register component is negative (\RegCompSdgSeventeen{}): register makes the two communities appear more similar than their topics warrant. Under the raw gap SDG~17 ranks near the bottom (\SemanticGapSdgSeventeen{}) but after register removal it jumps to the top (\AdjGapSdgSeventeen{}). Policy partnership discourse uses institutional language (\textit{countries}, \textit{nations}, \textit{global}) that superficially resembles research vocabulary, but the substance differs: research concerns technical terms (\textit{model}, \textit{method}), while policy concerns institutional coordination.
 
@@ -636,7 +627,7 @@ Table~\ref{tab:reference-concept} reproduces the per-SDG reference values (Secti
 \caption{Concept-retrieved corpus --- per-SDG reference values (semantic-gap and coverage-predictor families).}
 \label{tab:reference-concept}
 \input{../4_outputs/mpnet/tables/tab_concept_reference.tex}
-\par\smallskip\footnotesize\emph{Notes:} Same structure as Table~\ref{tab:register-decomposition}. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted. The concept-retrieved corpus reuses the MPNet register-adjusted space (Section~\ref{sec:register-adjustment-inlp}).\par
+\par\smallskip\footnotesize\emph{Notes:} The semantic-gap and coverage-predictor structure is retained. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted. The concept-retrieved corpus reuses the MPNet register-adjusted space (Section~\ref{sec:register-adjustment-inlp}).\par
 \end{table}
 
 \section{Diagnostics for Reference Classifier}
@@ -789,7 +780,7 @@ Two details of the sampling in Section~\ref{sec:register-adjustment-inlp} bear o
 \paragraph{Convergence results.}\label{app:register-inlp}
 INLP removal converges fast. Held-out accuracy falls from \RegisterFirstAcc{} at iteration~1 to \RegisterFinalAcc{} by iteration~\RegisterIterFinalK{}, and the mean gap shrinks by \RegisterIterReductionPct{}\% before flattening. Almost all of that happens in the first 15 directions: the gap's correlation with the raw (un-removed) gap drops from \RegisterIterRhoAtOne{} to about \RegisterIterPlateauRho{} and stays there. Figure~\ref{fig:register-convergence} shows the per-iteration paths for all three encoders.
 
-The decomposition identifies the SDG~17 inversion discussed in Results (Section~\ref{sec:semantic-gap}) and Table~\ref{tab:register-decomposition}: the register component is positive for all SDGs except SDG~17 (range: \RegCompSdgTen{} to \RegCompSdgThirteen{}, smallest SDG~10, largest SDG~13), the only negative value, where register \emph{increases} the apparent research--policy similarity of the partnership goal.
+The decomposition identifies the SDG~17 inversion discussed in Results (Section~\ref{sec:semantic-gap}, Fig.~\ref{fig:semantic_gap}): the register component is positive for all SDGs except SDG~17 (range: \RegCompSdgTen{} to \RegCompSdgThirteen{}, smallest SDG~10, largest SDG~13), the only negative value, where register \emph{increases} the apparent research--policy similarity of the partnership goal.
 
 \paragraph{Cross-config replication.}
 The same iterative procedure was run on the MiniLM and SciBERT encoder tracks (the latter two on the S1 subset, by design). All three reach the $\leq 0.5$ stopping threshold. Held-out register-classification accuracy falls from \RegisterCrossFirstAccMin{}--\RegisterCrossFirstAccMax{} at iteration~1 to \RegisterCrossFinalAccMin{}--\RegisterCrossFinalAccMax{} at convergence, and all three compress sharply in the first 15 iterations (to \RegisterCrossAccAtFifteenMin{}--\RegisterCrossAccAtFifteenMax{}) before plateauing at the majority-class baseline. The iteration count required to reach the threshold differs across encoders, but the qualitative convergence --- a rapid early drop followed by a plateau --- is identical, confirming that the convergence behaviour is a property of the INLP procedure rather than of the MPNet embedding space.
@@ -968,7 +959,7 @@ The semantic-gap ranking is moderately preserved across the three encoders on th
 \subsection{Per-Track Reference Value Tables}
 \label{app:reference-tables}
 
-The per-SDG reference table from Section~\ref{sec:interaction} is reproduced below for the MiniLM and SciBERT encoder tracks (each scored on the deterministic 100,000-paper subset, isolating encoder choice from corpus scale). Column structure matches Table~\ref{tab:register-decomposition}: a semantic-gap family (raw, adjusted, register component) and a coverage-predictor family (coverage gap, signed dominance, research share, policy share). Signed dominance = research share $-$ policy share (pp); coverage gap = $|\text{research}-\text{policy}|$ (pp).
+The per-SDG reference table from Section~\ref{sec:interaction} is reproduced below for the MiniLM and SciBERT encoder tracks (each scored on the deterministic 100,000-paper subset, isolating encoder choice from corpus scale). The table reports a semantic-gap family (raw, adjusted, register component) and a coverage-predictor family (coverage gap, signed dominance, research share, policy share). Signed dominance = research share $-$ policy share (pp); coverage gap = $|\text{research}-\text{policy}|$ (pp).
 
 \begin{table}[htbp]
 \centering
@@ -976,7 +967,7 @@ The per-SDG reference table from Section~\ref{sec:interaction} is reproduced bel
 \caption{MiniLM track --- per-SDG reference values (semantic-gap and coverage-predictor families).}
 \label{tab:reference-minilm}
 \input{../4_outputs/minilm/tables/tab_minilm_reference.tex}
-\par\smallskip\footnotesize\emph{Notes:} Same structure as Table~\ref{tab:register-decomposition}. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted.\par
+\par\smallskip\footnotesize\emph{Notes:} The semantic-gap and coverage-predictor structure is retained. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted.\par
 \end{table}
 
 \begin{table}[htbp]
@@ -985,7 +976,7 @@ The per-SDG reference table from Section~\ref{sec:interaction} is reproduced bel
 \caption{SciBERT track --- per-SDG reference values (semantic-gap and coverage-predictor families).}
 \label{tab:reference-scibert}
 \input{../4_outputs/scibert/tables/tab_scibert_reference.tex}
-\par\smallskip\footnotesize\emph{Notes:} Same structure as Table~\ref{tab:register-decomposition}. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted.\par
+\par\smallskip\footnotesize\emph{Notes:} The semantic-gap and coverage-predictor structure is retained. Signed dom.\ = research \% $-$ policy \% (pp); Reg.\ Comp.\ = raw $-$ adjusted.\par
 \end{table}
 
 \begin{figure}[ht]
