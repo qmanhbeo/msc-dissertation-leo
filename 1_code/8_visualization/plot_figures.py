@@ -78,7 +78,7 @@ plt.rcParams.update({
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
     "font.size": 10,
     "axes.titlesize": 12,
-    "axes.labelsize": 10,
+    "axes.labelsize": 12,
     "xtick.labelsize": 9,
     "ytick.labelsize": 9,
     "legend.fontsize": 9,
@@ -238,10 +238,12 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
 
     fig, axes = plt.subplots(2, 2, figsize=(6.6, 7.0))
     legend_handles = [
-        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=RESEARCH_COLOR,
-                   markersize=6, label="Adjusted Semantic Gap"),
-        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="none",
-                   markeredgecolor="#888888", markersize=6, label="Raw Semantic Gap"),
+        plt.Line2D([0], [0], marker="o", linestyle="None", color=RESEARCH_COLOR,
+                   markerfacecolor=RESEARCH_COLOR, markeredgecolor=RESEARCH_COLOR,
+                   markeredgewidth=0, markersize=5, label="Adjusted Gap"),
+        plt.Line2D([0], [0], marker="o", linestyle="None", color=BASELINE_GREY,
+                   markerfacecolor=BASELINE_GREY, markeredgecolor=BASELINE_GREY,
+                   markeredgewidth=0, markersize=5, label="Raw Gap"),
     ] if use_adjusted else None
 
     for (title, col, xlabel, xscale), ax in zip(panels, axes.ravel()):
@@ -260,11 +262,11 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
                 if x.empty:
                     continue
                 x = float(x.iloc[0]) * xscale
-                ax.scatter(x, raw_map.get(sdg, np.nan), s=22, facecolors="none",
-                           edgecolors="#888888", zorder=4, alpha=0.7)
+                ax.scatter(x, raw_map.get(sdg, np.nan), s=22, color=BASELINE_GREY,
+                           edgecolors=BASELINE_GREY, zorder=4, alpha=0.9)
                 ax.scatter(x, adj_map[sdg], s=28, color=RESEARCH_COLOR, zorder=5, alpha=0.9)
                 ax.annotate(f"{sdg}", (x, raw_map.get(sdg, np.nan)),
-                            fontsize=4, color="black", fontweight="bold",
+                            fontsize=4, color="white", fontweight="bold",
                             ha="center", va="center", zorder=6)
                 ax.annotate(f"{sdg}", (x, adj_map[sdg]),
                             fontsize=4, color="white", fontweight="bold",
@@ -292,9 +294,9 @@ def plot_h1_scatter_grid(layout, model: str) -> None:
     for ax in axes[:, 0]:
         ax.set_ylabel("Within-SDG semantic gap", fontsize=8)
     if legend_handles is not None:
-        fig.legend(handles=legend_handles, loc="upper center", ncol=2,
+        fig.legend(handles=legend_handles, loc="lower center", ncol=2,
                    frameon=False, fontsize=8, columnspacing=1.6, handletextpad=0.4)
-    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
 
     out_base = figures_dir / "fig9_h1_grid"
     fig.savefig(out_base.with_suffix(".pdf"), bbox_inches="tight")
@@ -691,12 +693,15 @@ def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
         ax.plot([xr, xp], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
         ax.plot(xr, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
         ax.plot(xp, i, "o", color=POLICY_COLOR, ms=5.5, zorder=2)
-        ax.text(xr, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=6.5,
+        research_label_x = xr + (0.2 if xr < 0.5 else 0.0)
+        policy_label_x = xp + (0.2 if xp < 0.5 else 0.0)
+        ax.text(research_label_x, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=6.5,
                 color="black")
-        ax.text(xp, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=6.5,
+        ax.text(policy_label_x, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=6.5,
                 color="black")
         gap = xr - xp
-        ax.text(max(xr, xp) + 0.6, i, f"{gap:+.1f}%", ha="left", va="center",
+        gap_x_offset = 1.4 if max(xr, xp) < 0.5 else 0.6
+        ax.text(max(xr, xp) + gap_x_offset, i, f"{gap:+.1f}%", ha="left", va="center",
                 fontsize=7, color="#222222")
     ax.set_yticks(y)
     ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
@@ -730,7 +735,7 @@ def plot_semantic_dumbbell(adj_map: dict[int, float], raw_map: dict[int, float],
     """
     rows = [(s, adj_map[s], raw_map[s]) for s in range(1, 18)
             if s in adj_map and s in raw_map]
-    rows.sort(key=lambda r: r[1], reverse=True)
+    rows.sort(key=lambda r: r[0])
     fig, ax = plt.subplots(figsize=(8.0, 6.8))
     y = np.arange(len(rows))
     for i, (sdg, adj, raw) in enumerate(rows):
@@ -748,14 +753,14 @@ def plot_semantic_dumbbell(adj_map: dict[int, float], raw_map: dict[int, float],
     ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s, _, _ in rows], fontsize=8)
     ax.axvline(0, color="black", lw=0.5)
     ax.set_xlim(0, max(raw_map.values()) + 0.05)
-    # y inverted: largest adjusted gap at the top.
+    # y inverted: SDG 1 at the top, matching the coverage figure.
     ax.set_ylim(len(rows) - 0.5, -1.2)
     ax.set_xlabel("Semantic gap (1 − cosine similarity; adjusted = after INLP register removal)")
     ax.legend(handles=[
         plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
-                   label="Adjusted gap (canonical, after INLP)"),
+                   label="Adjusted Gap"),
         plt.Line2D([0], [0], marker="o", ls="None", color=BASELINE_GREY, ms=5.5,
-                   label="Semantic gap (raw baseline)"),
+                   label="Raw Gap"),
     ], loc="lower right", fontsize=8, frameon=False)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -842,7 +847,7 @@ def main() -> None:
         df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
         fig2, ax2 = plt.subplots(figsize=(7, 5.5))
         y = np.arange(len(df_sem))
-        colors = [RESEARCH_COLOR if v > median_semantic_gap else "#BBBBBB" for v in df_sem["semantic_gap"]]
+        colors = [RESEARCH_COLOR if v > median_semantic_gap else BASELINE_GREY for v in df_sem["semantic_gap"]]
         ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
         for i, val in enumerate(df_sem["semantic_gap"]):
             ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
@@ -851,11 +856,11 @@ def main() -> None:
         ax2.axvline(mean_semantic_gap, color="black", linestyle=":", linewidth=1,
                     label=f"Mean ({mean_semantic_gap:.3f})")
         ax2.set_yticks(y)
-        ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=8.5)
+        ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=8)
         ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
         ax2.legend(handles=[
             mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap"),
-            mpatches.Patch(color="#BBBBBB", alpha=0.88, label="Below median gap"),
+            mpatches.Patch(color=BASELINE_GREY, alpha=0.88, label="Below median gap"),
             plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median ({median_semantic_gap:.3f})"),
             plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean ({mean_semantic_gap:.3f})"),
         ], fontsize=7.5)
