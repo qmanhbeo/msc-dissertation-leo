@@ -192,7 +192,7 @@ def build(overwrite: bool = False) -> int:
     cursor -= 0.75
 
     # --- Row: Classifier trained FIRST ---
-    t_clf = "① Train LR Classifier (C=3.0, L2)\nReference pool split into train / test\nMacro-F1 = 0.816 (Table 1)"
+    t_clf = "Train LR Classifier (C=3.0, L2)\nReference pool split into train / test\nMacro-F1 = 0.816 (Table 1)"
     h_clf = row_height([t_clf])
     clf = box(x4, cursor, col_w, h_clf, t_clf, C_REFERENCE, C_REF_EDGE)
     clf_source_x = x4 + col_w / 2
@@ -201,9 +201,9 @@ def build(overwrite: bool = False) -> int:
     cursor -= (h_clf + 0.4)
 
     # --- Row: Scoring happens only AFTER the classifier is trained ---
-    t_scC = "② Score Research (concept)\nsame trained classifier\n(robustness track)"
-    t_scR = "② Score Research (primary)\nLR argmax, 17 SDGs\nsegment assignments"
-    t_scP = "② Score Policy\nLR argmax, 17 SDGs\nsegment assignments"
+    t_scC = "Score Research (concept)\nsame trained classifier\n(robustness track)"
+    t_scR = "Score Research (primary)\nLR argmax, 17 SDGs\nsegment assignments"
+    t_scP = "Score Policy\nLR argmax, 17 SDGs\nsegment assignments"
     h_sc = row_height([t_scC, t_scR, t_scP])
     scC = box(x1, cursor, col_w, h_sc, t_scC, C_SECONDARY_FILL, C_RESEARCH_EDGE, dashed=True)
     scR = box(x2, cursor, col_w, h_sc, t_scR, C_RESEARCH, C_RESEARCH_EDGE)
@@ -226,8 +226,8 @@ def build(overwrite: bool = False) -> int:
 
     # --- Robustness terminus for concept track ---
     t_rob = "Robustness check\n(Sec. 4.4, Appendix A)\nReuses main register-\nadjusted space (untested\nassumption, Sec. 1.6)"
-    t_cov = "Coverage Gap Analysis (Sec. 3.6)\nDocument-weighted SDG shares\nCoverageGapⱼ = |Researchⱼ − Policyⱼ|"
-    t_sem = "Semantic Gap Analysis (Sec. 3.7)\nSDG-level research vs. policy centroids\nRaw Gap = 1 − (cᵢꞋ · cₚꞌ)"
+    t_cov = "Coverage Gap Analysis (Sec. 3.6)\nDocument-weighted SDG shares"
+    t_sem = "Semantic Gap Analysis (Sec. 3.7)\nSDG-level research vs. policy centroids"
     h_row3 = row_height([t_rob, t_cov, t_sem])
     rob = box(x1, cursor, col_w, h_row3, t_rob, C_NOTE, C_NOTE_EDGE, fontsize=7.8, dashed=True)
     cov = box(x2, cursor, col_w, h_row3, t_cov, C_SHARED, C_SHARED_EDGE)
