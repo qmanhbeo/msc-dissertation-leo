@@ -674,10 +674,10 @@ def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
                            n_research: int, n_policy: int) -> None:
     """fig2 — research vs policy coverage shares per SDG (dumbbell).
 
-    Redesign of the former grouped bar chart: one row per SDG with research
+    Redesign of the former grouped bar chart:     one row per SDG with research
     and policy dots on a common % axis. The research share is labelled above
     its dot (black), the policy share below its dot (black), and the coverage
-    gap as a signed dominance value (research − policy, %) right of the
+    gap as a signed dominance value (research − policy, %, bold) right of the
     righter-most dot of the row. Palette: this is the one pair that earns the
     full blue/orange contrast (research vs policy).
     """
@@ -691,21 +691,20 @@ def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
         ax.plot([xr, xp], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
         ax.plot(xr, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
         ax.plot(xp, i, "o", color=POLICY_COLOR, ms=5.5, zorder=2)
-        ax.text(xr, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=8,
+        ax.text(xr, i - 0.30, f"{xr:.1f}", ha="center", va="center", fontsize=6.5,
                 color="black")
-        ax.text(xp, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=8,
+        ax.text(xp, i + 0.30, f"{xp:.1f}", ha="center", va="center", fontsize=6.5,
                 color="black")
         gap = xr - xp
         ax.text(max(xr, xp) + 0.6, i, f"{gap:+.1f}%", ha="left", va="center",
-                fontsize=8, color="#222222")
+                fontsize=7, color="#222222")
     ax.set_yticks(y)
     ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s in sdgs], fontsize=8)
-    ax.tick_params(axis="x", labelsize=8)
     ax.axvline(0, color="black", lw=0.5)
     ax.set_xlim(0, 31)
     # y inverted by the (bottom, top) ordering of set_ylim: SDG 1 at the top.
     ax.set_ylim(len(sdgs) - 0.5, -1.2)
-    ax.set_xlabel("Share of corpus assigned to SDG (%)", fontsize=8)
+    ax.set_xlabel("Share of corpus assigned to SDG (%)")
     ax.legend(handles=[
         plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
                    label=f"Research (abstract-weighted, n = {n_research})"),
@@ -717,6 +716,51 @@ def plot_coverage_dumbbell(df: pd.DataFrame, figures_dir: Path,
     fig.tight_layout()
     _save_fig(fig, figures_dir, "fig2_coverage_profiles")
 
+
+def plot_semantic_dumbbell(adj_map: dict[int, float], raw_map: dict[int, float],
+                           figures_dir: Path) -> None:
+    """fig4 — within-SDG semantic gap: adjusted (topic) vs raw baseline dumbbell.
+
+    One row per SDG, sorted by the adjusted (post-INLP) gap descending. The
+    adjusted gap is the blue canonical dot; the raw baseline is the grey dot;
+    the connector between them IS the register component (raw − adjusted,
+    signed — SDG 17 inverts, raw < adjusted). The register component is labelled
+    right of the righter-most dot in cosine units. Palette: blue = canonical
+    adjusted object, grey = raw/baseline (ratified scheme).
+    """
+    rows = [(s, adj_map[s], raw_map[s]) for s in range(1, 18)
+            if s in adj_map and s in raw_map]
+    rows.sort(key=lambda r: r[1], reverse=True)
+    fig, ax = plt.subplots(figsize=(8.0, 6.8))
+    y = np.arange(len(rows))
+    for i, (sdg, adj, raw) in enumerate(rows):
+        ax.plot([adj, raw], [i, i], color="#BBBBBB", lw=1.4, zorder=1)
+        ax.plot(adj, i, "o", color=RESEARCH_COLOR, ms=5.5, zorder=2)
+        ax.plot(raw, i, "o", color=BASELINE_GREY, ms=5.5, zorder=2)
+        ax.text(adj, i - 0.30, f"{adj:.3f}", ha="center", va="center", fontsize=6.5,
+                color="black")
+        ax.text(raw, i + 0.30, f"{raw:.3f}", ha="center", va="center", fontsize=6.5,
+                color="black")
+        reg = raw - adj
+        ax.text(max(adj, raw) + 0.006, i, f"{reg:+.3f}", ha="left", va="center",
+                fontsize=7, color="#222222")
+    ax.set_yticks(y)
+    ax.set_yticklabels([SDG_SHORT[s].replace("\n", " ") for s, _, _ in rows], fontsize=8)
+    ax.axvline(0, color="black", lw=0.5)
+    ax.set_xlim(0, max(raw_map.values()) + 0.05)
+    # y inverted: largest adjusted gap at the top.
+    ax.set_ylim(len(rows) - 0.5, -1.2)
+    ax.set_xlabel("Semantic gap (1 − cosine similarity; adjusted = after INLP register removal)")
+    ax.legend(handles=[
+        plt.Line2D([0], [0], marker="o", ls="None", color=RESEARCH_COLOR, ms=5.5,
+                   label="Adjusted gap (canonical, after INLP)"),
+        plt.Line2D([0], [0], marker="o", ls="None", color=BASELINE_GREY, ms=5.5,
+                   label="Semantic gap (raw baseline)"),
+    ], loc="lower right", fontsize=8, frameon=False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    _save_fig(fig, figures_dir, "fig4_semantic_gap")
 
 def main() -> None:
     args = parse_args()
@@ -788,40 +832,15 @@ def main() -> None:
     )
 
     # -----------------------------------------------------------------------
-    # Figure 2 — Semantic gap by SDG (adjusted canonical, raw baseline)
+    # Figure 2 — Semantic gap by SDG (adjusted canonical vs raw baseline)
+    # rendered as a dumbbell; the connector IS the register component.
     # -----------------------------------------------------------------------
-    fig2, ax2 = plt.subplots(figsize=(7, 5.5))
-
-    if use_adjusted:
-        fig2_df = pd.DataFrame({"sdg": list(adj_map.keys()), "gap": list(adj_map.values())})
-        fig2_df["raw"] = fig2_df["sdg"].map(raw_map)
-        fig2_df = fig2_df.sort_values("gap", ascending=False).reset_index(drop=True)
-        y = np.arange(len(fig2_df))
-        _med = float(np.median(fig2_df["gap"].to_numpy()))
-        _mean = float(np.mean(fig2_df["gap"].to_numpy()))
-        colors = [RESEARCH_COLOR if v > _med else "#BBBBBB" for v in fig2_df["gap"]]
-        ax2.barh(y, fig2_df["gap"], color=colors, alpha=0.88, label="Adjusted gap (canonical)")
-        for i, (_, row) in enumerate(fig2_df.iterrows()):
-            if pd.notna(row["raw"]):
-                ax2.plot(row["raw"], i, "D", color="#555555", markersize=5, alpha=0.85,
-                         label="Semantic gap (baseline)" if i == 0 else None)
-        for i, val in enumerate(fig2_df["gap"]):
-            ax2.text(val + 0.008, i, f"{val:.3f}", va="center", ha="left", fontsize=7.5)
-        ax2.axvline(_med, color="grey", linestyle="--", linewidth=1,
-                    label=f"Median (adj, {_med:.3f})")
-        ax2.axvline(_mean, color="black", linestyle=":", linewidth=1,
-                    label=f"Mean (adj, {_mean:.3f})")
-        ax2.set_yticks(y)
-        ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in fig2_df.iterrows()], fontsize=8.5)
-        ax2.set_xlabel("Semantic gap (1 − cosine similarity; adjusted = after INLP register removal)")
-        ax2.legend(handles=[
-            mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Adjusted gap (canonical)"),
-            plt.Line2D([0], [0], marker="D", color="#555555", linestyle="None", label="Semantic gap (baseline)"),
-            plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median (adj, {_med:.3f})"),
-            plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean (adj, {_mean:.3f})"),
-        ], fontsize=7.5)
+    if use_adjusted and adj_map and raw_map:
+        plot_semantic_dumbbell(adj_map, raw_map, figures_dir)
     else:
+        # Fallback: raw-only horizontal bars when no adjusted data exists.
         df_sem = df_sem_valid.sort_values("semantic_gap", ascending=False).reset_index(drop=True)
+        fig2, ax2 = plt.subplots(figsize=(7, 5.5))
         y = np.arange(len(df_sem))
         colors = [RESEARCH_COLOR if v > median_semantic_gap else "#BBBBBB" for v in df_sem["semantic_gap"]]
         ax2.barh(y, df_sem["semantic_gap"], color=colors, alpha=0.88)
@@ -834,22 +853,20 @@ def main() -> None:
         ax2.set_yticks(y)
         ax2.set_yticklabels([SDG_SHORT[int(r["sdg"])].replace("\n", " ") for _, r in df_sem.iterrows()], fontsize=8.5)
         ax2.set_xlabel("Semantic gap (1 − cosine similarity between research and policy sub-centroids)")
-        high_patch = mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap")
-        low_patch = mpatches.Patch(color="#BBBBBB", alpha=0.88, label="Below median gap")
         ax2.legend(handles=[
-            high_patch, low_patch,
+            mpatches.Patch(color=RESEARCH_COLOR, alpha=0.88, label="Above median gap"),
+            mpatches.Patch(color="#BBBBBB", alpha=0.88, label="Below median gap"),
             plt.Line2D([0], [0], color="grey", linestyle="--", label=f"Median ({median_semantic_gap:.3f})"),
             plt.Line2D([0], [0], color="black", linestyle=":", label=f"Mean ({mean_semantic_gap:.3f})"),
         ], fontsize=7.5)
-    ax2.spines["top"].set_visible(False)
-    ax2.spines["right"].set_visible(False)
-    ax2.invert_yaxis()
-
-    fig2.tight_layout()
-    fig2.savefig(figures_dir / "fig4_semantic_gap.pdf", bbox_inches="tight")
-    fig2.savefig(figures_dir / "fig4_semantic_gap.png", bbox_inches="tight", dpi=300)
-    plt.close(fig2)
-    print("Saved: fig4_semantic_gap.pdf")
+        ax2.spines["top"].set_visible(False)
+        ax2.spines["right"].set_visible(False)
+        ax2.invert_yaxis()
+        fig2.tight_layout()
+        fig2.savefig(figures_dir / "fig4_semantic_gap.pdf", bbox_inches="tight")
+        fig2.savefig(figures_dir / "fig4_semantic_gap.png", bbox_inches="tight", dpi=300)
+        plt.close(fig2)
+        print("Saved: fig4_semantic_gap.pdf")
 
     # -----------------------------------------------------------------------
     # H1a--H1d coverage-predictor vs semantic-gap scatter grid (2x2, four
